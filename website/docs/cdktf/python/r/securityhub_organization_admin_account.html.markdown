@@ -55,6 +55,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `admin_account_id` - (Required) The AWS account identifier of the account to designate as the Security Hub administrator account.
 
 ## Attribute Reference
@@ -88,4 +89,4 @@ Using `terraform import`, import Security Hub Organization Admin Accounts using 
 % terraform import aws_securityhub_organization_admin_account.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-83f23d6f1c3f73f98991d420d396e1f7a78ea374e63126ce3c3d410cf5917cbd -->
+<!-- cache-key: cdktf-0.20.8 input-6ab69d0c9b4abd80d7dd9ab3d2cb00764128eecb26e7edecfa156d6e3c1b1664 -->

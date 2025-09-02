@@ -28,11 +28,15 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         BackupRegionSettings(self, "test",
             resource_type_management_preference={
-                "DynamoDB": True,
-                "EFS": True
+                "CloudFormation": True,
+                "DSQL": True,
+                "DynamoDB": False,
+                "EFS": False
             },
             resource_type_opt_in_preference={
                 "Aurora": True,
+                "CloudFormation": True,
+                "DSQL": True,
                 "DocumentDB": True,
                 "DynamoDB": True,
                 "EBS": True,
@@ -40,9 +44,13 @@ class MyConvertedCode(TerraformStack):
                 "EFS": True,
                 "FSx": True,
                 "Neptune": True,
-                "RDS": True,
-                "Storage Gateway": True,
-                "VirtualMachine": True
+                "RDS": False,
+                "Redshift": True,
+                "Redshift Serverless": False,
+                "S3": False,
+                "SAP HANA on Amazon EC2": False,
+                "Storage Gateway": False,
+                "VirtualMachine": False
             }
         )
 ```
@@ -51,8 +59,9 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `resource_type_opt_in_preference` - (Required) A map of services along with the opt-in preferences for the Region.
-* `resource_type_management_preference` - (Optional) A map of services along with the management preferences for the Region. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_UpdateRegionSettings.html#API_UpdateRegionSettings_RequestSyntax).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_type_opt_in_preference` - (Required) A map of service names to their opt-in preferences for the Region. See [AWS Documentation on which services support backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/backup-feature-availability.html).
+* `resource_type_management_preference` - (Optional) A map of service names to their full management preferences for the Region. For more information, see the AWS Documentation on [what full management is](https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#full-management) and [which services support full management](https://docs.aws.amazon.com/aws-backup/latest/devguide/backup-feature-availability.html#features-by-resource).
 
 ## Attribute Reference
 
@@ -85,4 +94,4 @@ Using `terraform import`, import Backup Region Settings using the `region`. For 
 % terraform import aws_backup_region_settings.test us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1c87f4723a3ea47fdb8b9fe296035ddc01080e9391eac471698160d93a976e00 -->
+<!-- cache-key: cdktf-0.20.8 input-c81f86990af5ac0ed11385e934665121c4334a64450f51481a00af393d0d4d00 -->

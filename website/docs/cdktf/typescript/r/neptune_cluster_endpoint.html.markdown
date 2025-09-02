@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterIdentifier` - (Required, Forces new resources) The DB cluster identifier of the DB cluster associated with the endpoint.
 * `clusterEndpointIdentifier` - (Required, Forces new resources) The identifier of the endpoint.
 * `endpointType` - (Required) The type of the endpoint. One of: `READER`, `WRITER`, `ANY`.
@@ -88,4 +89,4 @@ Using `terraform import`, import `aws_neptune_cluster_endpoint` using the `clust
 % terraform import aws_neptune_cluster_endpoint.example my-cluster:my-endpoint
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fe62dbee474ec48b5d17927f8e8d3998a36b2d1c434288d6e385def0ac966409 -->
+<!-- cache-key: cdktf-0.20.8 input-4863f2e0c6542cf558e9a1d14e5a79c38a3b4b5e2af221e2725f2093d71e51de -->

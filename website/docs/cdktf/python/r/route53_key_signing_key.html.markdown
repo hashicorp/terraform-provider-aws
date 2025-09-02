@@ -109,7 +109,7 @@ The following arguments are required:
 
 * `hosted_zone_id` - (Required) Identifier of the Route 53 Hosted Zone.
 * `key_management_service_arn` - (Required) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key. This must be unique for each key-signing key (KSK) in a single hosted zone. This key must be in the `us-east-1` Region and meet certain requirements, which are described in the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-cmk-requirements.html) and [Route 53 API Reference](https://docs.aws.amazon.com/Route53/latest/APIReference/API_CreateKeySigningKey.html).
-* `name` - (Required) Name of the key-signing key (KSK). Must be unique for each key-singing key in the same hosted zone.
+* `name` - (Required) Name of the key-signing key (KSK). Must be unique for each key-signing key in the same hosted zone.
 
 The following arguments are optional:
 
@@ -130,6 +130,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `public_key` - The public key, represented as a Base64 encoding, as required by [RFC-4034 Page 5](https://tools.ietf.org/rfc/rfc4034.txt).
 * `signing_algorithm_mnemonic` - A string used to represent the signing algorithm. This value must follow the guidelines provided by [RFC-8624 Section 3.1](https://tools.ietf.org/html/rfc8624#section-3.1).
 * `signing_algorithm_type` - An integer used to represent the signing algorithm. This value must follow the guidelines provided by [RFC-8624 Section 3.1](https://tools.ietf.org/html/rfc8624#section-3.1).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -156,4 +164,4 @@ Using `terraform import`, import `aws_route53_key_signing_key` resources using t
 % terraform import aws_route53_key_signing_key.example Z1D633PJN98FT9,example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-eeafa23f3b2cf9c292211ba55ca229ed45cfe8d510a9b973ce0489a244999fd8 -->
+<!-- cache-key: cdktf-0.20.8 input-16c6c81fd044a23130935bb0a16bb8c695042c569aa821232357d45e4a85a269 -->

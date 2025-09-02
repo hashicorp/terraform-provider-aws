@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -116,6 +117,91 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessSecurityPolicy_string(t *testing.T) {
+	ctx := acctest.Context(t)
+	var securitypolicy types.SecurityPolicyDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_security_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityPolicyConfig_string(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrPolicy, testAccSecurityPolicyConfig_String_ExpectedJSON(rName)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// verify no planned changes
+				Config: testAccSecurityPolicyConfig_string(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportStateIdFunc:       testAccSecurityPolicyImportStateIdFunc(resourceName),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPolicy}, // JSON is semantically correct but can be set in state in a different order
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessSecurityPolicy_stringUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var securitypolicy types.SecurityPolicyDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_security_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityPolicyConfig_string(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrPolicy, testAccSecurityPolicyConfig_String_ExpectedJSON(rName)),
+				),
+			},
+			{
+				Config: testAccSecurityPolicyConfig_stringUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrPolicy, testAccSecurityPolicyConfig_String_ExpectedJSON(rName)),
+				),
 			},
 		},
 	})
@@ -241,4 +327,35 @@ resource "aws_opensearchserverless_security_policy" "test" {
   })
 }
 `, rName, collection, description)
+}
+
+func testAccSecurityPolicyConfig_String_ExpectedJSON(rName string) string {
+	collection := fmt.Sprintf("collection/%s", rName)
+	return fmt.Sprintf(`{"Rules":[{"Resource":["%s"],"ResourceType":"collection"}],"AWSOwnedKey":true}`, collection)
+}
+
+func testAccSecurityPolicyConfig_string(rName string) string {
+	collection := fmt.Sprintf("collection/%s", rName)
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_security_policy" "test" {
+  name        = %[1]q
+  type        = "encryption"
+  description = %[1]q
+  policy      = "{\"Rules\":[{\"Resource\":[\"%[2]s\"],\"ResourceType\":\"collection\"}],\"AWSOwnedKey\":true}"
+}
+`, rName, collection)
+}
+
+// testAccSecurityPolicyConfig_stringUpdate uses the same policy with additional whitespace
+// to verify normalization prevents persistent differences
+func testAccSecurityPolicyConfig_stringUpdate(rName string) string {
+	collection := fmt.Sprintf("collection/%s", rName)
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_security_policy" "test" {
+  name        = %[1]q
+  type        = "encryption"
+  description = "%[1]s-updated"
+  policy      = "{\"Rules\":[{\"Resource\":[\"%[2]s\"],\"ResourceType\":\"collection\"}],\"AWSOwnedKey\": true }"
+}
+`, rName, collection)
 }

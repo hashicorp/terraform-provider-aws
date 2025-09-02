@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Required) The ID of the member AWS account.
 * `email` - (Optional) The email of the member AWS account.
 * `invite` - (Optional) Boolean whether to invite the account to Security Hub as a member. Defaults to `false`.
@@ -79,4 +80,4 @@ Using `terraform import`, import Security Hub members using their account ID. Fo
 % terraform import aws_securityhub_member.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b2f811f0ff3e2bff9fde29d7ad1d4c2d9fa7578b2c00bebd2e51ff8635a9fa1c -->
+<!-- cache-key: cdktf-0.20.8 input-78275e3515007a41280e07197b8e3650c94b3520d67f38b8e054fbc7ccbe3c2c -->

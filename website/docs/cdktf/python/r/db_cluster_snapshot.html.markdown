@@ -36,8 +36,10 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
+* `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -52,6 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `kms_key_id` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DB cluster snapshot.
 * `license_model` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
+
 * `source_db_cluster_snapshot_identifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storage_encrypted` - Whether the DB cluster snapshot is encrypted.
 * `status` - The status of this DB Cluster Snapshot.
@@ -89,4 +92,4 @@ Using `terraform import`, import `aws_db_cluster_snapshot` using the cluster sna
 % terraform import aws_db_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-184cf1bfcccfca9c2ff7ce3ea29b9445d23880d46f0be562ac06c71e5ee10f89 -->
+<!-- cache-key: cdktf-0.20.8 input-9b121296b7abc787ae46486660faad88c4d64778084a17936aaf1c7e849f5ad4 -->

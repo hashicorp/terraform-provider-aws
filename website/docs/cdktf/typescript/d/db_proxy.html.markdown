@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the DB proxy.
 
 ## Attribute Reference
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpcSecurityGroupIds` - Provides a list of VPC security groups that the proxy belongs to.
 * `vpcSubnetIds` - EC2 subnet IDs for the proxy.
 
-<!-- cache-key: cdktf-0.20.1 input-40613dad61f863b46258986380665de6148f37458b6c3dc04b218f3d733ebd72 -->
+<!-- cache-key: cdktf-0.20.8 input-07965549e5f838c09acb0a5b32b2f375c5ad322b528252715661d2835efc1585 -->

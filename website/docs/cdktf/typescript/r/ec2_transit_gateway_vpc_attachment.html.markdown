@@ -42,12 +42,14 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnetIds` - (Required) Identifiers of EC2 Subnets.
 * `transitGatewayId` - (Required) Identifier of EC2 Transit Gateway.
 * `vpcId` - (Required) Identifier of EC2 VPC.
 * `applianceModeSupport` - (Optional) Whether Appliance Mode support is enabled. If enabled, a traffic flow between a source and destination uses the same Availability Zone for the VPC attachment for the lifetime of that flow. Valid values: `disable`, `enable`. Default value: `disable`.
 * `dnsSupport` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 * `ipv6Support` - (Optional) Whether IPv6 support is enabled. Valid values: `disable`, `enable`. Default value: `disable`.
+* `securityGroupReferencingSupport` - (Optional) Whether Security Group Referencing Support is enabled. Valid values: `disable`, `enable`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway VPC Attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayDefaultRouteTableAssociation` - (Optional) Boolean whether the VPC Attachment should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 * `transitGatewayDefaultRouteTablePropagation` - (Optional) Boolean whether the VPC Attachment should propagate routes with the EC2 Transit Gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
@@ -56,7 +58,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcOwnerId` - Identifier of the AWS account that owns the EC2 VPC.
 
@@ -92,4 +95,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_vpc_attachment` using 
 % terraform import aws_ec2_transit_gateway_vpc_attachment.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e76943b879789e9aa1c622ff0379f66692ea0b317120aa63e121af64f6a6d4c3 -->
+<!-- cache-key: cdktf-0.20.8 input-835a660d493e7f5af4528f903d3fc24ac32bf1ed7968a77530890b0c08f3df77 -->

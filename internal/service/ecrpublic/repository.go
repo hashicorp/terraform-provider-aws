@@ -39,8 +39,6 @@ func ResourceRepository() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
@@ -124,7 +122,7 @@ func ResourceRepository() *schema.Resource {
 	}
 }
 
-func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -133,8 +131,8 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CatalogData = expandRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("catalog_data"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CatalogData = expandRepositoryCatalogData(v.([]any)[0].(map[string]any))
 	}
 
 	out, err := conn.CreateRepository(ctx, &input)
@@ -155,7 +153,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -223,13 +221,13 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if catalogOut != nil {
 		flatCatalogData := flattenRepositoryCatalogData(catalogOut)
-		if catalogData, ok := d.GetOk("catalog_data"); ok && len(catalogData.([]interface{})) > 0 && catalogData.([]interface{})[0] != nil {
-			catalogDataMap := catalogData.([]interface{})[0].(map[string]interface{})
+		if catalogData, ok := d.GetOk("catalog_data"); ok && len(catalogData.([]any)) > 0 && catalogData.([]any)[0] != nil {
+			catalogDataMap := catalogData.([]any)[0].(map[string]any)
 			if v, ok := catalogDataMap["logo_image_blob"].(string); ok && len(v) > 0 {
 				flatCatalogData["logo_image_blob"] = v
 			}
 		}
-		d.Set("catalog_data", []interface{}{flatCatalogData})
+		d.Set("catalog_data", []any{flatCatalogData})
 	} else {
 		d.Set("catalog_data", nil)
 	}
@@ -237,7 +235,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -294,7 +292,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -307,14 +305,14 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]interface{} {
+func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
 	catalogData := apiObject.CatalogData
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := catalogData.AboutText; v != nil {
 		tfMap["about_text"] = aws.ToString(v)
@@ -339,7 +337,7 @@ func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataO
 	return tfMap
 }
 
-func expandRepositoryCatalogData(tfMap map[string]interface{}) *awstypes.RepositoryCatalogDataInput {
+func expandRepositoryCatalogData(tfMap map[string]any) *awstypes.RepositoryCatalogDataInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -383,11 +381,11 @@ func expandRepositoryCatalogData(tfMap map[string]interface{}) *awstypes.Reposit
 
 func resourceRepositoryUpdateCatalogData(ctx context.Context, conn *ecrpublic.Client, d *schema.ResourceData) error {
 	if d.HasChange("catalog_data") {
-		if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("catalog_data"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input := ecrpublic.PutRepositoryCatalogDataInput{
 				RepositoryName: aws.String(d.Id()),
 				RegistryId:     aws.String(d.Get("registry_id").(string)),
-				CatalogData:    expandRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{})),
+				CatalogData:    expandRepositoryCatalogData(v.([]any)[0].(map[string]any)),
 			}
 
 			_, err := conn.PutRepositoryCatalogData(ctx, &input)

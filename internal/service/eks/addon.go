@@ -43,8 +43,6 @@ func resourceAddon() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
@@ -90,15 +88,26 @@ func resourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"pod_identity_association": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrRoleARN: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"service_account": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"preserve": {
 				Type:     schema.TypeBool,
 				Optional: true,
-			},
-			"resolve_conflicts": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				Deprecated:       `The "resolve_conflicts" attribute can't be set to "PRESERVE" on initial resource creation. Use "resolve_conflicts_on_create" and/or "resolve_conflicts_on_update" instead`,
 			},
 			"resolve_conflicts_on_create": {
 				Type:     schema.TypeString,
@@ -107,13 +116,11 @@ func resourceAddon() *schema.Resource {
 					types.ResolveConflictsNone,
 					types.ResolveConflictsOverwrite,
 				), false),
-				ConflictsWith: []string{"resolve_conflicts"},
 			},
 			"resolve_conflicts_on_update": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				ConflictsWith:    []string{"resolve_conflicts"},
 			},
 			"service_account_role_arn": {
 				Type:         schema.TypeString,
@@ -126,7 +133,7 @@ func resourceAddon() *schema.Resource {
 	}
 }
 
-func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -148,9 +155,11 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ConfigurationValues = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("resolve_conflicts"); ok {
-		input.ResolveConflicts = types.ResolveConflicts(v.(string))
-	} else if v, ok := d.GetOk("resolve_conflicts_on_create"); ok {
+	if v, ok := d.GetOk("pod_identity_association"); ok && v.(*schema.Set).Len() > 0 {
+		input.PodIdentityAssociations = expandAddonPodIdentityAssociations(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("resolve_conflicts_on_create"); ok {
 		input.ResolveConflicts = types.ResolveConflicts(v.(string))
 	}
 
@@ -159,7 +168,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateAddon(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -182,7 +191,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(id)
 
 	if _, err := waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
+		// Creating addon w/o setting resolve_conflicts_on_create to "OVERWRITE"
 		// might result in a failed creation, if unmanaged version of addon is already deployed
 		// and there are configuration conflicts:
 		// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
@@ -198,7 +207,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAddonRead(ctx, d, meta)...)
 }
 
-func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -226,6 +235,13 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
+	flatPIAs, err := flattenAddonPodIdentityAssociations(ctx, addon.PodIdentityAssociations, clusterName, meta)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening pod_identity_association: %s", err)
+	}
+	if err := d.Set("pod_identity_association", flatPIAs); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting pod_identity_association: %s", err)
+	}
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
 	setTagsOut(ctx, addon.Tags)
@@ -233,7 +249,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -242,7 +258,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values") {
+	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values", "pod_identity_association") {
 		input := &eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
 			ClientRequestToken: aws.String(sdkid.UniqueId()),
@@ -257,17 +273,16 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ConfigurationValues = aws.String(d.Get("configuration_values").(string))
 		}
 
-		var conflictResolutionAttr string
-		var conflictResolution types.ResolveConflicts
+		if d.HasChange("pod_identity_association") {
+			if v, ok := d.GetOk("pod_identity_association"); ok && v.(*schema.Set).Len() > 0 {
+				input.PodIdentityAssociations = expandAddonPodIdentityAssociations(v.(*schema.Set).List())
+			} else {
+				input.PodIdentityAssociations = []types.AddonPodIdentityAssociations{}
+			}
+		}
 
-		if v, ok := d.GetOk("resolve_conflicts"); ok {
-			conflictResolutionAttr = "resolve_conflicts"
-			conflictResolution = types.ResolveConflicts(v.(string))
-			input.ResolveConflicts = conflictResolution
-		} else if v, ok := d.GetOk("resolve_conflicts_on_update"); ok {
-			conflictResolutionAttr = "resolve_conflicts_on_update"
-			conflictResolution = types.ResolveConflicts(v.(string))
-			input.ResolveConflicts = conflictResolution
+		if v, ok := d.GetOk("resolve_conflicts_on_update"); ok {
+			input.ResolveConflicts = types.ResolveConflicts(v.(string))
 		}
 
 		// If service account role ARN is already provided, use it. Otherwise, the add-on uses
@@ -284,11 +299,11 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		updateID := aws.ToString(output.Update.Id)
 		if _, err := waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			if conflictResolution != types.ResolveConflictsOverwrite {
-				// Changing addon version w/o setting resolve_conflicts to "OVERWRITE"
+			if input.ResolveConflicts != types.ResolveConflictsOverwrite {
+				// Changing addon version w/o setting resolve_conflicts_on_update to "OVERWRITE"
 				// might result in a failed update if there are conflicts:
 				// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
-				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting attribute %q to %q", d.Id(), updateID, err, conflictResolutionAttr, types.ResolveConflictsOverwrite)
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting resolve_conflicts_on_update to %q", d.Id(), updateID, err, types.ResolveConflictsOverwrite)
 			}
 
 			return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s", d.Id(), updateID, err)
@@ -298,7 +313,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAddonRead(ctx, d, meta)...)
 }
 
-func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -319,6 +334,10 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
 	_, err = conn.DeleteAddon(ctx, input)
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EKS Add-On (%s): %s", d.Id(), err)
 	}
@@ -328,6 +347,67 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func expandAddonPodIdentityAssociations(tfList []any) []types.AddonPodIdentityAssociations {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var addonPodIdentityAssociations []types.AddonPodIdentityAssociations
+	for _, raw := range tfList {
+		tfMap, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		pia := types.AddonPodIdentityAssociations{}
+		if roleArn, ok := tfMap[names.AttrRoleARN].(string); ok {
+			pia.RoleArn = aws.String(roleArn)
+		}
+		if service_account, ok := tfMap["service_account"].(string); ok {
+			pia.ServiceAccount = aws.String(service_account)
+		}
+
+		addonPodIdentityAssociations = append(addonPodIdentityAssociations, pia)
+	}
+
+	return addonPodIdentityAssociations
+}
+
+func flattenAddonPodIdentityAssociations(ctx context.Context, associations []string, clusterName string, meta any) ([]any, error) {
+	if len(associations) == 0 {
+		return nil, nil
+	}
+
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
+	var results []any
+
+	for _, associationArn := range associations {
+		// CreateAddon returns the associationARN. The associationId is extracted from the end of the ARN,
+		// which is used in the DescribePodIdentityAssociation call to get the RoleARN and ServiceAccount
+		//
+		// Ex. "arn:aws:eks:<region>:<account-id>:podidentityassociation/<cluster-name>/a-1v95i5dqqiylbo3ud"
+		parts := strings.Split(associationArn, "/")
+		if len(parts) != 3 {
+			return nil, fmt.Errorf(`unable to extract association ID from ARN "%s"`, associationArn)
+		}
+
+		associationId := parts[2]
+		pia, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, associationId, clusterName)
+		if err != nil {
+			return nil, err
+		}
+
+		tfMap := map[string]any{
+			names.AttrRoleARN: pia.RoleArn,
+			"service_account": pia.ServiceAccount,
+		}
+
+		results = append(results, tfMap)
+	}
+
+	return results, nil
 }
 
 func findAddonByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, addonName string) (*types.Addon, error) {
@@ -384,7 +464,7 @@ func findAddonUpdateByThreePartKey(ctx context.Context, conn *eks.Client, cluste
 }
 
 func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
 		if tfresource.NotFound(err) {
@@ -400,7 +480,7 @@ func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName s
 }
 
 func statusAddonUpdate(ctx context.Context, conn *eks.Client, clusterName, addonName, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAddonUpdateByThreePartKey(ctx, conn, clusterName, addonName, id)
 
 		if tfresource.NotFound(err) {

@@ -30,7 +30,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new DataAwsSsoadminApplication(this, "example", {
       applicationArn:
-        "arn:aws:sso::012345678901:application/ssoins-1234/apl-5678",
+        "arn:aws:sso::123456789012:application/ssoins-1234/apl-5678",
     });
   }
 }
@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationArn` - (Required) ARN of the application.
 
 ## Attribute Reference
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `portalOptions` - Options for the portal associated with an application. See the `aws_ssoadmin_application` [resource documentation](../r/ssoadmin_application.html.markdown#portal_options-argument-reference). The attributes are the same.
 * `status` - Status of the application.
 
-<!-- cache-key: cdktf-0.20.1 input-0d07cfe6432527b9115d7fc49e2aad9b81dacbb2fee9606812ff5efd006c2f93 -->
+<!-- cache-key: cdktf-0.20.8 input-c45b51924b32a8a0f67ae880bd0f85456039006f546d4f5e141825fcebc23871 -->

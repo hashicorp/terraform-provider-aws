@@ -45,6 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name or description of the ByteMatchSet.
 * `byte_match_tuples` - (Optional)Settings for the ByteMatchSet, such as the bytes (typically a string that corresponds with ASCII characters) that you want AWS WAF to search for in web requests. ByteMatchTuple documented below.
 
@@ -93,4 +94,4 @@ Using `terraform import`, import WAF Regional Byte Match Set using the id. For e
 % terraform import aws_wafregional_byte_match_set.byte_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d354d98336a367dcda2900aef5df37bc2a4674f135a53bf8117fd2307be17d3e -->
+<!-- cache-key: cdktf-0.20.8 input-7b36a78b314d38dd7b1c31d0e4c3cf03e0609016119a1376638ed7efdf27fe91 -->

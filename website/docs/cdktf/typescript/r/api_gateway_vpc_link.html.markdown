@@ -60,6 +60,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name used to label and identify the VPC link.
 * `description` - (Optional) Description of the VPC link.
 * `targetArns` - (Required, ForceNew) List of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
@@ -100,4 +101,4 @@ Using `terraform import`, import API Gateway VPC Link using the `id`. For exampl
 % terraform import aws_api_gateway_vpc_link.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-67ae655f1b594d4a56352e7b95e9f98e0a7e757e376024aa97ec46526256091e -->
+<!-- cache-key: cdktf-0.20.8 input-afaea31930df9674dfc386f32bf14f8cb9b34b35da26fb8fa9c13c3321e40031 -->

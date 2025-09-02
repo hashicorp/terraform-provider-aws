@@ -26,7 +26,7 @@ const (
 	BucketResourceAccessIdPartsCount = 2
 )
 
-// @SDKResource("aws_lightsail_bucket_resource_access")
+// @SDKResource("aws_lightsail_bucket_resource_access", name="Bucket Resource Access")
 func ResourceBucketResourceAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketResourceAccessCreate,
@@ -53,7 +53,7 @@ func ResourceBucketResourceAccess() *schema.Resource {
 	}
 }
 
-func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -88,7 +88,7 @@ func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceBucketResourceAccessRead(ctx, d, meta)...)
 }
 
-func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -117,7 +117,7 @@ func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)

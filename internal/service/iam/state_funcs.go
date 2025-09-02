@@ -8,7 +8,7 @@ import (
 ) // StateTrimSpace is a StateFunc that trims extraneous whitespace from strings.
 // This prevents differences caused by an API canonicalizing a string with a
 // trailing newline character removed.
-func StateTrimSpace(v interface{}) string {
+func StateTrimSpace(v any) string {
 	s, ok := v.(string)
 
 	if !ok {

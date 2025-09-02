@@ -39,13 +39,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the framework.
 * `type` - (Required) Type of framework. Valid values are `Custom` and `Standard`.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [`aws_auditmanager_framework` resource](/docs/providers/aws/r/auditmanager_framework.html) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.1 input-e12a3dc3cc7a030af0ee05ef605e7ae0ed5532ec722427fc48f953a615499bf2 -->
+<!-- cache-key: cdktf-0.20.8 input-51430e56849f137c709d591d3b08c354fa38687f7f7635f398c3f95f4775e220 -->

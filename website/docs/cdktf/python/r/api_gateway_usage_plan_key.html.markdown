@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `key_id` - (Required) Identifier of the API key resource.
 * `key_type` - (Required) Type of the API key resource. Currently, the valid key type is API_KEY.
 * `usage_plan_id` - (Required) Id of the usage plan resource representing to associate the key to.
@@ -94,4 +95,4 @@ Using `terraform import`, import AWS API Gateway Usage Plan Key using the `USAGE
 % terraform import aws_api_gateway_usage_plan_key.key 12345abcde/zzz
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-64d31ac82ac47958b893fdad358b9552bfb53b3872642df3b580cd7ea2309914 -->
+<!-- cache-key: cdktf-0.20.8 input-2b0ef35110f97249f8260b0ef58daf9a335c485cffdbe0295059f19cc308ae19 -->

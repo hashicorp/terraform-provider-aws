@@ -5,7 +5,6 @@ package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +36,7 @@ func TestAccSESV2ConfigurationSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", regexache.MustCompile(`configuration-set/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`configuration-set/.+`)),
 				),
 			},
 			{
@@ -72,7 +71,7 @@ func TestAccSESV2ConfigurationSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSESV2ConfigurationSet_tlsPolicy(t *testing.T) {
+func TestAccSESV2ConfigurationSet_deliveryOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_configuration_set.test"
@@ -84,10 +83,10 @@ func TestAccSESV2ConfigurationSet_tlsPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetConfig_tlsPolicy(rName, string(types.TlsPolicyRequire)),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, string(types.TlsPolicyRequire)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(types.TlsPolicyRequire)),
 				),
 			},
@@ -97,10 +96,20 @@ func TestAccSESV2ConfigurationSet_tlsPolicy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSetConfig_tlsPolicy(rName, string(types.TlsPolicyOptional)),
+				Config: testAccConfigurationSetConfig_deliveryOptions_maxDeliverySeconds(rName, 300, string(types.TlsPolicyRequire)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.max_delivery_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(types.TlsPolicyRequire)),
+				),
+			},
+			{
+				Config: testAccConfigurationSetConfig_deliveryOptions_maxDeliverySeconds(rName, 800, string(types.TlsPolicyOptional)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.max_delivery_seconds", "800"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(types.TlsPolicyOptional)),
 				),
 			},
@@ -123,7 +132,7 @@ func TestAccSESV2ConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_reputationMetricsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "reputation_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "reputation_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reputation_options.0.reputation_metrics_enabled", acctest.CtTrue),
 				),
 			},
@@ -136,7 +145,7 @@ func TestAccSESV2ConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_reputationMetricsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "reputation_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "reputation_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reputation_options.0.reputation_metrics_enabled", acctest.CtFalse),
 				),
 			},
@@ -159,7 +168,7 @@ func TestAccSESV2ConfigurationSet_sendingEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_sendingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sending_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sending_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sending_options.0.sending_enabled", acctest.CtTrue),
 				),
 			},
@@ -172,7 +181,7 @@ func TestAccSESV2ConfigurationSet_sendingEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_sendingEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sending_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sending_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sending_options.0.sending_enabled", acctest.CtFalse),
 				),
 			},
@@ -195,8 +204,8 @@ func TestAccSESV2ConfigurationSet_suppressedReasons(t *testing.T) {
 				Config: testAccConfigurationSetConfig_suppressedReasons(rName, string(types.SuppressionListReasonBounce)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.0", string(types.SuppressionListReasonBounce)),
 				),
 			},
@@ -209,10 +218,38 @@ func TestAccSESV2ConfigurationSet_suppressedReasons(t *testing.T) {
 				Config: testAccConfigurationSetConfig_suppressedReasons(rName, string(types.SuppressionListReasonComplaint)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.0", string(types.SuppressionListReasonComplaint)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSESV2ConfigurationSet_suppressedReasonsEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_suppressedReasonsEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -233,8 +270,8 @@ func TestAccSESV2ConfigurationSet_engagementMetrics(t *testing.T) {
 				Config: testAccConfigurationSetConfig_engagementMetrics(rName, string(types.FeatureStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.0.engagement_metrics", string(types.FeatureStatusEnabled)),
 				),
 			},
@@ -247,8 +284,8 @@ func TestAccSESV2ConfigurationSet_engagementMetrics(t *testing.T) {
 				Config: testAccConfigurationSetConfig_engagementMetrics(rName, string(types.FeatureStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.dashboard_options.0.engagement_metrics", string(types.FeatureStatusDisabled)),
 				),
 			},
@@ -271,8 +308,8 @@ func TestAccSESV2ConfigurationSet_optimizedSharedDelivery(t *testing.T) {
 				Config: testAccConfigurationSetConfig_optimizedSharedDelivery(rName, string(types.FeatureStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.0.optimized_shared_delivery", string(types.FeatureStatusEnabled)),
 				),
 			},
@@ -285,8 +322,8 @@ func TestAccSESV2ConfigurationSet_optimizedSharedDelivery(t *testing.T) {
 				Config: testAccConfigurationSetConfig_optimizedSharedDelivery(rName, string(types.FeatureStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vdm_options.0.guardian_options.0.optimized_shared_delivery", string(types.FeatureStatusDisabled)),
 				),
 			},
@@ -294,49 +331,15 @@ func TestAccSESV2ConfigurationSet_optimizedSharedDelivery(t *testing.T) {
 	})
 }
 
-func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_sesv2_configuration_set.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigurationSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccConfigurationSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccConfigurationSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
+func testAccConfigurationSetConfig_suppressedReasonsEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+  suppression_options {
+    suppressed_reasons = []
+  }
+}
+`, rName)
 }
 
 func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -350,41 +353,33 @@ func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfsesv2.FindConfigurationSetByID(ctx, conn, rs.Primary.ID)
 
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.NotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameConfigurationSet, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("SESv2 Configuration Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckConfigurationSetExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckConfigurationSetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSet, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSet, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindConfigurationSetByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSet, rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -396,7 +391,7 @@ resource "aws_sesv2_configuration_set" "test" {
 `, rName)
 }
 
-func testAccConfigurationSetConfig_tlsPolicy(rName, tlsPolicy string) string {
+func testAccConfigurationSetConfig_deliveryOptions(rName string, tlsPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
@@ -406,6 +401,19 @@ resource "aws_sesv2_configuration_set" "test" {
   }
 }
 `, rName, tlsPolicy)
+}
+
+func testAccConfigurationSetConfig_deliveryOptions_maxDeliverySeconds(rName string, maxDeliverySeconds int, tlsPolicy string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+
+  delivery_options {
+    max_delivery_seconds = %[2]d
+    tls_policy           = %[3]q
+  }
+}
+`, rName, maxDeliverySeconds, tlsPolicy)
 }
 
 func testAccConfigurationSetConfig_reputationMetricsEnabled(rName string, reputationMetricsEnabled bool) string {
@@ -470,29 +478,4 @@ resource "aws_sesv2_configuration_set" "test" {
   }
 }
 `, rName, optimizedSharedDelivery)
-}
-
-func testAccConfigurationSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_sesv2_configuration_set" "test" {
-  configuration_set_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccConfigurationSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_sesv2_configuration_set" "test" {
-  configuration_set_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

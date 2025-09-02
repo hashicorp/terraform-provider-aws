@@ -54,6 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the stickiness policy.
 * `loadBalancer` - (Required) Name of load balancer to which the policy
   should be attached.
@@ -104,4 +105,4 @@ Using `terraform import`, import application cookie stickiness policies using th
 % terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-88293d9f7b9b0c56a30ec158ef04e7ebaf1d4abe22c80ea32220c4d2176785a6 -->
+<!-- cache-key: cdktf-0.20.8 input-84ab72b5859ee3412565dbcd8041cc761d8339701d18ffc0b97224a879adfff6 -->

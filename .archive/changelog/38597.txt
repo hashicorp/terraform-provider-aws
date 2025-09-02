@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_ecr_repository_creation_template
+```
+
+```release-note:new-data-source
+aws_ecr_repository_creation_template
+```

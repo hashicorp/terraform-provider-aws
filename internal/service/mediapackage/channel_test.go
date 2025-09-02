@@ -41,7 +41,7 @@ func TestAccMediaPackageChannel_basic(t *testing.T) {
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mediapackage", regexache.MustCompile(`channels/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediapackage", regexache.MustCompile(`channels/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.password", regexache.MustCompile("^[0-9a-f]*$")),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.url", regexache.MustCompile("^https://")),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.username", regexache.MustCompile("^[0-9a-f]*$")),
@@ -116,7 +116,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				Config: testAccChannelConfig_tags(rName, "Environment", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 				),
@@ -130,7 +130,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				Config: testAccChannelConfig_tags(rName, "Environment", "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test1"),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				Config: testAccChannelConfig_tags(rName, "Update", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Update", acctest.CtTrue),
 				),
 			},

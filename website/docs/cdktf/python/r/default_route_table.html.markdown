@@ -79,6 +79,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `propagating_vgws` - (Optional) List of virtual gateways for propagation.
 * `route` - (Optional) Configuration block of routes. Detailed below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html). This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -151,4 +152,4 @@ Using `terraform import`, import Default VPC route tables using the `vpc_id`. Fo
 
 [tf-main-route-table-association]: /docs/providers/aws/r/main_route_table_association.html
 
-<!-- cache-key: cdktf-0.20.1 input-52890b2ce73c129b096972d97be8827bd1630df722976c50bc3863ebadce1093 -->
+<!-- cache-key: cdktf-0.20.8 input-5b81cf12a6da7edcbb9be7a0bff4ed806ddd74713411db98a9aec1ed651d0668 -->

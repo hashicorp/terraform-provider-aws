@@ -11,8 +11,9 @@ var (
 	ResourceBucketCorsConfiguration                 = resourceBucketCorsConfiguration
 	ResourceBucketIntelligentTieringConfiguration   = resourceBucketIntelligentTieringConfiguration
 	ResourceBucketInventory                         = resourceBucketInventory
-	ResourceBucketLifecycleConfiguration            = resourceBucketLifecycleConfiguration
+	ResourceBucketLifecycleConfiguration            = newBucketLifecycleConfigurationResource
 	ResourceBucketLogging                           = resourceBucketLogging
+	ResourceBucketMetadataConfiguration             = newBucketMetadataConfigurationResource
 	ResourceBucketMetric                            = resourceBucketMetric
 	ResourceBucketNotification                      = resourceBucketNotification
 	ResourceBucketObjectLockConfiguration           = resourceBucketObjectLockConfiguration
@@ -28,38 +29,39 @@ var (
 	ResourceDirectoryBucket                         = newDirectoryBucketResource
 	ResourceObjectCopy                              = resourceObjectCopy
 
-	BucketUpdateTags                      = bucketUpdateTags
-	BucketRegionalDomainName              = bucketRegionalDomainName
-	BucketWebsiteEndpointAndDomain        = bucketWebsiteEndpointAndDomain
-	DeleteAllObjectVersions               = deleteAllObjectVersions
-	EmptyBucket                           = emptyBucket
-	FindAnalyticsConfiguration            = findAnalyticsConfiguration
-	FindBucket                            = findBucket
-	FindBucketACL                         = findBucketACL
-	FindBucketAccelerateConfiguration     = findBucketAccelerateConfiguration
-	FindBucketNotificationConfiguration   = findBucketNotificationConfiguration
-	FindBucketPolicy                      = findBucketPolicy
-	FindBucketRequestPayment              = findBucketRequestPayment
-	FindBucketVersioning                  = findBucketVersioning
-	FindBucketWebsite                     = findBucketWebsite
-	FindCORSRules                         = findCORSRules
-	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
-	FindInventoryConfiguration            = findInventoryConfiguration
-	FindLifecycleRules                    = findLifecycleRules
-	FindLoggingEnabled                    = findLoggingEnabled
-	FindMetricsConfiguration              = findMetricsConfiguration
-	FindObjectByBucketAndKey              = findObjectByBucketAndKey
-	FindObjectLockConfiguration           = findObjectLockConfiguration
-	FindOwnershipControls                 = findOwnershipControls
-	FindPublicAccessBlockConfiguration    = findPublicAccessBlockConfiguration
-	FindReplicationConfiguration          = findReplicationConfiguration
-	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
-	HostedZoneIDForRegion                 = hostedZoneIDForRegion
-	IsDirectoryBucket                     = isDirectoryBucket
-	ObjectListTags                        = objectListTags
-	ObjectUpdateTags                      = objectUpdateTags
-	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
-	ValidBucketName                       = validBucketName
+	BucketUpdateTags                            = bucketUpdateTags
+	BucketRegionalDomainName                    = bucketRegionalDomainName
+	BucketWebsiteEndpointAndDomain              = bucketWebsiteEndpointAndDomain
+	DeleteAllObjectVersions                     = deleteAllObjectVersions
+	EmptyBucket                                 = emptyBucket
+	FindAnalyticsConfiguration                  = findAnalyticsConfiguration
+	FindBucket                                  = findBucket
+	FindBucketACL                               = findBucketACL
+	FindBucketAccelerateConfiguration           = findBucketAccelerateConfiguration
+	FindBucketLifecycleConfiguration            = findBucketLifecycleConfiguration
+	FindBucketMetadataConfigurationByTwoPartKey = findBucketMetadataConfigurationByTwoPartKey
+	FindBucketNotificationConfiguration         = findBucketNotificationConfiguration
+	FindBucketPolicy                            = findBucketPolicy
+	FindBucketRequestPayment                    = findBucketRequestPayment
+	FindBucketVersioning                        = findBucketVersioning
+	FindBucketWebsite                           = findBucketWebsite
+	FindCORSRules                               = findCORSRules
+	FindIntelligentTieringConfiguration         = findIntelligentTieringConfiguration
+	FindInventoryConfiguration                  = findInventoryConfiguration
+	FindLoggingEnabled                          = findLoggingEnabled
+	FindMetricsConfiguration                    = findMetricsConfiguration
+	FindObjectByBucketAndKey                    = findObjectByBucketAndKey
+	FindObjectLockConfiguration                 = findObjectLockConfiguration
+	FindOwnershipControls                       = findOwnershipControls
+	FindPublicAccessBlockConfiguration          = findPublicAccessBlockConfiguration
+	FindReplicationConfiguration                = findReplicationConfiguration
+	FindServerSideEncryptionConfiguration       = findServerSideEncryptionConfiguration
+	HostedZoneIDForRegion                       = hostedZoneIDForRegion
+	IsDirectoryBucket                           = isDirectoryBucket
+	ObjectListTags                              = objectListTags
+	ObjectUpdateTags                            = objectUpdateTags
+	SDKv1CompatibleCleanKey                     = sdkv1CompatibleCleanKey
+	ValidBucketName                             = validBucketName
 
 	BucketPropagationTimeout       = bucketPropagationTimeout
 	BucketVersioningStatusDisabled = bucketVersioningStatusDisabled
@@ -68,4 +70,20 @@ var (
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
 	LifecycleRuleStatusEnabled     = lifecycleRuleStatusEnabled
+
+	NewObjectARN   = newObjectARN
+	ParseObjectARN = parseObjectARN
+
+	CreateResourceID          = createResourceID
+	ParseResourceID           = parseResourceID
+	CreateBucketACLResourceID = createBucketACLResourceID
+	ParseBucketACLResourceID  = parseBucketACLResourceID
+
+	DirectoryBucketNameRegex = directoryBucketNameRegex
+
+	LifecycleConfigEqual = lifecycleConfigEqual
+)
+
+type (
+	ObjectARN = objectARN
 )

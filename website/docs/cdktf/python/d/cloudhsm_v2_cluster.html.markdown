@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_id` - (Required) ID of Cloud HSM v2 cluster.
 * `cluster_state` - (Optional) State of the cluster to be found.
 
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
     * `cluster_certificates.0.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
 The number of available cluster certificates may vary depending on state of the cluster.
 
-<!-- cache-key: cdktf-0.20.1 input-cafc753026d5e76ff2fae8fcd6781f60ca5e79de76e720cef8a6975659131495 -->
+<!-- cache-key: cdktf-0.20.8 input-fd65be88fe2776087a6dcede604025778f040d383ad10ad91dd6ab89da143ff0 -->

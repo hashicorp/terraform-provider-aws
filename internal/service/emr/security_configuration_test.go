@@ -127,7 +127,7 @@ func TestAccEMRSecurityConfiguration_namePrefix(t *testing.T) {
 
 func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_security_configuration" {
@@ -158,7 +158,7 @@ func testAccCheckSecurityConfigurationExists(ctx context.Context, n string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		_, err := tfemr.FindSecurityConfigurationByName(ctx, conn, rs.Primary.ID)
 
@@ -184,7 +184,7 @@ resource "aws_emr_security_configuration" "test" {
       },
       "LocalDiskEncryptionConfiguration": {
         "EncryptionKeyProviderType": "AwsKms",
-        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
+        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
       }
     },
     "EnableInTransitEncryption": false,
@@ -212,7 +212,7 @@ resource "aws_emr_security_configuration" "test" {
       },
       "LocalDiskEncryptionConfiguration": {
         "EncryptionKeyProviderType": "AwsKms",
-        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
+        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
       }
     },
     "EnableInTransitEncryption": false,
@@ -242,7 +242,7 @@ resource "aws_emr_security_configuration" "test" {
       },
       "LocalDiskEncryptionConfiguration": {
         "EncryptionKeyProviderType": "AwsKms",
-        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
+        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
       }
     },
     "EnableInTransitEncryption": false,

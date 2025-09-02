@@ -64,6 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `listenerArn` - (Required, Forces New Resource) The ARN of the listener to which to attach the certificate.
 * `certificateArn` - (Required, Forces New Resource) The ARN of the certificate to attach to the listener.
 
@@ -105,4 +106,4 @@ Using `terraform import`, import Listener Certificates using the listener arn an
 % terraform import aws_lb_listener_certificate.example arn:aws:elasticloadbalancing:us-west-2:123456789012:listener/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b_arn:aws:iam::123456789012:server-certificate/tf-acc-test-6453083910015726063
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-010f8a2b1d22c8dc2a66a954423bfa17378f9f952397f5501786dea62742e9f7 -->
+<!-- cache-key: cdktf-0.20.8 input-fae8b43ebb285dba6e1e8e61f047deddb021c61854ec80dd12258a9f5d37f418 -->

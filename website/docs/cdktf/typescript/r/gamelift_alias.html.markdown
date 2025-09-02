@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the alias.
 * `description` - (Optional) Description of the alias.
 * `routingStrategy` - (Required) Specifies the fleet and/or routing type to use for the alias.
@@ -92,4 +93,4 @@ Using `terraform import`, import GameLift Aliases using the ID. For example:
 % terraform import aws_gamelift_alias.example <alias-id>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0388556f6d66db5cdeeff13f1605184c6bf94fb66ae580f7a99c34af9b175b72 -->
+<!-- cache-key: cdktf-0.20.8 input-83c2ed67d961efa78ab3ebded2f43b26b24850fb837eb038497804f23c5a449d -->

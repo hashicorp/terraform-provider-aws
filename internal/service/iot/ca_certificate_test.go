@@ -35,14 +35,14 @@ func TestAccIoTCACertificate_basic(t *testing.T) {
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "cacert/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_pem"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_mode", "SNI_ONLY"),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "generation_id"),
-					resource.TestCheckResourceAttr(resourceName, "registration_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "validity.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "registration_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "validity.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "validity.0.not_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "validity.0.not_before"),
 				),
@@ -91,7 +91,7 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 				Config: testAccCACertificateConfig_tags1(caCertificate, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -99,7 +99,7 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 				Config: testAccCACertificateConfig_tags2(caCertificate, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -108,7 +108,7 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 				Config: testAccCACertificateConfig_tags1(caCertificate, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -139,14 +139,14 @@ func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "cacert/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_pem"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_mode", "DEFAULT"),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "generation_id"),
-					resource.TestCheckResourceAttr(resourceName, "registration_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "validity.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "registration_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "validity.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "validity.0.not_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "validity.0.not_before"),
 				),
@@ -184,7 +184,7 @@ func TestAccIoTCACertificate_registrationConfig(t *testing.T) {
 				Config: testAccCACertificateConfig_registrationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "registration_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "registration_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_config.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_config.0.template_body"),
 				),
@@ -465,7 +465,7 @@ resource "aws_iot_ca_certificate" "test" {
     "policy": {
       "Type": "AWS::IoT::Policy",
       "Properties": {
-        "PolicyDocument":"{ \"Version\": \"2012-10-17\", \"Statement\": [{ \"Effect\": \"Allow\", \"Action\":[\"iot:Publish\"], \"Resource\": [\"arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/foo/bar\"] }] }"
+        "PolicyDocument":"{ \"Version\": \"2012-10-17\", \"Statement\": [{ \"Effect\": \"Allow\", \"Action\":[\"iot:Publish\"], \"Resource\": [\"arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:topic/foo/bar\"] }] }"
       }
     }
   } 

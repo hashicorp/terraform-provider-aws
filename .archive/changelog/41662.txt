@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Fix error when converting `rule` configuration from `filter.prefix` to `filter.and.prefix`
+```
+
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Fix error when converting `rule` configuration from `prefix` to `filter.prefix` or  `filter.and.prefix`
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_lifecycle_configuration: Adds warning validation to require exactly one of the elements of `rule.filter` 
+```

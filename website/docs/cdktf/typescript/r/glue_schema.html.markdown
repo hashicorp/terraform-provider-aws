@@ -43,12 +43,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `schemaName` – (Required) The Name of the schema.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `schemaName` - (Required) The Name of the schema.
 * `registryArn` - (Required) The ARN of the Glue Registry to create the schema in.
 * `dataFormat` - (Required) The data format of the schema definition. Valid values are `AVRO`, `JSON` and `PROTOBUF`.
 * `compatibility` - (Required) The compatibility mode of the schema. Values values are: `NONE`, `DISABLED`, `BACKWARD`, `BACKWARD_ALL`, `FORWARD`, `FORWARD_ALL`, `FULL`, and `FULL_ALL`.
 * `schemaDefinition` - (Required) The schema definition using the `dataFormat` setting for `schemaName`.
-* `description` – (Optional) A description of the schema.
+* `description` - (Optional) A description of the schema.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -95,4 +96,4 @@ Using `terraform import`, import Glue Registries using `arn`. For example:
 % terraform import aws_glue_schema.example arn:aws:glue:us-west-2:123456789012:schema/example/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-07d8be72b0ef5ec7a36f90bf89a090da4b36963b4802cf618422290e600eac94 -->
+<!-- cache-key: cdktf-0.20.8 input-d41a04c975ec0f7f5a1e55702c4fa13bdd824432f839de8e7bc85e5bb551a03a -->

@@ -69,7 +69,7 @@ func dataSourceCodeSigningConfig() *schema.Resource {
 	}
 }
 
-func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -87,7 +87,7 @@ func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData
 	d.Set("config_id", output.CodeSigningConfigId)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("last_modified", output.LastModified)
-	if err := d.Set("policies", []interface{}{map[string]interface{}{
+	if err := d.Set("policies", []any{map[string]any{
 		"untrusted_artifact_on_deployment": output.CodeSigningPolicies.UntrustedArtifactOnDeployment,
 	}}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policies: %s", err)

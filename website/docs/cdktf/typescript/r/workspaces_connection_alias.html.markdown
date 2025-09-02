@@ -38,10 +38,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connectionString` - (Required) The connection string specified for the connection alias. The connection string must be in the form of a fully qualified domain name (FQDN), such as www.example.com.
-* `tags` – (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -92,4 +93,4 @@ Using `terraform import`, import WorkSpaces Connection Alias using the connectio
 % terraform import aws_workspaces_connection_alias.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-413fd75316cfeb359e07cefddd821d90ecf5ceabe738b42d92da1fd7d2704797 -->
+<!-- cache-key: cdktf-0.20.8 input-2b0bf4c65cc1c9db7d860cf8176ae1be42689a1371dfe94b34da117ffef958ed -->

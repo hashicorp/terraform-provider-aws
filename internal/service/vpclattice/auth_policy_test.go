@@ -5,27 +5,23 @@ package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var authpolicy vpclattice.GetAuthPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_auth_policy.test"
@@ -59,7 +55,6 @@ func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 
 func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var authpolicy vpclattice.GetAuthPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_auth_policy.test"
@@ -95,48 +90,39 @@ func testAccCheckAuthPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			policy, err := conn.GetAuthPolicy(ctx, &vpclattice.GetAuthPolicyInput{
-				ResourceIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfvpclattice.FindAuthPolicyByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			if policy != nil {
-				return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameAuthPolicy, rs.Primary.ID, errors.New("Auth Policy not destroyed"))
-			}
+			return fmt.Errorf("VPCLattice Auth Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAuthPolicyExists(ctx context.Context, name string, authpolicy *vpclattice.GetAuthPolicyOutput) resource.TestCheckFunc {
+func testAccCheckAuthPolicyExists(ctx context.Context, n string, v *vpclattice.GetAuthPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameAuthPolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameAuthPolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetAuthPolicy(ctx, &vpclattice.GetAuthPolicyInput{
-			ResourceIdentifier: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfvpclattice.FindAuthPolicyByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			//return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameAuthPolicy, rs.Primary.ID, err)
-			return fmt.Errorf("AuthPolicy (for resource: %s) not found", rs.Primary.ID)
+			return err
 		}
 
-		*authpolicy = *resp
+		*v = *output
 
 		return nil
 	}

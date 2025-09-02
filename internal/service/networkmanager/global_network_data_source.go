@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkmanager_global_network")
-func DataSourceGlobalNetwork() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_global_network", name="Global Network")
+func dataSourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGlobalNetworkRead,
 
@@ -37,14 +37,14 @@ func DataSourceGlobalNetwork() *schema.Resource {
 	}
 }
 
-func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
-	globalNetwork, err := FindGlobalNetworkByID(ctx, conn, globalNetworkID)
+	globalNetwork, err := findGlobalNetworkByID(ctx, conn, globalNetworkID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Global Network (%s): %s", globalNetworkID, err)
@@ -55,7 +55,7 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrDescription, globalNetwork.Description)
 	d.Set("global_network_id", globalNetwork.GlobalNetworkId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

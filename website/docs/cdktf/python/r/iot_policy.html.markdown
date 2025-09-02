@@ -47,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. Use the [IoT Developer Guide](http://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) for more information on IoT Policies. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -93,4 +94,4 @@ Using `terraform import`, import IoT policies using the `name`. For example:
 % terraform import aws_iot_policy.pubsub PubSubToAnyTopic
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-407ebfd6f4c42e34cf580e380960f88968d7c9a68ee1d3f27268a743ff25bfbc -->
+<!-- cache-key: cdktf-0.20.8 input-f66f91b2ced084cfc3c6f5222d8a52091926025692383c6d9c99be884d20dbc7 -->

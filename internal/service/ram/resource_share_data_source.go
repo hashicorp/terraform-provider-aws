@@ -84,7 +84,7 @@ func dataSourceResourceShare() *schema.Resource {
 	}
 }
 
-func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -138,21 +138,21 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandTagFilter(tfMap map[string]interface{}) awstypes.TagFilter {
+func expandTagFilter(tfMap map[string]any) awstypes.TagFilter {
 	apiObject := awstypes.TagFilter{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.TagValues = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandTagFilters(tfList []interface{}) []awstypes.TagFilter {
+func expandTagFilters(tfList []any) []awstypes.TagFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -160,7 +160,7 @@ func expandTagFilters(tfList []interface{}) []awstypes.TagFilter {
 	var apiObjects []awstypes.TagFilter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue

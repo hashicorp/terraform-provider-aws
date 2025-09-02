@@ -15,7 +15,7 @@ import (
 
 // @FrameworkResource("aws_vpc_security_group_egress_rule", name="Security Group Egress Rule")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroupRule")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupRule")
 func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupEgressRuleResource{}
 	r.securityGroupRule = r
@@ -27,10 +27,6 @@ type securityGroupEgressRuleResource struct {
 	securityGroupRuleResource
 }
 
-func (*securityGroupEgressRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_egress_rule"
-}
-
 func (*securityGroupEgressRuleResource) MoveState(ctx context.Context) []resource.StateMover {
 	return []resource.StateMover{}
 }
@@ -39,8 +35,9 @@ func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *secu
 	conn := r.Meta().EC2Client(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
-		GroupId:       fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		IpPermissions: []awstypes.IpPermission{data.expandIPPermission(ctx)},
+		GroupId:           fwflex.StringFromFramework(ctx, data.SecurityGroupID),
+		IpPermissions:     []awstypes.IpPermission{data.expandIPPermission(ctx)},
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecurityGroupRule),
 	}
 
 	output, err := conn.AuthorizeSecurityGroupEgress(ctx, input)
@@ -55,10 +52,11 @@ func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *secu
 func (r *securityGroupEgressRuleResource) delete(ctx context.Context, data *securityGroupRuleResourceModel) error {
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
+	input := ec2.RevokeSecurityGroupEgressInput{
 		GroupId:              fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID)},
-	)
+		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID),
+	}
+	_, err := conn.RevokeSecurityGroupEgress(ctx, &input)
 
 	return err
 }

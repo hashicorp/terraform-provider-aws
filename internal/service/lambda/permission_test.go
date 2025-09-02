@@ -47,7 +47,7 @@ func TestPermissionUnmarshalling(t *testing.T) {
 	}
 
 	expectedPrincipal := "events.amazonaws.com"
-	service := stmt.Principal.(map[string]interface{})["Service"]
+	service := stmt.Principal.(map[string]any)["Service"]
 	if service != expectedPrincipal {
 		t.Fatalf("Expected Principal to match (%q != %q)", service, expectedPrincipal)
 	}
@@ -644,6 +644,7 @@ func TestAccLambdaPermission_FunctionURLs_iam(t *testing.T) {
 
 	resourceName := "aws_lambda_permission.test"
 	functionResourceName := "aws_lambda_function.test"
+	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -656,7 +657,7 @@ func TestAccLambdaPermission_FunctionURLs_iam(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunctionUrl"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithIAM"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
@@ -680,6 +681,7 @@ func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 
 	resourceName := "aws_lambda_permission.test"
 	functionResourceName := "aws_lambda_function.test"
+	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -692,7 +694,7 @@ func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunctionUrl"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromWithoutAuth"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
@@ -781,7 +783,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_iam_role" "test" {
@@ -903,7 +905,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -1060,7 +1062,7 @@ resource "aws_lambda_permission" "test" {
   statement_id           = "AllowExecutionWithIAM"
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = aws_lambda_function.test.function_name
-  principal              = "*"
+  principal              = aws_iam_role.test.arn
   function_url_auth_type = "AWS_IAM"
 }
 `)
@@ -1072,7 +1074,7 @@ resource "aws_lambda_permission" "test" {
   statement_id           = "AllowExecutionFromWithoutAuth"
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = aws_lambda_function.test.function_name
-  principal              = "*"
+  principal              = aws_iam_role.test.arn
   function_url_auth_type = "NONE"
 }
 `)

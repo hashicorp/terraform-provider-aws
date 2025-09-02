@@ -47,6 +47,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceId` - (Required) The ID of the virtual private cloud (VPC) that you're updating the DNSSEC validation status for.
 
 ## Attribute Reference
@@ -90,4 +91,4 @@ Using `terraform import`, import  Route 53 Resolver DNSSEC configs using the Rou
 % terraform import aws_route53_resolver_dnssec_config.example rdsc-be1866ecc1683e95
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-65576be1323a01047ddd84b194036361eced4cbe29a22e9031f40a7283d1af9a -->
+<!-- cache-key: cdktf-0.20.8 input-25355a87d3de9c2a770f20c93030966e085ecfc0cf8a7652e10a4089dab21b5d -->

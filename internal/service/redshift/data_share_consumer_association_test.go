@@ -10,14 +10,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +31,7 @@ func TestAccRedshiftDataShareConsumerAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, redshift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,8 +42,8 @@ func TestAccRedshiftDataShareConsumerAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "consumer_region", regionDataSourceName, names.AttrName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func TestAccRedshiftDataShareConsumerAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, redshift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -89,7 +89,7 @@ func TestAccRedshiftDataShareConsumerAssociation_associateEntireAccount(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, redshift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -100,8 +100,8 @@ func TestAccRedshiftDataShareConsumerAssociation_associateEntireAccount(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "associate_entire_account", acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
 				),
 			},
 			{
@@ -115,7 +115,7 @@ func TestAccRedshiftDataShareConsumerAssociation_associateEntireAccount(t *testi
 
 func testAccCheckDataShareConsumerAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_data_share_consumer_association" {
@@ -123,8 +123,8 @@ func testAccCheckDataShareConsumerAssociationDestroy(ctx context.Context) resour
 			}
 
 			_, err := tfredshift.FindDataShareConsumerAssociationByID(ctx, conn, rs.Primary.ID)
-			if tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "because the ARN doesn't exist.") ||
-				tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "either doesn't exist or isn't associated with this data consumer") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
+				errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "either doesn't exist or isn't associated with this data consumer") {
 				return nil
 			}
 			if err != nil {
@@ -149,7 +149,7 @@ func testAccCheckDataShareConsumerAssociationExists(ctx context.Context, name st
 			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameDataShareConsumerAssociation, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 		_, err := tfredshift.FindDataShareConsumerAssociationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameDataShareConsumerAssociation, rs.Primary.ID, err)
@@ -198,7 +198,7 @@ locals {
   # Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonredshift.html#amazonredshift-resources-for-iam-policies
   data_share_arn = format("arn:%s:redshift:%s:%s:datashare:%s/%s",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
     aws_redshiftserverless_namespace.test.namespace_id,
     "tfacctest",
@@ -222,7 +222,7 @@ resource "aws_redshift_data_share_consumer_association" "test" {
   depends_on = [aws_redshift_data_share_authorization.test]
 
   data_share_arn  = local.data_share_arn
-  consumer_region = data.aws_region.current.name
+  consumer_region = data.aws_region.current.region
 }
 `)
 }

@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_cognito_identity_provider: Correct plan-time validation of `provider_name` to count UTF-8 characters properly
+```
+
+```release-note:bug
+resource/aws_cognito_user_group: Correct plan-time validation of `name` to count UTF-8 characters properly
+```
+
+```release-note:bug
+resource/aws_cognito_user_pool_client: Correct plan-time validation of `callback_urls, `default_redirect_uri`, `logout_urls`, and `supported_identity_providers` to count UTF-8 characters properly
+```

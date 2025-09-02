@@ -12,6 +12,8 @@ description: |-
 
 Associates SCRAM secrets stored in the Secrets Manager service with a Managed Streaming for Kafka (MSK) cluster.
 
+!> This resource takes exclusive ownership over SCRAM secrets associated with a cluster. This includes removal of SCRAM secrets which are not explicitly configured. To prevent persistent drift, ensure any `aws_msk_single_scram_secret_association` resources managed alongside this resource are included in the `secretArnList` argument.
+
 -> **Note:** The following assumes the MSK cluster has SASL/SCRAM authentication enabled. See below for example usage or refer to the [Username/Password Authentication](https://docs.aws.amazon.com/msk/latest/developerguide/msk-password.html) section of the MSK Developer Guide for more details.
 
 To set up username and password authentication for a cluster, create an [`aws_secretsmanager_secret` resource](/docs/providers/aws/r/secretsmanager_secret.html) and associate
@@ -137,6 +139,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterArn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the MSK cluster.
 * `secretArnList` - (Required) List of AWS Secrets Manager secret ARNs.
 
@@ -178,4 +181,4 @@ Using `terraform import`, import MSK SCRAM Secret Associations using the `id`. F
 % terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ec732cf5141cf9fb92cf842bde1f6a37b2aeeb88245a75584896a69388c8d988 -->
+<!-- cache-key: cdktf-0.20.8 input-baef575a490da6f949fcc5b5aa9850768628fd52a7dbf3a63391998adf70bd9e -->

@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -156,14 +155,10 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
 	}
 }
 
-func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -184,7 +179,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	}
 
 	if v, ok := d.GetOk("s3"); ok {
-		input.S3 = expandDataRepositoryAssociationS3(v.([]interface{}))
+		input.S3 = expandDataRepositoryAssociationS3(v.([]any))
 	}
 
 	output, err := conn.CreateDataRepositoryAssociation(ctx, input)
@@ -202,7 +197,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceDataRepositoryAssociationRead(ctx, d, meta)...)
 }
 
-func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -233,7 +228,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -248,7 +243,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 		}
 
 		if d.HasChange("s3") {
-			input.S3 = expandDataRepositoryAssociationS3(d.Get("s3").([]interface{}))
+			input.S3 = expandDataRepositoryAssociationS3(d.Get("s3").([]any))
 		}
 
 		_, err := conn.UpdateDataRepositoryAssociation(ctx, input)
@@ -265,7 +260,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceDataRepositoryAssociationRead(ctx, d, meta)...)
 }
 
-func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -340,7 +335,7 @@ func findDataRepositoryAssociations(ctx context.Context, conn *fsx.Client, input
 }
 
 func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataRepositoryAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -421,61 +416,61 @@ func waitDataRepositoryAssociationDeleted(ctx context.Context, conn *fsx.Client,
 	return nil, err
 }
 
-func expandDataRepositoryAssociationS3(cfg []interface{}) *awstypes.S3DataRepositoryConfiguration {
+func expandDataRepositoryAssociationS3(cfg []any) *awstypes.S3DataRepositoryConfiguration {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
 
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 
 	s3Config := &awstypes.S3DataRepositoryConfiguration{}
 
 	if v, ok := m["auto_export_policy"]; ok {
-		policy := v.([]interface{})
+		policy := v.([]any)
 		s3Config.AutoExportPolicy = expandDataRepositoryAssociationS3AutoExportPolicy(policy)
 	}
 	if v, ok := m["auto_import_policy"]; ok {
-		policy := v.([]interface{})
+		policy := v.([]any)
 		s3Config.AutoImportPolicy = expandDataRepositoryAssociationS3AutoImportPolicy(policy)
 	}
 
 	return s3Config
 }
 
-func expandDataRepositoryAssociationS3AutoExportPolicy(policy []interface{}) *awstypes.AutoExportPolicy {
+func expandDataRepositoryAssociationS3AutoExportPolicy(policy []any) *awstypes.AutoExportPolicy {
 	if len(policy) == 0 || policy[0] == nil {
 		return nil
 	}
 
-	m := policy[0].(map[string]interface{})
+	m := policy[0].(map[string]any)
 	autoExportPolicy := &awstypes.AutoExportPolicy{}
 
 	if v, ok := m["events"]; ok {
-		autoExportPolicy.Events = flex.ExpandStringyValueList[awstypes.EventType](v.([]interface{}))
+		autoExportPolicy.Events = flex.ExpandStringyValueList[awstypes.EventType](v.([]any))
 	}
 
 	return autoExportPolicy
 }
 
-func expandDataRepositoryAssociationS3AutoImportPolicy(policy []interface{}) *awstypes.AutoImportPolicy {
+func expandDataRepositoryAssociationS3AutoImportPolicy(policy []any) *awstypes.AutoImportPolicy {
 	if len(policy) == 0 || policy[0] == nil {
 		return nil
 	}
 
-	m := policy[0].(map[string]interface{})
+	m := policy[0].(map[string]any)
 	autoImportPolicy := &awstypes.AutoImportPolicy{}
 
 	if v, ok := m["events"]; ok {
-		autoImportPolicy.Events = flex.ExpandStringyValueList[awstypes.EventType](v.([]interface{}))
+		autoImportPolicy.Events = flex.ExpandStringyValueList[awstypes.EventType](v.([]any))
 	}
 
 	return autoImportPolicy
 }
 
-func flattenDataRepositoryAssociationS3(s3Config *awstypes.S3DataRepositoryConfiguration) []map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenDataRepositoryAssociationS3(s3Config *awstypes.S3DataRepositoryConfiguration) []map[string]any {
+	result := make(map[string]any)
 	if s3Config == nil {
-		return []map[string]interface{}{result}
+		return []map[string]any{result}
 	}
 
 	if s3Config.AutoExportPolicy != nil {
@@ -485,29 +480,29 @@ func flattenDataRepositoryAssociationS3(s3Config *awstypes.S3DataRepositoryConfi
 		result["auto_import_policy"] = flattenS3AutoImportPolicy(s3Config.AutoImportPolicy)
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func flattenS3AutoExportPolicy(policy *awstypes.AutoExportPolicy) []map[string][]interface{} {
-	result := make(map[string][]interface{})
+func flattenS3AutoExportPolicy(policy *awstypes.AutoExportPolicy) []map[string][]any {
+	result := make(map[string][]any)
 	if policy == nil {
-		return []map[string][]interface{}{result}
+		return []map[string][]any{result}
 	}
 	if policy.Events != nil {
 		result["events"] = flex.FlattenStringyValueList(policy.Events)
 	}
 
-	return []map[string][]interface{}{result}
+	return []map[string][]any{result}
 }
 
-func flattenS3AutoImportPolicy(policy *awstypes.AutoImportPolicy) []map[string][]interface{} {
-	result := make(map[string][]interface{})
+func flattenS3AutoImportPolicy(policy *awstypes.AutoImportPolicy) []map[string][]any {
+	result := make(map[string][]any)
 	if policy == nil {
-		return []map[string][]interface{}{result}
+		return []map[string][]any{result}
 	}
 	if policy.Events != nil {
 		result["events"] = flex.FlattenStringyValueList(policy.Events)
 	}
 
-	return []map[string][]interface{}{result}
+	return []map[string][]any{result}
 }

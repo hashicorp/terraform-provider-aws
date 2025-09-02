@@ -64,6 +64,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `license_configuration_arn` - (Required) ARN of the license configuration.
 * `resource_arn` - (Required) ARN of the resource associated with the license configuration.
 
@@ -98,4 +99,4 @@ Using `terraform import`, import license configurations using `resource_arn,lice
 % terraform import aws_licensemanager_association.example arn:aws:ec2:eu-west-1:123456789012:image/ami-123456789abcdef01,arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8b8e9ddcd676f43167920f5782ed96b9679e5a610aa31170c5d53aa2d9e1453d -->
+<!-- cache-key: cdktf-0.20.8 input-78a6c4200140b9b5254514e6b1a4635ca130bb066434ee1158adf6a424492107 -->

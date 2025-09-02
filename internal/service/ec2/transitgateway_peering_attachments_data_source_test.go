@@ -31,7 +31,7 @@ func testAccTransitGatewayPeeringAttachmentsDataSource_Filter(t *testing.T, sema
 				Config: testAccTransitGatewayPeeringAttachmentsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue("data.aws_ec2_transit_gateway_peering_attachments.all", "ids.#", 1),
-					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_peering_attachments.by_attachment_id", "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_peering_attachments.by_attachment_id", "ids.#", "1"),
 				),
 			},
 		},

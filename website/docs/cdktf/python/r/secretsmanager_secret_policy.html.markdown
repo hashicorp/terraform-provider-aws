@@ -66,6 +66,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `block_public_policy` - (Optional) Makes an optional API call to Zelkova to validate the Resource Policy to prevent broad access to your secret.
 
 ## Attribute Reference
@@ -99,4 +100,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_policy` using the se
 % terraform import aws_secretsmanager_secret_policy.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-645c813817dc94994f91896c0dc33ab5185045f6665587858a142de45a69dfb5 -->
+<!-- cache-key: cdktf-0.20.8 input-556fd793c140149ab481605100c351f6af6bf69d7c4002848917dd8455a9d4f2 -->

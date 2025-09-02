@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -383,7 +384,27 @@ func waitCustomerGatewayDeleted(ctx context.Context, conn *ec2.Client, id string
 	return nil, err
 }
 
-func waitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.Client, importTaskID string, timeout time.Duration) (*awstypes.SnapshotTaskDetail, error) {
+func waitSnapshotCompleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SnapshotStatePending, awstypes.SnapshotStateRecoverable, awstypes.SnapshotStateRecovering),
+		Target:  enum.Slice(awstypes.SnapshotStateCompleted),
+		Refresh: statusSnapshot(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   15 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotImportCompleted(ctx context.Context, conn *ec2.Client, importTaskID string, timeout time.Duration) (*awstypes.SnapshotTaskDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ebsSnapshotImportStateActive,
@@ -393,7 +414,7 @@ func waitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.Client, import
 			ebsSnapshotImportStateConverting,
 		},
 		Target:  []string{ebsSnapshotImportStateCompleted},
-		Refresh: statusEBSSnapshotImport(ctx, conn, importTaskID),
+		Refresh: statusSnapshotImport(ctx, conn, importTaskID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -409,7 +430,7 @@ func waitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.Client, import
 	return nil, err
 }
 
-func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SnapshotTierStatus, error) { //nolint:unparam
+func waitSnapshotTierArchive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SnapshotTierStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(targetStorageTierStandard),
 		Target:  enum.Slice(awstypes.TargetStorageTierArchive),
@@ -1250,10 +1271,11 @@ func waitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.Client, natGat
 
 func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NatGatewayAddressStatusAssociating),
-		Target:  enum.Slice(awstypes.NatGatewayAddressStatusSucceeded),
-		Refresh: statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
-		Timeout: timeout,
+		Pending:                   enum.Slice(awstypes.NatGatewayAddressStatusAssociating),
+		Target:                    enum.Slice(awstypes.NatGatewayAddressStatusSucceeded),
+		Refresh:                   statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 5,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1269,12 +1291,13 @@ func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natG
 	return nil, err
 }
 
-func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
+func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusDisassociating),
-		Target:  []string{},
-		Refresh: statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
-		Timeout: timeout,
+		Pending:                   enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusDisassociating),
+		Target:                    []string{},
+		Refresh:                   statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 5,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1292,7 +1315,7 @@ func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, n
 
 func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.NatGatewayAddressStatusUnassigning),
+		Pending: enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusUnassigning),
 		Target:  []string{},
 		Refresh: statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
 		Timeout: timeout,
@@ -1445,6 +1468,46 @@ func waitNetworkInterfaceDetached(ctx context.Context, conn *ec2.Client, id stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NetworkInterfaceAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNetworkInterfacePermissionCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInterfacePermission, error) {
+	stateConf := &retry.StateChangeConf{
+		// For some reason, the API returns all caps statuses (e.g. "PENDING" instead of "pending")
+		Pending:                   []string{"PENDING"},
+		Target:                    []string{"GRANTED"},
+		Refresh:                   statusNetworkInterfacePermission(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNetworkInterfacePermissionDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInterfacePermission, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"PENDING", "GRANTED", "REVOKING"},
+		Target:  []string{},
+		Refresh: statusNetworkInterfacePermission(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
+
 		return output, err
 	}
 
@@ -1642,6 +1705,45 @@ func waitSecurityGroupCreated(ctx context.Context, conn *ec2.Client, id string, 
 	return nil, err
 }
 
+func waitSecurityGroupVPCAssociationCreated(ctx context.Context, conn *ec2.Client, groupID, vpcID string, timeout time.Duration) (*awstypes.SecurityGroupVpcAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.SecurityGroupVpcAssociationStateAssociating),
+		Target:                    enum.Slice(awstypes.SecurityGroupVpcAssociationStateAssociated),
+		Refresh:                   statusSecurityGroupVPCAssociation(ctx, conn, groupID, vpcID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SecurityGroupVpcAssociation); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSecurityGroupVPCAssociationDeleted(ctx context.Context, conn *ec2.Client, groupID, vpcID string, timeout time.Duration) (*awstypes.SecurityGroupVpcAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SecurityGroupVpcAssociationStateDisassociating),
+		Target:  []string{},
+		Refresh: statusSecurityGroupVPCAssociation(ctx, conn, groupID, vpcID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SecurityGroupVpcAssociation); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitSpotFleetRequestCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SpotFleetRequestConfig, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.BatchStateSubmitted),
@@ -1677,12 +1779,12 @@ func waitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.Client, id str
 		if output.ActivityStatus == awstypes.ActivityStatusError {
 			var errs []error
 
-			input := &ec2.DescribeSpotFleetRequestHistoryInput{
+			input := ec2.DescribeSpotFleetRequestHistoryInput{
 				SpotFleetRequestId: aws.String(id),
 				StartTime:          aws.Time(time.UnixMilli(0)),
 			}
 
-			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, input); err == nil {
+			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, &input); err == nil {
 				for _, v := range output {
 					if eventType := v.EventType; eventType == awstypes.EventTypeError || eventType == awstypes.EventTypeInformation {
 						errs = append(errs, errors.New(aws.ToString(v.EventInformation.EventDescription)))
@@ -1947,6 +2049,45 @@ func waitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(ctx context.Context, conn *
 	return nil, err
 }
 
+func waitTransitGatewayAttachmentAccepted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatePending, awstypes.TransitGatewayAttachmentStatePendingAcceptance),
+		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStateAvailable),
+		Timeout: timeout,
+		Refresh: statusTransitGatewayAttachment(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTransitGatewayAttachmentDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.TransitGatewayAttachmentStateAvailable,
+			awstypes.TransitGatewayAttachmentStateDeleting,
+			awstypes.TransitGatewayAttachmentStatePendingAcceptance,
+			awstypes.TransitGatewayAttachmentStateRejecting,
+		),
+		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStateDeleted),
+		Timeout: timeout,
+		Refresh: statusTransitGatewayAttachment(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitTransitGatewayConnectCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayConnect, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatePending),
@@ -2022,24 +2163,6 @@ func waitTransitGatewayCreated(ctx context.Context, conn *ec2.Client, id string,
 		Target:  enum.Slice(awstypes.TransitGatewayStateAvailable),
 		Refresh: statusTransitGateway(ctx, conn, id),
 		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.TransitGateway); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitTransitGatewayDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.TransitGatewayStateAvailable, awstypes.TransitGatewayStateDeleting),
-		Target:         []string{},
-		Refresh:        statusTransitGateway(ctx, conn, id),
-		Timeout:        timeout,
-		NotFoundChecks: 1,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2161,7 +2284,7 @@ func waitTransitGatewayPeeringAttachmentCreated(ctx context.Context, conn *ec2.C
 	return nil, err
 }
 
-func waitTransitGatewayPeeringAttachmentDeleted(ctx context.Context, conn *ec2.Client, id string) error {
+func waitTransitGatewayPeeringAttachmentDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPeeringAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TransitGatewayAttachmentStateAvailable,
@@ -2180,9 +2303,11 @@ func waitTransitGatewayPeeringAttachmentDeleted(ctx context.Context, conn *ec2.C
 		if status := output.Status; status != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(status.Code), aws.ToString(status.Message)))
 		}
+
+		return output, err
 	}
 
-	return err
+	return nil, err
 }
 
 func waitTransitGatewayPrefixListReferenceStateCreated(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, prefixListID string) (*awstypes.TransitGatewayPrefixListReference, error) {
@@ -2430,7 +2555,7 @@ func waitTransitGatewayRouteTablePropagationDeleted(ctx context.Context, conn *e
 	return err
 }
 
-func waitTransitGatewayUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) {
+func waitTransitGatewayUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayStateModifying),
 		Target:  enum.Slice(awstypes.TransitGatewayStateAvailable),
@@ -2522,8 +2647,26 @@ func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id
 		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
 		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
+		Target:  enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
+		Refresh: statusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2543,27 +2686,6 @@ func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id
 		Target:  []string{},
 		Refresh: statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
-		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2771,7 +2893,7 @@ func waitVPCEndpointAccepted(ctx context.Context, conn *ec2.Client, vpcEndpointI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
-		if state, lastError := output.State, output.LastError; state == awstypes.StateFailed && lastError != nil {
+		if state, lastError := string(output.State), output.LastError; strings.EqualFold(state, vpcEndpointStateFailed) && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
 		}
 
@@ -2794,7 +2916,7 @@ func waitVPCEndpointAvailable(ctx context.Context, conn *ec2.Client, vpcEndpoint
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
-		if state, lastError := output.State, output.LastError; state == awstypes.StateFailed && lastError != nil {
+		if state, lastError := string(output.State), output.LastError; strings.EqualFold(state, vpcEndpointStateFailed) && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
 		}
 
@@ -2965,10 +3087,11 @@ func waitVPCIPv6CIDRBlockAssociationDeleted(ctx context.Context, conn *ec2.Clien
 
 func waitVPCPeeringConnectionActive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcPeeringConnection, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeInitiatingRequest, awstypes.VpcPeeringConnectionStateReasonCodeProvisioning),
-		Target:  enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeActive, awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance),
-		Refresh: statusVPCPeeringConnectionActive(ctx, conn, id),
-		Timeout: timeout,
+		Pending:                   enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeInitiatingRequest, awstypes.VpcPeeringConnectionStateReasonCodeProvisioning),
+		Target:                    enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeActive, awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance),
+		Refresh:                   statusVPCPeeringConnectionActive(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -3189,6 +3312,291 @@ func waitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) (*awstypes.VpcBlockPublicAccessOptions, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateComplete),
+		Refresh:                   statusVPCBlockPublicAccessOptions(ctx, conn),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessOptions); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessExclusionCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateCreateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateCreateComplete),
+		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessExclusionUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateComplete),
+		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessExclusionDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.VpcBlockPublicAccessExclusionStateDeleteInProgress,
+			// There might API inconsistencies where even after invoking delete, the Describe might come back with a CreateComplete or UpdateComplete status (the status before delete was invoked).
+			// To account for that, we are also adding those two statuses as valid statues to retry.
+			awstypes.VpcBlockPublicAccessExclusionStateCreateComplete,
+			awstypes.VpcBlockPublicAccessExclusionStateUpdateComplete,
+		),
+		Target:  []string{},
+		Refresh: statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerStatePending),
+		Target:                    enum.Slice(awstypes.RouteServerStateAvailable),
+		Refresh:                   statusRouteServer(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerStateModifying),
+		Target:  enum.Slice(awstypes.RouteServerStateAvailable),
+		Refresh: statusRouteServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerStateDeleting),
+		Target:  []string{},
+		Refresh: statusRouteServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerAssociationCreated(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string, timeout time.Duration) (*awstypes.RouteServerAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerAssociationStateAssociating),
+		Target:                    enum.Slice(awstypes.RouteServerAssociationStateAssociated),
+		Refresh:                   statusRouteServerAssociation(ctx, conn, routeServerID, vpcID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerAssociationDeleted(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string, timeout time.Duration) (*awstypes.RouteServerAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerAssociationStateDisassociating),
+		Target:  []string{},
+		Refresh: statusRouteServerAssociation(ctx, conn, routeServerID, vpcID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerEndpointStatePending),
+		Target:                    enum.Slice(awstypes.RouteServerEndpointStateAvailable),
+		Refresh:                   statusRouteServerEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerStateDeleting),
+		Target:  []string{},
+		Refresh: statusRouteServerEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerPeerCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerPeer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerPeerStatePending),
+		Target:                    enum.Slice(awstypes.RouteServerPeerStateAvailable),
+		Refresh:                   statusRouteServerPeer(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerPeer); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerPeerDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerPeer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerStateDeleting),
+		Target:  []string{},
+		Refresh: statusRouteServerPeer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerPeer); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerPropagationCreated(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string, timeout time.Duration) (*awstypes.RouteServerPropagation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerPropagationStatePending),
+		Target:                    enum.Slice(awstypes.RouteServerPropagationStateAvailable),
+		Refresh:                   statusRouteServerPropagation(ctx, conn, routeServerID, routeTableID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerPropagation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerPropagationDeleted(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string, timeout time.Duration) (*awstypes.RouteServerPropagation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerPropagationStateDeleting),
+		Target:  []string{},
+		Refresh: statusRouteServerPropagation(ctx, conn, routeServerID, routeTableID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerPropagation); ok {
 		return output, err
 	}
 

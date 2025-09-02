@@ -84,14 +84,14 @@ class MyConvertedCode extends TerraformStack {
     const test = new VpcIpam(this, "test", {
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
     });
     const awsVpcIpamPoolTest = new VpcIpamPool(this, "test_2", {
       addressFamily: "ipv4",
       ipamScopeId: test.privateDefaultScopeId,
-      locale: Token.asString(current.name),
+      locale: Token.asString(current.region),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsVpcIpamPoolTest.overrideLogicalId("test");
@@ -117,13 +117,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidrBlock` - (Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4NetmaskLength`.
 * `instanceTenancy` - (Optional) A tenancy option for instances launched into the VPC. Default is `default`, which ensures that EC2 instances launched in this VPC use the EC2 instance tenancy attribute specified when the EC2 instance is launched. The only other option is `dedicated`, which ensures that EC2 instances launched in this VPC are run on dedicated tenancy instances regardless of the tenancy attribute specified at launch. This has a dedicated per region fee of $2 per hour, plus an hourly per instance usage fee.
 * `ipv4IpamPoolId` - (Optional) The ID of an IPv4 IPAM pool you want to use for allocating this VPC's CIDR. IPAM is a VPC feature that you can use to automate your IP address management workflows including assigning, tracking, troubleshooting, and auditing IP addresses across AWS Regions and accounts. Using IPAM you can monitor IP address usage throughout your AWS Organization.
 * `ipv4NetmaskLength` - (Optional) The netmask length of the IPv4 CIDR you want to allocate to this VPC. Requires specifying a `ipv4IpamPoolId`.
 * `ipv6CidrBlock` - (Optional) IPv6 CIDR block to request from an IPAM Pool. Can be set explicitly or derived from IPAM using `ipv6NetmaskLength`.
 * `ipv6IpamPoolId` - (Optional) IPAM Pool ID for a IPv6 pool. Conflicts with `assignGeneratedIpv6CidrBlock`.
-* `ipv6NetmaskLength` - (Optional) Netmask length to request from IPAM Pool. Conflicts with `ipv6CidrBlock`. This can be omitted if IPAM pool as a `allocationDefaultNetmaskLength` set. Valid values: `56`.
+* `ipv6NetmaskLength` - (Optional) Netmask length to request from IPAM Pool. Conflicts with `ipv6CidrBlock`. This can be omitted if IPAM pool as a `allocationDefaultNetmaskLength` set. Valid values are from `44` to `60` in increments of 4.
 * `ipv6CidrBlockNetworkBorderGroup` - (Optional) By default when an IPv6 CIDR is assigned to a VPC a default ipv6_cidr_block_network_border_group will be set to the region of the VPC. This can be changed to restrict advertisement of public addresses to specific Network Border Groups such as LocalZones.
 * `enableDnsSupport` - (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults to true.
 * `enableNetworkAddressUsageMetrics` - (Optional) Indicates whether Network Address Usage metrics are enabled for your VPC. Defaults to false.
@@ -181,4 +182,4 @@ Using `terraform import`, import VPCs using the VPC `id`. For example:
 % terraform import aws_vpc.test_vpc vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f42924a8a7f3ae9ab39c563bf4fee125691c2563eee4b0f0f333fcc0877fdf19 -->
+<!-- cache-key: cdktf-0.20.8 input-f7bff029ef6b031e9305fb6a132c1813a502c30c38771d865814e071bae80db3 -->

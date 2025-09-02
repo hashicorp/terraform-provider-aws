@@ -39,6 +39,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) Identifier of the associated REST API.
 * `stage_name` - (Required) Name of the Stage that will be exported.
 * `sdk_type` - (Required) Language for the generated SDK. Currently `java`, `javascript`, `android`, `objectivec` (for iOS), `swift` (for iOS), and `ruby` are supported.
@@ -53,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `content_type` - Content-type header value in the HTTP response.
 * `content_disposition` - Content-disposition header value in the HTTP response.
 
-<!-- cache-key: cdktf-0.20.1 input-ed1f26956d947879c351283b69f137259d03aa3d3365cfd1ed2dbc55a4d3774e -->
+<!-- cache-key: cdktf-0.20.8 input-c20a893821e088499709fce53e881aab4cd96ab0d2d30715f977e2117e8d629d -->

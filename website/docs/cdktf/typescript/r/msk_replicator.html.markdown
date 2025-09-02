@@ -65,6 +65,12 @@ class MyConvertedCode extends TerraformStack {
         targetKafkaClusterArn: target.arn,
         topicReplication: [
           {
+            startingPosition: {
+              type: "LATEST",
+            },
+            topicNameConfiguration: {
+              type: "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS",
+            },
             topicsToReplicate: [".*"],
           },
         ],
@@ -79,13 +85,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replicatorName` - (Required) The name of the replicator.
 * `kafkaCluster` - (Required) A list of Kafka clusters which are targets of the replicator.
 * `serviceExecutionRoleArn` - (Required) The ARN of the IAM role used by the replicator to access resources in the customer's account (e.g source and target clusters).
 * `replicationInfoList` - (Required) A list of replication configurations, where each configuration targets a given source cluster to target cluster replication flow.
 * `description` - (Optional) A summary description of the replicator.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### kafka_cluster Argument Reference
 
@@ -107,16 +115,17 @@ The following arguments are required:
 * `targetKafkaClusterArn` - (Required) The ARN of the target Kafka cluster.
 * `targetCompressionType` - (Required) The type of compression to use writing records to target Kafka cluster.
 * `topicReplication` - (Required) Configuration relating to topic replication.
-* `startingPosition` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 * `consumerGroupReplication` - (Required) Configuration relating to consumer group replication.
 
 ### topic_replication Argument Reference
 
+* `topicNameConfiguration` - (Optional) Configuration for specifying replicated topic names should be the same as their corresponding upstream topics or prefixed with source cluster alias.
 * `topicsToReplicate` - (Required) List of regular expression patterns indicating the topics to copy.
 * `topicsToExclude` - (Optional) List of regular expression patterns indicating the topics that should not be replica.
 * `detectAndCopyNewTopics` - (Optional) Whether to periodically check for new topics and partitions.
 * `copyAccessControlListsForTopics` - (Optional) Whether to periodically configure remote topic ACLs to match their corresponding upstream topics.
 * `copyTopicConfigurations` - (Optional) Whether to periodically configure remote topics to match their corresponding upstream topics.
+* `startingPosition` - (Optional) Configuration for specifying the position in the topics to start replicating from.
 
 ### consumer_group_replication Argument Reference
 
@@ -124,6 +133,10 @@ The following arguments are required:
 * `consumerGroupsToExclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detectAndCopyNewConsumerGroups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchroniseConsumerGroupOffsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
+
+### topic_name_configuration
+
+* `type` - (optional) The type of topic configuration name. Supports `PREFIXED_WITH_SOURCE_CLUSTER_ALIAS` and `IDENTICAL`.
 
 ### starting_position
 
@@ -133,7 +146,8 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Replicator. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Replicator.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -145,7 +159,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK relicators using the replicator ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK replicators using the replicator ARN. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -175,4 +189,4 @@ Using `terraform import`, import MSK replicators using the replicator ARN. For e
 % terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8ecd22706723da4c85b1aeca7ff723bb482ec1e13d4e4ac7c2f6ea0cc32264ce -->
+<!-- cache-key: cdktf-0.20.8 input-8bf4594598d13dce6022640b42dd1f6965ce218f5432cc4d9d9f97068e0b2ddd -->

@@ -36,8 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `virtual_interface_id` - (Required) ID of the Direct Connect Virtual Interface
 * `router_type_identifier` - (Required) ID of the Router Type. For example: `CiscoSystemsInc-2900SeriesRouters-IOS124`
 
@@ -74,4 +75,4 @@ A `router` block supports the following attributes:
 * `xslt_template_name` - Router XSLT Template Name
 * `xslt_template_name_for_mac` - Router XSLT Template Name for MacSec
 
-<!-- cache-key: cdktf-0.20.1 input-9678217d6fec10b383267202e6ceb5509d81e5095d37ada2c2523269c07135c5 -->
+<!-- cache-key: cdktf-0.20.8 input-17de84adeed4c77fb67e075c77387cde3ba1c341a32b23fe8b3df17aec501118 -->

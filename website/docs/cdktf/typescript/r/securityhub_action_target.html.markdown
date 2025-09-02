@@ -49,6 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The description for the custom action target.
 * `identifier` - (Required) The ID for the custom action target.
 * `description` - (Required) The name of the custom action target.
@@ -91,4 +92,4 @@ Using `terraform import`, import Security Hub custom action using the action tar
 % terraform import aws_securityhub_action_target.example arn:aws:securityhub:eu-west-1:312940875350:action/custom/a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f331888c82c7ef74de6bccfde47e4f271fbed25da322bc1a1b5a3647406b7908 -->
+<!-- cache-key: cdktf-0.20.8 input-d29588a472b6c44de4862533268e0dd217c2375610d5f820e90d5daf5e513928 -->

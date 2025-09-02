@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly IAM instance profile name to match.
 
 ## Attribute Reference
@@ -51,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `roleId` - Role ID associated with this instance profile.
 * `roleName` - Role name associated with this instance profile.
 
-<!-- cache-key: cdktf-0.20.1 input-5e845773261432b358ba5aad381e509f7458709c0eda7705643bdfff5097226a -->
+<!-- cache-key: cdktf-0.20.8 input-8efee4cfcffa26585b0245ee042113031b2d885f957b2f6e8258766c8943f342 -->

@@ -72,6 +72,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the virtual service. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual service. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
@@ -133,4 +134,4 @@ Using `terraform import`, import App Mesh virtual services using `mesh_name` tog
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.1 input-5fae0e103caf94ef3f122b26a776a50dc44ebd36febaccc175efd0e97ba5bdaf -->
+<!-- cache-key: cdktf-0.20.8 input-c7bef10aa2cc3d27ccf902442348679e4e54733c87e9e9cc1b4b74c6b41b7bfc -->

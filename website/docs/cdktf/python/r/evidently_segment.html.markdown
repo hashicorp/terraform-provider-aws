@@ -12,6 +12,8 @@ description: |-
 
 Provides a CloudWatch Evidently Segment resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
 ## Example Usage
 
 ### Basic
@@ -85,6 +87,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource) Specifies the description of the segment.
 * `name` - (Required, Forces new resource) A name for the segment.
 * `pattern` - (Required, Forces new resource) The pattern to use for the segment. For more information about pattern syntax, see [Segment rule pattern syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Evidently-segments.html#CloudWatch-Evidently-segments-syntax.html).
@@ -127,4 +130,4 @@ Using `terraform import`, import CloudWatch Evidently Segment using the `arn`. F
 % terraform import aws_evidently_segment.example arn:aws:evidently:us-west-2:123456789012:segment/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8f4f148ae07fcc5e61c1f38f8166eb6097494f8e5ccee4064e248569af124d84 -->
+<!-- cache-key: cdktf-0.20.8 input-30f694055d24aaf55fff6a578125f9dea8001bfbd2f496d7253586d36f876697 -->

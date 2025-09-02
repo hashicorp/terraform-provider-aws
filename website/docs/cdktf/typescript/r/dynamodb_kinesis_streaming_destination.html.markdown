@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
     awsKinesisStreamExample.overrideLogicalId("example");
     const awsDynamodbKinesisStreamingDestinationExample =
       new DynamodbKinesisStreamingDestination(this, "example_2", {
+        approximateCreationDateTimePrecision: "MICROSECOND",
         streamArn: Token.asString(awsKinesisStreamExample.arn),
         tableName: example.name,
       });
@@ -60,11 +61,11 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `approximateCreationDateTimePrecision` - (Optional) Toggle for the precision of Kinesis data stream timestamp. Valid values: `MILLISECOND` and `MICROSECOND`.
 * `streamArn` - (Required) The ARN for a Kinesis data stream. This must exist in the same account and region as the DynamoDB table.
-  
-* `tableName` - (Required) The name of the DynamoDB table. There
-  can only be one Kinesis streaming destination for a given DynamoDB table.
-  
+* `tableName` - (Required) The name of the DynamoDB table. There can only be one Kinesis streaming destination for a given DynamoDB table.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -103,4 +104,4 @@ Using `terraform import`, import DynamoDB Kinesis Streaming Destinations using t
 % terraform import aws_dynamodb_kinesis_streaming_destination.example example,arn:aws:kinesis:us-east-1:111122223333:exampleStreamName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d0a54894e87b04c66f4b0385516446c2240689109ec043bf93470658fee0ec34 -->
+<!-- cache-key: cdktf-0.20.8 input-ddb07a722a3d9e4767590effacf9658cc5bef2c7ec445155edbfcaf7f8bda798 -->

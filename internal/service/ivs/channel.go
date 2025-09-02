@@ -28,16 +28,16 @@ import (
 
 // @SDKResource("aws_ivs_channel", name="Channel")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.Channel")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(generator=false)
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
 		ReadWithoutTimeout:   resourceChannelRead,
 		UpdateWithoutTimeout: resourceChannelUpdate,
 		DeleteWithoutTimeout: resourceChannelDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -90,8 +90,6 @@ func ResourceChannel() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.ChannelType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -99,7 +97,7 @@ const (
 	ResNameChannel = "Channel"
 )
 
-func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
@@ -146,7 +144,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
-func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
@@ -175,7 +173,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
@@ -230,7 +228,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
-func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)

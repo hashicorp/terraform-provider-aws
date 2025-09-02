@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mountOptions` - (Optional) Configuration block containing mount options used by DataSync to access the NFS Server.
 * `onPremConfig` - (Required) Configuration block containing information for connecting to the NFS File System.
 * `serverHostname` - (Required) Specifies the IP address or DNS name of the NFS server. The DataSync Agent(s) use this to mount the NFS server.
@@ -102,4 +103,4 @@ Using `terraform import`, import `aws_datasync_location_nfs` using the DataSync 
 % terraform import aws_datasync_location_nfs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cb00fc82fb27ed23545aa2a14e593899a6887ce57ca2c5b408cf2933841b79e3 -->
+<!-- cache-key: cdktf-0.20.8 input-f240fbe4a449dfba36c7ea5e857026af75a0722e9f076d806f78dde5203da54d -->

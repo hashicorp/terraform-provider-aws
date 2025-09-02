@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hsmClientCertificateIdentifier` - (Required, Forces new resource) The identifier of the HSM client certificate.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -81,4 +82,4 @@ Using `terraform import`, import Redshift HSM Client Certificates using `hsmClie
 % terraform import aws_redshift_hsm_client_certificate.test example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5c66db327c1839116bd09ae2b35aec09129f16566c516184eda37641b0d7234e -->
+<!-- cache-key: cdktf-0.20.8 input-6de6d539ce40c813bddc623403802a1b6955ab83674014a66b4d1f6417dfcaa5 -->

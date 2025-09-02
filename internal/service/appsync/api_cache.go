@@ -47,11 +47,13 @@ func resourceAPICache() *schema.Resource {
 			"at_rest_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"ttl": {
@@ -67,7 +69,7 @@ func resourceAPICache() *schema.Resource {
 	}
 }
 
-func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -102,7 +104,7 @@ func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAPICacheRead(ctx, d, meta)...)
 }
 
-func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -128,24 +130,15 @@ func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	input := &appsync.UpdateApiCacheInput{
-		ApiId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("api_caching_behavior") {
-		input.ApiCachingBehavior = awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string))
-	}
-
-	if d.HasChange("ttl") {
-		input.Ttl = int64(d.Get("ttl").(int))
-	}
-
-	if d.HasChange(names.AttrType) {
-		input.Type = awstypes.ApiCacheType(d.Get(names.AttrType).(string))
+		ApiId:              aws.String(d.Id()),
+		ApiCachingBehavior: awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string)),
+		Ttl:                int64(d.Get("ttl").(int)),
+		Type:               awstypes.ApiCacheType(d.Get(names.AttrType).(string)),
 	}
 
 	_, err := conn.UpdateApiCache(ctx, input)
@@ -161,14 +154,15 @@ func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAPICacheRead(ctx, d, meta)...)
 }
 
-func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	log.Printf("[INFO] Deleting Appsync API Cache: %s", d.Id())
-	_, err := conn.DeleteApiCache(ctx, &appsync.DeleteApiCacheInput{
+	input := appsync.DeleteApiCacheInput{
 		ApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApiCache(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -211,7 +205,7 @@ func findAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 }
 
 func statusAPICache(ctx context.Context, conn *appsync.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAPICacheByID(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

@@ -25,7 +25,7 @@ func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 			{
 				Config: testAccSiteDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(dataSourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^os-.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),

@@ -7,16 +7,13 @@ description: |-
 
 # AWS Provider
 
-Use the Amazon Web Services (AWS) provider to interact with the
-many resources supported by AWS. You must configure the provider
-with the proper credentials before you can use it.
+The Amazon Web Services (AWS) provider is Terraform’s most widely-used provider and the industry-standard way to manage AWS infrastructure as code. It is an indispensable part of how leading technology companies, global banks, government agencies, and some of the largest enterprises in the world build and operate in the cloud. Every day, it provisions and orchestrates billions of dollars of AWS infrastructure across thousands of organizations.
 
-Use the navigation to the left to read about the available resources. There are currently 1389 resources and 564 data sources available in the provider.
+With 1,523 resources and 609 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
 
-To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
-including Lambda, RDS, and IAM by following the [AWS services
-tutorials](https://learn.hashicorp.com/collections/terraform/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+Configure the provider with your AWS credentials, and you can immediately begin creating and managing infrastructure in a safe, repeatable way. Use the navigation on the left to explore the available resources, or start with our [Get Started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) to learn the fundamentals. For deeper guidance on specific AWS services, visit the [AWS services tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+
+Note: Some AWS services do not yet support IPv6. In those cases, the provider may not be able to connect to AWS APIs over IPv6 addresses.
 
 ## Example Usage
 
@@ -27,7 +24,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -48,7 +45,7 @@ Terraform 0.12 and earlier:
 ```terraform
 # Configure the AWS Provider
 provider "aws" {
-  version = "~> 5.0"
+  version = "~> 6.0"
   region  = "us-east-1"
 }
 
@@ -77,6 +74,7 @@ and the [AWS SDKs](https://aws.amazon.com/tools/).
 The AWS Provider supports assuming an IAM role, either in
 the provider configuration block parameter `assume_role`
 or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
+If configuring the role in the provider configuration, the provider supports IAM Role Chaining by specifying a list of roles to assume.
 
 The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc).
 This can be configured either using environment variables or in a named profile.
@@ -181,6 +179,19 @@ provider "aws" {
     role_arn     = "arn:aws:iam::123456789012:role/ROLE_NAME"
     session_name = "SESSION_NAME"
     external_id  = "EXTERNAL_ID"
+  }
+}
+```
+
+To assume a role with role chaining, do the following:
+
+```terraform
+provider "aws" {
+  assume_role {
+    role_arn = "arn:aws:iam::123456789012:role/INITIAL_ROLE_NAME"
+  }
+  assume_role {
+    role_arn = "arn:aws:iam::123456789012:role/FINAL_ROLE_NAME"
   }
 }
 ```
@@ -304,7 +315,9 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 * `access_key` - (Optional) AWS access key. Can also be set with the `AWS_ACCESS_KEY_ID` environment variable, or via a shared credentials file if `profile` is specified. See also `secret_key`.
 * `allowed_account_ids` - (Optional) List of allowed AWS account IDs to prevent you from mistakenly using an incorrect one (and potentially end up destroying a live environment). Conflicts with `forbidden_account_ids`.
-* `assume_role` - (Optional) Configuration block for assuming an IAM role. See the [`assume_role` Configuration Block](#assume_role-configuration-block) section below. Only one `assume_role` block may be in the configuration.
+* `assume_role` - (Optional) List of configuration blocks for assuming an IAM role.
+  See the [`assume_role` Configuration Block](#assume_role-configuration-block) section below.
+  IAM Role Chaining is supported by specifying the roles to assume in order.
 * `assume_role_with_web_identity` - (Optional) Configuration block for assuming an IAM role using a web identity. See the [`assume_role_with_web_identity` Configuration Block](#assume_role_with_web_identity-configuration-block) section below. Only one `assume_role_with_web_identity` block may be in the configuration.
 * `custom_ca_bundle` - (Optional) File containing custom root and intermediate certificates.
   Can also be set using the `AWS_CA_BUNDLE` environment variable.
@@ -343,17 +356,19 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the Region can also be retrieved from the metadata.
+  Most Regional resources, data sources and ephemeral resources support an optional top-level `region` argument which can be used to override the provider configuration value. See the individual resource's documentation for details.
 * `retry_mode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.
 * `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`.
   By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible.
   Specific to the Amazon S3 service.
-* `s3_us_east_1_regional_endpoint` - (Optional) Specifies whether S3 API calls in the `us-east-1` Region use the legacy global endpoint or a regional endpoint.
+* `s3_us_east_1_regional_endpoint` - (Optional, **Deprecated**) Specifies whether S3 API calls in the `us-east-1` Region use the legacy global endpoint or a regional endpoint.
   Valid values are `legacy` or `regional`.
   If omitted, the default behavior in the `us-east-1` Region is to use the global endpoint for general purpose buckets and the regional endpoint for directory buckets.
   Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter.
   Specific to the Amazon S3 service.
+  This argument and the ability to use the global S3 endpoint are deprecated and will be removed in `v7.0.0`.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
 * `shared_config_files` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
 * `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
@@ -491,7 +506,9 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 The `assume_role` configuration block supports the following arguments:
 
-* `duration` - (Optional) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `duration` - (Optional) Duration of the assume role session.
+  You can provide a value from 15 minutes up to the maximum session duration setting for the role.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `external_id` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
@@ -651,9 +668,49 @@ vpc_resource_level_tags = tomap({
 })
 ```
 
+Example: Default tags from environment variables
+
+```terraform
+provider "aws" {
+  default_tags {
+    tags = {
+      Name = "Provider Tag"
+    }
+  }
+}
+
+resource "aws_vpc" "example" {
+  # ..other configuration...
+}
+
+output "vpc_resource_level_tags" {
+  value = aws_vpc.example.tags
+}
+
+output "vpc_all_tags" {
+  value = aws_vpc.example.tags_all
+}
+```
+
+Outputs:
+
+```console
+$ export TF_AWS_DEFAULT_TAGS_Environment=Test
+$ terraform apply
+...
+Outputs:
+
+vpc_all_tags = tomap({
+  "Environment" = "Test"
+  "Name" = "Provider Tag"
+})
+```
+
 The `default_tags` configuration block supports the following argument:
 
 * `tags` - (Optional) Key-value map of tags to apply to all resources.
+Default tags can also be provided via environment variables matching the pattern `TF_AWS_DEFAULT_TAGS_<tag_key>=<tag_value>`.
+If a tag is present in both an environment variable and this argument, the value in the provider configuration takes precedence.
 
 ### ignore_tags Configuration Block
 
@@ -669,8 +726,18 @@ provider "aws" {
 
 The `ignore_tags` configuration block supports the following arguments:
 
-* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider. This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
-* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider. This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider.
+Ignored tag keys can also be provided via the `TF_AWS_IGNORE_TAGS_KEYS` environment variable.
+When supplying multiple keys, the values should be comma delimited.
+If both this argument and the corresponding environment variable are set, values from both sources are merged into a single list.
+This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value.
+If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider.
+Ignored tag key prefixes can also be provided via the `TF_AWS_IGNORE_TAGS_KEY_PREFIXES` environment variable.
+When supplying multiple key prefixes, the values should be comma delimited.
+If both this argument and the corresponding environment variable are set, values from both sources are merged into a single list.
+This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values.
+If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
 
 ## Getting the Account ID
 

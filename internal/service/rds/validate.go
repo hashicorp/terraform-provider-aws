@@ -5,15 +5,25 @@ package rds
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 )
 
-func validEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
+func validEventSubscriptionName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[A-Za-z][0-9A-Za-z-]*$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters and hyphens allowed in %q", k))
+			"only ASCII letters, digits, and hyphens allowed in %q, and it must begin with a letter", k))
+	}
+	// When using name prefix, the generated suffix will always end with a number, so this check is not relevant
+	if strings.HasSuffix(value, "-") {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot end with a hyphen", k))
+	}
+	if strings.Contains(value, "--") {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
 	}
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
@@ -22,7 +32,25 @@ func validEventSubscriptionName(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validOptionGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validEventSubscriptionNamePrefix(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^[A-Za-z][0-9A-Za-z-]*$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only ASCII letters, digits, and hyphens allowed in %q, and it must begin with a letter", k))
+	}
+	if strings.Contains(value, "--") {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	// When using name prefix, the limit must account for the generated suffix that is 26 characters long
+	if len(value) > 229 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 229 characters", k))
+	}
+	return
+}
+
+func validOptionGroupName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -47,7 +75,7 @@ func validOptionGroupName(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
-func validOptionGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validOptionGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -68,7 +96,7 @@ func validOptionGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validParamGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validParamGroupName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z.-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -93,7 +121,7 @@ func validParamGroupName(v interface{}, k string) (ws []string, errors []error) 
 	return
 }
 
-func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validParamGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -114,7 +142,7 @@ func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validSubnetGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validSubnetGroupName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z_ .-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -131,7 +159,7 @@ func validSubnetGroupName(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
-func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validSubnetGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z_ .-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -144,7 +172,7 @@ func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
+func validIdentifier(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -165,7 +193,7 @@ func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validIdentifierPrefix(v interface{}, k string) (ws []string, errors []error) {
+func validIdentifierPrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

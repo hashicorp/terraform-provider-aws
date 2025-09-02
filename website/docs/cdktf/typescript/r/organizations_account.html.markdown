@@ -65,6 +65,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - The status of the account in the organization.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS member account using the `accountId`. For example:
@@ -130,4 +138,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d860653667ad2aaa9fbdfb913bef905be02789a28adb8345c0c7e3dc4dd84bb2 -->
+<!-- cache-key: cdktf-0.20.8 input-8e8887e3741a0846efe266d58d6294d1394e4019b43b0d7ca53014a12b747e55 -->

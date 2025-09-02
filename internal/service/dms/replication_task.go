@@ -31,6 +31,8 @@ import (
 
 // @SDKResource("aws_dms_replication_task", name="Replication Task")
 // @Tags(identifierAttribute="replication_task_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationTask")
+// @Testing(importIgnore="start_replication_task")
 func resourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationTaskCreate,
@@ -129,12 +131,10 @@ func resourceReplicationTask() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -191,7 +191,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceReplicationTaskRead(ctx, d, meta)...)
 }
 
-func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -221,7 +221,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -320,7 +320,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceReplicationTaskRead(ctx, d, meta)...)
 }
 
-func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -329,9 +329,10 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting DMS Replication Task: %s", d.Id())
-	_, err := conn.DeleteReplicationTask(ctx, &dms.DeleteReplicationTaskInput{
+	input := dms.DeleteReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
-	})
+	}
+	_, err := conn.DeleteReplicationTask(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
@@ -396,7 +397,7 @@ func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.Desc
 }
 
 func statusReplicationTask(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicationTaskByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

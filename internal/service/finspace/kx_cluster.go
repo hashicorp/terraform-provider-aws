@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -417,8 +416,6 @@ func ResourceKxCluster() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -428,7 +425,7 @@ const (
 	kxClusterIDPartCount = 2
 )
 
-func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -470,44 +467,44 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		in.AvailabilityZoneId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("capacity_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.CapacityConfiguration = expandCapacityConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("capacity_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.CapacityConfiguration = expandCapacityConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 {
-		in.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
+	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]any)) > 0 {
+		in.CommandLineArguments = expandCommandLineArguments(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.VpcConfiguration = expandVPCConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("auto_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.AutoScalingConfiguration = expandAutoScalingConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("auto_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.AutoScalingConfiguration = expandAutoScalingConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Databases = expandDatabases(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Databases = expandDatabases(v.([]any))
 	}
 
-	if v, ok := d.GetOk("savedown_storage_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.SavedownStorageConfiguration = expandSavedownStorageConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("savedown_storage_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.SavedownStorageConfiguration = expandSavedownStorageConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("cache_storage_configurations"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.CacheStorageConfigurations = expandCacheStorageConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("cache_storage_configurations"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.CacheStorageConfigurations = expandCacheStorageConfigurations(v.([]any))
 	}
 
-	if v, ok := d.GetOk("code"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Code = expandCode(v.([]interface{}))
+	if v, ok := d.GetOk("code"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Code = expandCode(v.([]any))
 	}
 
-	if v, ok := d.GetOk("scaling_group_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.ScalingGroupConfiguration = expandScalingGroupConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("scaling_group_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.ScalingGroupConfiguration = expandScalingGroupConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("tickerplant_log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.TickerplantLogConfiguration = expandTickerplantLogConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("tickerplant_log_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.TickerplantLogConfiguration = expandTickerplantLogConfiguration(v.([]any))
 	}
 
 	out, err := conn.CreateKxCluster(ctx, in)
@@ -526,7 +523,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceKxClusterRead(ctx, d, meta)...)
 }
 
-func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -612,7 +609,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -629,18 +626,18 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		ClusterName:   aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && d.HasChanges(names.AttrDatabase) {
-		DatabaseConfigIn.Databases = expandDatabases(d.Get(names.AttrDatabase).([]interface{}))
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && d.HasChanges(names.AttrDatabase) {
+		DatabaseConfigIn.Databases = expandDatabases(d.Get(names.AttrDatabase).([]any))
 		updateDb = true
 	}
 
-	if v, ok := d.GetOk("code"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil && d.HasChanges("code") {
-		CodeConfigIn.Code = expandCode(v.([]interface{}))
+	if v, ok := d.GetOk("code"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil && d.HasChanges("code") {
+		CodeConfigIn.Code = expandCode(v.([]any))
 		updateCode = true
 	}
 
 	if v, ok := d.GetOk("initialization_script"); ok {
-		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
+		CodeConfigIn.Code = expandCode(d.Get("code").([]any))
 		if d.HasChanges("initialization_script") {
 			CodeConfigIn.InitializationScript = aws.String(v.(string))
 			updateCode = true
@@ -649,14 +646,14 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 {
-		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
+	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]any)) > 0 {
+		CodeConfigIn.Code = expandCode(d.Get("code").([]any))
 		if d.HasChanges("command_line_arguments") {
-			CodeConfigIn.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
+			CodeConfigIn.CommandLineArguments = expandCommandLineArguments(v.(map[string]any))
 			updateCode = true
 		} else {
 			CodeConfigIn.CommandLineArguments = expandCommandLineArguments(
-				d.Get("command_line_arguments").(map[string]interface{}))
+				d.Get("command_line_arguments").(map[string]any))
 		}
 	}
 
@@ -686,7 +683,7 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceKxClusterRead(ctx, d, meta)...)
 }
 
-func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -765,7 +762,7 @@ func waitKxClusterDeleted(ctx context.Context, conn *finspace.Client, id string,
 }
 
 func statusKxCluster(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findKxClusterByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -809,12 +806,12 @@ func findKxClusterByID(ctx context.Context, conn *finspace.Client, id string) (*
 	return out, nil
 }
 
-func expandCapacityConfiguration(tfList []interface{}) *types.CapacityConfiguration {
+func expandCapacityConfiguration(tfList []any) *types.CapacityConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.CapacityConfiguration{}
 
@@ -829,12 +826,12 @@ func expandCapacityConfiguration(tfList []interface{}) *types.CapacityConfigurat
 	return a
 }
 
-func expandAutoScalingConfiguration(tfList []interface{}) *types.AutoScalingConfiguration {
+func expandAutoScalingConfiguration(tfList []any) *types.AutoScalingConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.AutoScalingConfiguration{}
 
@@ -865,12 +862,12 @@ func expandAutoScalingConfiguration(tfList []interface{}) *types.AutoScalingConf
 	return a
 }
 
-func expandScalingGroupConfiguration(tfList []interface{}) *types.KxScalingGroupConfiguration {
+func expandScalingGroupConfiguration(tfList []any) *types.KxScalingGroupConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.KxScalingGroupConfiguration{}
 
@@ -897,12 +894,12 @@ func expandScalingGroupConfiguration(tfList []interface{}) *types.KxScalingGroup
 	return a
 }
 
-func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownStorageConfiguration {
+func expandSavedownStorageConfiguration(tfList []any) *types.KxSavedownStorageConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.KxSavedownStorageConfiguration{}
 
@@ -921,12 +918,12 @@ func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownS
 	return a
 }
 
-func expandVPCConfiguration(tfList []interface{}) *types.VpcConfiguration {
+func expandVPCConfiguration(tfList []any) *types.VpcConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.VpcConfiguration{}
 
@@ -949,12 +946,12 @@ func expandVPCConfiguration(tfList []interface{}) *types.VpcConfiguration {
 	return a
 }
 
-func expandTickerplantLogConfiguration(tfList []interface{}) *types.TickerplantLogConfiguration {
+func expandTickerplantLogConfiguration(tfList []any) *types.TickerplantLogConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.TickerplantLogConfiguration{}
 
@@ -965,7 +962,7 @@ func expandTickerplantLogConfiguration(tfList []interface{}) *types.TickerplantL
 	return a
 }
 
-func expandCacheStorageConfiguration(tfMap map[string]interface{}) *types.KxCacheStorageConfiguration {
+func expandCacheStorageConfiguration(tfMap map[string]any) *types.KxCacheStorageConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -983,7 +980,7 @@ func expandCacheStorageConfiguration(tfMap map[string]interface{}) *types.KxCach
 	return a
 }
 
-func expandCacheStorageConfigurations(tfList []interface{}) []types.KxCacheStorageConfiguration {
+func expandCacheStorageConfigurations(tfList []any) []types.KxCacheStorageConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -991,7 +988,7 @@ func expandCacheStorageConfigurations(tfList []interface{}) []types.KxCacheStora
 	var s []types.KxCacheStorageConfiguration
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -1009,7 +1006,7 @@ func expandCacheStorageConfigurations(tfList []interface{}) []types.KxCacheStora
 	return s
 }
 
-func expandDatabases(tfList []interface{}) []types.KxDatabaseConfiguration {
+func expandDatabases(tfList []any) []types.KxDatabaseConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1017,7 +1014,7 @@ func expandDatabases(tfList []interface{}) []types.KxDatabaseConfiguration {
 	var s []types.KxDatabaseConfiguration
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -1035,7 +1032,7 @@ func expandDatabases(tfList []interface{}) []types.KxDatabaseConfiguration {
 	return s
 }
 
-func expandDatabase(tfMap map[string]interface{}) *types.KxDatabaseConfiguration {
+func expandDatabase(tfMap map[string]any) *types.KxDatabaseConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1050,8 +1047,8 @@ func expandDatabase(tfMap map[string]interface{}) *types.KxDatabaseConfiguration
 		a.DataviewName = aws.String(v)
 	}
 
-	if v, ok := tfMap["cache_configurations"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.CacheConfigurations = expandCacheConfigurations(v.([]interface{}))
+	if v, ok := tfMap["cache_configurations"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		a.CacheConfigurations = expandCacheConfigurations(v.([]any))
 	}
 
 	if v, ok := tfMap["changeset_id"].(string); ok && v != "" {
@@ -1061,7 +1058,7 @@ func expandDatabase(tfMap map[string]interface{}) *types.KxDatabaseConfiguration
 	return a
 }
 
-func expandCacheConfigurations(tfList []interface{}) []types.KxDatabaseCacheConfiguration {
+func expandCacheConfigurations(tfList []any) []types.KxDatabaseCacheConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1069,7 +1066,7 @@ func expandCacheConfigurations(tfList []interface{}) []types.KxDatabaseCacheConf
 	var s []types.KxDatabaseCacheConfiguration
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -1087,7 +1084,7 @@ func expandCacheConfigurations(tfList []interface{}) []types.KxDatabaseCacheConf
 	return s
 }
 
-func expandCacheConfiguration(tfMap map[string]interface{}) *types.KxDatabaseCacheConfiguration {
+func expandCacheConfiguration(tfMap map[string]any) *types.KxDatabaseCacheConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1105,12 +1102,12 @@ func expandCacheConfiguration(tfMap map[string]interface{}) *types.KxDatabaseCac
 	return a
 }
 
-func expandCode(tfList []interface{}) *types.CodeConfiguration {
+func expandCode(tfList []any) *types.CodeConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.CodeConfiguration{}
 
@@ -1141,7 +1138,7 @@ func expandCommandLineArgument(k string, v string) *types.KxCommandLineArgument 
 	return a
 }
 
-func expandCommandLineArguments(tfMap map[string]interface{}) []types.KxCommandLineArgument {
+func expandCommandLineArguments(tfMap map[string]any) []types.KxCommandLineArgument {
 	if tfMap == nil {
 		return nil
 	}
@@ -1161,12 +1158,12 @@ func expandCommandLineArguments(tfMap map[string]interface{}) []types.KxCommandL
 	return s
 }
 
-func flattenCapacityConfiguration(apiObject *types.CapacityConfiguration) []interface{} {
+func flattenCapacityConfiguration(apiObject *types.CapacityConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.NodeType; v != nil {
 		m["node_type"] = aws.ToString(v)
@@ -1176,15 +1173,15 @@ func flattenCapacityConfiguration(apiObject *types.CapacityConfiguration) []inte
 		m["node_count"] = aws.ToInt32(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAutoScalingConfiguration(apiObject *types.AutoScalingConfiguration) []interface{} {
+func flattenAutoScalingConfiguration(apiObject *types.AutoScalingConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.AutoScalingMetric; v != "" {
 		m["auto_scaling_metric"] = v
@@ -1210,15 +1207,15 @@ func flattenAutoScalingConfiguration(apiObject *types.AutoScalingConfiguration) 
 		m["scale_out_cooldown_seconds"] = aws.ToFloat64(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenScalingGroupConfiguration(apiObject *types.KxScalingGroupConfiguration) []interface{} {
+func flattenScalingGroupConfiguration(apiObject *types.KxScalingGroupConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.ScalingGroupName; v != nil {
 		m["scaling_group_name"] = aws.ToString(v)
@@ -1240,29 +1237,29 @@ func flattenScalingGroupConfiguration(apiObject *types.KxScalingGroupConfigurati
 		m["memory_reservation"] = aws.ToInt32(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenTickerplantLogConfiguration(apiObject *types.TickerplantLogConfiguration) []interface{} {
+func flattenTickerplantLogConfiguration(apiObject *types.TickerplantLogConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.TickerplantLogVolumes; v != nil {
 		m["tickerplant_log_volumes"] = v
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfiguration) []interface{} {
+func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Type; v != "" {
 		m[names.AttrType] = v
@@ -1276,15 +1273,15 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 		m["volume_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []interface{} {
+func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.VpcId; v != nil {
 		m[names.AttrVPCID] = aws.ToString(v)
@@ -1302,15 +1299,15 @@ func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []interface{} {
 		m[names.AttrIPAddressType] = string(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCode(apiObject *types.CodeConfiguration) []interface{} {
+func flattenCode(apiObject *types.CodeConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.S3Bucket; v != nil {
 		m[names.AttrS3Bucket] = aws.ToString(v)
@@ -1324,15 +1321,15 @@ func flattenCode(apiObject *types.CodeConfiguration) []interface{} {
 		m["s3_object_version"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCacheStorageConfiguration(apiObject *types.KxCacheStorageConfiguration) map[string]interface{} {
+func flattenCacheStorageConfiguration(apiObject *types.KxCacheStorageConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Type; aws.ToString(v) != "" {
 		m[names.AttrType] = aws.ToString(v)
@@ -1345,12 +1342,12 @@ func flattenCacheStorageConfiguration(apiObject *types.KxCacheStorageConfigurati
 	return m
 }
 
-func flattenCacheStorageConfigurations(apiObjects []types.KxCacheStorageConfiguration) []interface{} {
+func flattenCacheStorageConfigurations(apiObjects []types.KxCacheStorageConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenCacheStorageConfiguration(&apiObject))
@@ -1359,12 +1356,12 @@ func flattenCacheStorageConfigurations(apiObjects []types.KxCacheStorageConfigur
 	return l
 }
 
-func flattenCacheConfiguration(apiObject *types.KxDatabaseCacheConfiguration) map[string]interface{} {
+func flattenCacheConfiguration(apiObject *types.KxDatabaseCacheConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.CacheType; aws.ToString(v) != "" {
 		m["cache_type"] = aws.ToString(v)
@@ -1377,12 +1374,12 @@ func flattenCacheConfiguration(apiObject *types.KxDatabaseCacheConfiguration) ma
 	return m
 }
 
-func flattenCacheConfigurations(apiObjects []types.KxDatabaseCacheConfiguration) []interface{} {
+func flattenCacheConfigurations(apiObjects []types.KxDatabaseCacheConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenCacheConfiguration(&apiObject))
@@ -1391,12 +1388,12 @@ func flattenCacheConfigurations(apiObjects []types.KxDatabaseCacheConfiguration)
 	return l
 }
 
-func flattenDatabase(apiObject *types.KxDatabaseConfiguration) map[string]interface{} {
+func flattenDatabase(apiObject *types.KxDatabaseConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.DatabaseName; v != nil {
 		m[names.AttrDatabaseName] = aws.ToString(v)
@@ -1417,12 +1414,12 @@ func flattenDatabase(apiObject *types.KxDatabaseConfiguration) map[string]interf
 	return m
 }
 
-func flattenDatabases(apiObjects []types.KxDatabaseConfiguration) []interface{} {
+func flattenDatabases(apiObjects []types.KxDatabaseConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenDatabase(&apiObject))

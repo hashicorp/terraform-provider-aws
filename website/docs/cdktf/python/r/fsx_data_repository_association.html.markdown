@@ -70,6 +70,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `batch_import_meta_data_on_create` - (Optional) Set to true to run an import data repository task to import metadata from the data repository to the file system after the data repository association is created. Defaults to `false`.
 * `data_repository_path` - (Required) The path to the Amazon S3 data repository that will be linked to the file system. The path must be an S3 bucket s3://myBucket/myPrefix/. This path specifies where in the S3 data repository files will be imported from or exported to. The same S3 bucket cannot be linked more than once to the same file system.
 * `file_system_id` - (Required) The ID of the Amazon FSx file system to on which to create a data repository association.
@@ -130,4 +131,4 @@ Using `terraform import`, import FSx Data Repository Associations using the `id`
 % terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ccbef1d76e1257a56bbcfd48884d7a6ba0aaf2b3d64139f2f28bb6a48fb634c8 -->
+<!-- cache-key: cdktf-0.20.8 input-9ad72e70ffef7525be8136216b00f8f967766e2d6c5548dc98f2afdddf22c787 -->

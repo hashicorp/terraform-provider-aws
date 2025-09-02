@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,15 +49,14 @@ func resourceTransitGateway() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("default_route_table_association", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("default_route_table_association", func(_ context.Context, old, new, meta any) bool {
 				// Only changes from disable to enable for feature_set should force a new resource.
 				return old.(string) == string(awstypes.DefaultRouteTableAssociationValueDisable) && new.(string) == string(awstypes.DefaultRouteTableAssociationValueEnable)
 			}),
-			customdiff.ForceNewIfChange("default_route_table_propagation", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("default_route_table_propagation", func(_ context.Context, old, new, meta any) bool {
 				// Only changes from disable to enable for feature_set should force a new resource.
 				return old.(string) == string(awstypes.DefaultRouteTablePropagationValueDisable) && new.(string) == string(awstypes.DefaultRouteTablePropagationValueEnable)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -116,6 +116,12 @@ func resourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_group_referencing_support": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
+				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_cidr_blocks": {
@@ -143,18 +149,19 @@ func resourceTransitGateway() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTransitGatewayInput{
 		Options: &awstypes.TransitGatewayRequestOptions{
-			AutoAcceptSharedAttachments:  awstypes.AutoAcceptSharedAttachmentsValue(d.Get("auto_accept_shared_attachments").(string)),
-			DefaultRouteTableAssociation: awstypes.DefaultRouteTableAssociationValue(d.Get("default_route_table_association").(string)),
-			DefaultRouteTablePropagation: awstypes.DefaultRouteTablePropagationValue(d.Get("default_route_table_propagation").(string)),
-			DnsSupport:                   awstypes.DnsSupportValue(d.Get("dns_support").(string)),
-			MulticastSupport:             awstypes.MulticastSupportValue(d.Get("multicast_support").(string)),
-			VpnEcmpSupport:               awstypes.VpnEcmpSupportValue(d.Get("vpn_ecmp_support").(string)),
+			AutoAcceptSharedAttachments:     awstypes.AutoAcceptSharedAttachmentsValue(d.Get("auto_accept_shared_attachments").(string)),
+			DefaultRouteTableAssociation:    awstypes.DefaultRouteTableAssociationValue(d.Get("default_route_table_association").(string)),
+			DefaultRouteTablePropagation:    awstypes.DefaultRouteTablePropagationValue(d.Get("default_route_table_propagation").(string)),
+			DnsSupport:                      awstypes.DnsSupportValue(d.Get("dns_support").(string)),
+			MulticastSupport:                awstypes.MulticastSupportValue(d.Get("multicast_support").(string)),
+			SecurityGroupReferencingSupport: awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string)),
+			VpnEcmpSupport:                  awstypes.VpnEcmpSupportValue(d.Get("vpn_ecmp_support").(string)),
 		},
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGateway),
 	}
@@ -187,7 +194,7 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceTransitGatewayRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -214,6 +221,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
+	d.Set("security_group_referencing_support", transitGateway.Options.SecurityGroupReferencingSupport)
 	d.Set("transit_gateway_cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
@@ -222,7 +230,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -256,6 +264,10 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.Options.DnsSupport = awstypes.DnsSupportValue(d.Get("dns_support").(string))
 		}
 
+		if d.HasChange("security_group_referencing_support") {
+			input.Options.SecurityGroupReferencingSupport = awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string))
+		}
+
 		if d.HasChange("transit_gateway_cidr_blocks") {
 			oRaw, nRaw := d.GetChange("transit_gateway_cidr_blocks")
 			o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
@@ -285,7 +297,7 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -293,7 +305,7 @@ func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteTransitGateway(ctx, &ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})
@@ -312,4 +324,24 @@ func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func waitTransitGatewayDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        enum.Slice(awstypes.TransitGatewayStateAvailable, awstypes.TransitGatewayStateDeleting),
+		Target:         []string{},
+		Refresh:        statusTransitGateway(ctx, conn, id),
+		Timeout:        timeout,
+		Delay:          2 * time.Minute,
+		MinTimeout:     10 * time.Second,
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGateway); ok {
+		return output, err
+	}
+
+	return nil, err
 }

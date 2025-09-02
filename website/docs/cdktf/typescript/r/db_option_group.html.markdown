@@ -79,12 +79,14 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) Name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
 * `optionGroupDescription` - (Optional) Description of the option group. Defaults to "Managed by Terraform".
 * `engineName` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `majorEngineVersion` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) The options to apply. See [`option` Block](#option-block) below for more details.
+* `skipDestroy` - (Optional) Set to true if you do not wish the option group to be deleted at destroy time, and instead just remove the option group from the Terraform state.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `option` Block
@@ -102,8 +104,8 @@ The `option` blocks support the following arguments:
 
 The `optionSettings` blocks support the following arguments:
 
-* `name` - (Optional) Name of the setting.
-* `value` - (Optional) Value of the setting.
+* `name` - (Required) Name of the setting.
+* `value` - (Required) Value of the setting.
 
 ## Attribute Reference
 
@@ -151,4 +153,4 @@ Using `terraform import`, import DB option groups using the `name`. For example:
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4f57d2a8743b4e406d5ddc4770491e90f783f3d60d46d4947114c831496d546 -->
+<!-- cache-key: cdktf-0.20.8 input-352d839d57d471fd0413ffb77c9e1150656cebf34a38f5ba6e21b2f96658a0ad -->

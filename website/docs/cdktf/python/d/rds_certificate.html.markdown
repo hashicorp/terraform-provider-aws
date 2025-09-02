@@ -35,7 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) Certificate identifier. For example, `rds-ca-2019`.
+* `default_for_new_launches` - (Optional) When enabled, returns the default certificate for new RDS instances.
 * `latest_valid_till` - (Optional) When enabled, returns the certificate with the latest `ValidTill`.
 
 ## Attribute Reference
@@ -50,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `valid_from` - [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of certificate starting validity date.
 * `valid_till` - [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of certificate ending validity date.
 
-<!-- cache-key: cdktf-0.20.1 input-11fac79b0d201c3f0e3fe5f7ce9e1273fd98f100c84dc2f6a4a3f5286bb6b1dd -->
+<!-- cache-key: cdktf-0.20.8 input-07cccac0fd5b537b403fdef4e39763a4fbe72c250c5adaeb1b06be8752a90f61 -->

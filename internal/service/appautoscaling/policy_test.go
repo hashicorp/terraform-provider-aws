@@ -119,7 +119,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "StepScaling"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
@@ -127,10 +127,10 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.cooldown", "60"),
-					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.step_adjustment.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.step_adjustment.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
-						"scaling_adjustment":          acctest.Ct1,
-						"metric_interval_lower_bound": acctest.Ct0,
+						"scaling_adjustment":          "1",
+						"metric_interval_lower_bound": "0",
 						"metric_interval_upper_bound": "",
 					}),
 				),
@@ -188,21 +188,21 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.foobar_out", &policy),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.adjustment_type", "PercentChangeInCapacity"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.cooldown", "60"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.step_adjustment.#", acctest.Ct3),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.step_adjustment.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
-						"metric_interval_lower_bound": acctest.Ct3,
+						"metric_interval_lower_bound": "3",
 						"metric_interval_upper_bound": "",
-						"scaling_adjustment":          acctest.Ct3,
+						"scaling_adjustment":          "3",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
-						"metric_interval_lower_bound": acctest.Ct1,
-						"metric_interval_upper_bound": acctest.Ct3,
-						"scaling_adjustment":          acctest.Ct2,
+						"metric_interval_lower_bound": "1",
+						"metric_interval_upper_bound": "3",
+						"scaling_adjustment":          "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
-						"metric_interval_lower_bound": acctest.Ct0,
-						"metric_interval_upper_bound": acctest.Ct1,
-						"scaling_adjustment":          acctest.Ct1,
+						"metric_interval_lower_bound": "0",
+						"metric_interval_upper_bound": "1",
+						"scaling_adjustment":          "1",
 					}),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", names.AttrName, fmt.Sprintf("%s-out", randPolicyNamePrefix)),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "policy_type", "StepScaling"),
@@ -212,10 +212,10 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.foobar_in", &policy),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.adjustment_type", "PercentChangeInCapacity"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.cooldown", "60"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.step_adjustment.#", acctest.Ct3),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.step_adjustment.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
 						"metric_interval_lower_bound": "-1",
-						"metric_interval_upper_bound": acctest.Ct0,
+						"metric_interval_upper_bound": "0",
 						"scaling_adjustment":          "-1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
@@ -1145,7 +1145,7 @@ resource "aws_ecs_service" "test2" {
 }
 
 func testAccPolicyConfig_resourceIDForceNew1(rName string) string {
-	return testAccPolicyConfig_resourceIDForceNewBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_resourceIDForceNewBase(rName), fmt.Sprintf(`
 resource "aws_appautoscaling_target" "test" {
   max_capacity       = 4
   min_capacity       = 0
@@ -1190,11 +1190,11 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     ClusterName = aws_ecs_cluster.test.name
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccPolicyConfig_resourceIDForceNew2(rName string) string {
-	return testAccPolicyConfig_resourceIDForceNewBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_resourceIDForceNewBase(rName), fmt.Sprintf(`
 resource "aws_appautoscaling_target" "test" {
   max_capacity       = 4
   min_capacity       = 0
@@ -1239,7 +1239,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     ClusterName = aws_ecs_cluster.test.name
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

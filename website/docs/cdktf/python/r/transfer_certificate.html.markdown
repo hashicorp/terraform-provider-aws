@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate` - (Required) The valid certificate file required for the transfer.
 * `certificate_chain` - (Optional) The optional list of certificate that make up the chain for the certificate that is being imported.
 * `description` - (Optional) A short description that helps identify the certificate.
@@ -85,4 +86,4 @@ Using `terraform import`, import Transfer AS2 Certificate using the `certificate
 % terraform import aws_transfer_certificate.example c-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9e7f080d0a6c4946e22084c4f2ae3c03144eb7cd8a58f89d9fd2f1afa2ea612e -->
+<!-- cache-key: cdktf-0.20.8 input-c5eb8bc5c94b42ef8d118f1665a86cb75a997017cb38623798322877825e75ee -->

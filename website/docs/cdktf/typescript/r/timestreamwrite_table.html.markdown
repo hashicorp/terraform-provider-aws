@@ -107,7 +107,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `databaseName` – (Required) The name of the Timestream database.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `databaseName` - (Required) The name of the Timestream database.
 * `magneticStoreWriteProperties` - (Optional) Contains properties to set on the table when enabling magnetic store writes. See [Magnetic Store Write Properties](#magnetic-store-write-properties) below for more details.
 * `retentionProperties` - (Optional) The retention duration for the memory store and magnetic store. See [Retention Properties](#retention-properties) below for more details. If not provided, `magneticStoreRetentionPeriodInDays` default to 73000 and `memoryStoreRetentionPeriodInHours` defaults to 6.
 * `schema` - (Optional) The schema of the table. See [Schema](#schema) below for more details.
@@ -197,4 +198,4 @@ Using `terraform import`, import Timestream tables using the `tableName` and `da
 % terraform import aws_timestreamwrite_table.example ExampleTable:ExampleDatabase
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f3b0a12c378c166ac42527e7ddfa6ae43b71b326a2b2a3f2abcf892be6820171 -->
+<!-- cache-key: cdktf-0.20.8 input-b0281ea153eae9fb5ca0b76be4c982f38d37b1eaff728a5f6d73235efe5347c2 -->

@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_subnet_group"
 description: |-
@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the subnet group.
 
 ## Attribute Reference
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpcId` - VPC in which the subnet group exists.
 * `tags` - Map of tags assigned to the subnet group.
 
-<!-- cache-key: cdktf-0.20.1 input-a2199a4dfc692ac39b45aee765d1dc366111874bffd60dc24a73443b21e9d7d0 -->
+<!-- cache-key: cdktf-0.20.8 input-bab139729e73181632200d5ee9f1d77ca2b2147b604a19274cdde9f0054ea46d -->

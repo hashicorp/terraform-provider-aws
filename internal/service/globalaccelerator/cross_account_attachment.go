@@ -30,8 +30,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Cross-account Attachment")
-// @Tags(identifierAttribute="id")
+// @FrameworkResource("aws_globalaccelerator_cross_account_attachment", name="Cross-Account Attachment")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes;awstypes.Attachment")
+// @Testing(preIdentityVersion="v5.100.0")
 func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &crossAccountAttachmentResource{}
 
@@ -39,12 +42,8 @@ func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWith
 }
 
 type crossAccountAttachmentResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (*crossAccountAttachmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_globalaccelerator_cross_account_attachment"
+	framework.ResourceWithModel[crossAccountAttachmentResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -275,10 +274,6 @@ func (r *crossAccountAttachmentResource) Delete(ctx context.Context, request res
 	}
 }
 
-func (r *crossAccountAttachmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.Attachment, error) {
 	input := &globalaccelerator.DescribeCrossAccountAttachmentInput{
 		AttachmentArn: aws.String(arn),
@@ -312,8 +307,8 @@ type crossAccountAttachmentResourceModel struct {
 	Name             types.String                                  `tfsdk:"name"`
 	Principals       fwtypes.SetValueOf[types.String]              `tfsdk:"principals"`
 	Resources        fwtypes.SetNestedObjectValueOf[resourceModel] `tfsdk:"resource"`
-	Tags             types.Map                                     `tfsdk:"tags"`
-	TagsAll          types.Map                                     `tfsdk:"tags_all"`
+	Tags             tftags.Map                                    `tfsdk:"tags"`
+	TagsAll          tftags.Map                                    `tfsdk:"tags_all"`
 }
 
 func (m *crossAccountAttachmentResourceModel) InitFromID() error {

@@ -120,11 +120,11 @@ const (
 	ResNameDevEnvironment = "DevEnvironment"
 )
 
-func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
-	storage := expandPersistentStorageConfiguration(d.Get("persistent_storage").([]interface{})[0].(map[string]interface{}))
+	storage := expandPersistentStorageConfiguration(d.Get("persistent_storage").([]any)[0].(map[string]any))
 	instanceType := types.InstanceType(d.Get(names.AttrInstanceType).(string))
 	in := &codecatalyst.CreateDevEnvironmentInput{
 		ProjectName:       aws.String(d.Get("project_name").(string)),
@@ -141,12 +141,12 @@ func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 		in.Alias = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ides"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Ides = expandIdesConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("ides"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Ides = expandIdesConfiguration(v.([]any))
 	}
 
-	if v, ok := d.GetOk("repositories"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Repositories = expandRepositorysInput(v.([]interface{}))
+	if v, ok := d.GetOk("repositories"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Repositories = expandRepositorysInput(v.([]any))
 	}
 
 	out, err := conn.CreateDevEnvironment(ctx, in)
@@ -168,7 +168,7 @@ func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -206,7 +206,7 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -243,18 +243,19 @@ func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceDevEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	log.Printf("[INFO] Deleting Codecatalyst DevEnvironment %s", d.Id())
 
-	_, err := conn.DeleteDevEnvironment(ctx, &codecatalyst.DeleteDevEnvironmentInput{
+	input := codecatalyst.DeleteDevEnvironmentInput{
 		Id:          aws.String(d.Id()),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
 		ProjectName: aws.String(d.Get("project_name").(string)),
-	})
+	}
+	_, err := conn.DeleteDevEnvironment(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -303,7 +304,7 @@ func waitDevEnvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, i
 }
 
 func statusDevEnvironment(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findDevEnvironmentByID(ctx, conn, id, spaceName, projectName)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -342,12 +343,12 @@ func findDevEnvironmentByID(ctx context.Context, conn *codecatalyst.Client, id s
 	return out, nil
 }
 
-func flattenRepositories(apiObjects []types.DevEnvironmentRepositorySummary) []interface{} {
+func flattenRepositories(apiObjects []types.DevEnvironmentRepositorySummary) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenRepository(&apiObject))
@@ -356,12 +357,12 @@ func flattenRepositories(apiObjects []types.DevEnvironmentRepositorySummary) []i
 	return tfList
 }
 
-func flattenRepository(apiObject *types.DevEnvironmentRepositorySummary) interface{} {
+func flattenRepository(apiObject *types.DevEnvironmentRepositorySummary) any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BranchName; v != nil {
 		tfMap["branch_name"] = aws.ToString(v)
@@ -374,12 +375,12 @@ func flattenRepository(apiObject *types.DevEnvironmentRepositorySummary) interfa
 	return tfMap
 }
 
-func flattenIdes(apiObjects []types.Ide) []interface{} {
+func flattenIdes(apiObjects []types.Ide) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenIde(&apiObject))
@@ -388,12 +389,12 @@ func flattenIdes(apiObjects []types.Ide) []interface{} {
 	return tfList
 }
 
-func flattenIde(apiObject *types.Ide) map[string]interface{} {
+func flattenIde(apiObject *types.Ide) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -406,19 +407,19 @@ func flattenIde(apiObject *types.Ide) map[string]interface{} {
 	return tfMap
 }
 
-func flattenPersistentStorage(apiObject *types.PersistentStorage) []map[string]interface{} {
+func flattenPersistentStorage(apiObject *types.PersistentStorage) []map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrSize: aws.ToInt32(apiObject.SizeInGiB),
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []map[string]any{tfMap}
 }
 
-func expandRepositorysInput(tfList []interface{}) []types.RepositoryInput {
+func expandRepositorysInput(tfList []any) []types.RepositoryInput {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -426,7 +427,7 @@ func expandRepositorysInput(tfList []interface{}) []types.RepositoryInput {
 	var apiObjects []types.RepositoryInput
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -440,7 +441,7 @@ func expandRepositorysInput(tfList []interface{}) []types.RepositoryInput {
 	return apiObjects
 }
 
-func expandRepositoryInput(tfMap map[string]interface{}) types.RepositoryInput {
+func expandRepositoryInput(tfMap map[string]any) types.RepositoryInput {
 	apiObject := types.RepositoryInput{}
 
 	if v, ok := tfMap["branch_name"].(string); ok && v != "" {
@@ -453,7 +454,7 @@ func expandRepositoryInput(tfMap map[string]interface{}) types.RepositoryInput {
 	return apiObject
 }
 
-func expandIdesConfiguration(tfList []interface{}) []types.IdeConfiguration {
+func expandIdesConfiguration(tfList []any) []types.IdeConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -461,7 +462,7 @@ func expandIdesConfiguration(tfList []interface{}) []types.IdeConfiguration {
 	var apiObjects []types.IdeConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -475,7 +476,7 @@ func expandIdesConfiguration(tfList []interface{}) []types.IdeConfiguration {
 	return apiObjects
 }
 
-func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration {
+func expandIdeConfiguration(tfMap map[string]any) types.IdeConfiguration {
 	apiObject := types.IdeConfiguration{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -488,7 +489,7 @@ func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration
 	return apiObject
 }
 
-func expandPersistentStorageConfiguration(tfMap map[string]interface{}) *types.PersistentStorageConfiguration {
+func expandPersistentStorageConfiguration(tfMap map[string]any) *types.PersistentStorageConfiguration {
 	apiObject := &types.PersistentStorageConfiguration{}
 
 	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {

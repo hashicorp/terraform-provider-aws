@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudformation_stack_instances
+```
+
+```release-note:bug
+resource/aws_iam_role: Fix to reduce Terraform reporting differences when a role's ARN temporarily appears as the role's unique ID
+```

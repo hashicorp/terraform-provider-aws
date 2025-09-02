@@ -81,6 +81,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `scan_type` - (Required) the scanning type to set for the registry. Can be either `ENHANCED` or `BASIC`.
 - `rule` - (Optional) One or multiple blocks specifying scanning rules to determine which repository filters are used and at what frequency scanning will occur. See [below for schema](#rule).
 
@@ -111,13 +112,13 @@ from imports.aws.ecr_registry_scanning_configuration import EcrRegistryScanningC
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        EcrRegistryScanningConfiguration.generate_config_for_import(self, "example", "012345678901")
+        EcrRegistryScanningConfiguration.generate_config_for_import(self, "example", "123456789012")
 ```
 
 Using `terraform import`, import ECR Scanning Configurations using the `registry_id`. For example:
 
 ```console
-% terraform import aws_ecr_registry_scanning_configuration.example 012345678901
+% terraform import aws_ecr_registry_scanning_configuration.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-878f43063e7870789fdafbc4e35da8eca405013c513258165088a92488bbfa61 -->
+<!-- cache-key: cdktf-0.20.8 input-a07309c5d86c30ce93197b43659a8a86f23a27f535c45d6608cd56375846a399 -->

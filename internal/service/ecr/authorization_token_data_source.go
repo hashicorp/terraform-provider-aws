@@ -54,7 +54,7 @@ func dataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -79,7 +79,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	}
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("authorization_token", authorizationToken)
 	d.Set("proxy_endpoint", proxyEndpoint)
 	d.Set("expires_at", expiresAt)

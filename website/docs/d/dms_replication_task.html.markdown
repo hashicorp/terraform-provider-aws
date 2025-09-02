@@ -22,14 +22,10 @@ data "aws_dms_replication_task" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replication_task_id` - (Required) The replication task identifier.
-
-    - Must contain from 1 to 255 alphanumeric characters or hyphens.
-    - First character must be a letter.
-    - Cannot end with a hyphen.
-    - Cannot contain two consecutive hyphens.
 
 ## Attribute Reference
 

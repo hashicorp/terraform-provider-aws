@@ -62,6 +62,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applyImmediately` - (Optional) Specifies whether any instance modifications
   are applied immediately, or during the next maintenance window. Default is`false`.
 * `autoMinorVersionUpgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the instance during the maintenance window. Default is `true`.
@@ -96,7 +97,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `storageEncrypted` - Specifies whether the neptune cluster is encrypted.
 * `storageType` - Storage type associated with the cluster `standard/iopt1`.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
+* `writer` - Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 
 [1]: https://www.terraform.io/docs/configuration/meta-arguments/count.html
 
@@ -140,4 +141,4 @@ Using `terraform import`, import `aws_neptune_cluster_instance` using the instan
 % terraform import aws_neptune_cluster_instance.example my-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2ba6312683077ebbd2225c004780e41bd347fbc57a1a99be6bad0899ad291a36 -->
+<!-- cache-key: cdktf-0.20.8 input-b369c70de2a07affdf86d697e932b43fa8e2a4cf74bd45382aa2be5c55fabd20 -->

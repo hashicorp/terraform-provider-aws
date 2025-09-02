@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
 * `base_directory` - (Required) The landing directory for the files transferred by using the AS2 protocol.
 * `description` - (Optional) The Optional description of the transdfer.
@@ -83,4 +84,4 @@ Using `terraform import`, import Transfer AS2 Agreement using the `server_id/agr
 % terraform import aws_transfer_agreement.example s-4221a88afd5f4362a/a-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-68e33cbd7ad4965dddc102db9b300dde49f777c8ef6bfaa3845050362aa8992d -->
+<!-- cache-key: cdktf-0.20.8 input-ab4ee8152cb82b0ae6c7326dff0271550b1bf7047a640014776c3dfdb71b0a6b -->

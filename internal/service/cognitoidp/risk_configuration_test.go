@@ -35,12 +35,12 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrClientID),
-					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "0"),
 				),
 			},
 			{
@@ -54,13 +54,13 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrClientID),
-					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.11/32"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.*", "10.10.10.12/32"),
 				),
 			},
@@ -85,12 +85,12 @@ func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClientID, "aws_cognito_user_pool_client.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "0"),
 				),
 			},
 			{
@@ -118,13 +118,50 @@ func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.*", "SIGN_IN"),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.actions.0.event_action", "BLOCK"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPRiskConfiguration_takeover_without_notification(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_risk_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRiskConfigurationConfig_takeover_without_notification(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRiskConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.medium_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.medium_action.0.event_action", "MFA_REQUIRED"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.medium_action.0.notify", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.high_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.high_action.0.event_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.0.high_action.0.notify", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "0"),
 				),
 			},
 			{
@@ -396,6 +433,31 @@ resource "aws_cognito_risk_configuration" "test" {
   risk_exception_configuration {
     blocked_ip_range_list = []
     skipped_ip_range_list = []
+  }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccRiskConfigurationConfig_takeover_without_notification(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_risk_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  account_takeover_risk_configuration {
+    actions {
+      medium_action {
+        event_action = "MFA_REQUIRED"
+        notify       = false
+      }
+      high_action {
+        event_action = "BLOCK"
+        notify       = false
+      }
+    }
   }
 }
 

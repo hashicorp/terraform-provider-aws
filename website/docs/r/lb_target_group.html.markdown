@@ -108,6 +108,7 @@ resource "aws_lb_target_group" "tcp-example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connection_termination` - (Optional) Whether to terminate connections at the end of the deregistration timeout on Network Load Balancers. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#deregistration-delay) for more information. Default is `false`.
 * `deregistration_delay` - (Optional) Amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused. The range is 0-3600 seconds. The default value is 300 seconds.
 * `health_check` - (Optional, Maximum of 1) Health Check configuration block. Detailed below.
@@ -161,7 +162,7 @@ This resource supports the following arguments:
     * When the `target_type` is `lambda`, values can be between `200` and `499`. The default is `200`.
 * `path` - (May be required) Destination for the health check request. Required for HTTP/HTTPS ALB and HTTP NLB. Only applies to HTTP/HTTPS.
     * For HTTP and HTTPS health checks, the default is `/`.
-    * For gRPC health checks, the default is `/Amazon Web Services.ALB/healthcheck`.
+    * For gRPC health checks, the default is `/AWS.ALB/healthcheck`.
 * `port` - (Optional) The port the load balancer uses when performing health checks on targets.
   Valid values are either `traffic-port`, to use the same port as the target group, or a valid port number between `1` and `65536`.
   Default is `traffic-port`.
@@ -194,6 +195,7 @@ This resource supports the following arguments:
 ~> **NOTE:** This block is only valid for a Network Load Balancer (NLB) target group when `protocol` is `TCP` or `TLS`.
 
 * `enable_unhealthy_connection_termination` - (Optional) Indicates whether the load balancer terminates connections to unhealthy targets. Possible values are `true` or `false`. Default: `true`.
+* `unhealthy_draining_interval` - (Optional) Indicates the time to wait for in-flight requests to complete when a target becomes unhealthy. The range is `0-360000`. This value has to be set only if `enable_unhealthy_connection_termination` is set to false. Default: `0`.
 
 ### target_group_health
 

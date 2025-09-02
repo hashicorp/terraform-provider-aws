@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `namespaceName` - (Required) The namespace to create a snapshot for.
 * `snapshotName` - (Required) The name of the snapshot.
 * `retentionPeriod` - (Optional) How long to retain the created snapshot. Default value is `-1`.
@@ -90,4 +91,4 @@ Using `terraform import`, import Redshift Serverless Snapshots using the `snapsh
 % terraform import aws_redshiftserverless_snapshot.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8cdad9004cc5bbc08f27efbdc59cce26713d56ad09ff5203e21e04db05d9916b -->
+<!-- cache-key: cdktf-0.20.8 input-3d7dd15a8821cee11331d642cacb28d7027e9e311107e52943c6bc32057555a7 -->

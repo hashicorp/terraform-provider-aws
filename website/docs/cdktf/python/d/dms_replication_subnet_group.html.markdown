@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replication_subnet_group_id` - (Required) Name for the replication subnet group. This value is stored as a lowercase string. It must contain no more than 255 alphanumeric characters, periods, spaces, underscores, or hyphens and cannot be `default`.
 
 ## Attribute Reference
@@ -47,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `subnet_ids` - List of at least 2 EC2 subnet IDs for the subnet group. The subnets must cover at least 2 availability zones.
 * `vpc_id` - The ID of the VPC the subnet group is in.
 
-<!-- cache-key: cdktf-0.20.1 input-5a351e6983e13ca8ab53ae0b1934dd0149e708010440ee07aeef9d923642a6da -->
+<!-- cache-key: cdktf-0.20.8 input-1ca24f356e3b270ea15856f49d71001f8a0c26f1a7e67a05bc89ff4284e19ed3 -->

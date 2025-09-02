@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for the application. Must be between 1 and 64 characters in length.
 * `description` - (Optional) Description of the application. Can be at most 1024 characters.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -82,4 +83,4 @@ Using `terraform import`, import AppConfig Applications using their application 
 % terraform import aws_appconfig_application.example 71rxuzt
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-640d61d75f2bc0890c5f7e85bddbe3b0d0c1003903cdf41e4dfe4c6e445c5966 -->
+<!-- cache-key: cdktf-0.20.8 input-6c20dc65f0e38069132dcc9c2472530463aa96c2039c74b03cd3233bc5572b56 -->

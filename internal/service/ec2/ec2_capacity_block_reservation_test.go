@@ -44,7 +44,7 @@ func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 				Config: testAccCapacityBlockReservationConfig_basic(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityBlockReservationExists(ctx, resourceName, &reservation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`capacity-reservation/cr-:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`capacity-reservation/cr-:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(dataSourceName, "capacity_block_offering_id", resourceName, "capacity_block_offering_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "start_date", resourceName, "start_date"),

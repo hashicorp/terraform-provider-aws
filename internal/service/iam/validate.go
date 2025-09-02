@@ -26,7 +26,7 @@ func validResourceName(max int) schema.SchemaValidateFunc {
 var validAccountAlias = validation.All(
 	validation.StringLenBetween(3, 63),
 	validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`), "must start with an alphanumeric character and only contain lowercase alphanumeric characters and hyphens"),
-	func(v interface{}, k string) (ws []string, es []error) {
+	func(v any, k string) (ws []string, es []error) {
 		val := v.(string)
 		if strings.Contains(val, "--") {
 			es = append(es, fmt.Errorf("%q must not contain consecutive hyphens", k))
@@ -40,7 +40,7 @@ var validAccountAlias = validation.All(
 
 var validOpenIDURL = validation.All(
 	validation.IsURLWithHTTPS,
-	func(v interface{}, k string) (ws []string, es []error) {
+	func(v any, k string) (ws []string, es []error) {
 		value := v.(string)
 		u, err := url.Parse(value)
 		if err != nil {
@@ -57,7 +57,7 @@ var validOpenIDURL = validation.All(
 var validRolePolicyRole = validation.All(
 	validation.StringLenBetween(1, 128),
 	validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), ""),
-	func(v interface{}, k string) (ws []string, es []error) {
+	func(v any, k string) (ws []string, es []error) {
 		if _, errs := verify.ValidARN(v, k); len(errs) == 0 {
 			es = append(es, fmt.Errorf("%q must be the role's name not its ARN", k))
 		}

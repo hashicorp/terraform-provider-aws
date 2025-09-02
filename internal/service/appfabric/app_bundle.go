@@ -27,8 +27,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="App Bundle")
+// @FrameworkResource("aws_appfabric_app_bundle", name="App Bundle")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;awstypes;awstypes.AppBundle")
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preIdentityVersion="v5.100.0")
 func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appBundleResource{}
 
@@ -36,13 +42,8 @@ func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type appBundleResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[appBundleResourceModel]
-	framework.WithImportByID
-}
-
-func (*appBundleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_app_bundle"
+	framework.ResourceWithModel[appBundleResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *appBundleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -72,8 +73,13 @@ func (r *appBundleResource) Create(ctx context.Context, request resource.CreateR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError("creating AppFabric App Bundle", err.Error())
+	}
+
 	input := &appfabric.CreateAppBundleInput{
-		ClientToken:                  aws.String(errs.Must(uuid.GenerateUUID())),
+		ClientToken:                  aws.String(uuid),
 		CustomerManagedKeyIdentifier: fwflex.StringFromFramework(ctx, data.CustomerManagedKeyARN),
 		Tags:                         getTagsIn(ctx),
 	}
@@ -97,11 +103,6 @@ func (r *appBundleResource) Read(ctx context.Context, request resource.ReadReque
 	var data appBundleResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -139,9 +140,10 @@ func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteAppBundle(ctx, &appfabric.DeleteAppBundleInput{
-		AppBundleIdentifier: aws.String(data.ID.ValueString()),
-	})
+	input := appfabric.DeleteAppBundleInput{
+		AppBundleIdentifier: data.ID.ValueStringPointer(),
+	}
+	_, err := conn.DeleteAppBundle(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -152,10 +154,6 @@ func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteR
 
 		return
 	}
-}
-
-func (r *appBundleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) (*awstypes.AppBundle, error) {
@@ -184,17 +182,12 @@ func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) 
 }
 
 type appBundleResourceModel struct {
+	framework.WithRegionModel
 	ARN                   types.String `tfsdk:"arn"`
 	CustomerManagedKeyARN fwtypes.ARN  `tfsdk:"customer_managed_key_arn"`
 	ID                    types.String `tfsdk:"id"`
-	Tags                  types.Map    `tfsdk:"tags"`
-	TagsAll               types.Map    `tfsdk:"tags_all"`
-}
-
-func (data *appBundleResourceModel) InitFromID() error {
-	data.ARN = data.ID
-
-	return nil
+	Tags                  tftags.Map   `tfsdk:"tags"`
+	TagsAll               tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (data *appBundleResourceModel) setID() {

@@ -79,17 +79,18 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster-endpoint.html).
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required, Forces new resources) The cluster identifier.
 * `cluster_endpoint_identifier` - (Required, Forces new resources) The identifier to use for the new endpoint. This parameter is stored as a lowercase string.
 * `custom_endpoint_type` - (Required) The type of the endpoint. One of: READER , ANY .
 * `static_members` - (Optional) List of DB instance identifiers that are part of the custom endpoint group. Conflicts with `excluded_members`.
 * `excluded_members` - (Optional) List of DB instance identifiers that aren't part of the custom endpoint group. All other eligible instances are reachable through the custom endpoint. Only relevant if the list of static members is empty. Conflicts with `static_members`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster-endpoint.html).
 
 ## Attribute Reference
 
@@ -127,4 +128,4 @@ Using `terraform import`, import RDS Clusters Endpoint using the `cluster_endpoi
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Endpoints.Cluster
 
-<!-- cache-key: cdktf-0.20.1 input-5bd55d37058077c5adad48af32ed0809be00b04af5b23b8f0c92dd185bedc489 -->
+<!-- cache-key: cdktf-0.20.8 input-59ac5440b19d69aa55c7b186d7857eb0fc5478a15dde9f53e78aa2924da88d89 -->

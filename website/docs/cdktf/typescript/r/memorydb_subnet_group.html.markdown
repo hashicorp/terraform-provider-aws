@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_subnet_group"
 description: |-
@@ -63,6 +63,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) Name of the subnet group. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) Description for the subnet group. Defaults to `"Managed by Terraform"`.
@@ -109,4 +110,4 @@ Using `terraform import`, import a subnet group using its `name`. For example:
 % terraform import aws_memorydb_subnet_group.example my-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d868401aa8e04d4973ff0ffe4eb6c8770dd89bad3180e6917e7e0015e53618af -->
+<!-- cache-key: cdktf-0.20.8 input-9d8cbf77fa8809907f3583ebe5db29ae0045b5ddf0d672a3e75f993be831388b -->

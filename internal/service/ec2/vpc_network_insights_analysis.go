@@ -105,8 +105,6 @@ func resourceNetworkInsightsAnalysis() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -1412,7 +1410,7 @@ func networkInsightsAnalysisExplanationsSchema() *schema.Schema {
 	}
 }
 
-func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1442,7 +1440,7 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceNetworkInsightsAnalysisRead(ctx, d, meta)...)
 }
 
-func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1484,19 +1482,20 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceNetworkInsightsAnalysisRead(ctx, d, meta)
 }
 
-func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Network Insights Analysis: %s", d.Id())
-	_, err := conn.DeleteNetworkInsightsAnalysis(ctx, &ec2.DeleteNetworkInsightsAnalysisInput{
+	input := ec2.DeleteNetworkInsightsAnalysisInput{
 		NetworkInsightsAnalysisId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNetworkInsightsAnalysis(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
 		return diags
@@ -1509,30 +1508,30 @@ func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func flattenAdditionalDetail(apiObject *awstypes.AdditionalDetail) map[string]interface{} {
+func flattenAdditionalDetail(apiObject *awstypes.AdditionalDetail) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AdditionalDetailType; v != nil {
 		tfMap["additional_detail_type"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Component; v != nil {
-		tfMap["component"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["component"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAdditionalDetails(apiObjects []awstypes.AdditionalDetail) []interface{} {
+func flattenAdditionalDetails(apiObjects []awstypes.AdditionalDetail) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenAdditionalDetail(&apiObject))
@@ -1541,12 +1540,12 @@ func flattenAdditionalDetails(apiObjects []awstypes.AdditionalDetail) []interfac
 	return tfList
 }
 
-func flattenAlternatePathHint(apiObject *awstypes.AlternatePathHint) map[string]interface{} {
+func flattenAlternatePathHint(apiObject *awstypes.AlternatePathHint) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ComponentArn; v != nil {
 		tfMap["component_arn"] = aws.ToString(v)
@@ -1559,12 +1558,12 @@ func flattenAlternatePathHint(apiObject *awstypes.AlternatePathHint) map[string]
 	return tfMap
 }
 
-func flattenAlternatePathHints(apiObjects []awstypes.AlternatePathHint) []interface{} {
+func flattenAlternatePathHints(apiObjects []awstypes.AlternatePathHint) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenAlternatePathHint(&apiObject))
@@ -1573,12 +1572,12 @@ func flattenAlternatePathHints(apiObjects []awstypes.AlternatePathHint) []interf
 	return tfList
 }
 
-func flattenAnalysisAclRule(apiObject *awstypes.AnalysisAclRule) map[string]interface{} { // nosemgrep:ci.caps2-in-func-name
+func flattenAnalysisAclRule(apiObject *awstypes.AnalysisAclRule) map[string]any { // nosemgrep:ci.caps2-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
 		tfMap["cidr"] = aws.ToString(v)
@@ -1589,7 +1588,7 @@ func flattenAnalysisAclRule(apiObject *awstypes.AnalysisAclRule) map[string]inte
 	}
 
 	if v := apiObject.PortRange; v != nil {
-		tfMap["port_range"] = []interface{}{flattenPortRange(v)}
+		tfMap["port_range"] = []any{flattenPortRange(v)}
 	}
 
 	if v := apiObject.Protocol; v != nil {
@@ -1607,12 +1606,12 @@ func flattenAnalysisAclRule(apiObject *awstypes.AnalysisAclRule) map[string]inte
 	return tfMap
 }
 
-func flattenAnalysisLoadBalancerListener(apiObject *awstypes.AnalysisLoadBalancerListener) map[string]interface{} {
+func flattenAnalysisLoadBalancerListener(apiObject *awstypes.AnalysisLoadBalancerListener) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.InstancePort; v != nil {
 		tfMap["instance_port"] = aws.ToInt32(v)
@@ -1625,12 +1624,12 @@ func flattenAnalysisLoadBalancerListener(apiObject *awstypes.AnalysisLoadBalance
 	return tfMap
 }
 
-func flattenAnalysisComponent(apiObject *awstypes.AnalysisComponent) map[string]interface{} {
+func flattenAnalysisComponent(apiObject *awstypes.AnalysisComponent) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Arn; v != nil {
 		tfMap[names.AttrARN] = aws.ToString(v)
@@ -1647,12 +1646,12 @@ func flattenAnalysisComponent(apiObject *awstypes.AnalysisComponent) map[string]
 	return tfMap
 }
 
-func flattenAnalysisComponents(apiObjects []awstypes.AnalysisComponent) []interface{} {
+func flattenAnalysisComponents(apiObjects []awstypes.AnalysisComponent) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenAnalysisComponent(&apiObject))
@@ -1661,12 +1660,12 @@ func flattenAnalysisComponents(apiObjects []awstypes.AnalysisComponent) []interf
 	return tfList
 }
 
-func flattenAnalysisLoadBalancerTarget(apiObject *awstypes.AnalysisLoadBalancerTarget) map[string]interface{} {
+func flattenAnalysisLoadBalancerTarget(apiObject *awstypes.AnalysisLoadBalancerTarget) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Address; v != nil {
 		tfMap[names.AttrAddress] = aws.ToString(v)
@@ -1677,7 +1676,7 @@ func flattenAnalysisLoadBalancerTarget(apiObject *awstypes.AnalysisLoadBalancerT
 	}
 
 	if v := apiObject.Instance; v != nil {
-		tfMap["instance"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["instance"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.Port; v != nil {
@@ -1687,12 +1686,12 @@ func flattenAnalysisLoadBalancerTarget(apiObject *awstypes.AnalysisLoadBalancerT
 	return tfMap
 }
 
-func flattenAnalysisPacketHeader(apiObject *awstypes.AnalysisPacketHeader) map[string]interface{} {
+func flattenAnalysisPacketHeader(apiObject *awstypes.AnalysisPacketHeader) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DestinationAddresses; v != nil {
 		tfMap["destination_addresses"] = v
@@ -1717,12 +1716,12 @@ func flattenAnalysisPacketHeader(apiObject *awstypes.AnalysisPacketHeader) map[s
 	return tfMap
 }
 
-func flattenAnalysisRouteTableRoute(apiObject *awstypes.AnalysisRouteTableRoute) map[string]interface{} {
+func flattenAnalysisRouteTableRoute(apiObject *awstypes.AnalysisRouteTableRoute) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DestinationCidr; v != nil {
 		tfMap["destination_cidr"] = aws.ToString(v)
@@ -1767,19 +1766,19 @@ func flattenAnalysisRouteTableRoute(apiObject *awstypes.AnalysisRouteTableRoute)
 	return tfMap
 }
 
-func flattenAnalysisSecurityGroupRule(apiObject *awstypes.AnalysisSecurityGroupRule) map[string]interface{} {
+func flattenAnalysisSecurityGroupRule(apiObject *awstypes.AnalysisSecurityGroupRule) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
 		tfMap["cidr"] = aws.ToString(v)
 	}
 
 	if v := apiObject.PortRange; v != nil {
-		tfMap["port_range"] = []interface{}{flattenPortRange(v)}
+		tfMap["port_range"] = []any{flattenPortRange(v)}
 	}
 
 	if v := apiObject.PrefixListId; v != nil {
@@ -1797,19 +1796,19 @@ func flattenAnalysisSecurityGroupRule(apiObject *awstypes.AnalysisSecurityGroupR
 	return tfMap
 }
 
-func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} {
+func flattenExplanation(apiObject *awstypes.Explanation) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Acl; v != nil {
-		tfMap["acl"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["acl"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.AclRule; v != nil {
-		tfMap["acl_rule"] = []interface{}{flattenAnalysisAclRule(v)}
+		tfMap["acl_rule"] = []any{flattenAnalysisAclRule(v)}
 	}
 
 	if v := apiObject.Address; v != nil {
@@ -1821,7 +1820,7 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.AttachedTo; v != nil {
-		tfMap["attached_to"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["attached_to"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.AvailabilityZones; v != nil {
@@ -1833,23 +1832,23 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.ClassicLoadBalancerListener; v != nil {
-		tfMap["classic_load_balancer_listener"] = []interface{}{flattenAnalysisLoadBalancerListener(v)}
+		tfMap["classic_load_balancer_listener"] = []any{flattenAnalysisLoadBalancerListener(v)}
 	}
 
 	if v := apiObject.Component; v != nil {
-		tfMap["component"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["component"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.CustomerGateway; v != nil {
-		tfMap["customer_gateway"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["customer_gateway"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.Destination; v != nil {
-		tfMap[names.AttrDestination] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap[names.AttrDestination] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.DestinationVpc; v != nil {
-		tfMap["destination_vpc"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["destination_vpc"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.Direction; v != nil {
@@ -1857,7 +1856,7 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.ElasticLoadBalancerListener; v != nil {
-		tfMap["elastic_load_balancer_listener"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["elastic_load_balancer_listener"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.ExplanationCode; v != nil {
@@ -1865,11 +1864,11 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.IngressRouteTable; v != nil {
-		tfMap["ingress_route_table"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["ingress_route_table"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.InternetGateway; v != nil {
-		tfMap["internet_gateway"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["internet_gateway"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.LoadBalancerArn; v != nil {
@@ -1881,11 +1880,11 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.LoadBalancerTarget; v != nil {
-		tfMap["load_balancer_target"] = []interface{}{flattenAnalysisLoadBalancerTarget(v)}
+		tfMap["load_balancer_target"] = []any{flattenAnalysisLoadBalancerTarget(v)}
 	}
 
 	if v := apiObject.LoadBalancerTargetGroup; v != nil {
-		tfMap["load_balancer_target_group"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["load_balancer_target_group"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.LoadBalancerTargetGroups; v != nil {
@@ -1901,11 +1900,11 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.NatGateway; v != nil {
-		tfMap["nat_gateway"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["nat_gateway"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.NetworkInterface; v != nil {
-		tfMap["network_interface"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["network_interface"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.PacketField; v != nil {
@@ -1921,7 +1920,7 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.PrefixList; v != nil {
-		tfMap["prefix_list"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["prefix_list"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.Protocols; v != nil {
@@ -1929,19 +1928,19 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.RouteTable; v != nil {
-		tfMap["route_table"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["route_table"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.RouteTableRoute; v != nil {
-		tfMap["route_table_route"] = []interface{}{flattenAnalysisRouteTableRoute(v)}
+		tfMap["route_table_route"] = []any{flattenAnalysisRouteTableRoute(v)}
 	}
 
 	if v := apiObject.SecurityGroup; v != nil {
-		tfMap["security_group"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["security_group"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.SecurityGroupRule; v != nil {
-		tfMap["security_group_rule"] = []interface{}{flattenAnalysisSecurityGroupRule(v)}
+		tfMap["security_group_rule"] = []any{flattenAnalysisSecurityGroupRule(v)}
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
@@ -1949,7 +1948,7 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.SourceVpc; v != nil {
-		tfMap["source_vpc"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["source_vpc"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.State; v != nil {
@@ -1957,58 +1956,58 @@ func flattenExplanation(apiObject *awstypes.Explanation) map[string]interface{} 
 	}
 
 	if v := apiObject.Subnet; v != nil {
-		tfMap["subnet"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["subnet"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.SubnetRouteTable; v != nil {
-		tfMap["subnet_route_table"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["subnet_route_table"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.TransitGateway; v != nil {
-		tfMap["transit_gateway"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["transit_gateway"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.TransitGatewayAttachment; v != nil {
-		tfMap["transit_gateway_attachment"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["transit_gateway_attachment"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.TransitGatewayRouteTable; v != nil {
-		tfMap["transit_gateway_route_table"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["transit_gateway_route_table"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.TransitGatewayRouteTableRoute; v != nil {
-		tfMap["transit_gateway_route_table_route"] = []interface{}{flattenTransitGatewayRouteTableRoute(v)}
+		tfMap["transit_gateway_route_table_route"] = []any{flattenTransitGatewayRouteTableRoute(v)}
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["vpc"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.VpcEndpoint; v != nil {
-		tfMap["vpc_endpoint"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["vpc_endpoint"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.VpcPeeringConnection; v != nil {
-		tfMap["vpc_peering_connection"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["vpc_peering_connection"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.VpnConnection; v != nil {
-		tfMap["vpn_connection"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["vpn_connection"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.VpnGateway; v != nil {
-		tfMap["vpn_gateway"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["vpn_gateway"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	return tfMap
 }
 
-func flattenExplanations(apiObjects []awstypes.Explanation) []interface{} {
+func flattenExplanations(apiObjects []awstypes.Explanation) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenExplanation(&apiObject))
@@ -2017,15 +2016,15 @@ func flattenExplanations(apiObjects []awstypes.Explanation) []interface{} {
 	return tfList
 }
 
-func flattenPathComponent(apiObject *awstypes.PathComponent) map[string]interface{} {
+func flattenPathComponent(apiObject *awstypes.PathComponent) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AclRule; v != nil {
-		tfMap["acl_rule"] = []interface{}{flattenAnalysisAclRule(v)}
+		tfMap["acl_rule"] = []any{flattenAnalysisAclRule(v)}
 	}
 
 	if v := apiObject.AdditionalDetails; v != nil {
@@ -2033,27 +2032,27 @@ func flattenPathComponent(apiObject *awstypes.PathComponent) map[string]interfac
 	}
 
 	if v := apiObject.Component; v != nil {
-		tfMap["component"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["component"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.DestinationVpc; v != nil {
-		tfMap["destination_vpc"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["destination_vpc"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.InboundHeader; v != nil {
-		tfMap["inbound_header"] = []interface{}{flattenAnalysisPacketHeader(v)}
+		tfMap["inbound_header"] = []any{flattenAnalysisPacketHeader(v)}
 	}
 
 	if v := apiObject.OutboundHeader; v != nil {
-		tfMap["outbound_header"] = []interface{}{flattenAnalysisPacketHeader(v)}
+		tfMap["outbound_header"] = []any{flattenAnalysisPacketHeader(v)}
 	}
 
 	if v := apiObject.RouteTableRoute; v != nil {
-		tfMap["route_table_route"] = []interface{}{flattenAnalysisRouteTableRoute(v)}
+		tfMap["route_table_route"] = []any{flattenAnalysisRouteTableRoute(v)}
 	}
 
 	if v := apiObject.SecurityGroupRule; v != nil {
-		tfMap["security_group_rule"] = []interface{}{flattenAnalysisSecurityGroupRule(v)}
+		tfMap["security_group_rule"] = []any{flattenAnalysisSecurityGroupRule(v)}
 	}
 
 	if v := apiObject.SequenceNumber; v != nil {
@@ -2061,34 +2060,34 @@ func flattenPathComponent(apiObject *awstypes.PathComponent) map[string]interfac
 	}
 
 	if v := apiObject.SourceVpc; v != nil {
-		tfMap["source_vpc"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["source_vpc"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.Subnet; v != nil {
-		tfMap["subnet"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["subnet"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.TransitGateway; v != nil {
-		tfMap["transit_gateway"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["transit_gateway"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.TransitGatewayRouteTableRoute; v != nil {
-		tfMap["transit_gateway_route_table_route"] = []interface{}{flattenTransitGatewayRouteTableRoute(v)}
+		tfMap["transit_gateway_route_table_route"] = []any{flattenTransitGatewayRouteTableRoute(v)}
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap["vpc"] = []any{flattenAnalysisComponent(v)}
 	}
 
 	return tfMap
 }
 
-func flattenPathComponents(apiObjects []awstypes.PathComponent) []interface{} {
+func flattenPathComponents(apiObjects []awstypes.PathComponent) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPathComponent(&apiObject))
@@ -2097,12 +2096,12 @@ func flattenPathComponents(apiObjects []awstypes.PathComponent) []interface{} {
 	return tfList
 }
 
-func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
+func flattenPortRange(apiObject *awstypes.PortRange) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.From; v != nil {
 		tfMap["from"] = aws.ToInt32(v)
@@ -2115,12 +2114,12 @@ func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
 	return tfMap
 }
 
-func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
+func flattenPortRanges(apiObjects []awstypes.PortRange) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPortRange(&apiObject))
@@ -2129,12 +2128,12 @@ func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
 	return tfList
 }
 
-func flattenTransitGatewayRouteTableRoute(apiObject *awstypes.TransitGatewayRouteTableRoute) map[string]interface{} {
+func flattenTransitGatewayRouteTableRoute(apiObject *awstypes.TransitGatewayRouteTableRoute) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AttachmentId; v != nil {
 		tfMap["attachment_id"] = aws.ToString(v)

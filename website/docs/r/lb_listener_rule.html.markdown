@@ -208,6 +208,7 @@ resource "aws_lb_listener_rule" "oidc" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the rule.
 * `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
 * `action` - (Required) An Action block. Action blocks are documented below.
@@ -237,7 +238,7 @@ Action Blocks (for `action`) support the following:
 
 Forward Blocks (for `forward`) support the following:
 
-* `target_group` - (Required) One or more target groups block.
+* `target_group` - (Required) One or more target group blocks.
 * `stickiness` - (Optional) The target group stickiness for the rule.
 
 Target Group Blocks (for `target_group`) supports the following:

@@ -52,8 +52,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policyStoreId` - (Required) The ID of the Policy Store.
 * `definition` - (Required) The definition of the schema.
     * `value` - (Required) A JSON string representation of the schema.
@@ -96,4 +97,4 @@ Using `terraform import`, import Verified Permissions Policy Store Schema using 
  % terraform import aws_verifiedpermissions_schema.example DxQg2j8xvXJQ1tQCYNWj9T
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fa55babb31c88a4051bfbb8e79595a57efb620e322b4a49949467e8a84a89b63 -->
+<!-- cache-key: cdktf-0.20.8 input-68e2777b02915fb55ef64b57ec1f8a5a1bab4ba5bf761e5829a7bdcf31ee579e -->

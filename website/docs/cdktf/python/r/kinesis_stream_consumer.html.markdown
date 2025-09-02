@@ -47,8 +47,9 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) Name of the stream consumer.
-* `stream_arn` – (Required, Forces new resource) Amazon Resource Name (ARN) of the data stream the consumer is registered with.
+* `stream_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the data stream the consumer is registered with.
 
 ## Attribute Reference
 
@@ -85,4 +86,4 @@ Using `terraform import`, import Kinesis Stream Consumers using the Amazon Resou
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html
 
-<!-- cache-key: cdktf-0.20.1 input-faf8b78eb95acfe75982d82f725f47823646882c37a340dc5040b02aee2f21f1 -->
+<!-- cache-key: cdktf-0.20.8 input-f0b9ae1ac22596b28586c1275bc38d0a0155b3f41353dc1f9867c0da3ebb88b0 -->

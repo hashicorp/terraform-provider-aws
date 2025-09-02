@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_id` - (Required) EC2 Transit Gateway identifier.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Policy Table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -75,4 +76,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_policy_table` using th
 % terraform import aws_ec2_transit_gateway_policy_table.example tgw-rtb-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-74a9f90cb0d2a1a3f4d315939168fb889955b8d8ab3822d27c7d6149af4bd379 -->
+<!-- cache-key: cdktf-0.20.8 input-929f8de1580096a74e7318036f18629a84ee4c9ff794e93b7298d710ca4d2c01 -->

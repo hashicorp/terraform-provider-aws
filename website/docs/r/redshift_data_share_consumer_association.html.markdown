@@ -15,7 +15,7 @@ Terraform resource for managing an AWS Redshift Data Share Consumer Association.
 
 ```terraform
 resource "aws_redshift_data_share_consumer_association" "example" {
-  data_share_arn           = "arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
+  data_share_arn           = "arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
   associate_entire_account = true
 }
 ```
@@ -24,7 +24,7 @@ resource "aws_redshift_data_share_consumer_association" "example" {
 
 ```terraform
 resource "aws_redshift_data_share_consumer_association" "example" {
-  data_share_arn  = "arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
+  data_share_arn  = "arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
   consumer_region = "us-west-2"
 }
 ```
@@ -37,6 +37,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_writes` - (Optional) Whether to allow write operations for a datashare.
 * `associate_entire_account` - (Optional) Whether the datashare is associated with the entire account. Conflicts with `consumer_arn` and `consumer_region`.
 * `consumer_arn` - (Optional) Amazon Resource Name (ARN) of the consumer that is associated with the datashare. Conflicts with `associate_entire_account` and `consumer_region`.
@@ -57,12 +58,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_redshift_data_share_consumer_association.example
-  id = "arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2"
+  id = "arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2"
 }
 ```
 
 Using `terraform import`, import Redshift Data Share Consumer Association using the `id`. For example:
 
 ```console
-% terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
+% terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
 ```

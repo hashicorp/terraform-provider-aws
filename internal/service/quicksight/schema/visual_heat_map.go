@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,10 +64,10 @@ func heatMapVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"heat_map_column_items_limit_configuration": itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"heat_map_column_sort":                      fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
-										"heat_map_row_items_limit_configuration":    itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"heat_map_row_sort":                         fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"heat_map_column_items_limit_configuration": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"heat_map_column_sort":                      fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"heat_map_row_items_limit_configuration":    itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"heat_map_row_sort":                         fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
@@ -83,160 +83,161 @@ func heatMapVisualSchema() *schema.Schema {
 	}
 }
 
-func expandHeatMapVisual(tfList []interface{}) *quicksight.HeatMapVisual {
+func expandHeatMapVisual(tfList []any) *awstypes.HeatMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	visual := &quicksight.HeatMapVisual{}
+	apiObject := &awstypes.HeatMapVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
+		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
-		visual.ChartConfiguration = expandHeatMapConfiguration(v)
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ChartConfiguration = expandHeatMapConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
-		visual.ColumnHierarchies = expandColumnHierarchies(v)
+	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
-		visual.Subtitle = expandVisualSubtitleLabelOptions(v)
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
-		visual.Title = expandVisualTitleLabelOptions(v)
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
-	return visual
+	return apiObject
 }
 
-func expandHeatMapConfiguration(tfList []interface{}) *quicksight.HeatMapConfiguration {
+func expandHeatMapConfiguration(tfList []any) *awstypes.HeatMapConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.HeatMapConfiguration{}
+	apiObject := &awstypes.HeatMapConfiguration{}
 
-	if v, ok := tfMap["color_scale"].([]interface{}); ok && len(v) > 0 {
-		config.ColorScale = expandColorScale(v)
+	if v, ok := tfMap["color_scale"].([]any); ok && len(v) > 0 {
+		apiObject.ColorScale = expandColorScale(v)
 	}
-	if v, ok := tfMap["column_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.ColumnLabelOptions = expandChartAxisLabelOptions(v)
+	if v, ok := tfMap["column_label_options"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
-		config.DataLabels = expandDataLabelOptions(v)
+	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.FieldWells = expandHeatMapFieldWells(v)
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.FieldWells = expandHeatMapFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
-		config.Legend = expandLegendOptions(v)
+	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["row_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.RowLabelOptions = expandChartAxisLabelOptions(v)
+	if v, ok := tfMap["row_label_options"].([]any); ok && len(v) > 0 {
+		apiObject.RowLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.SortConfiguration = expandHeatMapSortConfiguration(v)
+	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.SortConfiguration = expandHeatMapSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
-		config.Tooltip = expandTooltipOptions(v)
+	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+		apiObject.Tooltip = expandTooltipOptions(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandHeatMapFieldWells(tfList []interface{}) *quicksight.HeatMapFieldWells {
+func expandHeatMapFieldWells(tfList []any) *awstypes.HeatMapFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.HeatMapFieldWells{}
+	apiObject := &awstypes.HeatMapFieldWells{}
 
-	if v, ok := tfMap["heat_map_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.HeatMapAggregatedFieldWells = expandHeatMapAggregatedFieldWells(v)
+	if v, ok := tfMap["heat_map_aggregated_field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.HeatMapAggregatedFieldWells = expandHeatMapAggregatedFieldWells(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandHeatMapAggregatedFieldWells(tfList []interface{}) *quicksight.HeatMapAggregatedFieldWells {
+func expandHeatMapAggregatedFieldWells(tfList []any) *awstypes.HeatMapAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.HeatMapAggregatedFieldWells{}
+	apiObject := &awstypes.HeatMapAggregatedFieldWells{}
 
-	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
-		config.Columns = expandDimensionFields(v)
+	if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 {
+		apiObject.Columns = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["rows"].([]interface{}); ok && len(v) > 0 {
-		config.Rows = expandDimensionFields(v)
+	if v, ok := tfMap["rows"].([]any); ok && len(v) > 0 {
+		apiObject.Rows = expandDimensionFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		config.Values = expandMeasureFields(v)
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
+		apiObject.Values = expandMeasureFields(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandHeatMapSortConfiguration(tfList []interface{}) *quicksight.HeatMapSortConfiguration {
+func expandHeatMapSortConfiguration(tfList []any) *awstypes.HeatMapSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.HeatMapSortConfiguration{}
+	apiObject := &awstypes.HeatMapSortConfiguration{}
 
-	if v, ok := tfMap["heat_map_column_items_limit_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.HeatMapColumnItemsLimitConfiguration = expandItemsLimitConfiguration(v)
+	if v, ok := tfMap["heat_map_column_items_limit_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.HeatMapColumnItemsLimitConfiguration = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["heat_map_column_sort"].([]interface{}); ok && len(v) > 0 {
-		config.HeatMapColumnSort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap["heat_map_column_sort"].([]any); ok && len(v) > 0 {
+		apiObject.HeatMapColumnSort = expandFieldSortOptionsList(v)
 	}
-	if v, ok := tfMap["heat_map_row_items_limit_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.HeatMapRowItemsLimitConfiguration = expandItemsLimitConfiguration(v)
+	if v, ok := tfMap["heat_map_row_items_limit_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.HeatMapRowItemsLimitConfiguration = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["heat_map_row_sort"].([]interface{}); ok && len(v) > 0 {
-		config.HeatMapRowSort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap["heat_map_row_sort"].([]any); ok && len(v) > 0 {
+		apiObject.HeatMapRowSort = expandFieldSortOptionsList(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func flattenHeatMapVisual(apiObject *quicksight.HeatMapVisual) []interface{} {
+func flattenHeatMapVisual(apiObject *awstypes.HeatMapVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+	tfMap := map[string]any{
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
+
 	if apiObject.Actions != nil {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
@@ -253,15 +254,16 @@ func flattenHeatMapVisual(apiObject *quicksight.HeatMapVisual) []interface{} {
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHeatMapConfiguration(apiObject *quicksight.HeatMapConfiguration) []interface{} {
+func flattenHeatMapConfiguration(apiObject *awstypes.HeatMapConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.ColorScale != nil {
 		tfMap["color_scale"] = flattenColorScale(apiObject.ColorScale)
 	}
@@ -287,28 +289,30 @@ func flattenHeatMapConfiguration(apiObject *quicksight.HeatMapConfiguration) []i
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHeatMapFieldWells(apiObject *quicksight.HeatMapFieldWells) []interface{} {
+func flattenHeatMapFieldWells(apiObject *awstypes.HeatMapFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.HeatMapAggregatedFieldWells != nil {
 		tfMap["heat_map_aggregated_field_wells"] = flattenHeatMapAggregatedFieldWells(apiObject.HeatMapAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHeatMapAggregatedFieldWells(apiObject *quicksight.HeatMapAggregatedFieldWells) []interface{} {
+func flattenHeatMapAggregatedFieldWells(apiObject *awstypes.HeatMapAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Columns != nil {
 		tfMap["columns"] = flattenDimensionFields(apiObject.Columns)
 	}
@@ -319,15 +323,16 @@ func flattenHeatMapAggregatedFieldWells(apiObject *quicksight.HeatMapAggregatedF
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHeatMapSortConfiguration(apiObject *quicksight.HeatMapSortConfiguration) []interface{} {
+func flattenHeatMapSortConfiguration(apiObject *awstypes.HeatMapSortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.HeatMapColumnItemsLimitConfiguration != nil {
 		tfMap["heat_map_column_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.HeatMapColumnItemsLimitConfiguration)
 	}
@@ -341,5 +346,5 @@ func flattenHeatMapSortConfiguration(apiObject *quicksight.HeatMapSortConfigurat
 		tfMap["heat_map_row_sort"] = flattenFieldSortOptions(apiObject.HeatMapRowSort)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

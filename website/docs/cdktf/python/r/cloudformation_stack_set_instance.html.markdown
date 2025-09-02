@@ -34,7 +34,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         CloudformationStackSetInstance(self, "example",
             account_id="123456789012",
-            region="us-east-1",
+            stack_set_instance_region="us-east-1",
             stack_set_name=Token.as_string(aws_cloudformation_stack_set_example.name)
         )
 ```
@@ -114,7 +114,7 @@ class MyConvertedCode(TerraformStack):
                         ]))
                 ]
             ),
-            region="us-east-1",
+            stack_set_instance_region="us-east-1",
             stack_set_name=Token.as_string(aws_cloudformation_stack_set_example.name)
         )
 ```
@@ -125,12 +125,13 @@ This resource supports the following arguments:
 
 * `stack_set_name` - (Required) Name of the StackSet.
 * `account_id` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account.
-* `deployment_targets` - (Optional) AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. See [deployment_targets](#deployment_targets-argument-reference) below.
-* `parameter_overrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
-* `region` - (Optional) Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
-* `retain_stack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
 * `call_as` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `SELF` (default), `DELEGATED_ADMIN`.
+* `deployment_targets` - (Optional) AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. See [deployment_targets](#deployment_targets-argument-reference) below.
 * `operation_preferences` - (Optional) Preferences for how AWS CloudFormation performs a stack set operation.
+* `parameter_overrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
+* `region` - (Optional, **Deprecated**) Target AWS Region to create a Stack based on the StackSet. Defaults to current region. Use `stack_set_instance_region` instead.
+* `retain_stack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
+* `stack_set_instance_region` - Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
 
 ### `deployment_targets` Argument Reference
 
@@ -149,6 +150,7 @@ The `operation_preferences` configuration block supports the following arguments
 * `failure_tolerance_percentage` - (Optional) Percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
 * `max_concurrent_count` - (Optional) Maximum number of accounts in which to perform this operation at one time.
 * `max_concurrent_percentage` - (Optional) Maximum percentage of accounts in which to perform this operation at one time.
+* `concurrency_mode` - (Optional) Specifies how the concurrency level behaves during the operation execution. Valid values are `STRICT_FAILURE_TOLERANCE` and `SOFT_FAILURE_TOLERANCE`.
 * `region_concurrency_type` - (Optional) Concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `SEQUENTIAL` and `PARALLEL`.
 * `region_order` - (Optional) Order of the Regions in where you want to perform the stack operation.
 
@@ -246,4 +248,4 @@ Using `terraform import`, import CloudFormation StackSet Instances when acting a
 % terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7fb05e14791cf7993878a65fbf8c5219cd03182722c0d64aa18f1e90ccb4ef85 -->
+<!-- cache-key: cdktf-0.20.8 input-5d2e24ae0fb8c542cb307e43a3df6fbc81d6cfa6588278d2346825b527a24044 -->

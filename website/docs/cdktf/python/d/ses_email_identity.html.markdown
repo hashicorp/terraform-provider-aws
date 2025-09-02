@@ -31,6 +31,12 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -38,4 +44,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` -  The ARN of the email identity.
 * `email` - Email identity.
 
-<!-- cache-key: cdktf-0.20.1 input-8b3c7c5e4c1d6197b2c76516866374779af6bd8d12e2ceda7f1a749b93b9a39e -->
+<!-- cache-key: cdktf-0.20.8 input-d3d7187b039e6e4258d5f8c6d656b5dbf451a14b6963f7651118093befb12179 -->

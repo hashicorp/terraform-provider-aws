@@ -16,14 +16,15 @@ Terraform resource for managing AWS Audit Manager Organization Admin Account Reg
 
 ```terraform
 resource "aws_auditmanager_organization_admin_account_registration" "example" {
-  admin_account_id = "012345678901"
+  admin_account_id = "123456789012"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `admin_account_id` - (Required) Identifier for the organization administrator account.
 
 ## Attribute Reference
@@ -40,12 +41,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_auditmanager_organization_admin_account_registration.example
-  id = "012345678901 "
+  id = "123456789012 "
 }
 ```
 
 Using `terraform import`, import Audit Manager Organization Admin Account Registration using the `id`. For example:
 
 ```console
-% terraform import aws_auditmanager_organization_admin_account_registration.example 012345678901 
+% terraform import aws_auditmanager_organization_admin_account_registration.example 123456789012 
 ```

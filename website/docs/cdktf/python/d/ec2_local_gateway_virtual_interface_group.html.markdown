@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLocalGatewayVirtualInterfaceGroups.html) for supported filters. Detailed below.
 * `id` - (Optional) Identifier of EC2 Local Gateway Virtual Interface Group.
 * `local_gateway_id` - (Optional) Identifier of EC2 Local Gateway.
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-5e2411b5d41b817a4357d5f458ca79618899e731412cbe0aaf57de8040137661 -->
+<!-- cache-key: cdktf-0.20.8 input-d078ba32a6275d591790ce35093756a4cd697503bb09da8ebb2ce7dce2f36295 -->

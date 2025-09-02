@@ -42,13 +42,9 @@ func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type deploymentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deploymentResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_m2_deployment"
 }
 
 func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -118,7 +114,12 @@ func (r *deploymentResource) Create(ctx context.Context, request resource.Create
 
 	// Set values for unknowns.
 	data.DeploymentID = fwflex.StringToFramework(ctx, output.DeploymentId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating Mainframe Modernization Deployment", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	timeout := r.CreateTimeout(ctx, data.Timeouts)
 	if _, err := waitDeploymentCreated(ctx, conn, data.ApplicationID.ValueString(), data.DeploymentID.ValueString(), timeout); err != nil {
@@ -233,7 +234,12 @@ func (r *deploymentResource) Update(ctx context.Context, request resource.Update
 
 		// Set values for unknowns.
 		new.DeploymentID = fwflex.StringToFramework(ctx, output.DeploymentId)
-		new.setID()
+		id, err := new.setID()
+		if err != nil {
+			response.Diagnostics.AddError("creating Mainframe Modernization Deployment", err.Error())
+			return
+		}
+		new.ID = types.StringValue(id)
 
 		if _, err := waitDeploymentUpdated(ctx, conn, new.ApplicationID.ValueString(), new.DeploymentID.ValueString(), timeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Deployment (%s) update", new.ID.ValueString()), err.Error())
@@ -331,6 +337,9 @@ func (r *deploymentResource) ModifyPlan(ctx context.Context, request resource.Mo
 		}
 
 		response.Diagnostics.Append(response.Plan.Set(ctx, &plan)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 }
 
@@ -361,7 +370,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 }
 
 func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, applicationID, deploymentID)
 
 		if tfresource.NotFound(err) {
@@ -415,6 +424,7 @@ func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, applicationID, 
 }
 
 type deploymentResourceModel struct {
+	framework.WithRegionModel
 	ApplicationID      types.String   `tfsdk:"application_id"`
 	ApplicationVersion types.Int64    `tfsdk:"application_version"`
 	DeploymentID       types.String   `tfsdk:"deployment_id"`
@@ -443,6 +453,11 @@ func (data *deploymentResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *deploymentResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationID.ValueString(), data.DeploymentID.ValueString()}, deploymentResourceIDPartCount, false)))
+func (data *deploymentResourceModel) setID() (string, error) {
+	parts := []string{
+		data.ApplicationID.ValueString(),
+		data.DeploymentID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, deploymentResourceIDPartCount, false)
 }

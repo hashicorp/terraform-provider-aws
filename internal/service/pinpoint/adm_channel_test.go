@@ -9,13 +9,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,7 +50,7 @@ func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccADMChannelConfi
 
 func TestAccPinpointADMChannel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel pinpoint.ADMChannelResponse
+	var channel awstypes.ADMChannelResponse
 	resourceName := "aws_pinpoint_adm_channel.channel"
 
 	config := testAccADMChannelConfigurationFromEnv(t)
@@ -85,7 +85,7 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckADMChannelExists(ctx context.Context, n string, channel *pinpoint.ADMChannelResponse) resource.TestCheckFunc {
+func testAccCheckADMChannelExists(ctx context.Context, n string, channel *awstypes.ADMChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -96,19 +96,41 @@ func testAccCheckADMChannelExists(ctx context.Context, n string, channel *pinpoi
 			return fmt.Errorf("No Pinpoint ADM channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
-		// Check if the ADM Channel exists
-		params := &pinpoint.GetAdmChannelInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetAdmChannelWithContext(ctx, params)
+		output, err := tfpinpoint.FindADMChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*channel = *output.ADMChannelResponse
+		*channel = *output
+
+		return nil
+	}
+}
+
+func testAccCheckADMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_pinpoint_adm_channel" {
+				continue
+			}
+
+			_, err := tfpinpoint.FindADMChannelByApplicationId(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Pinpoint ADM Channel %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
@@ -126,31 +148,4 @@ resource "aws_pinpoint_adm_channel" "channel" {
   enabled       = false
 }
 `, conf.ClientID, conf.ClientSecret)
-}
-
-func testAccCheckADMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_pinpoint_adm_channel" {
-				continue
-			}
-
-			// Check if the ADM channel exists by fetching its attributes
-			params := &pinpoint.GetAdmChannelInput{
-				ApplicationId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetAdmChannelWithContext(ctx, params)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-					continue
-				}
-				return err
-			}
-			return fmt.Errorf("ADM Channel exists when it should be destroyed!")
-		}
-
-		return nil
-	}
 }

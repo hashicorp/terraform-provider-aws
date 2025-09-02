@@ -51,6 +51,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired .
@@ -76,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-145158f6b1f653afe1f39eba16c020b3a0c007043249f21a1109df310923bf6a -->
+<!-- cache-key: cdktf-0.20.8 input-e2320f289b6b15f41bddf9f61e20177dc652c7e3dc325a68a5ff3635c298f73f -->

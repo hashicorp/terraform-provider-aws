@@ -64,6 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `queueUrl` - (Required) The URL of the SQS Queue to which to attach the policy
 * `redrivePolicy` - (Required) The JSON redrive policy for the SQS queue. Accepts two key/val pairs: `deadLetterTargetArn` and `maxReceiveCount`. Learn more in the [Amazon SQS dead-letter queues documentation](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html).
 
@@ -90,7 +91,7 @@ class MyConvertedCode extends TerraformStack {
     SqsQueueRedrivePolicy.generateConfigForImport(
       this,
       "test",
-      "https://queue.amazonaws.com/0123456789012/myqueue"
+      "https://queue.amazonaws.com/123456789012/myqueue"
     );
   }
 }
@@ -100,7 +101,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SQS Queue Redrive Policies using the queue URL. For example:
 
 ```console
-% terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+% terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e7f48e464819827bf219c6c6888346afabe01cbaae381206aa80f3e9ec43811a -->
+<!-- cache-key: cdktf-0.20.8 input-28acac650d5066bd826ddd5e642e0cd427fccd7be1cf280f8df9e3a8bf7bd5ea -->

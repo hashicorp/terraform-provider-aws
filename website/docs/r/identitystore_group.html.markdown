@@ -30,6 +30,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `display_name` - (Optional) A string containing the name of the group. This value is commonly displayed when the group is referenced.
 * `description` - (Optional) A string containing the description of the group.
 

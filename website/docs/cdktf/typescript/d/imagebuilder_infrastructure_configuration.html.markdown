@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the infrastructure configuration.
 
 ## Attribute Reference
@@ -58,6 +59,11 @@ This data source exports the following attributes in addition to the arguments a
         * `s3BucketName` - Name of the S3 Bucket for logging.
         * `s3KeyPrefix` - Key prefix for S3 Bucket logging.
 * `name` - Name of the infrastructure configuration.
+* `placement` - Placement settings that define where the instances that are launched from your image will run.
+    * `availabilityZone` - Availability Zone where your build and test instances will launch.
+    * `hostId` - ID of the Dedicated Host on which build and test instances run.
+    * `hostResourceGroupArn` - ARN of the host resource group in which to launch build and test instances.
+    * `tenancy` - Placement tenancy of the instance.
 * `resourceTags` - Key-value map of resource tags for the infrastructure created by the infrastructure configuration.
 * `securityGroupIds` - Set of EC2 Security Group identifiers associated with the configuration.
 * `snsTopicArn` - ARN of the SNS Topic associated with the configuration.
@@ -65,4 +71,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the infrastructure configuration.
 * `terminateInstanceOnFailure` - Whether instances are terminated on failure.
 
-<!-- cache-key: cdktf-0.20.1 input-7380cb5d85c6d7849e3a07a0e4591a1b51c24389729b623e1b3ca40a6eea581e -->
+<!-- cache-key: cdktf-0.20.8 input-66e9fe42a4dfe8fef868356ba49dc84837c55555b515f4d484c2abafcfb28068 -->

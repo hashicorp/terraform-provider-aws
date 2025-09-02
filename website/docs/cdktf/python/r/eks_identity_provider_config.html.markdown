@@ -40,16 +40,17 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `cluster_name` - (Required) Name of the EKS Cluster.
 * `oidc` - (Required) Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### oidc Configuration Block
 
-* `client_id` – (Required) Client ID for the OpenID Connect identity provider.
+* `client_id` - (Required) Client ID for the OpenID Connect identity provider.
 * `groups_claim` - (Optional) The JWT claim that the provider will use to return groups.
 * `groups_prefix` - (Optional) A prefix that is prepended to group claims e.g., `oidc:`.
-* `identity_provider_config_name` – (Required) The name of the identity provider config.
+* `identity_provider_config_name` - (Required) The name of the identity provider config.
 * `issuer_url` - (Required) Issuer URL for the OpenID Connect identity provider.
 * `required_claims` - (Optional) The key value pairs that describe required claims in the identity token.
 * `username_claim` - (Optional) The JWT claim that the provider will use as the username.
@@ -96,4 +97,4 @@ Using `terraform import`, import EKS Identity Provider Configurations using the 
 % terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5c1f7e41459f3297aafc7d76e5e6f234ff3ac373c8e28f3c212e15d50db41a0f -->
+<!-- cache-key: cdktf-0.20.8 input-c9b0e04c1dd2c84d54e077f3b9c99f986fe0d20e882420c0f7cf984d49fcb1f4 -->

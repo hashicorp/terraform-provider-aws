@@ -170,7 +170,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `configuration` - (Optional) Execute command configuration for the cluster. See [`configueration` Block](#configuration-block) for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `configuration` - (Optional) Execute command configuration for the cluster. See [`configuration` Block](#configuration-block) for details.
 * `service_connect_defaults` - (Optional) Default Service Connect namespace. See [`service_connect_defaults` Block](#service_connect_defaults-block) for details.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. See [`setting` Block](#setting-block) for details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -218,14 +219,13 @@ The `service_connect_defaults` configuration block supports the following argume
 The `setting` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
-* `value` -  (Required) Value to assign to the setting. Valid values: `enabled`, `disabled`.
+* `value` -  (Required) Value to assign to the setting. Valid values: `enhanced`, `enabled`, `disabled`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the cluster.
-* `id` - ARN that identifies the cluster.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -253,4 +253,4 @@ Using `terraform import`, import ECS clusters using the cluster name. For exampl
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ce3c6b13fb8b84480df8276839643d2e4ad1fc669627b6f56ea0c5da6604c507 -->
+<!-- cache-key: cdktf-0.20.8 input-e367a347aeed7ca364c486ddb6273745fd543ff092421952bc06e05858ddf421 -->

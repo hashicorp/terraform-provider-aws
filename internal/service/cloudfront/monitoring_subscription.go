@@ -67,7 +67,7 @@ func resourceMonitoringSubscription() *schema.Resource {
 	}
 }
 
-func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -76,8 +76,8 @@ func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.Resourc
 		DistributionId: aws.String(id),
 	}
 
-	if v, ok := d.GetOk("monitoring_subscription"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.MonitoringSubscription = expandMonitoringSubscription(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("monitoring_subscription"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MonitoringSubscription = expandMonitoringSubscription(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateMonitoringSubscription(ctx, input)
@@ -93,7 +93,7 @@ func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceMonitoringSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -110,7 +110,7 @@ func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if output.MonitoringSubscription != nil {
-		if err := d.Set("monitoring_subscription", []interface{}{flattenMonitoringSubscription(output.MonitoringSubscription)}); err != nil {
+		if err := d.Set("monitoring_subscription", []any{flattenMonitoringSubscription(output.MonitoringSubscription)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting monitoring_subscription: %s", err)
 		}
 	} else {
@@ -120,14 +120,15 @@ func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription: %s", d.Id())
-	_, err := conn.DeleteMonitoringSubscription(ctx, &cloudfront.DeleteMonitoringSubscriptionInput{
+	input := cloudfront.DeleteMonitoringSubscriptionInput{
 		DistributionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMonitoringSubscription(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) || errs.IsA[*awstypes.NoSuchMonitoringSubscription](err) {
 		return diags
@@ -140,7 +141,7 @@ func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceMonitoringSubscriptionImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceMonitoringSubscriptionImport(ctx context.Context, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
 	d.Set("distribution_id", d.Id())
 	return []*schema.ResourceData{d}, nil
 }
@@ -170,21 +171,21 @@ func findMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloud
 	return output, nil
 }
 
-func expandMonitoringSubscription(tfMap map[string]interface{}) *awstypes.MonitoringSubscription {
+func expandMonitoringSubscription(tfMap map[string]any) *awstypes.MonitoringSubscription {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.MonitoringSubscription{}
 
-	if v, ok := tfMap["realtime_metrics_subscription_config"].([]interface{}); ok && len(v) > 0 {
-		apiObject.RealtimeMetricsSubscriptionConfig = expandRealtimeMetricsSubscriptionConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["realtime_metrics_subscription_config"].([]any); ok && len(v) > 0 {
+		apiObject.RealtimeMetricsSubscriptionConfig = expandRealtimeMetricsSubscriptionConfig(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandRealtimeMetricsSubscriptionConfig(tfMap map[string]interface{}) *awstypes.RealtimeMetricsSubscriptionConfig {
+func expandRealtimeMetricsSubscriptionConfig(tfMap map[string]any) *awstypes.RealtimeMetricsSubscriptionConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -198,26 +199,26 @@ func expandRealtimeMetricsSubscriptionConfig(tfMap map[string]interface{}) *awst
 	return apiObject
 }
 
-func flattenMonitoringSubscription(apiObject *awstypes.MonitoringSubscription) map[string]interface{} {
+func flattenMonitoringSubscription(apiObject *awstypes.MonitoringSubscription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := flattenRealtimeMetricsSubscriptionConfig(apiObject.RealtimeMetricsSubscriptionConfig); len(v) > 0 {
-		tfMap["realtime_metrics_subscription_config"] = []interface{}{v}
+		tfMap["realtime_metrics_subscription_config"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenRealtimeMetricsSubscriptionConfig(apiObject *awstypes.RealtimeMetricsSubscriptionConfig) map[string]interface{} {
+func flattenRealtimeMetricsSubscriptionConfig(apiObject *awstypes.RealtimeMetricsSubscriptionConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"realtime_metrics_subscription_status": apiObject.RealtimeMetricsSubscriptionStatus,
 	}
 

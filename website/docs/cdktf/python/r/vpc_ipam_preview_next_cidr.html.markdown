@@ -35,14 +35,14 @@ class MyConvertedCode(TerraformStack):
         current = DataAwsRegion(self, "current")
         example = VpcIpam(self, "example",
             operating_regions=[VpcIpamOperatingRegions(
-                region_name=Token.as_string(current.name)
+                region_name=Token.as_string(current.region)
             )
             ]
         )
         aws_vpc_ipam_pool_example = VpcIpamPool(self, "example_2",
             address_family="ipv4",
             ipam_scope_id=example.private_default_scope_id,
-            locale=Token.as_string(current.name)
+            locale=Token.as_string(current.region)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_example.override_logical_id("example")
@@ -66,6 +66,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional) The netmask length of the CIDR you would like to preview from the IPAM pool.
@@ -77,4 +78,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `cidr` - The previewed CIDR from the pool.
 * `id` - The ID of the preview.
 
-<!-- cache-key: cdktf-0.20.1 input-db4b1871b5157cc9d4a7fcfd29b8fc4970d630b294fcf9dd81f44145d3e4f936 -->
+<!-- cache-key: cdktf-0.20.8 input-a9d469cc28f2c124149dea8d55d016430e288e984381bdb07bdbbc72e3cf54ba -->

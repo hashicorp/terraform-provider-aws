@@ -52,8 +52,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are optional:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `by_customization_type` - (Optional) Customization type to filter on. Valid values are `FINE_TUNING`.
 * `by_inference_type` - (Optional) Inference type to filter on. Valid values are `ON_DEMAND` and `PROVISIONED`.
 * `by_output_modality` - (Optional) Output modality to filter on. Valid values are `TEXT`, `IMAGE`, and `EMBEDDING`.
@@ -78,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 * `provider_name` - Model provider name.
 * `response_streaming_supported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.1 input-3f6e267fa2515e62c2f529b7e5658b24518fe85ab5b45efa47bd33b5d6efa5a3 -->
+<!-- cache-key: cdktf-0.20.8 input-cc41af445188096537d13b36d8378917c5fa2cdac4e03a4dc71f1f48fa65401a -->

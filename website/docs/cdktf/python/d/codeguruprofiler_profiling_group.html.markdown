@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the profiling group.
 
 ## Attribute Reference
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Mapping of Key-Value tags for the resource.
 * `updated_at` -  Timestamp when Profiling Group was updated.
 
-<!-- cache-key: cdktf-0.20.1 input-bd065a64432a0998e6b35b67e8ca7cb003e357ee8ca03afa7401639f707b5d04 -->
+<!-- cache-key: cdktf-0.20.8 input-befef5cb2ade661570ed00849f0a9c742c5f50c0c4b39e1c165c0832f2292132 -->
