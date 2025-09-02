@@ -5,6 +5,8 @@ package bedrockagent
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -22,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -29,12 +33,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -59,7 +65,6 @@ const (
 type flowResource struct {
 	framework.ResourceWithModel[flowResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
 }
 
 func (r *flowResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -92,6 +97,14 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "must only contain alphanumeric characters, hyphens and underscores"),
+				},
+			},
+			"prepare_flow": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrStatus: schema.StringAttribute{
@@ -985,12 +998,34 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 		return
 	}
 
+	// Set the state now to avoid losing track of the new flow in case the following PrepareFlow operation fails
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+
+	if data.PrepareFlow.ValueBool() {
+		timeout := r.CreateTimeout(ctx, data.Timeouts)
+
+		flow, err := prepareFlow(ctx, conn, data.ID.ValueString(), timeout)
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.BedrockAgent, "preparing", ResNameFlow, data.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, flow, &data)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	}
 }
 
 func (r *flowResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -1055,7 +1090,7 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 
 		input.FlowIdentifier = new.ID.ValueStringPointer()
 
-		output, err := conn.UpdateFlow(ctx, &input)
+		_, err := conn.UpdateFlow(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNameFlow, new.ID.String(), err),
@@ -1064,16 +1099,32 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 			return
 		}
 
-		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
-		if response.Diagnostics.HasError() {
+		flow, err := findFlowByID(ctx, conn, new.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForUpdate, ResNameFlow, new.ID.String(), err),
+				err.Error(),
+			)
 			return
 		}
 
-		// Set values for unknowns.
-		new.CreatedAt = old.CreatedAt
-		new.UpdatedAt = timetypes.NewRFC3339TimePointerValue(output.UpdatedAt)
-		new.Version = fwflex.StringToFramework(ctx, output.Version)
-		new.Status = fwtypes.StringEnumValue(output.Status)
+		if new.PrepareFlow.ValueBool() {
+			timeout := r.UpdateTimeout(ctx, new.Timeouts)
+
+			flow, err = prepareFlow(ctx, conn, new.ID.ValueString(), timeout)
+			if err != nil {
+				response.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.BedrockAgent, "preparing", ResNameFlow, new.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, flow, &new)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	} else {
 		new.CreatedAt = old.CreatedAt
 		new.UpdatedAt = old.UpdatedAt
@@ -1111,6 +1162,30 @@ func (r *flowResource) Delete(ctx context.Context, request resource.DeleteReques
 	}
 }
 
+func (r *flowResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	// Set prepare_flow to default value on import
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_flow"), true)...)
+}
+
+func prepareFlow(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
+	input := bedrockagent.PrepareFlowInput{
+		FlowIdentifier: aws.String(id),
+	}
+
+	_, err := conn.PrepareFlow(ctx, &input)
+	if err != nil {
+		return nil, fmt.Errorf("preparing Flow: %w", err)
+	}
+
+	flow, err := waitFlowPrepared(ctx, conn, id, timeout)
+	if err != nil {
+		return nil, fmt.Errorf("waiting for prepared Flow: %w", err)
+	}
+
+	return flow, nil
+}
+
 func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetFlowOutput, error) {
 	input := bedrockagent.GetFlowInput{
 		FlowIdentifier: aws.String(id),
@@ -1135,6 +1210,42 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 	return output, nil
 }
 
+func statusFlow(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findFlowByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitFlowPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetFlowOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.FlowStatusPreparing),
+		Target:  enum.Slice(awstypes.FlowStatusPrepared),
+		Refresh: statusFlow(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrockagent.GetFlowOutput); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Validations, func(v awstypes.FlowValidation) error {
+			return fmt.Errorf("%v: %s", v.Severity, *v.Message)
+		})...))
+		return output, err
+	}
+
+	return nil, err
+}
+
 type flowResourceModel struct {
 	framework.WithRegionModel
 	ARN                      types.String                                         `tfsdk:"arn"`
@@ -1145,6 +1256,7 @@ type flowResourceModel struct {
 	ExecutionRoleARN         fwtypes.ARN                                          `tfsdk:"execution_role_arn"`
 	ID                       types.String                                         `tfsdk:"id"`
 	Name                     types.String                                         `tfsdk:"name"`
+	PrepareFlow              types.Bool                                           `tfsdk:"prepare_flow"`
 	Status                   fwtypes.StringEnum[awstypes.FlowStatus]              `tfsdk:"status"`
 	Tags                     tftags.Map                                           `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                           `tfsdk:"tags_all"`
