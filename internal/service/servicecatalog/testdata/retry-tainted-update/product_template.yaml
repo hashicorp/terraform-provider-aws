@@ -141,7 +141,6 @@ Resources:
           };
       Environment:
         Variables:
-          # MPIVersion: !Ref MPIVersion
           FailureSimulation: !Ref FailureSimulation
           ExtraParam: !Ref ExtraParam
 

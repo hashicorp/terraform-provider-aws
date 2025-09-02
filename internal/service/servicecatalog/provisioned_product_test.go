@@ -1155,12 +1155,6 @@ resource "aws_servicecatalog_provisioning_artifact" "new_version" {
   description  = "New"
   template_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
   type         = "CLOUD_FORMATION_TEMPLATE"
-
-  # Force a new version to be created when MPI version changes
-  # Is this needed?
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 data "aws_servicecatalog_provisioning_artifacts" "product_artifacts" {
@@ -1178,7 +1172,7 @@ resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "product_template.yaml"
 
-  source = "${path.module}/testdata/foo/product_template.yaml"
+  source = "${path.module}/testdata/retry-tainted-update/product_template.yaml"
 }
 `, rName, useNewVersion, simulateFailure, extraParam))
 }
