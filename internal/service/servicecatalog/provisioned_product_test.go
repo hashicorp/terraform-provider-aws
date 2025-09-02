@@ -1061,11 +1061,17 @@ func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
 			},
 
 			// Step 5: Clean up by applying a working config
 			{
 				Config: testAccProvisionedProductConfig_retryTaintedUpdate_ResolveFailure(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "AVAILABLE"),
