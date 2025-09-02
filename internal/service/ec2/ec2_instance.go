@@ -1244,17 +1244,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v := instance.Placement; v != nil {
 		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
-
-		d.Set("placement_group", v.GroupName)
-
 		d.Set("host_id", v.HostId)
-
 		if v := v.HostResourceGroupArn; v != nil {
 			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 		}
-
+		d.Set("placement_group", v.GroupName)
+		d.Set("placement_group_id", v.GroupId)
 		d.Set("placement_partition_number", v.PartitionNumber)
-
 		d.Set("tenancy", v.Tenancy)
 	}
 
@@ -3081,7 +3077,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		opts.InstanceType = awstypes.InstanceType(v.(string))
 	}
 
-	var instanceInterruptionBehavior string
+	var instanceInterruptionBehavior awstypes.InstanceInterruptionBehavior
 
 	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any))
@@ -3094,7 +3090,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		opts.LaunchTemplate = launchTemplateSpecification
 
 		if launchTemplateData.InstanceMarketOptions != nil && launchTemplateData.InstanceMarketOptions.SpotOptions != nil {
-			instanceInterruptionBehavior = string(launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior)
+			instanceInterruptionBehavior = launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior
 		}
 	}
 
@@ -3168,12 +3164,12 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 	}
 
-	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == string(awstypes.InstanceInterruptionBehaviorTerminate)) {
+	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == awstypes.InstanceInterruptionBehaviorTerminate) {
 		opts.Placement.GroupName = aws.String(v.(string))
 		opts.SpotPlacement.GroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("placement_group_id"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == string(awstypes.InstanceInterruptionBehaviorTerminate)) {
+	if v, ok := d.GetOk("placement_group_id"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == awstypes.InstanceInterruptionBehaviorTerminate) {
 		opts.Placement.GroupId = aws.String(v.(string))
 		// AWS SDK missing groupID in type for spotplacement
 		// opts.SpotPlacement.GroupId = aws.String(v.(string))
