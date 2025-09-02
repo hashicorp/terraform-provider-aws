@@ -75,6 +75,15 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrAvailabilityZone: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The name of the Availability Zone (AZ) where the odb network is located. Changing this will force terraform to create new resource",
+			},
 			"availability_zone_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -650,6 +659,7 @@ func FindOracleDBNetworkResourceByID(ctx context.Context, conn *odb.Client, id s
 type odbNetworkResourceModel struct {
 	framework.WithRegionModel
 	DisplayName             types.String                                                               `tfsdk:"display_name"`
+	AvailabilityZone        types.String                                                               `tfsdk:"availability_zone"`
 	AvailabilityZoneId      types.String                                                               `tfsdk:"availability_zone_id"`
 	ClientSubnetCidr        types.String                                                               `tfsdk:"client_subnet_cidr"`
 	BackupSubnetCidr        types.String                                                               `tfsdk:"backup_subnet_cidr"`

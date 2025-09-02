@@ -55,6 +55,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `custom_domain_name` - (Optional) The name of the custom domain that the network is located. Custom_domain_name and default_dns_prefix both can't be given. Changing this will force terraform to create new resource.
+* `availability_zone` - (Optional) The name of the Availability Zone (AZ) where the odb network is located. Changing this will force terraform to create new resource. Make sure availability_zone maps correctly with availability_zone_id.
 * `s3_policy_document` - (Optional) Specifies the endpoint policy for Amazon S3 access from the ODB network.
 * `default_dns_prefix` - (Optional) The default DNS prefix for the network resource. Changing this will force terraform to create new resource. Changing this will force terraform to create new resource.
 * `tags` - (Optional) A map of tags to assign to the exadata infrastructure. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
