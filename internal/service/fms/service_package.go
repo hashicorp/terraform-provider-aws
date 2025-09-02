@@ -37,7 +37,7 @@ func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string
 			// Include go-vcr retryable to prevent generated client retryer from being overridden
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
-				retryables = append(retryables, retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+				retryables = append(retryables, vcr.InteractionNotFoundRetryableFunc)
 			}
 
 			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retryables...)
