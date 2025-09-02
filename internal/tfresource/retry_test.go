@@ -354,7 +354,7 @@ func TestRetryContext_nil(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	var expected *tfresource.RetryError = nil
+	var expected error
 	f := func(context.Context) *tfresource.RetryError {
 		return nil
 	}
