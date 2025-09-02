@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3tables_table: Add `maintenance_configuration.iceberg_compaction.settings.strategy` argument
+```
