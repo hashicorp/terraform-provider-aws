@@ -295,7 +295,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_complex(rName),
+				Config: testAccPlanConfig_complex(rName, acctest.AlternateRegion(), acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
@@ -435,10 +435,10 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 				ImportStateVerify: true,
 				// API may return regions in different order than specified
 				ImportStateVerifyIgnore: []string{
-					"workflow.1.step.6.arc_routing_control_config.0.region_and_routing_controls.0.region",
-					"workflow.1.step.6.arc_routing_control_config.0.region_and_routing_controls.1.region",
-					"workflow.1.step.6.arc_routing_control_config.0.region_and_routing_controls.0.routing_control_arns.0",
-					"workflow.1.step.6.arc_routing_control_config.0.region_and_routing_controls.1.routing_control_arns.0",
+					"workflow.0.step.6.arc_routing_control_config.0.region_and_routing_controls.0.region",
+					"workflow.0.step.6.arc_routing_control_config.0.region_and_routing_controls.1.region",
+					"workflow.0.step.6.arc_routing_control_config.0.region_and_routing_controls.0.routing_control_arns.0",
+					"workflow.0.step.6.arc_routing_control_config.0.region_and_routing_controls.1.routing_control_arns.0",
 					// EKS scaling resources may be returned in different order
 					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.hpa_name",
 					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.name",
@@ -452,13 +452,8 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 	})
 }
 
-func testAccPlanConfig_complex(rName string) string {
+func testAccPlanConfig_complex(rName, primaryRegion, alternateRegion string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[3]q
-}
-
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -480,8 +475,8 @@ resource "aws_arcregionswitch_plan" "test" {
   name                            = %[1]q
   execution_role                  = aws_iam_role.test.arn
   recovery_approach               = "activeActive"
-  regions                         = [%[3]q, %[3]q]
-  primary_region                  = %[3]q
+  regions                         = [%[2]q, %[3]q]
+  primary_region                  = %[2]q
   description                     = "Complex test plan with multiple execution block types"
   recovery_time_objective_minutes = 60
 
@@ -629,7 +624,7 @@ resource "aws_arcregionswitch_plan" "test" {
         scaling_resources {
           namespace = "default"
           resources {
-            resource_name = %[3]q
+            resource_name = %[2]q
             name          = "test-deployment-secondary"
             namespace     = "default"
             hpa_name      = "test-hpa-secondary"
@@ -664,7 +659,7 @@ resource "aws_arcregionswitch_plan" "test" {
           routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"]
         }
         region_and_routing_controls {
-          region               = %[3]q
+          region               = %[2]q
           routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"]
         }
         cross_account_role = "arn:aws:iam::123456789012:role/RoutingControlRole"
@@ -686,7 +681,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
         record_sets {
           record_set_identifier = "primary"
-          region                = %[3]q
+          region                = %[2]q
         }
         record_sets {
           record_set_identifier = "secondary"
@@ -761,7 +756,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
         record_sets {
           record_set_identifier = "primary"
-          region                = %[3]q
+          region                = %[2]q
         }
         record_sets {
           record_set_identifier = "secondary"
@@ -771,7 +766,7 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName, acctest.AlternateRegion(), acctest.Region())
+`, rName, primaryRegion, alternateRegion)
 }
 
 func testAccPlanConfig_route53HealthCheck(rName, zoneName, primaryRegion, alternateRegion string) string {
@@ -1135,7 +1130,7 @@ resource "aws_arcregionswitch_plan" "test" {
   name                            = %[1]q
   execution_role                  = aws_iam_role.test.arn
   recovery_approach               = "activePassive"
-  regions                         = [%[3]q, %[2]q]
+  regions                         = [%[3]q, %[3]q]
   primary_region                  = %[3]q
   description                     = %[4]q
   recovery_time_objective_minutes = %[5]d
