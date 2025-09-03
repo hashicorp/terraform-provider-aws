@@ -74,6 +74,7 @@ type resourcePlanModel struct {
 	RecoveryTimeObjectiveMinutes types.Int64  `tfsdk:"recovery_time_objective_minutes"`
 	AssociatedAlarms             types.Set    `tfsdk:"associated_alarms"`
 	Workflow                     types.List   `tfsdk:"workflow"`
+	Triggers                     types.List   `tfsdk:"triggers"`
 	Region                       types.String `tfsdk:"region"`
 	Tags                         tftags.Map   `tfsdk:"tags"`
 	TagsAll                      tftags.Map   `tfsdk:"tags_all"`
@@ -262,6 +263,20 @@ type parallelStepModel struct {
 	Description              types.String `tfsdk:"description"`
 	ExecutionApprovalConfig  types.List   `tfsdk:"execution_approval_config"`
 	CustomActionLambdaConfig types.List   `tfsdk:"custom_action_lambda_config"`
+}
+
+// Trigger Configuration Models
+type triggerModel struct {
+	Action                           types.String `tfsdk:"action"`
+	Description                      types.String `tfsdk:"description"`
+	MinDelayMinutesBetweenExecutions types.Int64  `tfsdk:"min_delay_minutes_between_executions"`
+	TargetRegion                     types.String `tfsdk:"target_region"`
+	Conditions                       types.List   `tfsdk:"conditions"`
+}
+
+type conditionModel struct {
+	AssociatedAlarmName types.String `tfsdk:"associated_alarm_name"`
+	Condition           types.String `tfsdk:"condition"`
 }
 
 func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -1312,6 +1327,44 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 													},
 												},
 											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"triggers": fwschema.ListNestedBlock{
+				NestedObject: fwschema.NestedBlockObject{
+					Attributes: map[string]fwschema.Attribute{
+						"action": fwschema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("activate", "deactivate"),
+							},
+						},
+						names.AttrDescription: fwschema.StringAttribute{
+							Optional: true,
+						},
+						"min_delay_minutes_between_executions": fwschema.Int64Attribute{
+							Required: true,
+						},
+						"target_region": fwschema.StringAttribute{
+							Required: true,
+						},
+					},
+					Blocks: map[string]fwschema.Block{
+						"conditions": fwschema.ListNestedBlock{
+							NestedObject: fwschema.NestedBlockObject{
+								Attributes: map[string]fwschema.Attribute{
+									"associated_alarm_name": fwschema.StringAttribute{
+										Required: true,
+									},
+									"condition": fwschema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.OneOf("red", "green"),
 										},
 									},
 								},
