@@ -5,7 +5,6 @@ package arcregionswitch
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
@@ -44,53 +43,6 @@ func FindPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	}
 
 	return output.Plan, nil
-}
-
-func ListTags(ctx context.Context, conn *arcregionswitch.Client, identifier string) (tftags.KeyValueTags, error) {
-	input := arcregionswitch.ListTagsForResourceInput{
-		Arn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResource(ctx, &input)
-
-	if err != nil {
-		return tftags.New(ctx, nil), err
-	}
-
-	return tftags.New(ctx, output.ResourceTags), nil
-}
-
-func UpdateTags(ctx context.Context, conn *arcregionswitch.Client, identifier string, oldTagsMap, newTagsMap any) error {
-	oldTags := tftags.New(ctx, oldTagsMap)
-	newTags := tftags.New(ctx, newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := arcregionswitch.UntagResourceInput{
-			Arn:             aws.String(identifier),
-			ResourceTagKeys: removedTags.Keys(),
-		}
-
-		_, err := conn.UntagResource(ctx, &input)
-
-		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := arcregionswitch.TagResourceInput{
-			Arn:  aws.String(identifier),
-			Tags: updatedTags.Map(),
-		}
-
-		_, err := conn.TagResource(ctx, &input)
-
-		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	return nil
 }
 
 // @FrameworkResource("aws_arcregionswitch_plan", name="Plan")
@@ -758,7 +710,7 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	// Handle tags
-	tags, err := ListTags(ctx, r.Meta().ARCRegionSwitchClient(ctx), state.ID.ValueString())
+	tags, err := listTags(ctx, conn, aws.ToString(plan.Arn))
 	if err != nil {
 		resp.Diagnostics.AddError("listing tags for ARC Region Switch Plan", err.Error())
 		return
@@ -823,7 +775,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Handle tags update
 	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+		if err := updateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
 			resp.Diagnostics.AddError("updating tags", err.Error())
 			return
 		}
