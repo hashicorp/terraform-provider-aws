@@ -60,62 +60,6 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_arcregionswitch_plan" {
-				continue
-			}
-
-			_, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.ID)
-
-			if err == nil {
-				return fmt.Errorf("ARC Region Switch Plan %s still exists", rs.Primary.ID)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckPlanExists(ctx context.Context, n string, v *sdktypes.Plan) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Plan not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ARC Region Switch Plan ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
-
-		output, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
-
-	input := arcregionswitch.ListPlansInput{}
-	_, err := conn.ListPlans(ctx, &input)
-
-	if err != nil {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-}
-
 func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan sdktypes.Plan
@@ -282,415 +226,6 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccPlanConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[3]q, %[2]q]
-  primary_region    = %[3]q
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region())
-}
-
-func testAccPlanConfig_update(rName, description string, rto int) string {
-	alarms := fmt.Sprintf(`
-  associated_alarms {
-    name                = "test-alarm-1"
-    alarm_type          = "applicationHealth"
-    resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-1"
-  }`, acctest.Region())
-
-	if rto == 60 {
-		alarms += fmt.Sprintf(`
-  associated_alarms {
-    name                = "test-alarm-2"
-    alarm_type          = "applicationHealth"
-    resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-2"
-  }`, acctest.Region())
-	}
-
-	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name                            = %[1]q
-  execution_role                  = aws_iam_role.test.arn
-  recovery_approach               = "activePassive"
-  regions                         = [%[3]q, %[2]q]
-  primary_region                  = %[3]q
-  description                     = %[4]q
-  recovery_time_objective_minutes = %[5]d
-%[6]s
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region(), description, rto, alarms)
-}
-
-func testAccPlanConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[3]q, %[2]q]
-  primary_region    = %[3]q
-
-  tags = {
-    %[4]q = %[5]q
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1)
-}
-
-func testAccPlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[3]q, %[2]q]
-  primary_region    = %[3]q
-
-  tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccPlanConfig_minimalRegions(rName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[3]q, %[2]q]
-  primary_region    = %[3]q
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "minimal-step-secondary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "minimal-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region())
-}
-
-func testAccPlanConfig_multipleWorkflowsSameAction(rName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activeActive"
-  regions           = [%[2]q, %[2]q]
-  primary_region    = %[2]q
-
-  workflow {
-    workflow_target_action = "activate"
-
-    step {
-      name                 = "activate-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "deactivate"
-
-    step {
-      name                 = "deactivate-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
 func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
@@ -1434,4 +969,469 @@ provider "aws" {
   region = %[4]q
 }
 `, rName, zoneName, primaryRegion, alternateRegion)
+}
+
+func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_arcregionswitch_plan" {
+				continue
+			}
+
+			_, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.ID)
+
+			if err == nil {
+				return fmt.Errorf("ARC Region Switch Plan %s still exists", rs.Primary.ID)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckPlanExists(ctx context.Context, n string, v *sdktypes.Plan) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Plan not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ARC Region Switch Plan ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
+
+		output, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
+
+	input := arcregionswitch.ListPlansInput{}
+	_, err := conn.ListPlans(ctx, &input)
+
+	if err != nil {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+}
+
+func testAccPlanConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
+
+    step {
+      name                 = "basic-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[3]q
+
+    step {
+      name                 = "basic-step-primary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region())
+}
+
+func testAccPlanConfig_update(rName, description string, rto int) string {
+	alarms := fmt.Sprintf(`
+  associated_alarms {
+    name                = "test-alarm-1"
+    alarm_type          = "applicationHealth"
+    resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-1"
+  }`, acctest.Region())
+
+	if rto == 60 {
+		alarms += fmt.Sprintf(`
+  associated_alarms {
+    name                = "test-alarm-2"
+    alarm_type          = "applicationHealth"
+    resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-2"
+  }`, acctest.Region())
+	}
+
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name                            = %[1]q
+  execution_role                  = aws_iam_role.test.arn
+  recovery_approach               = "activePassive"
+  regions                         = [%[3]q, %[2]q]
+  primary_region                  = %[3]q
+  description                     = %[4]q
+  recovery_time_objective_minutes = %[5]d
+%[6]s
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
+
+    step {
+      name                 = "basic-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[3]q
+
+    step {
+      name                 = "basic-step-primary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region(), description, rto, alarms)
+}
+
+func testAccPlanConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  tags = {
+    %[4]q = %[5]q
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
+
+    step {
+      name                 = "basic-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[3]q
+
+    step {
+      name                 = "basic-step-primary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1)
+}
+
+func testAccPlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  tags = {
+    %[4]q = %[5]q
+    %[6]q = %[7]q
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
+
+    step {
+      name                 = "basic-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[3]q
+
+    step {
+      name                 = "basic-step-primary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccPlanConfig_minimalRegions(rName string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
+
+    step {
+      name                 = "minimal-step-secondary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[3]q
+
+    step {
+      name                 = "minimal-step-primary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region())
+}
+
+func testAccPlanConfig_multipleWorkflowsSameAction(rName string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activeActive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "activate-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "deactivate"
+
+    step {
+      name                 = "deactivate-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region())
 }
