@@ -299,7 +299,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.21.0-alpha.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250902143515-144af2bf0d95
-	github.com/hashicorp/terraform-plugin-testing v1.13.3-0.20250902202803-95081f880861
+	github.com/hashicorp/terraform-plugin-testing v1.13.3-0.20250903153441-d5311201d93c
 	github.com/jaswdr/faker/v2 v2.8.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38
@@ -348,7 +348,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/hc-install v0.9.2 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/terraform-exec v0.23.2-0.20250903114929-54411bed9f29 // indirect
+	github.com/hashicorp/terraform-exec v0.23.2-0.20250903143921-c05687bce503 // indirect
 	github.com/hashicorp/terraform-registry-address v0.3.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
