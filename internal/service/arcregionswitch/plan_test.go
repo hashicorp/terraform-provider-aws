@@ -35,13 +35,13 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_basic(rName, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "primary_region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "primary_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.execution_block_type", "ManualApproval"),
@@ -132,7 +132,7 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_basic(rName, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfarcregionswitch.ResourcePlan, resourceName),
@@ -284,8 +284,13 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 	})
 }
 
-func testAccPlanConfig_basic(rName, primaryRegion, alternateRegion string) string {
+func testAccPlanConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -307,12 +312,12 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = aws_iam_role.test.arn
   recovery_approach = "activePassive"
-  regions           = [%[2]q, %[3]q]
-  primary_region    = %[2]q
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = %[3]q
+    workflow_target_region = %[2]q
 
     step {
       name                 = "basic-step"
@@ -327,7 +332,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = %[2]q
+    workflow_target_region = %[3]q
 
     step {
       name                 = "basic-step-primary"
@@ -340,7 +345,7 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName, primaryRegion, alternateRegion)
+`, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
 func testAccPlanConfig_update(rName, description string, rto int, primaryRegion, alternateRegion string) string {
@@ -681,7 +686,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

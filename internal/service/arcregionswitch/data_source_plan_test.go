@@ -86,7 +86,7 @@ func testAccPlanDataSourceConfig_basic(rName string) string {
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
 }
-`, testAccPlanConfig_basic(rName, acctest.AlternateRegion(), acctest.Region()))
+`, testAccPlanConfig_basic(rName))
 }
 
 func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing.T) {
