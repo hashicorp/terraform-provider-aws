@@ -22,6 +22,7 @@ var (
 	FindGroupUserByThreePartKey              = findGroupUserByThreePartKey
 	FindIdentityProviderByTwoPartKey         = findIdentityProviderByTwoPartKey
 	FindLogDeliveryConfigurationByUserPoolID = findLogDeliveryConfigurationByUserPoolID
+	FindManagedLoginBrandingByThreePartKey   = findManagedLoginBrandingByThreePartKey
 	FindResourceServerByTwoPartKey           = findResourceServerByTwoPartKey
 	FindRiskConfigurationByTwoPartKey        = findRiskConfigurationByTwoPartKey
 	FindUserByTwoPartKey                     = findUserByTwoPartKey
