@@ -46,8 +46,11 @@ func TestAccCognitoIDPManagedLoginBranding_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("managed_login_branding_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("settings"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("settings_all"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("use_cognito_provided_values"), knownvalue.Bool(true)),
 				},
 			},
 			{
