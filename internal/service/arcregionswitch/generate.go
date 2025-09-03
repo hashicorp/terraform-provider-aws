@@ -3,5 +3,6 @@
 
 //go:generate go run ../../generate/servicepackage/main.go
 //go:generate go run ../../generate/tags/main.go -ServiceTagsMap -KVTValues -ListTags -ListTagsInIDElem=Arn -ListTagsOutTagsElem=ResourceTags -UpdateTags -TagInIDElem=Arn -UntagInTagsElem=ResourceTagKeys
+// ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package arcregionswitch

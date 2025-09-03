@@ -28,7 +28,7 @@ func TestAccARCRegionSwitchPlan_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPlanConfig_invalidRecoveryApproach(rName),
-				ExpectError: regexache.MustCompile(`Attribute recovery_approach value must be one of`),
+				ExpectError: regexache.MustCompile(`The provided value does not match any valid values`),
 			},
 			{
 				Config:      testAccPlanConfig_invalidExecutionRole(rName),
@@ -76,9 +76,11 @@ resource "aws_arcregionswitch_plan" "test" {
       name                 = "basic-step"
       execution_block_type = "ManualApproval"
 
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
+      execution_block_configuration {
+        execution_approval_config {
+          approval_role   = aws_iam_role.test.arn
+          timeout_minutes = 60
+        }
       }
     }
   }
@@ -103,9 +105,11 @@ resource "aws_arcregionswitch_plan" "test" {
       name                 = "basic-step"
       execution_block_type = "ManualApproval"
 
-      execution_approval_config {
-        approval_role   = "arn:aws:iam::123456789012:role/test"
-        timeout_minutes = 60
+      execution_block_configuration {
+        execution_approval_config {
+          approval_role   = "arn:aws:iam::123456789012:role/test"
+          timeout_minutes = 60
+        }
       }
     }
   }
@@ -147,9 +151,11 @@ resource "aws_arcregionswitch_plan" "test" {
       name                 = "single-region-step"
       execution_block_type = "ManualApproval"
 
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
+      execution_block_configuration {
+        execution_approval_config {
+          approval_role   = aws_iam_role.test.arn
+          timeout_minutes = 60
+        }
       }
     }
   }

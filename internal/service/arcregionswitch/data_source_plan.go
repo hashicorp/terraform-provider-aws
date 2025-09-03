@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func listRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planArn string) ([]awstypes.Route53HealthCheck, error) {
+func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planArn string) ([]awstypes.Route53HealthCheck, error) {
 	input := &arcregionswitch.ListRoute53HealthChecksInput{
 		Arn: aws.String(planArn),
 	}
@@ -168,7 +168,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 		// Wait for health check IDs to be populated (takes ~4 minutes)
 		timeout := 5 * time.Minute
 		healthCheckErr = retry.RetryContext(ctx, timeout, func() *retry.RetryError {
-			healthChecks, healthCheckErr = listRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
+			healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
 			if healthCheckErr != nil {
 				return retry.NonRetryableError(healthCheckErr)
 			}
@@ -183,7 +183,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 			return nil
 		})
 		if tfresource.TimedOut(healthCheckErr) {
-			healthChecks, healthCheckErr = listRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
+			healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
 			if healthCheckErr != nil {
 				resp.Diagnostics.AddError("reading Route53 health checks", healthCheckErr.Error())
 				return
@@ -195,7 +195,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 		}
 	} else {
 		// Fetch health checks without waiting
-		healthChecks, healthCheckErr = listRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
+		healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
 		if healthCheckErr != nil {
 			resp.Diagnostics.AddError("listing Route53 health checks", healthCheckErr.Error())
 			return
