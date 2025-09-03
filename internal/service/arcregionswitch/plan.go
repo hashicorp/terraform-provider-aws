@@ -5,13 +5,13 @@ package arcregionswitch
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,7 +22,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,6 +39,12 @@ func FindPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	output, err := conn.GetPlan(ctx, &input)
 
 	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
 		return nil, err
 	}
 
@@ -44,53 +53,6 @@ func FindPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	}
 
 	return output.Plan, nil
-}
-
-func ListTags(ctx context.Context, conn *arcregionswitch.Client, identifier string) (tftags.KeyValueTags, error) {
-	input := arcregionswitch.ListTagsForResourceInput{
-		Arn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResource(ctx, &input)
-
-	if err != nil {
-		return tftags.New(ctx, nil), err
-	}
-
-	return tftags.New(ctx, output.ResourceTags), nil
-}
-
-func UpdateTags(ctx context.Context, conn *arcregionswitch.Client, identifier string, oldTagsMap, newTagsMap any) error {
-	oldTags := tftags.New(ctx, oldTagsMap)
-	newTags := tftags.New(ctx, newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := arcregionswitch.UntagResourceInput{
-			Arn:             aws.String(identifier),
-			ResourceTagKeys: removedTags.Keys(),
-		}
-
-		_, err := conn.UntagResource(ctx, &input)
-
-		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := arcregionswitch.TagResourceInput{
-			Arn:  aws.String(identifier),
-			Tags: updatedTags.Map(),
-		}
-
-		_, err := conn.TagResource(ctx, &input)
-
-		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	return nil
 }
 
 // @FrameworkResource("aws_arcregionswitch_plan", name="Plan")
@@ -111,44 +73,603 @@ func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schem
 }
 
 type resourcePlanModel struct {
-	ARN                          types.String `tfsdk:"arn"`
-	ID                           types.String `tfsdk:"id"`
-	Name                         types.String `tfsdk:"name"`
-	ExecutionRole                types.String `tfsdk:"execution_role"`
-	RecoveryApproach             types.String `tfsdk:"recovery_approach"`
-	Regions                      types.List   `tfsdk:"regions"`
-	Description                  types.String `tfsdk:"description"`
-	PrimaryRegion                types.String `tfsdk:"primary_region"`
-	RecoveryTimeObjectiveMinutes types.Int64  `tfsdk:"recovery_time_objective_minutes"`
-	AssociatedAlarms             types.Set    `tfsdk:"associated_alarms"`
-	Workflow                     types.List   `tfsdk:"workflow"`
-	Region                       types.String `tfsdk:"region"`
-	Tags                         tftags.Map   `tfsdk:"tags"`
-	TagsAll                      tftags.Map   `tfsdk:"tags_all"`
+	Arn                          types.String                                         `tfsdk:"arn"`
+	ID                           types.String                                         `tfsdk:"id"`
+	Name                         types.String                                         `tfsdk:"name"`
+	ExecutionRole                types.String                                         `tfsdk:"execution_role"`
+	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]        `tfsdk:"recovery_approach"`
+	Regions                      fwtypes.ListOfString                                 `tfsdk:"regions"`
+	Description                  types.String                                         `tfsdk:"description"`
+	PrimaryRegion                types.String                                         `tfsdk:"primary_region"`
+	RecoveryTimeObjectiveMinutes types.Int64                                          `tfsdk:"recovery_time_objective_minutes"`
+	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel] `tfsdk:"associated_alarms"`
+	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]       `tfsdk:"workflow"`
+	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]        `tfsdk:"triggers"`
+	Region                       types.String                                         `tfsdk:"region"`
+	Tags                         tftags.Map                                           `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                           `tfsdk:"tags_all"`
+}
+
+// Custom expand to handle AssociatedAlarms set-to-map conversion
+// Expand converts the Terraform resource model to AWS API input.
+// Custom expansion is required because:
+// 1. Union Type Handling: ExecutionBlockConfiguration uses AWS SDK union types that AutoFlex cannot handle automatically
+// 2. Complex Nested Transformations: ScalingResources (list→map[string]map[string]) and RegionAndRoutingControls (list→map[string][]) require manual conversion
+// 3. Set-to-Map Conversions: AssociatedAlarms transforms from Terraform sets to AWS API maps with complex key generation
+// 4. Conditional Logic: Different execution block types require different field mappings and validations
+// AutoFlex works well for simple field mappings but cannot handle these complex structural transformations.
+func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag.Diagnostics) {
+	var apiObject arcregionswitch.CreatePlanInput
+
+	// Manually expand all fields except AssociatedAlarms and complex nested structures
+	diags.Append(flex.Expand(ctx, m.Name, &apiObject.Name)...)
+	diags.Append(flex.Expand(ctx, m.ExecutionRole, &apiObject.ExecutionRole)...)
+	diags.Append(flex.Expand(ctx, m.RecoveryApproach, &apiObject.RecoveryApproach)...)
+	diags.Append(flex.Expand(ctx, m.Regions, &apiObject.Regions)...)
+	diags.Append(flex.Expand(ctx, m.Description, &apiObject.Description)...)
+	diags.Append(flex.Expand(ctx, m.PrimaryRegion, &apiObject.PrimaryRegion)...)
+	diags.Append(flex.Expand(ctx, m.RecoveryTimeObjectiveMinutes, &apiObject.RecoveryTimeObjectiveMinutes)...)
+	diags.Append(flex.Expand(ctx, m.Triggers, &apiObject.Triggers)...)
+	diags.Append(flex.Expand(ctx, m.Tags, &apiObject.Tags)...)
+
+	// Handle AssociatedAlarms set-to-map conversion manually
+	if !m.AssociatedAlarms.IsNull() && !m.AssociatedAlarms.IsUnknown() {
+		var alarms []associatedAlarmModel
+		diags.Append(m.AssociatedAlarms.ElementsAs(ctx, &alarms, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		apiObject.AssociatedAlarms = make(map[string]awstypes.AssociatedAlarm, len(alarms))
+		for _, alarm := range alarms {
+			var apiAlarm awstypes.AssociatedAlarm
+			diags.Append(flex.Expand(ctx, alarm.AlarmType, &apiAlarm.AlarmType)...)
+			diags.Append(flex.Expand(ctx, alarm.ResourceIdentifier, &apiAlarm.ResourceIdentifier)...)
+			diags.Append(flex.Expand(ctx, alarm.CrossAccountRole, &apiAlarm.CrossAccountRole)...)
+			diags.Append(flex.Expand(ctx, alarm.ExternalId, &apiAlarm.ExternalId)...)
+
+			key := alarm.Name.ValueString()
+			apiObject.AssociatedAlarms[key] = apiAlarm
+		}
+	}
+
+	// Handle Workflows with complex nested ScalingResources transformation
+	if !m.Workflows.IsNull() && !m.Workflows.IsUnknown() {
+		var workflows []workflowModel
+		diags.Append(m.Workflows.ElementsAs(ctx, &workflows, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		apiObject.Workflows = make([]awstypes.Workflow, len(workflows))
+		for i, workflow := range workflows {
+			var apiWorkflow awstypes.Workflow
+			diags.Append(flex.Expand(ctx, workflow.WorkflowTargetAction, &apiWorkflow.WorkflowTargetAction)...)
+			diags.Append(flex.Expand(ctx, workflow.WorkflowTargetRegion, &apiWorkflow.WorkflowTargetRegion)...)
+			diags.Append(flex.Expand(ctx, workflow.WorkflowDescription, &apiWorkflow.WorkflowDescription)...)
+
+			// Handle Steps with EKS ScalingResources transformation
+			if !workflow.Steps.IsNull() && !workflow.Steps.IsUnknown() {
+				var steps []stepModel
+				diags.Append(workflow.Steps.ElementsAs(ctx, &steps, false)...)
+				if diags.HasError() {
+					return nil, diags
+				}
+
+				apiWorkflow.Steps = make([]awstypes.Step, len(steps))
+				for j, step := range steps {
+					var apiStep awstypes.Step
+					diags.Append(flex.Expand(ctx, step.Name, &apiStep.Name)...)
+					diags.Append(flex.Expand(ctx, step.Description, &apiStep.Description)...)
+					diags.Append(flex.Expand(ctx, step.ExecutionBlockType, &apiStep.ExecutionBlockType)...)
+
+					// Handle ExecutionBlockConfiguration with ScalingResources
+					if !step.ExecutionBlockConfiguration.IsNull() && !step.ExecutionBlockConfiguration.IsUnknown() {
+						var execConfigs []executionBlockConfigurationModel
+						diags.Append(step.ExecutionBlockConfiguration.ElementsAs(ctx, &execConfigs, false)...)
+						if diags.HasError() {
+							return nil, diags
+						}
+
+						if len(execConfigs) > 0 {
+							execConfig := execConfigs[0]
+
+							// Handle EksResourceScalingConfig specifically
+							if !execConfig.EksResourceScalingConfig.IsNull() {
+								data, d := execConfig.EksResourceScalingConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+
+								var apiEksConfig awstypes.EksResourceScalingConfiguration
+								diags.Append(flex.Expand(ctx, data.CapacityMonitoringApproach, &apiEksConfig.CapacityMonitoringApproach)...)
+								diags.Append(flex.Expand(ctx, data.TargetPercent, &apiEksConfig.TargetPercent)...)
+								diags.Append(flex.Expand(ctx, data.TimeoutMinutes, &apiEksConfig.TimeoutMinutes)...)
+								diags.Append(flex.Expand(ctx, data.KubernetesResourceType, &apiEksConfig.KubernetesResourceType)...)
+								diags.Append(flex.Expand(ctx, data.EksClusters, &apiEksConfig.EksClusters)...)
+								diags.Append(flex.Expand(ctx, data.Ungraceful, &apiEksConfig.Ungraceful)...)
+
+								// Handle complex ScalingResources conversion
+								if !data.ScalingResources.IsNull() && !data.ScalingResources.IsUnknown() {
+									var scalingResources []scalingResourcesModel
+									diags.Append(data.ScalingResources.ElementsAs(ctx, &scalingResources, false)...)
+									if diags.HasError() {
+										return nil, diags
+									}
+
+									apiEksConfig.ScalingResources = make([]map[string]map[string]awstypes.KubernetesScalingResource, len(scalingResources))
+									for k, sr := range scalingResources {
+										namespaceMap := make(map[string]map[string]awstypes.KubernetesScalingResource)
+
+										if !sr.Resources.IsNull() && !sr.Resources.IsUnknown() {
+											var resources []kubernetesScalingResourceModel
+											diags.Append(sr.Resources.ElementsAs(ctx, &resources, false)...)
+											if diags.HasError() {
+												return nil, diags
+											}
+
+											resourceMap := make(map[string]awstypes.KubernetesScalingResource)
+											for _, res := range resources {
+												var kubeRes awstypes.KubernetesScalingResource
+												diags.Append(flex.Expand(ctx, res.Name, &kubeRes.Name)...)
+												diags.Append(flex.Expand(ctx, res.Namespace, &kubeRes.Namespace)...)
+												diags.Append(flex.Expand(ctx, res.HpaName, &kubeRes.HpaName)...)
+
+												resourceMap[res.ResourceName.ValueString()] = kubeRes
+											}
+
+											namespaceMap[sr.Namespace.ValueString()] = resourceMap
+										}
+
+										apiEksConfig.ScalingResources[k] = namespaceMap
+									}
+								}
+
+								r := awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig{
+									Value: apiEksConfig,
+								}
+								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.ArcRoutingControlConfig.IsNull() {
+								// Handle ArcRoutingControlConfig specifically
+								data, d := execConfig.ArcRoutingControlConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+
+								var apiArcConfig awstypes.ArcRoutingControlConfiguration
+								diags.Append(flex.Expand(ctx, data.CrossAccountRole, &apiArcConfig.CrossAccountRole)...)
+								diags.Append(flex.Expand(ctx, data.ExternalId, &apiArcConfig.ExternalId)...)
+								diags.Append(flex.Expand(ctx, data.TimeoutMinutes, &apiArcConfig.TimeoutMinutes)...)
+
+								// Handle complex RegionAndRoutingControls conversion
+								if !data.RegionAndRoutingControls.IsNull() && !data.RegionAndRoutingControls.IsUnknown() {
+									var regionControls []regionAndRoutingControlsModel
+									diags.Append(data.RegionAndRoutingControls.ElementsAs(ctx, &regionControls, false)...)
+									if diags.HasError() {
+										return nil, diags
+									}
+
+									apiArcConfig.RegionAndRoutingControls = make(map[string][]awstypes.ArcRoutingControlState, len(regionControls))
+									for _, rc := range regionControls {
+										region := rc.Region.ValueString()
+
+										if !rc.RoutingControlArns.IsNull() && !rc.RoutingControlArns.IsUnknown() {
+											var arns []string
+											diags.Append(rc.RoutingControlArns.ElementsAs(ctx, &arns, false)...)
+											if diags.HasError() {
+												return nil, diags
+											}
+
+											states := make([]awstypes.ArcRoutingControlState, len(arns))
+											for i, arn := range arns {
+												states[i] = awstypes.ArcRoutingControlState{
+													RoutingControlArn: &arn,
+													// Default state - could be configurable
+													State: awstypes.RoutingControlStateChangeOn,
+												}
+											}
+
+											apiArcConfig.RegionAndRoutingControls[region] = states
+										}
+									}
+								}
+
+								r := awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig{
+									Value: apiArcConfig,
+								}
+								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.ExecutionApprovalConfig.IsNull() {
+								data, d := execConfig.ExecutionApprovalConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+								var r awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
+								diags.Append(flex.Expand(ctx, data, &r.Value)...)
+								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.EcsCapacityIncreaseConfig.IsNull() {
+								data, d := execConfig.EcsCapacityIncreaseConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+								var r awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
+								diags.Append(flex.Expand(ctx, data, &r.Value)...)
+								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.Route53HealthCheckConfig.IsNull() {
+								data, d := execConfig.Route53HealthCheckConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+								var r awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
+								diags.Append(flex.Expand(ctx, data, &r.Value)...)
+								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.CustomActionLambdaConfig.IsNull() {
+								data, d := execConfig.CustomActionLambdaConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+								var r awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
+								diags.Append(flex.Expand(ctx, data, &r.Value)...)
+								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.ParallelConfig.IsNull() {
+								data, d := execConfig.ParallelConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+
+								// Handle ParallelConfig with nested step execution block configurations
+								var apiParallelConfig awstypes.ParallelExecutionBlockConfiguration
+								if !data.Step.IsNull() && !data.Step.IsUnknown() {
+									var parallelSteps []parallelStepModel
+									diags.Append(data.Step.ElementsAs(ctx, &parallelSteps, false)...)
+									if diags.HasError() {
+										return nil, diags
+									}
+
+									apiParallelConfig.Steps = make([]awstypes.Step, len(parallelSteps))
+									for k, pStep := range parallelSteps {
+										var apiParallelStep awstypes.Step
+										diags.Append(flex.Expand(ctx, pStep.Name, &apiParallelStep.Name)...)
+										diags.Append(flex.Expand(ctx, pStep.ExecutionBlockType, &apiParallelStep.ExecutionBlockType)...)
+										diags.Append(flex.Expand(ctx, pStep.Description, &apiParallelStep.Description)...)
+
+										// Handle execution block configuration for parallel steps
+										if !pStep.ExecutionApprovalConfig.IsNull() {
+											pData, pD := pStep.ExecutionApprovalConfig.ToPtr(ctx)
+											diags.Append(pD...)
+											if diags.HasError() {
+												return nil, diags
+											}
+											var pR awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
+											diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
+											apiParallelStep.ExecutionBlockConfiguration = &pR
+										} else if !pStep.CustomActionLambdaConfig.IsNull() {
+											pData, pD := pStep.CustomActionLambdaConfig.ToPtr(ctx)
+											diags.Append(pD...)
+											if diags.HasError() {
+												return nil, diags
+											}
+											var pR awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
+											diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
+											apiParallelStep.ExecutionBlockConfiguration = &pR
+										}
+
+										apiParallelConfig.Steps[k] = apiParallelStep
+									}
+								}
+
+								var r awstypes.ExecutionBlockConfigurationMemberParallelConfig
+								r.Value = apiParallelConfig
+								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.GlobalAuroraConfig.IsNull() {
+								data, d := execConfig.GlobalAuroraConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+								var r awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
+								diags.Append(flex.Expand(ctx, data, &r.Value)...)
+								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.Ec2AsgCapacityIncreaseConfig.IsNull() {
+								data, d := execConfig.Ec2AsgCapacityIncreaseConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+								var r awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
+								diags.Append(flex.Expand(ctx, data, &r.Value)...)
+								apiStep.ExecutionBlockConfiguration = &r
+							}
+						}
+					}
+
+					apiWorkflow.Steps[j] = apiStep
+				}
+			}
+
+			apiObject.Workflows[i] = apiWorkflow
+		}
+	}
+
+	return apiObject, diags
+}
+
+// Custom flatten to handle reverse transformations
+// Flatten converts AWS API output to Terraform resource model.
+// Custom flattening is required because:
+// 1. Union Type Handling: ExecutionBlockConfiguration union types need manual type switching and field extraction
+// 2. Reverse Complex Transformations: Converting AWS API maps back to Terraform list structures for ScalingResources and RegionAndRoutingControls
+// 3. Map-to-Set Conversions: AssociatedAlarms must be converted from AWS API maps back to Terraform sets
+// 4. Workflow Ordering: AWS API returns workflows in non-deterministic order, requiring sorting for consistent Terraform state
+// 5. Nested Parallel Steps: Parallel execution block configurations require recursive flattening with proper initialization
+// AutoFlex cannot handle these reverse transformations and complex nested structures automatically.
+func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Diagnostics) {
+	plan, ok := v.(*awstypes.Plan)
+	if !ok {
+		diags.AddError(
+			"Unexpected Type",
+			"Expected *awstypes.Plan",
+		)
+		return diags
+	}
+
+	if plan == nil {
+		diags.AddError(
+			"Unexpected Response",
+			"Plan is nil",
+		)
+		return diags
+	}
+
+	// Handle simple fields with AutoFlex
+	diags.Append(flex.Flatten(ctx, plan.Name, &m.Name)...)
+	diags.Append(flex.Flatten(ctx, plan.ExecutionRole, &m.ExecutionRole)...)
+	diags.Append(flex.Flatten(ctx, plan.RecoveryApproach, &m.RecoveryApproach)...)
+	diags.Append(flex.Flatten(ctx, plan.Regions, &m.Regions)...)
+	diags.Append(flex.Flatten(ctx, plan.Description, &m.Description)...)
+	diags.Append(flex.Flatten(ctx, plan.PrimaryRegion, &m.PrimaryRegion)...)
+	diags.Append(flex.Flatten(ctx, plan.RecoveryTimeObjectiveMinutes, &m.RecoveryTimeObjectiveMinutes)...)
+	diags.Append(flex.Flatten(ctx, plan.Triggers, &m.Triggers)...)
+
+	// Handle AssociatedAlarms map-to-set conversion
+	if len(plan.AssociatedAlarms) > 0 {
+		alarms := make([]associatedAlarmModel, 0, len(plan.AssociatedAlarms))
+		for name, alarm := range plan.AssociatedAlarms {
+			var alarmModel associatedAlarmModel
+			alarmModel.Name = types.StringValue(name)
+			diags.Append(flex.Flatten(ctx, alarm.AlarmType, &alarmModel.AlarmType)...)
+			diags.Append(flex.Flatten(ctx, alarm.ResourceIdentifier, &alarmModel.ResourceIdentifier)...)
+			diags.Append(flex.Flatten(ctx, alarm.CrossAccountRole, &alarmModel.CrossAccountRole)...)
+			diags.Append(flex.Flatten(ctx, alarm.ExternalId, &alarmModel.ExternalId)...)
+			alarms = append(alarms, alarmModel)
+		}
+		var d fwdiag.Diagnostics
+		m.AssociatedAlarms, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, alarms)
+		diags.Append(d...)
+	}
+
+	// Handle Workflows with complex nested transformations
+	if len(plan.Workflows) > 0 {
+		// Sort workflows by target action for consistent ordering (activate before deactivate)
+		sort.Slice(plan.Workflows, func(i, j int) bool {
+			return string(plan.Workflows[i].WorkflowTargetAction) < string(plan.Workflows[j].WorkflowTargetAction)
+		})
+
+		workflows := make([]workflowModel, len(plan.Workflows))
+		for i, workflow := range plan.Workflows {
+			diags.Append(flex.Flatten(ctx, workflow.WorkflowTargetAction, &workflows[i].WorkflowTargetAction)...)
+			diags.Append(flex.Flatten(ctx, workflow.WorkflowTargetRegion, &workflows[i].WorkflowTargetRegion)...)
+			diags.Append(flex.Flatten(ctx, workflow.WorkflowDescription, &workflows[i].WorkflowDescription)...)
+
+			// Handle Steps - this is where the complex logic will go
+			if len(workflow.Steps) > 0 {
+				steps := make([]stepModel, len(workflow.Steps))
+				for j, step := range workflow.Steps {
+					diags.Append(flex.Flatten(ctx, step.Name, &steps[j].Name)...)
+					diags.Append(flex.Flatten(ctx, step.Description, &steps[j].Description)...)
+					diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &steps[j].ExecutionBlockType)...)
+
+					// Handle ExecutionBlockConfiguration - reverse of our complex expand logic
+					if step.ExecutionBlockConfiguration != nil {
+						// Initialize with empty values for all fields to avoid nil pointer issues
+						execConfig := executionBlockConfigurationModel{
+							ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
+							Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
+							CustomActionLambdaConfig:     fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
+							GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
+							Ec2AsgCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2AsgCapacityIncreaseConfigModel](ctx),
+							EcsCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
+							EksResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
+							ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
+							ParallelConfig:               fwtypes.NewListNestedObjectValueOfNull[parallelConfigModel](ctx),
+						}
+
+						// Handle union type flattening manually (similar to expand logic)
+						switch t := step.ExecutionBlockConfiguration.(type) {
+						case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
+							// Handle EKS ScalingResources complex transformation manually
+							var eksConfig eksResourceScalingConfigModel
+							diags.Append(flex.Flatten(ctx, t.Value.CapacityMonitoringApproach, &eksConfig.CapacityMonitoringApproach)...)
+							diags.Append(flex.Flatten(ctx, t.Value.EksClusters, &eksConfig.EksClusters)...)
+							diags.Append(flex.Flatten(ctx, t.Value.KubernetesResourceType, &eksConfig.KubernetesResourceType)...)
+							diags.Append(flex.Flatten(ctx, t.Value.TargetPercent, &eksConfig.TargetPercent)...)
+							diags.Append(flex.Flatten(ctx, t.Value.TimeoutMinutes, &eksConfig.TimeoutMinutes)...)
+							diags.Append(flex.Flatten(ctx, t.Value.Ungraceful, &eksConfig.Ungraceful)...)
+
+							// Handle ScalingResources: []map[string]map[string]KubernetesScalingResource → []scalingResourcesModel
+							if len(t.Value.ScalingResources) > 0 {
+								scalingResources := make([]scalingResourcesModel, len(t.Value.ScalingResources))
+								for i, sr := range t.Value.ScalingResources {
+									for namespace, resourceMap := range sr {
+										scalingResources[i].Namespace = types.StringValue(namespace)
+
+										// Convert map[string]KubernetesScalingResource → []kubernetesScalingResourceModel
+										resources := make([]kubernetesScalingResourceModel, 0, len(resourceMap))
+										for resourceName, resource := range resourceMap {
+											var resourceModel kubernetesScalingResourceModel
+											resourceModel.ResourceName = types.StringValue(resourceName)
+											diags.Append(flex.Flatten(ctx, resource.Name, &resourceModel.Name)...)
+											diags.Append(flex.Flatten(ctx, resource.Namespace, &resourceModel.Namespace)...)
+											diags.Append(flex.Flatten(ctx, resource.HpaName, &resourceModel.HpaName)...)
+											resources = append(resources, resourceModel)
+										}
+
+										var d fwdiag.Diagnostics
+										scalingResources[i].Resources, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, resources)
+										diags.Append(d...)
+									}
+								}
+
+								var d fwdiag.Diagnostics
+								eksConfig.ScalingResources, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, scalingResources)
+								diags.Append(d...)
+							}
+
+							execConfig.EksResourceScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksConfig)
+						case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
+							// Handle ARC RegionAndRoutingControls complex transformation manually
+							var arcConfig arcRoutingControlConfigModel
+							diags.Append(flex.Flatten(ctx, t.Value.CrossAccountRole, &arcConfig.CrossAccountRole)...)
+							diags.Append(flex.Flatten(ctx, t.Value.ExternalId, &arcConfig.ExternalId)...)
+							diags.Append(flex.Flatten(ctx, t.Value.TimeoutMinutes, &arcConfig.TimeoutMinutes)...)
+
+							// Handle RegionAndRoutingControls: map[string][]ArcRoutingControlState → []regionAndRoutingControlsModel
+							if len(t.Value.RegionAndRoutingControls) > 0 {
+								regionControls := make([]regionAndRoutingControlsModel, 0, len(t.Value.RegionAndRoutingControls))
+								for region, controlStates := range t.Value.RegionAndRoutingControls {
+									var regionModel regionAndRoutingControlsModel
+									regionModel.Region = types.StringValue(region)
+
+									// Extract ARNs from ArcRoutingControlState slice
+									arns := make([]string, len(controlStates))
+									for i, state := range controlStates {
+										if state.RoutingControlArn != nil {
+											arns[i] = *state.RoutingControlArn
+										}
+									}
+
+									diags.Append(flex.Flatten(ctx, arns, &regionModel.RoutingControlArns)...)
+
+									regionControls = append(regionControls, regionModel)
+								}
+
+								var d fwdiag.Diagnostics
+								arcConfig.RegionAndRoutingControls, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, regionControls)
+								diags.Append(d...)
+							}
+
+							execConfig.ArcRoutingControlConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &arcConfig)
+						case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.ExecutionApprovalConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.EcsCapacityIncreaseConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.Route53HealthCheckConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.CustomActionLambdaConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
+							// Handle ParallelConfig with nested step execution block configurations manually
+							var parallelConfig parallelConfigModel
+
+							if len(t.Value.Steps) > 0 {
+								parallelSteps := make([]parallelStepModel, len(t.Value.Steps))
+								for i, step := range t.Value.Steps {
+									// Initialize with empty values for all fields to avoid nil pointer issues
+									parallelSteps[i] = parallelStepModel{
+										CustomActionLambdaConfig: fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
+										ExecutionApprovalConfig:  fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
+									}
+
+									diags.Append(flex.Flatten(ctx, step.Name, &parallelSteps[i].Name)...)
+									diags.Append(flex.Flatten(ctx, step.Description, &parallelSteps[i].Description)...)
+									diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &parallelSteps[i].ExecutionBlockType)...)
+
+									// Handle parallel step execution block configurations
+									if step.ExecutionBlockConfiguration != nil {
+										switch pType := step.ExecutionBlockConfiguration.(type) {
+										case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].CustomActionLambdaConfig)...)
+										case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ExecutionApprovalConfig)...)
+										}
+									}
+								}
+
+								var d fwdiag.Diagnostics
+								parallelConfig.Step, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, parallelSteps)
+								diags.Append(d...)
+							}
+
+							execConfig.ParallelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &parallelConfig)
+						case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.GlobalAuroraConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.Ec2AsgCapacityIncreaseConfig)...)
+						}
+
+						var d fwdiag.Diagnostics
+						steps[j].ExecutionBlockConfiguration, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []executionBlockConfigurationModel{execConfig})
+						diags.Append(d...)
+					} else {
+						// Set empty list if no execution block configuration
+						var d fwdiag.Diagnostics
+						steps[j].ExecutionBlockConfiguration, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []executionBlockConfigurationModel{})
+						diags.Append(d...)
+					}
+				}
+
+				var d fwdiag.Diagnostics
+				workflows[i].Steps, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, steps)
+				diags.Append(d...)
+			} else {
+				// Set empty list if no steps
+				var d fwdiag.Diagnostics
+				workflows[i].Steps, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []stepModel{})
+				diags.Append(d...)
+			}
+		}
+
+		var d fwdiag.Diagnostics
+		m.Workflows, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, workflows)
+		diags.Append(d...)
+	} else {
+		// Set empty list if no workflows
+		var d fwdiag.Diagnostics
+		m.Workflows, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []workflowModel{})
+		diags.Append(d...)
+	}
+
+	return diags
 }
 
 type associatedAlarmModel struct {
-	Name               types.String `tfsdk:"name"`
-	AlarmType          types.String `tfsdk:"alarm_type"`
-	ResourceIdentifier types.String `tfsdk:"resource_identifier"`
-	CrossAccountRole   types.String `tfsdk:"cross_account_role"`
-	ExternalId         types.String `tfsdk:"external_id"`
+	Name               types.String                           `tfsdk:"name"`
+	AlarmType          fwtypes.StringEnum[awstypes.AlarmType] `tfsdk:"alarm_type"`
+	ResourceIdentifier types.String                           `tfsdk:"resource_identifier"`
+	CrossAccountRole   types.String                           `tfsdk:"cross_account_role"`
+	ExternalId         types.String                           `tfsdk:"external_id"`
 }
 
 type workflowModel struct {
-	WorkflowTargetAction types.String `tfsdk:"workflow_target_action"`
-	WorkflowTargetRegion types.String `tfsdk:"workflow_target_region"`
-	WorkflowDescription  types.String `tfsdk:"workflow_description"`
-	Step                 types.List   `tfsdk:"step"`
+	WorkflowTargetAction fwtypes.StringEnum[awstypes.WorkflowTargetAction] `tfsdk:"workflow_target_action"`
+	WorkflowTargetRegion types.String                                      `tfsdk:"workflow_target_region"`
+	WorkflowDescription  types.String                                      `tfsdk:"workflow_description"`
+	Steps                fwtypes.ListNestedObjectValueOf[stepModel]        `tfsdk:"step"`
 }
 
 type route53HealthCheckConfigModel struct {
-	HostedZoneId     types.String `tfsdk:"hosted_zone_id"`
-	RecordName       types.String `tfsdk:"record_name"`
-	CrossAccountRole types.String `tfsdk:"cross_account_role"`
-	ExternalId       types.String `tfsdk:"external_id"`
-	TimeoutMinutes   types.Int64  `tfsdk:"timeout_minutes"`
-	RecordSets       types.List   `tfsdk:"record_sets"`
+	HostedZoneId     types.String                                    `tfsdk:"hosted_zone_id"`
+	RecordName       types.String                                    `tfsdk:"record_name"`
+	CrossAccountRole types.String                                    `tfsdk:"cross_account_role"`
+	ExternalId       types.String                                    `tfsdk:"external_id"`
+	TimeoutMinutes   types.Int64                                     `tfsdk:"timeout_minutes"`
+	RecordSets       fwtypes.ListNestedObjectValueOf[recordSetModel] `tfsdk:"record_sets"`
 }
 
 type recordSetModel struct {
@@ -157,18 +678,22 @@ type recordSetModel struct {
 }
 
 type stepModel struct {
-	Name                         types.String `tfsdk:"name"`
-	ExecutionBlockType           types.String `tfsdk:"execution_block_type"`
-	Description                  types.String `tfsdk:"description"`
-	ExecutionApprovalConfig      types.List   `tfsdk:"execution_approval_config"`
-	Route53HealthCheckConfig     types.List   `tfsdk:"route53_health_check_config"`
-	CustomActionLambdaConfig     types.List   `tfsdk:"custom_action_lambda_config"`
-	GlobalAuroraConfig           types.List   `tfsdk:"global_aurora_config"`
-	Ec2AsgCapacityIncreaseConfig types.List   `tfsdk:"ec2_asg_capacity_increase_config"`
-	EcsCapacityIncreaseConfig    types.List   `tfsdk:"ecs_capacity_increase_config"`
-	EksResourceScalingConfig     types.List   `tfsdk:"eks_resource_scaling_config"`
-	ArcRoutingControlConfig      types.List   `tfsdk:"arc_routing_control_config"`
-	ParallelConfig               types.List   `tfsdk:"parallel_config"`
+	Name                        types.String                                                      `tfsdk:"name"`
+	ExecutionBlockType          fwtypes.StringEnum[awstypes.ExecutionBlockType]                   `tfsdk:"execution_block_type"`
+	Description                 types.String                                                      `tfsdk:"description"`
+	ExecutionBlockConfiguration fwtypes.ListNestedObjectValueOf[executionBlockConfigurationModel] `tfsdk:"execution_block_configuration"`
+}
+
+type executionBlockConfigurationModel struct {
+	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
+	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
+	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config"`
+	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
+	Ec2AsgCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2AsgCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
+	EcsCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
+	EksResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config"`
+	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config"`
+	ParallelConfig               fwtypes.ListNestedObjectValueOf[parallelConfigModel]               `tfsdk:"parallel_config"`
 }
 
 type executionApprovalConfigModel struct {
@@ -177,49 +702,49 @@ type executionApprovalConfigModel struct {
 }
 
 type customActionLambdaConfigModel struct {
-	RegionToRun          types.String  `tfsdk:"region_to_run"`
-	RetryIntervalMinutes types.Float64 `tfsdk:"retry_interval_minutes"`
-	TimeoutMinutes       types.Int64   `tfsdk:"timeout_minutes"`
-	Lambda               types.List    `tfsdk:"lambda"`
-	Ungraceful           types.List    `tfsdk:"ungraceful"`
+	RegionToRun          types.String                                     `tfsdk:"region_to_run"`
+	RetryIntervalMinutes types.Float64                                    `tfsdk:"retry_interval_minutes"`
+	TimeoutMinutes       types.Int64                                      `tfsdk:"timeout_minutes"`
+	Lambda               fwtypes.ListNestedObjectValueOf[lambdaModel]     `tfsdk:"lambda"`
+	Ungraceful           fwtypes.ListNestedObjectValueOf[ungracefulModel] `tfsdk:"ungraceful"`
 }
 
 type lambdaModel struct {
-	ARN              types.String `tfsdk:"arn"`
+	Arn              types.String `tfsdk:"arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
-	ExternalID       types.String `tfsdk:"external_id"`
+	ExternalId       types.String `tfsdk:"external_id"`
 }
 
 type ungracefulModel struct {
-	Behavior types.String `tfsdk:"behavior"`
+	Behavior fwtypes.StringEnum[awstypes.LambdaUngracefulBehavior] `tfsdk:"behavior"`
 }
 
 // Global Aurora Configuration Models
 type globalAuroraConfigModel struct {
-	Behavior                types.String `tfsdk:"behavior"`
-	GlobalClusterIdentifier types.String `tfsdk:"global_cluster_identifier"`
-	DatabaseClusterArns     types.List   `tfsdk:"database_cluster_arns"`
-	CrossAccountRole        types.String `tfsdk:"cross_account_role"`
-	ExternalId              types.String `tfsdk:"external_id"`
-	TimeoutMinutes          types.Int64  `tfsdk:"timeout_minutes"`
-	Ungraceful              types.List   `tfsdk:"ungraceful"`
+	Behavior                fwtypes.StringEnum[awstypes.GlobalAuroraDefaultBehavior]     `tfsdk:"behavior"`
+	GlobalClusterIdentifier types.String                                                 `tfsdk:"global_cluster_identifier"`
+	DatabaseClusterArns     fwtypes.ListOfARN                                            `tfsdk:"database_cluster_arns"`
+	CrossAccountRole        types.String                                                 `tfsdk:"cross_account_role"`
+	ExternalId              types.String                                                 `tfsdk:"external_id"`
+	TimeoutMinutes          types.Int64                                                  `tfsdk:"timeout_minutes"`
+	Ungraceful              fwtypes.ListNestedObjectValueOf[globalAuroraUngracefulModel] `tfsdk:"ungraceful"`
 }
 
 type globalAuroraUngracefulModel struct {
-	Ungraceful types.String `tfsdk:"ungraceful"`
+	Ungraceful fwtypes.StringEnum[awstypes.GlobalAuroraUngracefulBehavior] `tfsdk:"ungraceful"`
 }
 
 // EC2 ASG Configuration Models
 type ec2AsgCapacityIncreaseConfigModel struct {
-	CapacityMonitoringApproach types.String `tfsdk:"capacity_monitoring_approach"`
-	TargetPercent              types.Int64  `tfsdk:"target_percent"`
-	TimeoutMinutes             types.Int64  `tfsdk:"timeout_minutes"`
-	Asgs                       types.List   `tfsdk:"asgs"`
-	Ungraceful                 types.List   `tfsdk:"ungraceful"`
+	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.Ec2AsgCapacityMonitoringApproach] `tfsdk:"capacity_monitoring_approach"`
+	TargetPercent              types.Int64                                                   `tfsdk:"target_percent"`
+	TimeoutMinutes             types.Int64                                                   `tfsdk:"timeout_minutes"`
+	Asgs                       fwtypes.ListNestedObjectValueOf[asgModel]                     `tfsdk:"asgs"`
+	Ungraceful                 fwtypes.ListNestedObjectValueOf[ec2UngracefulModel]           `tfsdk:"ungraceful"`
 }
 
 type asgModel struct {
-	ARN              types.String `tfsdk:"arn"`
+	Arn              types.String `tfsdk:"arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
 	ExternalId       types.String `tfsdk:"external_id"`
 }
@@ -230,11 +755,11 @@ type ec2UngracefulModel struct {
 
 // ECS Configuration Models
 type ecsCapacityIncreaseConfigModel struct {
-	CapacityMonitoringApproach types.String `tfsdk:"capacity_monitoring_approach"`
-	TargetPercent              types.Int64  `tfsdk:"target_percent"`
-	TimeoutMinutes             types.Int64  `tfsdk:"timeout_minutes"`
-	Services                   types.List   `tfsdk:"services"`
-	Ungraceful                 types.List   `tfsdk:"ungraceful"`
+	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.EcsCapacityMonitoringApproach] `tfsdk:"capacity_monitoring_approach"`
+	TargetPercent              types.Int64                                                `tfsdk:"target_percent"`
+	TimeoutMinutes             types.Int64                                                `tfsdk:"timeout_minutes"`
+	Services                   fwtypes.ListNestedObjectValueOf[serviceModel]              `tfsdk:"services"`
+	Ungraceful                 fwtypes.ListNestedObjectValueOf[ecsUngracefulModel]        `tfsdk:"ungraceful"`
 }
 
 type serviceModel struct {
@@ -250,13 +775,13 @@ type ecsUngracefulModel struct {
 
 // EKS Configuration Models
 type eksResourceScalingConfigModel struct {
-	CapacityMonitoringApproach types.String `tfsdk:"capacity_monitoring_approach"`
-	TargetPercent              types.Int64  `tfsdk:"target_percent"`
-	TimeoutMinutes             types.Int64  `tfsdk:"timeout_minutes"`
-	KubernetesResourceType     types.List   `tfsdk:"kubernetes_resource_type"`
-	EksClusters                types.List   `tfsdk:"eks_clusters"`
-	ScalingResources           types.List   `tfsdk:"scaling_resources"`
-	Ungraceful                 types.List   `tfsdk:"ungraceful"`
+	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.EksCapacityMonitoringApproach]   `tfsdk:"capacity_monitoring_approach"`
+	TargetPercent              types.Int64                                                  `tfsdk:"target_percent"`
+	TimeoutMinutes             types.Int64                                                  `tfsdk:"timeout_minutes"`
+	KubernetesResourceType     fwtypes.ListNestedObjectValueOf[kubernetesResourceTypeModel] `tfsdk:"kubernetes_resource_type"`
+	EksClusters                fwtypes.ListNestedObjectValueOf[eksClusterModel]             `tfsdk:"eks_clusters"`
+	ScalingResources           fwtypes.ListNestedObjectValueOf[scalingResourcesModel]       `tfsdk:"scaling_resources"`
+	Ungraceful                 fwtypes.ListNestedObjectValueOf[eksUngracefulModel]          `tfsdk:"ungraceful"`
 }
 
 type kubernetesResourceTypeModel struct {
@@ -271,8 +796,8 @@ type eksClusterModel struct {
 }
 
 type scalingResourcesModel struct {
-	Namespace types.String `tfsdk:"namespace"`
-	Resources types.List   `tfsdk:"resources"`
+	Namespace types.String                                                    `tfsdk:"namespace"`
+	Resources fwtypes.ListNestedObjectValueOf[kubernetesScalingResourceModel] `tfsdk:"resources"`
 }
 
 type kubernetesScalingResourceModel struct {
@@ -288,28 +813,42 @@ type eksUngracefulModel struct {
 
 // ARC Routing Control Configuration Models
 type arcRoutingControlConfigModel struct {
-	CrossAccountRole         types.String `tfsdk:"cross_account_role"`
-	ExternalId               types.String `tfsdk:"external_id"`
-	TimeoutMinutes           types.Int64  `tfsdk:"timeout_minutes"`
-	RegionAndRoutingControls types.List   `tfsdk:"region_and_routing_controls"`
+	CrossAccountRole         types.String                                                   `tfsdk:"cross_account_role"`
+	ExternalId               types.String                                                   `tfsdk:"external_id"`
+	TimeoutMinutes           types.Int64                                                    `tfsdk:"timeout_minutes"`
+	RegionAndRoutingControls fwtypes.ListNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls"`
 }
 
 type regionAndRoutingControlsModel struct {
-	Region             types.String `tfsdk:"region"`
-	RoutingControlArns types.List   `tfsdk:"routing_control_arns"`
+	Region             types.String      `tfsdk:"region"`
+	RoutingControlArns fwtypes.ListOfARN `tfsdk:"routing_control_arns"`
 }
 
 // Parallel Configuration Models
 type parallelConfigModel struct {
-	Step types.List `tfsdk:"step"`
+	Step fwtypes.ListNestedObjectValueOf[parallelStepModel] `tfsdk:"step"`
 }
 
 type parallelStepModel struct {
-	Name                     types.String `tfsdk:"name"`
-	ExecutionBlockType       types.String `tfsdk:"execution_block_type"`
-	Description              types.String `tfsdk:"description"`
-	ExecutionApprovalConfig  types.List   `tfsdk:"execution_approval_config"`
-	CustomActionLambdaConfig types.List   `tfsdk:"custom_action_lambda_config"`
+	Name                     types.String                                                   `tfsdk:"name"`
+	ExecutionBlockType       fwtypes.StringEnum[awstypes.ExecutionBlockType]                `tfsdk:"execution_block_type"`
+	Description              types.String                                                   `tfsdk:"description"`
+	ExecutionApprovalConfig  fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]  `tfsdk:"execution_approval_config"`
+	CustomActionLambdaConfig fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel] `tfsdk:"custom_action_lambda_config"`
+}
+
+// Trigger Configuration Models
+type triggerModel struct {
+	Action                           fwtypes.StringEnum[awstypes.WorkflowTargetAction] `tfsdk:"action"`
+	Description                      types.String                                      `tfsdk:"description"`
+	MinDelayMinutesBetweenExecutions types.Int64                                       `tfsdk:"min_delay_minutes_between_executions"`
+	TargetRegion                     types.String                                      `tfsdk:"target_region"`
+	Conditions                       fwtypes.ListNestedObjectValueOf[conditionModel]   `tfsdk:"conditions"`
+}
+
+type conditionModel struct {
+	AssociatedAlarmName types.String                                `tfsdk:"associated_alarm_name"`
+	Condition           fwtypes.StringEnum[awstypes.AlarmCondition] `tfsdk:"condition"`
 }
 
 func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -321,50 +860,14 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
-	var regions []string
-	resp.Diagnostics.Append(plan.Regions.ElementsAs(ctx, &regions, false)...)
-	if resp.Diagnostics.HasError() {
+	// Use custom Expand method for resourcePlanModel
+	expanded, diags := plan.Expand(ctx)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	input := arcregionswitch.CreatePlanInput{
-		Name:             aws.String(plan.Name.ValueString()),
-		ExecutionRole:    aws.String(plan.ExecutionRole.ValueString()),
-		RecoveryApproach: awstypes.RecoveryApproach(plan.RecoveryApproach.ValueString()),
-		Regions:          regions,
-	}
-
-	if !plan.Description.IsNull() {
-		input.Description = aws.String(plan.Description.ValueString())
-	}
-
-	if !plan.PrimaryRegion.IsNull() {
-		input.PrimaryRegion = aws.String(plan.PrimaryRegion.ValueString())
-	}
-
-	if !plan.RecoveryTimeObjectiveMinutes.IsNull() {
-		input.RecoveryTimeObjectiveMinutes = aws.Int32(int32(plan.RecoveryTimeObjectiveMinutes.ValueInt64()))
-	}
-
-	// Handle workflows - API requires this field
-	if !plan.Workflow.IsNull() {
-		var workflows []workflowModel
-		resp.Diagnostics.Append(plan.Workflow.ElementsAs(ctx, &workflows, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.Workflows = expandWorkflowsFromFramework(workflows)
-	}
-
-	// Handle associated alarms
-	if !plan.AssociatedAlarms.IsNull() && !plan.AssociatedAlarms.IsUnknown() {
-		var alarms []associatedAlarmModel
-		resp.Diagnostics.Append(plan.AssociatedAlarms.ElementsAs(ctx, &alarms, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.AssociatedAlarms = expandAssociatedAlarmsFromFramework(alarms)
-	}
+	input := expanded.(arcregionswitch.CreatePlanInput)
 
 	// Handle tags - use getTagsIn to get all tags including provider defaults
 	input.Tags = getTagsIn(ctx)
@@ -375,297 +878,10 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	plan.ARN = types.StringValue(aws.ToString(output.Plan.Arn))
+	plan.Arn = types.StringValue(aws.ToString(output.Plan.Arn))
 	plan.ID = types.StringValue(aws.ToString(output.Plan.Arn))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func getAssociatedAlarmObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":                types.StringType,
-			"alarm_type":          types.StringType,
-			"resource_identifier": types.StringType,
-			"cross_account_role":  types.StringType,
-			"external_id":         types.StringType,
-		},
-	}
-}
-
-func getWorkflowObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"workflow_target_action": types.StringType,
-			"workflow_target_region": types.StringType,
-			"workflow_description":   types.StringType,
-			"step":                   types.ListType{ElemType: getStepObjectType()},
-		},
-	}
-}
-
-func getStepObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":                             types.StringType,
-			"execution_block_type":             types.StringType,
-			"description":                      types.StringType,
-			"execution_approval_config":        types.ListType{ElemType: getExecutionApprovalConfigObjectType()},
-			"route53_health_check_config":      types.ListType{ElemType: getRoute53HealthCheckConfigObjectType()},
-			"custom_action_lambda_config":      types.ListType{ElemType: getCustomActionLambdaConfigObjectType()},
-			"global_aurora_config":             types.ListType{ElemType: getGlobalAuroraConfigObjectType()},
-			"ec2_asg_capacity_increase_config": types.ListType{ElemType: getEc2AsgCapacityIncreaseConfigObjectType()},
-			"ecs_capacity_increase_config":     types.ListType{ElemType: getEcsCapacityIncreaseConfigObjectType()},
-			"eks_resource_scaling_config":      types.ListType{ElemType: getEksResourceScalingConfigObjectType()},
-			"arc_routing_control_config":       types.ListType{ElemType: getArcRoutingControlConfigObjectType()},
-			"parallel_config":                  types.ListType{ElemType: getParallelConfigObjectType()},
-		},
-	}
-}
-
-func getRoute53HealthCheckConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"hosted_zone_id":     types.StringType,
-			"record_name":        types.StringType,
-			"cross_account_role": types.StringType,
-			"external_id":        types.StringType,
-			"timeout_minutes":    types.Int64Type,
-			"record_sets":        types.ListType{ElemType: getRecordSetObjectType()},
-		},
-	}
-}
-
-func getRecordSetObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"record_set_identifier": types.StringType,
-			"region":                types.StringType,
-		},
-	}
-}
-
-func getExecutionApprovalConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"approval_role":   types.StringType,
-			"timeout_minutes": types.Int64Type,
-		},
-	}
-}
-
-func getCustomActionLambdaConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"region_to_run":          types.StringType,
-			"retry_interval_minutes": types.Float64Type,
-			"timeout_minutes":        types.Int64Type,
-			"lambda":                 types.ListType{ElemType: getLambdaObjectType()},
-			"ungraceful":             types.ListType{ElemType: getUngracefulObjectType()},
-		},
-	}
-}
-
-func getGlobalAuroraConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"behavior":                  types.StringType,
-			"global_cluster_identifier": types.StringType,
-			"database_cluster_arns":     types.ListType{ElemType: types.StringType},
-			"cross_account_role":        types.StringType,
-			"external_id":               types.StringType,
-			"timeout_minutes":           types.Int64Type,
-			"ungraceful":                types.ListType{ElemType: getGlobalAuroraUngracefulObjectType()},
-		},
-	}
-}
-
-func getGlobalAuroraUngracefulObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"ungraceful": types.StringType,
-		},
-	}
-}
-
-func getEc2AsgCapacityIncreaseConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"capacity_monitoring_approach": types.StringType,
-			"target_percent":               types.Int64Type,
-			"timeout_minutes":              types.Int64Type,
-			"asgs":                         types.ListType{ElemType: getAsgObjectType()},
-			"ungraceful":                   types.ListType{ElemType: getEc2UngracefulObjectType()},
-		},
-	}
-}
-
-func getAsgObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"arn":                types.StringType,
-			"cross_account_role": types.StringType,
-			"external_id":        types.StringType,
-		},
-	}
-}
-
-func getEc2UngracefulObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"minimum_success_percentage": types.Int64Type,
-		},
-	}
-}
-
-func getEcsCapacityIncreaseConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"capacity_monitoring_approach": types.StringType,
-			"target_percent":               types.Int64Type,
-			"timeout_minutes":              types.Int64Type,
-			"services":                     types.ListType{ElemType: getServiceObjectType()},
-			"ungraceful":                   types.ListType{ElemType: getEcsUngracefulObjectType()},
-		},
-	}
-}
-
-func getServiceObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"cluster_arn":        types.StringType,
-			"service_arn":        types.StringType,
-			"cross_account_role": types.StringType,
-			"external_id":        types.StringType,
-		},
-	}
-}
-
-func getEcsUngracefulObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"minimum_success_percentage": types.Int64Type,
-		},
-	}
-}
-
-func getEksResourceScalingConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"capacity_monitoring_approach": types.StringType,
-			"target_percent":               types.Int64Type,
-			"timeout_minutes":              types.Int64Type,
-			"kubernetes_resource_type":     types.ListType{ElemType: getKubernetesResourceTypeObjectType()},
-			"eks_clusters":                 types.ListType{ElemType: getEksClusterObjectType()},
-			"scaling_resources":            types.ListType{ElemType: getScalingResourcesObjectType()},
-			"ungraceful":                   types.ListType{ElemType: getEksUngracefulObjectType()},
-		},
-	}
-}
-
-func getKubernetesResourceTypeObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"api_version": types.StringType,
-			"kind":        types.StringType,
-		},
-	}
-}
-
-func getEksClusterObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"cluster_arn":        types.StringType,
-			"cross_account_role": types.StringType,
-			"external_id":        types.StringType,
-		},
-	}
-}
-
-func getScalingResourcesObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"namespace": types.StringType,
-			"resources": types.ListType{ElemType: getKubernetesScalingResourceObjectType()},
-		},
-	}
-}
-
-func getKubernetesScalingResourceObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"resource_name": types.StringType,
-			"name":          types.StringType,
-			"namespace":     types.StringType,
-			"hpa_name":      types.StringType,
-		},
-	}
-}
-
-func getEksUngracefulObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"minimum_success_percentage": types.Int64Type,
-		},
-	}
-}
-
-func getArcRoutingControlConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"cross_account_role":          types.StringType,
-			"external_id":                 types.StringType,
-			"timeout_minutes":             types.Int64Type,
-			"region_and_routing_controls": types.ListType{ElemType: getRegionAndRoutingControlsObjectType()},
-		},
-	}
-}
-
-func getRegionAndRoutingControlsObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"region":               types.StringType,
-			"routing_control_arns": types.ListType{ElemType: types.StringType},
-		},
-	}
-}
-
-func getParallelConfigObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"step": types.ListType{ElemType: getParallelStepObjectType()},
-		},
-	}
-}
-
-func getParallelStepObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":                        types.StringType,
-			"execution_block_type":        types.StringType,
-			"description":                 types.StringType,
-			"execution_approval_config":   types.ListType{ElemType: getExecutionApprovalConfigObjectType()},
-			"custom_action_lambda_config": types.ListType{ElemType: getCustomActionLambdaConfigObjectType()},
-		},
-	}
-}
-
-func getLambdaObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"arn":                types.StringType,
-			"cross_account_role": types.StringType,
-			"external_id":        types.StringType,
-		},
-	}
-}
-
-func getUngracefulObjectType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"behavior": types.StringType,
-		},
-	}
 }
 
 func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -687,78 +903,19 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	state.ARN = types.StringValue(aws.ToString(plan.Arn))
-	state.Name = types.StringValue(aws.ToString(plan.Name))
-	state.ExecutionRole = types.StringValue(aws.ToString(plan.ExecutionRole))
-	state.RecoveryApproach = types.StringValue(string(plan.RecoveryApproach))
-
-	regions, diags := types.ListValueFrom(ctx, types.StringType, plan.Regions)
-	resp.Diagnostics.Append(diags...)
-	state.Regions = regions
-
-	if plan.Description != nil {
-		state.Description = types.StringValue(aws.ToString(plan.Description))
-	} else {
-		state.Description = types.StringNull()
-	}
-
-	if plan.PrimaryRegion != nil {
-		state.PrimaryRegion = types.StringValue(aws.ToString(plan.PrimaryRegion))
-	} else {
-		state.PrimaryRegion = types.StringNull()
-	}
-
-	if plan.RecoveryTimeObjectiveMinutes != nil {
-		state.RecoveryTimeObjectiveMinutes = types.Int64Value(int64(aws.ToInt32(plan.RecoveryTimeObjectiveMinutes)))
-	} else {
-		state.RecoveryTimeObjectiveMinutes = types.Int64Null()
-	}
-
-	// Handle associated alarms
-	if len(plan.AssociatedAlarms) > 0 {
-		alarmElements := make([]attr.Value, 0, len(plan.AssociatedAlarms))
-		for alarmName, alarm := range plan.AssociatedAlarms {
-			alarmAttrs := map[string]attr.Value{
-				"name":                types.StringValue(alarmName),
-				"alarm_type":          types.StringValue(string(alarm.AlarmType)),
-				"resource_identifier": types.StringValue(aws.ToString(alarm.ResourceIdentifier)),
-			}
-
-			if alarm.CrossAccountRole != nil {
-				alarmAttrs["cross_account_role"] = types.StringValue(aws.ToString(alarm.CrossAccountRole))
-			} else {
-				alarmAttrs["cross_account_role"] = types.StringNull()
-			}
-
-			if alarm.ExternalId != nil {
-				alarmAttrs["external_id"] = types.StringValue(aws.ToString(alarm.ExternalId))
-			} else {
-				alarmAttrs["external_id"] = types.StringNull()
-			}
-
-			alarmObj, alarmDiags := types.ObjectValue(getAssociatedAlarmObjectType().AttrTypes, alarmAttrs)
-			resp.Diagnostics.Append(alarmDiags...)
-			alarmElements = append(alarmElements, alarmObj)
-		}
-
-		alarmSet, alarmSetDiags := types.SetValue(getAssociatedAlarmObjectType(), alarmElements)
-		resp.Diagnostics.Append(alarmSetDiags...)
-		state.AssociatedAlarms = alarmSet
-	} else {
-		state.AssociatedAlarms = types.SetNull(getAssociatedAlarmObjectType())
-	}
-
-	// Handle workflows
-	if len(plan.Workflows) > 0 {
-		workflows, diags := flattenWorkflowsToFramework(ctx, plan.Workflows)
+	// Use custom Flatten method for resourcePlanModel
+	diags := state.Flatten(ctx, plan)
+	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
-		state.Workflow = workflows
-	} else {
-		state.Workflow = types.ListNull(getWorkflowObjectType())
+		return
 	}
+
+	// Set ID and ARN explicitly since they might need special handling
+	state.ID = types.StringValue(aws.ToString(plan.Arn))
+	state.Arn = types.StringValue(aws.ToString(plan.Arn))
 
 	// Handle tags
-	tags, err := ListTags(ctx, r.Meta().ARCRegionSwitchClient(ctx), state.ID.ValueString())
+	tags, err := listTags(ctx, conn, aws.ToString(plan.Arn))
 	if err != nil {
 		resp.Diagnostics.AddError("listing tags for ARC Region Switch Plan", err.Error())
 		return
@@ -778,42 +935,24 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
-	// Convert workflows from Framework List to slice
-	var workflows []workflowModel
-	resp.Diagnostics.Append(plan.Workflow.ElementsAs(ctx, &workflows, false)...)
-	if resp.Diagnostics.HasError() {
+	// Use custom expand logic (similar to Create)
+	apiObject, diags := plan.Expand(ctx)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	// Convert associated alarms from Framework Set to slice
-	var alarms []associatedAlarmModel
-	resp.Diagnostics.Append(plan.AssociatedAlarms.ElementsAs(ctx, &alarms, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	createInput := apiObject.(arcregionswitch.CreatePlanInput)
 
-	input := arcregionswitch.UpdatePlanInput{
-		Arn:              aws.String(state.ID.ValueString()),
-		ExecutionRole:    aws.String(plan.ExecutionRole.ValueString()),
-		Workflows:        expandWorkflowsFromFramework(workflows),
-		AssociatedAlarms: expandAssociatedAlarmsFromFramework(alarms),
-	}
-
-	if !plan.Description.Equal(state.Description) {
-		if plan.Description.IsNull() {
-			input.Description = aws.String("")
-		} else {
-			input.Description = aws.String(plan.Description.ValueString())
-		}
-	}
-
-	if !plan.RecoveryTimeObjectiveMinutes.Equal(state.RecoveryTimeObjectiveMinutes) {
-		if plan.RecoveryTimeObjectiveMinutes.IsNull() {
-			input.RecoveryTimeObjectiveMinutes = aws.Int32(0)
-		} else {
-			input.RecoveryTimeObjectiveMinutes = aws.Int32(int32(plan.RecoveryTimeObjectiveMinutes.ValueInt64()))
-		}
-	}
+	// Convert CreatePlanInput to UpdatePlanInput (only updatable fields)
+	var input arcregionswitch.UpdatePlanInput
+	input.Arn = aws.String(state.ID.ValueString())
+	input.ExecutionRole = createInput.ExecutionRole
+	input.Description = createInput.Description
+	input.RecoveryTimeObjectiveMinutes = createInput.RecoveryTimeObjectiveMinutes
+	input.Workflows = createInput.Workflows
+	input.AssociatedAlarms = createInput.AssociatedAlarms
+	input.Triggers = createInput.Triggers
 
 	_, err := conn.UpdatePlan(ctx, &input)
 	if err != nil {
@@ -823,7 +962,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Handle tags update
 	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+		if err := updateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
 			resp.Diagnostics.AddError("updating tags", err.Error())
 			return
 		}
@@ -847,6 +986,10 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	_, err := conn.DeletePlan(ctx, &input)
 	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
 		resp.Diagnostics.AddError("deleting ARC Region Switch Plan", err.Error())
 		return
 	}
@@ -882,7 +1025,8 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"recovery_approach": fwschema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.RecoveryApproach](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -891,8 +1035,8 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"regions": fwschema.ListAttribute{
-				Required:    true,
-				ElementType: types.StringType,
+				Required:   true,
+				CustomType: fwtypes.ListOfStringType,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -911,13 +1055,15 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 		Blocks: map[string]fwschema.Block{
 			"associated_alarms": fwschema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[associatedAlarmModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
 						names.AttrName: fwschema.StringAttribute{
 							Required: true,
 						},
 						"alarm_type": fwschema.StringAttribute{
-							Required: true,
+							CustomType: fwtypes.StringEnumType[awstypes.AlarmType](),
+							Required:   true,
 							Validators: []validator.String{
 								stringvalidator.OneOf("applicationHealth", "trigger"),
 							},
@@ -935,10 +1081,12 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"workflow": fwschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[workflowModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
 						"workflow_target_action": fwschema.StringAttribute{
-							Required: true,
+							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
+							Required:   true,
 							Validators: []validator.String{
 								stringvalidator.OneOf("activate", "deactivate"),
 							},
@@ -952,291 +1100,335 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 					Blocks: map[string]fwschema.Block{
 						"step": fwschema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[stepModel](ctx),
 							NestedObject: fwschema.NestedBlockObject{
 								Attributes: map[string]fwschema.Attribute{
 									names.AttrName: fwschema.StringAttribute{
 										Required: true,
 									},
 									"execution_block_type": fwschema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.StringEnumType[awstypes.ExecutionBlockType](),
+										Required:   true,
 									},
 									names.AttrDescription: fwschema.StringAttribute{
 										Optional: true,
 									},
 								},
 								Blocks: map[string]fwschema.Block{
-									"execution_approval_config": fwschema.ListNestedBlock{
+									"execution_block_configuration": fwschema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[executionBlockConfigurationModel](ctx),
 										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"approval_role": fwschema.StringAttribute{
-													Required: true,
-												},
-												"timeout_minutes": fwschema.Int64Attribute{
-													Optional: true,
-												},
-											},
-										},
-									},
-									"route53_health_check_config": fwschema.ListNestedBlock{
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"hosted_zone_id": fwschema.StringAttribute{
-													Required: true,
-												},
-												"record_name": fwschema.StringAttribute{
-													Required: true,
-												},
-												"cross_account_role": fwschema.StringAttribute{
-													Optional: true,
-												},
-												"external_id": fwschema.StringAttribute{
-													Optional: true,
-												},
-												"timeout_minutes": fwschema.Int64Attribute{
-													Optional: true,
-												},
-											},
 											Blocks: map[string]fwschema.Block{
-												"record_sets": fwschema.ListNestedBlock{
+												"execution_approval_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
-															"record_set_identifier": fwschema.StringAttribute{
+															"approval_role": fwschema.StringAttribute{
 																Required: true,
 															},
-															"region": fwschema.StringAttribute{
-																Required: true,
+															"timeout_minutes": fwschema.Int64Attribute{
+																Optional: true,
 															},
 														},
 													},
 												},
-											},
-										},
-									},
-									"custom_action_lambda_config": fwschema.ListNestedBlock{
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"region_to_run": fwschema.StringAttribute{
-													Required: true,
-												},
-												"retry_interval_minutes": fwschema.Float64Attribute{
-													Required: true,
-												},
-												"timeout_minutes": fwschema.Int64Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"lambda": fwschema.ListNestedBlock{
+												"route53_health_check_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[route53HealthCheckConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
-															names.AttrARN: fwschema.StringAttribute{
+															"hosted_zone_id": fwschema.StringAttribute{
+																Required: true,
+															},
+															"record_name": fwschema.StringAttribute{
 																Required: true,
 															},
 															"cross_account_role": fwschema.StringAttribute{
 																Optional: true,
 															},
-															names.AttrExternalID: fwschema.StringAttribute{
+															"external_id": fwschema.StringAttribute{
 																Optional: true,
+															},
+															"timeout_minutes": fwschema.Int64Attribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]fwschema.Block{
+															"record_sets": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[recordSetModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"record_set_identifier": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																		"region": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																	},
+																},
 															},
 														},
 													},
 												},
-												"ungraceful": fwschema.ListNestedBlock{
+												"custom_action_lambda_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[customActionLambdaConfigModel](ctx),
+													NestedObject: fwschema.NestedBlockObject{
+														Attributes: map[string]fwschema.Attribute{
+															"region_to_run": fwschema.StringAttribute{
+																Required: true,
+															},
+															"retry_interval_minutes": fwschema.Float64Attribute{
+																Required: true,
+															},
+															"timeout_minutes": fwschema.Int64Attribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]fwschema.Block{
+															"lambda": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"arn": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																		"cross_account_role": fwschema.StringAttribute{
+																			Optional: true,
+																		},
+																		"external_id": fwschema.StringAttribute{
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"ungraceful": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[ungracefulModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"behavior": fwschema.StringAttribute{
+																			CustomType: fwtypes.StringEnumType[awstypes.LambdaUngracefulBehavior](),
+																			Required:   true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"global_aurora_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
 															"behavior": fwschema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraDefaultBehavior](),
+																Required:   true,
+															},
+															"global_cluster_identifier": fwschema.StringAttribute{
 																Required: true,
 															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"global_aurora_config": fwschema.ListNestedBlock{
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"behavior": fwschema.StringAttribute{
-													Required: true,
-												},
-												"global_cluster_identifier": fwschema.StringAttribute{
-													Required: true,
-												},
-												"database_cluster_arns": fwschema.ListAttribute{
-													ElementType: types.StringType,
-													Required:    true,
-												},
-												"cross_account_role": fwschema.StringAttribute{
-													Optional: true,
-												},
-												names.AttrExternalID: fwschema.StringAttribute{
-													Optional: true,
-												},
-												"timeout_minutes": fwschema.Int64Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"ungraceful": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"ungraceful": fwschema.StringAttribute{
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"ec2_asg_capacity_increase_config": fwschema.ListNestedBlock{
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"capacity_monitoring_approach": fwschema.StringAttribute{
-													Required: true,
-												},
-												"target_percent": fwschema.Int64Attribute{
-													Required: true,
-												},
-												"timeout_minutes": fwschema.Int64Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"asgs": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															names.AttrARN: fwschema.StringAttribute{
-																Required: true,
+															"database_cluster_arns": fwschema.ListAttribute{
+																CustomType: fwtypes.ListOfARNType,
+																Required:   true,
 															},
 															"cross_account_role": fwschema.StringAttribute{
 																Optional: true,
 															},
-															names.AttrExternalID: fwschema.StringAttribute{
+															"external_id": fwschema.StringAttribute{
 																Optional: true,
 															},
-														},
-													},
-												},
-												"ungraceful": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"minimum_success_percentage": fwschema.Int64Attribute{
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"ecs_capacity_increase_config": fwschema.ListNestedBlock{
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"capacity_monitoring_approach": fwschema.StringAttribute{
-													Required: true,
-												},
-												"target_percent": fwschema.Int64Attribute{
-													Required: true,
-												},
-												"timeout_minutes": fwschema.Int64Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"services": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"cluster_arn": fwschema.StringAttribute{
-																Required: true,
-															},
-															"service_arn": fwschema.StringAttribute{
-																Required: true,
-															},
-															"cross_account_role": fwschema.StringAttribute{
+															"timeout_minutes": fwschema.Int64Attribute{
 																Optional: true,
-															},
-															names.AttrExternalID: fwschema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-												"ungraceful": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"minimum_success_percentage": fwschema.Int64Attribute{
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"eks_resource_scaling_config": fwschema.ListNestedBlock{
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"capacity_monitoring_approach": fwschema.StringAttribute{
-													Required: true,
-												},
-												"target_percent": fwschema.Int64Attribute{
-													Required: true,
-												},
-												"timeout_minutes": fwschema.Int64Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"kubernetes_resource_type": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"api_version": fwschema.StringAttribute{
-																Required: true,
-															},
-															"kind": fwschema.StringAttribute{
-																Required: true,
-															},
-														},
-													},
-												},
-												"eks_clusters": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"cluster_arn": fwschema.StringAttribute{
-																Required: true,
-															},
-															"cross_account_role": fwschema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrExternalID: fwschema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-												"scaling_resources": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															names.AttrNamespace: fwschema.StringAttribute{
-																Required: true,
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"resources": fwschema.ListNestedBlock{
+															"ungraceful": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraUngracefulModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
-																		"resource_name": fwschema.StringAttribute{
+																		"ungraceful": fwschema.StringAttribute{
+																			CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraUngracefulBehavior](),
+																			Required:   true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"ec2_asg_capacity_increase_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[ec2AsgCapacityIncreaseConfigModel](ctx),
+													NestedObject: fwschema.NestedBlockObject{
+														Attributes: map[string]fwschema.Attribute{
+															"capacity_monitoring_approach": fwschema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.Ec2AsgCapacityMonitoringApproach](),
+																Required:   true,
+															},
+															"target_percent": fwschema.Int64Attribute{
+																Required: true,
+															},
+															"timeout_minutes": fwschema.Int64Attribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]fwschema.Block{
+															"asgs": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[asgModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"arn": fwschema.StringAttribute{
 																			Required: true,
 																		},
-																		names.AttrName: fwschema.StringAttribute{
+																		"cross_account_role": fwschema.StringAttribute{
+																			Optional: true,
+																		},
+																		"external_id": fwschema.StringAttribute{
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"ungraceful": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[ec2UngracefulModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"minimum_success_percentage": fwschema.Int64Attribute{
 																			Required: true,
 																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"ecs_capacity_increase_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[ecsCapacityIncreaseConfigModel](ctx),
+													NestedObject: fwschema.NestedBlockObject{
+														Attributes: map[string]fwschema.Attribute{
+															"capacity_monitoring_approach": fwschema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EcsCapacityMonitoringApproach](),
+																Required:   true,
+															},
+															"target_percent": fwschema.Int64Attribute{
+																Required: true,
+															},
+															"timeout_minutes": fwschema.Int64Attribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]fwschema.Block{
+															"services": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[serviceModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"cluster_arn": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																		"service_arn": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																		"cross_account_role": fwschema.StringAttribute{
+																			Optional: true,
+																		},
+																		"external_id": fwschema.StringAttribute{
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"ungraceful": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[ecsUngracefulModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"minimum_success_percentage": fwschema.Int64Attribute{
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"eks_resource_scaling_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[eksResourceScalingConfigModel](ctx),
+													NestedObject: fwschema.NestedBlockObject{
+														Attributes: map[string]fwschema.Attribute{
+															"capacity_monitoring_approach": fwschema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EksCapacityMonitoringApproach](),
+																Required:   true,
+															},
+															"target_percent": fwschema.Int64Attribute{
+																Required: true,
+															},
+															"timeout_minutes": fwschema.Int64Attribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]fwschema.Block{
+															"kubernetes_resource_type": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[kubernetesResourceTypeModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"api_version": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																		"kind": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"eks_clusters": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[eksClusterModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"cluster_arn": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																		"cross_account_role": fwschema.StringAttribute{
+																			Optional: true,
+																		},
+																		"external_id": fwschema.StringAttribute{
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"scaling_resources": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[scalingResourcesModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
 																		names.AttrNamespace: fwschema.StringAttribute{
 																			Required: true,
 																		},
-																		"hpa_name": fwschema.StringAttribute{
-																			Optional: true,
+																	},
+																	Blocks: map[string]fwschema.Block{
+																		"resources": fwschema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[kubernetesScalingResourceModel](ctx),
+																			NestedObject: fwschema.NestedBlockObject{
+																				Attributes: map[string]fwschema.Attribute{
+																					"resource_name": fwschema.StringAttribute{
+																						Required: true,
+																					},
+																					names.AttrName: fwschema.StringAttribute{
+																						Required: true,
+																					},
+																					names.AttrNamespace: fwschema.StringAttribute{
+																						Required: true,
+																					},
+																					"hpa_name": fwschema.StringAttribute{
+																						Optional: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"ungraceful": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[eksUngracefulModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"minimum_success_percentage": fwschema.Int64Attribute{
+																			Required: true,
 																		},
 																	},
 																},
@@ -1244,111 +1436,112 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 														},
 													},
 												},
-												"ungraceful": fwschema.ListNestedBlock{
+												"arc_routing_control_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[arcRoutingControlConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
-															"minimum_success_percentage": fwschema.Int64Attribute{
-																Required: true,
+															"cross_account_role": fwschema.StringAttribute{
+																Optional: true,
 															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"arc_routing_control_config": fwschema.ListNestedBlock{
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"cross_account_role": fwschema.StringAttribute{
-													Optional: true,
-												},
-												names.AttrExternalID: fwschema.StringAttribute{
-													Optional: true,
-												},
-												"timeout_minutes": fwschema.Int64Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"region_and_routing_controls": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"region": fwschema.StringAttribute{
-																Required: true,
+															"external_id": fwschema.StringAttribute{
+																Optional: true,
 															},
-															"routing_control_arns": fwschema.ListAttribute{
-																ElementType: types.StringType,
-																Required:    true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"parallel_config": fwschema.ListNestedBlock{
-										NestedObject: fwschema.NestedBlockObject{
-											Blocks: map[string]fwschema.Block{
-												"step": fwschema.ListNestedBlock{
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															names.AttrName: fwschema.StringAttribute{
-																Required: true,
-															},
-															"execution_block_type": fwschema.StringAttribute{
-																Required: true,
-															},
-															names.AttrDescription: fwschema.StringAttribute{
+															"timeout_minutes": fwschema.Int64Attribute{
 																Optional: true,
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"execution_approval_config": fwschema.ListNestedBlock{
+															"region_and_routing_controls": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[regionAndRoutingControlsModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
-																		"approval_role": fwschema.StringAttribute{
+																		"region": fwschema.StringAttribute{
 																			Required: true,
 																		},
-																		"timeout_minutes": fwschema.Int64Attribute{
-																			Optional: true,
+																		"routing_control_arns": fwschema.ListAttribute{
+																			CustomType: fwtypes.ListOfARNType,
+																			Required:   true,
 																		},
 																	},
 																},
 															},
-															"custom_action_lambda_config": fwschema.ListNestedBlock{
+														},
+													},
+												},
+												"parallel_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[parallelConfigModel](ctx),
+													NestedObject: fwschema.NestedBlockObject{
+														Blocks: map[string]fwschema.Block{
+															"step": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[parallelStepModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
-																		"region_to_run": fwschema.StringAttribute{
+																		names.AttrName: fwschema.StringAttribute{
 																			Required: true,
 																		},
-																		"retry_interval_minutes": fwschema.Float64Attribute{
-																			Required: true,
+																		"execution_block_type": fwschema.StringAttribute{
+																			CustomType: fwtypes.StringEnumType[awstypes.ExecutionBlockType](),
+																			Required:   true,
 																		},
-																		"timeout_minutes": fwschema.Int64Attribute{
+																		names.AttrDescription: fwschema.StringAttribute{
 																			Optional: true,
 																		},
 																	},
 																	Blocks: map[string]fwschema.Block{
-																		"lambda": fwschema.ListNestedBlock{
+																		"execution_approval_config": fwschema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
 																			NestedObject: fwschema.NestedBlockObject{
 																				Attributes: map[string]fwschema.Attribute{
-																					names.AttrARN: fwschema.StringAttribute{
+																					"approval_role": fwschema.StringAttribute{
 																						Required: true,
 																					},
-																					"cross_account_role": fwschema.StringAttribute{
-																						Optional: true,
-																					},
-																					names.AttrExternalID: fwschema.StringAttribute{
+																					"timeout_minutes": fwschema.Int64Attribute{
 																						Optional: true,
 																					},
 																				},
 																			},
 																		},
-																		"ungraceful": fwschema.ListNestedBlock{
+																		"custom_action_lambda_config": fwschema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[customActionLambdaConfigModel](ctx),
 																			NestedObject: fwschema.NestedBlockObject{
 																				Attributes: map[string]fwschema.Attribute{
-																					"behavior": fwschema.StringAttribute{
+																					"region_to_run": fwschema.StringAttribute{
 																						Required: true,
+																					},
+																					"retry_interval_minutes": fwschema.Float64Attribute{
+																						Required: true,
+																					},
+																					"timeout_minutes": fwschema.Int64Attribute{
+																						Optional: true,
+																					},
+																				},
+																				Blocks: map[string]fwschema.Block{
+																					"lambda": fwschema.ListNestedBlock{
+																						CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaModel](ctx),
+																						NestedObject: fwschema.NestedBlockObject{
+																							Attributes: map[string]fwschema.Attribute{
+																								"arn": fwschema.StringAttribute{
+																									Required: true,
+																								},
+																								"cross_account_role": fwschema.StringAttribute{
+																									Optional: true,
+																								},
+																								"external_id": fwschema.StringAttribute{
+																									Optional: true,
+																								},
+																							},
+																						},
+																					},
+																					"ungraceful": fwschema.ListNestedBlock{
+																						CustomType: fwtypes.NewListNestedObjectTypeOf[ungracefulModel](ctx),
+																						NestedObject: fwschema.NestedBlockObject{
+																							Attributes: map[string]fwschema.Attribute{
+																								"behavior": fwschema.StringAttribute{
+																									CustomType: fwtypes.StringEnumType[awstypes.LambdaUngracefulBehavior](),
+																									Required:   true,
+																								},
+																							},
+																						},
 																					},
 																				},
 																			},
@@ -1360,6 +1553,48 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 													},
 												},
 											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"triggers": fwschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[triggerModel](ctx),
+				NestedObject: fwschema.NestedBlockObject{
+					Attributes: map[string]fwschema.Attribute{
+						"action": fwschema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
+							Required:   true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("activate", "deactivate"),
+							},
+						},
+						names.AttrDescription: fwschema.StringAttribute{
+							Optional: true,
+						},
+						"min_delay_minutes_between_executions": fwschema.Int64Attribute{
+							Required: true,
+						},
+						"target_region": fwschema.StringAttribute{
+							Required: true,
+						},
+					},
+					Blocks: map[string]fwschema.Block{
+						"conditions": fwschema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[conditionModel](ctx),
+							NestedObject: fwschema.NestedBlockObject{
+								Attributes: map[string]fwschema.Attribute{
+									"associated_alarm_name": fwschema.StringAttribute{
+										Required: true,
+									},
+									"condition": fwschema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.AlarmCondition](),
+										Required:   true,
+										Validators: []validator.String{
+											stringvalidator.OneOf("red", "green"),
 										},
 									},
 								},

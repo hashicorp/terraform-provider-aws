@@ -315,13 +315,15 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.5.0
 	github.com/shopspring/decimal v1.4.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.63.0
 	go.opentelemetry.io/otel v1.38.0
 	golang.org/x/crypto v0.45.0
 	golang.org/x/text v0.31.0
 	golang.org/x/tools v0.39.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.6
+	gopkg.in/dnaeon/go-vcr.v4 v4.0.5
+>>>>>>> deb4526fe52 (GitHub Feedback: Address comments from PR feedback)
 )
 
 require (
