@@ -284,7 +284,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	input := workmail.ListResourcesInput{}
+	input := workmail.ListResourcesInput{
+		OrganizationId: aws.String("m-12345678901234567890123456789012"),
+	}
 	_, err := client.ListResources(ctx, &input,
 		func(opts *workmail.Options) {
 			opts.APIOptions = append(opts.APIOptions,

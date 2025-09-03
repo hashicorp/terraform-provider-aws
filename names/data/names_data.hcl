@@ -8967,7 +8967,8 @@ service "workmail" {
   }
 
   endpoint_info {
-    endpoint_api_call = "ListResources"
+    endpoint_api_call   = "ListResources"
+    endpoint_api_params = "OrganizationId: aws.String(\"m-12345678901234567890123456789012\")"
   }
 
   resource_prefix {
