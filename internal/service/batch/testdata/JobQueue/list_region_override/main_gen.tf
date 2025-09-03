@@ -2,7 +2,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_batch_job_queue" "test" {
-  name     = var.rName
+  count = 3 # Should be a variable
+
+  region = var.region
+
+  name     = "${var.rName}-${count.index}"
   priority = 1
   state    = "DISABLED"
 
@@ -13,6 +17,8 @@ resource "aws_batch_job_queue" "test" {
 }
 
 resource "aws_batch_compute_environment" "test" {
+  region = var.region
+
   name         = var.rName
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
@@ -57,7 +63,7 @@ resource "aws_iam_role" "ecs_instance" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-          "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
         }
     }
   ]
@@ -80,13 +86,9 @@ variable "rName" {
   type        = string
   nullable    = false
 }
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.0.0"
-    }
-  }
-}
 
-provider "aws" {}
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
+}
