@@ -42,21 +42,21 @@ func waitUpgradeSucceeded(ctx context.Context, conn *opensearch.Client, name str
 
 func waitForDomainCreation(ctx context.Context, conn *opensearch.Client, domainName string, timeout time.Duration) error {
 	var out *awstypes.DomainStatus
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = findDomainByName(ctx, conn, domainName)
 		if tfresource.NotFound(err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if !aws.ToBool(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
 			return nil
 		}
 
-		return retry.RetryableError(
+		return tfresource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for OpenSearch Domain to be created", domainName))
 	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
@@ -77,18 +77,18 @@ func waitForDomainCreation(ctx context.Context, conn *opensearch.Client, domainN
 
 func waitForDomainUpdate(ctx context.Context, conn *opensearch.Client, domainName string, timeout time.Duration) error {
 	var out *awstypes.DomainStatus
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = findDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if !aws.ToBool(out.Processing) {
 			return nil
 		}
 
-		return retry.RetryableError(
+		return tfresource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
 	}, tfresource.WithDelay(1*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
@@ -109,7 +109,7 @@ func waitForDomainUpdate(ctx context.Context, conn *opensearch.Client, domainNam
 
 func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainName string, timeout time.Duration) error {
 	var out *awstypes.DomainStatus
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = findDomainByName(ctx, conn, domainName)
 
@@ -117,14 +117,14 @@ func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainNam
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if out != nil && !aws.ToBool(out.Processing) {
 			return nil
 		}
 
-		return retry.RetryableError(fmt.Errorf("timeout while waiting for the OpenSearch Domain %q to be deleted", domainName))
+		return tfresource.RetryableError(fmt.Errorf("timeout while waiting for the OpenSearch Domain %q to be deleted", domainName))
 	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
 	if tfresource.TimedOut(err) {

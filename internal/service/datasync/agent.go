@@ -283,7 +283,7 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteAgent(ctx, &input)
 	}, "in-use by these location(s)")
 

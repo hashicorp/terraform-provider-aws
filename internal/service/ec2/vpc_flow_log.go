@@ -231,7 +231,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.MaxAggregationInterval = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFlowLogs(ctx, input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 

@@ -6,7 +6,6 @@ package quicksight_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
@@ -94,12 +93,7 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 
 func TestAccQuickSightUser_withNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "QUICKSIGHT_NAMESPACE"
-	namespace := os.Getenv(key)
-	if namespace == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	namespace := acctest.SkipIfEnvVarNotSet(t, "QUICKSIGHT_NAMESPACE")
 	var user awstypes.User
 	rName := "tfacctest" + sdkacctest.RandString(10)
 	resourceName := "aws_quicksight_user." + rName

@@ -304,7 +304,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Subnets = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err = tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateLoadBalancer(ctx, input)
 	})
 
@@ -469,7 +469,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			// Occasionally AWS will error with a 'duplicate listener', without any
 			// other listeners on the ELB. Retry here to eliminate that.
 			_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.CreateLoadBalancerListeners(ctx, input)
 				},
 				func(err error) (bool, error) {
@@ -699,7 +699,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Subnets:          add,
 			}
 
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancerToSubnets(ctx, input)
 			}, "cannot be attached to multiple subnets in the same AZ")
 

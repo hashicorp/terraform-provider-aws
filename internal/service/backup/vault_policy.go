@@ -67,7 +67,7 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutBackupVaultAccessPolicy(ctx, input)
 		},
 		errCodeInvalidParameterValueException, "Provided principal is not valid",

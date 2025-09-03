@@ -882,7 +882,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	// InvalidInputException: CodeBuild is not authorized to perform
 	// InvalidInputException: Not authorized to perform DescribeSecurityGroups
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateProject(ctx, input)
 	}, "ot authorized to perform")
 
@@ -1146,7 +1146,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		// But its a slice of pointers so if not set for every update, they get removed.
 		input.Tags = getTagsIn(ctx)
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateProject(ctx, input)
 		}, "ot authorized to perform")
 

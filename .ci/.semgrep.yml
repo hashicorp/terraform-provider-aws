@@ -273,14 +273,6 @@ rules:
                   })
                   ...
                   if isResourceTimeoutError($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  }, ...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
           - patterns:
               - pattern: |
                   if tfresource.TimedOut($ERR) {
@@ -292,14 +284,6 @@ rules:
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
                   })
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  }, ...)
                   ...
                   if tfresource.TimedOut($ERR) { ... }
     severity: WARNING

@@ -1404,6 +1404,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)S3Tables"
     severity: WARNING
+  - id: s3vectors-in-func-name
+    languages:
+      - go
+    message: Do not use "S3Vectors" in func name inside s3vectors package
+    paths:
+      include:
+        - internal/service/s3vectors
+      exclude:
+        - internal/service/s3vectors/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Vectors"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: s3vectors-in-test-name
+    languages:
+      - go
+    message: Include "S3Vectors" in test name
+    paths:
+      include:
+        - internal/service/s3vectors/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccS3Vectors"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: s3vectors-in-const-name
+    languages:
+      - go
+    message: Do not use "S3Vectors" in const name inside s3vectors package
+    paths:
+      include:
+        - internal/service/s3vectors
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Vectors"
+    severity: WARNING
+  - id: s3vectors-in-var-name
+    languages:
+      - go
+    message: Do not use "S3Vectors" in var name inside s3vectors package
+    paths:
+      include:
+        - internal/service/s3vectors
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Vectors"
+    severity: WARNING
   - id: sagemaker-in-func-name
     languages:
       - go

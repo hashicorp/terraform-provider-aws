@@ -917,7 +917,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	const (
 		timeout = 1 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidViewerCertificate](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidViewerCertificate](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDistributionWithTags(ctx, &input)
 	})
 
@@ -1045,7 +1045,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		const (
 			timeout = 1 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidViewerCertificate](ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidViewerCertificate](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateDistribution(ctx, &input)
 		})
 
@@ -1133,7 +1133,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		const (
 			timeout = 3 * time.Minute
 		)
-		_, err = tfresource.RetryWhenIsA[*awstypes.DistributionNotDisabled](ctx, timeout, func() (any, error) {
+		_, err = tfresource.RetryWhenIsA[any, *awstypes.DistributionNotDisabled](ctx, timeout, func(ctx context.Context) (any, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
 		})
 	}
@@ -1232,6 +1232,12 @@ func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string
 	input.DistributionConfig.Enabled = aws.Bool(false)
 
 	_, err = conn.UpdateDistribution(ctx, &input)
+
+	// If the configured logging bucket no longer exists, disable logging and retry update
+	if errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "The S3 bucket that you specified for CloudFront logs doesn't exist") {
+		input.DistributionConfig.Logging = &awstypes.LoggingConfig{Enabled: aws.Bool(false)}
+		_, err = conn.UpdateDistribution(ctx, &input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("updating CloudFront Distribution (%s): %w", id, err)

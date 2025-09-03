@@ -53,6 +53,8 @@ This resource supports the following arguments:
 * `subnet_id` - (Required) The ID of the subnet to add the mount target in.
 * `ip_address` - (Optional) The address (within the address range of the specified subnet) at
 which the file system may be mounted via the mount target.
+* `ip_address_type` - (Optional) IP address type for the mount target. Valid values are `IPV4_ONLY` (only IPv4 addresses), `IPV6_ONLY` (only IPv6 addresses), and `DUAL_STACK` (dual-stack, both IPv4 and IPv6 addresses). Defaults to `IPV4_ONLY`.
+* `ipv6_address` - (Optional) IPv6 address to use. Valid only when `ip_address_type` is set to `IPV6_ONLY` or `DUAL_STACK`.
 * `security_groups` - (Optional) A list of up to 5 VPC security group IDs (that must
 be for the same VPC as subnet specified) in effect for the mount target.
 
@@ -105,4 +107,4 @@ Using `terraform import`, import the EFS mount targets using the `id`. For examp
 % terraform import aws_efs_mount_target.alpha fsmt-52a643fb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4fd2810f3a5f1d0375a7568d3b1334ef7f3c353ee25d5695d5ae12bd6c69bb01 -->
+<!-- cache-key: cdktf-0.20.8 input-5715e887a0b57e70fd411f2c182808af50844584a6ab52ea2a5207d49580ec01 -->

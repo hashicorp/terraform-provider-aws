@@ -3021,6 +3021,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)ObservabilityAccessManager"
     severity: WARNING
+  - id: odb-in-func-name
+    languages:
+      - go
+    message: Do not use "ODB" in func name inside odb package
+    paths:
+      include:
+        - internal/service/odb
+      exclude:
+        - internal/service/odb/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ODB"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: odb-in-test-name
+    languages:
+      - go
+    message: Include "ODB" in test name
+    paths:
+      include:
+        - internal/service/odb/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccODB"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: odb-in-const-name
+    languages:
+      - go
+    message: Do not use "ODB" in const name inside odb package
+    paths:
+      include:
+        - internal/service/odb
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ODB"
+    severity: WARNING
+  - id: odb-in-var-name
+    languages:
+      - go
+    message: Do not use "ODB" in var name inside odb package
+    paths:
+      include:
+        - internal/service/odb
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ODB"
+    severity: WARNING
   - id: opensearch-in-func-name
     languages:
       - go
