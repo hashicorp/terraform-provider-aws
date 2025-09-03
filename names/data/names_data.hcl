@@ -8973,7 +8973,6 @@ service "workmail" {
   provider_package_correct = "workmail"
   doc_prefix               = ["workmail_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "workmailmessageflow" {

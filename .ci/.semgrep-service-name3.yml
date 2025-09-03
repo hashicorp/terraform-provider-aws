@@ -4240,6 +4240,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)WellArchitected"
     severity: WARNING
+  - id: workmail-in-func-name
+    languages:
+      - go
+    message: Do not use "WorkMail" in func name inside workmail package
+    paths:
+      include:
+        - internal/service/workmail
+      exclude:
+        - internal/service/workmail/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkMail"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: workmail-in-test-name
+    languages:
+      - go
+    message: Include "WorkMail" in test name
+    paths:
+      include:
+        - internal/service/workmail/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccWorkMail"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: workmail-in-const-name
+    languages:
+      - go
+    message: Do not use "WorkMail" in const name inside workmail package
+    paths:
+      include:
+        - internal/service/workmail
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkMail"
+    severity: WARNING
+  - id: workmail-in-var-name
+    languages:
+      - go
+    message: Do not use "WorkMail" in var name inside workmail package
+    paths:
+      include:
+        - internal/service/workmail
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WorkMail"
+    severity: WARNING
   - id: workspaces-in-func-name
     languages:
       - go
