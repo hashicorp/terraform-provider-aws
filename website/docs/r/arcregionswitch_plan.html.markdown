@@ -189,6 +189,7 @@ resource "aws_arcregionswitch_plan" "complex" {
 * `primary_region` - Primary region for the plan.
 * `recovery_time_objective_minutes` - Recovery time objective in minutes.
 * `tags` - Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `triggers` - Set of triggers that can initiate the plan execution. See [Trigger](#trigger) below.
 
 ### Workflow
 

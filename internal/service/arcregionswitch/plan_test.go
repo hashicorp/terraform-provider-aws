@@ -159,7 +159,7 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_update(rName, "Initial description", 30, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_update(rName, "Initial description", 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
@@ -168,7 +168,7 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPlanConfig_update(rName, "Updated description", 60, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_update(rName, "Updated description", 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
@@ -196,7 +196,7 @@ func TestAccARCRegionSwitchPlan_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -204,7 +204,7 @@ func TestAccARCRegionSwitchPlan_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPlanConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -213,7 +213,7 @@ func TestAccARCRegionSwitchPlan_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPlanConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -240,7 +240,7 @@ func TestAccARCRegionSwitchPlan_singleRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_minimalRegions(rName, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_minimalRegions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
@@ -268,7 +268,7 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_multipleWorkflowsSameAction(rName, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_multipleWorkflowsSameAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
@@ -348,24 +348,29 @@ resource "aws_arcregionswitch_plan" "test" {
 `, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
-func testAccPlanConfig_update(rName, description string, rto int, primaryRegion, alternateRegion string) string {
-	alarms := `
+func testAccPlanConfig_update(rName, description string, rto int) string {
+	alarms := fmt.Sprintf(`
   associated_alarms {
     name                = "test-alarm-1"
     alarm_type          = "applicationHealth"
-    resource_identifier = "arn:aws:cloudwatch:%[4]s:123456789012:alarm:test-alarm-1"
-  }`
+    resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-1"
+  }`, acctest.Region())
 
 	if rto == 60 {
-		alarms += `
+		alarms += fmt.Sprintf(`
   associated_alarms {
     name                = "test-alarm-2"
     alarm_type          = "applicationHealth"
-    resource_identifier = "arn:aws:cloudwatch:%[4]s:123456789012:alarm:test-alarm-2"
-  }`
+    resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-2"
+  }`, acctest.Region())
 	}
 
 	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -387,14 +392,14 @@ resource "aws_arcregionswitch_plan" "test" {
   name                            = %[1]q
   execution_role                  = aws_iam_role.test.arn
   recovery_approach               = "activePassive"
-  regions                         = [%[4]q, %[5]q]
-  primary_region                  = %[4]q
-  description                     = %[2]q
-  recovery_time_objective_minutes = %[3]d
+  regions                         = [%[3]q, %[2]q]
+  primary_region                  = %[3]q
+  description                     = %[4]q
+  recovery_time_objective_minutes = %[5]d
 %[6]s
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = %[5]q
+    workflow_target_region = %[2]q
 
     step {
       name                 = "basic-step"
@@ -409,7 +414,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = %[4]q
+    workflow_target_region = %[3]q
 
     step {
       name                 = "basic-step-primary"
@@ -422,11 +427,16 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName, description, rto, primaryRegion, alternateRegion, alarms)
+`, rName, acctest.AlternateRegion(), acctest.Region(), description, rto, alarms)
 }
 
-func testAccPlanConfig_tags1(rName, tagKey1, tagValue1, primaryRegion, alternateRegion string) string {
+func testAccPlanConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -448,80 +458,16 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = aws_iam_role.test.arn
   recovery_approach = "activePassive"
-  regions           = [%[4]q, %[5]q]
-  primary_region    = %[4]q
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
 
   tags = {
-    %[2]q = %[3]q
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[5]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[4]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, tagKey1, tagValue1, primaryRegion, alternateRegion)
-}
-
-func testAccPlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2, primaryRegion, alternateRegion string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[6]q, %[7]q]
-  primary_region    = %[6]q
-
-  tags = {
-    %[2]q = %[3]q
     %[4]q = %[5]q
   }
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = %[7]q
+    workflow_target_region = %[2]q
 
     step {
       name                 = "basic-step"
@@ -536,7 +482,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = %[6]q
+    workflow_target_region = %[3]q
 
     step {
       name                 = "basic-step-primary"
@@ -549,11 +495,16 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2, primaryRegion, alternateRegion)
+`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1)
 }
 
-func testAccPlanConfig_minimalRegions(rName, primaryRegion, alternateRegion string) string {
+func testAccPlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -575,12 +526,81 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = aws_iam_role.test.arn
   recovery_approach = "activePassive"
-  regions           = [%[2]q, %[3]q]
-  primary_region    = %[2]q
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  tags = {
+    %[4]q = %[5]q
+    %[6]q = %[7]q
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
+
+    step {
+      name                 = "basic-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
 
   workflow {
     workflow_target_action = "activate"
     workflow_target_region = %[3]q
+
+    step {
+      name                 = "basic-step-primary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccPlanConfig_minimalRegions(rName string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
 
     step {
       name                 = "minimal-step-secondary"
@@ -595,7 +615,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = %[2]q
+    workflow_target_region = %[3]q
 
     step {
       name                 = "minimal-step-primary"
@@ -608,11 +628,16 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName, primaryRegion, alternateRegion)
+`, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
-func testAccPlanConfig_multipleWorkflowsSameAction(rName, primaryRegion, alternateRegion string) string {
+func testAccPlanConfig_multipleWorkflowsSameAction(rName string) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[2]q
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -634,7 +659,7 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = aws_iam_role.test.arn
   recovery_approach = "activeActive"
-  regions           = [%[2]q, %[3]q]
+  regions           = [%[2]q, %[2]q]
   primary_region    = %[2]q
 
   workflow {
@@ -665,7 +690,7 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName, primaryRegion, alternateRegion)
+`, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
 func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
@@ -735,7 +760,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_complex(rName, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_complex(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
@@ -892,8 +917,13 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 	})
 }
 
-func testAccPlanConfig_complex(rName, primaryRegion, alternateRegion string) string {
+func testAccPlanConfig_complex(rName string) string {
 	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[3]q
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -915,8 +945,8 @@ resource "aws_arcregionswitch_plan" "test" {
   name                            = %[1]q
   execution_role                  = aws_iam_role.test.arn
   recovery_approach               = "activeActive"
-  regions                         = [%[2]q, %[3]q]
-  primary_region                  = %[2]q
+  regions                         = [%[3]q, %[3]q]
+  primary_region                  = %[3]q
   description                     = "Complex test plan with multiple execution block types"
   recovery_time_objective_minutes = 60
 
@@ -1070,7 +1100,7 @@ resource "aws_arcregionswitch_plan" "test" {
             hpa_name      = "test-hpa-secondary"
           }
           resources {
-            resource_name = %[2]q
+            resource_name = %[3]q
             name          = "test-deployment-primary"
             namespace     = "default"
             hpa_name      = "test-hpa-primary"
@@ -1095,7 +1125,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
       arc_routing_control_config {
         region_and_routing_controls {
-          region               = %[2]q
+          region               = %[3]q
           routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"]
         }
         region_and_routing_controls {
@@ -1121,7 +1151,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
         record_sets {
           record_set_identifier = "primary"
-          region                = %[2]q
+          region                = %[3]q
         }
         record_sets {
           record_set_identifier = "secondary"
@@ -1196,7 +1226,7 @@ resource "aws_arcregionswitch_plan" "test" {
 
         record_sets {
           record_set_identifier = "primary"
-          region                = %[2]q
+          region                = %[3]q
         }
         record_sets {
           record_set_identifier = "secondary"
@@ -1206,7 +1236,7 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName, primaryRegion, alternateRegion)
+`, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
 func testAccPlanConfig_route53HealthCheck(rName, zoneName, primaryRegion, alternateRegion string) string {
