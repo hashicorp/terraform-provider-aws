@@ -61,6 +61,30 @@ func TestAccCognitoIDPManagedLoginBranding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPManagedLoginBranding_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var client awstypes.ManagedLoginBrandingType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_managed_login_branding.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedLoginBranding_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &client),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceManagedLoginBranding, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckManagedLoginBrandingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)

@@ -7,6 +7,7 @@ package cognitoidp
 var (
 	ResourceIdentityProvider         = resourceIdentityProvider
 	ResourceLogDeliveryConfiguration = newLogDeliveryConfigurationResource
+	ResourceManagedLoginBranding     = newManagedLoginBrandingResource
 	ResourceManagedUserPoolClient    = newManagedUserPoolClientResource
 	ResourceResourceServer           = resourceResourceServer
 	ResourceRiskConfiguration        = resourceRiskConfiguration
