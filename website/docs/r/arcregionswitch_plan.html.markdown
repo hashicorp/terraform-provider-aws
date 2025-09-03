@@ -174,19 +174,21 @@ resource "aws_arcregionswitch_plan" "complex" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+### Required
 
-* `name` - (Required) Name of the plan. Must be unique within the account.
-* `execution_role` - (Required) ARN of the IAM role that ARC Region Switch will assume to execute the plan.
-* `recovery_approach` - (Required) Recovery approach for the plan. Valid values: `activeActive`, `activePassive`.
-* `regions` - (Required) List of AWS regions involved in the plan.
-* `workflow` - (Required) List of workflows that define the steps to execute. See [Workflow](#workflow) below.
-* `description` - (Optional) Description of the plan.
-* `primary_region` - (Optional) Primary region for the plan.
-* `recovery_time_objective_minutes` - (Optional) Recovery time objective in minutes.
-* `associated_alarms` - (Optional) Set of CloudWatch alarms associated with the plan. See [Associated Alarms](#associated-alarms) below.
-* `trigger` - (Optional) List of triggers that can automatically execute the plan. See [Trigger](#trigger) below.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `execution_role` - ARN of the IAM role that ARC Region Switch will assume to execute the plan.
+* `name` - Name of the plan. Must be unique within the account.
+* `recovery_approach` - Recovery approach for the plan. Valid values: `activeActive`, `activePassive`.
+* `regions` - List of AWS regions involved in the plan.
+* `workflow` - List of workflows that define the steps to execute. See [Workflow](#workflow) below.
+
+### Optional
+
+* `associated_alarms` - Set of CloudWatch alarms associated with the plan. See [Associated Alarms](#associated-alarms) below.
+* `description` - Description of the plan.
+* `primary_region` - Primary region for the plan.
+* `recovery_time_objective_minutes` - Recovery time objective in minutes.
+* `tags` - Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Workflow
 
