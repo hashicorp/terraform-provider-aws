@@ -1130,7 +1130,7 @@ resource "aws_arcregionswitch_plan" "test" {
   name                            = %[1]q
   execution_role                  = aws_iam_role.test.arn
   recovery_approach               = "activePassive"
-  regions                         = [%[3]q, %[3]q]
+  regions                         = [%[2]q, %[3]q]
   primary_region                  = %[3]q
   description                     = %[4]q
   recovery_time_objective_minutes = %[5]d
