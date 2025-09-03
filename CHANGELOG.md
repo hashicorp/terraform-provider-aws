@@ -23,6 +23,7 @@ ENHANCEMENTS:
 * resource/aws_ssm_maintenance_window_target: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
 * resource/aws_ssm_maintenance_window_task: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
 * resource/aws_ssm_patch_baseline: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
+* resource/aws_synthetics_canary: Add `run_config.ephemeral_storage` argument. ([#44105](https://github.com/hashicorp/terraform-provider-aws/issues/44105))
 
 BUG FIXES:
 
