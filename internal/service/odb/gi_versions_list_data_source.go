@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
@@ -57,13 +57,20 @@ func (d *dataSourceGiVersionsList) Read(ctx context.Context, req datasource.Read
 	if !data.Shape.IsNull() {
 		input.Shape = data.Shape.ValueStringPointer()
 	}
-	out, err := conn.ListGiVersions(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameGiVersionsList, "", err),
-			err.Error(),
-		)
-		return
+	paginator := odb.NewListGiVersionsPaginator(conn, &input)
+	var out odb.ListGiVersionsOutput
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameGiVersionsList, "", err),
+				err.Error(),
+			)
+			return
+		}
+		if page != nil && len(page.GiVersions) > 0 {
+			out.GiVersions = append(out.GiVersions, page.GiVersions...)
+		}
 	}
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 	if resp.Diagnostics.HasError() {

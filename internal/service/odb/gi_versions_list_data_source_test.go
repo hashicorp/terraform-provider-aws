@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
