@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInput {
+func expandAdvancedSecurityOptions(m []any, masterUserPasswordWO string) *awstypes.AdvancedSecurityOptionsInput {
 	config := awstypes.AdvancedSecurityOptionsInput{}
 	group := m[0].(map[string]any)
 
@@ -43,6 +43,10 @@ func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInp
 
 					if v, ok := masterUserOptions["master_user_password"].(string); ok && v != "" {
 						muo.MasterUserPassword = aws.String(v)
+					}
+
+					if masterUserPasswordWO != "" {
+						muo.MasterUserPassword = aws.String(masterUserPasswordWO)
 					}
 
 					config.MasterUserOptions = &muo
