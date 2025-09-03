@@ -661,6 +661,17 @@ func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, 
 		v.SetIdentitySpec(spec.Identity, inttypes.FrameworkImport{})
 	}
 
+	//set SDKv2 specific specifications
+	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+		if !tfunique.IsHandleNil(spec.Tags) {
+			v.SetTagsSpec(spec.Tags)
+		}
+	}
+
+	if v, ok := inner.(inttypes.SDKv2Identityer); ok {
+		v.AddIdentity(spec.Identity.Attributes)
+	}
+
 	return &wrappedListResource{
 		inner:              inner,
 		servicePackageName: servicePackageName,
@@ -746,4 +757,18 @@ func (w *wrappedListResource) ListResourceConfigSchema(ctx context.Context, requ
 func (w *wrappedListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	// This method does not call down to the inner resource.
 	response.TypeName = w.spec.TypeName
+}
+
+func (w *wrappedListResource) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+	if v, ok := w.inner.(list.ListResourceWithRawV5Schemas); ok {
+		ctx, diags := w.context(ctx, nil, w.meta)
+		if diags.HasError() {
+			tflog.Warn(ctx, "wrapping Schemas", map[string]any{
+				"resource":               w.spec.TypeName,
+				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+			})
+		}
+
+		v.RawV5Schemas(ctx, request, response)
+	}
 }

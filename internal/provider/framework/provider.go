@@ -52,6 +52,7 @@ var (
 type frameworkProvider struct {
 	dataSources        []func() datasource.DataSource
 	ephemeralResources []func() ephemeral.EphemeralResource
+	listResources      []func() list.ListResource
 	primary            interface{ Meta() any }
 	resources          []func() resource.Resource
 	servicePackages    iter.Seq[conns.ServicePackage]
@@ -387,22 +388,8 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 	}
 }
 
-func (p *frameworkProvider) ListResources(ctx context.Context) []func() list.ListResource {
-	spec := &inttypes.ServicePackageFrameworkListResource{
-		TypeName: "aws_batch_job_queue",
-		Factory:  batch.JobQueueResourceAsListResource,
-		Name:     "Job Queue",
-		Tags: unique.Make(inttypes.ServicePackageResourceTags{
-			IdentifierAttribute: names.AttrARN,
-		}),
-		Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-	}
-	return []func() list.ListResource{
-		func() list.ListResource {
-			return newWrappedListResource(spec, names.Batch)
-		},
-	}
+func (p *frameworkProvider) ListResources(_ context.Context) []func() list.ListResource {
+	return slices.Clone(p.listResources)
 }
 
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
@@ -430,6 +417,14 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			p.resources = append(p.resources, func() resource.Resource { //nolint:contextcheck // must be a func()
 				return newWrappedResource(resourceSpec, servicePackageName)
 			})
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithFrameworkListResource); ok {
+			for _, listResourceSpec := range v.FrameworkListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResource(listResourceSpec, servicePackageName)
+				})
+			}
 		}
 	}
 }

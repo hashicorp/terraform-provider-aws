@@ -413,3 +413,11 @@ type SDKv2Import struct {
 	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
 }
+
+type SDKv2Identityer interface {
+	AddIdentity([]IdentityAttribute)
+}
+
+type SDKv2Tagger interface {
+	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
+}

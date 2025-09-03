@@ -58,7 +58,11 @@ func resourceInstance() *schema.Resource {
 		DeleteWithoutTimeout: resourceInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				rd.Set(names.AttrForceDestroy, false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		SchemaVersion: 2,
@@ -588,7 +592,7 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", names.AttrSubnetID, "private_ip", "secondary_private_ips", names.AttrVPCSecurityGroupIDs, names.AttrSecurityGroups, "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "primary_network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -605,6 +609,7 @@ func resourceInstance() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						// Note: Changes to `network_interface.network_card_index` should be mirrored in `aws_spot_instance_request`
 						"network_card_index": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -618,6 +623,7 @@ func resourceInstance() *schema.Resource {
 						},
 					},
 				},
+				Deprecated: "network_interface is deprecated. To specify the primary network interface, use primary_network_interface instead. To attach additional network interfaces, use the aws_network_interface_attachment resource.",
 			},
 			"outpost_arn": {
 				Type:     schema.TypeString,
@@ -643,6 +649,27 @@ func resourceInstance() *schema.Resource {
 			"primary_network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"primary_network_interface": {
+				// Note: Changes to `primary_network_interface` should be mirrored in `aws_spot_instance_request`
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				Computed:      true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDeleteOnTermination: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrNetworkInterfaceID: {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"private_dns": {
 				Type:     schema.TypeString,
@@ -1307,10 +1334,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			// Otherwise, assume the network device was attached via an outside resource.
 			for _, index := range configuredDeviceIndexes {
 				if index == int(aws.ToInt32(iNi.Attachment.DeviceIndex)) {
+					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 					ni["device_index"] = aws.ToInt32(iNi.Attachment.DeviceIndex)
 					ni["network_card_index"] = aws.ToInt32(iNi.Attachment.NetworkCardIndex)
 					ni[names.AttrNetworkInterfaceID] = aws.ToString(iNi.NetworkInterfaceId)
-					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 				}
 			}
 			// Don't add empty network interfaces to schema
@@ -1327,11 +1354,17 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		// If an instance is shutting down, network interfaces are detached, and attributes may be nil,
 		// need to protect against nil pointer dereferences
 		if primaryNetworkInterface.NetworkInterfaceId != nil {
+			pni := map[string]any{
+				names.AttrNetworkInterfaceID:  aws.ToString(primaryNetworkInterface.NetworkInterfaceId),
+				names.AttrDeleteOnTermination: aws.ToBool(primaryNetworkInterface.Attachment.DeleteOnTermination),
+			}
+			if err := d.Set("primary_network_interface", []any{pni}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting primary_network_interface for AWS Instance (%s): %s", d.Id(), err)
+			}
+
+			d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
 			if primaryNetworkInterface.SubnetId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 				d.Set(names.AttrSubnetID, primaryNetworkInterface.SubnetId)
-			}
-			if primaryNetworkInterface.NetworkInterfaceId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-				d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
 			}
 			d.Set("ipv6_address_count", len(primaryNetworkInterface.Ipv6Addresses))
 			if primaryNetworkInterface.SourceDestCheck != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
@@ -2592,8 +2625,9 @@ func findRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*s
 	return rootDeviceName, nil
 }
 
-func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfaces any) []awstypes.InstanceNetworkInterfaceSpecification {
-	networkInterfaces := []awstypes.InstanceNetworkInterfaceSpecification{}
+func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfaces any, primaryNetworkInterface any) []awstypes.InstanceNetworkInterfaceSpecification {
+	var networkInterfaces []awstypes.InstanceNetworkInterfaceSpecification
+
 	// Get necessary items
 	subnet, hasSubnet := d.GetOk(names.AttrSubnetID)
 
@@ -2645,19 +2679,29 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 		}
 
 		networkInterfaces = append(networkInterfaces, ni)
-	} else {
+	} else if nInterfaces != nil && nInterfaces.(*schema.Set).Len() > 0 {
 		// If we have manually specified network interfaces, build and attach those here.
-		vL := nInterfaces.(*schema.Set).List()
-		for _, v := range vL {
-			ini := v.(map[string]any)
-			ni := awstypes.InstanceNetworkInterfaceSpecification{
-				DeviceIndex:         aws.Int32(int32(ini["device_index"].(int))),
-				NetworkCardIndex:    aws.Int32(int32(ini["network_card_index"].(int))),
-				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
-				DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
+		tfList := nInterfaces.(*schema.Set).List()
+		for _, tfMapRaw := range tfList {
+			tfMap := tfMapRaw.(map[string]any)
+			apiObject := awstypes.InstanceNetworkInterfaceSpecification{
+				DeleteOnTermination: aws.Bool(tfMap[names.AttrDeleteOnTermination].(bool)),
+				DeviceIndex:         aws.Int32(int32(tfMap["device_index"].(int))),
+				NetworkInterfaceId:  aws.String(tfMap[names.AttrNetworkInterfaceID].(string)),
 			}
-			networkInterfaces = append(networkInterfaces, ni)
+			if v, ok := tfMap["network_card_index"]; ok && v != 0 {
+				apiObject.NetworkCardIndex = aws.Int32(int32(v.(int)))
+			}
+			networkInterfaces = append(networkInterfaces, apiObject)
 		}
+	} else {
+		v := primaryNetworkInterface.([]any)
+		ini := v[0].(map[string]any)
+		ni := awstypes.InstanceNetworkInterfaceSpecification{
+			DeviceIndex:        aws.Int32(0),
+			NetworkInterfaceId: aws.String(ini[names.AttrNetworkInterfaceID].(string)),
+		}
+		networkInterfaces = append(networkInterfaces, ni)
 	}
 
 	return networkInterfaces
@@ -3153,11 +3197,12 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 	_, privIP := d.GetOk("private_ip")
 	_, secPrivIP := d.GetOk("secondary_private_ips")
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
+	primaryNetworkInterface, primaryNetworkInterfaceOk := d.GetOk("primary_network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if (hasSubnet && (assocPubIPA || privIP || secPrivIP)) || interfacesOk {
+	if (hasSubnet && (assocPubIPA || privIP || secPrivIP)) || interfacesOk || primaryNetworkInterfaceOk {
 		// Otherwise we're attaching (a) network interface(s)
-		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces)
+		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces, primaryNetworkInterface)
 	} else {
 		// If simply specifying a subnetID, privateIP, Security Groups, or VPC Security Groups, build these now
 		if subnetID != "" {

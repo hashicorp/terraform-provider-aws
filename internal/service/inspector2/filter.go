@@ -78,6 +78,8 @@ func (r *filterResource) Schema(ctx context.Context, request resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"code_repository_project_name":       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"code_repository_provider_type":      stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"code_vulnerability_detector_name":   stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"code_vulnerability_detector_tags":   stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"code_vulnerability_file_path":       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
@@ -88,6 +90,8 @@ func (r *filterResource) Schema(ctx context.Context, request resource.SchemaRequ
 						"ec2_instance_vpc_id":                stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"ecr_image_architecture":             stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"ecr_image_hash":                     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"ecr_image_in_use_count":             numberFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"ecr_image_last_in_use_at":           dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"ecr_image_pushed_at":                dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"ecr_image_registry":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"ecr_image_repository_name":          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
@@ -559,6 +563,8 @@ type filterResourceModel struct {
 
 type filterCriteriaModel struct {
 	AWSAccountID                   fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"aws_account_id"`
+	CodeRepositoryProjectName      fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_repository_project_name"`
+	CodeRepositoryProviderType     fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_repository_provider_type"`
 	CodeVulnerabilityDetectorName  fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_vulnerability_detector_name"`
 	CodeVulnerabilityDetectorTags  fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_vulnerability_detector_tags"`
 	CodeVulnerabilityFilePath      fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_vulnerability_file_path"`
@@ -569,6 +575,8 @@ type filterCriteriaModel struct {
 	EC2InstanceVpcId               fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"ec2_instance_vpc_id"`
 	ECRImageArchitecture           fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"ecr_image_architecture"`
 	ECRImageHash                   fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"ecr_image_hash"`
+	ECRImageInUseCount             fwtypes.SetNestedObjectValueOf[numberFilterModel]    `tfsdk:"ecr_image_in_use_count"`
+	ECRImageLastInUseAt            fwtypes.SetNestedObjectValueOf[dateFilterModel]      `tfsdk:"ecr_image_last_in_use_at"`
 	ECRImagePushedAt               fwtypes.SetNestedObjectValueOf[dateFilterModel]      `tfsdk:"ecr_image_pushed_at"`
 	ECRImageRegistry               fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"ecr_image_registry"`
 	ECRImageRepositoryName         fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"ecr_image_repository_name"`

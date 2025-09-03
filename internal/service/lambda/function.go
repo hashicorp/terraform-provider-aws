@@ -1403,7 +1403,7 @@ type functionCU interface {
 
 func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*T, error) {
 	output, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {
@@ -1435,7 +1435,7 @@ func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*
 			functionExtraThrottlingTimeout = 9 * time.Minute
 		)
 		output, err = tfresource.RetryWhen(ctx, functionExtraThrottlingTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return f()
 			},
 			func(err error) (bool, error) {

@@ -12,7 +12,7 @@ var (
 
 	FindNamespace           = findNamespace
 	FindTableByThreePartKey = findTableByThreePartKey
-	FindTableBucket         = findTableBucket
+	FindTableBucketByARN    = findTableBucketByARN
 	FindTableBucketPolicy   = findTableBucketPolicy
 	FindTablePolicy         = findTablePolicy
 
@@ -20,9 +20,7 @@ var (
 )
 
 const (
-	ResNameNamespace   = resNameNamespace
-	ResNameTableBucket = resNameTableBucket
-
+	ResNameNamespace     = resNameNamespace
 	NamespaceIDSeparator = namespaceIDSeparator
 )
 

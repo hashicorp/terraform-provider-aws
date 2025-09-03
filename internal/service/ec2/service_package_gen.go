@@ -1404,6 +1404,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route",
 			Name:     "Route",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("route_table_id", true),
+				inttypes.StringIdentityAttribute("destination_cidr_block", false),
+				inttypes.StringIdentityAttribute("destination_ipv6_cidr_block", false),
+				inttypes.StringIdentityAttribute("destination_prefix_list_id", false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      routeImportID{},
+			},
 		},
 		{
 			Factory:  resourceRouteTable,
@@ -1412,7 +1422,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceRouteTableAssociation,

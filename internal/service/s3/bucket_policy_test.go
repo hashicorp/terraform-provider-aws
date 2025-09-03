@@ -530,6 +530,23 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 	}
 }
 
+func testAccCheckBucketPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
+
+		_, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
+		return err
+	}
+}
+
 func testAccBucketPolicyConfig_basic(bucketName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
