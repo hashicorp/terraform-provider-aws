@@ -30,6 +30,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_s3tables_table_policy: Remove plan-time validation of `name` and `namespace` ([#44072](https://github.com/hashicorp/terraform-provider-aws/issues/44072))
+* resource/aws_servicecatalog_provisioned_product: Set `provisioning_parameters` and `provisioning_artifact_id` to the values from the last successful deployment when update fails ([#43956](https://github.com/hashicorp/terraform-provider-aws/issues/43956))
 
 ## 6.11.0 (August 28, 2025)
 
