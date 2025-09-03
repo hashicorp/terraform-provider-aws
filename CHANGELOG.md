@@ -9,20 +9,28 @@ NOTES:
 ENHANCEMENTS:
 
 * data-source/aws_efs_mount_target: Add `ip_address_type` and `ipv6_address` attributes ([#44079](https://github.com/hashicorp/terraform-provider-aws/issues/44079))
+* data-source/aws_instance: Add `placement_group_id` attribute ([#38527](https://github.com/hashicorp/terraform-provider-aws/issues/38527))
 * data-source/aws_lambda_function: Add `source_kms_key_arn` attribute ([#44080](https://github.com/hashicorp/terraform-provider-aws/issues/44080))
+* data-source/aws_launch_template: Add `placement.group_id` attribute ([#44097](https://github.com/hashicorp/terraform-provider-aws/issues/44097))
+* provider: Support `ap-southeast-6` as a valid AWS Region ([#44127](https://github.com/hashicorp/terraform-provider-aws/issues/44127))
+* resource/aws_ecs_service: Remove Terraform default for `availability_zone_rebalancing` and change the attribute to Optional and Computed. This allow ECS to default to `ENABLED` for new resources compatible with *AvailabilityZoneRebalancing* and maintain an existing service's `availability_zone_rebalancing` value during update when not configured. If an existing service never had an `availability_zone_rebalancing` value configured and is updated, ECS will treat this as `DISABLED` ([#43241](https://github.com/hashicorp/terraform-provider-aws/issues/43241))
 * resource/aws_efs_mount_target: Add `ip_address_type` and `ipv6_address` arguments to support IPv6 connectivity ([#44079](https://github.com/hashicorp/terraform-provider-aws/issues/44079))
+* resource/aws_instance: Add `placement_group_id` argument ([#38527](https://github.com/hashicorp/terraform-provider-aws/issues/38527))
 * resource/aws_instance: Add resource identity support ([#44068](https://github.com/hashicorp/terraform-provider-aws/issues/44068))
 * resource/aws_lambda_function: Add `source_kms_key_arn` argument ([#44080](https://github.com/hashicorp/terraform-provider-aws/issues/44080))
+* resource/aws_launch_template: Add `placement.group_id` argument ([#44097](https://github.com/hashicorp/terraform-provider-aws/issues/44097))
 * resource/aws_ssm_association: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
 * resource/aws_ssm_document: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
 * resource/aws_ssm_maintenance_window: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
 * resource/aws_ssm_maintenance_window_target: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
 * resource/aws_ssm_maintenance_window_task: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
 * resource/aws_ssm_patch_baseline: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
+* resource/aws_synthetics_canary: Add `run_config.ephemeral_storage` argument. ([#44105](https://github.com/hashicorp/terraform-provider-aws/issues/44105))
 
 BUG FIXES:
 
 * resource/aws_s3tables_table_policy: Remove plan-time validation of `name` and `namespace` ([#44072](https://github.com/hashicorp/terraform-provider-aws/issues/44072))
+* resource/aws_servicecatalog_provisioned_product: Set `provisioning_parameters` and `provisioning_artifact_id` to the values from the last successful deployment when update fails ([#43956](https://github.com/hashicorp/terraform-provider-aws/issues/43956))
 
 ## 6.11.0 (August 28, 2025)
 

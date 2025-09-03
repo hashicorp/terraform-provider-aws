@@ -8974,6 +8974,11 @@ service "workmail" {
     human_friendly      = "WorkMail"
   }
 
+  endpoint_info {
+    endpoint_api_call   = "ListResources"
+    endpoint_api_params = "OrganizationId: aws.String(\"m-12345678901234567890123456789012\")"
+  }
+
   resource_prefix {
     correct = "aws_workmail_"
   }
@@ -8981,7 +8986,6 @@ service "workmail" {
   provider_package_correct = "workmail"
   doc_prefix               = ["workmail_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "workmailmessageflow" {

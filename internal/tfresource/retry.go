@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -223,60 +222,32 @@ func WithContinuousTargetOccurence(continuousTargetOccurence int) OptionsFunc {
 // Retry allows configuration of StateChangeConf's various time arguments.
 // This is especially useful for AWS services that are prone to throttling, such as Route53, where
 // the default durations cause problems.
-func Retry(ctx context.Context, timeout time.Duration, f sdkretry.RetryFunc, optFns ...OptionsFunc) error {
-	// These are used to pull the error out of the function; need a mutex to
-	// avoid a data race.
-	var resultErr error
-	var resultErrMu sync.Mutex
-
-	options := Options{}
+func Retry(ctx context.Context, timeout time.Duration, f func(context.Context) *RetryError, optFns ...OptionsFunc) error {
+	options := Options{
+		MinPollInterval: 500 * time.Millisecond, //nolint:mnd // 500ms is the Plugin SDKv2 default
+	}
 	for _, fn := range optFns {
 		fn(&options)
 	}
 
-	c := &sdkretry.StateChangeConf{
-		Pending:    []string{"retryableerror"},
-		Target:     []string{"success"},
-		Timeout:    timeout,
-		MinTimeout: 500 * time.Millisecond,
-		Refresh: func() (any, string, error) {
-			rerr := f()
-
-			resultErrMu.Lock()
-			defer resultErrMu.Unlock()
-
-			if rerr == nil {
-				resultErr = nil
-				return 42, "success", nil
-			}
-
-			resultErr = rerr.Err
-
-			if rerr.Retryable {
-				return 42, "retryableerror", nil
-			}
-
-			return nil, "quit", rerr.Err
+	_, err := retryWhen(ctx, timeout,
+		func(ctx context.Context) (any, error) {
+			return nil, f(ctx)
 		},
-	}
+		func(err error) (bool, error) {
+			if err, ok := errs.As[*RetryError](err); ok {
+				if err != nil {
+					return err.isRetryable, err.err
+				}
+				return false, nil
+			}
 
-	options.Apply(c)
+			return false, err
+		},
+		backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(options.Delay, options.PollInterval, options.MinPollInterval)),
+	)
 
-	_, waitErr := c.WaitForStateContext(ctx)
-
-	// Need to acquire the lock here to be able to avoid race using resultErr as
-	// the return value
-	resultErrMu.Lock()
-	defer resultErrMu.Unlock()
-
-	// resultErr may be nil because the wait timed out and resultErr was never
-	// set; this is still an error
-	if resultErr == nil {
-		return waitErr
-	}
-	// resultErr takes precedence over waitErr if both are set because it is
-	// more likely to be useful
-	return resultErr
+	return err
 }
 
 func retryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable Retryable, opts ...backoff.Option) (T, error) {
