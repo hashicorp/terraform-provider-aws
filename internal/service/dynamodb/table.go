@@ -127,6 +127,7 @@ func resourceTable() *schema.Resource {
 			}),
 			customdiff.ForceNewIfChange("warm_throughput.0.read_units_per_second", func(_ context.Context, old, new, meta any) bool {
 				// warm_throughput can only be increased, not decreased
+				// i.e., "api error ValidationException: One or more parameter values were invalid: Requested ReadUnitsPerSecond for WarmThroughput for table is lower than current WarmThroughput, decreasing WarmThroughput is not supported"
 				if old, new := old.(int), new.(int); new != 0 && new < old {
 					return true
 				}
@@ -135,6 +136,7 @@ func resourceTable() *schema.Resource {
 			}),
 			customdiff.ForceNewIfChange("warm_throughput.0.write_units_per_second", func(_ context.Context, old, new, meta any) bool {
 				// warm_throughput can only be increased, not decreased
+				// i.e., "api error ValidationException: One or more parameter values were invalid: Requested ReadUnitsPerSecond for WarmThroughput for table is lower than current WarmThroughput, decreasing WarmThroughput is not supported"
 				if old, new := old.(int), new.(int); new != 0 && new < old {
 					return true
 				}
