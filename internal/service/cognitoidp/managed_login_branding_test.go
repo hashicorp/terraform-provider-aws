@@ -36,7 +36,7 @@ func TestAccCognitoIDPManagedLoginBranding_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedLoginBranding_basic(rName),
+				Config: testAccManagedLoginBrandingConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
 				),
@@ -77,12 +77,49 @@ func TestAccCognitoIDPManagedLoginBranding_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedLoginBranding_basic(rName),
+				Config: testAccManagedLoginBrandingConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &client),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceManagedLoginBranding, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPManagedLoginBranding_asset(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ManagedLoginBrandingType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_managed_login_branding.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedLoginBrandingConfig_asset(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetSizeExact(1)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "managed_login_branding_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "user_pool_id", "managed_login_branding_id"),
 			},
 		},
 	})
@@ -135,7 +172,7 @@ func testAccCheckManagedLoginBrandingExists(ctx context.Context, n string, v *aw
 	}
 }
 
-func testAccManagedLoginBranding_basic(rName string) string {
+func testAccManagedLoginBrandingConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -146,12 +183,34 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id        = aws_cognito_user_pool.test.id
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
+`, rName)
+}
 
+func testAccManagedLoginBrandingConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccManagedLoginBrandingConfig_base(rName), `
 resource "aws_cognito_managed_login_branding" "test" {
   client_id    = aws_cognito_user_pool_client.test.id
   user_pool_id = aws_cognito_user_pool.test.id
 
   use_cognito_provided_values = true
 }
-`, rName)
+`)
+}
+
+func testAccManagedLoginBrandingConfig_asset(rName string) string {
+	return acctest.ConfigCompose(testAccManagedLoginBrandingConfig_base(rName), `
+resource "aws_cognito_managed_login_branding" "test" {
+  client_id    = aws_cognito_user_pool_client.test.id
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  use_cognito_provided_values = true
+
+  asset {
+    bytes      = filebase64("test-fixtures/login_branding_asset.svg")
+    category   = "PAGE_FOOTER_BACKGROUND"
+    color_mode = "DARK"
+    extension  = "SVG"
+  }
+}
+`)
 }
