@@ -663,6 +663,7 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	state.ARN = types.StringValue(aws.ToString(plan.Arn))
+	state.ID = types.StringValue(aws.ToString(plan.Arn))
 	state.Name = types.StringValue(aws.ToString(plan.Name))
 	state.ExecutionRole = types.StringValue(aws.ToString(plan.ExecutionRole))
 	state.RecoveryApproach = types.StringValue(string(plan.RecoveryApproach))
