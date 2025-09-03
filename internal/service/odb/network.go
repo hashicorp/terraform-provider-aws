@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -34,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_odb_network", name="Network")
 // @Tags(identifierAttribute="arn")
 func newResourceNetwork(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -162,12 +160,6 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNwkOciDnsForwardingConfigResourceModel](ctx),
 				Computed:    true,
 				Description: "The DNS resolver endpoint in OCI for forwarding DNS queries for the ociPrivateZone domain.",
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						names.AttrDomainName:  types.StringType,
-						"oci_dns_listener_ip": types.StringType,
-					},
-				},
 			},
 			"peered_cidrs": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
@@ -456,8 +448,8 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 		)
 		return
 	}
-	state.S3Access = fwtypes.StringEnumValue(readS3AccessStatus)
-	state.S3PolicyDocument = types.StringPointerValue(updatedOdbNwk.ManagedServices.S3Access.S3PolicyDocument)
+	plan.S3Access = fwtypes.StringEnumValue(readS3AccessStatus)
+	plan.S3PolicyDocument = types.StringPointerValue(updatedOdbNwk.ManagedServices.S3Access.S3PolicyDocument)
 
 	readZeroEtlAccessStatus, err := mapManagedServiceStatusToAccessStatus(updatedOdbNwk.ManagedServices.ZeroEtlAccess.Status)
 	if err != nil {
@@ -467,7 +459,7 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 		)
 		return
 	}
-	state.ZeroEtlAccess = fwtypes.StringEnumValue(readZeroEtlAccessStatus)
+	plan.ZeroEtlAccess = fwtypes.StringEnumValue(readZeroEtlAccessStatus)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, updatedOdbNwk, &plan)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

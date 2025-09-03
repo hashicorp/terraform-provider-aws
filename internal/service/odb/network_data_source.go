@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_odb_network", name="Network")
 // @Tags(identifierAttribute="arn")
 func newDataSourceNetwork(context.Context) (datasource.DataSourceWithConfigure, error) {
