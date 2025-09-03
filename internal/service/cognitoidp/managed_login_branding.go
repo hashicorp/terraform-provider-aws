@@ -163,6 +163,14 @@ func (r *managedLoginBrandingResource) Create(ctx context.Context, request resou
 		return
 	}
 
+	// Additional fields.
+	settings, diags := data.Settings.ToSmithyDocument(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	input.Settings = settings
+
 	output, err := conn.CreateManagedLoginBranding(ctx, &input)
 
 	if err != nil {
@@ -408,7 +416,7 @@ type managedLoginBrandingResourceModel struct {
 	UserPoolID               types.String                                   `tfsdk:"user_pool_id"`
 }
 
-func flattenManagedLoginBrandingSettings(ctx context.Context, settings document.Interface) (fwtypes.SmithyJSON[document.Interface], diag.Diagnostics) {
+func flattenManagedLoginBrandingSettings(ctx context.Context, settings document.Interface) (fwtypes.SmithyJSON[document.Interface], diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
 	if settings == nil {
