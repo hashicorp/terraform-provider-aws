@@ -259,6 +259,39 @@ func (r *managedLoginBrandingResource) Read(ctx context.Context, request resourc
 	}
 	data.SettingsAll = settingsAll
 
+	input := cognitoidentityprovider.ListUserPoolClientsInput{
+		UserPoolId: aws.String(userPoolID),
+	}
+	pages := cognitoidentityprovider.NewListUserPoolClientsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("listing Cognito User Pool (%s) Clients", userPoolID), err.Error())
+
+			return
+		}
+
+		for _, v := range page.UserPoolClients {
+			clientID := aws.ToString(v.ClientId)
+			input := cognitoidentityprovider.DescribeManagedLoginBrandingByClientInput{
+				ClientId:   aws.String(clientID),
+				UserPoolId: aws.String(userPoolID),
+			}
+			mlb, err := findManagedLoginBrandingByClient(ctx, conn, &input)
+
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding by client (%s)", clientID), err.Error())
+
+				return
+			}
+
+			if aws.ToString(mlb.ManagedLoginBrandingId) == managedLoginBrandingID {
+				data.ClientID = fwflex.StringValueToFramework(ctx, clientID)
+			}
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -386,6 +419,27 @@ func findManagedLoginBrandingByThreePartKey(ctx context.Context, conn *cognitoid
 
 func findManagedLoginBranding(ctx context.Context, conn *cognitoidentityprovider.Client, input *cognitoidentityprovider.DescribeManagedLoginBrandingInput) (*awstypes.ManagedLoginBrandingType, error) {
 	output, err := conn.DescribeManagedLoginBranding(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ManagedLoginBranding == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ManagedLoginBranding, nil
+}
+
+func findManagedLoginBrandingByClient(ctx context.Context, conn *cognitoidentityprovider.Client, input *cognitoidentityprovider.DescribeManagedLoginBrandingByClientInput) (*awstypes.ManagedLoginBrandingType, error) {
+	output, err := conn.DescribeManagedLoginBrandingByClient(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
