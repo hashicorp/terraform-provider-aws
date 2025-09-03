@@ -575,14 +575,16 @@ func warmThroughputSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"read_units_per_second": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Computed: true,
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(12000),
 				},
 				"write_units_per_second": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Computed: true,
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(4000),
 				},
 			},
 		},
@@ -1930,7 +1932,7 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 }
 
 func updateWarmThroughput(ctx context.Context, conn *dynamodb.Client, warmList []any, tableName string, timeout time.Duration) error {
-	if len(warmList) < 1 && warmList[0] == nil {
+	if len(warmList) < 1 || warmList[0] == nil {
 		return nil
 	}
 
