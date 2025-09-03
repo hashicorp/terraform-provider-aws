@@ -8966,6 +8966,10 @@ service "workmail" {
     human_friendly      = "WorkMail"
   }
 
+  endpoint_info {
+    endpoint_api_call = "ListResources"
+  }
+
   resource_prefix {
     correct = "aws_workmail_"
   }
