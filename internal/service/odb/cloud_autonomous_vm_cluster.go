@@ -154,7 +154,6 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "The description of the Autonomous VM cluster.",
 			},
@@ -470,32 +469,6 @@ func (r *resourceCloudAutonomousVmCluster) Read(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCloudAutonomousVmCluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state cloudAutonomousVmClusterResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	conn := r.Meta().ODBClient(ctx)
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	updatedAVMC, err := waitCloudAutonomousVmClusterUpdated(ctx, conn, state.CloudAutonomousVmClusterId.ValueString(), updateTimeout)
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameCloudAutonomousVmCluster, state.CloudAutonomousVmClusterId.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, updatedAVMC, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
 func (r *resourceCloudAutonomousVmCluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ODBClient(ctx)
 
@@ -536,22 +509,6 @@ func (r *resourceCloudAutonomousVmCluster) Delete(ctx context.Context, req resou
 func waitCloudAutonomousVmClusterCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudAutonomousVmCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusProvisioning),
-		Target:  enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh: statusCloudAutonomousVmCluster(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*odbtypes.CloudAutonomousVmCluster); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitCloudAutonomousVmClusterUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudAutonomousVmCluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(odbtypes.ResourceStatusUpdating),
 		Target:  enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
 		Refresh: statusCloudAutonomousVmCluster(ctx, conn, id),
 		Timeout: timeout,
