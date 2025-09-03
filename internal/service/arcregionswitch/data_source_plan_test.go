@@ -80,13 +80,13 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecks(t *testing.T) {
 }
 
 func testAccPlanDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccPlanConfig_basic(rName),
+		`
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
 }
-`, testAccPlanConfig_basic(rName))
+`)
 }
 
 func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing.T) {
@@ -128,14 +128,14 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing
 }
 
 func testAccPlanDataSourceConfig_route53HealthChecksWithWait(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccPlanConfig_route53HealthChecks(rName),
+		`
 data "aws_arcregionswitch_plan" "test" {
   arn                    = aws_arcregionswitch_plan.test.arn
   wait_for_health_checks = true
 }
-`, testAccPlanConfig_route53HealthChecks(rName))
+`)
 }
 
 func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
@@ -167,23 +167,23 @@ func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
 }
 
 func testAccPlanDataSourceConfig_withoutWaitFlags(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccPlanConfig_route53HealthChecks(rName),
+		`
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
 }
-`, testAccPlanConfig_route53HealthChecks(rName))
+`)
 }
 
 func testAccPlanDataSourceConfig_route53HealthChecks(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccPlanConfig_route53HealthChecks(rName),
+		`
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
 }
-`, testAccPlanConfig_route53HealthChecks(rName))
+`)
 }
 
 func testAccPlanConfig_route53HealthChecks(rName string) string {
