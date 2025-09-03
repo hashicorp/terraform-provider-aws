@@ -5,6 +5,7 @@ package arcregionswitch
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,6 +37,12 @@ func FindPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	output, err := conn.GetPlan(ctx, &input)
 
 	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
 		return nil, err
 	}
 
@@ -814,6 +822,10 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	_, err := conn.DeletePlan(ctx, &input)
 	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
 		resp.Diagnostics.AddError("deleting ARC Region Switch Plan", err.Error())
 		return
 	}

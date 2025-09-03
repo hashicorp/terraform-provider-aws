@@ -116,6 +116,33 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan sdktypes.Plan
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_basic(rName, acctest.AlternateRegion(), acctest.Region()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfarcregionswitch.ResourcePlan, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan sdktypes.Plan
