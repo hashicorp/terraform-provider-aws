@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.249.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.250.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.4
@@ -177,12 +177,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/mq v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.2
-	github.com/aws/aws-sdk-go-v2/service/neptune v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.12.2
-	github.com/aws/aws-sdk-go-v2/service/notifications v1.6.4
+	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.4
 	github.com/aws/aws-sdk-go-v2/service/oam v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/odb v1.4.2
@@ -201,7 +201,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.93.1
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.93.2
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.104.1
@@ -211,7 +211,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.21.2
-	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.2
+	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.57.2
