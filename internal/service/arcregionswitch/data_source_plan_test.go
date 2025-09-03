@@ -19,7 +19,7 @@ func TestAccARCRegionSwitchPlanDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -49,7 +49,7 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecks(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -80,13 +80,13 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecks(t *testing.T) {
 }
 
 func testAccPlanDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccPlanConfig_basic(rName),
+		`
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
 }
-`, testAccPlanConfig_basic(rName, acctest.AlternateRegion(), acctest.Region()))
+`)
 }
 
 func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing.T) {
@@ -99,7 +99,7 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -128,14 +128,14 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing
 }
 
 func testAccPlanDataSourceConfig_route53HealthChecksWithWait(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccPlanConfig_route53HealthChecks(rName),
+		`
 data "aws_arcregionswitch_plan" "test" {
   arn                    = aws_arcregionswitch_plan.test.arn
   wait_for_health_checks = true
 }
-`, testAccPlanConfig_route53HealthChecks(rName))
+`)
 }
 
 func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
@@ -144,7 +144,7 @@ func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -167,23 +167,23 @@ func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
 }
 
 func testAccPlanDataSourceConfig_withoutWaitFlags(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccPlanConfig_route53HealthChecks(rName),
+		`
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
 }
-`, testAccPlanConfig_route53HealthChecks(rName))
+`)
 }
 
 func testAccPlanDataSourceConfig_route53HealthChecks(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccPlanConfig_route53HealthChecks(rName),
+		`
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
 }
-`, testAccPlanConfig_route53HealthChecks(rName))
+`)
 }
 
 func testAccPlanConfig_route53HealthChecks(rName string) string {
@@ -220,18 +220,20 @@ resource "aws_arcregionswitch_plan" "test" {
       name                 = "route53-health-check-step"
       execution_block_type = "Route53HealthCheck"
 
-      route53_health_check_config {
-        hosted_zone_id  = "Z123456789012345678"
-        record_name     = "test.example.com"
-        timeout_minutes = 10
+      execution_block_configuration {
+        route53_health_check_config {
+          hosted_zone_id  = "Z123456789012345678"
+          record_name     = "test.example.com"
+          timeout_minutes = 10
 
-        record_sets {
-          record_set_identifier = "primary"
-          region                = %[2]q
-        }
-        record_sets {
-          record_set_identifier = "secondary"
-          region                = %[3]q
+          record_sets {
+            record_set_identifier = "primary"
+            region                = %[2]q
+          }
+          record_sets {
+            record_set_identifier = "secondary"
+            region                = %[3]q
+          }
         }
       }
     }
@@ -245,18 +247,20 @@ resource "aws_arcregionswitch_plan" "test" {
       name                 = "route53-health-check-step-primary"
       execution_block_type = "Route53HealthCheck"
 
-      route53_health_check_config {
-        hosted_zone_id  = "Z123456789012345678"
-        record_name     = "test.example.com"
-        timeout_minutes = 10
+      execution_block_configuration {
+        route53_health_check_config {
+          hosted_zone_id  = "Z123456789012345678"
+          record_name     = "test.example.com"
+          timeout_minutes = 10
 
-        record_sets {
-          record_set_identifier = "primary"
-          region                = %[2]q
-        }
-        record_sets {
-          record_set_identifier = "secondary"
-          region                = %[3]q
+          record_sets {
+            record_set_identifier = "primary"
+            region                = %[2]q
+          }
+          record_sets {
+            record_set_identifier = "secondary"
+            region                = %[3]q
+          }
         }
       }
     }

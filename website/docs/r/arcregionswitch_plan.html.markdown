@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Application Recovery Controller Region Switch Plan.
 
+~> **NOTE:** All execution block configurations must be wrapped in an `execution_block_configuration` block. This is required to properly handle the different types of execution blocks supported by the AWS API.
+
 ## Example Usage
 
 ### Basic Usage
@@ -47,9 +49,11 @@ resource "aws_arcregionswitch_plan" "example" {
       name                 = "manual-approval"
       execution_block_type = "ManualApproval"
 
-      execution_approval_config {
-        approval_role   = aws_iam_role.example.arn
-        timeout_minutes = 60
+      execution_block_configuration {
+        execution_approval_config {
+          approval_role   = aws_iam_role.example.arn
+          timeout_minutes = 60
+        }
       }
     }
   }
@@ -62,9 +66,11 @@ resource "aws_arcregionswitch_plan" "example" {
       name                 = "manual-approval"
       execution_block_type = "ManualApproval"
 
-      execution_approval_config {
-        approval_role   = aws_iam_role.example.arn
-        timeout_minutes = 60
+      execution_block_configuration {
+        execution_approval_config {
+          approval_role   = aws_iam_role.example.arn
+          timeout_minutes = 60
+        }
       }
     }
   }
@@ -96,13 +102,15 @@ resource "aws_arcregionswitch_plan" "complex" {
       name                 = "lambda-step"
       execution_block_type = "CustomActionLambda"
 
-      custom_action_lambda_config {
-        region_to_run           = "activatingRegion"
-        retry_interval_minutes  = 5.0
-        timeout_minutes         = 30
+      execution_block_configuration {
+        custom_action_lambda_config {
+          region_to_run           = "activatingRegion"
+          retry_interval_minutes  = 5.0
+          timeout_minutes         = 30
 
-        lambda {
-          arn = aws_lambda_function.example.arn
+          lambda {
+            arn = aws_lambda_function.example.arn
+          }
         }
       }
     }
@@ -111,29 +119,35 @@ resource "aws_arcregionswitch_plan" "complex" {
       name                 = "parallel-step"
       execution_block_type = "Parallel"
 
-      parallel_config {
-        step {
-          name                 = "asg-scaling"
-          execution_block_type = "EC2AutoScaling"
+      execution_block_configuration {
+        parallel_config {
+          step {
+            name                 = "asg-scaling"
+            execution_block_type = "EC2AutoScaling"
 
-          ec2_asg_capacity_increase_config {
-            asgs {
-              arn = aws_autoscaling_group.example.arn
+            execution_block_configuration {
+              ec2_asg_capacity_increase_config {
+                asgs {
+                  arn = aws_autoscaling_group.example.arn
+                }
+                target_percent = 150
+              }
             }
-            target_percent = 150
           }
-        }
 
-        step {
-          name                 = "ecs-scaling"
-          execution_block_type = "ECSServiceScaling"
+          step {
+            name                 = "ecs-scaling"
+            execution_block_type = "ECSServiceScaling"
 
-          ecs_capacity_increase_config {
-            services {
-              cluster_arn = aws_ecs_cluster.example.arn
-              service_arn = aws_ecs_service.example.arn
+            execution_block_configuration {
+              ecs_capacity_increase_config {
+                services {
+                  cluster_arn = aws_ecs_cluster.example.arn
+                  service_arn = aws_ecs_service.example.arn
+                }
+                target_percent = 200
+              }
             }
-            target_percent = 200
           }
         }
       }
@@ -174,19 +188,22 @@ resource "aws_arcregionswitch_plan" "complex" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+### Required
 
-* `name` - (Required) Name of the plan. Must be unique within the account.
-* `execution_role` - (Required) ARN of the IAM role that ARC Region Switch will assume to execute the plan.
-* `recovery_approach` - (Required) Recovery approach for the plan. Valid values: `activeActive`, `activePassive`.
-* `regions` - (Required) List of AWS regions involved in the plan.
-* `workflow` - (Required) List of workflows that define the steps to execute. See [Workflow](#workflow) below.
-* `description` - (Optional) Description of the plan.
-* `primary_region` - (Optional) Primary region for the plan.
-* `recovery_time_objective_minutes` - (Optional) Recovery time objective in minutes.
-* `associated_alarms` - (Optional) Set of CloudWatch alarms associated with the plan. See [Associated Alarms](#associated-alarms) below.
-* `trigger` - (Optional) List of triggers that can automatically execute the plan. See [Trigger](#trigger) below.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `execution_role` - ARN of the IAM role that ARC Region Switch will assume to execute the plan.
+* `name` - Name of the plan. Must be unique within the account.
+* `recovery_approach` - Recovery approach for the plan. Valid values: `activeActive`, `activePassive`.
+* `regions` - List of AWS regions involved in the plan.
+* `workflow` - List of workflows that define the steps to execute. See [Workflow](#workflow) below.
+
+### Optional
+
+* `associated_alarms` - Set of CloudWatch alarms associated with the plan. See [Associated Alarms](#associated-alarms) below.
+* `description` - Description of the plan.
+* `primary_region` - Primary region for the plan.
+* `recovery_time_objective_minutes` - Recovery time objective in minutes.
+* `tags` - Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `triggers` - Set of triggers that can initiate the plan execution. See [Trigger](#trigger) below.
 
 ### Workflow
 
@@ -200,8 +217,11 @@ This resource supports the following arguments:
 * `name` - (Required) Name of the step.
 * `execution_block_type` - (Required) Type of execution block. Valid values: `CustomActionLambda`, `ManualApproval`, `AuroraGlobalDatabase`, `EC2AutoScaling`, `ARCRoutingControl`, `ARCRegionSwitchPlan`, `Parallel`, `ECSServiceScaling`, `EKSResourceScaling`, `Route53HealthCheck`.
 * `description` - (Optional) Description of the step.
+* `execution_block_configuration` - (Required) Configuration block for the execution block. Contains one of the following nested configuration blocks based on the `execution_block_type`:
 
-The following configuration blocks are available based on the `execution_block_type`:
+#### Execution Block Configuration
+
+The `execution_block_configuration` block contains one of the following configuration blocks based on the `execution_block_type`:
 
 * `execution_approval_config` - Configuration for manual approval steps. See [Execution Approval Config](#execution-approval-config) below.
 * `custom_action_lambda_config` - Configuration for Lambda function execution. See [Custom Action Lambda Config](#custom-action-lambda-config) below.
