@@ -959,10 +959,6 @@ resource "aws_route53_record" "secondary" {
 }
 
 # Provider configuration for secondary region
-provider "aws" {
-  alias  = "secondary"
-  region = %[4]q
-}
 `, rName, zoneName, primaryRegion, alternateRegion)
 }
 
@@ -1024,10 +1020,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccPlanConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1104,10 +1096,6 @@ func testAccPlanConfig_update(rName, description string, rto int) string {
 	}
 
 	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1170,10 +1158,6 @@ resource "aws_arcregionswitch_plan" "test" {
 
 func testAccPlanConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1238,10 +1222,6 @@ resource "aws_arcregionswitch_plan" "test" {
 
 func testAccPlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1307,10 +1287,6 @@ resource "aws_arcregionswitch_plan" "test" {
 
 func testAccPlanConfig_minimalRegions(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1371,10 +1347,6 @@ resource "aws_arcregionswitch_plan" "test" {
 
 func testAccPlanConfig_multipleWorkflowsSameAction(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "alternate"
-  region = %[2]q
-}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
