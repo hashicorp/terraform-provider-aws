@@ -38,7 +38,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) String identifier of the associated REST API.
-* `response_type` - (Required) [Response type](https://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html) of the associated GatewayResponse.
+* `response_type` - (Required) Response type of the associated GatewayResponse. See the [AWS Documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html) for supported values.
 * `status_code` - (Optional) HTTP status code of the Gateway Response.
 * `response_templates` - (Optional) Map of templates used to transform the response body.
 * `response_parameters` - (Optional) Map of parameters (paths, query strings and headers) of the Gateway Response.
