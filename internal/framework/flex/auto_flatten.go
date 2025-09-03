@@ -620,21 +620,21 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		//
 		// JSONStringer -> types.String-ish.
 		//
-		if vFrom.Type().Implements(reflect.TypeFor[smithydocument.Unmarshaler]()) {
-			tflog.SubsystemInfo(ctx, subsystemName, "Source implements smithydocument.Unmarshaler")
+		if vFrom.Type().Implements(reflect.TypeFor[smithydocument.Marshaler]()) {
+			tflog.SubsystemInfo(ctx, subsystemName, "Source implements smithydocument.Marshaler")
 
 			stringValue := types.StringNull()
 
 			if vFrom.IsNil() {
 				tflog.SubsystemTrace(ctx, subsystemName, "Flattening null value")
 			} else {
-				doc := vFrom.Interface().(smithydocument.Unmarshaler)
+				doc := vFrom.Interface().(smithydocument.Marshaler)
 				s, err := tfsmithy.DocumentToJSONString(doc)
 				if err != nil {
-					tflog.SubsystemError(ctx, subsystemName, "Unmarshalling JSON document", map[string]any{
+					tflog.SubsystemError(ctx, subsystemName, "Marshalling JSON document", map[string]any{
 						logAttrKeyError: err.Error(),
 					})
-					diags.Append(diagFlatteningUnmarshalSmithyDocument(reflect.TypeOf(doc), err))
+					diags.Append(diagFlatteningMarshalSmithyDocument(reflect.TypeOf(doc), err))
 					return diags
 				}
 				stringValue = types.StringValue(s)
@@ -1750,13 +1750,13 @@ func diagFlatteningNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
 	)
 }
 
-func diagFlatteningUnmarshalSmithyDocument(sourceType reflect.Type, err error) diag.ErrorDiagnostic {
+func diagFlatteningMarshalSmithyDocument(sourceType reflect.Type, err error) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic(
 		"Incompatible Types",
 		"An unexpected error occurred while flattening configuration. "+
 			"This is always an error in the provider. "+
 			"Please report the following to the provider developer:\n\n"+
-			fmt.Sprintf("Unmarshalling JSON document of type %q failed: %s", fullTypeName(sourceType), err.Error()),
+			fmt.Sprintf("Marshalling JSON document of type %q failed: %s", fullTypeName(sourceType), err.Error()),
 	)
 }
 

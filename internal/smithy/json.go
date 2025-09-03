@@ -24,20 +24,13 @@ func DocumentFromJSONString[T any](s string, f func(any) T) (T, error) {
 }
 
 // DocumentToJSONString converts a [Smithy document](https://smithy.io/2.0/spec/simple-types.html#document) to a JSON string.
-func DocumentToJSONString(document smithydocument.Unmarshaler) (string, error) {
-	var v any
-
-	err := document.UnmarshalSmithyDocument(&v)
+func DocumentToJSONString(document smithydocument.Marshaler) (string, error) {
+	bytes, err := document.MarshalSmithyDocument()
 	if err != nil {
 		return "", err
 	}
 
-	s, err := tfjson.EncodeToString(v)
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(s), nil
+	return strings.TrimSpace(string(bytes)), nil
 }
 
 // JSONStringer interface is used to marshal and unmarshal JSON interface objects.

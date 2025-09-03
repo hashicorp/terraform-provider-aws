@@ -477,7 +477,7 @@ func infoSourceImplementsJSONStringer(sourcePath string, sourceType reflect.Type
 	return map[string]any{
 		"@level":             hclog.Info.String(),
 		"@module":            logModule,
-		"@message":           "Source implements smithydocument.Unmarshaler",
+		"@message":           "Source implements smithydocument.Marshaler",
 		logAttrKeySourcePath: sourcePath,
 		logAttrKeySourceType: fullTypeName(sourceType),
 		logAttrKeyTargetPath: targetPath,
@@ -569,11 +569,11 @@ func errorTargetHasNoMapBlockKey(sourcePath string, sourceType reflect.Type, tar
 	}
 }
 
-func errorUnmarshallingJSONDocument(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type, err error) map[string]any {
+func errorMarshallingJSONDocument(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type, err error) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Error.String(),
 		"@module":            logModule,
-		"@message":           "Unmarshalling JSON document",
+		"@message":           "Marshalling JSON document",
 		logAttrKeySourcePath: sourcePath,
 		logAttrKeySourceType: fullTypeName(sourceType),
 		logAttrKeyTargetPath: targetPath,
