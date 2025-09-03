@@ -23,6 +23,14 @@ resource "aws_glue_catalog_table_optimizer" "example" {
   configuration {
     role_arn = "arn:aws:iam::123456789012:role/example-role"
     enabled  = true
+
+    compaction_configuration {
+      iceberg_configuration {
+        strategy              = "binpack"
+        min_input_files       = 100
+        delete_file_threshold = 5
+      }
+    }
   }
 
   type = "compaction"
@@ -94,16 +102,24 @@ This resource supports the following arguments:
 ### Configuration
 
 * `enabled` - (Required) Indicates whether the table optimizer is enabled.
+* `compaction_configuration` (Optional) - The configuration block for compaction optimization. Required if the optimizer type is set to `compaction`. See [Compaction Configuration](#compaction-configuration) for additional details.
 * `orphan_file_deletion_configuration` (Optional) - The configuration block for an orphan file deletion optimizer. See [Orphan File Deletion Configuration](#orphan-file-deletion-configuration) for additional details.
 * `retention_configuration` (Optional) - The configuration block for a snapshot retention optimizer. See [Retention Configuration](#retention-configuration) for additional details.
 * `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer.
+
+### Compaction Configuration
+
+* `iceberg_configuration` (Optional) - The configuration for Iceberg compaction optimizer.
+    * `strategy` (Required) - The strategy to use for compaction. Valid values are: `binpack`, `sort`, `z-order`. Note: to use `sort` or `z-order`, the table must already have a `sort_order` defined.
+    * `min_input_files` (Optional) - The minimum number of deletes that must be present in a data file to make it eligible for compaction. Defaults to `100`.
+    * `delete_file_threshold` (Optional) - The minimum number of data files that must be present in a partition before compaction will actually compact files. Defaults to `1`.
 
 ### Orphan File Deletion Configuration
 
 * `iceberg_configuration` (Optional) - The configuration for an Iceberg orphan file deletion optimizer.
     * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
     * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
-  
+
 ### Retention Configuration
 
 * `iceberg_configuration` (Optional) - The configuration for an Iceberg snapshot retention optimizer.
