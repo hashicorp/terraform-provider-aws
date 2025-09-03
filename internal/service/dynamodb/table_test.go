@@ -5000,6 +5000,11 @@ func TestAccDynamoDBTable_gsiWarmThroughput_billingPayPerRequest(t *testing.T) {
 						"warm_throughput.0.write_units_per_second": "4200",
 					}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccTableConfig_gsiWarmThroughput_billingPayPerRequest(rName, 6, 6, 12300, 4300),
@@ -5023,6 +5028,11 @@ func TestAccDynamoDBTable_gsiWarmThroughput_billingPayPerRequest(t *testing.T) {
 						"warm_throughput.0.write_units_per_second": "4100",
 					}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
