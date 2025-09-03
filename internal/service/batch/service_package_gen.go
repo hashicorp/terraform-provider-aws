@@ -48,6 +48,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	}
 }
 
+func (p *servicePackage) FrameworkListResources(ctx context.Context) []*inttypes.ServicePackageFrameworkListResource {
+	return []*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  JobQueueResourceAsListResource,
+			TypeName: "aws_batch_job_queue",
+			Name:     "Job Queue",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
+}
+
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{

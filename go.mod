@@ -289,8 +289,8 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/hcl/v2 v2.24.0
-	github.com/hashicorp/terraform-json v0.26.0
-	github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250818132955-0cdd87dec4dd
+	github.com/hashicorp/terraform-json v0.26.1-0.20250829125600-5c1a00f3ccc4
+	github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250828103048-e39d5775ca20
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0
@@ -298,8 +298,8 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.29.0-beta.1
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.21.0-alpha.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
-	github.com/hashicorp/terraform-plugin-testing v1.13.3-0.20250818150222-fef3bb61bf40
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250902143515-144af2bf0d95
+	github.com/hashicorp/terraform-plugin-testing v1.13.3-0.20250902202803-95081f880861
 	github.com/jaswdr/faker/v2 v2.8.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38
@@ -348,7 +348,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/hc-install v0.9.2 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/terraform-exec v0.23.1 // indirect
+	github.com/hashicorp/terraform-exec v0.23.2-0.20250903114929-54411bed9f29 // indirect
 	github.com/hashicorp/terraform-registry-address v0.3.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
@@ -386,7 +386,9 @@ require (
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
 
-replace (
-	github.com/hashicorp/terraform-plugin-framework => github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250828103048-e39d5775ca20
-	github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250902143515-144af2bf0d95
-)
+//replace (
+//	github.com/hashicorp/terraform-plugin-framework => github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250828103048-e39d5775ca20
+//	github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250902143515-144af2bf0d95
+//)
+
+//replace github.com/hashicorp/terraform-exec => github.com/hashicorp/terraform-exec v0.23.2-0.20250903114929-54411bed9f29
