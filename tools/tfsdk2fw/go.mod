@@ -64,11 +64,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chime v1.40.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.26.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.31.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.28.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.65.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.53.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.54.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.31.2 // indirect
@@ -192,7 +192,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.31.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.37.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/mq v1.33.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mq v1.34.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.1 // indirect
@@ -221,7 +221,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.93.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.26.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.104.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.105.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.58.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.37.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.31.2 // indirect
@@ -231,8 +231,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.30.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.21.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.57.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.33.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.58.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.34.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.9.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.26.2 // indirect
