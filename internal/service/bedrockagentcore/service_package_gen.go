@@ -42,6 +42,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceMemory,
+			TypeName: "aws_bedrockagentcore_memory",
+			Name:     "Memory",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newResourceMemoryStrategy,
+			TypeName: "aws_bedrockagentcore_memory_strategy",
+			Name:     "Memory Strategy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceOAuth2CredentialProvider,
 			TypeName: "aws_bedrockagentcore_oauth2_credential_provider",
 			Name:     "OAuth2 Credential Provider",

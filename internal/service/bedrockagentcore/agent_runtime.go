@@ -472,8 +472,7 @@ func (m *artifactModel) Flatten(ctx context.Context, v any) (diags diag.Diagnost
 	switch t := v.(type) {
 	case awstypes.AgentArtifactMemberContainerConfiguration:
 		var model ContainerConfigurationModel
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -489,12 +488,12 @@ func (m artifactModel) Expand(ctx context.Context) (result any, diags diag.Diagn
 	switch {
 	case !m.ContainerConfiguration.IsNull():
 		model, d := m.ContainerConfiguration.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.AgentArtifactMemberContainerConfiguration
-		diags.Append(flex.Expand(ctx, model, &r.Value)...)
+		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -520,8 +519,7 @@ func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) (diag
 	switch t := v.(type) {
 	case awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer:
 		var model customJWTAuthorizerConfigurationModel
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -537,12 +535,12 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (result any, d
 	switch {
 	case !m.CustomJWTAuthorizer.IsNull():
 		model, d := m.CustomJWTAuthorizer.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer
-		diags.Append(flex.Expand(ctx, model, &r.Value)...)
+		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
