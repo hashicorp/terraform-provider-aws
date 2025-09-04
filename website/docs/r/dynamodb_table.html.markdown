@@ -108,9 +108,13 @@ resource "aws_dynamodb_table" "example" {
 
 A global table configured for Multi-Region strong consistency (MRSC) provides the ability to perform a strongly consistent read with multi-Region scope. Performing a strongly consistent read on an MRSC table ensures you're always reading the latest version of an item, irrespective of the Region in which you're performing the read.
 
+You can configure a MRSC global table with three replicas, or with two replicas and one witness. A witness is a component of a MRSC global table that contains data written to global table replicas, and provides an optional alternative to a full replica while supporting MRSC's availability architecture. You cannot perform read or write operations on a witness. A witness is located in a different Region than the two replicas.
+
 **Note** Please see detailed information, restrictions, caveats etc on the [AWS Support Page](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/multi-region-strong-consistency-gt.html).
 
 Consistency Mode (`consistency_mode`) is a new argument on the embedded `replica` that allows you to configure consistency mode for Global Tables.
+
+##### Consistency mode with 3 Replicas
 
 ```terraform
 resource "aws_dynamodb_table" "example" {
@@ -134,6 +138,30 @@ resource "aws_dynamodb_table" "example" {
     region_name      = "us-west-2"
     consistency_mode = "STRONG"
   }
+}
+```
+
+##### Consistency Mode with 2 Replicas and Witness Region
+
+```terraform
+resource "aws_dynamodb_table" "example" {
+  name             = "example"
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name      = "us-east-2"
+    consistency_mode = "STRONG"
+  }
+
+  global_table_witness_region_name = "us-west-2"
 }
 ```
 
@@ -218,6 +246,7 @@ The following arguments are optional:
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options. See below.
 * `range_key` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `read_capacity` - (Optional) Number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
+* `global_table_witness_region_name` - (Optional) Name of the region to use as a Witness Region in a Multi-Region Strong Consistency deployment. **Note** This must be used alongside a single `replica` with `consistency_mode` set to `STRONG`. Other combinations will fail to provision.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. See below.
 * `restore_date_time` - (Optional) Time of the point-in-time recovery point to restore.
 * `restore_source_name` - (Optional) Name of the table to restore. Must match the name of an existing table.
