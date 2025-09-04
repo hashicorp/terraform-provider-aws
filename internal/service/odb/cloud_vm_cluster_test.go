@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -6,9 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"strings"
+	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,11 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"testing"
 )
 
 type cloudVmClusterResourceTest struct {
@@ -155,7 +154,7 @@ func Foo(t *testing.T) {
 						return nil
 					}),
 					vmClusterTestResource.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
@@ -167,7 +166,7 @@ func Foo(t *testing.T) {
 			{
 				Config: vmClusterTestResource.testAccCloudVmClusterConfigUpdatedTags(vmClusterTestResource.exaInfra(exaInfraRName), vmClusterTestResource.odbNetwork(odbNetRName), rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					vmClusterTestResource.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
@@ -195,7 +194,7 @@ func Foo(t *testing.T) {
 						return nil
 					}),
 
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
@@ -249,12 +248,10 @@ func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_vm_cluster" {
 				continue
 			}
-
 			_, err := tfodb.FindCloudVmClusterForResourceByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
@@ -262,10 +259,8 @@ func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterDestroy(ctx context.
 			if err != nil {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameCloudVmCluster, rs.Primary.ID, err)
 			}
-
 			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameCloudVmCluster, rs.Primary.ID, errors.New("not destroyed"))
 		}
-
 		return nil
 	}
 }
@@ -276,31 +271,23 @@ func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterExists(ctx context.C
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, name, errors.New("not found"))
 		}
-
 		if rs.Primary.ID == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, name, errors.New("not set"))
 		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 		resp, err := tfodb.FindCloudVmClusterForResourceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, rs.Primary.ID, err)
 		}
-
 		*cloudvmcluster = *resp
-
 		return nil
 	}
 }
 
 func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 	input := &odb.ListCloudVmClustersInput{}
-
 	_, err := conn.ListCloudVmClusters(ctx, input)
-
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -310,7 +297,6 @@ func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testin
 }
 
 func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(exaInfra, odbNet, rName, sshKey string) string {
-
 	res := fmt.Sprintf(`
 %s
 
@@ -345,7 +331,6 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 }
 
 func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigUpdatedTags(exaInfra, odbNet, rName, sshKey string) string {
-
 	res := fmt.Sprintf(`
 %s
 
@@ -403,7 +388,6 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   
 }
 `, rName)
-	//fmt.Println(resource)
 	return resource
 }
 
@@ -418,12 +402,10 @@ resource "aws_odb_network" "test" {
   zero_etl_access = "DISABLED"
 }
 `, rName)
-	//fmt.Println(resource)
 	return resource
 }
 
 func (cloudVmClusterResourceTest) cloudVmClusterWithAllParameters(exaInfra, odbNet, rName, sshKey string) string {
-
 	res := fmt.Sprintf(`
 
 %s

@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -16,7 +18,6 @@ import (
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"testing"
 )
 
 import (
@@ -65,7 +66,7 @@ func TestAccODBCloudVmClusterDataSource_basic(t *testing.T) {
 				Config: vmClusterTestDS.cloudVMClusterConfig(odbNetRName, exaInfraRName, vmcDisplayName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestDS.testAccCheckCloudVmClusterExists(ctx, dataSourceName, &cloudvmcluster),
-					resource.TestCheckResourceAttr(dataSourceName, "display_name", vmcDisplayName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDisplayName, vmcDisplayName),
 				),
 			},
 		},
