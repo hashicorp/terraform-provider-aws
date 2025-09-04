@@ -163,6 +163,52 @@ func TestAccCognitoIDPManagedLoginBranding_settings(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPManagedLoginBranding_updateFromBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ManagedLoginBrandingType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_managed_login_branding.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedLoginBrandingConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("settings"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("use_cognito_provided_values"), knownvalue.Bool(true)),
+				},
+			},
+			{
+				Config: testAccManagedLoginBrandingConfig_settings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("settings"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("use_cognito_provided_values"), knownvalue.Bool(false)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckManagedLoginBrandingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -78,10 +77,8 @@ func (r *managedLoginBrandingResource) Schema(ctx context.Context, request resou
 				Validators: []validator.Bool{
 					boolvalidator.ExactlyOneOf(
 						path.MatchRoot("settings"),
+						path.MatchRoot("use_cognito_provided_values"),
 					),
-				},
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrUserPoolID: schema.StringAttribute{
@@ -316,13 +313,20 @@ func (r *managedLoginBrandingResource) Update(ctx context.Context, request resou
 	}
 
 	// Updated settings work in a PATCH model: https://docs.aws.amazon.com/cognito/latest/developerguide/managed-login-brandingeditor.html#branding-designer-api.
-	oldSettings, newSettings := fwflex.StringValueFromFramework(ctx, old.Settings), fwflex.StringValueFromFramework(ctx, new.Settings)
-	patch, err := tfjson.CreateMergePatchFromStrings(oldSettings, newSettings)
+	var patch string
+	var err error
+	if oldSettings, newSettings := fwflex.StringValueFromFramework(ctx, old.Settings), fwflex.StringValueFromFramework(ctx, new.Settings); oldSettings != "" {
+		patch, err = tfjson.CreateMergePatchFromStrings(oldSettings, newSettings)
 
-	if err != nil {
-		response.Diagnostics.AddError("creating JSON merge patch", err.Error())
+		if err != nil {
+			response.Diagnostics.AddError("creating JSON merge patch", err.Error())
 
-		return
+			return
+		}
+		input.UseCognitoProvidedValues = false
+	} else if newSettings != "" {
+		patch = newSettings
+		input.UseCognitoProvidedValues = false
 	}
 
 	input.Settings, err = tfsmithy.DocumentFromJSONString(patch, document.NewLazyDocument)
@@ -356,6 +360,7 @@ func (r *managedLoginBrandingResource) Update(ctx context.Context, request resou
 		return
 	}
 	new.SettingsAll = settingsAll
+	new.UseCognitoProvidedValues = fwflex.BoolValueToFramework(ctx, mlb.UseCognitoProvidedValues)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
