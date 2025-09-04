@@ -25,94 +25,8 @@ import (
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-// func TestBaselineExampleUnitTest(t *testing.T) {
-// 	t.Parallel()
-
-// 	testCases := []struct {
-// 		TestName string
-// 		Input    string
-// 		Expected string
-// 		Error    bool
-// 	}{
-// 		{
-// 			TestName: "empty",
-// 			Input:    "",
-// 			Expected: "",
-// 			Error:    true,
-// 		},
-// 		{
-// 			TestName: "descriptive name",
-// 			Input:    "some input",
-// 			Expected: "some output",
-// 			Error:    false,
-// 		},
-// 		{
-// 			TestName: "another descriptive name",
-// 			Input:    "more input",
-// 			Expected: "more output",
-// 			Error:    false,
-// 		},
-// 	}
-
-// 	for _, testCase := range testCases {
-// 		testCase := testCase
-// 		t.Run(testCase.TestName, func(t *testing.T) {
-// 			t.Parallel()
-// 			got, err := tfcontroltower.FunctionFromResource(testCase.Input)
-
-// 			if err != nil && !testCase.Error {
-// 				t.Errorf("got error (%s), expected no error", err)
-// 			}
-
-// 			if err == nil && testCase.Error {
-// 				t.Errorf("got (%s) and no error, expected error", got)
-// 			}
-
-// 			if got != testCase.Expected {
-// 				t.Errorf("got %s, expected %s", got, testCase.Expected)
-// 			}
-// 		})
-// 	}
-// }
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccControlTowerBaseline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -137,8 +51,7 @@ func TestAccControlTowerBaseline_basic(t *testing.T) {
 					testAccCheckBaselineExists(ctx, resourceName, &baseline),
 					resource.TestCheckResourceAttr(resourceName, "baseline_version", "4.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "baseline_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "arn", "controltower", regexache.MustCompile(`enabledbaseline:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "controltower", regexache.MustCompile(`enabledbaseline:+.`)),
 				),
 			},
 			{
@@ -221,9 +134,10 @@ func testAccCheckBaselineExists(ctx context.Context, name string, baseline *type
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
-		resp, err := conn.GetEnabledBaseline(ctx, &controltower.GetEnabledBaselineInput{
+		input := controltower.GetEnabledBaselineInput{
 			EnabledBaselineIdentifier: aws.String(rs.Primary.Attributes[names.AttrARN]),
-		})
+		}
+		resp, err := conn.GetEnabledBaseline(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.ControlTower, create.ErrActionCheckingExistence, tfcontroltower.ResNameBaseline, rs.Primary.ID, err)

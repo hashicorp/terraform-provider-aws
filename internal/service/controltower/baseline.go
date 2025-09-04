@@ -10,27 +10,32 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
+	"github.com/aws/aws-sdk-go-v2/service/controltower/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_controltower_baseline", name="Baseline")
+// @Tags(identifierAttribute="arn")
 func newResourceBaseline(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBaseline{}
 
@@ -46,48 +51,58 @@ const (
 )
 
 type resourceBaseline struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceBaselineData]
 	framework.WithTimeouts
 }
 
-func (r *resourceBaseline) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_controltower_baseline"
-}
 
-func (r *resourceBaseline) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"baseline_identifier": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"baseline_version": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			names.AttrID:      framework.IDAttribute(),
+			"operation_identifier": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"target_identifier": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrParameters: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[parameters](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"key": schema.StringAttribute{
+						names.AttrKey: schema.StringAttribute{
 							Required: true,
 						},
-						"value": schema.StringAttribute{
+						names.AttrValue: schema.StringAttribute{
+							//CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 							Required: true,
 						},
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -96,199 +111,214 @@ func (r *resourceBaseline) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *resourceBaseline) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
+func (r *resourceBaseline) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().ControlTowerClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan resourceBaselineData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a create input structure
-	in := &controltower.EnableBaselineInput{}
+	in := controltower.EnableBaselineInput{}
 
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	in.Tags = getTagsIn(ctx)
-	// TIP: -- 4. Call the AWS create function
-	out, err := conn.EnableBaseline(ctx, in)
+
+	params, d := plan.Parameters.ToSlice(ctx)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var ebp []awstypes.EnabledBaselineParameter
+	for _, param := range params {
+		ebp = append(ebp, awstypes.EnabledBaselineParameter{
+			Key:   param.Key.ValueStringPointer(),
+			Value: document.NewLazyDocument(param.Value.String()),
+		})
+	}
+	in.Parameters = ebp
+
+	out, err := conn.EnableBaseline(ctx, &in)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ControlTower, create.ErrActionCreating, ResNameBaseline, plan.BaselineIdentifier.String(), err),
 			err.Error(),
 		)
 		return
 	}
+
 	if out == nil || out.OperationIdentifier == nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ControlTower, create.ErrActionCreating, ResNameBaseline, plan.BaselineIdentifier.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set the minimum attributes
-	plan.ARN = flex.StringToFramework(ctx, out.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.OperationIdentifier)
-
-	// TIP: -- 6. Use a waiter to wait for create to complete
+	plan.ARN = fwflex.StringToFramework(ctx, out.Arn)
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitBaselineCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	_, err = waitBaselineReady(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN.ValueString())...)
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ControlTower, create.ErrActionWaitingForCreation, ResNameBaseline, plan.BaselineIdentifier.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceBaseline) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceBaseline) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().ControlTowerClient(ctx)
 
 	var state resourceBaselineData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
 	out, err := findBaselineByID(ctx, conn, state.ARN.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ControlTower, create.ErrActionSetting, ResNameBaseline, state.ARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
-
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
+	if out.Parameters != nil {
+		var parameterList []parameters
+		for _, param := range out.Parameters {
+			var data any
+			err = param.Value.UnmarshalSmithyDocument(data)
+			if err != nil {
+				response.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.ControlTower, create.ErrActionSetting, ResNameBaseline, state.ARN.String(), err),
+					err.Error(),
+				)
+				return
+			}
+
+			p := parameters{
+				Key:   fwflex.StringToFramework(ctx, param.Key),
+				Value: fwflex.StringValueToFramework(ctx, data.(string)),
+			}
+			parameterList = append(parameterList, p)
+		}
+		state.Parameters = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, parameterList)
+	} else {
+		state.Parameters = fwtypes.NewListNestedObjectValueOfNull[parameters](ctx)
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceBaseline) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
-	// TIP: -- 1. Get a client connection to the relevant service
+func (r *resourceBaseline) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().ControlTowerClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan, state resourceBaselineData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a modify input structure and check for changes
-	if !plan.BaselineVersion.Equal(state.BaselineVersion) {
+	diff, d := fwflex.Diff(ctx, plan, state)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-		in := &controltower.UpdateEnabledBaselineInput{
+	if !diff.HasChanges() {
+		in := controltower.UpdateEnabledBaselineInput{
 			EnabledBaselineIdentifier: plan.ARN.ValueStringPointer(),
 		}
 
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 
-		out, err := conn.UpdateEnabledBaseline(ctx, in)
+		out, err := conn.UpdateEnabledBaseline(ctx, &in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ControlTower, create.ErrActionUpdating, ResNameBaseline, plan.ID.String(), err),
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ControlTower, create.ErrActionUpdating, ResNameBaseline, plan.ARN.String(), err),
 				err.Error(),
 			)
 			return
 		}
+
 		if out == nil || out.OperationIdentifier == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ControlTower, create.ErrActionUpdating, ResNameBaseline, plan.ID.String(), nil),
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ControlTower, create.ErrActionUpdating, ResNameBaseline, plan.ARN.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
 
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		_, err = waitBaselineReady(ctx, conn, plan.ARN.ValueString(), updateTimeout)
+		if err != nil {
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN.ValueString())...)
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ControlTower, create.ErrActionWaitingForUpdate, ResNameBaseline, plan.ARN.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 
-	// TIP: -- 6. Save the request plan to response state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceBaseline) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
+func (r *resourceBaseline) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().ControlTowerClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceBaselineData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	in := &controltower.DisableBaselineInput{
-		EnabledBaselineIdentifier: aws.String(state.ARN.ValueString()),
+		EnabledBaselineIdentifier: state.ARN.ValueStringPointer(),
 	}
 
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DisableBaseline(ctx, in)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ControlTower, create.ErrActionDeleting, ResNameBaseline, state.ARN.String(), err),
 			err.Error(),
 		)
@@ -297,49 +327,15 @@ func (r *resourceBaseline) Delete(ctx context.Context, req resource.DeleteReques
 
 }
 
-// TIP: ==== TERRAFORM IMPORTING ====
-// If Read can get all the information it needs from the Identifier
-// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
-// you'll need a custom import function.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
-func (r *resourceBaseline) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *resourceBaseline) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-	statusSucceeded     = "SUCCEEDED"
-	statusFailed        = "FAILED"
-	statusUnderChange   = "UNDER_CHANGE"
-)
-
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitBaselineCreated(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*awstypes.EnabledBaselineDetails, error) {
+func waitBaselineReady(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*awstypes.EnabledBaselineDetails, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusSucceeded},
-		Refresh:                   statusBaseline(ctx, conn, id),
+		Pending:                   enum.Slice(awstypes.EnablementStatusUnderChange),
+		Target:                    enum.Slice(awstypes.EnablementStatusSucceeded),
+		Refresh:                   statusBaseline(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -353,17 +349,10 @@ func waitBaselineCreated(ctx context.Context, conn *controltower.Client, id stri
 	return nil, err
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-func statusBaseline(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusBaseline(conn *controltower.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findBaselineByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -384,8 +373,7 @@ func findBaselineByID(ctx context.Context, conn *controltower.Client, id string)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -399,28 +387,17 @@ func findBaselineByID(ctx context.Context, conn *controltower.Client, id string)
 	return out.EnabledBaselineDetails, nil
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceBaselineData struct {
-	ARN                types.String   `tfsdk:"arn"`
-	BaselineIdentifier types.String   `tfsdk:"baseline_identifier"`
-	BaselineVersion    types.String   `tfsdk:"baseline_version"`
-	ID                 types.String   `tfsdk:"id"`
-	Parameters         []parameters   `tfsdk:"parameters"`
-	Tags               tftags.Map     `tfsdk:"tags"`
-	TagsAll            tftags.Map     `tfsdk:"tags_all"`
-	TargetIdentifier   types.String   `tfsdk:"target_identifier"`
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	framework.WithRegionModel
+	ARN                 types.String                                `tfsdk:"arn"`
+	BaselineIdentifier  types.String                                `tfsdk:"baseline_identifier"`
+	BaselineVersion     types.String                                `tfsdk:"baseline_version"`
+	OperationIdentifier types.String                                `tfsdk:"operation_identifier"`
+	Parameters          fwtypes.ListNestedObjectValueOf[parameters] `tfsdk:"parameters"`
+	Tags                tftags.Map                                  `tfsdk:"tags"`
+	TagsAll             tftags.Map                                  `tfsdk:"tags_all"`
+	TargetIdentifier    types.String                                `tfsdk:"target_identifier"`
+	Timeouts            timeouts.Value                              `tfsdk:"timeouts"`
 }
 
 type parameters struct {
