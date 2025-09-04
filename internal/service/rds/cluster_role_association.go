@@ -50,7 +50,7 @@ func resourceClusterRoleAssociation() *schema.Resource {
 			},
 			"feature_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			names.AttrRoleARN: {
