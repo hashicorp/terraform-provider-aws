@@ -94,7 +94,6 @@ func resourceRegexPatternSet() *schema.Resource {
 				"regular_expression": {
 					Type:     schema.TypeSet,
 					Optional: true,
-					MaxItems: 10,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"regex_string": {
@@ -229,7 +228,7 @@ func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFAssociatedItemException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFAssociatedItemException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRegexPatternSet(ctx, input)
 	})
 

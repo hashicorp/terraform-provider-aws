@@ -80,18 +80,19 @@ resource "aws_vpc_route_server_peer" "test" {
 
 The following arguments are required:
 
-* `route_server_endpoint_id` - (Required) The ID of the route server endpoint for which to create a peer.
+* `bgp_options` - (Required) The BGP options for the peer, including ASN (Autonomous System Number) and BFD (Bidrectional Forwarding Detection) settings. Configuration block with BGP Options configuration Detailed below
 * `peer_address` - (Required) The IPv4 address of the peer device.
-* `bgp_options` - The BGP options for the peer, including ASN (Autonomous System Number) and BFD (Bidrectional Forwarding Detection) settings. Configuration block with BGP Options configuration Detailed below
+* `route_server_endpoint_id` - (Required) The ID of the route server endpoint for which to create a peer.
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### bgp_options
 
 * `peer_asn` - (Required) The Border Gateway Protocol (BGP) Autonomous System Number (ASN) for the appliance. Valid values are from 1 to 4294967295. We recommend using a private ASN in the 64512–65534 (16-bit ASN) or 4200000000–4294967294 (32-bit ASN) range.
 * `peer_liveness_detection` (Optional) The requested liveness detection protocol for the BGP peer. Valid values are `bgp-keepalive` and `bfd`. Default value is `bgp-keepalive`.
-
-The following arguments are optional:
-
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 

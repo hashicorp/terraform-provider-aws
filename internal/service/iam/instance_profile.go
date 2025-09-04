@@ -118,7 +118,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(output.InstanceProfile.InstanceProfileName))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findInstanceProfileByName(ctx, conn, d.Id())
 	})
 
@@ -274,7 +274,7 @@ func instanceProfileAddRole(ctx context.Context, conn *iam.Client, profileName, 
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AddRoleToInstanceProfile(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -382,15 +382,24 @@ func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, 
 	return err
 }
 
-func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListInstanceProfileTags(ctx, &iam.ListInstanceProfileTagsInput{
+func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListInstanceProfileTagsInput{
 		InstanceProfileName: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListInstanceProfileTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return output.Tags, nil
+	return output, nil
 }
 
 type invalidParameterValueError struct {

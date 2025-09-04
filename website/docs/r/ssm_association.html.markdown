@@ -81,7 +81,7 @@ resource "aws_ssm_association" "example" {
 
 ### Create an association with multiple instances with their instance ids
 
-```
+```terraform
 # Removed EC2 provisioning dependencies for brevity
 
 resource "aws_ssm_association" "system_update" {
@@ -164,13 +164,13 @@ resource "aws_instance" "web_server_2" {
 
 ### Create an association with multiple instances with their values matching their tags
 
-```
+```terraform
 # SSM Association for Webbased Servers
 resource "aws_ssm_association" "database_association" {
   name = aws_ssm_document.system_update.name # Use the name of the document as the association name
   targets {
     key    = "tag:Role"
-    values = ["WebServer","Database"]
+    values = ["WebServer", "Database"]
   }
 
   parameters = {
@@ -182,7 +182,7 @@ resource "aws_ssm_association" "database_association" {
 # EC2 Instance 1 - Web Server with "ServerType" tag
 resource "aws_instance" "web_server" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
+  instance_type          = "t3.micro"
   subnet_id              = data.aws_subnet.default.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
@@ -214,7 +214,7 @@ resource "aws_instance" "web_server" {
 # EC2 Instance 2 - Database Server with "Role" tag
 resource "aws_instance" "database_server" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
+  instance_type          = "t3.micro"
   subnet_id              = data.aws_subnet.default.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
@@ -246,13 +246,13 @@ resource "aws_instance" "database_server" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the SSM document to apply.
 * `apply_only_at_cron_interval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
 * `association_name` - (Optional) The descriptive name for the association.
 * `automation_target_parameter_name` - (Optional) Specify the target for the association. This target is required for associations that use an `Automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
 * `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
-* `instance_id` - (Optional, **Deprecated**) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above. Use the `targets` attribute instead.
 * `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
 * `max_errors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%. If you specify a threshold of 3, the stop command is sent when the fourth error is returned. If you specify a threshold of 10% for 50 associations, the stop command is sent when the sixth error is returned.
 * `output_location` - (Optional) An output location block. Output Location is documented below.
@@ -280,18 +280,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the SSM association
 * `association_id` - The ID of the SSM association.
-* `instance_id` - The instance id that the SSM document was applied to.
 * `name` - The name of the SSM document to apply.
 * `parameters` - Additional parameters passed to the SSM document.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_association.example
+  identity = {
+    association_id = "10abcdef-0abc-1234-5678-90abcdef123456"
+  }
+}
+
+resource "aws_ssm_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `association_id` - (String) ID of the SSM association.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM associations using the `association_id`. For example:
 
 ```terraform
 import {
-  to = aws_ssm_association.test-association
+  to = aws_ssm_association.example
   id = "10abcdef-0abc-1234-5678-90abcdef123456"
 }
 ```
@@ -299,5 +324,5 @@ import {
 Using `terraform import`, import SSM associations using the `association_id`. For example:
 
 ```console
-% terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+% terraform import aws_ssm_association.example 10abcdef-0abc-1234-5678-90abcdef123456
 ```

@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,6 +33,11 @@ import (
 // @Tags(identifierAttribute="id", resourceType="Parameter")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
 // @Testing(importIgnore="has_value_wo")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(plannableImportAction="NoOp")
+// @CustomImport
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
@@ -41,6 +47,12 @@ func resourceParameter() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
+
 				d.Set("has_value_wo", false)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -150,16 +162,19 @@ func resourceParameter() *schema.Resource {
 				return awstypes.ParameterTier(old.(string)) == awstypes.ParameterTierAdvanced && awstypes.ParameterTier(new.(string)) == awstypes.ParameterTierStandard
 			}),
 			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange(names.AttrValue)
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue) || diff.HasChange(names.AttrDescription)
 			}),
 			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("insecure_value")
 			}),
 			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange(names.AttrValue)
+				if diff.NewValueKnown("insecure_value") {
+					return false
+				}
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue)
 			}),
 			customdiff.ComputedIf("has_value_wo", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange("value_wo_version")
+				return diff.HasChange("value_wo_version") || !diff.NewValueKnown("value_wo_version")
 			}),
 		),
 	}
@@ -253,7 +268,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		timeout = 2 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return findParameterByName(ctx, conn, d.Id(), true)
 		},
 		func(err error) (bool, error) {
@@ -292,6 +307,9 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 
 		if valueWO != "" {
 			hasWriteOnly = true
+		} else {
+			hasWriteOnly = false
+			d.Set("has_value_wo", nil)
 		}
 	}
 

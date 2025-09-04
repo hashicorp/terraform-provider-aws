@@ -69,7 +69,7 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Retry for IAM eventual consistency
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.BadRequestException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.BadRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutEventStream(ctx, &req)
 	}, "make sure the IAM Role is configured correctly")
 

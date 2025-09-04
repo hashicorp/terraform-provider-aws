@@ -21,6 +21,8 @@ linters:
   settings:
     usetesting:
       os-setenv: true
+      context-background: false
+      context-todo: false
 issues:
   max-issues-per-linter: 10
   max-same-issues: 3

@@ -46,7 +46,7 @@ func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(resourceID)
 
 	if tags != nil {
-		if err := d.Set(names.AttrTags, KeyValueTags(ctx, tags).Map()); err != nil {
+		if err := d.Set(names.AttrTags, keyValueTags(ctx, tags).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	} else {

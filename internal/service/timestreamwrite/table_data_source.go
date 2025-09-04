@@ -19,15 +19,15 @@ import (
 )
 
 // @FrameworkDataSource("aws_timestreamwrite_table", name="Table")
-func newDataSourceTable(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceTable{}, nil
+func newTableDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &tableDataSource{}, nil
 }
 
-type dataSourceTable struct {
-	framework.DataSourceWithConfigure
+type tableDataSource struct {
+	framework.DataSourceWithModel[tableDataSourceModel]
 }
 
-func (d *dataSourceTable) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *tableDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -48,19 +48,9 @@ func (d *dataSourceTable) Schema(ctx context.Context, request datasource.SchemaR
 			names.AttrDatabaseName: schema.StringAttribute{
 				Required: true,
 			},
-			"magnetic_store_write_properties": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsMagneticProp](ctx),
-				Computed:   true,
-			},
-			"retention_properties": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsRetentionProperties](ctx),
-				Computed:   true,
-			},
-
-			names.AttrSchema: schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsSchema](ctx),
-				Computed:   true,
-			},
+			"magnetic_store_write_properties": framework.DataSourceComputedListOfObjectAttribute[dsMagneticProp](ctx),
+			"retention_properties":            framework.DataSourceComputedListOfObjectAttribute[dsRetentionProperties](ctx),
+			names.AttrSchema:                  framework.DataSourceComputedListOfObjectAttribute[dsSchema](ctx),
 			"table_status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.TableStatus](),
 				Computed:   true,
@@ -69,8 +59,8 @@ func (d *dataSourceTable) Schema(ctx context.Context, request datasource.SchemaR
 	}
 }
 
-func (d *dataSourceTable) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dsTable
+func (d *tableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data tableDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -80,7 +70,7 @@ func (d *dataSourceTable) Read(ctx context.Context, req datasource.ReadRequest, 
 	out, err := findTableByTwoPartKey(ctx, conn, data.DatabaseName.ValueString(), data.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, data.Name.ValueString(), data.Arn.String(), err),
+			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, data.Name.ValueString(), data.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -92,8 +82,9 @@ func (d *dataSourceTable) Read(ctx context.Context, req datasource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dsTable struct {
-	Arn                          types.String                                           `tfsdk:"arn"`
+type tableDataSourceModel struct {
+	framework.WithRegionModel
+	ARN                          types.String                                           `tfsdk:"arn"`
 	CreationTime                 timetypes.RFC3339                                      `tfsdk:"creation_time"`
 	DatabaseName                 types.String                                           `tfsdk:"database_name"`
 	LastUpdatedTime              timetypes.RFC3339                                      `tfsdk:"last_updated_time"`

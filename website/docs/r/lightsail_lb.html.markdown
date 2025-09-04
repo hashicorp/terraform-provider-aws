@@ -36,6 +36,7 @@ The following arguments are optional:
 
 * `health_check_path` - (Optional) Health check path of the load balancer. Default value `/`.
 * `ip_address_type` - (Optional) IP address type of the load balancer. Valid values: `dualstack`, `ipv4`. Default value `dualstack`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

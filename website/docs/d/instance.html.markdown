@@ -32,6 +32,7 @@ data "aws_instance" "foo" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instance_tags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
@@ -100,6 +101,7 @@ interpolation.
 * `outpost_arn` - ARN of the Outpost.
 * `password_data` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placement_group` - Placement group of the Instance.
+* `placement_group_id` - Placement group ID of the Instance.
 * `placement_partition_number` - Number of the partition the instance is in.
 * `private_dns` - Private DNS name assigned to the Instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `private_dns_name_options` - Options for the instance hostname.

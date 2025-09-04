@@ -28,6 +28,9 @@ import (
 
 // @SDKResource("aws_networkmanager_vpc_attachment", name="VPC Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.VpcAttachment")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
 func resourceVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAttachmentCreate,
@@ -310,7 +313,7 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		})
@@ -436,6 +439,8 @@ func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, 
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusVPCAttachment(ctx, conn, id),
+		Delay:          2 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 
@@ -477,11 +482,11 @@ func expandVpcOptions(tfMap map[string]any) *awstypes.VpcOptions { // nosemgrep:
 	apiObject := &awstypes.VpcOptions{}
 
 	if v, ok := tfMap["appliance_mode_support"].(bool); ok {
-		apiObject.ApplianceModeSupport = v
+		apiObject.ApplianceModeSupport = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["ipv6_support"].(bool); ok {
-		apiObject.Ipv6Support = v
+		apiObject.Ipv6Support = aws.Bool(v)
 	}
 
 	return apiObject
@@ -493,8 +498,8 @@ func flattenVpcOptions(apiObject *awstypes.VpcOptions) map[string]any { // nosem
 	}
 
 	tfMap := map[string]any{
-		"appliance_mode_support": apiObject.ApplianceModeSupport,
-		"ipv6_support":           apiObject.Ipv6Support,
+		"appliance_mode_support": aws.ToBool(apiObject.ApplianceModeSupport),
+		"ipv6_support":           aws.ToBool(apiObject.Ipv6Support),
 	}
 
 	return tfMap

@@ -12,7 +12,7 @@ description: |-
 
 Decrypt multiple secrets from data encrypted with the AWS KMS service.
 
-~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral).
+~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral).
 
 ## Example Usage
 
@@ -50,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `secret` - (Required) One or more encrypted payload definitions from the KMS service. See the Secret Definitions below.
 
 ### Secret Definitions
@@ -72,4 +73,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `plaintext` - Map containing each `secret` `name` as the key with its decrypted plaintext value
 
-<!-- cache-key: cdktf-0.20.8 input-4e02e39a54770a8a756b2ca29a72fae5e616f2b4b8b53a312cbfee6098bc0e3f -->
+<!-- cache-key: cdktf-0.20.8 input-1c146350ca5cc3aca7152c0f4d4af82205e531d297786b6eea5d08f669cc5d42 -->

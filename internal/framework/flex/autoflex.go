@@ -120,8 +120,8 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.
 		if ctx.Value(fieldNamePrefixRecurse) == nil {
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
-			if strings.HasPrefix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), typeFrom, typeTo, flexer)
+			if trimmed, ok := strings.CutPrefix(fieldNameFrom, v); ok {
+				return findFieldFuzzy(ctx, trimmed, typeFrom, typeTo, flexer)
 			}
 			return findFieldFuzzy(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer)
 		}

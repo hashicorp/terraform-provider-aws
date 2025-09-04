@@ -32,6 +32,7 @@ This resource supports the following arguments:
 * `kms_encryption_key` - (Optional) The ARN of the AWS KMS key that encrypts data in the DSQL Cluster, or `"AWS_OWNED_KMS_KEY"`.
 * `multi_region_properties` - (Optional) Multi-region properties of the DSQL Cluster.
     * `witness_region` - (Required) Witness region for the multi-region clusters. Setting this makes this cluster a multi-region cluster. Changing it recreates the resource.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Set of tags to be associated with the AWS DSQL Cluster resource.
 
 ## Attribute Reference

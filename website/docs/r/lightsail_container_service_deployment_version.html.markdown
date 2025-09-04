@@ -63,6 +63,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `public_endpoint` - (Optional) Configuration block that describes the settings of the public endpoint for the container service. [See below](#public_endpoint).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `container`
 

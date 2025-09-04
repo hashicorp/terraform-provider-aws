@@ -3,8 +3,9 @@ package kinesisvideo
 
 import (
 	"context"
-	"fmt"
+	"maps"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -23,13 +24,23 @@ func listTags(ctx context.Context, conn *kinesisvideo.Client, identifier string,
 		StreamARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
+	output := make(map[string]string)
+
+	err := listTagsForStreamPages(ctx, conn, &input, func(page *kinesisvideo.ListTagsForStreamOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		maps.Copy(output, page.Tags)
+
+		return !lastPage
+	}, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists kinesisvideo service tags and set them in Context.
@@ -38,7 +49,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisVideoClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -99,7 +110,7 @@ func updateTags(ctx context.Context, conn *kinesisvideo.Client, identifier strin
 		_, err := conn.UntagStream(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -114,7 +125,7 @@ func updateTags(ctx context.Context, conn *kinesisvideo.Client, identifier strin
 		_, err := conn.TagStream(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

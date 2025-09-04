@@ -109,6 +109,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `customKeyStoreType` - (Optional, ForceNew) Specifies the type of key store to create. Valid values are `AWS_CLOUDHSM` and `EXTERNAL_KEY_STORE`. If omitted, AWS will default the value to `AWS_CLOUDHSM`.
 
 If `customKeyStoreType` is `AWS_CLOUDHSM`, the following optional arguments must be set:
@@ -176,4 +177,4 @@ Using `terraform import`, import KMS (Key Management) Custom Key Store using the
 % terraform import aws_kms_custom_key_store.example cks-5ebd4ef395a96288e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3bdca951dcb21fa211cdd37fd8d031dedc83fb6e756f71526716295381a5a568 -->
+<!-- cache-key: cdktf-0.20.8 input-0e2082259dc84895366d31b35d1606a53eb98a1831d5a882a72c729749ad79af -->

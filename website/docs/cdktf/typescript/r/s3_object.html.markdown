@@ -272,10 +272,11 @@ The following arguments are optional:
 * `objectLockMode` - (Optional) Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) that you want to apply to this object. Valid values are `GOVERNANCE` and `COMPLIANCE`.
 * `objectLockRetainUntilDate` - (Optional) Date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
 * `overrideProvider` - (Optional) Override provider-level configuration options. See [Override Provider](#override-provider) below for more details.
-* `serverSideEncryption` - (Optional) Server-side encryption of the object in S3. Valid values are "`AES256`" and "`aws:kms`".
+* `serverSideEncryption` - (Optional) Server-side encryption of the object in S3. Valid values are `"AES256"`, `"aws:kms"`, `"aws:kms:dsse"`, and `"aws:fsx"`.
 * `sourceHash` - (Optional) Triggers updates like `etag` but useful to address `etag` encryption limitations. Set using `filemd5("path/to/source")` (Terraform 0.11.12 or later). (The value is only stored in state and not saved by AWS.)
 * `source` - (Optional, conflicts with `content` and `contentBase64`) Path to a file that will be read and uploaded as raw bytes for the object content.
 * `storageClass` - (Optional) [Storage Class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#AmazonS3-PutObject-request-header-StorageClass) for the object. Defaults to "`STANDARD`".
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `websiteRedirect` - (Optional) Target URL for [website redirect](http://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html).
 
@@ -371,4 +372,4 @@ Import using S3 URL syntax:
 % terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6f3dc660d252acaf6768265b00305176df16921d98c959876ef39bc59c4c4385 -->
+<!-- cache-key: cdktf-0.20.8 input-c97164acb47185d674cef0f99b544a666c36e3b3e8e48130038c0e9d72db2b4d -->

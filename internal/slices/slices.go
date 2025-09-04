@@ -69,6 +69,10 @@ type Predicate[T any] func(T) bool
 
 // Filter returns a new slice containing all values that return `true` for the filter function `f`.
 func Filter[S ~[]E, E any](s S, f Predicate[E]) S {
+	if len(s) == 0 {
+		return nil
+	}
+
 	v := S(make([]E, 0, len(s)))
 
 	for _, e := range s {
@@ -125,7 +129,7 @@ func IndexOf[S ~[]any, E comparable](s S, v E) int {
 }
 
 type signed interface {
-	~int | ~int32 | ~int64
+	~int | ~int8 | ~int16 | ~int32 | ~int64
 }
 
 // Range returns a slice of integers from `start` to `stop` (exclusive) using the specified `step`.
@@ -152,4 +156,14 @@ func Range[T signed](start, stop, step T) []T {
 	}
 
 	return v
+}
+
+type stringable interface {
+	~string | ~[]byte | ~[]rune
+}
+
+func Strings[S ~[]E, E stringable](s S) []string {
+	return ApplyToAll(s, func(e E) string {
+		return string(e)
+	})
 }

@@ -23,25 +23,26 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_iam_user_policy_attachments_exclusive", name="User Policy Attachments Exclusive")
-func newResourceUserPolicyAttachmentsExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceUserPolicyAttachmentsExclusive{}, nil
+func newUserPolicyAttachmentsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &userPolicyAttachmentsExclusiveResource{}, nil
 }
 
 const (
 	ResNameUserPolicyAttachmentsExclusive = "User Policy Attachments Exclusive"
 )
 
-type resourceUserPolicyAttachmentsExclusive struct {
-	framework.ResourceWithConfigure
+type userPolicyAttachmentsExclusiveResource struct {
+	framework.ResourceWithModel[userPolicyAttachmentsExclusiveResourceModel]
 	framework.WithNoOpDelete
 }
 
-func (r *resourceUserPolicyAttachmentsExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *userPolicyAttachmentsExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrUserName: schema.StringAttribute{
@@ -51,6 +52,7 @@ func (r *resourceUserPolicyAttachmentsExclusive) Schema(ctx context.Context, req
 				},
 			},
 			"policy_arns": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.Set{
@@ -61,8 +63,8 @@ func (r *resourceUserPolicyAttachmentsExclusive) Schema(ctx context.Context, req
 	}
 }
 
-func (r *resourceUserPolicyAttachmentsExclusive) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceUserPolicyAttachmentsExclusiveData
+func (r *userPolicyAttachmentsExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan userPolicyAttachmentsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -86,10 +88,10 @@ func (r *resourceUserPolicyAttachmentsExclusive) Create(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceUserPolicyAttachmentsExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *userPolicyAttachmentsExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().IAMClient(ctx)
 
-	var state resourceUserPolicyAttachmentsExclusiveData
+	var state userPolicyAttachmentsExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -108,12 +110,12 @@ func (r *resourceUserPolicyAttachmentsExclusive) Read(ctx context.Context, req r
 		return
 	}
 
-	state.PolicyARNs = flex.FlattenFrameworkStringValueSetLegacy(ctx, out)
+	state.PolicyARNs = flex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserPolicyAttachmentsExclusive) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceUserPolicyAttachmentsExclusiveData
+func (r *userPolicyAttachmentsExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state userPolicyAttachmentsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -146,7 +148,7 @@ func (r *resourceUserPolicyAttachmentsExclusive) Update(ctx context.Context, req
 // Managed IAM policies defined on this resource but not attached to
 // the user will be added. Policies attached to the user but not configured
 // on this resource will be removed.
-func (r *resourceUserPolicyAttachmentsExclusive) syncAttachments(ctx context.Context, userName string, want []string) error {
+func (r *userPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.Context, userName string, want []string) error {
 	conn := r.Meta().IAMClient(ctx)
 
 	have, err := findUserPolicyAttachmentsByName(ctx, conn, userName)
@@ -173,7 +175,7 @@ func (r *resourceUserPolicyAttachmentsExclusive) syncAttachments(ctx context.Con
 	return nil
 }
 
-func (r *resourceUserPolicyAttachmentsExclusive) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *userPolicyAttachmentsExclusiveResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrUserName), req, resp)
 }
 
@@ -206,7 +208,7 @@ func findUserPolicyAttachmentsByName(ctx context.Context, conn *iam.Client, user
 	return policyARNs, nil
 }
 
-type resourceUserPolicyAttachmentsExclusiveData struct {
-	UserName   types.String `tfsdk:"user_name"`
-	PolicyARNs types.Set    `tfsdk:"policy_arns"`
+type userPolicyAttachmentsExclusiveResourceModel struct {
+	UserName   types.String        `tfsdk:"user_name"`
+	PolicyARNs fwtypes.SetOfString `tfsdk:"policy_arns"`
 }

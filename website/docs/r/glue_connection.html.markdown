@@ -279,20 +279,22 @@ resource "aws_glue_connection" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `name` – (Required) Name of the connection.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the connection.
 
 The following arguments are optional:
 
-* `catalog_id` – (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
-* `athena_properties` – (Optional) Map of key-value pairs used as connection properties specific to the Athena compute environment.
-* `connection_properties` – (Optional) Map of key-value pairs used as parameters for this connection. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/connection-properties.html).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `catalog_id` - (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
+* `athena_properties` - (Optional) Map of key-value pairs used as connection properties specific to the Athena compute environment.
+* `connection_properties` - (Optional) Map of key-value pairs used as parameters for this connection. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/connection-properties.html).
 
   **Note:** Some connection types require the `SparkProperties` property with a JSON document that contains the actual connection properties. For specific examples, refer to [Example Usage](#example-usage).
-* `connection_type` – (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `DYNAMODB`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`.
-* `description` – (Optional) Description of the connection.
-* `match_criteria` – (Optional) List of criteria that can be used in selecting this connection.
+* `connection_type` - (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `DYNAMODB`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`.
+* `description` - (Optional) Description of the connection.
+* `match_criteria` - (Optional) List of criteria that can be used in selecting this connection.
 * `physical_connection_requirements` - (Optional) Map of physical connection requirements, such as VPC and SecurityGroup. See [`physical_connection_requirements` Block](#physical_connection_requirements-block) for details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

@@ -39,6 +39,8 @@ func resourceApplication() *schema.Resource {
 		UpdateWithoutTimeout: resourceApplicationUpdate,
 		DeleteWithoutTimeout: resourceApplicationDelete,
 
+		DeprecationMessage: "use aws_kinesisanalyticsv2_application resource instead",
+
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("inputs", func(_ context.Context, old, new, meta any) bool {
 				// An existing input configuration cannot be deleted.

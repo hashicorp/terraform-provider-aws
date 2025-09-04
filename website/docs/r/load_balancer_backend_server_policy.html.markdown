@@ -68,6 +68,7 @@ resource "aws_load_balancer_backend_server_policy" "wu-tang-backend-auth-policie
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `load_balancer_name` - (Required) The load balancer to attach the policy to.
 * `policy_names` - (Required) List of Policy Names to apply to the backend server.
 * `instance_port` - (Required) The instance port to apply the policy to.

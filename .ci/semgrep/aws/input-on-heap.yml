@@ -19,7 +19,6 @@ rules:
         - "internal/service/autoscaling"
         - "internal/service/backup"
         - "internal/service/batch"
-        - "internal/service/bcmdataexports"
         - "internal/service/bedrock"
         - "internal/service/bedrockagent"
         - "internal/service/budgets"

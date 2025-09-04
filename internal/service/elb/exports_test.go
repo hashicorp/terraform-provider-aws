@@ -15,7 +15,6 @@ var (
 	ResourceProxyProtocolPolicy       = resourceProxyProtocolPolicy
 	ResourceSSLNegotiationPolicy      = resourceSSLNegotiationPolicy
 
-	AccountIDPerRegionMap                           = accountIDPerRegionMap
 	AppCookieStickinessPolicyParseResourceID        = appCookieStickinessPolicyParseResourceID
 	BackendServerPolicyParseResourceID              = backendServerPolicyParseResourceID
 	FindLoadBalancerAttachmentByTwoPartKey          = findLoadBalancerAttachmentByTwoPartKey
@@ -30,5 +29,6 @@ var (
 	ListenerPolicyParseResourceID                   = listenerPolicyParseResourceID
 	PolicyParseResourceID                           = policyParseResourceID
 	ProxyProtocolPolicyParseResourceID              = proxyProtocolPolicyParseResourceID
+	ServiceAccountPerRegionMap                      = serviceAccountPerRegionMap
 	SSLNegotiationPolicyParseResourceID             = sslNegotiationPolicyParseResourceID
 )

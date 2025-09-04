@@ -69,15 +69,15 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `retention_period_in_days` - (Optional) Number of days to retain metric data in the workspace.
 * `limits_per_label_set` - (Optional) Configuration block for setting limits on metrics with specific label sets. Detailed below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `retention_period_in_days` - (Optional) Number of days to retain metric data in the workspace.
 
 ### `limits_per_label_set`
 
 The `limits_per_label_set` configuration block supports the following arguments:
 
 * `label_set` - (Required) Map of label key-value pairs that identify the metrics to which the limits apply. An empty map represents the default bucket for metrics that don't match any other label set.
-
 * `limits` - (Required) Configuration block for the limits to apply to the specified label set. Detailed below.
 
 #### `limits`

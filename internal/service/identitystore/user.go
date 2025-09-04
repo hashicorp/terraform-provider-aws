@@ -650,12 +650,12 @@ func userParseResourceID(id string) (string, string, error) {
 }
 
 func findUserByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, userID string) (*identitystore.DescribeUserOutput, error) {
-	input := &identitystore.DescribeUserInput{
+	input := identitystore.DescribeUserInput{
 		IdentityStoreId: aws.String(identityStoreID),
 		UserId:          aws.String(userID),
 	}
 
-	return findUser(ctx, conn, input)
+	return findUser(ctx, conn, &input)
 }
 
 func findUser(ctx context.Context, conn *identitystore.Client, input *identitystore.DescribeUserInput) (*identitystore.DescribeUserOutput, error) {

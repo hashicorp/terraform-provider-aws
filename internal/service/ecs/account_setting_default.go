@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -56,22 +55,18 @@ func resourceAccountSettingDefaultPut(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	settingName := awstypes.SettingName(d.Get(names.AttrName).(string))
+	settingName := d.Get(names.AttrName).(string)
 	input := &ecs.PutAccountSettingDefaultInput{
-		Name:  settingName,
+		Name:  awstypes.SettingName(settingName),
 		Value: aws.String(d.Get(names.AttrValue).(string)),
 	}
 
-	output, err := conn.PutAccountSettingDefault(ctx, input)
-
+	_, err := conn.PutAccountSettingDefault(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ECS Account Setting Default (%s): %s", settingName, err)
 	}
 
-	if d.IsNewResource() {
-		// Huh?
-		d.SetId(aws.ToString(output.Setting.Value))
-	}
+	d.SetId(settingName)
 
 	return append(diags, resourceAccountSettingDefaultRead(ctx, d, meta)...)
 }
@@ -93,10 +88,8 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading ECS Account Setting Default (%s): %s", settingName, err)
 	}
 
-	principalARN := aws.ToString(setting.PrincipalArn)
-	d.SetId(principalARN)
 	d.Set(names.AttrName, setting.Name)
-	d.Set("principal_arn", principalARN)
+	d.Set("principal_arn", setting.PrincipalArn)
 	d.Set(names.AttrValue, setting.Value)
 
 	return diags
@@ -145,13 +138,6 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 
 func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
-	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Service:   names.ECSEndpointID,
-		Resource:  "cluster/" + d.Id(),
-	}.String())
 
 	return []*schema.ResourceData{d}, nil
 }

@@ -41,6 +41,7 @@ data "aws_ami" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent AMI.
@@ -50,6 +51,10 @@ recent AMI.
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
+* `allow_unsafe_filter` - (Optional) If true, allow unsafe filter values. With unsafe
+filters and `most_recent` set to `true`, a third party may introduce a new image which
+will be returned by this data source. Consider filtering by owner or image ID rather
+than setting this argument.
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance

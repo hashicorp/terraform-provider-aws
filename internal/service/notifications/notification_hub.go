@@ -41,7 +41,7 @@ func newNotificationHubResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type notificationHubResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[notificationHubResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }

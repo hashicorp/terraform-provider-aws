@@ -133,6 +133,7 @@ resource "aws_appflow_flow" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the flow.
 * `destination_flow_config` - (Required) A [Destination Flow Config](#destination-flow-config) that controls how Amazon AppFlow places data in the destination connector.
 * `source_flow_config` - (Required) The [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
@@ -417,17 +418,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `name`. For example:
 
 ```terraform
 import {
   to = aws_appflow_flow.example
-  id = "arn:aws:appflow:us-west-2:123456789012:flow/example-flow"
+  id = "example-flow"
 }
 ```
 
-Using `terraform import`, import AppFlow flows using the `arn`. For example:
+Using `terraform import`, import AppFlow flows using the `name`. For example:
 
 ```console
-% terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
+% terraform import aws_appflow_flow.example example-flow
 ```

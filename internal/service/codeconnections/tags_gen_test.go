@@ -11,6 +11,6 @@ import (
 	tfcodeconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codeconnections"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfcodeconnections.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfcodeconnections.ServicePackage(ctx), resourceAddress, knownValue)
 }

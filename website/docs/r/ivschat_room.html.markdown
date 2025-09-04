@@ -52,6 +52,7 @@ resource "aws_ivschat_room" "example" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `logging_configuration_identifiers` - (Optional) List of Logging Configuration
   ARNs to attach to the room.
 * `maximum_message_length` - (Optional) Maximum number of characters in a single

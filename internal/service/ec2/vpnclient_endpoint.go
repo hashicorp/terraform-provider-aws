@@ -5,11 +5,9 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -87,7 +85,7 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			},
 			"client_cidr_block": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 			},
@@ -188,6 +186,13 @@ func resourceClientVPNEndpoint() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"endpoint_ip_address_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EndpointIpAddressType](),
+			},
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				MinItems: 1,
@@ -224,6 +229,13 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"traffic_ip_address_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TrafficIpAddressType](),
+			},
 			"transport_protocol": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -254,7 +266,6 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateClientVpnEndpointInput{
-		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ClientToken:          aws.String(id.UniqueId()),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
@@ -265,6 +276,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk("authentication_options"); ok && v.(*schema.Set).Len() > 0 {
 		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("client_cidr_block"); ok {
+		input.ClientCidrBlock = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -295,6 +310,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.DnsServers = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("endpoint_ip_address_type"); ok {
+		input.EndpointIpAddressType = awstypes.EndpointIpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -305,6 +324,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk("session_timeout_hours"); ok {
 		input.SessionTimeoutHours = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("traffic_ip_address_type"); ok {
+		input.TrafficIpAddressType = awstypes.TrafficIpAddressType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
@@ -324,7 +347,8 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	ep, err := findClientVPNEndpointByID(ctx, conn, d.Id())
 
@@ -338,14 +362,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clientVPNEndpointARN(ctx, c, d.Id()))
 	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_options: %s", err)
 	}
@@ -381,8 +398,9 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrDescription, ep.Description)
 	d.Set("disconnect_on_session_timeout", ep.DisconnectOnSessionTimeout)
 	d.Set(names.AttrDNSName, ep.DnsName)
-	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
-	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
+	d.Set("dns_servers", ep.DnsServers)
+	d.Set("endpoint_ip_address_type", ep.EndpointIpAddressType)
+	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {
@@ -392,6 +410,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
+	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
@@ -791,4 +810,8 @@ func flattenClientRouteEnforcementOptions(apiObject *awstypes.ClientRouteEnforce
 	}
 
 	return tfMap
+}
+
+func clientVPNEndpointARN(ctx context.Context, c *conns.AWSClient, clientVPNEndpointID string) string {
+	return c.RegionalARN(ctx, names.EC2, "client-vpn-endpoint/"+clientVPNEndpointID)
 }

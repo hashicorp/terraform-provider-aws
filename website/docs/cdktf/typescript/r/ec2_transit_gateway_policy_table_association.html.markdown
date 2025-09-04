@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transitGatewayAttachmentId` - (Required) Identifier of EC2 Transit Gateway Attachment.
 * `transitGatewayPolicyTableId` - (Required) Identifier of EC2 Transit Gateway Policy Table.
 
@@ -86,4 +87,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_policy_table_associati
 % terraform import aws_ec2_transit_gateway_policy_table_association.example tgw-rtb-12345678_tgw-attach-87654321
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fb6c9a474c21becbfa7750b9e0ef6a384a8f2e3673c394bf8ae8f12a2b132f7b -->
+<!-- cache-key: cdktf-0.20.8 input-68acd25ab901d52acc66ca4e32054746b47945eff538f3c63f40c3c2fd37403b -->

@@ -1,4 +1,5 @@
 resource "aws_appflow_flow" "test" {
+{{- template "region" }}
   name = var.rName
 
   source_flow_config {
@@ -46,10 +47,12 @@ resource "aws_appflow_flow" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test_source" {
+{{- template "region" }}
   bucket = "${var.rName}-source"
 }
 
 resource "aws_s3_bucket_policy" "test_source" {
+{{- template "region" }}
   bucket = aws_s3_bucket.test_source.bucket
   policy = <<EOF
 {
@@ -76,16 +79,19 @@ EOF
 }
 
 resource "aws_s3_object" "test" {
+{{- template "region" }}
   bucket = aws_s3_bucket.test_source.bucket
   key    = "flow_source.csv"
   source = "test-fixtures/flow_source.csv"
 }
 
 resource "aws_s3_bucket" "test_destination" {
+{{- template "region" }}
   bucket = "${var.rName}-destination"
 }
 
 resource "aws_s3_bucket_policy" "test_destination" {
+{{- template "region" }}
   bucket = aws_s3_bucket.test_destination.bucket
   policy = <<EOF
 

@@ -28,7 +28,7 @@ func newAccountSuppressionAttributesResource(context.Context) (resource.Resource
 }
 
 type accountSuppressionAttributesResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accountSuppressionAttributesResourceModel]
 	framework.WithNoOpDelete
 	framework.WithImportByID
 }
@@ -38,7 +38,7 @@ func (r *accountSuppressionAttributesResource) Schema(ctx context.Context, reque
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"suppressed_reasons": schema.SetAttribute{
-				CustomType:  fwtypes.NewSetTypeOf[fwtypes.StringEnum[awstypes.SuppressionListReason]](ctx),
+				CustomType:  fwtypes.SetOfStringEnumType[awstypes.SuppressionListReason](),
 				Required:    true,
 				ElementType: fwtypes.StringEnumType[awstypes.SuppressionListReason](),
 			},
@@ -149,6 +149,7 @@ func findAccountSuppressionAttributes(ctx context.Context, conn *sesv2.Client) (
 }
 
 type accountSuppressionAttributesResourceModel struct {
-	ID                types.String                                                           `tfsdk:"id"`
-	SuppressedReasons fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SuppressionListReason]] `tfsdk:"suppressed_reasons"`
+	framework.WithRegionModel
+	ID                types.String                                            `tfsdk:"id"`
+	SuppressedReasons fwtypes.SetOfStringEnum[awstypes.SuppressionListReason] `tfsdk:"suppressed_reasons"`
 }

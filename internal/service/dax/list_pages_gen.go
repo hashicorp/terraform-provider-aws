@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 )
 
-func describeClustersPages(ctx context.Context, conn *dax.Client, input *dax.DescribeClustersInput, fn func(*dax.DescribeClustersOutput, bool) bool) error {
+func describeClustersPages(ctx context.Context, conn *dax.Client, input *dax.DescribeClustersInput, fn func(*dax.DescribeClustersOutput, bool) bool, optFns ...func(*dax.Options)) error {
 	for {
-		output, err := conn.DescribeClusters(ctx, input)
+		output, err := conn.DescribeClusters(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

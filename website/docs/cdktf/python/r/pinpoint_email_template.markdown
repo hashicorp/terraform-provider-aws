@@ -43,8 +43,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `template_name` - (Required) name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.
 * `email_template` - (Required) Specifies the content and settings for a message template that can be used in messages that are sent through the email channel. See [Email Template](#email-template)
 
@@ -95,4 +96,4 @@ Using `terraform import`, import Pinpoint Email Template using the `template_nam
 % terraform import aws_pinpoint_email_template.reset template_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6ec76068933a952dc4b7bbba734b8d07ad5b6f5777c00d5d042f3f0723878cc3 -->
+<!-- cache-key: cdktf-0.20.8 input-311133628dd7456c52c99bb71fb1aa296a08a58838fdff1928be46f852b86ea5 -->

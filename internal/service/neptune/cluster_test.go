@@ -1451,7 +1451,9 @@ resource "aws_iam_role" "kms_admin" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1486,7 +1488,7 @@ resource "aws_kms_key" "test" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1502,7 +1504,7 @@ resource "aws_kms_key" "test" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }
@@ -1758,7 +1760,9 @@ resource "aws_iam_role" "kms_admin" {
 }
 
 resource "aws_kms_key" "test1" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1793,7 +1797,7 @@ resource "aws_kms_key" "test1" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1809,7 +1813,7 @@ resource "aws_kms_key" "test1" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }
@@ -1819,7 +1823,9 @@ POLICY
 }
 
 resource "aws_kms_key" "test2" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1854,7 +1860,7 @@ resource "aws_kms_key" "test2" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1870,7 +1876,7 @@ resource "aws_kms_key" "test2" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }

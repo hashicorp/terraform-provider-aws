@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `status` - (Required) Whether Service Catalog is enabled or disabled in SageMaker. Valid values are `Enabled` and `Disabled`.
 
 ## Attribute Reference
@@ -80,4 +81,4 @@ Using `terraform import`, import models using the `id`. For example:
 % terraform import aws_sagemaker_servicecatalog_portfolio_status.example us-east-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-513897937f6daf743f04829b9fa20743080d1656873edd34f5129f00d829664c -->
+<!-- cache-key: cdktf-0.20.8 input-d16aeb8ecbd9b2a6eb501812725fa4d8c742f48833cae31476906ca2e5f8eaf1 -->

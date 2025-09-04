@@ -157,16 +157,16 @@ var (
 )
 
 // @SDKResource("aws_sns_topic_subscription", name="Topic Subscription")
+// @ArnIdentity
+// @Testing(existsType="map[string]string")
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(importIgnore="confirmation_timeout_in_minutes;endpoint_auto_confirms")
 func resourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
 		ReadWithoutTimeout:   resourceTopicSubscriptionRead,
 		UpdateWithoutTimeout: resourceTopicSubscriptionUpdate,
 		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
 
@@ -252,7 +252,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (any, error) {
+	attributes, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func(ctx context.Context) (map[string]string, error) {
 		return findSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -265,8 +265,6 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
-
-	attributes := outputRaw.(map[string]string)
 
 	return sdkdiag.AppendFromErr(diags, subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }

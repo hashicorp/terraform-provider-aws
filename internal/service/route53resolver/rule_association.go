@@ -25,15 +25,15 @@ import (
 )
 
 // @SDKResource("aws_route53_resolver_rule_association", name="Rule Association")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRuleAssociation")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(domainTfVar="domain")
 func resourceRuleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleAssociationCreate,
 		ReadWithoutTimeout:   resourceRuleAssociationRead,
 		DeleteWithoutTimeout: resourceRuleAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

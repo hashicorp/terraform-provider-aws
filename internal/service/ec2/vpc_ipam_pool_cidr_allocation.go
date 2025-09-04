@@ -134,7 +134,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 	allocationID := aws.ToString(output.IpamPoolAllocation.IpamPoolAllocationId)
 	d.SetId(ipamPoolCIDRAllocationCreateResourceID(allocationID, ipamPoolID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, ipamPoolID)
 	})
 

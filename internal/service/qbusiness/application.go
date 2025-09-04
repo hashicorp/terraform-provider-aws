@@ -36,8 +36,8 @@ import (
 
 // @FrameworkResource("aws_qbusiness_application", name="Application")
 // @Tags(identifierAttribute="arn")
-func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceApplication{}
+func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &applicationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -50,13 +50,13 @@ const (
 	ResNameApplication = "Application"
 )
 
-type resourceApplication struct {
-	framework.ResourceWithConfigure
+type applicationResource struct {
+	framework.ResourceWithModel[applicationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -136,8 +136,8 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceApplication) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data resourceApplicationData
+func (r *applicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data applicationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -191,8 +191,8 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resourceApplicationData
+func (r *applicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data applicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -222,8 +222,8 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state, plan resourceApplicationData
+func (r *applicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state, plan applicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -281,8 +281,8 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data resourceApplicationData
+func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data applicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -393,7 +393,8 @@ func waitApplicationDeleted(ctx context.Context, conn *qbusiness.Client, id stri
 	return nil, err
 }
 
-type resourceApplicationData struct {
+type applicationResourceModel struct {
+	framework.WithRegionModel
 	ApplicationId                types.String                                                  `tfsdk:"id"`
 	ApplicationArn               types.String                                                  `tfsdk:"arn"`
 	AttachmentsConfiguration     fwtypes.ListNestedObjectValueOf[attachmentsConfigurationData] `tfsdk:"attachments_configuration"`

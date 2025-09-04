@@ -24,19 +24,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_datazone_domain", name="Domain")
-func newDataSourceDomain(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDomain{}, nil
+func newDomainDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &domainDataSource{}, nil
 }
 
 const (
 	DSNameDomain = "Domain Data Source"
 )
 
-type dataSourceDomain struct {
-	framework.DataSourceWithConfigure
+type domainDataSource struct {
+	framework.DataSourceWithModel[domainDataSourceModel]
 }
 
-func (d *dataSourceDomain) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *domainDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -75,10 +75,10 @@ func (d *dataSourceDomain) Schema(_ context.Context, _ datasource.SchemaRequest,
 	}
 }
 
-func (d *dataSourceDomain) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *domainDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().DataZoneClient(ctx)
 
-	var data dataSourceDomainModel
+	var data domainDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -115,7 +115,7 @@ func (d *dataSourceDomain) Read(ctx context.Context, request datasource.ReadRequ
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (d *dataSourceDomain) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+func (d *domainDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.AtLeastOneOf(
 			path.MatchRoot(names.AttrName),
@@ -153,7 +153,8 @@ func findDomains(ctx context.Context, conn *datazone.Client, filter tfslices.Pre
 	return output, nil
 }
 
-type dataSourceDomainModel struct {
+type domainDataSourceModel struct {
+	framework.WithRegionModel
 	ARN              types.String      `tfsdk:"arn"`
 	CreatedAt        timetypes.RFC3339 `tfsdk:"created_at"`
 	Description      types.String      `tfsdk:"description"`

@@ -20,7 +20,7 @@ go test \
     ./internal/function/... \
     ./internal/generate/... \
     ./internal/io/... \
-    ./internal/iters/... \
+    ./internal/iter/... \
     ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
@@ -31,11 +31,15 @@ go test \
     ./internal/sdkv2/... \
     ./internal/semver/... \
     ./internal/slices/... \
+    ./internal/smerr/... \
+    ./internal/smithy/... \
     ./internal/sweep/... \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
+    ./internal/unique/... \
     ./internal/vault/... \
+    ./internal/vcr/... \
     ./internal/verify/... \
     ./internal/yaml/... \
     -json

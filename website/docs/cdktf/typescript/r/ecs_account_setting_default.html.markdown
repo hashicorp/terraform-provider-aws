@@ -68,6 +68,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the account setting to set.
 * `value` - (Required) State of the setting.
 
@@ -75,7 +76,6 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the account setting.
 * `prinicpal_arn` - ARN that identifies the account setting.
 
 ## Import
@@ -110,4 +110,4 @@ Using `terraform import`, import ECS Account Setting defaults using the `name`. 
 % terraform import aws_ecs_account_setting_default.example taskLongArnFormat
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d592a96664b8b98e25bb2b0b319968c41ffef57e01b547b0274788797aabdc22 -->
+<!-- cache-key: cdktf-0.20.8 input-06eff1c2390f072338d83d0bbd597eb602acc3f61d38c816c1e6efbae83da258 -->

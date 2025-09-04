@@ -41,17 +41,17 @@ const (
 )
 
 // @SDKResource("aws_comprehend_entity_recognizer", name="Entity Recognizer")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.EntityRecognizerProperties")
+// @Testing(preCheck="testAccPreCheck")
 func ResourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,
 		ReadWithoutTimeout:   resourceEntityRecognizerRead,
 		UpdateWithoutTimeout: resourceEntityRecognizerUpdate,
 		DeleteWithoutTimeout: resourceEntityRecognizerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -522,7 +522,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	}
 
 	var out *comprehend.CreateEntityRecognizerOutput
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = conn.CreateEntityRecognizer(ctx, in)
 
@@ -530,12 +530,12 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 			var tmre *types.TooManyRequestsException
 			var qee ratelimit.QuotaExceededError // This is not a typo: the ratelimit.QuotaExceededError is returned as a struct, not a pointer
 			if errors.As(err, &tmre) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			} else if errors.As(err, &qee) {
 				// Unable to get a rate limit token
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			} else {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 		}
 

@@ -46,6 +46,11 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -53,8 +58,15 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccStackConfig_basic(rName),
-				PlanOnly: true,
+				Config: testAccStackConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -437,13 +449,6 @@ func TestAccCloudFormationStack_withTransform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_transform(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stack),
-				),
-			},
-			{
-				PlanOnly: true,
-				Config:   testAccStackConfig_transform(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
@@ -1007,7 +1012,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
@@ -1029,7 +1034,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }

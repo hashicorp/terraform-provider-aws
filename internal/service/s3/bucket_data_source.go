@@ -36,15 +36,15 @@ func dataSourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bucket_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,8 +62,8 @@ func dataSourceBucket() *schema.Resource {
 
 func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
 
@@ -79,7 +79,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", bucket, err)
 	}
 
-	region, err := findBucketRegion(ctx, awsClient, bucket, optFns...)
+	region, err := findBucketRegion(ctx, c, bucket, optFns...)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Region: %s", bucket, err)
@@ -89,21 +89,16 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any)
 	if arn.IsARN(bucket) {
 		d.Set(names.AttrARN, bucket)
 	} else {
-		arn := arn.ARN{
-			Partition: awsClient.Partition(ctx),
-			Service:   "s3",
-			Resource:  bucket,
-		}.String()
-		d.Set(names.AttrARN, arn)
+		d.Set(names.AttrARN, bucketARN(ctx, c, bucket))
 	}
-	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucket+".s3"))
+	d.Set("bucket_domain_name", c.PartitionHostname(ctx, bucket+".s3"))
+	d.Set("bucket_region", region)
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucket, region))
 	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
 		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	} else {
 		log.Printf("[WARN] HostedZoneIDForRegion: %s", err)
 	}
-	d.Set(names.AttrRegion, region)
 	if _, err := findBucketWebsite(ctx, conn, bucket, ""); err == nil {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, region)
 		d.Set("website_domain", domain)

@@ -160,7 +160,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ObjectNotFoundException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ObjectNotFoundException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.PutScheduledAction(ctx, &input)
 	})
 

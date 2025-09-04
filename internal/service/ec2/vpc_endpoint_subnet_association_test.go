@@ -150,7 +150,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
   vpc_endpoint_type   = "Interface"
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2"
   security_group_ids  = [data.aws_security_group.test.id]
   private_dns_enabled = false
 

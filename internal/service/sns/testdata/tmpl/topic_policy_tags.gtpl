@@ -1,0 +1,32 @@
+resource "aws_sns_topic" "test" {
+{{- template "region" }}
+  name = var.rName
+}
+
+resource "aws_sns_topic_policy" "test" {
+{{- template "region" }}
+  arn    = aws_sns_topic.test.arn
+  policy = <<POLICY
+{
+  "Version":"2012-10-17",
+  "Id":"default",
+  "Statement":[
+    {
+      "Sid":"${var.rName}",
+      "Effect":"Allow",
+      "Principal":{
+        "AWS":"*"
+      },
+      "Action":[
+        "SNS:GetTopicAttributes",
+        "SNS:SetTopicAttributes",
+        "SNS:AddPermission",
+        "SNS:RemovePermission"
+      ],
+      "Resource":"${aws_sns_topic.test.arn}"
+    }
+  ]
+}
+POLICY
+{{- template "tags" }}
+}

@@ -89,7 +89,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `compute_configuration` - (Optional) The compute configuration of the compute fleet. This is only required if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE`. See [`compute_configuration`](#compute_configuration) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `computeConfiguration` - (Optional) The compute configuration of the compute fleet. This is only required if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE` or `CUSTOM_INSTANCE_TYPE`. See [`computeConfiguration`](#compute_configuration) below.
 * `fleetServiceRole` - (Optional) The service role associated with the compute fleet.
 * `imageId` - (Optional) The Amazon Machine Image (AMI) of the compute fleet.
 * `overflowBehavior` - (Optional) Overflow behavior for compute fleet. Valid values: `ON_DEMAND`, `QUEUE`.
@@ -100,9 +101,10 @@ The following arguments are optional:
 ### compute_configuration
 
 * `disk` - (Optional) Amount of disk space of the instance type included in the fleet.
-* `machine_type` - (Optional) Machine type of the instance type included in the fleet. Valid values: `GENERAL`, `NVME`.
-* `memory` - (Optional) Amount of memory of the instance type included in the fleet.
-* `vcpu` - (Optional) Number of vCPUs of the instance type included in the fleet.
+* `instanceType` - (Optional) EC2 instance type to be launched in the fleet. Specify only if `computeType` is set to `CUSTOM_INSTANCE_TYPE`. See [Supported instance families](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment-reserved-capacity.instance-types).
+* `machineType` - (Optional) Machine type of the instance type included in the fleet. Valid values: `GENERAL`, `NVME`. Specify only if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE`.
+* `memory` - (Optional) Amount of memory of the instance type included in the fleet. Specify only if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE`.
+* `vcpu` - (Optional) Number of vCPUs of the instance type included in the fleet. Specify only if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE`.
 
 ### scaling_configuration
 
@@ -162,4 +164,4 @@ Using `terraform import`, import CodeBuild Fleet using the `name`. For example:
 % terraform import aws_codebuild_fleet.name fleet-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fa06d5482be245bb3fced3fa7e741b380ec91afe7cdfa28aaaa9e3e3a8d884d0 -->
+<!-- cache-key: cdktf-0.20.8 input-13a0a2d510f19cb7840e239724b8dbde64e4e55206b0eadcc133da557f5e5243 -->

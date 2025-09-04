@@ -31,6 +31,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `confirm_remove_self_resource_access` - (Optional) Set this parameter to true to confirm that you want to remove your permissions to change the policy of this resource in the future.
 
 ## Attribute Reference
@@ -41,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB Resource Policy using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB Resource Policy using the `resource_arn`. For example:
 
 ```terraform
 import {
@@ -50,7 +51,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DynamoDB Resource Policy using the `example_id_arg`. For example:
+Using `terraform import`, import DynamoDB Resource Policy using the `resource_arn`. For example:
 
 ```console
 % terraform import aws_dynamodb_resource_policy.example arn:aws:dynamodb:us-east-1:1234567890:table/my-table

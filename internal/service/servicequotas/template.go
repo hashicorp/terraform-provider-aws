@@ -5,11 +5,12 @@ package servicequotas
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -18,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -28,22 +29,31 @@ import (
 )
 
 // @FrameworkResource("aws_servicequotas_template", name="Template")
-func newResourceTemplate(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTemplate{}, nil
+// @Region(overrideEnabled=false)
+func newTemplateResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &templateResource{}, nil
 }
 
 const (
-	ResNameTemplate     = "Template"
-	templateIDPartCount = 3
+	templateResourceIDPartCount = 3
 )
 
-type resourceTemplate struct {
-	framework.ResourceWithConfigure
+type templateResource struct {
+	framework.ResourceWithModel[templateResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *templateResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"aws_region": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"global_quota": schema.BoolAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
@@ -64,10 +74,13 @@ func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			names.AttrRegion: schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
+				DeprecationMessage: "region is deprecated. Use aws_region instead.",
 			},
 			"service_code": schema.StringAttribute{
 				Required: true,
@@ -94,213 +107,224 @@ func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *resourceTemplate) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *templateResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data templateResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().ServiceQuotasClient(ctx)
 
-	var plan resourceTemplateData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	region, quotaCode, serviceCode := fwflex.StringValueFromFramework(ctx, data.AWSRegion), fwflex.StringValueFromFramework(ctx, data.QuotaCode), fwflex.StringValueFromFramework(ctx, data.ServiceCode)
+	if region == "" {
+		region = fwflex.StringValueFromFramework(ctx, data.Region)
 	}
 
-	region := plan.Region.ValueString()
-	quotaCode := plan.QuotaCode.ValueString()
-	serviceCode := plan.ServiceCode.ValueString()
-
-	parts := []string{region, quotaCode, serviceCode}
-	id, err := flex.FlattenResourceId(parts, templateIDPartCount, false)
+	id, err := flex.FlattenResourceId([]string{region, quotaCode, serviceCode}, templateResourceIDPartCount, false)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceQuotas, create.ErrActionCreating, ResNameTemplate, id, err),
-			err.Error(),
-		)
-	}
-	plan.ID = fwflex.StringValueToFramework(ctx, id)
+		response.Diagnostics.AddError("creating resource ID", err.Error())
 
-	in := &servicequotas.PutServiceQuotaIncreaseRequestIntoTemplateInput{
-		AwsRegion:    aws.String(region),
-		DesiredValue: plan.Value.ValueFloat64Pointer(),
-		QuotaCode:    aws.String(quotaCode),
-		ServiceCode:  aws.String(serviceCode),
+		return
 	}
 
-	out, err := conn.PutServiceQuotaIncreaseRequestIntoTemplate(ctx, in)
+	var input servicequotas.PutServiceQuotaIncreaseRequestIntoTemplateInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
+	input.AwsRegion = aws.String(region)
+
+	output, err := conn.PutServiceQuotaIncreaseRequestIntoTemplate(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceQuotas, create.ErrActionCreating, ResNameTemplate, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.ServiceQuotaIncreaseRequestInTemplate == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceQuotas, create.ErrActionCreating, ResNameTemplate, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Service Quotas Template (%s)", id), err.Error())
+
 		return
 	}
 
-	templateItem := out.ServiceQuotaIncreaseRequestInTemplate
-	plan.GlobalQuota = types.BoolValue(templateItem.GlobalQuota)
-	plan.QuotaName = fwflex.StringToFramework(ctx, templateItem.QuotaName)
-	plan.ServiceName = fwflex.StringToFramework(ctx, templateItem.ServiceName)
-	plan.Unit = fwflex.StringToFramework(ctx, templateItem.Unit)
+	// Set values for unknowns.
+	data.ID = fwflex.StringValueToFramework(ctx, id)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.ServiceQuotaIncreaseRequestInTemplate, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Additional fields.
+	data.Region = data.AWSRegion
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceTemplate) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().ServiceQuotasClient(ctx)
-
-	var state resourceTemplateData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *templateResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data templateResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := FindTemplateByID(ctx, conn, state.ID.ValueString())
+	parts, err := flex.ExpandResourceId(data.ID.ValueString(), templateResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	conn := r.Meta().ServiceQuotasClient(ctx)
+
+	output, err := findTemplateByThreePartKey(ctx, conn, parts[0], parts[1], parts[2])
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceQuotas, create.ErrActionSetting, ResNameTemplate, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Service Quotas Template (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.GlobalQuota = types.BoolValue(out.GlobalQuota)
-	state.QuotaCode = fwflex.StringToFramework(ctx, out.QuotaCode)
-	state.QuotaName = fwflex.StringToFramework(ctx, out.QuotaName)
-	state.Region = fwflex.StringToFramework(ctx, out.AwsRegion)
-	state.ServiceCode = fwflex.StringToFramework(ctx, out.ServiceCode)
-	state.ServiceName = fwflex.StringToFramework(ctx, out.ServiceName)
-	state.Unit = fwflex.StringToFramework(ctx, out.Unit)
-	state.Value = fwflex.Float64ToFramework(ctx, out.DesiredValue)
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Additional fields.
+	data.Region = data.AWSRegion
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceTemplate) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().ServiceQuotasClient(ctx)
-
-	var state, plan resourceTemplateData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *templateResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new templateResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Value.Equal(state.Value) {
-		in := &servicequotas.PutServiceQuotaIncreaseRequestIntoTemplateInput{
-			AwsRegion:    plan.Region.ValueStringPointer(),
-			DesiredValue: plan.Value.ValueFloat64Pointer(),
-			QuotaCode:    plan.QuotaCode.ValueStringPointer(),
-			ServiceCode:  plan.ServiceCode.ValueStringPointer(),
+	parts, err := flex.ExpandResourceId(new.ID.ValueString(), templateResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	conn := r.Meta().ServiceQuotasClient(ctx)
+
+	if !new.DesiredValue.Equal(old.DesiredValue) {
+		input := servicequotas.PutServiceQuotaIncreaseRequestIntoTemplateInput{
+			AwsRegion:    aws.String(parts[0]),
+			DesiredValue: fwflex.Float64FromFramework(ctx, new.DesiredValue),
+			QuotaCode:    aws.String(parts[1]),
+			ServiceCode:  aws.String(parts[2]),
 		}
 
-		out, err := conn.PutServiceQuotaIncreaseRequestIntoTemplate(ctx, in)
+		_, err := conn.PutServiceQuotaIncreaseRequestIntoTemplate(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ServiceQuotas, create.ErrActionUpdating, ResNameTemplate, plan.ID.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Service Quotas Template (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
-		if out == nil || out.ServiceQuotaIncreaseRequestInTemplate == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ServiceQuotas, create.ErrActionUpdating, ResNameTemplate, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		templateItem := out.ServiceQuotaIncreaseRequestInTemplate
-		plan.GlobalQuota = types.BoolValue(templateItem.GlobalQuota)
-		plan.QuotaName = fwflex.StringToFramework(ctx, templateItem.QuotaName)
-		plan.ServiceName = fwflex.StringToFramework(ctx, templateItem.ServiceName)
-		plan.Unit = fwflex.StringToFramework(ctx, templateItem.Unit)
-
-		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, new)...)
 }
 
-func (r *resourceTemplate) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *templateResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data templateResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	parts, err := flex.ExpandResourceId(data.ID.ValueString(), templateResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
 	conn := r.Meta().ServiceQuotasClient(ctx)
 
-	var state resourceTemplateData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	input := servicequotas.DeleteServiceQuotaIncreaseRequestFromTemplateInput{
+		AwsRegion:   aws.String(parts[0]),
+		QuotaCode:   aws.String(parts[1]),
+		ServiceCode: aws.String(parts[2]),
+	}
+
+	_, err = conn.DeleteServiceQuotaIncreaseRequestFromTemplate(ctx, &input)
+
+	if errs.IsA[*awstypes.NoSuchResourceException](err) {
 		return
 	}
 
-	in := &servicequotas.DeleteServiceQuotaIncreaseRequestFromTemplateInput{
-		AwsRegion:   state.Region.ValueStringPointer(),
-		QuotaCode:   state.QuotaCode.ValueStringPointer(),
-		ServiceCode: state.ServiceCode.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteServiceQuotaIncreaseRequestFromTemplate(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.NoSuchResourceException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceQuotas, create.ErrActionDeleting, ResNameTemplate, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Service Quotas Template (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceTemplate) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func (r *templateResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("aws_region"),
+			path.MatchRoot(names.AttrRegion),
+		),
+	}
 }
 
-func FindTemplateByID(ctx context.Context, conn *servicequotas.Client, id string) (*awstypes.ServiceQuotaIncreaseRequestInTemplate, error) {
-	parts, err := flex.ExpandResourceId(id, templateIDPartCount, false)
-	if err != nil {
-		return nil, err
-	}
-	region := parts[0]
-	quotaCode := parts[1]
-	serviceCode := parts[2]
-
-	in := &servicequotas.GetServiceQuotaIncreaseRequestFromTemplateInput{
+func findTemplateByThreePartKey(ctx context.Context, conn *servicequotas.Client, region, quotaCode, serviceCode string) (*awstypes.ServiceQuotaIncreaseRequestInTemplate, error) {
+	input := servicequotas.GetServiceQuotaIncreaseRequestFromTemplateInput{
 		AwsRegion:   aws.String(region),
 		QuotaCode:   aws.String(quotaCode),
 		ServiceCode: aws.String(serviceCode),
 	}
 
-	out, err := conn.GetServiceQuotaIncreaseRequestFromTemplate(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.NoSuchResourceException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	return findTemplate(ctx, conn, &input)
+}
 
+func findTemplate(ctx context.Context, conn *servicequotas.Client, input *servicequotas.GetServiceQuotaIncreaseRequestFromTemplateInput) (*awstypes.ServiceQuotaIncreaseRequestInTemplate, error) {
+	output, err := conn.GetServiceQuotaIncreaseRequestFromTemplate(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchResourceException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.ServiceQuotaIncreaseRequestInTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.ServiceQuotaIncreaseRequestInTemplate == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.ServiceQuotaIncreaseRequestInTemplate, nil
+	return output.ServiceQuotaIncreaseRequestInTemplate, nil
 }
 
-type resourceTemplateData struct {
-	GlobalQuota types.Bool    `tfsdk:"global_quota"`
-	ID          types.String  `tfsdk:"id"`
-	QuotaCode   types.String  `tfsdk:"quota_code"`
-	QuotaName   types.String  `tfsdk:"quota_name"`
-	Region      types.String  `tfsdk:"region"`
-	ServiceCode types.String  `tfsdk:"service_code"`
-	ServiceName types.String  `tfsdk:"service_name"`
-	Unit        types.String  `tfsdk:"unit"`
-	Value       types.Float64 `tfsdk:"value"`
+type templateResourceModel struct {
+	AWSRegion    types.String  `tfsdk:"aws_region"`
+	DesiredValue types.Float64 `tfsdk:"value"`
+	GlobalQuota  types.Bool    `tfsdk:"global_quota"`
+	ID           types.String  `tfsdk:"id"`
+	QuotaCode    types.String  `tfsdk:"quota_code"`
+	QuotaName    types.String  `tfsdk:"quota_name"`
+	Region       types.String  `tfsdk:"region"`
+	ServiceCode  types.String  `tfsdk:"service_code"`
+	ServiceName  types.String  `tfsdk:"service_name"`
+	Unit         types.String  `tfsdk:"unit"`
 }

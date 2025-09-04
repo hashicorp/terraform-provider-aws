@@ -305,6 +305,22 @@ func statusSecurityGroup(ctx context.Context, conn *ec2.Client, id string) retry
 	}
 }
 
+func statusSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, groupID, vpcID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, groupID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusSpotFleetActivityStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSpotFleetRequestByID(ctx, conn, id)
@@ -1212,6 +1228,22 @@ func statusTransitGateway(ctx context.Context, conn *ec2.Client, id string) retr
 	}
 }
 
+func statusTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findTransitGatewayAttachmentByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusTransitGatewayConnect(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTransitGatewayConnectByID(ctx, conn, id)
@@ -1446,6 +1478,22 @@ func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2.Client, allocat
 	}
 }
 
+func statusSnapshot(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSnapshotByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSnapshotTierStatusBySnapshotID(ctx, conn, id)
@@ -1510,7 +1558,7 @@ func statusFastSnapshotRestore(ctx context.Context, conn *ec2.Client, availabili
 	}
 }
 
-func statusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findImportSnapshotTaskByID(ctx, conn, id)
 

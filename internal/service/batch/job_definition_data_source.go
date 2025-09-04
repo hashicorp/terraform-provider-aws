@@ -37,7 +37,7 @@ func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfi
 }
 
 type jobDefinitionDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[jobDefinitionDataSourceModel]
 }
 
 func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -211,6 +211,7 @@ func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.C
 }
 
 type jobDefinitionDataSourceModel struct {
+	framework.WithRegionModel
 	ARNPrefix                  types.String                                         `tfsdk:"arn_prefix"`
 	ContainerOrchestrationType types.String                                         `tfsdk:"container_orchestration_type"`
 	EKSProperties              fwtypes.ListNestedObjectValueOf[eksPropertiesModel]  `tfsdk:"eks_properties"`

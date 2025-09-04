@@ -150,7 +150,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterDelete(ctx context.Context, 
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Peering Attachment (%s): %s", d.Id(), err)
 	}
 
-	if err := waitTransitGatewayPeeringAttachmentDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitTransitGatewayPeeringAttachmentDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Peering Attachment (%s) delete: %s", d.Id(), err)
 	}
 

@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Glue Registry.
 
 ## Attribute Reference
@@ -49,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - Amazon Resource Name (ARN) of Glue Registry.
 * `description` - A description of the registry.
 
-<!-- cache-key: cdktf-0.20.8 input-e9eb8b4e6e8262dd3c80922987d4f0253afa9a1750108733d9da020bcd0e6760 -->
+<!-- cache-key: cdktf-0.20.8 input-ba90cbdb3646dcb390dd0971158a80b09925c2df242ecc5072aeb07b2d61f2ce -->

@@ -41,7 +41,7 @@ func newNotificationConfigurationResource(_ context.Context) (resource.ResourceW
 }
 
 type notificationConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[notificationConfigurationResourceModel]
 }
 
 func (r *notificationConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

@@ -549,7 +549,7 @@ resource "aws_macie2_findings_filter" "test" {
   finding_criteria {
     criterion {
       field = "region"
-      eq    = [data.aws_region.current.name]
+      eq    = [data.aws_region.current.region]
     }
   }
   depends_on = [aws_macie2_account.test]
@@ -570,7 +570,7 @@ resource "aws_macie2_findings_filter" "test" {
   finding_criteria {
     criterion {
       field = "region"
-      eq    = [data.aws_region.current.name]
+      eq    = [data.aws_region.current.region]
     }
     criterion {
       field = "sample"
@@ -600,7 +600,7 @@ resource "aws_macie2_findings_filter" "test" {
   finding_criteria {
     criterion {
       field = "region"
-      eq    = [data.aws_region.current.name]
+      eq    = [data.aws_region.current.region]
     }
     criterion {
       field = "sample"

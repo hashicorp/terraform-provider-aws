@@ -85,6 +85,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auth_type` - (Required) The type of authentication used to connect to a GitHub, GitHub Enterprise, or Bitbucket
   repository. Valid values are `BASIC_AUTH`,
   `PERSONAL_ACCESS_TOKEN`, `CODECONNECTIONS`, and `SECRETS_MANAGER`. An OAUTH connection is not supported by the API.
@@ -128,4 +129,4 @@ Using `terraform import`, import CodeBuild Source Credential using the CodeBuild
 % terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1c28e4ff4cad45118b86b63364951fcb713f19a633aba27898921ca15b920890 -->
+<!-- cache-key: cdktf-0.20.8 input-da6d2c9de23fdd9e93ed468a09d92d5229183095c3cefe5b05acf97dc26ad8ec -->

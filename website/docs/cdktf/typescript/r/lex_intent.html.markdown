@@ -124,6 +124,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `conclusionStatement` - (Optional) The statement that you want Amazon Lex to convey to the user
 after the intent is successfully fulfilled by the Lambda function. This element is relevant only if
 you provide a Lambda function in the `fulfillmentActivity`. If you return the intent to the client
@@ -296,4 +297,4 @@ Using `terraform import`, import intents using their name. For example:
 % terraform import aws_lex_intent.order_flowers_intent OrderFlowers
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bc4d0529031c21b9dbe67a57c70be3664c7edf7ad0c0512f13dbf0d1a13356b3 -->
+<!-- cache-key: cdktf-0.20.8 input-fae009ea2362670d306ccb357168308cf0187532647e7cf357b677ef181edef3 -->

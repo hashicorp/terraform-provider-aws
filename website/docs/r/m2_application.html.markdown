@@ -59,6 +59,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `definition` - (Optional) The application definition for this application. You can specify either inline JSON or an S3 bucket location.
 * `kms_key_id` - (Optional) KMS Key to use for the Application.
 * `role_arn` - (Optional) ARN of role for application to use to access AWS resources.
@@ -70,6 +71,7 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content` - (Optional) JSON application definition. Either this or `s3_location` must be specified.
 * `s3_location` - (Optional) Location of the application definition in S3. Either this or `content` must be specified.
 
