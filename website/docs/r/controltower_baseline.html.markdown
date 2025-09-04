@@ -30,26 +30,35 @@ resource "aws_controltower_baseline" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `baseline_identifier` - (Required) The ARN of the baseline to be enabled.
+* `baseline_version` - (Required) The version of the baseline to be enabled.
+* `target_identifier` - (Required) The ARN of the target on which the baseline will be enabled. Only OUs are supported as targets.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `parameters` - (Optional) A list of key-value objects that specify enablement parameters, where key is a string and value is a document of any type. See [Parameter](#parameters) below for details.
+* `tags` - (Optional) Tags to apply to the landing zone. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### parameters
+
+* `key` - (Required) The key of the parameter.
+* `value` - (Required) The value of the parameter.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Baseline. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Baseline.
+* `operaton_identifier` - The ID (in UUID format) of the asynchronous operation.
+* `tags_all` - A map of tags assigned to the landing zone, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 
@@ -58,12 +67,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_controltower_baseline.example
-  id = "baseline-id-12345678"
+  id = "arn:aws:controltower:us-east-1:012345678912:enabledbaseline/XALULM96QHI525UOC"
 }
 ```
 
-Using `terraform import`, import Control Tower Baseline using the `example_id_arg`. For example:
+Using `terraform import`, import Control Tower Baseline using the `arn`. For example:
 
 ```console
-% terraform import aws_controltower_baseline.example baseline-id-12345678
+% terraform import aws_controltower_baseline.example arn:aws:controltower:us-east-1:012345678912:enabledbaseline/XALULM96QHI525UOC
 ```

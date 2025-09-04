@@ -39,7 +39,6 @@ import (
 // @ArnIdentity
 func newResourceBaseline(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBaseline{}
-
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 
