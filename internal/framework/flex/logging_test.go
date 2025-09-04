@@ -477,7 +477,7 @@ func infoSourceImplementsJSONStringer(sourcePath string, sourceType reflect.Type
 	return map[string]any{
 		"@level":             hclog.Info.String(),
 		"@module":            logModule,
-		"@message":           "Source implements json.JSONStringer",
+		"@message":           "Source implements smithydocument.Marshaler",
 		logAttrKeySourcePath: sourcePath,
 		logAttrKeySourceType: fullTypeName(sourceType),
 		logAttrKeyTargetPath: targetPath,
