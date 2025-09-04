@@ -58,7 +58,7 @@ func TestAccCognitoIDPManagedLoginBranding_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "managed_login_branding_id",
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "user_pool_id", "managed_login_branding_id"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrUserPoolID, "managed_login_branding_id"),
 			},
 		},
 	})
@@ -119,7 +119,7 @@ func TestAccCognitoIDPManagedLoginBranding_asset(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "managed_login_branding_id",
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "user_pool_id", "managed_login_branding_id"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrUserPoolID, "managed_login_branding_id"),
 			},
 		},
 	})
@@ -157,7 +157,7 @@ func TestAccCognitoIDPManagedLoginBranding_settings(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "managed_login_branding_id",
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "user_pool_id", "managed_login_branding_id"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrUserPoolID, "managed_login_branding_id"),
 			},
 		},
 	})
@@ -310,7 +310,7 @@ func testAccCheckManagedLoginBrandingDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfcognitoidp.FindManagedLoginBrandingByThreePartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["managed_login_branding_id"], false)
+			_, err := tfcognitoidp.FindManagedLoginBrandingByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes["managed_login_branding_id"], false)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -336,7 +336,7 @@ func testAccCheckManagedLoginBrandingExists(ctx context.Context, n string, v *aw
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
-		output, err := tfcognitoidp.FindManagedLoginBrandingByThreePartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["managed_login_branding_id"], false)
+		output, err := tfcognitoidp.FindManagedLoginBrandingByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes["managed_login_branding_id"], false)
 
 		if err != nil {
 			return err
