@@ -321,10 +321,9 @@ func (r *resourceBaseline) Delete(ctx context.Context, request resource.DeleteRe
 		)
 		return
 	}
-
 }
 
-func waitBaselineReady(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*awstypes.EnabledBaselineDetails, error) {
+func waitBaselineReady(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*awstypes.EnabledBaselineDetails, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EnablementStatusUnderChange),
 		Target:                    enum.Slice(awstypes.EnablementStatusSucceeded),
