@@ -5,14 +5,7 @@ page_title: "AWS: aws_controltower_baseline"
 description: |-
   Terraform resource for managing an AWS Control Tower Baseline.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_controltower_baseline
 
 Terraform resource for managing an AWS Control Tower Baseline.
@@ -22,7 +15,14 @@ Terraform resource for managing an AWS Control Tower Baseline.
 ### Basic Usage
 
 ```terraform
-resource "aws_controltower_baseline" "example" {
+resource "aws_controltower_baseline" "test" {
+  baseline_identifier = "arn:aws:controltower:us-east-1::baseline/17BSJV3IGJ2QSGA2"
+  baseline_version    = "4.0"
+  target_identifier   = aws_organizations_organizational_unit.test.arn
+  parameters {
+    key   = "IdentityCenterEnabledBaselineArn"
+    value = "arn:aws:controltower:us-east-1:664418989480:enabledbaseline/XALULM96QHI525UOC"
+  }
 }
 ```
 

@@ -165,6 +165,9 @@ func testAccEnabledBaselinesPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccBaselineConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
 data "aws_organizations_organization" "current" {}
 
 resource "aws_organizations_organizational_unit" "test" {
@@ -173,12 +176,12 @@ resource "aws_organizations_organizational_unit" "test" {
 }
 
 resource "aws_controltower_baseline" "test" {
-  baseline_identifier = "arn:aws:controltower:us-east-1::baseline/17BSJV3IGJ2QSGA2"
+  baseline_identifier = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}::baseline/17BSJV3IGJ2QSGA2"
   baseline_version    = "4.0"
   target_identifier   = aws_organizations_organizational_unit.test.arn
   parameters {
     key   = "IdentityCenterEnabledBaselineArn"
-    value = "arn:aws:controltower:us-east-1:664418989480:enabledbaseline/XALULM96QHI525UOC"
+    value = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}:664418989480:enabledbaseline/XALULM96QHI525UOC"
   }
 }
 `, rName)

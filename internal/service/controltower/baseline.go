@@ -55,7 +55,6 @@ type resourceBaseline struct {
 	framework.WithTimeouts
 }
 
-
 func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
