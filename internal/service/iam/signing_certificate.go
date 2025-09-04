@@ -103,7 +103,7 @@ func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.SigningCertificate, error) {
 		return FindSigningCertificate(ctx, conn, userName, certId)
 	}, d.IsNewResource())
 
@@ -117,12 +117,10 @@ func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
-	resp := outputRaw.(*awstypes.SigningCertificate)
-
-	d.Set("certificate_body", resp.CertificateBody)
-	d.Set("certificate_id", resp.CertificateId)
-	d.Set(names.AttrUserName, resp.UserName)
-	d.Set(names.AttrStatus, resp.Status)
+	d.Set("certificate_body", output.CertificateBody)
+	d.Set("certificate_id", output.CertificateId)
+	d.Set(names.AttrUserName, output.UserName)
+	d.Set(names.AttrStatus, output.Status)
 
 	return diags
 }

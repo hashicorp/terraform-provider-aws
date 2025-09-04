@@ -80,6 +80,7 @@ resource "aws_datasync_task" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination_location_arn` - (Required) Amazon Resource Name (ARN) of destination DataSync Location.
 * `source_location_arn` - (Required) Amazon Resource Name (ARN) of source DataSync Location.
 * `cloudwatch_log_group_arn` - (Optional) Amazon Resource Name (ARN) of the CloudWatch Log Group that is used to monitor and log events in the sync task.

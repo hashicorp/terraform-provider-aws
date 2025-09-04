@@ -55,6 +55,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_id` - (Required) ID of the EMR cluster
 * `compute_limits` - (Required) Configuration block with compute limit settings. Described below.
 
@@ -95,4 +96,4 @@ Using `terraform import`, import EMR Managed Scaling Policies using the EMR Clus
 % terraform import aws_emr_managed_scaling_policy.example j-123456ABCDEF
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-62b04cc94e05c0974582d7b0b1123356847a607e2399a95467c580bdbc32dcb0 -->
+<!-- cache-key: cdktf-0.20.8 input-012306b6777cc64e07046fdc4d30a57cd6a34720e89dbfb728afd870cb006b32 -->

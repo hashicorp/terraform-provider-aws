@@ -113,10 +113,6 @@ func testAccMesh_egressFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "DROP_ALL"),
 				),
 			},
-			{
-				PlanOnly: true,
-				Config:   testAccMeshConfig_basic(rName),
-			},
 		},
 	})
 }

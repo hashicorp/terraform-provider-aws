@@ -17,6 +17,7 @@ AppStream 2.0
 AppSync
 Application Auto Scaling
 Application Migration (Mgn)
+Application Resilience Controller Region Switch
 Application Signals
 Athena
 Audit Manager
@@ -26,6 +27,7 @@ BCM Data Exports
 Backup
 Batch
 Bedrock
+Bedrock AgentCore
 Bedrock Agents
 Billing
 CE (Cost Explorer)
@@ -107,6 +109,7 @@ EMR Serverless
 ElastiCache
 Elastic Beanstalk
 Elastic Transcoder
+Elastic VMware
 Elasticsearch
 Elemental MediaConnect
 Elemental MediaConvert
@@ -138,9 +141,7 @@ IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
 Invoicing
-IoT Analytics
 IoT Core
-IoT Events
 IoT Greengrass
 KMS (Key Management)
 Kendra
@@ -175,7 +176,7 @@ Network Manager
 OpenSearch
 OpenSearch Ingestion
 OpenSearch Serverless
-OpsWorks
+Oracle Database@AWS
 Organizations
 Outposts
 Outposts (EC2)
@@ -209,8 +210,8 @@ S3 (Simple Storage)
 S3 Control
 S3 Glacier
 S3 Tables
+S3 Vectors
 S3 on Outposts
-SDB (SimpleDB)
 SES (Simple Email)
 SESv2 (Simple Email V2)
 SFN (Step Functions)
@@ -258,7 +259,7 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
-WorkLink
+WorkMail
 WorkSpaces
 WorkSpaces Web
 X-Ray

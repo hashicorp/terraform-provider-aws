@@ -32,22 +32,19 @@ var hostedZoneIDPerRegionMap = map[string]string{
 }
 
 // @FrameworkDataSource("aws_apprunner_hosted_zone_id", name="Hosted Zone ID")
+// @Region(validateOverrideInPartition=false)
 func newHostedZoneIDDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &hostedZoneIDDataSource{}, nil
 }
 
 type hostedZoneIDDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[hostedZoneIDDataSourceModel]
 }
 
 func (d *hostedZoneIDDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -59,12 +56,7 @@ func (d *hostedZoneIDDataSource) Read(ctx context.Context, request datasource.Re
 		return
 	}
 
-	var region string
-	if data.Region.IsNull() {
-		region = d.Meta().Region(ctx)
-	} else {
-		region = data.Region.ValueString()
-	}
+	region := d.Meta().Region(ctx)
 
 	if zoneID, ok := hostedZoneIDPerRegionMap[region]; ok {
 		data.ID = types.StringValue(zoneID)
@@ -79,6 +71,6 @@ func (d *hostedZoneIDDataSource) Read(ctx context.Context, request datasource.Re
 }
 
 type hostedZoneIDDataSourceModel struct {
-	ID     types.String `tfsdk:"id"`
-	Region types.String `tfsdk:"region"`
+	framework.WithRegionModel
+	ID types.String `tfsdk:"id"`
 }

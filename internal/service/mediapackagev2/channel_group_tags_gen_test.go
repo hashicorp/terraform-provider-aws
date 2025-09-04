@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -48,11 +47,12 @@ func testAccMediaPackageV2ChannelGroup_tagsSerial(t *testing.T) {
 
 func testAccMediaPackageV2ChannelGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
@@ -238,11 +238,12 @@ func testAccMediaPackageV2ChannelGroup_tags(t *testing.T) {
 
 func testAccMediaPackageV2ChannelGroup_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
@@ -302,11 +303,12 @@ func testAccMediaPackageV2ChannelGroup_tags_null(t *testing.T) {
 
 func testAccMediaPackageV2ChannelGroup_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
@@ -354,11 +356,12 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyMap(t *testing.T) {
 
 func testAccMediaPackageV2ChannelGroup_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
@@ -436,11 +439,12 @@ func testAccMediaPackageV2ChannelGroup_tags_AddOnUpdate(t *testing.T) {
 
 func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
@@ -530,11 +534,12 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
@@ -673,11 +678,12 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 
 func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
@@ -765,11 +771,12 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Replace(t *testing
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -954,11 +961,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1120,11 +1128,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping(t *testin
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1302,11 +1311,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping(t *testing.T
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1394,11 +1404,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToProviderOnly(t *
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1485,11 +1496,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToResourceOnly(t *
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1553,11 +1565,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyResourceTag(t *test
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1613,11 +1626,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyProviderOnlyTag(t *
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1684,11 +1698,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullOverlappingResourceT
 
 func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1757,11 +1772,12 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullNonOverlappingResour
 
 func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1814,11 +1830,12 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -1913,11 +1930,12 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Add(t *testing.
 
 func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -2002,11 +2020,12 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Replace(t *test
 
 func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -2037,7 +2056,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2086,7 +2105,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2135,7 +2154,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2164,11 +2183,12 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 
 func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
@@ -2198,7 +2218,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2256,7 +2276,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2313,7 +2333,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

@@ -270,6 +270,12 @@ service/appsync:
           - any-glob-to-any-file:
               - 'internal/service/appsync/**/*'
               - 'website/**/appsync_*'
+service/arcregionswitch:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/arcregionswitch/**/*'
+              - 'website/**/arcregionswitch_*'
 service/athena:
   - any:
       - changed-files:
@@ -331,6 +337,12 @@ service/bedrockagent:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagent/**/*'
               - 'website/**/bedrockagent_*'
+service/bedrockagentcore:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bedrockagentcore/**/*'
+              - 'website/**/bedrockagentcore_*'
 service/billing:
   - any:
       - changed-files:
@@ -560,6 +572,7 @@ service/cognitoidp:
               - 'website/**/cognito_resource_*'
               - 'website/**/cognito_user*'
               - 'website/**/cognito_risk*'
+              - 'website/**/cognito_log*'
 service/cognitosync:
   - any:
       - changed-files:
@@ -926,6 +939,12 @@ service/evidently:
           - any-glob-to-any-file:
               - 'internal/service/evidently/**/*'
               - 'website/**/evidently_*'
+service/evs:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/evs/**/*'
+              - 'website/**/evs_*'
 service/finspace:
   - any:
       - changed-files:
@@ -1595,6 +1614,12 @@ service/oam:
           - any-glob-to-any-file:
               - 'internal/service/oam/**/*'
               - 'website/**/oam_*'
+service/odb:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/odb/**/*'
+              - 'website/**/odb_*'
 service/opensearch:
   - any:
       - changed-files:
@@ -1928,6 +1953,12 @@ service/s3tables:
           - any-glob-to-any-file:
               - 'internal/service/s3tables/**/*'
               - 'website/**/s3tables_*'
+service/s3vectors:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/s3vectors/**/*'
+              - 'website/**/s3vectors_*'
 service/sagemaker:
   - any:
       - changed-files:
@@ -2280,6 +2311,7 @@ service/vpc:
               - 'website/**/vpc\.*'
               - 'website/**/vpcs\.*'
               - 'website/**/vpc_block_public_access_*'
+              - 'website/**/vpc_route_server*'
 service/vpclattice:
   - any:
       - changed-files:

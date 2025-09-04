@@ -5,7 +5,6 @@ package s3tables_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -25,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -126,9 +124,14 @@ func TestAccS3TablesTable_disappears(t *testing.T) {
 				Config: testAccTableConfig_basic(rName, namespace, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.NewResourceTable, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTable, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -537,6 +540,52 @@ func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccS3TablesTable_metadata(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var table s3tables.GetTableOutput
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_s3tables_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_metadata(rName, namespace, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.name", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.type", "int"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.required", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.1.name", acctest.CtName),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.1.type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.1.required", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.2.name", names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.2.type", "timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.2.required", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{"metadata"},
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
@@ -546,48 +595,47 @@ func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3tables.FindTable(ctx, conn,
+			_, err := tfs3tables.FindTableByThreePartKey(ctx, conn,
 				rs.Primary.Attributes["table_bucket_arn"],
 				rs.Primary.Attributes[names.AttrNamespace],
 				rs.Primary.Attributes[names.AttrName],
 			)
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTable, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTable, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Tables Table %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTableExists(ctx context.Context, name string, table *s3tables.GetTableOutput) resource.TestCheckFunc {
+func testAccCheckTableExists(ctx context.Context, n string, v *s3tables.GetTableOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTable, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrNamespace] == "" || rs.Primary.Attributes[names.AttrName] == "" {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTable, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
 
-		resp, err := tfs3tables.FindTable(ctx, conn,
+		output, err := tfs3tables.FindTableByThreePartKey(ctx, conn,
 			rs.Primary.Attributes["table_bucket_arn"],
 			rs.Primary.Attributes[names.AttrNamespace],
 			rs.Primary.Attributes[names.AttrName],
 		)
+
 		if err != nil {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTable, rs.Primary.ID, err)
+			return err
 		}
 
-		*table = *resp
+		*v = *output
 
 		return nil
 	}
@@ -748,5 +796,50 @@ resource "aws_kms_key" "test2" {
 }
 
 
+`, rName, namespace, bucketName)
+}
+
+func testAccTableConfig_metadata(rName, namespace, bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "int"
+          required = true
+        }
+        field {
+          name = "name"
+          type = "string"
+        }
+        field {
+          name     = "created_at"
+          type     = "timestamp"
+          required = true
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "test" {
+  namespace        = %[2]q
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[3]q
+}
 `, rName, namespace, bucketName)
 }

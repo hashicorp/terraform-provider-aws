@@ -49,8 +49,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront KeyValueStore.
-* `id` - A unique identifier for the KeyValueStore. Same as `name`.
 * `etag` - ETag hash of the KeyValueStore.
+* `id` - A unique identifier for the KeyValueStore.
 
 ## Timeouts
 
@@ -83,4 +83,4 @@ Using `terraform import`, import CloudFront Key Value Store using the `name`. Fo
 % terraform import aws_cloudfront_key_value_store.example example_store
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2c7d66072a4a2d94c521f72818a599845afcff8fc7069e0cb0264c4da9928d51 -->
+<!-- cache-key: cdktf-0.20.8 input-1988208c5f0ba7109b42400496bc20efbe7af1368a9ef4249fd52b1b03ddd00e -->

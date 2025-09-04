@@ -11,6 +11,6 @@ import (
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfvpclattice.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfvpclattice.ServicePackage(ctx), resourceAddress, knownValue)
 }

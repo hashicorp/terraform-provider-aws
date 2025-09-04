@@ -13,15 +13,6 @@ type errorMessager interface {
 	ErrorMessage() string
 }
 
-func AsContains(err error, target any, message string) bool {
-	if errors.As(err, target) {
-		if v, ok := target.(errorMessager); ok && strings.Contains(v.ErrorMessage(), message) {
-			return true
-		}
-	}
-	return false
-}
-
 type ErrorWithErrorMessage interface {
 	error
 	errorMessager

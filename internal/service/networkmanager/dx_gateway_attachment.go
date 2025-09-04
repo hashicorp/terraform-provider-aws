@@ -34,6 +34,9 @@ import (
 
 // @FrameworkResource("aws_networkmanager_dx_gateway_attachment", name="Direct Connect Gateway Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.DirectConnectGatewayAttachment")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(importIgnore="state")
 func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directConnectGatewayAttachmentResource{}
 
@@ -45,7 +48,7 @@ func newDirectConnectGatewayAttachmentResource(context.Context) (resource.Resour
 }
 
 type directConnectGatewayAttachmentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[directConnectGatewayAttachmentResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -275,7 +278,7 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	}
 
 	// If attachment state is pending acceptance, reject the attachment before deleting.
-	if state := dxgwAttachment.Attachment.State; state == awstypes.AttachmentStatePendingAttachmentAcceptance || state == awstypes.AttachmentStatePendingTagAcceptance {
+	if state := dxgwAttachment.Attachment.State; state == awstypes.AttachmentStatePendingAttachmentAcceptance {
 		input := &networkmanager.RejectAttachmentInput{
 			AttachmentId: fwflex.StringFromFramework(ctx, data.ID),
 		}
@@ -398,6 +401,8 @@ func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networ
 		Target:         []string{},
 		Refresh:        statusDirectConnectGatewayAttachment(ctx, conn, id),
 		Timeout:        timeout,
+		Delay:          2 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 

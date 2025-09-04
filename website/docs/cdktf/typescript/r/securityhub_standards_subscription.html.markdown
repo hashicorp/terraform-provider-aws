@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
       dependsOn: [example],
       standardsArn:
         "arn:aws:securityhub:${" +
-        current.name +
+        current.region +
         "}::standards/pci-dss/v/3.2.1",
     });
   }
@@ -51,6 +51,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `standardsArn` - (Required) The ARN of a standard - see below.
 
 Currently available standards (remember to replace `${var.partition}` and `${var.region}` as appropriate):
@@ -63,13 +64,22 @@ Currently available standards (remember to replace `${var.partition}` and `${var
 | CIS AWS Foundations Benchmark v1.4.0     | `arn:${var.partition}:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.4.0`            |
 | CIS AWS Foundations Benchmark v3.0.0     | `arn:${var.partition}:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/3.0.0`            |
 | NIST SP 800-53 Rev. 5                    | `arn:${var.partition}:securityhub:${var.region}::standards/nist-800-53/v/5.0.0`                              |
-| PCI DSS                                  | `arn:${var.partition}:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
+| NIST SP 800-171 Rev. 2                   | `arn:${var.partition}:securityhub:${var.region}::standards/nist-800-171/v/2.0.0`                             |
+| PCI DSS  v3.2.1                          | `arn:${var.partition}:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
+| PCI DSS  v4.0.1                          | `arn:${var.partition}:securityhub:${var.region}::standards/pci-dss/v/4.0.1`                                  |
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of a resource that represents your subscription to a supported standard.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `delete` - (Default `3m`)
 
 ## Import
 
@@ -155,4 +165,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1dc0e821402cbe9c5d05c2a06a4c4a136423a27592e2e2dc7b6613093e3784e9 -->
+<!-- cache-key: cdktf-0.20.8 input-0c94a1879fac51a1d1ea67cf0753c02b43ce94692e8a97f63d6f3a1d9576e6a3 -->

@@ -29,7 +29,7 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_account_assignment", name="Account Assignment")
-func ResourceAccountAssignment() *schema.Resource {
+func resourceAccountAssignment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountAssignmentCreate,
 		ReadWithoutTimeout:   resourceAccountAssignmentRead,
@@ -100,7 +100,7 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 	targetType := d.Get("target_type").(string)
 
 	// We need to check if the assignment exists before creating it since the AWS SSO API doesn't prevent us from creating duplicates.
-	_, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
+	_, err := findAccountAssignmentByFivePartKey(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): already exists", principalType, principalID)
@@ -148,7 +148,7 @@ func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, 
 	permissionSetARN := idParts[4]
 	instanceARN := idParts[5]
 
-	accountAssignment, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
+	accountAssignment, err := findAccountAssignmentByFivePartKey(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
@@ -221,7 +221,7 @@ func ParseAccountAssignmentID(id string) ([]string, error) {
 	return idParts, nil
 }
 
-func FindAccountAssignment(ctx context.Context, conn *ssoadmin.Client, principalID, principalType, accountID, permissionSetARN, instanceARN string) (*awstypes.AccountAssignment, error) {
+func findAccountAssignmentByFivePartKey(ctx context.Context, conn *ssoadmin.Client, principalID, principalType, accountID, permissionSetARN, instanceARN string) (*awstypes.AccountAssignment, error) {
 	input := &ssoadmin.ListAccountAssignmentsInput{
 		AccountId:        aws.String(accountID),
 		InstanceArn:      aws.String(instanceARN),
@@ -257,9 +257,10 @@ func findAccountAssignments(
 ) ([]awstypes.AccountAssignment, error) {
 	var output []awstypes.AccountAssignment
 
-	paginator := ssoadmin.NewListAccountAssignmentsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ssoadmin.NewListAccountAssignmentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,

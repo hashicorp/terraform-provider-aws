@@ -89,6 +89,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sourceBackupIdentifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
 * `hsmType` - (Required) The type of HSM module in the cluster. Currently, `hsm1.medium` and `hsm2m.medium` are supported.
 * `subnetIds` - (Required) The IDs of subnets in which cluster will operate.
@@ -146,4 +147,4 @@ Using `terraform import`, import CloudHSM v2 Clusters using the cluster `id`. Fo
 % terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3208e14c04cfc617e88b434c8f4bbb8bbc097b0e47df7d25a430d89aae3136b1 -->
+<!-- cache-key: cdktf-0.20.8 input-ac8e07eb0fb4417fd40b3c2666ed96f5a33fc3aef13a86e70f0bed9c3fbbb795 -->

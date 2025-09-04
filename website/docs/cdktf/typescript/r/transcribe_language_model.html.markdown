@@ -110,8 +110,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `baseModelName` - (Required) Name of reference base model.
 * `inputDataConfig` - (Required) The input data config for the LanguageModel. See [Input Data Config](#input-data-config) for more details.
 * `languageCode` - (Required) The language code you selected for your language model. Refer to the [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html) page for accepted codes.
@@ -172,4 +173,4 @@ Using `terraform import`, import Transcribe LanguageModel using the `modelName`.
 % terraform import aws_transcribe_language_model.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-85a81f3a3aae68cdb05de1abee14c19e807278023470592c0e052318dc2bff47 -->
+<!-- cache-key: cdktf-0.20.8 input-43e069594446118a1c70b94ec225f1111c0c49139b254a9eef15fe8fe67a6d39 -->

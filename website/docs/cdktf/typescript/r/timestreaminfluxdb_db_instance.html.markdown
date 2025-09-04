@@ -319,6 +319,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbParameterGroupIdentifier` - (Optional) ID of the DB parameter group assigned to your DB instance. This argument is updatable. If added to an existing Timestream for InfluxDB instance or given a new value, will cause an in-place update to the instance. However, if an instance already has a value for `dbParameterGroupIdentifier`, removing `dbParameterGroupIdentifier` will cause the instance to be destroyed and recreated.
 * `dbStorageType` - (Default `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT3"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400. This argument is updatable. For a single instance, after this argument has been updated once, it can only be updated again after 6 hours have passed.
 * `deploymentType` - (Default `"SINGLE_AZ"`) Specifies whether the DB instance will be deployed as a standalone instance or with a Multi-AZ standby for high availability. Valid options are: `"SINGLE_AZ"`, `"WITH_MULTIAZ_STANDBY"`. This argument is updatable.
@@ -349,7 +350,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `availabilityZone` - Availability Zone in which the DB instance resides.
 * `endpoint` - Endpoint used to connect to InfluxDB. The default InfluxDB port is 8086.
 * `id` - ID of the Timestream for InfluxDB instance.
-* `influxAuthParametersSecretArn` - ARN of the AWS Secrets Manager secret containing the initial InfluxDB authorization parameters. The secret value is a JSON formatted key-value pair holding InfluxDB authorization values: organization, bucket, username, and password. This secret will be read by the `aws_timestreaminfluxdb_db_instance` resource in order to support importing: deleting the secret or secret values can cause errors.
+* `influxAuthParametersSecretArn` - ARN of the AWS Secrets Manager secret containing the initial InfluxDB authorization parameters. The secret value is a JSON formatted key-value pair holding InfluxDB authorization values: organization, bucket, username, and password.
 * `secondaryAvailabilityZone` - Availability Zone in which the standby instance is located when deploying with a MultiAZ standby instance.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -393,4 +394,4 @@ Using `terraform import`, import Timestream for InfluxDB Db Instance using its i
 % terraform import aws_timestreaminfluxdb_db_instance.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f033d38565c8bba8047b7dd9540c4eef21884863898cb9f03010334097c19285 -->
+<!-- cache-key: cdktf-0.20.8 input-5f3be5ff0ec9dc8e3934c3b05bfc9f47482f61aca1728783c48c3f182a4c03b2 -->

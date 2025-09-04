@@ -27,18 +27,16 @@ import (
 )
 
 // @SDKResource("aws_iam_saml_provider", name="SAML Provider")
-// @Tags(identifierAttribute="id", resourceType="SAMLProvider")
+// @Tags(identifierAttribute="arn", resourceType="SAMLProvider")
 // @Testing(tagsTest=false)
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,
 		ReadWithoutTimeout:   resourceSAMLProviderRead,
 		UpdateWithoutTimeout: resourceSAMLProviderUpdate,
 		DeleteWithoutTimeout: resourceSAMLProviderDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -210,6 +208,26 @@ func findSAMLProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func samlProviderTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListSAMLProviderTagsInput{
+		SAMLProviderArn: aws.String(identifier),
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListSAMLProviderTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
 	return output, nil

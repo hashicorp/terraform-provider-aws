@@ -45,7 +45,7 @@ func newPromptResource(_ context.Context) (resource.ResourceWithConfigure, error
 }
 
 type promptResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[promptResourceModel]
 	framework.WithImportByID
 }
 
@@ -637,6 +637,7 @@ func findPromptByID(ctx context.Context, conn *bedrockagent.Client, id string) (
 }
 
 type promptResourceModel struct {
+	framework.WithRegionModel
 	ARN                      types.String                                        `tfsdk:"arn"`
 	CreatedAt                timetypes.RFC3339                                   `tfsdk:"created_at"`
 	CustomerEncryptionKeyARN fwtypes.ARN                                         `tfsdk:"customer_encryption_key_arn"`
@@ -1083,8 +1084,8 @@ func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) diag.Diagn
 }
 
 type toolConfigurationModel struct {
-	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tool"`
 	ToolChoice fwtypes.ListNestedObjectValueOf[toolChoiceModel] `tfsdk:"tool_choice"`
+	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tool"`
 }
 
 type toolModel struct {

@@ -118,8 +118,8 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidDBInstanceStateFault](ctx, timeout,
-		func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidDBInstanceStateFault](ctx, timeout,
+		func(ctx context.Context) (any, error) {
 			return conn.RegisterDBProxyTargets(ctx, input)
 		},
 		"CREATING")

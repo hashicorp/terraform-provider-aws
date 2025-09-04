@@ -14,7 +14,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -245,8 +249,15 @@ func TestAccRoute53HealthCheck_ipv6(t *testing.T) {
 				Config: testAccHealthCheckConfig_ip("1234:5678:9abc:6811:0:0:0:4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "1234:5678:9abc:6811:0:0:0:4"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrIPAddress), knownvalue.StringExact("1234:5678:9abc:6811:0:0:0:4")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -254,8 +265,15 @@ func TestAccRoute53HealthCheck_ipv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccHealthCheckConfig_ip("1234:5678:9abc:6811:0:0:0:4"),
-				PlanOnly: true,
+				Config: testAccHealthCheckConfig_ip("1234:5678:9abc:6811:0:0:0:4"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -640,7 +658,7 @@ data "aws_region" "current" {}
 resource "aws_route53_health_check" "test" {
   type                            = "CLOUDWATCH_METRIC"
   cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.test.alarm_name
-  cloudwatch_alarm_region         = data.aws_region.current.name
+  cloudwatch_alarm_region         = data.aws_region.current.region
   insufficient_data_health_status = "Healthy"
 }
 `
@@ -664,7 +682,7 @@ data "aws_region" "current" {}
 resource "aws_route53_health_check" "test" {
   type                            = "CLOUDWATCH_METRIC"
   cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.test.alarm_name
-  cloudwatch_alarm_region         = data.aws_region.current.name
+  cloudwatch_alarm_region         = data.aws_region.current.region
   insufficient_data_health_status = "Healthy"
 
   triggers = {

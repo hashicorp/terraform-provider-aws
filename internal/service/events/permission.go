@@ -127,7 +127,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	policyStatement, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (*permissionPolicyStatement, error) {
 		return findPermissionByTwoPartKey(ctx, conn, eventBusName, statementID)
 	})
 
@@ -140,8 +140,6 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Permission (%s): %s", d.Id(), err)
 	}
-
-	policyStatement := outputRaw.(*permissionPolicyStatement)
 
 	d.Set(names.AttrAction, policyStatement.Action)
 	if err := d.Set(names.AttrCondition, flattenPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {

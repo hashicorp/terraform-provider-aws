@@ -160,7 +160,7 @@ func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VerificationCertificate = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.RegisterCACertificate(ctx, input)
 	})
 
@@ -242,7 +242,7 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateCACertificate(ctx, input)
 		})
 

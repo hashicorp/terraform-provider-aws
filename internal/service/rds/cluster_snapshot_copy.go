@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -30,6 +29,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,8 +38,8 @@ import (
 // @FrameworkResource("aws_rds_cluster_snapshot_copy", name="Cluster Snapshot Copy")
 // @Tags(identifierAttribute="db_cluster_snapshot_arn")
 // @Testing(tagsTest=false)
-func newResourceClusterSnapshotCopy(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceClusterSnapshotCopy{}
+func newClusterSnapshotCopyResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &clusterSnapshotCopyResource{}
 
 	r.SetDefaultCreateTimeout(20 * time.Minute)
 
@@ -50,12 +50,13 @@ const (
 	ResNameClusterSnapshotCopy = "Cluster Snapshot Copy"
 )
 
-type resourceClusterSnapshotCopy struct {
-	framework.ResourceWithConfigure
+type clusterSnapshotCopyResource struct {
+	framework.ResourceWithModel[clusterSnapshotCopyResourceModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceClusterSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *clusterSnapshotCopyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
@@ -114,6 +115,7 @@ func (r *resourceClusterSnapshotCopy) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"shared_accounts": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
 			},
@@ -168,8 +170,8 @@ func (r *resourceClusterSnapshotCopy) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceClusterSnapshotCopy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data resourceClusterSnapshotCopyData
+func (r *clusterSnapshotCopyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data clusterSnapshotCopyResourceModel
 	conn := r.Meta().RDSClient(ctx)
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -258,8 +260,8 @@ func (r *resourceClusterSnapshotCopy) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceClusterSnapshotCopy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resourceClusterSnapshotCopyData
+func (r *clusterSnapshotCopyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data clusterSnapshotCopyResourceModel
 	conn := r.Meta().RDSClient(ctx)
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -307,8 +309,8 @@ func (r *resourceClusterSnapshotCopy) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceClusterSnapshotCopy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var old, new resourceClusterSnapshotCopyData
+func (r *clusterSnapshotCopyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new clusterSnapshotCopyResourceModel
 	conn := r.Meta().RDSClient(ctx)
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
@@ -353,8 +355,8 @@ func (r *resourceClusterSnapshotCopy) Update(ctx context.Context, req resource.U
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func (r *resourceClusterSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data resourceClusterSnapshotCopyData
+func (r *clusterSnapshotCopyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data clusterSnapshotCopyResourceModel
 	conn := r.Meta().RDSClient(ctx)
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -382,30 +384,27 @@ func (r *resourceClusterSnapshotCopy) Delete(ctx context.Context, req resource.D
 	}
 }
 
-func (r *resourceClusterSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-type resourceClusterSnapshotCopyData struct {
-	AllocatedStorage                  types.Int64  `tfsdk:"allocated_storage"`
-	CopyTags                          types.Bool   `tfsdk:"copy_tags"`
-	DBClusterSnapshotARN              types.String `tfsdk:"db_cluster_snapshot_arn"`
-	DestinationRegion                 types.String `tfsdk:"destination_region"`
-	Engine                            types.String `tfsdk:"engine"`
-	EngineVersion                     types.String `tfsdk:"engine_version"`
-	ID                                types.String `tfsdk:"id"`
-	KMSKeyID                          types.String `tfsdk:"kms_key_id"`
-	LicenseModel                      types.String `tfsdk:"license_model"`
-	PresignedURL                      types.String `tfsdk:"presigned_url"`
-	SharedAccounts                    types.Set    `tfsdk:"shared_accounts"`
-	SnapshotType                      types.String `tfsdk:"snapshot_type"`
-	SourceDBClusterSnapshotIdentifier types.String `tfsdk:"source_db_cluster_snapshot_identifier"`
-	StorageEncrypted                  types.Bool   `tfsdk:"storage_encrypted"`
-	StorageType                       types.String `tfsdk:"storage_type"`
-	Tags                              tftags.Map   `tfsdk:"tags"`
-	TagsAll                           tftags.Map   `tfsdk:"tags_all"`
-	TargetDBClusterSnapshotIdentifier types.String `tfsdk:"target_db_cluster_snapshot_identifier"`
-	VPCID                             types.String `tfsdk:"vpc_id"`
+type clusterSnapshotCopyResourceModel struct {
+	framework.WithRegionModel
+	AllocatedStorage                  types.Int64         `tfsdk:"allocated_storage"`
+	CopyTags                          types.Bool          `tfsdk:"copy_tags"`
+	DBClusterSnapshotARN              types.String        `tfsdk:"db_cluster_snapshot_arn"`
+	DestinationRegion                 types.String        `tfsdk:"destination_region"`
+	Engine                            types.String        `tfsdk:"engine"`
+	EngineVersion                     types.String        `tfsdk:"engine_version"`
+	ID                                types.String        `tfsdk:"id"`
+	KMSKeyID                          types.String        `tfsdk:"kms_key_id"`
+	LicenseModel                      types.String        `tfsdk:"license_model"`
+	PresignedURL                      types.String        `tfsdk:"presigned_url"`
+	SharedAccounts                    fwtypes.SetOfString `tfsdk:"shared_accounts"`
+	SnapshotType                      types.String        `tfsdk:"snapshot_type"`
+	SourceDBClusterSnapshotIdentifier types.String        `tfsdk:"source_db_cluster_snapshot_identifier"`
+	StorageEncrypted                  types.Bool          `tfsdk:"storage_encrypted"`
+	StorageType                       types.String        `tfsdk:"storage_type"`
+	Tags                              tftags.Map          `tfsdk:"tags"`
+	TagsAll                           tftags.Map          `tfsdk:"tags_all"`
+	TargetDBClusterSnapshotIdentifier types.String        `tfsdk:"target_db_cluster_snapshot_identifier"`
+	VPCID                             types.String        `tfsdk:"vpc_id"`
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }

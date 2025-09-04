@@ -49,6 +49,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compute_config` - (Required) Configuration block for provisioning an DMS Serverless replication.
 * `start_replication` - (Optional) Whether to run or stop the serverless replication, default is false.
 * `replication_config_identifier` - (Required) Unique identifier that you want to use to create the config.
@@ -119,4 +120,4 @@ Using `terraform import`, import a replication config using the `arn`. For examp
 % terraform import aws_dms_replication_config.example arn:aws:dms:us-east-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b7a7a8ff3d90aeafeeed28a3176b3d1eca746bb4d693423c343ad7af62c8898e -->
+<!-- cache-key: cdktf-0.20.8 input-38ce7f7b19d17fd40cc0a3063a9b6f899694b9b55417bad2cf77ebab64adbcee -->

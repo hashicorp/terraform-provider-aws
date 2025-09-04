@@ -138,7 +138,7 @@ func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, me
 	const (
 		timeout = 2 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUse](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUse](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteNamespace(ctx, &servicediscovery.DeleteNamespaceInput{
 			Id: aws.String(d.Id()),
 		})

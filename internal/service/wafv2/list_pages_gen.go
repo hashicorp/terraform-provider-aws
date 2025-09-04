@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 )
 
-func listAPIKeysPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListAPIKeysInput, fn func(*wafv2.ListAPIKeysOutput, bool) bool) error {
+func listAPIKeysPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListAPIKeysInput, fn func(*wafv2.ListAPIKeysOutput, bool) bool, optFns ...func(*wafv2.Options)) error {
 	for {
-		output, err := conn.ListAPIKeys(ctx, input)
+		output, err := conn.ListAPIKeys(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -25,9 +25,9 @@ func listAPIKeysPages(ctx context.Context, conn *wafv2.Client, input *wafv2.List
 	}
 	return nil
 }
-func listIPSetsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListIPSetsInput, fn func(*wafv2.ListIPSetsOutput, bool) bool) error {
+func listIPSetsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListIPSetsInput, fn func(*wafv2.ListIPSetsOutput, bool) bool, optFns ...func(*wafv2.Options)) error {
 	for {
-		output, err := conn.ListIPSets(ctx, input)
+		output, err := conn.ListIPSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -41,9 +41,9 @@ func listIPSetsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListI
 	}
 	return nil
 }
-func listRegexPatternSetsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListRegexPatternSetsInput, fn func(*wafv2.ListRegexPatternSetsOutput, bool) bool) error {
+func listRegexPatternSetsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListRegexPatternSetsInput, fn func(*wafv2.ListRegexPatternSetsOutput, bool) bool, optFns ...func(*wafv2.Options)) error {
 	for {
-		output, err := conn.ListRegexPatternSets(ctx, input)
+		output, err := conn.ListRegexPatternSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -57,9 +57,9 @@ func listRegexPatternSetsPages(ctx context.Context, conn *wafv2.Client, input *w
 	}
 	return nil
 }
-func listRuleGroupsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListRuleGroupsInput, fn func(*wafv2.ListRuleGroupsOutput, bool) bool) error {
+func listRuleGroupsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListRuleGroupsInput, fn func(*wafv2.ListRuleGroupsOutput, bool) bool, optFns ...func(*wafv2.Options)) error {
 	for {
-		output, err := conn.ListRuleGroups(ctx, input)
+		output, err := conn.ListRuleGroups(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -73,9 +73,9 @@ func listRuleGroupsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.L
 	}
 	return nil
 }
-func listWebACLsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListWebACLsInput, fn func(*wafv2.ListWebACLsOutput, bool) bool) error {
+func listWebACLsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListWebACLsInput, fn func(*wafv2.ListWebACLsOutput, bool) bool, optFns ...func(*wafv2.Options)) error {
 	for {
-		output, err := conn.ListWebACLs(ctx, input)
+		output, err := conn.ListWebACLs(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

@@ -27,8 +27,8 @@ import (
 )
 
 // @FrameworkResource("aws_rds_instance_state", name="Instance State")
-func newResourceInstanceState(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceInstanceState{}
+func newInstanceStateResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &instanceStateResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -40,13 +40,13 @@ const (
 	ResNameInstanceState = "Instance State"
 )
 
-type resourceInstanceState struct {
-	framework.ResourceWithConfigure
+type instanceStateResource struct {
+	framework.ResourceWithModel[instanceStateResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 }
 
-func (r *resourceInstanceState) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *instanceStateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrIdentifier: schema.StringAttribute{
@@ -71,10 +71,10 @@ func (r *resourceInstanceState) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func (r *resourceInstanceState) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *instanceStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var plan resourceInstanceStateData
+	var plan instanceStateResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -96,10 +96,10 @@ func (r *resourceInstanceState) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceInstanceState) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *instanceStateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var state resourceInstanceStateData
+	var state instanceStateResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -123,10 +123,10 @@ func (r *resourceInstanceState) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceInstanceState) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *instanceStateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var plan, state resourceInstanceStateData
+	var plan, state instanceStateResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -148,7 +148,7 @@ func (r *resourceInstanceState) Update(ctx context.Context, req resource.UpdateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceInstanceState) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *instanceStateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), req, resp)
 }
 
@@ -172,7 +172,8 @@ func updateInstanceState(ctx context.Context, conn *rds.Client, id string, curre
 	return nil
 }
 
-type resourceInstanceStateData struct {
+type instanceStateResourceModel struct {
+	framework.WithRegionModel
 	Identifier types.String   `tfsdk:"identifier"`
 	State      types.String   `tfsdk:"state"`
 	Timeouts   timeouts.Value `tfsdk:"timeouts"`

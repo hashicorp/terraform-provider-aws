@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Billing Group.
 * `properties` - (Optional) The Billing Group properties. Defined below.
 * `tags` - (Optional) Key-value mapping of resource tags
@@ -90,4 +91,4 @@ Using `terraform import`, import IoT Billing Groups using the name. For example:
 % terraform import aws_iot_billing_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dab27541300c49c7b325d16500be60de674e0e66417b90b7bc7f76b19ed33b6d -->
+<!-- cache-key: cdktf-0.20.8 input-1ff5ae106ed93553777fbd99df00288e2df9176a2ff8cc12b46ac5fc05bb4d19 -->

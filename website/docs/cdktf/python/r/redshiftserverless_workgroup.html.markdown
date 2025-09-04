@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `base_capacity` - (Optional) The base data warehouse capacity of the workgroup in Redshift Processing Units (RPUs).
 * `price_performance_target` - (Optional) Price-performance scaling for the workgroup. See `Price Performance Target` below.
 * `config_parameter` - (Optional) An array of parameters to set for more control over a serverless database. See `Config Parameter` below.
@@ -125,4 +126,4 @@ Using `terraform import`, import Redshift Serverless Workgroups using the `workg
 % terraform import aws_redshiftserverless_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ecde67a05bc334d3a173c0fb7df74dd26055492a6c86192a882e24aeb5cd5c16 -->
+<!-- cache-key: cdktf-0.20.8 input-cda94414083962fde0d6563f0cbfdc95d13066eb0e0d5cf30249c8661cbac6ac -->

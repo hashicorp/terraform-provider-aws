@@ -35,13 +35,17 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `arn` – (Required) ARN of the resource, an S3 path.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `arn` - (Required) ARN of the resource, an S3 path.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `hybrid_access_enabled` - Flag to enable AWS LakeFormation hybrid access permission mode.
 * `last_modified` - Date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-* `role_arn` – Role that the resource was registered with.
+* `role_arn` - Role that the resource was registered with.
+* `with_federation` - Whether the resource is a federated resource.
+* `with_privileged_access` - Boolean to grant the calling principal the permissions to perform all supported Lake Formation operations on the registered data location.
 
-<!-- cache-key: cdktf-0.20.8 input-0c1a85f7290c6bc89a9ea51efd00a0bf4a23cdd113bd8e7bbd6cccf5fda51901 -->
+<!-- cache-key: cdktf-0.20.8 input-ae5e266ce7658b53bc3b0f2f3f31decab2ab8669c320beca4cc8359a1b75ad67 -->

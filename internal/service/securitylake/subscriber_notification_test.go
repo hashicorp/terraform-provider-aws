@@ -21,11 +21,14 @@ import (
 
 func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
 	subscriberResourceName := "aws_securitylake_subscriber.test"
 	var subscriber types.SubscriberResource
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -63,9 +66,12 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 
 func testAccSubscriberNotification_https_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -108,9 +114,12 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 
 func testAccSubscriberNotification_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -138,6 +147,10 @@ func testAccSubscriberNotification_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -214,9 +227,12 @@ func testAccSubscriberNotification_update(t *testing.T) {
 
 func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -274,9 +290,12 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 
 func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

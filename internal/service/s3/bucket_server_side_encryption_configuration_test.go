@@ -524,6 +524,7 @@ func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKMSMa
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -548,6 +549,7 @@ func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKMSMa
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -611,6 +613,7 @@ func testAccBucketServerSideEncryptionConfigurationConfig_applySSEByDefaultKeyEn
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -662,6 +665,7 @@ resource "aws_s3_directory_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {

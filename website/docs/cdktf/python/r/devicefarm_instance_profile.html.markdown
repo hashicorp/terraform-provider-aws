@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the instance profile.
 * `exclude_app_packages_from_cleanup` - (Optional) An array of strings that specifies the list of app packages that should not be cleaned up from the device after a test run.
 * `name` - (Required) The name for the instance profile.
@@ -76,4 +77,4 @@ Using `terraform import`, import DeviceFarm Instance Profiles using their ARN. F
 % terraform import aws_devicefarm_instance_profile.example arn:aws:devicefarm:us-west-2:123456789012:instanceprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d86437266b415c4418b80940b5f7ab5ae78552f885f204fd832d7ebe02557468 -->
+<!-- cache-key: cdktf-0.20.8 input-24ec4fafc5151e74a30586bafa68a9ce05a47b6db1f1a77b52779dddcee72f3d -->

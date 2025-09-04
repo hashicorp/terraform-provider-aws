@@ -24,16 +24,18 @@ import (
 )
 
 // @SDKResource("aws_organizations_policy_attachment", name="Policy Attachment")
+// @IdentityAttribute("policy_id")
+// @IdentityAttribute("target_id")
+// @ImportIDHandler("policyAttachmentImportID")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="6.4.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
 		UpdateWithoutTimeout: resourcePolicyAttachmentUpdate,
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"policy_id": {
@@ -61,13 +63,13 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	policyID := d.Get("policy_id").(string)
 	targetID := d.Get("target_id").(string)
 	id := policyAttachmentCreateResourceID(targetID, policyID)
-	input := &organizations.AttachPolicyInput{
+	input := organizations.AttachPolicyInput{
 		PolicyId: aws.String(policyID),
 		TargetId: aws.String(targetID),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (any, error) {
-		return conn.AttachPolicy(ctx, input)
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func(ctx context.Context) (any, error) {
+		return conn.AttachPolicy(ctx, &input)
 	})
 
 	if err != nil {
@@ -83,12 +85,10 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	targetID, policyID, err := policyAttachmentParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	targetID := d.Get("target_id").(string)
+	policyID := d.Get("policy_id").(string)
 
-	_, err = findPolicyAttachmentByTwoPartKey(ctx, conn, targetID, policyID)
+	_, err := findPolicyAttachmentByTwoPartKey(ctx, conn, targetID, policyID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Organizations Policy Attachment %s not found, removing from state", d.Id())
@@ -123,13 +123,10 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		return nil
 	}
 
-	targetID, policyID, err := policyAttachmentParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	targetID := d.Get("target_id").(string)
+	policyID := d.Get("policy_id").(string)
 
-	log.Printf("[DEBUG] Deleting Organizations Policy Attachment: %s", d.Id())
-	_, err = conn.DetachPolicy(ctx, &organizations.DetachPolicyInput{
+	_, err := conn.DetachPolicy(ctx, &organizations.DetachPolicyInput{
 		PolicyId: aws.String(policyID),
 		TargetId: aws.String(targetID),
 	})
@@ -152,16 +149,6 @@ func policyAttachmentCreateResourceID(targetID, policyID string) string {
 	id := strings.Join(parts, policyAttachmentResourceIDSeparator)
 
 	return id
-}
-
-func policyAttachmentParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TARGETID%[2]sPOLICYID", id, policyAttachmentResourceIDSeparator)
 }
 
 func findPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.Client, targetID, policyID string) (*awstypes.PolicyTargetSummary, error) {
@@ -210,4 +197,24 @@ func findPolicyTargets(ctx context.Context, conn *organizations.Client, input *o
 	}
 
 	return output, nil
+}
+
+type policyAttachmentImportID struct{}
+
+func (policyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return policyAttachmentCreateResourceID(d.Get("target_id").(string), d.Get("policy_id").(string))
+}
+
+func (policyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
+	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		result := map[string]string{
+			"target_id": parts[0],
+			"policy_id": parts[1],
+		}
+		return id, result, nil
+	}
+
+	return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected TARGETID%[2]sPOLICYID", id, policyAttachmentResourceIDSeparator)
 }

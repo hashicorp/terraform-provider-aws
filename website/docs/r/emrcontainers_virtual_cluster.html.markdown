@@ -35,8 +35,9 @@ resource "aws_emrcontainers_virtual_cluster" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `container_provider` - (Required) Configuration block for the container provider associated with your cluster.
-* `name` – (Required) Name of the virtual cluster.
+* `name` - (Required) Name of the virtual cluster.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### container_provider Arguments

@@ -276,6 +276,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpcId` - (Required) The ID of the VPC in which the endpoint will be used.
 * `autoAccept` - (Optional) Accept the VPC endpoint (the VPC endpoint and service need to be in the same AWS account).
 * `policy` - (Optional) A policy to attach to the endpoint that controls access to the service. This is a JSON formatted string. Defaults to full access. All `Gateway` and some `Interface` endpoints support policies - see the [relevant AWS documentation](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints-access.html) for more details. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
@@ -304,7 +305,7 @@ If no security groups are specified, the VPC's [default security group](https://
 
 * `ipv4` - (Optional) The IPv4 address to assign to the endpoint network interface in the subnet. You must provide an IPv4 address if the VPC endpoint supports IPv4.
 * `ipv6` - (Optional) The IPv6 address to assign to the endpoint network interface in the subnet. You must provide an IPv6 address if the VPC endpoint supports IPv6.
-* `subnet` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnetIds` argument.
+* `subnetId` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnetIds` argument.
 
 ## Timeouts
 
@@ -362,4 +363,4 @@ Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For 
 % terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3a77f977a389df0cb617ede4085afa1ca5f0717cf173d7df5bc143a45f162bd1 -->
+<!-- cache-key: cdktf-0.20.8 input-1e84ab9698aeadfe7a107a4819bb5ee38e42da7d0593dac8f091709c33f57289 -->

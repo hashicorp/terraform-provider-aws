@@ -11,12 +11,15 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
+	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
@@ -82,8 +85,7 @@ func deleteFrameworkResource(
 			Schema: schemaResp.Schema,
 		}
 
-		err = stateFunc(ctx, &state, rs.Primary)
-		if err != nil {
+		if err := stateFunc(ctx, &state, rs.Primary); err != nil {
 			return err
 		}
 
@@ -91,7 +93,35 @@ func deleteFrameworkResource(
 		resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 		if response.Diagnostics.HasError() {
-			return fwdiag.DiagnosticsError(response.Diagnostics)
+			err := fwdiag.DiagnosticsError(response.Diagnostics)
+			if errs.Contains(err, "Value Conversion Error") {
+				// Hack for per-resource Region override.
+				// Inject a top-level region attribute into the schema and retry.
+				schemaResp.Schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
+					Optional: true,
+					Computed: true,
+				}
+				state := tfsdk.State{
+					Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+					Schema: schemaResp.Schema,
+				}
+
+				if err := stateFunc(ctx, &state, rs.Primary); err != nil {
+					return err
+				}
+
+				response := fwresource.DeleteResponse{}
+				resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
+
+				err = nil
+				if response.Diagnostics.HasError() {
+					err = fwdiag.DiagnosticsError(response.Diagnostics)
+				}
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

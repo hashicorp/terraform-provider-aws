@@ -31,7 +31,7 @@ resource "aws_eip" "example" {
 
 resource "aws_shield_protection" "example" {
   name         = "example-protection"
-  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.example.id}"
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.example.id}"
 }
 
 resource "aws_route53_health_check" "example" {

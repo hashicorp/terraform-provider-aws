@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	ErrorCodeAccessDenied = "AccessDeniedException"
+	errCodeAccessDenied = "AccessDeniedException"
 )
 
 func isResourceMissing(err error) bool {

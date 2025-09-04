@@ -25,6 +25,7 @@ resource "aws_sagemaker_space" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_id` - (Required) The ID of the associated Domain.
 * `ownership_settings` - (Optional) A collection of ownership settings. Required if `space_sharing_settings` is set. See [`ownership_settings` Block](#ownership_settings-block) below.
 * `space_display_name` - (Optional) The name of the space that appears in the SageMaker AI Studio UI.

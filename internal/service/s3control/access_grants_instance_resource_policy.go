@@ -35,7 +35,7 @@ func newAccessGrantsInstanceResourcePolicyResource(context.Context) (resource.Re
 }
 
 type accessGrantsInstanceResourcePolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantsInstanceResourcePolicyResourceModel]
 	framework.WithImportByID
 }
 
@@ -220,6 +220,7 @@ func findAccessGrantsInstanceResourcePolicy(ctx context.Context, conn *s3control
 }
 
 type accessGrantsInstanceResourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	AccountID types.String      `tfsdk:"account_id"`
 	ID        types.String      `tfsdk:"id"`
 	Policy    fwtypes.IAMPolicy `tfsdk:"policy"`

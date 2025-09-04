@@ -51,8 +51,9 @@ resource "aws_ssmcontacts_contact_channel" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `contact_id` - (Required) Amazon Resource Name (ARN) of the AWS SSM Contact that the contact channel belongs to.
 - `delivery_address` - (Required) Block that contains contact engagement details. See details below.
 - `name` - (Required) Name of the contact channel. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.

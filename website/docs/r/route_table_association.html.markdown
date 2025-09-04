@@ -31,6 +31,7 @@ resource "aws_route_table_association" "b" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnet_id` - (Optional) The subnet ID to create an association. Conflicts with `gateway_id`.
 * `gateway_id` - (Optional) The gateway ID to create an association. Conflicts with `subnet_id`.
 * `route_table_id` - (Required) The ID of the routing table to associate with.

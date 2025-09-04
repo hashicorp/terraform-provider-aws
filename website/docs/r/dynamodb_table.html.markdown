@@ -104,6 +104,39 @@ resource "aws_dynamodb_table" "example" {
 }
 ```
 
+#### Global Tables with Multi-Region Strong Consistency
+
+A global table configured for Multi-Region strong consistency (MRSC) provides the ability to perform a strongly consistent read with multi-Region scope. Performing a strongly consistent read on an MRSC table ensures you're always reading the latest version of an item, irrespective of the Region in which you're performing the read.
+
+**Note** Please see detailed information, restrictions, caveats etc on the [AWS Support Page](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/multi-region-strong-consistency-gt.html).
+
+Consistency Mode (`consistency_mode`) is a new argument on the embedded `replica` that allows you to configure consistency mode for Global Tables.
+
+```terraform
+resource "aws_dynamodb_table" "example" {
+  name             = "example"
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name      = "us-east-2"
+    consistency_mode = "STRONG"
+  }
+
+  replica {
+    region_name      = "us-west-2"
+    consistency_mode = "STRONG"
+  }
+}
+```
+
 ### Replica Tagging
 
 You can manage global table replicas' tags in various ways. This example shows using `replica.*.propagate_tags` for the first replica and the `aws_dynamodb_tag` resource for the other.
@@ -159,7 +192,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_tag" "example" {
-  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.name, data.aws_region.alternate.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.name)
   key          = "Architect"
   value        = "Gigi"
 }
@@ -175,6 +208,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `billing_mode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `PROVISIONED` and `PAY_PER_REQUEST`. Defaults to `PROVISIONED`.
 * `deletion_protection_enabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
 * `import_table` - (Optional) Import Amazon S3 data into a new table. See below.
@@ -263,6 +297,7 @@ The following arguments are optional:
   **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
   **Note:** Changing this value will recreate the replica.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
+* `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the replica. Default is `false`.
 * `propagate_tags` - (Optional) Whether to propagate the global table's tags to a replica.
   Default is `false`.
   Changes to tags only move in one direction: from global (source) to replica.
@@ -270,6 +305,7 @@ The following arguments are optional:
   Tag changes on the global table are propagated to replicas.
   Changing from `true` to `false` on a subsequent `apply` leaves replica tags as-is and no longer manages them.
 * `region_name` - (Required) Region name of the replica.
+* `consistency_mode` - (Optional) Whether this global table will be using `STRONG` consistency mode or `EVENTUAL` consistency mode. Default value is `EVENTUAL`.
 
 ### `server_side_encryption`
 

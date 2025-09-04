@@ -30,16 +30,14 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TrustStore")
 // @Testing(importIgnore="ca_certificates_bundle_s3_bucket;ca_certificates_bundle_s3_key")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustStoreCreate,
 		ReadWithoutTimeout:   resourceTrustStoreRead,
 		UpdateWithoutTimeout: resourceTrustStoreUpdate,
 		DeleteWithoutTimeout: resourceTrustStoreDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
@@ -136,7 +134,7 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(output.TrustStores[0].TrustStoreArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findTrustStoreByARN(ctx, conn, d.Id())
 	})
 
@@ -222,7 +220,7 @@ func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting ELBv2 Trust Store: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.TrustStoreInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.TrustStoreInUseException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteTrustStore(ctx, &elasticloadbalancingv2.DeleteTrustStoreInput{
 			TrustStoreArn: aws.String(d.Id()),
 		})
@@ -357,7 +355,7 @@ func waitForNoTrustStoreAssociations(ctx context.Context, conn *elasticloadbalan
 		TrustStoreArn: aws.String(arn),
 	}
 
-	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
 		associations, err := findTrustStoreAssociations(ctx, conn, input)
 
 		if tfresource.NotFound(err) {

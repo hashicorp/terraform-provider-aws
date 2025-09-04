@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,11 +18,12 @@ import (
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
@@ -201,11 +201,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags(t *testing.T) {
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
@@ -263,11 +264,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_null(t *testing.T) {
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
@@ -313,11 +315,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyMap(t *testing.T) 
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
@@ -393,11 +396,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_AddOnUpdate(t *testing.
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
@@ -483,11 +487,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnCreate(t *te
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
@@ -622,11 +627,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Add(t
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
@@ -712,11 +718,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Repla
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -893,11 +900,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnl
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1053,11 +1061,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nonOverlapp
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1229,11 +1238,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_overlapping
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1319,11 +1329,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToPro
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1408,11 +1419,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToRes
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1474,11 +1486,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyResour
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1532,11 +1545,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyProvid
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1601,11 +1615,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullOverlap
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1672,11 +1687,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullNonOver
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1727,11 +1743,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnCreate(t 
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1824,11 +1841,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Ad
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1911,11 +1929,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Re
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -1946,7 +1965,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1995,7 +2014,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2044,7 +2063,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2073,11 +2092,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalogappregistry.GetAttributeGroupOutput
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
@@ -2107,7 +2127,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Reso
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2165,7 +2185,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Reso
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2222,7 +2242,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Reso
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

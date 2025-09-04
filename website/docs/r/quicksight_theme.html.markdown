@@ -49,15 +49,16 @@ resource "aws_quicksight_theme" "example" {
 
 The following arguments are required:
 
-* `theme_id` - (Required, Forces new resource) Identifier of the theme.
 * `base_theme_id` - (Required) The ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight. For a list of the starting themes, use ListThemes or choose Themes from within an analysis.
-* `name` - (Required) Display name of the theme.
 * `configuration` - (Required) The theme configuration, which contains the theme display properties. See [configuration](#configuration).
+* `name` - (Required) Display name of the theme.
+* `theme_id` - (Required, Forces new resource) Identifier of the theme.
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `permissions` - (Optional) A set of resource permissions on the theme. Maximum of 64 items. See [permissions](#permissions).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_description` - (Optional) A description of the current theme version being created/updated.
 

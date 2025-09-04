@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,11 +18,12 @@ import (
 
 func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
@@ -221,11 +221,12 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
@@ -286,11 +287,12 @@ func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
@@ -339,11 +341,12 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
@@ -424,11 +427,12 @@ func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
@@ -524,11 +528,12 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 
 func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
@@ -673,11 +678,12 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 
 func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
@@ -768,11 +774,12 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *t
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -969,11 +976,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1144,11 +1152,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1335,11 +1344,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1430,11 +1440,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOn
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1524,11 +1535,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOn
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1595,11 +1607,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1658,11 +1671,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyT
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1730,11 +1744,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingRes
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1804,11 +1819,12 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlapping
 
 func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1864,11 +1880,12 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testin
 
 func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -1966,11 +1983,12 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *te
 
 func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -2058,11 +2076,12 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t
 
 func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -2093,7 +2112,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2142,7 +2161,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2191,7 +2210,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2220,11 +2239,12 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 
 func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
@@ -2254,7 +2274,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2312,7 +2332,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2369,7 +2389,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

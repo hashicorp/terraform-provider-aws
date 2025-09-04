@@ -3,9 +3,9 @@ package kms
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
@@ -27,6 +27,7 @@ func listTags(ctx context.Context, conn *kms.Client, identifier string, optFns .
 	input := kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := kms.NewListResourceTagsPaginator(conn, &input)
@@ -34,19 +35,17 @@ func listTags(ctx context.Context, conn *kms.Client, identifier string, optFns .
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if tfawserr.ErrCodeEquals(err, "NotFoundException") {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
-			}
+			})
 		}
 
 		if err != nil {
-			return tftags.New(ctx, nil), err
+			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil
@@ -58,7 +57,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).KMSClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -136,7 +135,7 @@ func updateTags(ctx context.Context, conn *kms.Client, identifier string, oldTag
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -151,13 +150,13 @@ func updateTags(ctx context.Context, conn *kms.Client, identifier string, oldTag
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
 		if err := waitTagsPropagated(ctx, conn, identifier, newTags, optFns...); err != nil {
-			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -178,7 +177,7 @@ func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags t
 		names.AttrTags: tags,
 	})
 
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := listTags(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -186,7 +185,7 @@ func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags t
 		}
 
 		if err != nil {
-			return false, err
+			return false, smarterr.NewError(err)
 		}
 
 		if inContext, ok := tftags.FromContext(ctx); ok {

@@ -174,6 +174,33 @@ func TestValidAccountID(t *testing.T) {
 	}
 }
 
+func TestValidRegionName(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"mx-central-1",
+		"us-isof-south-1",
+	}
+	for _, v := range validNames {
+		_, errors := ValidRegionName(v, "region")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid AWS Region: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"invalid",
+		"k@rea-central-1",
+		"ca-west-123",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidRegionName(v, "region")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid AWS Region", v)
+		}
+	}
+}
+
 func TestValidARN(t *testing.T) {
 	t.Parallel()
 
@@ -935,6 +962,42 @@ func TestMapKeysAre(t *testing.T) {
 
 			diags := f(testCase.value, cty.Path{})
 			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestCaseInsensitiveMatchDeprecation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		value    any
+		wantDiag bool
+	}{
+		{
+			name:  "exact match",
+			value: "foo",
+		},
+		{
+			name:  "no match",
+			value: "baz",
+		},
+		{
+			name:     "case insensitive match",
+			value:    "FOO",
+			wantDiag: true,
+		},
+	}
+
+	f := CaseInsensitiveMatchDeprecation([]string{"foo", "bar"})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(tt.value, cty.Path{})
+			if got, want := len(diags) > 0, tt.wantDiag; got != want {
 				t.Errorf("got = %v, want = %v", got, want)
 			}
 		})
