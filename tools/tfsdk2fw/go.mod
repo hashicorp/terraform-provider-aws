@@ -285,6 +285,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.67.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.63.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.32.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.0 // indirect
@@ -345,7 +346,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/run v1.0.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
