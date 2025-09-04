@@ -312,32 +312,41 @@ func (r *managedLoginBrandingResource) Update(ctx context.Context, request resou
 		return
 	}
 
-	// Updated settings work in a PATCH model: https://docs.aws.amazon.com/cognito/latest/developerguide/managed-login-brandingeditor.html#branding-designer-api.
-	var patch string
-	var err error
-	if oldSettings, newSettings := fwflex.StringValueFromFramework(ctx, old.Settings), fwflex.StringValueFromFramework(ctx, new.Settings); oldSettings != "" {
-		patch, err = tfjson.CreateMergePatchFromStrings(oldSettings, newSettings)
+	if oldSettings, newSettings := fwflex.StringValueFromFramework(ctx, old.Settings), fwflex.StringValueFromFramework(ctx, new.Settings); newSettings != oldSettings {
+		if oldSettings == "" {
+			var err error
+			input.Settings, err = tfsmithy.DocumentFromJSONString(newSettings, document.NewLazyDocument)
 
-		if err != nil {
-			response.Diagnostics.AddError("creating JSON merge patch", err.Error())
+			if err != nil {
+				response.Diagnostics.AddError("creating Smithy document", err.Error())
 
-			return
+				return
+			}
+
+			input.UseCognitoProvidedValues = false
+		} else if newSettings != "" {
+			// Updated settings work in a PATCH model: https://docs.aws.amazon.com/cognito/latest/developerguide/managed-login-brandingeditor.html#branding-designer-api.
+			patch, err := tfjson.CreateMergePatchFromStrings(oldSettings, newSettings)
+
+			if err != nil {
+				response.Diagnostics.AddError("creating JSON merge patch", err.Error())
+
+				return
+			}
+
+			input.Settings, err = tfsmithy.DocumentFromJSONString(patch, document.NewLazyDocument)
+
+			if err != nil {
+				response.Diagnostics.AddError("creating Smithy document", err.Error())
+
+				return
+			}
+
+			input.UseCognitoProvidedValues = false
 		}
-		input.UseCognitoProvidedValues = false
-	} else if newSettings != "" {
-		patch = newSettings
-		input.UseCognitoProvidedValues = false
 	}
 
-	input.Settings, err = tfsmithy.DocumentFromJSONString(patch, document.NewLazyDocument)
-
-	if err != nil {
-		response.Diagnostics.AddError("creating Smithy document", err.Error())
-
-		return
-	}
-
-	_, err = conn.UpdateManagedLoginBranding(ctx, &input)
+	_, err := conn.UpdateManagedLoginBranding(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito Managed Login Branding (%s)", managedLoginBrandingID), err.Error())
