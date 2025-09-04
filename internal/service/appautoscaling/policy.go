@@ -305,7 +305,58 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	id := d.Get(names.AttrName).(string)
-	input := expandPutScalingPolicyInput(d)
+	input := applicationautoscaling.PutScalingPolicyInput{
+		PolicyName: aws.String(d.Get(names.AttrName).(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
+	}
+
+	if v, ok := d.GetOk("policy_type"); ok {
+		input.PolicyType = awstypes.PolicyType(v.(string))
+	}
+
+	if v, ok := d.GetOk("scalable_dimension"); ok {
+		input.ScalableDimension = awstypes.ScalableDimension(v.(string))
+	}
+
+	if v, ok := d.GetOk("service_namespace"); ok {
+		input.ServiceNamespace = awstypes.ServiceNamespace(v.(string))
+	}
+
+	if v, ok := d.GetOk("step_scaling_policy_configuration"); ok {
+		input.StepScalingPolicyConfiguration = expandStepScalingPolicyConfiguration(v.([]any))
+	}
+
+	if l, ok := d.GetOk("target_tracking_scaling_policy_configuration"); ok {
+		v := l.([]any)
+		if len(v) == 1 {
+			ttspCfg := v[0].(map[string]any)
+			cfg := awstypes.TargetTrackingScalingPolicyConfiguration{
+				TargetValue: aws.Float64(ttspCfg["target_value"].(float64)),
+			}
+
+			if v, ok := ttspCfg["scale_in_cooldown"]; ok {
+				cfg.ScaleInCooldown = aws.Int32(int32(v.(int)))
+			}
+
+			if v, ok := ttspCfg["scale_out_cooldown"]; ok {
+				cfg.ScaleOutCooldown = aws.Int32(int32(v.(int)))
+			}
+
+			if v, ok := ttspCfg["disable_scale_in"]; ok {
+				cfg.DisableScaleIn = aws.Bool(v.(bool))
+			}
+
+			if v, ok := ttspCfg["customized_metric_specification"].([]any); ok && len(v) > 0 {
+				cfg.CustomizedMetricSpecification = expandCustomizedMetricSpecification(v)
+			}
+
+			if v, ok := ttspCfg["predefined_metric_specification"].([]any); ok && len(v) > 0 {
+				cfg.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
+			}
+
+			input.TargetTrackingScalingPolicyConfiguration = &cfg
+		}
+	}
 
 	_, err := tfresource.RetryWhenIsA[any, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutScalingPolicy(ctx, &input)
@@ -650,63 +701,6 @@ func expandPredefinedMetricSpecification(configured []any) *awstypes.PredefinedM
 		}
 	}
 	return spec
-}
-
-func expandPutScalingPolicyInput(d *schema.ResourceData) applicationautoscaling.PutScalingPolicyInput {
-	apiObject := applicationautoscaling.PutScalingPolicyInput{
-		PolicyName: aws.String(d.Get(names.AttrName).(string)),
-		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-	}
-
-	if v, ok := d.GetOk("policy_type"); ok {
-		apiObject.PolicyType = awstypes.PolicyType(v.(string))
-	}
-
-	if v, ok := d.GetOk("scalable_dimension"); ok {
-		apiObject.ScalableDimension = awstypes.ScalableDimension(v.(string))
-	}
-
-	if v, ok := d.GetOk("service_namespace"); ok {
-		apiObject.ServiceNamespace = awstypes.ServiceNamespace(v.(string))
-	}
-
-	if v, ok := d.GetOk("step_scaling_policy_configuration"); ok {
-		apiObject.StepScalingPolicyConfiguration = expandStepScalingPolicyConfiguration(v.([]any))
-	}
-
-	if l, ok := d.GetOk("target_tracking_scaling_policy_configuration"); ok {
-		v := l.([]any)
-		if len(v) == 1 {
-			ttspCfg := v[0].(map[string]any)
-			cfg := awstypes.TargetTrackingScalingPolicyConfiguration{
-				TargetValue: aws.Float64(ttspCfg["target_value"].(float64)),
-			}
-
-			if v, ok := ttspCfg["scale_in_cooldown"]; ok {
-				cfg.ScaleInCooldown = aws.Int32(int32(v.(int)))
-			}
-
-			if v, ok := ttspCfg["scale_out_cooldown"]; ok {
-				cfg.ScaleOutCooldown = aws.Int32(int32(v.(int)))
-			}
-
-			if v, ok := ttspCfg["disable_scale_in"]; ok {
-				cfg.DisableScaleIn = aws.Bool(v.(bool))
-			}
-
-			if v, ok := ttspCfg["customized_metric_specification"].([]any); ok && len(v) > 0 {
-				cfg.CustomizedMetricSpecification = expandCustomizedMetricSpecification(v)
-			}
-
-			if v, ok := ttspCfg["predefined_metric_specification"].([]any); ok && len(v) > 0 {
-				cfg.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
-			}
-
-			apiObject.TargetTrackingScalingPolicyConfiguration = &cfg
-		}
-	}
-
-	return apiObject
 }
 
 func expandStepScalingPolicyConfiguration(cfg []any) *awstypes.StepScalingPolicyConfiguration {
