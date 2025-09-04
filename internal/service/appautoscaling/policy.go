@@ -5,10 +5,8 @@ package appautoscaling
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -105,12 +105,14 @@ func resourcePolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_interval_lower_bound": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         nullable.TypeNullableFloat,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 									},
 									"metric_interval_upper_bound": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         nullable.TypeNullableFloat,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 									},
 									"scaling_adjustment": {
 										Type:     schema.TypeInt,
@@ -549,52 +551,31 @@ func expandTargetTrackingScalingPolicyConfiguration(tfList []any) *awstypes.Targ
 	return apiObject
 }
 
-// Takes the result of flatmap.Expand for an array of step adjustments and
-// returns a []*awstypes.StepAdjustment.
-func expandStepAdjustments(configured []any) ([]awstypes.StepAdjustment, error) {
-	var adjustments []awstypes.StepAdjustment
+func expandStepAdjustments(tfList []any) []awstypes.StepAdjustment {
+	var apiObjects []awstypes.StepAdjustment
 
-	// Loop over our configured step adjustments and create an array
-	// of aws-sdk-go compatible objects. We're forced to convert strings
-	// to floats here because there's no way to detect whether or not
-	// an uninitialized, optional schema element is "0.0" deliberately.
-	// With strings, we can test for "", which is definitely an empty
-	// struct value.
-	for _, raw := range configured {
-		data := raw.(map[string]any)
-		a := awstypes.StepAdjustment{
-			ScalingAdjustment: aws.Int32(int32(data["scaling_adjustment"].(int))),
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.StepAdjustment{
+			ScalingAdjustment: aws.Int32(int32(tfMap["scaling_adjustment"].(int))),
 		}
-		if data["metric_interval_lower_bound"] != "" {
-			bound := data["metric_interval_lower_bound"]
-			switch bound := bound.(type) {
-			case string:
-				f, err := strconv.ParseFloat(bound, 64)
-				if err != nil {
-					return nil, errors.New("metric_interval_lower_bound must be a float value represented as a string")
-				}
-				a.MetricIntervalLowerBound = aws.Float64(f)
-			default:
-				return nil, errors.New("metric_interval_lower_bound isn't a string")
+
+		if v, ok := tfMap["metric_interval_lower_bound"].(string); ok {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+				apiObject.MetricIntervalLowerBound = aws.Float64(v)
 			}
 		}
-		if data["metric_interval_upper_bound"] != "" {
-			bound := data["metric_interval_upper_bound"]
-			switch bound := bound.(type) {
-			case string:
-				f, err := strconv.ParseFloat(bound, 64)
-				if err != nil {
-					return nil, errors.New("metric_interval_upper_bound must be a float value represented as a string")
-				}
-				a.MetricIntervalUpperBound = aws.Float64(f)
-			default:
-				return nil, errors.New("metric_interval_upper_bound isn't a string")
+
+		if v, ok := tfMap["metric_interval_upper_bound"].(string); ok {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+				apiObject.MetricIntervalUpperBound = aws.Float64(v)
 			}
 		}
-		adjustments = append(adjustments, a)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return adjustments, nil
+	return apiObjects
 }
 
 func expandCustomizedMetricSpecification(configured []any) *awstypes.CustomizedMetricSpecification {
@@ -733,72 +714,58 @@ func expandStepScalingPolicyConfiguration(tfList []any) *awstypes.StepScalingPol
 	}
 
 	if v, ok := tfMap["step_adjustment"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.StepAdjustments, _ = expandStepAdjustments(v.List())
+		apiObject.StepAdjustments = expandStepAdjustments(v.List())
 	}
 
 	return apiObject
 }
 
-func flattenStepScalingPolicyConfiguration(cfg *awstypes.StepScalingPolicyConfiguration) []any {
-	if cfg == nil {
+func flattenStepScalingPolicyConfiguration(apiObject *awstypes.StepScalingPolicyConfiguration) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := make(map[string]any)
+	tfMap := make(map[string]any)
 
-	m["adjustment_type"] = string(cfg.AdjustmentType)
+	tfMap["adjustment_type"] = string(apiObject.AdjustmentType)
 
-	if cfg.Cooldown != nil {
-		m["cooldown"] = aws.ToInt32(cfg.Cooldown)
+	if apiObject.Cooldown != nil {
+		tfMap["cooldown"] = aws.ToInt32(apiObject.Cooldown)
 	}
 
-	m["metric_aggregation_type"] = string(cfg.MetricAggregationType)
+	tfMap["metric_aggregation_type"] = string(apiObject.MetricAggregationType)
 
-	if cfg.MinAdjustmentMagnitude != nil {
-		m["min_adjustment_magnitude"] = aws.ToInt32(cfg.MinAdjustmentMagnitude)
-	}
-	if cfg.StepAdjustments != nil {
-		stepAdjustmentsResource := &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"metric_interval_lower_bound": {
-					Type:     schema.TypeString,
-					Optional: true,
-				},
-				"metric_interval_upper_bound": {
-					Type:     schema.TypeString,
-					Optional: true,
-				},
-				"scaling_adjustment": {
-					Type:     schema.TypeInt,
-					Required: true,
-				},
-			},
-		}
-		m["step_adjustment"] = schema.NewSet(schema.HashResource(stepAdjustmentsResource), flattenStepAdjustments(cfg.StepAdjustments))
+	if apiObject.MinAdjustmentMagnitude != nil {
+		tfMap["min_adjustment_magnitude"] = aws.ToInt32(apiObject.MinAdjustmentMagnitude)
 	}
 
-	return []any{m}
+	if apiObject.StepAdjustments != nil {
+		tfMap["step_adjustment"] = flattenStepAdjustments(apiObject.StepAdjustments)
+	}
+
+	return []any{tfMap}
 }
 
-func flattenStepAdjustments(adjs []awstypes.StepAdjustment) []any {
-	out := make([]any, len(adjs))
+func flattenStepAdjustments(apiObjects []awstypes.StepAdjustment) []any {
+	tfList := make([]any, len(apiObjects))
 
-	for i, adj := range adjs {
-		m := make(map[string]any)
+	for i, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
 
-		m["scaling_adjustment"] = int(aws.ToInt32(adj.ScalingAdjustment))
+		tfMap["scaling_adjustment"] = aws.ToInt32(apiObject.ScalingAdjustment)
 
-		if adj.MetricIntervalLowerBound != nil {
-			m["metric_interval_lower_bound"] = fmt.Sprintf("%g", aws.ToFloat64(adj.MetricIntervalLowerBound))
-		}
-		if adj.MetricIntervalUpperBound != nil {
-			m["metric_interval_upper_bound"] = fmt.Sprintf("%g", aws.ToFloat64(adj.MetricIntervalUpperBound))
+		if apiObject.MetricIntervalLowerBound != nil {
+			tfMap["metric_interval_lower_bound"] = flex.Float64ToStringValue(apiObject.MetricIntervalLowerBound)
 		}
 
-		out[i] = m
+		if apiObject.MetricIntervalUpperBound != nil {
+			tfMap["metric_interval_upper_bound"] = flex.Float64ToStringValue(apiObject.MetricIntervalUpperBound)
+		}
+
+		tfList[i] = tfMap
 	}
 
-	return out
+	return tfList
 }
 
 func flattenTargetTrackingScalingPolicyConfiguration(cfg *awstypes.TargetTrackingScalingPolicyConfiguration) []any {
