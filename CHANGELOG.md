@@ -1,4 +1,4 @@
-## 6.12.0 (Unreleased)
+## 6.12.0 (September 4, 2025)
 
 NOTES:
 
