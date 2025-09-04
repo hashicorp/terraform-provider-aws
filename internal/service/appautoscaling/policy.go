@@ -326,36 +326,8 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.StepScalingPolicyConfiguration = expandStepScalingPolicyConfiguration(v.([]any))
 	}
 
-	if l, ok := d.GetOk("target_tracking_scaling_policy_configuration"); ok {
-		v := l.([]any)
-		if len(v) == 1 {
-			ttspCfg := v[0].(map[string]any)
-			cfg := awstypes.TargetTrackingScalingPolicyConfiguration{
-				TargetValue: aws.Float64(ttspCfg["target_value"].(float64)),
-			}
-
-			if v, ok := ttspCfg["scale_in_cooldown"]; ok {
-				cfg.ScaleInCooldown = aws.Int32(int32(v.(int)))
-			}
-
-			if v, ok := ttspCfg["scale_out_cooldown"]; ok {
-				cfg.ScaleOutCooldown = aws.Int32(int32(v.(int)))
-			}
-
-			if v, ok := ttspCfg["disable_scale_in"]; ok {
-				cfg.DisableScaleIn = aws.Bool(v.(bool))
-			}
-
-			if v, ok := ttspCfg["customized_metric_specification"].([]any); ok && len(v) > 0 {
-				cfg.CustomizedMetricSpecification = expandCustomizedMetricSpecification(v)
-			}
-
-			if v, ok := ttspCfg["predefined_metric_specification"].([]any); ok && len(v) > 0 {
-				cfg.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
-			}
-
-			input.TargetTrackingScalingPolicyConfiguration = &cfg
-		}
+	if v, ok := d.GetOk("target_tracking_scaling_policy_configuration"); ok {
+		input.TargetTrackingScalingPolicyConfiguration = expandTargetTrackingScalingPolicyConfiguration(v.([]any))
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
@@ -542,6 +514,39 @@ func policyParseImportID(id string) ([]string, error) {
 	}
 
 	return []string{serviceNamespace, resourceID, scalableDimension, name}, nil
+}
+
+func expandTargetTrackingScalingPolicyConfiguration(tfList []any) *awstypes.TargetTrackingScalingPolicyConfiguration {
+	if len(tfList) < 1 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.TargetTrackingScalingPolicyConfiguration{
+		TargetValue: aws.Float64(tfMap["target_value"].(float64)),
+	}
+
+	if v, ok := tfMap["customized_metric_specification"].([]any); ok && len(v) > 0 {
+		apiObject.CustomizedMetricSpecification = expandCustomizedMetricSpecification(v)
+	}
+
+	if v, ok := tfMap["disable_scale_in"]; ok {
+		apiObject.DisableScaleIn = aws.Bool(v.(bool))
+	}
+
+	if v, ok := tfMap["predefined_metric_specification"].([]any); ok && len(v) > 0 {
+		apiObject.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
+	}
+
+	if v, ok := tfMap["scale_in_cooldown"]; ok {
+		apiObject.ScaleInCooldown = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := tfMap["scale_out_cooldown"]; ok {
+		apiObject.ScaleOutCooldown = aws.Int32(int32(v.(int)))
+	}
+
+	return apiObject
 }
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
