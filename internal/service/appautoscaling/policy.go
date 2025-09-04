@@ -326,7 +326,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+	output, err := tfresource.RetryWhenIsA[*awstypes.ScalingPolicy, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (*awstypes.ScalingPolicy, error) {
 		return findScalingPolicyByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string), d.Get("scalable_dimension").(string))
 	})
 
@@ -340,7 +340,6 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	output := outputRaw.(*awstypes.ScalingPolicy)
 	d.Set("alarm_arns", tfslices.ApplyToAll(output.Alarms, func(v awstypes.Alarm) string {
 		return aws.ToString(v.AlarmARN)
 	}))
@@ -364,13 +363,13 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
+	log.Printf("[DEBUG] Deleting Application Auto Scaling Scaling Policy: %s", d.Id())
 	input := applicationautoscaling.DeleteScalingPolicyInput{
 		PolicyName:        aws.String(d.Get(names.AttrName).(string)),
 		ResourceId:        aws.String(d.Get(names.AttrResourceID).(string)),
 		ScalableDimension: awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ServiceNamespace:  awstypes.ServiceNamespace(d.Get("service_namespace").(string)),
 	}
-
 	_, err := tfresource.RetryWhenIsA[any, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteScalingPolicy(ctx, &input)
 	})
@@ -387,7 +386,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts, err := validPolicyImportInput(d.Id())
+	parts, err := policyParseImportID(d.Id())
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +432,6 @@ func findScalingPolicies(ctx context.Context, conn *applicationautoscaling.Clien
 	var output []awstypes.ScalingPolicy
 
 	pages := applicationautoscaling.NewDescribeScalingPoliciesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -451,17 +449,19 @@ func findScalingPolicies(ctx context.Context, conn *applicationautoscaling.Clien
 	return output, nil
 }
 
-func validPolicyImportInput(id string) ([]string, error) {
-	idParts := strings.Split(id, "/")
+func policyParseImportID(id string) ([]string, error) {
+	const (
+		importIDSeparator = "/"
+	)
+	idParts := strings.Split(id, importIDSeparator)
 	if len(idParts) < 4 {
-		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected <service-namespace>%[2]s<resource-id>%[2]s<scalable-dimension>%[2]s<policy-name>", id, importIDSeparator)
 	}
 
 	var serviceNamespace, resourceID, scalableDimension, name string
 	switch idParts[0] {
 	case "dynamodb":
 		serviceNamespace = idParts[0]
-
 		dimensionIdx := 3
 		// DynamoDB resource ID can be "/table/tableName" or "/table/tableName/index/indexName"
 		if idParts[dimensionIdx] == "index" {
@@ -487,7 +487,7 @@ func validPolicyImportInput(id string) ([]string, error) {
 	}
 
 	if serviceNamespace == "" || resourceID == "" || scalableDimension == "" || name == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected <service-namespace>%[2]s<resource-id>%[2]s<scalable-dimension>%[2]s<policy-name>", id, importIDSeparator)
 	}
 
 	return []string{serviceNamespace, resourceID, scalableDimension, name}, nil

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestValidatePolicyImportInput(t *testing.T) {
+func TestPolicyParseImportID(t *testing.T) {
 	t.Parallel()
 
 	// lintignore:AWSAT003,AWSAT005
@@ -87,17 +87,17 @@ func TestValidatePolicyImportInput(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		idParts, err := tfappautoscaling.ValidPolicyImportInput(tc.input)
+		idParts, err := tfappautoscaling.PolicyParseImportID(tc.input)
 		if tc.errorExpected == false && err != nil {
-			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): resulted in an unexpected error: %s", tc.input, err)
+			t.Errorf("tfappautoscaling.PolicyParseImportID(%q): resulted in an unexpected error: %s", tc.input, err)
 		}
 
 		if tc.errorExpected == true && err == nil {
-			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): expected an error, but returned successfully", tc.input)
+			t.Errorf("tfappautoscaling.PolicyParseImportID(%q): expected an error, but returned successfully", tc.input)
 		}
 
 		if !reflect.DeepEqual(tc.expected, idParts) {
-			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
+			t.Errorf("tfappautoscaling.PolicyParseImportID(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
 		}
 	}
 }
