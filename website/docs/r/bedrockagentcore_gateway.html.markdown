@@ -5,16 +5,6 @@ page_title: "AWS: aws_bedrockagentcore_gateway"
 description: |-
   Manages an AWS Bedrock AgentCore Gateway.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_bedrockagentcore_gateway
 

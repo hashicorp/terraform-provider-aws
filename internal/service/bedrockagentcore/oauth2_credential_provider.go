@@ -41,11 +41,6 @@ import (
 func newResourceOAuth2CredentialProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceOauth2CredentialProvider{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -565,6 +560,11 @@ func (m *resourceOauth2CredentialProviderModel) VendorValue(ctx context.Context)
 		vendor = string(awstypes.CredentialProviderVendorTypeSalesforceOauth2)
 	case !c.Slack.IsNull():
 		vendor = string(awstypes.CredentialProviderVendorTypeSlackOauth2)
+	default:
+		diags.AddError(
+			"Invalid OAuth2 Provider Configuration",
+			"At least one OAuth2 provider must be configured: custom, github, google, microsoft, salesforce, or slack",
+		)
 	}
 
 	return vendor, nil
@@ -645,48 +645,42 @@ func (m *oauth2ProviderConfigInputModel) Flatten(ctxWithCreds context.Context, v
 
 	switch t := v.(type) {
 	case awstypes.Oauth2ProviderConfigOutputMemberCustomOauth2ProviderConfig:
-		d := flex.Flatten(ctxWithCreds, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctxWithCreds, &diags, flex.Flatten(ctxWithCreds, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		m.Custom = fwtypes.NewListNestedObjectValueOfPtrMust(ctxWithCreds, &model)
 
 	case awstypes.Oauth2ProviderConfigOutputMemberGithubOauth2ProviderConfig:
-		d := flex.Flatten(ctxWithCreds, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctxWithCreds, &diags, flex.Flatten(ctxWithCreds, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		m.Github = fwtypes.NewListNestedObjectValueOfPtrMust(ctxWithCreds, &model)
 
 	case awstypes.Oauth2ProviderConfigOutputMemberGoogleOauth2ProviderConfig:
-		d := flex.Flatten(ctxWithCreds, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctxWithCreds, &diags, flex.Flatten(ctxWithCreds, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		m.Google = fwtypes.NewListNestedObjectValueOfPtrMust(ctxWithCreds, &model)
 
 	case awstypes.Oauth2ProviderConfigOutputMemberMicrosoftOauth2ProviderConfig:
-		d := flex.Flatten(ctxWithCreds, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctxWithCreds, &diags, flex.Flatten(ctxWithCreds, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		m.Microsoft = fwtypes.NewListNestedObjectValueOfPtrMust(ctxWithCreds, &model)
 
 	case awstypes.Oauth2ProviderConfigOutputMemberSalesforceOauth2ProviderConfig:
-		d := flex.Flatten(ctxWithCreds, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctxWithCreds, &diags, flex.Flatten(ctxWithCreds, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		m.Salesforce = fwtypes.NewListNestedObjectValueOfPtrMust(ctxWithCreds, &model)
 
 	case awstypes.Oauth2ProviderConfigOutputMemberSlackOauth2ProviderConfig:
-		d := flex.Flatten(ctxWithCreds, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctxWithCreds, &diags, flex.Flatten(ctxWithCreds, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -734,9 +728,15 @@ func (m oauth2ProviderConfigInputModel) Expand(ctxWithCreds context.Context) (re
 		from, diags = m.Slack.ToPtr(ctxWithCreds)
 		to = &r.Value
 		result = &r
+	default:
+		diags.AddError(
+			"Invalid OAuth2 Provider Configuration",
+			"At least one OAuth2 provider must be configured: custom, github, google, microsoft, salesforce, or slack",
+		)
+		return nil, diags
 	}
 
-	diags.Append(diags...)
+	smerr.EnrichAppend(ctxWithCreds, &diags, diags)
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -748,7 +748,7 @@ func (m oauth2ProviderConfigInputModel) Expand(ctxWithCreds context.Context) (re
 		}
 	}
 
-	diags.Append(flex.Expand(ctxWithCreds, from, to)...)
+	smerr.EnrichAppend(ctxWithCreds, &diags, flex.Expand(ctxWithCreds, from, to))
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -763,8 +763,7 @@ func (m *oauth2DiscoveryModel) Flatten(ctx context.Context, v any) (diags diag.D
 
 	case awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata:
 		var model oauth2AuthorizationServerMetadataModel
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -785,16 +784,21 @@ func (m oauth2DiscoveryModel) Expand(ctx context.Context) (result any, diags dia
 
 	case !m.AuthorizationServerMetadata.IsNull():
 		model, d := m.AuthorizationServerMetadata.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata
-		diags.Append(flex.Expand(ctx, model, &r.Value)...)
+		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
+	default:
+		diags.AddError(
+			"Invalid OAuth2 Discovery Configuration",
+			"Either discovery_url or authorization_server_metadata must be configured",
+		)
+		return nil, diags
 	}
-	return nil, diags
 }

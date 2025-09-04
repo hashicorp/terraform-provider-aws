@@ -3,5 +3,21 @@ aws_bedrockagentcore_agent_runtime
 ```
 
 ```release-note:new-resource
+aws_bedrockagentcore_gateway
+```
+
+```release-note:new-resource
+aws_bedrockagentcore_gateway_target
+```
+
+```release-note:new-resource
+aws_bedrockagentcore_memory
+```
+
+```release-note:new-resource
+aws_bedrockagentcore_memory_strategy
+```
+
+```release-note:new-resource
 aws_bedrockagentcore_oauth2_credential_provider
 ```

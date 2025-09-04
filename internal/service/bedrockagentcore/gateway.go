@@ -323,7 +323,6 @@ func (r *resourceGateway) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteGateway(ctx, &input)
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -467,8 +466,7 @@ func (m *gatewayProtocolConfigurationModel) Flatten(ctx context.Context, v any) 
 	switch t := v.(type) {
 	case awstypes.GatewayProtocolConfigurationMemberMcp:
 		var model mcpGatewayConfigurationModel
-		d := flex.Flatten(ctx, t.Value, &model)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -484,12 +482,12 @@ func (m gatewayProtocolConfigurationModel) Expand(ctx context.Context) (result a
 	switch {
 	case !m.MCP.IsNull():
 		model, d := m.MCP.ToPtr(ctx)
-		diags.Append(d...)
+		smerr.EnrichAppend(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.GatewayProtocolConfigurationMemberMcp
-		diags.Append(flex.Expand(ctx, model, &r.Value)...)
+		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}

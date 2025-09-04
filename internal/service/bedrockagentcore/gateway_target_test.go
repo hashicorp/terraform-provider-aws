@@ -4,18 +4,6 @@
 package bedrockagentcore_test
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/bedrockagentcorecontrol/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
@@ -709,7 +697,6 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, schemaContent))
 }
 
-// Example 1: Primitive schema - { "type": "string", "description": "A token" }
 func testAccSchema_primitive() string {
 	return `
 			type        = "string"
@@ -717,7 +704,6 @@ func testAccSchema_primitive() string {
  		   `
 }
 
-// Example 2: Object with properties + required
 func testAccSchema_objectWithProperties() string {
 	return `
 			type        = "object"
@@ -741,7 +727,6 @@ func testAccSchema_objectWithProperties() string {
 		 `
 }
 
-// Example 3: Array of primitives
 func testAccSchema_arrayOfPrimitives() string {
 	return `
 			type        = "array"
@@ -753,7 +738,6 @@ func testAccSchema_arrayOfPrimitives() string {
 		 `
 }
 
-// Example 4: Array of objects (element has flat props)
 func testAccSchema_arrayOfObjects() string {
 	return `
 			type = "array"
@@ -780,7 +764,6 @@ func testAccSchema_arrayOfObjects() string {
 		 `
 }
 
-// Example 5: Array of arrays (consecutive arrays)
 func testAccSchema_arrayOfArrays() string {
 	return `
 			type = "array"
@@ -795,7 +778,6 @@ func testAccSchema_arrayOfArrays() string {
 		 `
 }
 
-// Example 6: Mixed nested object/array
 func testAccSchema_mixedNested() string {
 	return `
 			type = "object"
@@ -815,7 +797,6 @@ func testAccSchema_mixedNested() string {
 		 `
 }
 
-// Example 7: Array with extra (ignored) JSON-Schema keywords
 func testAccSchema_arrayWithIgnoredKeywords() string {
 	return `
 			type = "array"
@@ -826,49 +807,6 @@ func testAccSchema_arrayWithIgnoredKeywords() string {
 		 `
 }
 
-// Invalid Example A: items present but type != "array"
-//func testAccSchema_invalidItemsOnObject() string {
-//	return `
-//			type = "object"
-//
-//			items {
-//				type = "string"
-//			}
-//		 `
-//}
-//
-//// Invalid Example B: properties present but type != "object"
-//func testAccSchema_invalidPropertiesOnArray() string {
-//	return `
-//			type = "array"
-//
-//			property {
-//				name = "x"
-//				type = "string"
-//			}
-//		 `
-//}
-//
-//// Invalid Example C: required outside of properties / not a subset
-//func testAccSchema_invalidRequiredNotSubset() string {
-//	return `
-//			type = "object"
-//
-//			property {
-//				name     = "a"
-//				type     = "string"
-//				required = true
-//			}
-//
-//			property {
-//				name     = "b"
-//				type     = "string"
-//				required = true
-//			}
-//		 `
-//}
-
-// Invalid Example D: Both items and properties at the same node
 func testAccSchema_invalidBothItemsAndProperties() string {
 	return `
 			type = "object"
@@ -884,28 +822,22 @@ func testAccSchema_invalidBothItemsAndProperties() string {
 		 `
 }
 
-// Invalid Example E: Missing type
 func testAccSchema_invalidMissingType() string {
 	return `
 			description = "No type here"
 		 `
 }
 
-// Invalid Example F: Unsupported type
 func testAccSchema_invalidUnsupportedType() string {
 	return `
 			type = "date"
 		 `
 }
 
-// Credential Provider Helper Functions
-
-// Gateway IAM Role provider (no configuration needed)
 func testAccCredentialProvider_gatewayIAMRole() string {
 	return `    gateway_iam_role {}`
 }
 
-// API Key provider with all optional parameters
 func testAccCredentialProvider_apiKey() string {
 	return `    api_key {
       provider_arn              = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/example.com"
@@ -915,7 +847,6 @@ func testAccCredentialProvider_apiKey() string {
     }`
 }
 
-// OAuth provider with required and optional parameters
 func testAccCredentialProvider_oauth() string {
 	return `    oauth {
       provider_arn = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/oauth.example.com"
@@ -927,7 +858,6 @@ func testAccCredentialProvider_oauth() string {
     }`
 }
 
-// Invalid: Multiple providers configured simultaneously
 func testAccCredentialProvider_multipleProviders() string {
 	return `    gateway_iam_role {}
     api_key {
@@ -935,7 +865,6 @@ func testAccCredentialProvider_multipleProviders() string {
     }`
 }
 
-// Invalid: Empty credential provider configuration
 func testAccCredentialProvider_empty() string {
 	return `    # No providers configured`
 }

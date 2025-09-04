@@ -5,16 +5,6 @@ page_title: "AWS: aws_bedrockagentcore_gateway_target"
 description: |-
   Manages an AWS Bedrock AgentCore Gateway Target.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_bedrockagentcore_gateway_target
 
@@ -386,8 +376,8 @@ The `s3` block supports the following:
 
 The `api_schema_configuration` block supports exactly one of the following:
 
-* `inline_payload` - (Optional) Inline schema payload. See [`inline_payload`](#inline_payload-1) below.
-* `s3` - (Optional) S3-based schema configuration. See [`s3`](#s3-1) below.
+* `inline_payload` - (Optional) Inline schema payload. See [`inline_payload`](#inline_payload) below.
+* `s3` - (Optional) S3-based schema configuration. See [`s3`](#s3) below.
 
 ### `inline_payload` (API Schema)
 

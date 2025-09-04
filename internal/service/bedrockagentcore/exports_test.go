@@ -6,12 +6,16 @@ package bedrockagentcore
 // Exports for use in tests only.
 var (
 	ResourceAgentRuntime             = newResourceAgentRuntime
-	ResourceOAuth2CredentialProvider = newResourceOAuth2CredentialProvider
 	ResourceGateway                  = newResourceGateway
 	ResourceGatewayTarget            = newResourceGatewayTarget
+	ResourceMemory                   = newResourceMemory
+	ResourceMemoryStrategy           = newResourceMemoryStrategy
+	ResourceOAuth2CredentialProvider = newResourceOAuth2CredentialProvider
 
 	FindAgentRuntimeByID               = findAgentRuntimeByID
-	FindOAuth2CredentialProviderByName = findOAuth2CredentialProviderByName
 	FindGatewayByID                    = findGatewayByID
 	FindGatewayTargetByID              = findGatewayTargetByID
+	FindMemoryByID                     = findMemoryByID
+	FindOAuth2CredentialProviderByName = findOAuth2CredentialProviderByName
+	FindMemoryStrategyByID             = findMemoryStrategyByID
 )
