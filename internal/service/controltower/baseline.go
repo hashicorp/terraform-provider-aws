@@ -42,7 +42,6 @@ func newResourceBaseline(_ context.Context) (resource.ResourceWithConfigure, err
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -97,7 +96,6 @@ func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest,
 							Required: true,
 						},
 						names.AttrValue: schema.StringAttribute{
-							//CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 							Required: true,
 						},
 					},
@@ -106,7 +104,6 @@ func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest,
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
-				Delete: true,
 			}),
 		},
 	}

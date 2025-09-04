@@ -20,9 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccControlTowerBaseline_basic(t *testing.T) {
