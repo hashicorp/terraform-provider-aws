@@ -708,31 +708,35 @@ func expandPredefinedMetricSpecification(configured []any) *awstypes.PredefinedM
 	return spec
 }
 
-func expandStepScalingPolicyConfiguration(cfg []any) *awstypes.StepScalingPolicyConfiguration {
-	if len(cfg) < 1 {
+func expandStepScalingPolicyConfiguration(tfList []any) *awstypes.StepScalingPolicyConfiguration {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	out := &awstypes.StepScalingPolicyConfiguration{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.StepScalingPolicyConfiguration{}
 
-	m := cfg[0].(map[string]any)
-	if v, ok := m["adjustment_type"]; ok {
-		out.AdjustmentType = awstypes.AdjustmentType(v.(string))
-	}
-	if v, ok := m["cooldown"]; ok {
-		out.Cooldown = aws.Int32(int32(v.(int)))
-	}
-	if v, ok := m["metric_aggregation_type"]; ok {
-		out.MetricAggregationType = awstypes.MetricAggregationType(v.(string))
-	}
-	if v, ok := m["min_adjustment_magnitude"].(int); ok && v > 0 {
-		out.MinAdjustmentMagnitude = aws.Int32(int32(v))
-	}
-	if v, ok := m["step_adjustment"].(*schema.Set); ok && v.Len() > 0 {
-		out.StepAdjustments, _ = expandStepAdjustments(v.List())
+	if v, ok := tfMap["adjustment_type"]; ok {
+		apiObject.AdjustmentType = awstypes.AdjustmentType(v.(string))
 	}
 
-	return out
+	if v, ok := tfMap["cooldown"]; ok {
+		apiObject.Cooldown = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := tfMap["metric_aggregation_type"]; ok {
+		apiObject.MetricAggregationType = awstypes.MetricAggregationType(v.(string))
+	}
+
+	if v, ok := tfMap["min_adjustment_magnitude"].(int); ok && v > 0 {
+		apiObject.MinAdjustmentMagnitude = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["step_adjustment"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.StepAdjustments, _ = expandStepAdjustments(v.List())
+	}
+
+	return apiObject
 }
 
 func flattenStepScalingPolicyConfiguration(cfg *awstypes.StepScalingPolicyConfiguration) []any {
