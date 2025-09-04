@@ -6,6 +6,10 @@ NOTES:
 * resource/aws_s3_bucket_acl: The `access_control_policy.owner.display_name` attribute is deprecated. AWS has [ended support for this attribute](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Owner.html). API responses began inconsistently returning it on July 15, 2025, and will stop returning it entirely on November 21, 2025. This attribute will be removed in a future major version. ([#44090](https://github.com/hashicorp/terraform-provider-aws/issues/44090))
 * resource/aws_s3_bucket_logging: The `target_grant.grantee.display_name` attribute is deprecated. AWS has [ended support for this attribute](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Grantee.html). API responses began inconsistently returning it on July 15, 2025, and will stop returning it entirely on November 21, 2025. This attribute will be removed in a future major version. ([#44090](https://github.com/hashicorp/terraform-provider-aws/issues/44090))
 
+FEATURES:
+
+* **New Resource:** `aws_cognito_managed_login_branding` ([#43817](https://github.com/hashicorp/terraform-provider-aws/issues/43817))
+
 ENHANCEMENTS:
 
 * data-source/aws_efs_mount_target: Add `ip_address_type` and `ipv6_address` attributes ([#44079](https://github.com/hashicorp/terraform-provider-aws/issues/44079))
@@ -33,6 +37,7 @@ BUG FIXES:
 
 * resource/aws_s3tables_table_policy: Remove plan-time validation of `name` and `namespace` ([#44072](https://github.com/hashicorp/terraform-provider-aws/issues/44072))
 * resource/aws_servicecatalog_provisioned_product: Set `provisioning_parameters` and `provisioning_artifact_id` to the values from the last successful deployment when update fails ([#43956](https://github.com/hashicorp/terraform-provider-aws/issues/43956))
+* resource/aws_wafv2_web_acl: Fix performance of update when the WebACL has a large number of rules ([#42740](https://github.com/hashicorp/terraform-provider-aws/issues/42740))
 
 ## 6.11.0 (August 28, 2025)
 
