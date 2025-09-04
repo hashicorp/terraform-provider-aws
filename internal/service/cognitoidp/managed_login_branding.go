@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -312,38 +311,17 @@ func (r *managedLoginBrandingResource) Update(ctx context.Context, request resou
 		return
 	}
 
-	if oldSettings, newSettings := fwflex.StringValueFromFramework(ctx, old.Settings), fwflex.StringValueFromFramework(ctx, new.Settings); newSettings != oldSettings {
-		if oldSettings == "" {
-			var err error
-			input.Settings, err = tfsmithy.DocumentFromJSONString(newSettings, document.NewLazyDocument)
+	if oldSettings, newSettings := fwflex.StringValueFromFramework(ctx, old.Settings), fwflex.StringValueFromFramework(ctx, new.Settings); newSettings != oldSettings && newSettings != "" {
+		var err error
+		input.Settings, err = tfsmithy.DocumentFromJSONString(newSettings, document.NewLazyDocument)
 
-			if err != nil {
-				response.Diagnostics.AddError("creating Smithy document", err.Error())
+		if err != nil {
+			response.Diagnostics.AddError("creating Smithy document", err.Error())
 
-				return
-			}
-
-			input.UseCognitoProvidedValues = false
-		} else if newSettings != "" {
-			// Updated settings work in a PATCH model: https://docs.aws.amazon.com/cognito/latest/developerguide/managed-login-brandingeditor.html#branding-designer-api.
-			patch, err := tfjson.CreateMergePatchFromStrings(oldSettings, newSettings)
-
-			if err != nil {
-				response.Diagnostics.AddError("creating JSON merge patch", err.Error())
-
-				return
-			}
-
-			input.Settings, err = tfsmithy.DocumentFromJSONString(patch, document.NewLazyDocument)
-
-			if err != nil {
-				response.Diagnostics.AddError("creating Smithy document", err.Error())
-
-				return
-			}
-
-			input.UseCognitoProvidedValues = false
+			return
 		}
+
+		input.UseCognitoProvidedValues = false
 	}
 
 	_, err := conn.UpdateManagedLoginBranding(ctx, &input)

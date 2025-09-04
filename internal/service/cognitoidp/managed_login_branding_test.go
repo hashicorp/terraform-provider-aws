@@ -138,7 +138,7 @@ func TestAccCognitoIDPManagedLoginBranding_settings(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedLoginBrandingConfig_settings(rName),
+				Config: testAccManagedLoginBrandingConfig_settings(rName, "LIGHT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
 				),
@@ -191,7 +191,7 @@ func TestAccCognitoIDPManagedLoginBranding_updateFromBasic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccManagedLoginBrandingConfig_settings(rName),
+				Config: testAccManagedLoginBrandingConfig_settings(rName, "LIGHT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
 				),
@@ -222,7 +222,7 @@ func TestAccCognitoIDPManagedLoginBranding_updateToBasic(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedLoginBrandingConfig_settings(rName),
+				Config: testAccManagedLoginBrandingConfig_settings(rName, "LIGHT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
 				),
@@ -249,6 +249,52 @@ func TestAccCognitoIDPManagedLoginBranding_updateToBasic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("settings"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("use_cognito_provided_values"), knownvalue.Bool(true)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPManagedLoginBranding_updateSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ManagedLoginBrandingType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_managed_login_branding.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedLoginBrandingConfig_settings(rName, "LIGHT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("settings"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("use_cognito_provided_values"), knownvalue.Bool(false)),
+				},
+			},
+			{
+				Config: testAccManagedLoginBrandingConfig_settings(rName, "DARK"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("settings"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("use_cognito_provided_values"), knownvalue.Bool(false)),
 				},
 			},
 		},
@@ -345,8 +391,8 @@ resource "aws_cognito_managed_login_branding" "test" {
 `)
 }
 
-func testAccManagedLoginBrandingConfig_settings(rName string) string {
-	return acctest.ConfigCompose(testAccManagedLoginBrandingConfig_base(rName), `
+func testAccManagedLoginBrandingConfig_settings(rName, colorScheme string) string {
+	return acctest.ConfigCompose(testAccManagedLoginBrandingConfig_base(rName), fmt.Sprintf(`
 resource "aws_cognito_managed_login_branding" "test" {
   client_id    = aws_cognito_user_pool_client.test.id
   user_pool_id = aws_cognito_user_pool.test.id
@@ -387,7 +433,7 @@ resource "aws_cognito_managed_login_branding" "test" {
         "sessionTimerDisplay" : "NONE"
       },
       "global" : {
-        "colorSchemeMode" : "LIGHT",
+        "colorSchemeMode" : %[1]q,
         "pageFooter" : {
           "enabled" : false
         },
@@ -804,5 +850,5 @@ resource "aws_cognito_managed_login_branding" "test" {
     }
   })
 }
-`)
+`, colorScheme))
 }
