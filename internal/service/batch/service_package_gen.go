@@ -55,6 +55,10 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) []*inttypes
 			TypeName: "aws_batch_job_queue",
 			Name:     "Job Queue",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 		},
 	}
 }

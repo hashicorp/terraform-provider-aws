@@ -101,6 +101,18 @@ func main() {
 
 					v.frameworkListResources[key] = value
 				}
+
+				if val, exists := v.frameworkResources[key]; exists {
+					value.IdentityAttributes = val.IdentityAttributes
+					value.IdentityDuplicateAttrs = val.IdentityDuplicateAttrs
+					value.ARNIdentity = val.ARNIdentity
+					value.SingletonIdentity = val.SingletonIdentity
+					value.TransparentTagging = val.TransparentTagging
+					value.TagsResourceType = val.TagsResourceType
+					value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
+
+					v.frameworkListResources[key] = value
+				}
 			}
 		}
 
