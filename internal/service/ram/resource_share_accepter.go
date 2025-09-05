@@ -309,10 +309,6 @@ func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.Client
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		output, err = findMaybeResourceShareInvitation(ctx, conn, input, filter)
-	}
-
 	if errors.Is(err, errNotFound) {
 		output, err = option.None[awstypes.ResourceShareInvitation](), nil
 	}
