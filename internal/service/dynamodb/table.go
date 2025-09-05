@@ -2663,6 +2663,15 @@ func flattenTableWarmThroughput(apiObject *awstypes.TableWarmThroughputDescripti
 		return []any{}
 	}
 
+	// Only flatten warm throughput if it meets the minimum requirements
+	// AWS may return values below the minimum when warm throughput is not actually configured
+	readUnits := aws.ToInt64(apiObject.ReadUnitsPerSecond)
+	writeUnits := aws.ToInt64(apiObject.WriteUnitsPerSecond)
+
+	if readUnits < 12000 || writeUnits < 4000 {
+		return []any{}
+	}
+
 	m := map[string]any{}
 
 	if v := apiObject.ReadUnitsPerSecond; v != nil {
@@ -2678,6 +2687,15 @@ func flattenTableWarmThroughput(apiObject *awstypes.TableWarmThroughputDescripti
 
 func flattenGSIWarmThroughput(apiObject *awstypes.GlobalSecondaryIndexWarmThroughputDescription) []any {
 	if apiObject == nil {
+		return []any{}
+	}
+
+	// Only flatten warm throughput if it meets the minimum requirements
+	// AWS may return values below the minimum when warm throughput is not actually configured
+	readUnits := aws.ToInt64(apiObject.ReadUnitsPerSecond)
+	writeUnits := aws.ToInt64(apiObject.WriteUnitsPerSecond)
+
+	if readUnits < 12000 || writeUnits < 4000 {
 		return []any{}
 	}
 
