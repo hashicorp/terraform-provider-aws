@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -52,6 +51,7 @@ var (
 type frameworkProvider struct {
 	dataSources        []func() datasource.DataSource
 	ephemeralResources []func() ephemeral.EphemeralResource
+	listResources      []func() list.ListResource
 	primary            interface{ Meta() any }
 	resources          []func() resource.Resource
 	servicePackages    iter.Seq[conns.ServicePackage]
@@ -388,21 +388,7 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 }
 
 func (p *frameworkProvider) ListResources(ctx context.Context) []func() list.ListResource {
-	spec := &inttypes.ServicePackageFrameworkListResource{
-		TypeName: "aws_batch_job_queue",
-		Factory:  batch.JobQueueResourceAsListResource,
-		Name:     "Job Queue",
-		Tags: unique.Make(inttypes.ServicePackageResourceTags{
-			IdentifierAttribute: names.AttrARN,
-		}),
-		Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-	}
-	return []func() list.ListResource{
-		func() list.ListResource {
-			return newWrappedListResource(spec, names.Batch)
-		},
-	}
+	return slices.Clone(p.listResources)
 }
 
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
@@ -422,6 +408,14 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			for _, ephemeralResourceSpec := range v.EphemeralResources(ctx) {
 				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource { //nolint:contextcheck // must be a func()
 					return newWrappedEphemeralResource(ephemeralResourceSpec, servicePackageName)
+				})
+			}
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithListResources); ok {
+			for listResourceSpec := range v.FrameworkListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResource(listResourceSpec, servicePackageName)
 				})
 			}
 		}

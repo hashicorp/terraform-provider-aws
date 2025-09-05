@@ -63,8 +63,8 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 	return &r, nil
 }
 
-// @List
-func JobQueueResourceAsListResource() list.ListResourceWithConfigure {
+// @FrameworkListResource("aws_batch_job_queue")
+func jobQueueResourceAsListResource() list.ListResourceWithConfigure {
 	return &jobQueueResource{}
 }
 
