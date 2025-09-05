@@ -50,7 +50,8 @@ func (t objectTypeOf[T]) Equal(o attr.Type) bool {
 		return false
 	}
 
-	return t.ObjectType.Equal(other.ObjectType)
+	// Use reflect.DeepEqual to compare the structure rather than instances
+	return reflect.DeepEqual(t.ObjectType.AttrTypes, other.ObjectType.AttrTypes)
 }
 
 func (t objectTypeOf[T]) String() string {
