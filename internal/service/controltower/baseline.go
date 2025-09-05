@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -118,28 +119,12 @@ func (r *resourceBaseline) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	in := controltower.EnableBaselineInput{}
-
 	response.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	in.Tags = getTagsIn(ctx)
-
-	params, d := plan.Parameters.ToSlice(ctx)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	var ebp []awstypes.EnabledBaselineParameter
-	for _, param := range params {
-		ebp = append(ebp, awstypes.EnabledBaselineParameter{
-			Key:   param.Key.ValueStringPointer(),
-			Value: document.NewLazyDocument(param.Value.String()),
-		})
-	}
-	in.Parameters = ebp
 
 	out, err := conn.EnableBaseline(ctx, &in)
 	if err != nil {
@@ -205,30 +190,6 @@ func (r *resourceBaseline) Read(ctx context.Context, request resource.ReadReques
 	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	if out.Parameters != nil {
-		var parameterList []parameters
-		for _, param := range out.Parameters {
-			var data any
-			err = param.Value.UnmarshalSmithyDocument(data)
-			if err != nil {
-				response.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.ControlTower, create.ErrActionSetting, ResNameBaseline, state.ARN.String(), err),
-					err.Error(),
-				)
-				return
-			}
-
-			p := parameters{
-				Key:   fwflex.StringToFramework(ctx, param.Key),
-				Value: fwflex.StringValueToFramework(ctx, data.(string)),
-			}
-			parameterList = append(parameterList, p)
-		}
-		state.Parameters = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, parameterList)
-	} else {
-		state.Parameters = fwtypes.NewListNestedObjectValueOfNull[parameters](ctx)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
@@ -395,4 +356,43 @@ type resourceBaselineData struct {
 type parameters struct {
 	Key   types.String `tfsdk:"key"`
 	Value types.String `tfsdk:"value"`
+}
+
+func (p parameters) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.EnabledBaselineParameter
+	if !p.Key.IsNull() {
+		r.Key = fwflex.StringFromFramework(ctx, p.Key)
+	}
+
+	if !p.Value.IsNull() {
+		r.Value = document.NewLazyDocument(fwflex.StringValueFromFramework(ctx, p.Value))
+	}
+
+	return &r, diags
+}
+
+func (p *parameters) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v.(type) {
+	case awstypes.EnabledBaselineParameter:
+		param := v.(awstypes.EnabledBaselineParameter)
+		p.Key = fwflex.StringToFramework(ctx, param.Key)
+		if param.Value != nil {
+			var value any
+			err := param.Value.UnmarshalSmithyDocument(&value)
+			if err != nil {
+				diags.AddError(
+					"Error Reading Control Tower Baseline Parameter",
+					"Could not read Control Tower Baseline Parameter: "+err.Error(),
+				)
+				return diags
+			}
+			p.Value = fwflex.StringValueToFramework(ctx, value.(string))
+		} else {
+			p.Value = types.StringNull()
+		}
+	}
+	return diags
 }
