@@ -36,6 +36,8 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `APPRUNNER_CUSTOM_DOMAIN` | A custom domain endpoint (root domain, subdomain, or wildcard) for AppRunner Custom Domain Association testing. |
 | `AUDITMANAGER_DEREGISTER_ACCOUNT_ON_DESTROY` | Flag to execute tests that will disable AuditManager in the account upon destruction. |
 | `AUDITMANAGER_ORGANIZATION_ADMIN_ACCOUNT_ID` | Organization admin account identifier for use in AuditManager testing. |
+| `AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI` | ECR repository image URI (tagged as `v1`) for Bedrock AgentCore Agent Runtime acceptance tests. |
+| `AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI` | ECR repository image URI (tagged as `v2`) for Bedrock AgentCore Agent Runtime acceptance tests. |
 | `AWS_ALTERNATE_ACCESS_KEY_ID` | AWS access key ID with access to a secondary AWS account for tests requiring multiple accounts. Requires `AWS_ALTERNATE_SECRET_ACCESS_KEY`. Conflicts with `AWS_ALTERNATE_PROFILE`. |
 | `AWS_ALTERNATE_SECRET_ACCESS_KEY` | AWS secret access key with access to a secondary AWS account for tests requiring multiple accounts. Requires `AWS_ALTERNATE_ACCESS_KEY_ID`. Conflicts with `AWS_ALTERNATE_PROFILE`. |
 | `AWS_ALTERNATE_PROFILE` | AWS profile with access to a secondary AWS account for tests requiring multiple accounts. Conflicts with `AWS_ALTERNATE_ACCESS_KEY_ID` and `AWS_ALTERNATE_SECRET_ACCESS_KEY`. |

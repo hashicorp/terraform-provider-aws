@@ -22,6 +22,7 @@ rules:
         - internal/service/auditmanager/control.go
         - internal/service/auditmanager/framework.go
         - internal/service/batch/job_queue.go
+        - internal/service/bedrockagentcore/gateway_target.go
         - internal/service/cognitoidp/user_pool_client.go
         - internal/service/lexv2models/bot.go
         - internal/service/lexv2models/bot_locale.go
@@ -58,6 +59,7 @@ rules:
         - internal/service/auditmanager/control.go
         - internal/service/auditmanager/framework.go
         - internal/service/batch/job_queue.go
+        - internal/service/bedrockagentcore/gateway_target.go
         - internal/service/cognitoidp/user_pool_client.go
         - internal/service/datazone/domain.go
         - internal/service/datazone/environment_blueprint_configuration.go
