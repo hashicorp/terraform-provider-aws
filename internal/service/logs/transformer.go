@@ -27,9 +27,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1007,7 +1007,7 @@ func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlo
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
+				LastError: err,
 			}
 		}
 
