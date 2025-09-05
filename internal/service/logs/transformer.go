@@ -53,6 +53,7 @@ const (
 type resourceTransformer struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.ResourceWithModel[resourceTransformerModel]
 }
 
 func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -1022,6 +1023,7 @@ func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlo
 }
 
 type resourceTransformerModel struct {
+	framework.WithRegionModel
 	LogGroupIdentifier types.String                                            `tfsdk:"log_group_identifier"`
 	TransformerConfig  fwtypes.ListNestedObjectValueOf[transformerConfigModel] `tfsdk:"transformer_config"`
 	Timeouts           timeouts.Value                                          `tfsdk:"timeouts"`
