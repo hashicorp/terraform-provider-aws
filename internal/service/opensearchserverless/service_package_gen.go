@@ -96,7 +96,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceSecurityPolicy,
+			Factory:  dataSourceSecurityPolicy,
 			TypeName: "aws_opensearchserverless_security_policy",
 			Name:     "Security Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

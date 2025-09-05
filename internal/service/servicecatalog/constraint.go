@@ -117,6 +117,10 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 			return retry.RetryableError(err)
 		}
 
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "Access denied while assuming the role") {
+			return retry.RetryableError(err)
+		}
+
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return retry.RetryableError(err)
 		}
