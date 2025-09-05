@@ -39,6 +39,8 @@ func TestAccCloudFrontDistribution_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.response_completion_timeout", "0"),
 				),
 			},
 			{
