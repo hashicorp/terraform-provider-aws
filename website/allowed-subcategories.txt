@@ -259,6 +259,7 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
+WorkMail
 WorkSpaces
 WorkSpaces Web
 X-Ray

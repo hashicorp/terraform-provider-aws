@@ -2133,13 +2133,21 @@ service "cognitoidp" {
   }
 
   resource_prefix {
-    actual  = "aws_cognito_(identity_provider|resource|user|risk|log)"
+    actual  = "aws_cognito_(identity_provider|log|managed_login_branding|managed_user|resource|risk|user)"
     correct = "aws_cognitoidp_"
   }
 
   provider_package_correct = "cognitoidp"
-  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk", "cognito_log"]
-  brand                    = "AWS"
+  doc_prefix = [
+    "cognito_identity_provider",
+    "cognito_log",
+    "cognito_managed_login_branding",
+    "cognito_managed_user",
+    "cognito_resource_",
+    "cognito_risk",
+    "cognito_user"
+  ]
+  brand = "AWS"
 }
 
 service "cognitosync" {
@@ -8966,6 +8974,11 @@ service "workmail" {
     human_friendly      = "WorkMail"
   }
 
+  endpoint_info {
+    endpoint_api_call   = "ListResources"
+    endpoint_api_params = "OrganizationId: aws.String(\"m-12345678901234567890123456789012\")"
+  }
+
   resource_prefix {
     correct = "aws_workmail_"
   }
@@ -8973,7 +8986,6 @@ service "workmail" {
   provider_package_correct = "workmail"
   doc_prefix               = ["workmail_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "workmailmessageflow" {

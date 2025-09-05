@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"os/exec"
+	"strconv"
 	"testing"
 	"time"
 
@@ -156,11 +157,11 @@ func TestAccECSService_basic(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", "aws_ecs_task_definition.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_lattice_configuration.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -185,9 +186,9 @@ func TestAccECSService_basic(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_lattice_configuration.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1104,7 +1105,7 @@ func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
 				Config: testAccServiceConfig_blueGreenDeployment_withHookBehavior(rName, false),
 				PreConfig: func() {
 					go func() {
-						_ = exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start() //lintignore:XR007
+						_ = exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start() // lintignore:XR007
 					}()
 				},
 				ExpectError: regexache.MustCompile("execution halted|context canceled"),
@@ -2654,32 +2655,74 @@ func TestAccECSService_AvailabilityZoneRebalancing(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "ENABLED"),
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingEnabled)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
+				},
 			},
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName),
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingDisabled)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
+				},
 			},
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "DISABLED"),
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingDisabled)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingDisabled)),
+				},
 			},
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "ENABLED"),
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingEnabled)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingDisabled)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
+				},
 			},
 		},
 	})
@@ -4415,6 +4458,8 @@ resource "aws_ecs_service" "test" {
   name                 = %[1]q
   task_definition      = aws_ecs_task_definition.test.arn
 
+  availability_zone_rebalancing = "DISABLED"
+
   ordered_placement_strategy {
     type  = "binpack"
     field = "memory"
@@ -4492,6 +4537,8 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
+  availability_zone_rebalancing = "DISABLED"
+
   ordered_placement_strategy {
     type  = "binpack"
     field = "memory"
@@ -4563,6 +4610,8 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
+  availability_zone_rebalancing = "DISABLED"
+
   ordered_placement_strategy {
     type = "random"
   }
@@ -4597,6 +4646,8 @@ resource "aws_ecs_service" "test" {
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
+
+  availability_zone_rebalancing = "DISABLED"
 
   ordered_placement_strategy {
     type  = "binpack"
@@ -7432,7 +7483,12 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceConfig_availabilityZoneRebalancing(rName string, serviceRebalancing string) string {
+func testAccServiceConfig_availabilityZoneRebalancing(rName string, azRebalancing awstypes.AvailabilityZoneRebalancing) string {
+	val := string(azRebalancing)
+	if val != "null" {
+		val = strconv.Quote(val)
+	}
+
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -7458,37 +7514,7 @@ resource "aws_ecs_service" "test" {
   name                          = %[1]q
   cluster                       = aws_ecs_cluster.test.id
   task_definition               = aws_ecs_task_definition.test.arn
-  availability_zone_rebalancing = %[2]q
+  availability_zone_rebalancing = %[2]s
 }
-  `, rName, serviceRebalancing)
-}
-
-func testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<DEFINITION
-  [
-    {
-      "cpu": 128,
-      "essential": true,
-      "image": "ghost:latest",
-      "memory": 128,
-      "name": "ghost"
-    }
-  ]
-  DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-}
-  `, rName)
+  `, rName, val)
 }
