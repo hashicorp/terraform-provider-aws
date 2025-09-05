@@ -10,10 +10,12 @@ var (
 	ResourceResourceShare           = resourceResourceShare
 	ResourceResourceShareAccepter   = resourceResourceShareAccepter
 	ResourceSharingWithOrganization = resourceSharingWithOrganization
+	ResourcePermission              = newPermissionResource
 
 	FindPrincipalAssociationByTwoPartKey     = findPrincipalAssociationByTwoPartKey
 	FindResourceAssociationByTwoPartKey      = findResourceAssociationByTwoPartKey
 	FindResourceShareOwnerOtherAccountsByARN = findResourceShareOwnerOtherAccountsByARN
 	FindResourceShareOwnerSelfByARN          = findResourceShareOwnerSelfByARN
 	FindSharingWithOrganization              = findSharingWithOrganization
+	FindPermissionByArn                      = findPermissionByArn
 )
