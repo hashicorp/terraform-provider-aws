@@ -143,6 +143,7 @@ func resourceTable() *schema.Resource {
 
 				return false
 			}),
+			validateWarmThroughputCustomDiff,
 			validateTTLCustomDiff,
 		),
 
@@ -2663,12 +2664,13 @@ func flattenTableWarmThroughput(apiObject *awstypes.TableWarmThroughputDescripti
 		return []any{}
 	}
 
-	// Only flatten warm throughput if it meets the minimum requirements
 	// AWS may return values below the minimum when warm throughput is not actually configured
+	// Also treat exact minimum values as defaults since AWS sets these automatically
 	readUnits := aws.ToInt64(apiObject.ReadUnitsPerSecond)
 	writeUnits := aws.ToInt64(apiObject.WriteUnitsPerSecond)
 
-	if readUnits < 12000 || writeUnits < 4000 {
+	// Return empty if values are below minimums OR exactly at minimums (AWS defaults)
+	if (readUnits < 12000 && writeUnits < 4000) || (readUnits == 12000 && writeUnits == 4000) {
 		return []any{}
 	}
 
@@ -2690,12 +2692,13 @@ func flattenGSIWarmThroughput(apiObject *awstypes.GlobalSecondaryIndexWarmThroug
 		return []any{}
 	}
 
-	// Only flatten warm throughput if it meets the minimum requirements
 	// AWS may return values below the minimum when warm throughput is not actually configured
+	// Also treat exact minimum values as defaults since AWS sets these automatically
 	readUnits := aws.ToInt64(apiObject.ReadUnitsPerSecond)
 	writeUnits := aws.ToInt64(apiObject.WriteUnitsPerSecond)
 
-	if readUnits < 12000 || writeUnits < 4000 {
+	// Return empty if values are below minimums OR exactly at minimums (AWS defaults)
+	if (readUnits < 12000 && writeUnits < 4000) || (readUnits == 12000 && writeUnits == 4000) {
 		return []any{}
 	}
 
@@ -3118,6 +3121,65 @@ func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) e
 			return fmt.Errorf("%s can not be set when billing_mode is %q", key, awstypes.BillingModePayPerRequest)
 		}
 	}
+	return nil
+}
+
+func validateWarmThroughputCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	// Handle table-level warm throughput suppression
+	if err := suppressTableWarmThroughputDefaults(d, configRaw); err != nil {
+		return err
+	}
+
+	// Handle GSI warm throughput suppression
+	if err := suppressGSIWarmThroughputDefaults(d, configRaw); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
+	// If warm throughput is explicitly configured, don't suppress any diffs
+	if warmThroughput := configRaw.GetAttr("warm_throughput"); warmThroughput.IsKnown() && !warmThroughput.IsNull() && warmThroughput.LengthInt() > 0 {
+		return nil
+	}
+
+	// If warm throughput is not explicitly configured, suppress AWS default values
+	if !d.HasChange("warm_throughput") {
+		return nil
+	}
+
+	_, new := d.GetChange("warm_throughput")
+	newList, ok := new.([]interface{})
+	if !ok || len(newList) == 0 {
+		return nil
+	}
+
+	newMap, ok := newList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	readUnits := newMap["read_units_per_second"]
+	writeUnits := newMap["write_units_per_second"]
+
+	// If AWS returns default values and no explicit config, suppress the diff
+	if (readUnits == 1 && writeUnits == 1) || (readUnits == 12000 && writeUnits == 4000) {
+		return d.Clear("warm_throughput")
+	}
+
+	return nil
+}
+
+func suppressGSIWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
+	// GSI warm throughput defaults are now handled in the flattenGSIWarmThroughput function
+	// by filtering out AWS default values during the read operation.
+	// This approach is more reliable than trying to suppress diffs on Set-based fields.
 	return nil
 }
 
