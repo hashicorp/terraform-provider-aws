@@ -4,10 +4,11 @@
 package json_test
 
 import (
+	"cmp"
 	"slices"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	gocmp "github.com/google/go-cmp/cmp"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	mattbairdjsonpatch "github.com/mattbaird/jsonpatch"
 )
@@ -73,32 +74,20 @@ func TestCreatePatchFromStrings(t *testing.T) {
 			t.Parallel()
 
 			got, err := tfjson.CreatePatchFromStrings(testCase.a, testCase.b)
-			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
+			if got, want := err != nil, testCase.wantErr; !gocmp.Equal(got, want) {
 				t.Errorf("CreatePatchFromStrings(%s, %s) err %t, want %t", testCase.a, testCase.b, got, want)
 			}
 			if err == nil {
-				sortTransformer := cmp.Transformer("SortPatchOps", func(ops []mattbairdjsonpatch.JsonPatchOperation) []mattbairdjsonpatch.JsonPatchOperation {
+				sortTransformer := gocmp.Transformer("SortPatchOps", func(ops []mattbairdjsonpatch.JsonPatchOperation) []mattbairdjsonpatch.JsonPatchOperation {
 					sorted := make([]mattbairdjsonpatch.JsonPatchOperation, len(ops))
 					copy(sorted, ops)
 					slices.SortFunc(sorted, func(a, b mattbairdjsonpatch.JsonPatchOperation) int {
-						if a.Operation != b.Operation {
-							if a.Operation < b.Operation {
-								return -1
-							}
-							return 1
-						}
-						if a.Path < b.Path {
-							return -1
-						}
-						if a.Path > b.Path {
-							return 1
-						}
-						return 0
+						return cmp.Or(cmp.Compare(a.Operation, b.Operation), cmp.Compare(a.Path, b.Path))
 					})
 					return sorted
 				})
 
-				if diff := cmp.Diff(got, testCase.wantPatch, sortTransformer); diff != "" {
+				if diff := gocmp.Diff(got, testCase.wantPatch, sortTransformer); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
