@@ -3155,12 +3155,12 @@ func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.V
 	}
 
 	_, new := d.GetChange("warm_throughput")
-	newList, ok := new.([]interface{})
+	newList, ok := new.([]any)
 	if !ok || len(newList) == 0 {
 		return nil
 	}
 
-	newMap, ok := newList[0].(map[string]interface{})
+	newMap, ok := newList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
