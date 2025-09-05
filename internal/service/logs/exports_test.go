@@ -38,6 +38,7 @@ var (
 	FindQueryDefinitionByTwoPartKey                        = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName                               = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey                     = findSubscriptionFilterByTwoPartKey
+	FindTransformerByLogGroupIdentifier                    = findTransformerByLogGroupIdentifier
 
 	TrimLogGroupARNWildcardSuffix          = trimLogGroupARNWildcardSuffix
 	ValidLogGroupName                      = validLogGroupName
