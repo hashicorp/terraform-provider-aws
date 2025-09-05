@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -86,6 +87,11 @@ func TestAccOpenSearchPackage_packageTypeZipPlugin(t *testing.T) {
 					"available_package_version",
 					"package_source", // This isn't returned by the API
 				},
+			},
+			{
+				// If engin_version is different from specified in the plugin zip file, it should return an error
+				Config:      testAccPackageConfig_packageTypeZipPlugin(pkgName, "OpenSearch_2.11"),
+				ExpectError: regexache.MustCompile(`doesn't matches with the provided EngineVersion`),
 			},
 		},
 	})
