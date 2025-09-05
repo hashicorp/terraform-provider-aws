@@ -560,12 +560,10 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 	conn := awsClient.BatchClient(ctx)
 
 	interceptors := []listResultInterceptor{
-		populateTimeoutsInterceptor{},
 		populateIdentityInterceptor{},
 		identityInterceptor{
 			attributes: r.IdentitySpec().Attributes,
 		},
-		setResourceInterceptor{},
 		tagsInterceptor{
 			HTags: interceptors.HTags(unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
@@ -594,10 +592,18 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 
 			var data jobQueueResourceModel
 
+			timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTimeouts))
+			obj, _ := newEmptyObject(timeoutsType)
+			data.Timeouts.Object = obj
+
+			typ, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTags))
+			tagsType := typ.(attr.TypeWithElementType)
+			data.Tags.MapValue = basetypes.NewMapNull(tagsType.ElementType())
+			data.TagsAll.MapValue = basetypes.NewMapNull(tagsType.ElementType())
+
 			params := interceptorParams{
 				c:      awsClient,
 				result: &result,
-				object: &data,
 			}
 
 			params.when = Before
@@ -614,7 +620,13 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 			if diags := fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue")); diags.HasError() {
 				result.Diagnostics.Append(diags...)
 			}
+
 			setTagsOut(ctx, jobQueue.Tags)
+
+			if diags := result.Resource.Set(ctx, &data); diags.HasError() {
+				result.Diagnostics.Append(diags...)
+				return
+			}
 
 			result.DisplayName = fmt.Sprintf("x%s (%s)x", data.JobQueueName.ValueString(), data.JobQueueARN.ValueString())
 
@@ -661,7 +673,6 @@ const (
 type interceptorParams struct {
 	c      *conns.AWSClient
 	result *list.ListResult
-	object *jobQueueResourceModel // Because tfsdk.Resource doesn't have SetAttribute
 	when   when
 }
 
@@ -705,34 +716,17 @@ func (r tagsInterceptor) read(ctx context.Context, params interceptorParams) (di
 		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(params.c.IgnoreTagsConfig(ctx)).ResolveDuplicatesFramework(ctx, params.c.DefaultTagsConfig(ctx), params.c.IgnoreTagsConfig(ctx), stateTags, &diags).Map(); len(v) > 0 {
 			stateTags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
-		params.object.Tags = stateTags
+		diags.Append(params.result.Resource.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
+		if diags.HasError() {
+			return
+		}
 
 		// Computed tags_all do.
 		stateTagsAll := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(params.c.IgnoreTagsConfig(ctx)).Map())
-		params.object.TagsAll = tftags.NewMapFromMapValue(stateTagsAll)
-	}
-
-	return
-}
-
-// This interceptor will not be needed if Framework pre-populates the Resource as it does with CRUD operations
-type populateTimeoutsInterceptor struct{}
-
-func (r populateTimeoutsInterceptor) read(ctx context.Context, params interceptorParams) (diags diag.Diagnostics) {
-	switch params.when {
-	case Before:
-		timeoutsType, d := params.result.Resource.Schema.TypeAtPath(ctx, path.Root("timeouts"))
-		diags.Append(d...)
-		if d.HasError() {
+		diags.Append(params.result.Resource.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
+		if diags.HasError() {
 			return
 		}
-
-		obj, d := newEmptyObject(timeoutsType)
-		diags.Append(d...)
-		if d.HasError() {
-			return
-		}
-		params.object.Timeouts.Object = obj
 	}
 
 	return
@@ -756,18 +750,6 @@ func (r populateIdentityInterceptor) read(ctx context.Context, params intercepto
 		if diags.HasError() {
 			return
 		}
-	}
-
-	return
-}
-
-// This interceptor will not be needed if the Resource value is of a type that implements SetAttribute
-type setResourceInterceptor struct{}
-
-func (r setResourceInterceptor) read(ctx context.Context, params interceptorParams) (diags diag.Diagnostics) {
-	switch params.when {
-	case After:
-		diags.Append(params.result.Resource.Set(ctx, params.object)...)
 	}
 
 	return
@@ -829,6 +811,7 @@ func newEmptyObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagno
 
 	attrTypes := i.AttributeTypes()
 	attrValues := make(map[string]attr.Value, len(attrTypes))
+	// TODO: only handles string types
 	for attrName := range attrTypes {
 		attrValues[attrName] = types.StringNull()
 	}
