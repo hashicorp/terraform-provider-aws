@@ -38,7 +38,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "package_id"),
 					resource.TestCheckResourceAttr(resourceName, "package_name", pkgName),
 					resource.TestCheckResourceAttr(resourceName, "package_source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "package_type", "TXT-DICTIONARY"),
+					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeTxtDictionary)),
 				),
 			},
 			{
