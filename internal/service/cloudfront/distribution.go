@@ -697,11 +697,7 @@ func resourceDistribution() *schema.Resource {
 						"response_completion_timeout": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  0, // Zero equals to unspecified
-							ValidateFunc: validation.Any(
-								validation.IntAtLeast(30),
-								validation.IntInSlice([]int{0}),
-							),
+							Default:  0, // Zero is equivalent to unspecified
 						},
 						"s3_origin_config": {
 							Type:     schema.TypeList,
