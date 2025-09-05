@@ -72,8 +72,11 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 	id := clusterRoleAssociationCreateResourceID(dbClusterID, roleARN)
 	input := rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(dbClusterID),
-		FeatureName:         aws.String(d.Get("feature_name").(string)),
 		RoleArn:             aws.String(roleARN),
+	}
+
+	if v, ok := d.GetOk("feature_name"); ok {
+		input.FeatureName = aws.String(v.(string))
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
