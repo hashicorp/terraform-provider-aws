@@ -192,17 +192,17 @@ resource "aws_s3_bucket" "test" {
 }
 
 
-# example-dummy-opensearch-plugin.zip was created from the sample repository provided by AWS using the following commands:
+# example-opensearch-plugin.zip was created from the sample repository provided by AWS using the following commands:
 # > git clone https://github.com/aws-samples/kr-tech-blog-sample-code.git
 # > cd kr-tech-blog-sample-code/opensearch_custom_plugin
 # > gradele build
-# > cp build/distributions/opensearch-custom-plugin-1.0.0.zip terraform-provider-aws/internal/service/opensearch/test-fixtures/example-dummy-opensearch-plugin.zip
+# > cp build/distributions/opensearch-custom-plugin-1.0.0.zip terraform-provider-aws/internal/service/opensearch/test-fixtures/example-opensearch-plugin.zip
 
 resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   key    = %[1]q
-  source = "./test-fixtures/example-dummy-opensearch-plugin.zip"
-  etag   = filemd5("./test-fixtures/example-dummy-opensearch-plugin.zip")
+  source = "./test-fixtures/example-opensearch-plugin.zip"
+  etag   = filemd5("./test-fixtures/example-opensearch-plugin.zip")
 }
 
 resource "aws_opensearch_package" "test" {
