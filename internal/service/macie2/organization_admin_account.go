@@ -53,8 +53,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 		ClientToken:    aws.String(id.UniqueId()),
 	}
 
-	var err error
-	err = tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {
+	err := tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.EnableOrganizationAdminAccount(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
