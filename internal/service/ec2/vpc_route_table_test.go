@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -1312,16 +1311,16 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 
 		plId := aws.ToString(resp.PrefixLists[0].PrefixListId)
 
-		err = retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
+		err = tfresource.Retry(ctx, 3*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 			input := ec2.DescribeRouteTablesInput{
 				RouteTableIds: []string{aws.ToString(routeTable.RouteTableId)},
 			}
 			resp, err := conn.DescribeRouteTables(ctx, &input)
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			if resp == nil || len(resp.RouteTables) == 0 {
-				return retry.NonRetryableError(fmt.Errorf("Route Table not found"))
+				return tfresource.NonRetryableError(fmt.Errorf("Route Table not found"))
 			}
 
 			for _, route := range resp.RouteTables[0].Routes {
@@ -1330,7 +1329,7 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 				}
 			}
 
-			return retry.RetryableError(fmt.Errorf("Route not found"))
+			return tfresource.RetryableError(fmt.Errorf("Route not found"))
 		})
 
 		return err

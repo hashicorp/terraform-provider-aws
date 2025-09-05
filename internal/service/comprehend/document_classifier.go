@@ -514,9 +514,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 		return nil
 	}, tfresource.WithPollInterval(documentClassifierPollInterval))
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateDocumentClassifier(ctx, in)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Document Classifier (%s): %s", action, d.Get(names.AttrName).(string), err)
 	}

@@ -147,9 +147,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		return tfresource.NonRetryableError(err)
 	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.Enable(ctx, in)
-	}
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
 	}

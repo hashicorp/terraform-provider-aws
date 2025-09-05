@@ -15,12 +15,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1675,14 +1675,14 @@ func sweepSecurityGroups(region string) error {
 			}
 
 			// Handle EC2 eventual consistency
-			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			err := tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 				_, err := conn.DeleteSecurityGroup(ctx, &input)
 
 				if tfawserr.ErrCodeEquals(err, "DependencyViolation") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if err != nil {
-					return retry.NonRetryableError(err)
+					return tfresource.NonRetryableError(err)
 				}
 				return nil
 			})

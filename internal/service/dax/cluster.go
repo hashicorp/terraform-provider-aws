@@ -259,21 +259,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		resp, err = conn.CreateCluster(ctx, input)
 		if errs.IsA[*awstypes.InvalidParameterValueException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateCluster(ctx, input)
-	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DAX cluster: %s", err)
 	}
@@ -498,22 +495,18 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
 	}
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteCluster(ctx, req)
 		if errs.IsA[*awstypes.InvalidClusterStateFault](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCluster(ctx, req)
-	}
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags

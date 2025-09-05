@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -2769,20 +2768,21 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		var output *awstypes.Service
-		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+		err := tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 			var err error
 			output, err = tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 
 			if tfresource.NotFound(err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 
 			return nil
 		})
+
 		if err != nil {
 			return err
 		}

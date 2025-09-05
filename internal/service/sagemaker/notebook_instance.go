@@ -417,29 +417,22 @@ func startNotebookInstance(ctx context.Context, conn *sagemaker.Client, id strin
 	}
 	// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
 	// it doesn't change we'll send another request
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.StartNotebookInstance(ctx, startOpts)
 		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("starting: %s", err))
+			return tfresource.NonRetryableError(fmt.Errorf("starting: %s", err))
 		}
 
 		err = waitNotebookInstanceStarted(ctx, conn, id)
 		if err != nil {
-			return retry.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
+			return tfresource.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.StartNotebookInstance(ctx, startOpts)
-		if err != nil {
-			return fmt.Errorf("starting: %s", err)
-		}
 
-		err = waitNotebookInstanceStarted(ctx, conn, id)
-		if err != nil {
-			return fmt.Errorf("starting: waiting for completion: %s", err)
-		}
+	if err != nil {
+		return fmt.Errorf("starting: %s", err)
 	}
 
 	if err := waitNotebookInstanceInService(ctx, conn, id); err != nil {

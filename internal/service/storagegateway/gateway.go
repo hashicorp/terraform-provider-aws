@@ -305,31 +305,25 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		var response *http.Response
-		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 			response, err = client.Do(request)
 
 			if err != nil {
+				errReturn := fmt.Errorf("making HTTP request: %w", err)
 				if errs.IsA[net.Error](err) {
-					errMessage := fmt.Errorf("making HTTP request: %w", err)
-					log.Printf("[DEBUG] retryable %s", errMessage)
-					return retry.RetryableError(errMessage)
+					return tfresource.RetryableError(errReturn)
 				}
 
-				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return tfresource.NonRetryableError(errReturn)
 			}
 
-			if slices.Contains([]int{504}, response.StatusCode) {
-				errMessage := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
-				log.Printf("[DEBUG] retryable %s", errMessage)
-				return retry.RetryableError(errMessage)
+			if slices.Contains([]int{http.StatusGatewayTimeout}, response.StatusCode) {
+				errReturn := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
+				return tfresource.RetryableError(errReturn)
 			}
 
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			response, err = client.Do(request)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "retrieving activation key from IP Address (%s): %s", gatewayIPAddress, err)

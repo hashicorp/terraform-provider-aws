@@ -11,7 +11,6 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -205,7 +204,7 @@ func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Retrying as Read after Delete is not always consistent.
-			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			err := tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 				_, err := tfsfn.FindActivityByARN(ctx, conn, rs.Primary.ID)
 
 				if tfresource.NotFound(err) {
@@ -213,10 +212,10 @@ func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
 				}
 
 				if err != nil {
-					return retry.NonRetryableError(err)
+					return tfresource.NonRetryableError(err)
 				}
 
-				return retry.RetryableError(fmt.Errorf("Step Functions Activity still exists: %s", rs.Primary.ID))
+				return tfresource.RetryableError(fmt.Errorf("Step Functions Activity still exists: %s", rs.Primary.ID))
 			})
 
 			return err

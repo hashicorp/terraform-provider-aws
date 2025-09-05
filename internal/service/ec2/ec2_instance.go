@@ -1672,19 +1672,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 						}
 					} else {
-						err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
+						err := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-									return retry.RetryableError(err)
+									return tfresource.RetryableError(err)
 								}
-								return retry.NonRetryableError(err)
+								return tfresource.NonRetryableError(err)
 							}
 							return nil
 						})
-						if tfresource.TimedOut(err) {
-							_, err = conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
-						}
+
 						if err != nil {
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): replacing instance profile: %s", d.Id(), err)
 						}
@@ -2560,22 +2558,21 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.AssociateIamInstanceProfile(ctx, &input)
-	}
+
 	if err != nil {
 		return fmt.Errorf("associating instance profile: %s", err)
 	}
+
 	return nil
 }
 
@@ -2987,16 +2984,16 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 	input := ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
-	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		resp, err = conn.GetPasswordData(ctx, &input)
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if resp.PasswordData == nil || aws.ToString(resp.PasswordData) == "" {
-			return retry.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
+			return tfresource.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
 		}
 
 		passwordData = strings.TrimSpace(aws.ToString(resp.PasswordData))
@@ -3004,16 +3001,7 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 		log.Printf("[INFO] Password data read for instance %s", instanceID)
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.GetPasswordData(ctx, &input)
-		if err != nil {
-			return "", fmt.Errorf("getting password data: %s", err)
-		}
-		if resp.PasswordData == nil || aws.ToString(resp.PasswordData) == "" {
-			return "", errors.New("password data is blank")
-		}
-		passwordData = strings.TrimSpace(aws.ToString(resp.PasswordData))
-	}
+
 	if err != nil {
 		return "", err
 	}

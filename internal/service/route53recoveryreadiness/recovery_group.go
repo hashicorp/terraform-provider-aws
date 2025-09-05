@@ -148,20 +148,16 @@ func resourceRecoveryGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Readiness Recovery Group (%s): %s", d.Id(), err)
 	}
 
-	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+	err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
 		_, err := findRecoveryGroupByName(ctx, conn, d.Id())
 		if err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
-		return retry.RetryableError(fmt.Errorf("Route53 Recovery Readiness Recovery Group (%s) still exists", d.Id()))
+		return tfresource.RetryableError(fmt.Errorf("Route53 Recovery Readiness Recovery Group (%s) still exists", d.Id()))
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = findRecoveryGroupByName(ctx, conn, d.Id())
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Readiness Recovery Group (%s) deletion: %s", d.Id(), err)
