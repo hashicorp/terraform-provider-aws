@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
@@ -38,6 +39,12 @@ func resourcePackage() *schema.Resource {
 			"available_package_version": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"engine_version": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^Elasticsearch_[0-9]{1}\.[0-9]{1,2}$|^OpenSearch_[0-9]{1,2}\.[0-9]{1,2}$`), "must be in the format 'Elasticsearch_X.Y' or 'OpenSearch_X.Y'"),
 			},
 			"package_description": {
 				Type:     schema.TypeString,
@@ -94,6 +101,10 @@ func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta any
 		PackageType:        awstypes.PackageType(d.Get("package_type").(string)),
 	}
 
+	if v, ok := d.GetOk("engine_version"); ok {
+		input.EngineVersion = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("package_source"); ok {
 		input.PackageSource = expandPackageSource(v.([]any)[0].(map[string]any))
 	}
@@ -126,6 +137,7 @@ func resourcePackageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.Set("available_package_version", pkg.AvailablePackageVersion)
+	d.Set("engine_version", pkg.EngineVersion)
 	d.Set("package_description", pkg.PackageDescription)
 	d.Set("package_id", pkg.PackageID)
 	d.Set("package_name", pkg.PackageName)
