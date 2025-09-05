@@ -578,115 +578,137 @@ func expandStepAdjustments(tfList []any) []awstypes.StepAdjustment {
 	return apiObjects
 }
 
-func expandCustomizedMetricSpecification(configured []any) *awstypes.CustomizedMetricSpecification {
-	spec := &awstypes.CustomizedMetricSpecification{}
-
-	for _, raw := range configured {
-		data := raw.(map[string]any)
-		if val, ok := data["metrics"].(*schema.Set); ok && val.Len() > 0 {
-			spec.Metrics = expandTargetTrackingMetricDataQueries(val.List())
-		} else {
-			if v, ok := data[names.AttrMetricName]; ok {
-				spec.MetricName = aws.String(v.(string))
-			}
-
-			if v, ok := data[names.AttrNamespace]; ok {
-				spec.Namespace = aws.String(v.(string))
-			}
-
-			if v, ok := data[names.AttrUnit].(string); ok && v != "" {
-				spec.Unit = aws.String(v)
-			}
-
-			if v, ok := data["statistic"]; ok {
-				spec.Statistic = awstypes.MetricStatistic(v.(string))
-			}
-
-			if s, ok := data["dimensions"].(*schema.Set); ok && s.Len() > 0 {
-				dimensions := make([]awstypes.MetricDimension, s.Len())
-				for i, d := range s.List() {
-					dimension := d.(map[string]any)
-					dimensions[i] = awstypes.MetricDimension{
-						Name:  aws.String(dimension[names.AttrName].(string)),
-						Value: aws.String(dimension[names.AttrValue].(string)),
-					}
-				}
-				spec.Dimensions = dimensions
-			}
-		}
-	}
-	return spec
-}
-
-func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []any) []awstypes.TargetTrackingMetricDataQuery {
-	if len(metricDataQuerySlices) < 1 {
+func expandCustomizedMetricSpecification(tfList []any) *awstypes.CustomizedMetricSpecification {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
-	metricDataQueries := make([]awstypes.TargetTrackingMetricDataQuery, len(metricDataQuerySlices))
 
-	for i := range metricDataQueries {
-		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]any)
-		metricDataQuery := awstypes.TargetTrackingMetricDataQuery{
-			Id: aws.String(metricDataQueryFlat[names.AttrID].(string)),
-		}
-		if val, ok := metricDataQueryFlat["metric_stat"]; ok && len(val.([]any)) > 0 {
-			metricStatSpec := val.([]any)[0].(map[string]any)
-			metricSpec := metricStatSpec["metric"].([]any)[0].(map[string]any)
-			metric := &awstypes.TargetTrackingMetric{
-				MetricName: aws.String(metricSpec[names.AttrMetricName].(string)),
-				Namespace:  aws.String(metricSpec[names.AttrNamespace].(string)),
-			}
-			if v, ok := metricSpec["dimensions"]; ok {
-				dims := v.(*schema.Set).List()
-				dimList := make([]awstypes.TargetTrackingMetricDimension, len(dims))
-				for i := range dimList {
-					dim := dims[i].(map[string]any)
-					md := awstypes.TargetTrackingMetricDimension{
-						Name:  aws.String(dim[names.AttrName].(string)),
-						Value: aws.String(dim[names.AttrValue].(string)),
-					}
-					dimList[i] = md
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.CustomizedMetricSpecification{}
+
+	if v, ok := tfMap["metrics"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Metrics = expandTargetTrackingMetricDataQueries(v.List())
+	} else {
+		if v, ok := tfMap["dimensions"].(*schema.Set); ok && v.Len() > 0 {
+			dimensions := make([]awstypes.MetricDimension, v.Len())
+
+			for i, tfMapRaw := range v.List() {
+				tfMap := tfMapRaw.(map[string]any)
+				dimensions[i] = awstypes.MetricDimension{
+					Name:  aws.String(tfMap[names.AttrName].(string)),
+					Value: aws.String(tfMap[names.AttrValue].(string)),
 				}
-				metric.Dimensions = dimList
 			}
-			metricStat := &awstypes.TargetTrackingMetricStat{
-				Metric: metric,
-				Stat:   aws.String(metricStatSpec["stat"].(string)),
-			}
-			if v, ok := metricStatSpec[names.AttrUnit]; ok && len(v.(string)) > 0 {
-				metricStat.Unit = aws.String(v.(string))
-			}
-			metricDataQuery.MetricStat = metricStat
+
+			apiObject.Dimensions = dimensions
 		}
-		if val, ok := metricDataQueryFlat[names.AttrExpression]; ok && val.(string) != "" {
-			metricDataQuery.Expression = aws.String(val.(string))
+
+		if v, ok := tfMap[names.AttrMetricName]; ok {
+			apiObject.MetricName = aws.String(v.(string))
 		}
-		if val, ok := metricDataQueryFlat["label"]; ok && val.(string) != "" {
-			metricDataQuery.Label = aws.String(val.(string))
+
+		if v, ok := tfMap[names.AttrNamespace]; ok {
+			apiObject.Namespace = aws.String(v.(string))
 		}
-		if val, ok := metricDataQueryFlat["return_data"]; ok {
-			metricDataQuery.ReturnData = aws.Bool(val.(bool))
+
+		if v, ok := tfMap["statistic"]; ok {
+			apiObject.Statistic = awstypes.MetricStatistic(v.(string))
 		}
-		metricDataQueries[i] = metricDataQuery
+
+		if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
+			apiObject.Unit = aws.String(v)
+		}
 	}
-	return metricDataQueries
+
+	return apiObject
 }
 
-func expandPredefinedMetricSpecification(configured []any) *awstypes.PredefinedMetricSpecification {
-	spec := &awstypes.PredefinedMetricSpecification{}
-
-	for _, raw := range configured {
-		data := raw.(map[string]any)
-
-		if v, ok := data["predefined_metric_type"]; ok {
-			spec.PredefinedMetricType = awstypes.MetricType(v.(string))
-		}
-
-		if v, ok := data["resource_label"].(string); ok && v != "" {
-			spec.ResourceLabel = aws.String(v)
-		}
+func expandTargetTrackingMetricDataQueries(tfList []any) []awstypes.TargetTrackingMetricDataQuery {
+	if len(tfList) < 1 {
+		return nil
 	}
-	return spec
+
+	apiObjects := make([]awstypes.TargetTrackingMetricDataQuery, len(tfList))
+
+	for i, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.TargetTrackingMetricDataQuery{
+			Id: aws.String(tfMap[names.AttrID].(string)),
+		}
+
+		if v, ok := tfMap[names.AttrExpression]; ok && v.(string) != "" {
+			apiObject.Expression = aws.String(v.(string))
+		}
+
+		if v, ok := tfMap["label"]; ok && v.(string) != "" {
+			apiObject.Label = aws.String(v.(string))
+		}
+
+		if v, ok := tfMap["metric_stat"]; ok && len(v.([]any)) > 0 {
+			apiObject.MetricStat = &awstypes.TargetTrackingMetricStat{}
+			tfMap := v.([]any)[0].(map[string]any)
+
+			if v, ok := tfMap["metric"]; ok && len(v.([]any)) > 0 {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				metric := &awstypes.TargetTrackingMetric{
+					MetricName: aws.String(tfMap[names.AttrMetricName].(string)),
+					Namespace:  aws.String(tfMap[names.AttrNamespace].(string)),
+				}
+
+				if v, ok := tfMap["dimensions"].(*schema.Set); ok && v.Len() > 0 {
+					dimensions := make([]awstypes.TargetTrackingMetricDimension, v.Len())
+
+					for i, tfMapRaw := range v.List() {
+						tfMap := tfMapRaw.(map[string]any)
+						dimensions[i] = awstypes.TargetTrackingMetricDimension{
+							Name:  aws.String(tfMap[names.AttrName].(string)),
+							Value: aws.String(tfMap[names.AttrValue].(string)),
+						}
+					}
+
+					metric.Dimensions = dimensions
+				}
+
+				apiObject.MetricStat.Metric = metric
+			}
+
+			if v, ok := tfMap["stat"].(string); ok && v != "" {
+				apiObject.MetricStat.Stat = aws.String(v)
+			}
+
+			if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
+				apiObject.MetricStat.Unit = aws.String(v)
+			}
+		}
+
+		if v, ok := tfMap["return_data"]; ok {
+			apiObject.ReturnData = aws.Bool(v.(bool))
+		}
+
+		apiObjects[i] = apiObject
+	}
+
+	return apiObjects
+}
+
+func expandPredefinedMetricSpecification(tfList []any) *awstypes.PredefinedMetricSpecification {
+	if len(tfList) < 1 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.PredefinedMetricSpecification{}
+
+	if v, ok := tfMap["predefined_metric_type"].(string); ok && v != "" {
+		apiObject.PredefinedMetricType = awstypes.MetricType(v)
+	}
+
+	if v, ok := tfMap["resource_label"].(string); ok && v != "" {
+		apiObject.ResourceLabel = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func expandStepScalingPolicyConfiguration(tfList []any) *awstypes.StepScalingPolicyConfiguration {
@@ -727,13 +749,13 @@ func flattenStepScalingPolicyConfiguration(apiObject *awstypes.StepScalingPolicy
 
 	tfMap := make(map[string]any)
 
-	tfMap["adjustment_type"] = string(apiObject.AdjustmentType)
+	tfMap["adjustment_type"] = apiObject.AdjustmentType
 
 	if apiObject.Cooldown != nil {
 		tfMap["cooldown"] = aws.ToInt32(apiObject.Cooldown)
 	}
 
-	tfMap["metric_aggregation_type"] = string(apiObject.MetricAggregationType)
+	tfMap["metric_aggregation_type"] = apiObject.MetricAggregationType
 
 	if apiObject.MinAdjustmentMagnitude != nil {
 		tfMap["min_adjustment_magnitude"] = aws.ToInt32(apiObject.MinAdjustmentMagnitude)
@@ -768,151 +790,160 @@ func flattenStepAdjustments(apiObjects []awstypes.StepAdjustment) []any {
 	return tfList
 }
 
-func flattenTargetTrackingScalingPolicyConfiguration(cfg *awstypes.TargetTrackingScalingPolicyConfiguration) []any {
-	if cfg == nil {
+func flattenTargetTrackingScalingPolicyConfiguration(apiObject *awstypes.TargetTrackingScalingPolicyConfiguration) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := make(map[string]any)
+	tfMap := make(map[string]any)
 
-	if v := cfg.CustomizedMetricSpecification; v != nil {
-		m["customized_metric_specification"] = flattenCustomizedMetricSpecification(v)
+	if v := apiObject.CustomizedMetricSpecification; v != nil {
+		tfMap["customized_metric_specification"] = flattenCustomizedMetricSpecification(v)
 	}
 
-	if v := cfg.DisableScaleIn; v != nil {
-		m["disable_scale_in"] = aws.ToBool(v)
+	if v := apiObject.DisableScaleIn; v != nil {
+		tfMap["disable_scale_in"] = aws.ToBool(v)
 	}
 
-	if v := cfg.PredefinedMetricSpecification; v != nil {
-		m["predefined_metric_specification"] = flattenPredefinedMetricSpecification(v)
+	if v := apiObject.PredefinedMetricSpecification; v != nil {
+		tfMap["predefined_metric_specification"] = flattenPredefinedMetricSpecification(v)
 	}
 
-	if v := cfg.ScaleInCooldown; v != nil {
-		m["scale_in_cooldown"] = aws.ToInt32(v)
+	if v := apiObject.ScaleInCooldown; v != nil {
+		tfMap["scale_in_cooldown"] = aws.ToInt32(v)
 	}
 
-	if v := cfg.ScaleOutCooldown; v != nil {
-		m["scale_out_cooldown"] = aws.ToInt32(v)
+	if v := apiObject.ScaleOutCooldown; v != nil {
+		tfMap["scale_out_cooldown"] = aws.ToInt32(v)
 	}
 
-	if v := cfg.TargetValue; v != nil {
-		m["target_value"] = aws.ToFloat64(v)
+	if v := apiObject.TargetValue; v != nil {
+		tfMap["target_value"] = aws.ToFloat64(v)
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func flattenCustomizedMetricSpecification(cfg *awstypes.CustomizedMetricSpecification) []any {
-	if cfg == nil {
+func flattenCustomizedMetricSpecification(apiObject *awstypes.CustomizedMetricSpecification) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{}
+	tfMap := map[string]any{}
 
-	if cfg.Metrics != nil {
-		m["metrics"] = flattenTargetTrackingMetricDataQueries(cfg.Metrics)
+	if apiObject.Metrics != nil {
+		tfMap["metrics"] = flattenTargetTrackingMetricDataQueries(apiObject.Metrics)
 	} else {
-		if v := cfg.Dimensions; len(v) > 0 {
-			m["dimensions"] = flattenMetricDimensions(cfg.Dimensions)
+		if v := apiObject.Dimensions; len(v) > 0 {
+			tfMap["dimensions"] = flattenMetricDimensions(apiObject.Dimensions)
 		}
 
-		if v := cfg.MetricName; v != nil {
-			m[names.AttrMetricName] = aws.ToString(v)
+		if v := apiObject.MetricName; v != nil {
+			tfMap[names.AttrMetricName] = aws.ToString(v)
 		}
 
-		if v := cfg.Namespace; v != nil {
-			m[names.AttrNamespace] = aws.ToString(v)
+		if v := apiObject.Namespace; v != nil {
+			tfMap[names.AttrNamespace] = aws.ToString(v)
 		}
 
-		m["statistic"] = string(cfg.Statistic)
+		tfMap["statistic"] = apiObject.Statistic
 
-		if v := cfg.Unit; v != nil {
-			m[names.AttrUnit] = aws.ToString(v)
+		if v := apiObject.Unit; v != nil {
+			tfMap[names.AttrUnit] = aws.ToString(v)
 		}
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func flattenTargetTrackingMetricDataQueries(metricDataQueries []awstypes.TargetTrackingMetricDataQuery) []any {
-	metricDataQueriesSpec := make([]any, len(metricDataQueries))
-	for i := range metricDataQueriesSpec {
-		metricDataQuery := map[string]any{}
-		rawMetricDataQuery := metricDataQueries[i]
-		metricDataQuery[names.AttrID] = aws.ToString(rawMetricDataQuery.Id)
-		if rawMetricDataQuery.Expression != nil {
-			metricDataQuery[names.AttrExpression] = aws.ToString(rawMetricDataQuery.Expression)
+func flattenTargetTrackingMetricDataQueries(apiObjects []awstypes.TargetTrackingMetricDataQuery) []any {
+	tfList := make([]any, len(apiObjects))
+
+	for i, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrID: aws.ToString(apiObject.Id),
 		}
-		if rawMetricDataQuery.Label != nil {
-			metricDataQuery["label"] = aws.ToString(rawMetricDataQuery.Label)
+
+		if apiObject.Expression != nil {
+			tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
 		}
-		if rawMetricDataQuery.MetricStat != nil {
-			metricStatSpec := map[string]any{}
-			rawMetricStat := rawMetricDataQuery.MetricStat
-			rawMetric := rawMetricStat.Metric
-			metricSpec := map[string]any{}
-			if rawMetric.Dimensions != nil {
-				dimSpec := make([]any, len(rawMetric.Dimensions))
-				for i := range dimSpec {
-					dim := map[string]any{}
-					rawDim := rawMetric.Dimensions[i]
-					dim[names.AttrName] = aws.ToString(rawDim.Name)
-					dim[names.AttrValue] = aws.ToString(rawDim.Value)
-					dimSpec[i] = dim
+
+		if apiObject.Label != nil {
+			tfMap["label"] = aws.ToString(apiObject.Label)
+		}
+
+		if apiObject := apiObject.MetricStat; apiObject != nil {
+			tfMapMetricStat := map[string]any{
+				"stat": aws.ToString(apiObject.Stat),
+			}
+
+			if apiObject := apiObject.Metric; apiObject != nil {
+				tfMapMetric := map[string]any{
+					names.AttrMetricName: aws.ToString(apiObject.MetricName),
+					names.AttrNamespace:  aws.ToString(apiObject.Namespace),
 				}
-				metricSpec["dimensions"] = dimSpec
+
+				tfList := make([]any, len(apiObject.Dimensions))
+				for i, apiObject := range apiObject.Dimensions {
+					tfList[i] = map[string]any{
+						names.AttrName:  aws.ToString(apiObject.Name),
+						names.AttrValue: aws.ToString(apiObject.Value),
+					}
+				}
+
+				tfMapMetric["dimensions"] = tfList
+				tfMapMetricStat["metric"] = []map[string]any{tfMapMetric}
 			}
-			metricSpec[names.AttrMetricName] = aws.ToString(rawMetric.MetricName)
-			metricSpec[names.AttrNamespace] = aws.ToString(rawMetric.Namespace)
-			metricStatSpec["metric"] = []map[string]any{metricSpec}
-			metricStatSpec["stat"] = aws.ToString(rawMetricStat.Stat)
-			if rawMetricStat.Unit != nil {
-				metricStatSpec[names.AttrUnit] = aws.ToString(rawMetricStat.Unit)
+
+			if apiObject.Unit != nil {
+				tfMapMetricStat[names.AttrUnit] = aws.ToString(apiObject.Unit)
 			}
-			metricDataQuery["metric_stat"] = []map[string]any{metricStatSpec}
+
+			tfMap["metric_stat"] = []map[string]any{tfMapMetricStat}
 		}
-		if rawMetricDataQuery.ReturnData != nil {
-			metricDataQuery["return_data"] = aws.ToBool(rawMetricDataQuery.ReturnData)
+
+		if apiObject.ReturnData != nil {
+			tfMap["return_data"] = aws.ToBool(apiObject.ReturnData)
 		}
-		metricDataQueriesSpec[i] = metricDataQuery
+
+		tfList[i] = tfMap
 	}
-	return metricDataQueriesSpec
+
+	return tfList
 }
 
-func flattenMetricDimensions(ds []awstypes.MetricDimension) []any {
-	l := make([]any, len(ds))
-	for i, d := range ds {
-		if ds == nil {
-			continue
+func flattenMetricDimensions(apiObjects []awstypes.MetricDimension) []any {
+	tfList := make([]any, len(apiObjects))
+
+	for i, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.Name; v != nil {
+			tfMap[names.AttrName] = aws.ToString(v)
 		}
 
-		m := map[string]any{}
-
-		if v := d.Name; v != nil {
-			m[names.AttrName] = aws.ToString(v)
+		if v := apiObject.Value; v != nil {
+			tfMap[names.AttrValue] = aws.ToString(v)
 		}
 
-		if v := d.Value; v != nil {
-			m[names.AttrValue] = aws.ToString(v)
-		}
-
-		l[i] = m
+		tfList[i] = tfMap
 	}
-	return l
+
+	return tfList
 }
 
-func flattenPredefinedMetricSpecification(cfg *awstypes.PredefinedMetricSpecification) []any {
-	if cfg == nil {
+func flattenPredefinedMetricSpecification(apiObject *awstypes.PredefinedMetricSpecification) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{}
-
-	m["predefined_metric_type"] = string(cfg.PredefinedMetricType)
-
-	if v := cfg.ResourceLabel; v != nil {
-		m["resource_label"] = aws.ToString(v)
+	tfMap := map[string]any{
+		"predefined_metric_type": apiObject.PredefinedMetricType,
 	}
 
-	return []any{m}
+	if v := apiObject.ResourceLabel; v != nil {
+		tfMap["resource_label"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
 }
