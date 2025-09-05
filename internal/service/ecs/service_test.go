@@ -1106,7 +1106,7 @@ func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
 				Config: testAccServiceConfig_blueGreenDeployment_withHookBehavior(rName, false),
 				PreConfig: func() {
 					go func() {
-						_ = exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start() //lintignore:XR007
+						_ = exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start() // lintignore:XR007
 					}()
 				},
 				ExpectError: regexache.MustCompile("execution halted|context canceled"),
@@ -2656,7 +2656,7 @@ func TestAccECSService_AvailabilityZoneRebalancing(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
@@ -2670,7 +2670,7 @@ func TestAccECSService_AvailabilityZoneRebalancing(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "null"),
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
@@ -2723,112 +2723,6 @@ func TestAccECSService_AvailabilityZoneRebalancing(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
-				},
-			},
-		},
-	})
-}
-
-func TestAccECSService_AvailabilityZoneRebalancing_UpgradeV6_8_0_configured(t *testing.T) {
-	ctx := acctest.Context(t)
-	var service awstypes.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
-		CheckDestroy: testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.8.0",
-					},
-				},
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
-				},
-			},
-		},
-	})
-}
-
-func TestAccECSService_AvailabilityZoneRebalancing_UpgradeV6_8_0_unconfigured(t *testing.T) {
-	ctx := acctest.Context(t)
-	var service awstypes.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
-		CheckDestroy: testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.8.0",
-					},
-				},
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "null"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingDisabled)),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccServiceConfig_availabilityZoneRebalancing(rName, "null"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingDisabled)),
 				},
 			},
 		},

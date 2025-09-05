@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1531,12 +1532,12 @@ func flattenTemplateConfiguration(apiObject *types.TemplateConfiguration) ([]any
 
 	tfMap := map[string]any{}
 	if v := apiObject.Template; v != nil {
-		bytes, err := apiObject.Template.MarshalSmithyDocument()
+		v, err := tfsmithy.DocumentToJSONString(v)
 		if err != nil {
 			return nil, err
 		}
 
-		tfMap["template"] = string(bytes[:])
+		tfMap["template"] = v
 	}
 
 	return []any{tfMap}, nil

@@ -1,10 +1,16 @@
-## 6.12.0 (Unreleased)
+## 6.13.0 (Unreleased)
+
+## 6.12.0 (September 4, 2025)
 
 NOTES:
 
 * resource/aws_s3_bucket_acl: The `access_control_policy.grant.grantee.display_name` attribute is deprecated. AWS has [ended support for this attribute](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Grantee.html). API responses began inconsistently returning it on July 15, 2025, and will stop returning it entirely on November 21, 2025. This attribute will be removed in a future major version. ([#44090](https://github.com/hashicorp/terraform-provider-aws/issues/44090))
 * resource/aws_s3_bucket_acl: The `access_control_policy.owner.display_name` attribute is deprecated. AWS has [ended support for this attribute](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Owner.html). API responses began inconsistently returning it on July 15, 2025, and will stop returning it entirely on November 21, 2025. This attribute will be removed in a future major version. ([#44090](https://github.com/hashicorp/terraform-provider-aws/issues/44090))
 * resource/aws_s3_bucket_logging: The `target_grant.grantee.display_name` attribute is deprecated. AWS has [ended support for this attribute](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Grantee.html). API responses began inconsistently returning it on July 15, 2025, and will stop returning it entirely on November 21, 2025. This attribute will be removed in a future major version. ([#44090](https://github.com/hashicorp/terraform-provider-aws/issues/44090))
+
+FEATURES:
+
+* **New Resource:** `aws_cognito_managed_login_branding` ([#43817](https://github.com/hashicorp/terraform-provider-aws/issues/43817))
 
 ENHANCEMENTS:
 
@@ -15,6 +21,8 @@ ENHANCEMENTS:
 * provider: Support `ap-southeast-6` as a valid AWS Region ([#44127](https://github.com/hashicorp/terraform-provider-aws/issues/44127))
 * resource/aws_ecs_service: Remove Terraform default for `availability_zone_rebalancing` and change the attribute to Optional and Computed. This allow ECS to default to `ENABLED` for new resources compatible with *AvailabilityZoneRebalancing* and maintain an existing service's `availability_zone_rebalancing` value during update when not configured. If an existing service never had an `availability_zone_rebalancing` value configured and is updated, ECS will treat this as `DISABLED` ([#43241](https://github.com/hashicorp/terraform-provider-aws/issues/43241))
 * resource/aws_efs_mount_target: Add `ip_address_type` and `ipv6_address` arguments to support IPv6 connectivity ([#44079](https://github.com/hashicorp/terraform-provider-aws/issues/44079))
+* resource/aws_fsx_openzfs_file_system: Remove maximum items limit on the `user_and_group_quotas` argument ([#44120](https://github.com/hashicorp/terraform-provider-aws/issues/44120))
+* resource/aws_fsx_openzfs_volume: Remove maximum items limit on the `user_and_group_quotas` argument ([#44118](https://github.com/hashicorp/terraform-provider-aws/issues/44118))
 * resource/aws_instance: Add `placement_group_id` argument ([#38527](https://github.com/hashicorp/terraform-provider-aws/issues/38527))
 * resource/aws_instance: Add resource identity support ([#44068](https://github.com/hashicorp/terraform-provider-aws/issues/44068))
 * resource/aws_lambda_function: Add `source_kms_key_arn` argument ([#44080](https://github.com/hashicorp/terraform-provider-aws/issues/44080))
@@ -30,6 +38,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_s3tables_table_policy: Remove plan-time validation of `name` and `namespace` ([#44072](https://github.com/hashicorp/terraform-provider-aws/issues/44072))
+* resource/aws_servicecatalog_provisioned_product: Set `provisioning_parameters` and `provisioning_artifact_id` to the values from the last successful deployment when update fails ([#43956](https://github.com/hashicorp/terraform-provider-aws/issues/43956))
+* resource/aws_wafv2_web_acl: Fix performance of update when the WebACL has a large number of rules ([#42740](https://github.com/hashicorp/terraform-provider-aws/issues/42740))
 
 ## 6.11.0 (August 28, 2025)
 
