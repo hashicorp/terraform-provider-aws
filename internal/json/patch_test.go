@@ -4,7 +4,7 @@
 package json_test
 
 import (
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -80,11 +80,20 @@ func TestCreatePatchFromStrings(t *testing.T) {
 				sortTransformer := cmp.Transformer("SortPatchOps", func(ops []mattbairdjsonpatch.JsonPatchOperation) []mattbairdjsonpatch.JsonPatchOperation {
 					sorted := make([]mattbairdjsonpatch.JsonPatchOperation, len(ops))
 					copy(sorted, ops)
-					sort.Slice(sorted, func(i, j int) bool {
-						if sorted[i].Operation != sorted[j].Operation {
-							return sorted[i].Operation < sorted[j].Operation
+					slices.SortFunc(sorted, func(a, b mattbairdjsonpatch.JsonPatchOperation) int {
+						if a.Operation != b.Operation {
+							if a.Operation < b.Operation {
+								return -1
+							}
+							return 1
 						}
-						return sorted[i].Path < sorted[j].Path
+						if a.Path < b.Path {
+							return -1
+						}
+						if a.Path > b.Path {
+							return 1
+						}
+						return 0
 					})
 					return sorted
 				})
