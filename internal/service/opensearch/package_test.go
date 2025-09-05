@@ -71,7 +71,7 @@ func TestAccOpenSearchPackage_packageTypeZipPlugin(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPackageExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "available_package_version", "v1"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_2.17"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "OpenSearch_2.17"),
 					resource.TestCheckResourceAttr(resourceName, "package_description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "package_id"),
 					resource.TestCheckResourceAttr(resourceName, "package_name", pkgName),

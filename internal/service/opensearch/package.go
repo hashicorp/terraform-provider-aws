@@ -42,7 +42,7 @@ func resourcePackage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -103,7 +103,7 @@ func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta any
 		PackageType:        awstypes.PackageType(d.Get("package_type").(string)),
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -142,7 +142,7 @@ func resourcePackageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.Set("available_package_version", pkg.AvailablePackageVersion)
-	d.Set("engine_version", pkg.EngineVersion)
+	d.Set(names.AttrEngineVersion, pkg.EngineVersion)
 	d.Set("package_description", pkg.PackageDescription)
 	d.Set("package_id", pkg.PackageID)
 	d.Set("package_name", pkg.PackageName)
