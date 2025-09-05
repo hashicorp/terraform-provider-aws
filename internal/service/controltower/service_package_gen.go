@@ -22,7 +22,21 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceBaseline,
+			TypeName: "aws_controltower_baseline",
+			Name:     "Baseline",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

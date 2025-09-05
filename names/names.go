@@ -66,6 +66,7 @@ const (
 	ComputeOptimizerEndpointID             = "compute-optimizer"
 	ConfigServiceEndpointID                = "config"
 	ConnectEndpointID                      = "connect"
+	ControlTowerEndpointID                 = "controltower"
 	DataExchangeEndpointID                 = "dataexchange"
 	DataPipelineEndpointID                 = "datapipeline"
 	DataZoneEndpointID                     = "datazone"
