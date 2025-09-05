@@ -280,6 +280,7 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 			},
 			"scan_listener_port_tcp": schema.Int32Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
