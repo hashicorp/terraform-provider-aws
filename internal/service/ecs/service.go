@@ -2048,33 +2048,29 @@ func (e *expectServiceActiveError) Error() string {
 func findServiceByTwoPartKeyWaitForActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) (*awstypes.Service, error) {
 	var service *awstypes.Service
 
-	// Use the retry.RetryContext function instead of WaitForState() because we don't want the timeout error, if any.
+	// Use the tfresource.Retry function instead of WaitForState() because we don't want the timeout error, if any.
 	const (
 		timeout = 2 * time.Minute
 	)
-	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		service, err = findServiceByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
 
 		if tfresource.NotFound(err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if status := aws.ToString(service.Status); status != serviceStatusActive {
-			return retry.RetryableError(newExpectServiceActiveError(status))
+			return tfresource.RetryableError(newExpectServiceActiveError(status))
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		service, err = findServiceByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
-	}
 
 	if errs.IsA[*expectServiceActiveError](err) {
 		return nil, &retry.NotFoundError{
