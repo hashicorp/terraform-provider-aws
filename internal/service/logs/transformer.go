@@ -35,7 +35,7 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_logs_transformer", name="Transformer")
+// @FrameworkResource("aws_cloudwatch_log_transformer", name="Transformer")
 func newResourceTransformer(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTransformer{}
 
