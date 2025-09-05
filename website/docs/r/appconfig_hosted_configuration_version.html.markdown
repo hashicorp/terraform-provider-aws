@@ -79,13 +79,13 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 }
 ```
 
-### Multi-variate Feature Flags
+### Multi-variant Feature Flags
 
 ```terraform
 resource "aws_appconfig_hosted_configuration_version" "example" {
   application_id           = aws_appconfig_application.example.id
   configuration_profile_id = aws_appconfig_configuration_profile.example.configuration_profile_id
-  description              = "Example Multi-variate Feature Flag Configuration Version"
+  description              = "Example Multi-variant Feature Flag Configuration Version"
   content_type             = "application/json"
 
   content = jsonencode({
@@ -97,7 +97,7 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
     values = {
       loggingenabled = {
         _variants = concat([
-          for user_id in var.appcfg_enableLogging_userIds : {
+          for user_id in var.appcfg_enableLogging_userIds : { # Flat list of userIds
             enabled = true,
             name    = "usersWithLoggingEnabled_${user_id}",
             rule    = "(or (eq $userId \"${user_id}\"))"
