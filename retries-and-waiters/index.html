@@ -1,0 +1,1990 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../regular-expressions/">
+      
+      
+        <link rel="next" href="../terraform-plugin-development-packages/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Retries and Waiters - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#retries-and-waiters" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Retries and Waiters
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agents/" class="md-nav__link">
+        AI Agents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" tabindex="0" aria-expanded="false">
+          AI Agent Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="AI Agent Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          AI Agent Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/arn-based-resource-identity/" class="md-nav__link">
+        ARN-Based Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/parameterized-resource-identity/" class="md-nav__link">
+        Parameterized Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/smarterr/" class="md-nav__link">
+        Smarterr
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../enhanced-region-support/" class="md-nav__link">
+        Enhanced Region Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../go-vcr/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Retries and Waiters
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Retries and Waiters
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#terraform-plugin-sdk-functionality" class="md-nav__link">
+    Terraform Plugin SDK Functionality
+  </a>
+  
+    <nav class="md-nav" aria-label="Terraform Plugin SDK Functionality">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#state-change-configuration-and-functions" class="md-nav__link">
+    State Change Configuration and Functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retry-functions" class="md-nav__link">
+    Retry Functions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aws-request-handling" class="md-nav__link">
+    AWS Request Handling
+  </a>
+  
+    <nav class="md-nav" aria-label="AWS Request Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-aws-go-sdk-retries" class="md-nav__link">
+    Default AWS Go SDK Retries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lower-network-error-retries" class="md-nav__link">
+    Lower Network Error Retries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-aws-provider-service-retries" class="md-nav__link">
+    Terraform AWS Provider Service Retries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eventual-consistency" class="md-nav__link">
+    Eventual Consistency
+  </a>
+  
+    <nav class="md-nav" aria-label="Eventual Consistency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operation-specific-error-retries" class="md-nav__link">
+    Operation Specific Error Retries
+  </a>
+  
+    <nav class="md-nav" aria-label="Operation Specific Error Retries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iam-error-retries" class="md-nav__link">
+    IAM Error Retries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asynchronous-operation-error-retries" class="md-nav__link">
+    Asynchronous Operation Error Retries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-lifecycle-retries" class="md-nav__link">
+    Resource Lifecycle Retries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-attribute-value-waiters" class="md-nav__link">
+    Resource Attribute Value Waiters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#asynchronous-operations" class="md-nav__link">
+    Asynchronous Operations
+  </a>
+  
+    <nav class="md-nav" aria-label="Asynchronous Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aws-go-sdk-waiters" class="md-nav__link">
+    AWS Go SDK Waiters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-lifecycle-waiters" class="md-nav__link">
+    Resource Lifecycle Waiters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#terraform-plugin-sdk-functionality" class="md-nav__link">
+    Terraform Plugin SDK Functionality
+  </a>
+  
+    <nav class="md-nav" aria-label="Terraform Plugin SDK Functionality">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#state-change-configuration-and-functions" class="md-nav__link">
+    State Change Configuration and Functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retry-functions" class="md-nav__link">
+    Retry Functions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aws-request-handling" class="md-nav__link">
+    AWS Request Handling
+  </a>
+  
+    <nav class="md-nav" aria-label="AWS Request Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-aws-go-sdk-retries" class="md-nav__link">
+    Default AWS Go SDK Retries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lower-network-error-retries" class="md-nav__link">
+    Lower Network Error Retries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-aws-provider-service-retries" class="md-nav__link">
+    Terraform AWS Provider Service Retries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eventual-consistency" class="md-nav__link">
+    Eventual Consistency
+  </a>
+  
+    <nav class="md-nav" aria-label="Eventual Consistency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operation-specific-error-retries" class="md-nav__link">
+    Operation Specific Error Retries
+  </a>
+  
+    <nav class="md-nav" aria-label="Operation Specific Error Retries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iam-error-retries" class="md-nav__link">
+    IAM Error Retries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asynchronous-operation-error-retries" class="md-nav__link">
+    Asynchronous Operation Error Retries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-lifecycle-retries" class="md-nav__link">
+    Resource Lifecycle Retries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-attribute-value-waiters" class="md-nav__link">
+    Resource Attribute Value Waiters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#asynchronous-operations" class="md-nav__link">
+    Asynchronous Operations
+  </a>
+  
+    <nav class="md-nav" aria-label="Asynchronous Operations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aws-go-sdk-waiters" class="md-nav__link">
+    AWS Go SDK Waiters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-lifecycle-waiters" class="md-nav__link">
+    Resource Lifecycle Waiters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<!-- markdownlint-configure-file { "code-block-style": false } -->
+<h1 id="retries-and-waiters">Retries and Waiters<a class="headerlink" href="#retries-and-waiters" title="Permanent link">#</a></h1>
+<p>Terraform plugins may run into situations where calling the remote system after an operation may be necessary. These typically fall under three classes where:</p>
+<ul>
+<li>The request never reaches the remote system.</li>
+<li>The request reaches the remote system and responds that it cannot handle the request temporarily.</li>
+<li>The implementation of the remote system requires additional requests to ensure success.</li>
+</ul>
+<p>This guide describes the behavior of the Terraform AWS Provider and provides code implementations that help ensure success in each of these situations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The helper functions detailed below <strong>are</strong> compatible with Terraform Plugin Framework based resources (the required library for net-new resources).
+While these functions currently reside in the legacy Terraform Plugin SDK repository, they are not directly tied to functionality exclusive to this library, and likely will be moved to a standalone library or into the AWS provider itself in the future.</p>
+</div>
+<h2 id="terraform-plugin-sdk-functionality">Terraform Plugin SDK Functionality<a class="headerlink" href="#terraform-plugin-sdk-functionality" title="Permanent link">#</a></h2>
+<p>The <a href="https://github.com/hashicorp/terraform-plugin-sdk/">Terraform Plugin SDK</a>, which the AWS Provider uses, provides vital tools for handling consistency: the <code>retry.StateChangeConf{}</code> struct, and the retry function <code>retry.RetryContext()</code>.
+We will discuss these throughout the rest of this guide.
+Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.</p>
+<p>This guide goes beyond the <a href="https://www.terraform.io/plugin/sdkv2/resources/retries-and-customizable-timeouts">Terraform Plugin SDK v2 documentation</a> by providing additional context and emergent implementations specific to the Terraform AWS Provider.</p>
+<h3 id="state-change-configuration-and-functions">State Change Configuration and Functions<a class="headerlink" href="#state-change-configuration-and-functions" title="Permanent link">#</a></h3>
+<p>The <a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf"><code>retry.StateChangeConf</code> type</a>, along with its receiver methods <a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForState"><code>WaitForState()</code></a> and <a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForStateContext"><code>WaitForStateContext()</code></a> is a generic primitive for repeating operations in Terraform resource logic until desired value(s) are received. The "state change" in this case is generic to any value and not specific to the Terraform State. Among other functionality, it supports some of these desirable optional properties:</p>
+<ul>
+<li>Expecting specific value(s) while waiting for the target value(s) to be reached. Unexpected values are returned as an error which can be augmented with additional details.</li>
+<li>Expecting the target value(s) to be returned multiple times in succession.</li>
+<li>Allowing various polling configurations such as delaying the initial request and setting the time between polls.</li>
+</ul>
+<h3 id="retry-functions">Retry Functions<a class="headerlink" href="#retry-functions" title="Permanent link">#</a></h3>
+<p>The <a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#RetryContext"><code>retry.RetryContext()</code></a> function provides a simplified retry implementation around <code>retry.StateChangeConf</code>.
+The most common use is for simple error-based retries.</p>
+<h2 id="aws-request-handling">AWS Request Handling<a class="headerlink" href="#aws-request-handling" title="Permanent link">#</a></h2>
+<p>The Terraform AWS Provider's requests to AWS service APIs happen on top of Hypertext Transfer Protocol (HTTP). The following is a simplified description of the layers and handling that requests pass through:</p>
+<ul>
+<li>A Terraform resource calls an AWS Go SDK function.</li>
+<li>The AWS Go SDK generates an AWS-compatible HTTP request using the <a href="https://pkg.go.dev/net/http/">Go standard library <code>net/http</code> package</a>. This includes the following:<ul>
+<li>Adding HTTP headers for authentication and signing of requests to ensure authenticity.</li>
+<li>Converting operation inputs into required HTTP URI parameters and/or request body type (XML or JSON).</li>
+<li>If debug logging is enabled, logging of the HTTP request.</li>
+</ul>
+</li>
+<li>The AWS Go SDK transmits the <code>net/http</code> request using Go's standard handling of the Operating System (OS) and Domain Name System (DNS) configuration.</li>
+<li>The AWS service potentially receives the request and responds, typically adding a request identifier HTTP header which can be used for AWS Support cases.</li>
+<li>The OS and Go <code>net/http</code> receive the response and pass it to the AWS Go SDK.</li>
+<li>The AWS Go SDK attempts to handle the response. This may include:<ul>
+<li>Parsing output</li>
+<li>Converting errors into operation errors (Go <code>error</code> type of wrapped <a href="https://docs.aws.amazon.com/sdk-for-go/api/aws/awserr/#Error"><code>awserr.Error</code> type</a>).</li>
+<li>Converting response elements into operation outputs (AWS Go SDK operation-specific types).</li>
+<li>Triggering automatic request retries based on default and custom logic.</li>
+</ul>
+</li>
+<li>The Terraform resource receives the response, including any output and errors, from the AWS Go SDK.</li>
+</ul>
+<p>In cases where custom operation handling is configured for a specific service client, the changes can typically be found in <code>internal/service/{service-name}/service_package.go</code>.</p>
+<h3 id="default-aws-go-sdk-retries">Default AWS Go SDK Retries<a class="headerlink" href="#default-aws-go-sdk-retries" title="Permanent link">#</a></h3>
+<p>In some situations, while handling a response, the AWS Go SDK automatically retries a request before returning the output and error. The retry mechanism implements an exponential backoff algorithm. The default conditions triggering automatic retries (implemented through <a href="https://docs.aws.amazon.com/sdk-for-go/api/aws/client/#DefaultRetryer"><code>client.DefaultRetryer</code></a>) include:</p>
+<ul>
+<li>Certain network errors. A common exception to this is connection reset errors.</li>
+<li>HTTP status codes 429 and 5xx.</li>
+<li>Certain API error codes, which are common across various AWS services (e.g., <code>ThrottledException</code>). However, not all AWS services implement these error codes consistently. A common exception to this is certain expired credentials errors.</li>
+</ul>
+<p>By default, the Terraform AWS Provider sets the maximum number of AWS Go SDK retries based on the <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs#max_retries"><code>max_retries</code> provider configuration</a>. The provider configuration defaults to 25 and the exponential backoff roughly equates to one hour of retries. This very high default value was present before the Terraform AWS Provider codebase was split from Terraform CLI in version 0.10.</p>
+<h3 id="lower-network-error-retries">Lower Network Error Retries<a class="headerlink" href="#lower-network-error-retries" title="Permanent link">#</a></h3>
+<p>Given the very high default number of AWS Go SDK retries configured in the Terraform AWS Provider and the excessive wait that practitioners would face, the <a href="https://github.com/hashicorp/aws-sdk-go-base/blob/57529b4c2d2f8f3b5299d66a829b01259fa800d7/session.go#L108-L130"><code>hashicorp/aws-sdk-go-base</code> codebase</a> lowers retries to 10 for certain network errors that typically cannot be remediated via retries. This roughly equates to 30 seconds of retries.</p>
+<h3 id="terraform-aws-provider-service-retries">Terraform AWS Provider Service Retries<a class="headerlink" href="#terraform-aws-provider-service-retries" title="Permanent link">#</a></h3>
+<p>The AWS Go SDK provides hooks for injecting custom logic into service client handlers.
+We prefer this handling in situations where contributors would need to apply the retry behavior to many resources.
+For example, in cases where the AWS service API does not mark an error code as automatically retriable.
+The AWS Provider includes other retry-changing behaviors using this method.
+When custom service client configurations are applied, these will be defined in <code>internal/service/{service-name}/service_package.go</code>.</p>
+<p>With V2 of the AWS Go SDK, the retrier is extended directly in client construction.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// NewClient returns a new AWS SDK for Go v2 client for this service package&#39;s AWS API.</span>
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><span class="nx">servicePackage</span><span class="p">)</span><span class="w"> </span><span class="nx">NewClient</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">any</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="nx">s3_sdkv2</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">cfg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="nx">config</span><span class="p">[</span><span class="s">&quot;aws_sdkv2_config&quot;</span><span class="p">].(</span><span class="o">*</span><span class="nx">aws_sdkv2</span><span class="p">.</span><span class="nx">Config</span><span class="p">))</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">s3_sdkv2</span><span class="p">.</span><span class="nx">NewFromConfig</span><span class="p">(</span><span class="nx">cfg</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">s3</span><span class="p">.</span><span class="nx">WithEndpointResolverV2</span><span class="p">(</span><span class="nx">newEndpointResolverSDKv2</span><span class="p">()),</span>
+<span class="w">        </span><span class="nx">withBaseEndpoint</span><span class="p">(</span><span class="nx">config</span><span class="p">[</span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrEndpoint</span><span class="p">].(</span><span class="kt">string</span><span class="p">)),</span>
+<span class="w">        </span><span class="kd">func</span><span class="p">(</span><span class="nx">o</span><span class="w"> </span><span class="o">*</span><span class="nx">s3_sdkv2</span><span class="p">.</span><span class="nx">Options</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// ..other configuration..</span>
+
+<span class="w">            </span><span class="nx">o</span><span class="p">.</span><span class="nx">Retryer</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conns</span><span class="p">.</span><span class="nx">AddIsErrorRetryables</span><span class="p">(</span><span class="nx">cfg</span><span class="p">.</span><span class="nx">Retryer</span><span class="p">().(</span><span class="nx">aws_sdkv2</span><span class="p">.</span><span class="nx">RetryerV2</span><span class="p">),</span><span class="w"> </span><span class="nx">retry_sdkv2</span><span class="p">.</span><span class="nx">IsErrorRetryableFunc</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="nx">aws_sdkv2</span><span class="p">.</span><span class="nx">Ternary</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="nx">tfawserr_sdkv2</span><span class="p">.</span><span class="nx">ErrMessageContains</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="nx">errCodeOperationAborted</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A conflicting conditional operation is currently in progress against this resource. Please try again.&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="nx">aws_sdkv2</span><span class="p">.</span><span class="nx">TrueTernary</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nx">aws_sdkv2</span><span class="p">.</span><span class="nx">UnknownTernary</span><span class="w"> </span><span class="c1">// Delegate to configured Retryer.</span>
+<span class="w">            </span><span class="p">}))</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">),</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="eventual-consistency">Eventual Consistency<a class="headerlink" href="#eventual-consistency" title="Permanent link">#</a></h2>
+<p>Eventual consistency is a temporary condition where the remote system can return outdated information or errors due to not being strongly read-after-write consistent.
+This is a pattern found in remote systems that must be highly scaled for broad usage.</p>
+<p>Terraform expects any planned resource lifecycle change (create, update, destroy of the resource itself) and planned resource attribute value change to match after being applied.
+Conversely, operators typically expect that Terraform resources also implement the concept of drift detection for resources and their attributes, which requires reading information back from the remote system after an operation.
+A common implementation is calling the underlying <code>Get</code>/<code>Describe</code> AWS API after <code>Create</code> and <code>Update</code>.</p>
+<p>These two concepts conflict with each other and require additional handling in Terraform resource logic as shown in the following sections.
+These issues are <em>not</em> reliably reproducible, especially in the case of writing acceptance testing, so they can be elusive with false positives to verify fixes.</p>
+<h3 id="operation-specific-error-retries">Operation Specific Error Retries<a class="headerlink" href="#operation-specific-error-retries" title="Permanent link">#</a></h3>
+<p>Even given a properly ordered Terraform configuration, eventual consistency can unexpectedly prevent downstream operations from succeeding.
+A simple retry after a few seconds resolves many of these issues.
+To reduce frustrating behavior for operators, wrap AWS Go SDK operations with the <code>retry.RetryContext()</code> function.
+These retries should have a reasonably low timeout (typically two minutes but up to five minutes).
+Save them in a constant for reusability.
+These functions are preferably in line with the associated resource logic to remove any indirection with the code.</p>
+<p>Do not use this type of logic to overcome improperly ordered Terraform configurations.
+The approach may not work in larger environments.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="c1">// Maximum amount of time to wait for Thing operation eventual consistency</span>
+<span class="w">    </span><span class="nx">ThingOperationTimeout</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span>
+<span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1">// internal/service/{service}/{thing}.go</span>
+
+<span class="c1">// ... Create, Read, Update, or Delete function ...</span>
+<span class="w">    </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">ThingOperationTimeout</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryError</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="cm">/* ... AWS Go SDK operation with eventual consistency errors ... */</span>
+
+<span class="w">        </span><span class="c1">// Retryable conditions which can be checked.</span>
+<span class="w">        </span><span class="c1">// These must be updated to match the AWS service API error code and message.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">errs</span><span class="p">.</span><span class="nx">IsAErrorMessageContains</span><span class="p">[</span><span class="cm">/* error type */</span><span class="p">](</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="cm">/* error message */</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">NonRetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">})</span>
+
+<span class="w">    </span><span class="c1">// This check is important - it handles when the AWS Go SDK operation retries without returning.</span>
+<span class="w">    </span><span class="c1">// e.g., any automatic retries due to network or throttling errors.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">tfresource</span><span class="p">.</span><span class="nx">TimedOut</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// The use of equals assignment (over colon equals) is also important here.</span>
+<span class="w">        </span><span class="c1">// This overwrites the error variable to simplify logic.</span>
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="cm">/* ... AWS Go SDK operation with IAM eventual consistency errors ... */</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;... error message context ... : %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+<h4 id="iam-error-retries">IAM Error Retries<a class="headerlink" href="#iam-error-retries" title="Permanent link">#</a></h4>
+<p>A common eventual consistency issue is an error returned due to IAM permissions. The IAM service itself is eventually consistent along with the propagation of its components and permissions to other AWS services. For example, if the following operations occur in quick succession:</p>
+<ul>
+<li>Create an IAM Role</li>
+<li>Attach an IAM Policy to the IAM Role</li>
+<li>Reference the new IAM Role in another AWS service, such as creating a Lambda Function</li>
+</ul>
+<p>The last operation can receive varied API errors ranging from:</p>
+<ul>
+<li>IAM Role being reported as not existing</li>
+<li>IAM Role being reported as not having permissions for the other service to use it (assume role permissions)</li>
+<li>IAM Role being reported as not having sufficient permissions (inline or attached role permissions)</li>
+</ul>
+<p>Each AWS service API (and sometimes even operations within the same API) varies in the implementation of these errors. To handle them, it is recommended to use the <a href="#operation-specific-error-retries">Operation Specific Error Retries</a> pattern. The Terraform AWS Provider implements a standard timeout constant of two minutes in the <code>internal/service/iam</code> package which should be used for all retry timeouts associated with IAM errors. This timeout was derived from years of Terraform operational experience with all AWS APIs.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// internal/service/{service}/{thing}.go</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="c1">// ... other imports ...</span>
+<span class="w">    </span><span class="nx">tfiam</span><span class="w"> </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/internal/service/iam&quot;</span>
+<span class="p">)</span>
+
+<span class="c1">// ... Create and typically Update function ...</span>
+<span class="w">    </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">iamwaiter</span><span class="p">.</span><span class="nx">PropagationTimeout</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryError</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="cm">/* ... AWS Go SDK operation with IAM eventual consistency errors ... */</span>
+
+<span class="w">        </span><span class="c1">// Example retryable condition</span>
+<span class="w">        </span><span class="c1">// This must be updated to match the AWS service API error code and message.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">errs</span><span class="p">.</span><span class="nx">IsAErrorMessageContains</span><span class="p">[</span><span class="cm">/* error type */</span><span class="p">](</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="cm">/* error message */</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">NonRetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">})</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">tfresource</span><span class="p">.</span><span class="nx">TimedOut</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="cm">/* ... AWS Go SDK operation with IAM eventual consistency errors ... */</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;... error message context ... : %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+<h4 id="asynchronous-operation-error-retries">Asynchronous Operation Error Retries<a class="headerlink" href="#asynchronous-operation-error-retries" title="Permanent link">#</a></h4>
+<p>Some remote system operations run asynchronously as detailed in the <a href="#asynchronous-operations">Asynchronous Operations section</a>. In these cases, it is possible that the initial operation will immediately return as successful, but potentially return a retryable failure while checking the operation status that requires starting everything over. The handling for these is complicated by the fact that there are two timeouts, one for the retryable failure and one for the asynchronous operation status checking.</p>
+<p>The below code example highlights this situation for a resource creation that also exhibited IAM eventual consistency.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// internal/service/{service}/{thing}.go</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="c1">// ... other imports ...</span>
+<span class="w">    </span><span class="nx">tfiam</span><span class="w"> </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/internal/service/iam&quot;</span>
+<span class="p">)</span>
+
+<span class="c1">// ... Create function ...</span>
+
+<span class="w">    </span><span class="c1">// Underlying IAM eventual consistency errors can occur after the creation</span>
+<span class="w">    </span><span class="c1">// operation. The goal is only retry these types of errors up to the IAM</span>
+<span class="w">    </span><span class="c1">// timeout. Since the creation process is asynchronous and can take up to</span>
+<span class="w">    </span><span class="c1">// its own timeout, we store a stop time upfront for checking.</span>
+<span class="w">    </span><span class="nx">iamwaiterStopTime</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Add</span><span class="p">(</span><span class="nx">tfiam</span><span class="p">.</span><span class="nx">PropagationTimeout</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">// Ensure to add IAM eventual consistency timeout in case of retries</span>
+<span class="w">    </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">tfiam</span><span class="p">.</span><span class="nx">PropagationTimeout</span><span class="o">+</span><span class="nx">ThingOperationTimeout</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryError</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Only retry IAM eventual consistency errors up to that timeout</span>
+<span class="w">        </span><span class="nx">iamwaiterRetry</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Before</span><span class="p">(</span><span class="nx">iamwaiterStopTime</span><span class="p">)</span>
+
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="cm">/* ... AWS Go SDK operation without eventual consistency errors ... */</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">NonRetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">ThingOperation</span><span class="p">(</span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">())</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="nx">iamwaiterRetry</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="cm">/* eventual consistency error checking */</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">NonRetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">})</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">tfresource</span><span class="p">.</span><span class="nx">TimedOut</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="cm">/* ... AWS Go SDK operation without eventual consistency errors ... */</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">ThingOperation</span><span class="p">(</span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">())</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+<h3 id="resource-lifecycle-retries">Resource Lifecycle Retries<a class="headerlink" href="#resource-lifecycle-retries" title="Permanent link">#</a></h3>
+<p>Resource lifecycle eventual consistency is a type of consistency issue that relates to the existence or state of an AWS infrastructure component.
+For example, if you create a resource and immediately try to get information about it, some AWS services and operations will return a "not found" error.
+Depending on the service and general AWS load, these errors can be frequent or rare.</p>
+<p>In order to avoid this issue, identify operations that make changes.
+Then, when calling any other operations that rely on the changes, account for the possibility that the AWS service has not yet fully realized them.</p>
+<p>Handling eventual consistency looks slightly different for Terraform Plugin Framework based resources versus Plugin SDK V2. For Terraform Framework based resources, a <code>Get</code>/<code>Describe</code> API call should be made after the create request completes, all within the <code>Create</code> method. For Terraform Plugin SDK V2 resources, the <code>Create</code> function should return by calling the <code>Read</code> function. Both approaches fill in computed attributes and ensure that the AWS service applied the configuration correctly. Add retry logic to the <code>Get</code>/<code>Describe</code> API call (Plugin Framework) or <code>Read</code> function (Plugin SDK V2) to overcome the temporary condition on resource creation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For eventually consistent resources, "not found" errors can still occur in the <code>Read</code> function even after implementing <a href="#resource-lifecycle-waiters">Resource Lifecycle Waiters</a>.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="c1">// Maximum amount of time to wait for Thing eventual consistency on creation</span>
+<span class="w">    </span><span class="nx">ThingCreationTimeout</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span>
+<span class="p">)</span>
+</code></pre></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_1_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// internal/service/{service}/{thing}.go</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">resourceThing</span><span class="p">)</span><span class="w"> </span><span class="nx">Create</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">CreateRequest</span><span class="p">,</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="o">*</span><span class="nx">resource</span><span class="p">.</span><span class="nx">CreateResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">conn</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">ExampleClient</span><span class="p">()</span>
+
+<span class="w">    </span><span class="c1">// ...Creation steps...</span>
+
+<span class="w">    </span><span class="nx">input</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">example</span><span class="p">.</span><span class="nx">OperationInput</span><span class="p">{</span><span class="cm">/* ... */</span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">OperationOutput</span>
+<span class="w">    </span><span class="nx">createTimeout</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">CreateTimeout</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Timeouts</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">createTimeout</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryError</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span>
+<span class="w">        </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">Operation</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">input</span><span class="p">)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">errs</span><span class="p">.</span><span class="nx">IsA</span><span class="p">[</span><span class="o">*</span><span class="nx">types</span><span class="p">.</span><span class="nx">ResourceNotFoundException</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">NonRetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">})</span>
+
+<span class="w">    </span><span class="c1">// Retry AWS Go SDK operation if no response from automatic retries.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">tfresource</span><span class="p">.</span><span class="nx">TimedOut</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">Operation</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">input</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">            </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForCreation</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameThing</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Prevent panics.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">            </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForCreation</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameThing</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;empty output&quot;</span><span class="p">)),</span>
+<span class="w">            </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// ... refresh Terraform state as normal ...</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// internal/service/{service}/{thing}.go</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">ExampleThingCreate</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">diags</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span>
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">ExampleThingRead</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">ExampleThingRead</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">diags</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span>
+
+<span class="w">    </span><span class="nx">conn</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">ExampleConn</span><span class="p">()</span>
+
+<span class="w">    </span><span class="nx">input</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">example</span><span class="p">.</span><span class="nx">OperationInput</span><span class="p">{</span><span class="cm">/* ... */</span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">OperationOutput</span>
+<span class="w">    </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">ThingCreationTimeout</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryError</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span>
+<span class="w">        </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">Operation</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">input</span><span class="p">)</span>
+
+<span class="w">        </span><span class="c1">// Retry on any API &quot;not found&quot; errors, but only on new resources.</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">IsNewResource</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">tfawserr</span><span class="p">.</span><span class="nx">ErrorCodeEquals</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="nx">example</span><span class="p">.</span><span class="nx">ErrCodeResourceNotFoundException</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">NonRetryableError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">})</span>
+
+<span class="w">    </span><span class="c1">// Retry AWS Go SDK operation if no response from automatic retries.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">tfresource</span><span class="p">.</span><span class="nx">TimedOut</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">Operation</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">input</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Prevent confusing Terraform error messaging to operators by</span>
+<span class="w">    </span><span class="c1">// Only ignoring API &quot;not found&quot; errors if not a new resource.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">d</span><span class="p">.</span><span class="nx">IsNewResource</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">tfawserr</span><span class="p">.</span><span class="nx">ErrorCodeEquals</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="nx">example</span><span class="p">.</span><span class="nx">ErrCodeNoSuchEntityException</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;[WARN] Example Thing (%s) not found, removing from state&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">())</span>
+<span class="w">        </span><span class="nx">d</span><span class="p">.</span><span class="nx">SetId</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">diags</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">sdkdiag</span><span class="p">.</span><span class="nx">AppendErrorf</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;reading Example Thing (%s): %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Prevent panics.</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">sdkdiag</span><span class="p">.</span><span class="nx">AppendErrorf</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;reading Example Thing (%s): empty response&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">())</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// ... refresh Terraform state as normal ...</span>
+<span class="w">    </span><span class="nx">d</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;arn&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">output</span><span class="p">.</span><span class="nx">Arn</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Some other general guidelines are:</p>
+<ul>
+<li>If the <code>Create</code> function uses <code>retry.StateChangeConf</code>, the underlying <code>resource.RefreshStateFunc</code> should <code>return nil, "", nil</code> instead of the API "not found" error. This way the <code>StateChangeConf</code> logic will automatically retry.</li>
+<li>If the <code>Create</code> function uses <code>retry.RetryContext()</code>, the API "not found" error should be caught and <code>return retry.RetryableError(err)</code> to automatically retry.</li>
+</ul>
+<p>In rare cases, it may be easier to duplicate all <code>Read</code> function logic in the <code>Create</code> function to handle all retries in one place.</p>
+</div>
+</div>
+</div>
+<h3 id="resource-attribute-value-waiters">Resource Attribute Value Waiters<a class="headerlink" href="#resource-attribute-value-waiters" title="Permanent link">#</a></h3>
+<p>An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom <code>retry.StateChangeConf</code> and <code>resource.RefreshStateFunc</code> handlers. For example, the waiting logic can be implemented as:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// ThingAttribute fetches the Thing and its Attribute</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">ThingAttribute</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="w"> </span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">StateRefreshFunc</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="kd">interface</span><span class="p">{},</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="cm">/* ... AWS Go SDK operation to fetch resource/value ... */</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">errs</span><span class="p">.</span><span class="nx">IsA</span><span class="p">[</span><span class="o">*</span><span class="nx">types</span><span class="p">.</span><span class="nx">ResourceNotFoundException</span><span class="p">](</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">aws</span><span class="p">.</span><span class="nx">ToString</span><span class="p">(</span><span class="nx">output</span><span class="p">.</span><span class="nx">Attribute</span><span class="p">),</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// waitThingAttributeUpdated is an attribute waiter for Thing.Attribute</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">waitThingAttributeUpdated</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="w"> </span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">expectedValue</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">timeout</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Thing</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">stateConf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">retry</span><span class="p">.</span><span class="nx">StateChangeConf</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Target</span><span class="p">:</span><span class="w">  </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="nx">expectedValue</span><span class="p">},</span>
+<span class="w">        </span><span class="nx">Refresh</span><span class="p">:</span><span class="w"> </span><span class="nx">ThingAttribute</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Timeout</span><span class="p">:</span><span class="w"> </span><span class="nx">timeout</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">outputRaw</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">stateConf</span><span class="p">.</span><span class="nx">WaitForState</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">outputRaw</span><span class="p">.(</span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Thing</span><span class="p">);</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>And consumed within the resource update workflow as follows:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_2_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">resourceThing</span><span class="p">)</span><span class="w"> </span><span class="nx">Update</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">UpdateRequest</span><span class="p">,</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">UpdateResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ...</span>
+
+<span class="w">    </span><span class="p">!</span><span class="nx">plan</span><span class="p">.</span><span class="nx">Attribute</span><span class="p">.</span><span class="nx">Equal</span><span class="p">(</span><span class="nx">state</span><span class="p">.</span><span class="nx">Attribute</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// ... AWS Go SDK logic to update attribute ...</span>
+
+<span class="w">        </span><span class="nx">updateTimeout</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">UpdateTimeout</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Timeouts</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitThingAttributeUpdated</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">StringValue</span><span class="p">(),</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Attribute</span><span class="p">.</span><span class="nx">StringValue</span><span class="p">(),</span><span class="w"> </span><span class="nx">updateTimeout</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">                </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForUpdate</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameThing</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">                </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">            </span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">resourceThingUpdate</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diags</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ...</span>
+
+<span class="w">    </span><span class="nx">d</span><span class="p">.</span><span class="nx">HasChange</span><span class="p">(</span><span class="s">&quot;attribute&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// ... AWS Go SDK logic to update attribute ...</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitThingAttributeUpdated</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;attribute&quot;</span><span class="p">).(</span><span class="kt">string</span><span class="p">),</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Timeout</span><span class="p">(</span><span class="nx">schema</span><span class="p">.</span><span class="nx">TimeoutUpdate</span><span class="p">));</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForUpdate</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameThing</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h2 id="asynchronous-operations">Asynchronous Operations<a class="headerlink" href="#asynchronous-operations" title="Permanent link">#</a></h2>
+<p>When you initiate a long-running operation, an AWS service may return a successful response immediately and continue working on the request asynchronously. A resource can track the status with a component-level field (e.g., <code>CREATING</code>, <code>UPDATING</code>, etc.) or an explicit tracking identifier.</p>
+<p>Terraform resources should wait for these background operations to complete. Failing to do so can introduce incomplete state information and downstream errors in other resources. In rare scenarios involving very long-running operations, operators may request a flag to skip the waiting. However, these should only be implemented case-by-case to prevent those previously mentioned confusing issues.</p>
+<h3 id="aws-go-sdk-waiters">AWS Go SDK Waiters<a class="headerlink" href="#aws-go-sdk-waiters" title="Permanent link">#</a></h3>
+<p>The AWS SDK for Go provides <a href="https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/using.html#using-waiters">waiters</a> for some asynchronous operations. We prefer using <a href="#resource-lifecycle-waiters">Resource Lifecycle Waiters</a> instead since they are more commonly used throughout the codebase and provide more options for customization.</p>
+<h3 id="resource-lifecycle-waiters">Resource Lifecycle Waiters<a class="headerlink" href="#resource-lifecycle-waiters" title="Permanent link">#</a></h3>
+<p>Most of the codebase uses <code>retry.StateChangeConf</code> and <code>retry.StateRefreshFunc</code> handlers for tracking either component-level status fields or explicit tracking identifiers.
+These should be placed in the <code>internal/service/{SERVICE}</code> package and split into separate functions. For example:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// ThingStatus fetches the Thing and its Status</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">ThingStatus</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="w"> </span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">StateRefreshFunc</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="kd">interface</span><span class="p">{},</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="cm">/* ... AWS Go SDK operation to fetch resource/status ... */</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">errs</span><span class="p">.</span><span class="nx">IsA</span><span class="p">[</span><span class="o">*</span><span class="nx">types</span><span class="p">.</span><span class="nx">ResourceNotFoundException</span><span class="p">](</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">aws</span><span class="p">.</span><span class="nx">ToString</span><span class="p">(</span><span class="nx">output</span><span class="p">.</span><span class="nx">Status</span><span class="p">),</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1">// waitThingCreated is a resource waiter for Thing creation</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">waitThingCreated</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="w"> </span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">timeout</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Thing</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">stateConf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">retry</span><span class="p">.</span><span class="nx">StateChangeConf</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Pending</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="nx">example</span><span class="p">.</span><span class="nx">StatusCreating</span><span class="p">},</span>
+<span class="w">        </span><span class="nx">Target</span><span class="p">:</span><span class="w">  </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="nx">example</span><span class="p">.</span><span class="nx">StatusCreated</span><span class="p">},</span>
+<span class="w">        </span><span class="nx">Refresh</span><span class="p">:</span><span class="w"> </span><span class="nx">ThingStatus</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Timeout</span><span class="p">:</span><span class="w"> </span><span class="nx">timeout</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">outputRaw</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">stateConf</span><span class="p">.</span><span class="nx">WaitForState</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">outputRaw</span><span class="p">.(</span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Thing</span><span class="p">);</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="p">}</span>
+
+<span class="c1">// waitThingDeleted is a resource waiter for Thing deletion</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">waitThingDeleted</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="w"> </span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">timeout</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Thing</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">stateConf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">retry</span><span class="p">.</span><span class="nx">StateChangeConf</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Pending</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="nx">example</span><span class="p">.</span><span class="nx">StatusDeleting</span><span class="p">},</span>
+<span class="w">        </span><span class="nx">Target</span><span class="p">:</span><span class="w">  </span><span class="p">[]</span><span class="kt">string</span><span class="p">{},</span><span class="w"> </span><span class="c1">// Use empty list if the resource disappears and does not have &quot;deleted&quot; status</span>
+<span class="w">        </span><span class="nx">Refresh</span><span class="p">:</span><span class="w"> </span><span class="nx">ThingStatus</span><span class="p">(</span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Timeout</span><span class="p">:</span><span class="w"> </span><span class="nx">timeout</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">outputRaw</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">stateConf</span><span class="p">.</span><span class="nx">WaitForState</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">outputRaw</span><span class="p">.(</span><span class="o">*</span><span class="nx">example</span><span class="p">.</span><span class="nx">Thing</span><span class="p">);</span><span class="w"> </span><span class="nx">ok</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="p">}</span>
+</code></pre></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_3_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">resourceThing</span><span class="p">)</span><span class="w"> </span><span class="nx">Create</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">CreateRequest</span><span class="p">,</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">CreateResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ... AWS Go SDK logic to create resource ...</span>
+
+<span class="w">    </span><span class="nx">createTimeout</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">CreateTimeout</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Timeouts</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">waitThingCreated</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">ValueString</span><span class="p">(),</span><span class="w"> </span><span class="nx">createTimeout</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">            </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForCreation</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameThing</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">Append</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">State</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">resourceThing</span><span class="p">)</span><span class="w"> </span><span class="nx">Delete</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">DeleteRequest</span><span class="p">,</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="o">*</span><span class="nx">resource</span><span class="p">.</span><span class="nx">DeleteResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ... AWS Go SDK logic to delete resource ...</span>
+
+<span class="w">    </span><span class="nx">deleteTimeout</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">DeleteTimeout</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Timeouts</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">waitThingDeleted</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">ValueString</span><span class="p">(),</span><span class="w"> </span><span class="nx">deleteTimeout</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">            </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForDeletion</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameThing</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">resourceThingCreate</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">diags</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span>
+
+<span class="w">    </span><span class="c1">// ... AWS Go SDK logic to create resource ...</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitThingCreated</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Timeout</span><span class="p">(</span><span class="nx">schema</span><span class="p">.</span><span class="nx">TimeoutCreate</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForCreation</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameThing</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">ExampleThingRead</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">resourceThingDelete</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ... AWS Go SDK logic to delete resource ...</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitThingDeleted</span><span class="p">(</span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Timeout</span><span class="p">(</span><span class="nx">schema</span><span class="p">.</span><span class="nx">TimeoutDelete</span><span class="p">));</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">Example</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForDeletion</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameThing</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">diags</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Typically, the AWS Go SDK should include constants for various status field values (e.g., <code>StatusCreating</code> for <code>CREATING</code>). If not, create them in a file named <code>internal/service/{SERVICE}/consts.go</code>.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
