@@ -4910,7 +4910,7 @@ func TestAccDynamoDBTable_warmThroughputDefault(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_warmThroughput(rName, 5, 5, 12000, 4000),
+				Config: testAccTableConfig_warmThroughput(rName, 5, 5, 12000, 4100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
