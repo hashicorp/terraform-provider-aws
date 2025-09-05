@@ -171,6 +171,11 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   db_servers                      = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
   tags = {
     "env" = "dev"
   }

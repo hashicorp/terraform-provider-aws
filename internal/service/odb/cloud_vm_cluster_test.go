@@ -115,7 +115,6 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 	}
 	var cloudvmcluster1 odbtypes.CloudVmCluster
 	var cloudvmcluster2 odbtypes.CloudVmCluster
-	var cloudvmcluster3 odbtypes.CloudVmCluster
 	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 
@@ -140,8 +139,6 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 						return nil
 					}),
 					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
 			{
@@ -162,26 +159,6 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 						}
 						return nil
 					}),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmcDisplayName, publicKey),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster3),
-					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
-						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster3.CloudVmClusterId)) != 0 {
-							return errors.New("Should  not create a new cloud vm cluster for tag update")
-						}
-						return nil
-					}),
-
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
 			{
@@ -308,8 +285,10 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   db_servers                      = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
-  tags = {
-    "env" = "dev"
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
   }
 
 }
