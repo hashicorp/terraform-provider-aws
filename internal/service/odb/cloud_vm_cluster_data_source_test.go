@@ -81,7 +81,6 @@ func (cloudVmClusterDSTest) testAccCheckCloudVmClusterDestroy(ctx context.Contex
 			if rs.Type != "aws_odb_cloud_vm_cluster" {
 				continue
 			}
-
 			_, err := tfodb.FindCloudVmClusterForResourceByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
@@ -89,10 +88,8 @@ func (cloudVmClusterDSTest) testAccCheckCloudVmClusterDestroy(ctx context.Contex
 			if err != nil {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameCloudVmCluster, rs.Primary.ID, err)
 			}
-
 			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameCloudVmCluster, rs.Primary.ID, errors.New("not destroyed"))
 		}
-
 		return nil
 	}
 }
@@ -103,31 +100,23 @@ func (cloudVmClusterDSTest) testAccCheckCloudVmClusterExists(ctx context.Context
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, name, errors.New("not found"))
 		}
-
 		if rs.Primary.ID == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, name, errors.New("not set"))
 		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 		resp, err := tfodb.FindCloudVmClusterForResourceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, rs.Primary.ID, err)
 		}
-
 		*cloudvmcluster = *resp
-
 		return nil
 	}
 }
 
 func (cloudVmClusterDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 	input := &odb.ListCloudVmClustersInput{}
-
 	_, err := conn.ListCloudVmClusters(ctx, input)
-
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -139,34 +128,28 @@ func (cloudVmClusterDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 func (cloudVmClusterDSTest) cloudVMClusterConfig(odbNet, exaInfra, displayName, sshKey string) string {
 	dsTfCodeVmCluster := fmt.Sprintf(`
 
+
 resource "aws_odb_network" "test" {
-  display_name          = %[1]q
+  display_name         = %[1]q
   availability_zone_id = "use1-az6"
   client_subnet_cidr   = "10.2.0.0/24"
   backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access = "DISABLED"
-  zero_etl_access = "DISABLED"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
 }
 
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name          = %[2]q
-  shape             	= "Exadata.X9M"
-  storage_count      	= 3
-  compute_count         = 2
-  availability_zone_id 	= "use1-az6"
-  customer_contacts_to_send_to_oci = ["abc@example.com"]
-  maintenance_window = {
-  		custom_action_timeout_in_mins = 16
-		days_of_week =	[]
-        hours_of_day =	[]
-        is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 0
-        months = []
-        patching_mode = "ROLLING"
-        preference = "NO_PREFERENCE"
-		weeks_of_month =[]
+  display_name         = %[1]q
+  shape                = "Exadata.X9M"
+  storage_count        = 3
+  compute_count        = 2
+  availability_zone_id = "use1-az6"
+  maintenance_window {
+    custom_action_timeout_in_mins    = 16
+    is_custom_action_timeout_enabled = true
+    patching_mode                    = "ROLLING"
+    preference                       = "NO_PREFERENCE"
   }
-  
 }
 
 data "aws_odb_db_servers_list" "test" {
@@ -174,28 +157,28 @@ data "aws_odb_db_servers_list" "test" {
 }
 
 resource "aws_odb_cloud_vm_cluster" "test" {
-  display_name             = %[3]q
+  display_name                    = %[3]q
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
   cpu_core_count                  = 6
-  gi_version                	  = "23.0.0.0"
+  gi_version                      = "23.0.0.0"
   hostname_prefix                 = "apollo12"
-  ssh_public_keys                 = [%[4]q]
+  ssh_public_keys                 = ["%[4]s"]
   odb_network_id                  = aws_odb_network.test.id
   is_local_backup_enabled         = true
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers					  = [ for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+  db_servers                      = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   tags = {
-  	  "env"= "dev"
+    "env" = "dev"
   }
 
 }
 
 data "aws_odb_cloud_vm_cluster" "test" {
-  id             = aws_odb_cloud_vm_cluster.test.id
+  id = aws_odb_cloud_vm_cluster.test.id
 }
 `, odbNet, exaInfra, displayName, sshKey)
 	return dsTfCodeVmCluster
