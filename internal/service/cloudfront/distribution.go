@@ -694,6 +694,15 @@ func resourceDistribution() *schema.Resource {
 								},
 							},
 						},
+						"response_completion_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0, // Zero equals to unspecified
+							ValidateFunc: validation.Any(
+								validation.IntAtLeast(30),
+								validation.IntInSlice([]int{0}),
+							),
+						},
 						"s3_origin_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -2144,6 +2153,12 @@ func expandOrigin(tfMap map[string]any) *awstypes.Origin {
 		}
 	}
 
+	if v, ok := tfMap["response_completion_timeout"]; ok {
+		if v := v.(int); v > 0 {
+			apiObject.ResponseCompletionTimeout = aws.Int32(int32(v))
+		}
+	}
+
 	if v, ok := tfMap["s3_origin_config"]; ok {
 		if v := v.([]any); len(v) > 0 {
 			apiObject.S3OriginConfig = expandS3OriginConfig(v[0].(map[string]any))
@@ -2202,6 +2217,10 @@ func flattenOrigin(apiObject *awstypes.Origin) map[string]any {
 
 	if apiObject.OriginShield != nil && aws.ToBool(apiObject.OriginShield.Enabled) {
 		tfMap["origin_shield"] = []any{flattenOriginShield(apiObject.OriginShield)}
+	}
+
+	if apiObject.ResponseCompletionTimeout != nil {
+		tfMap["response_completion_timeout"] = aws.ToInt32(apiObject.ResponseCompletionTimeout)
 	}
 
 	if apiObject.S3OriginConfig != nil && aws.ToString(apiObject.S3OriginConfig.OriginAccessIdentity) != "" {
