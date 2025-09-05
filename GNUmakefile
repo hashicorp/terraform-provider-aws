@@ -626,10 +626,13 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
 
 test: prereq-go fmt-check ## Run unit tests
-	@echo "make: Running unit tests..."
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
 
 test-compile: prereq-go ## Test package compilation
@@ -641,6 +644,8 @@ test-compile: prereq-go ## Test package compilation
 	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
 
 testacc: prereq-go fmt-check ## Run acceptance tests
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
 		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
