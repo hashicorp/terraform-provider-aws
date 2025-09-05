@@ -4,6 +4,7 @@
 package json_test
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -76,7 +77,19 @@ func TestCreatePatchFromStrings(t *testing.T) {
 				t.Errorf("CreatePatchFromStrings(%s, %s) err %t, want %t", testCase.a, testCase.b, got, want)
 			}
 			if err == nil {
-				if diff := cmp.Diff(got, testCase.wantPatch); diff != "" {
+				sortTransformer := cmp.Transformer("SortPatchOps", func(ops []mattbairdjsonpatch.JsonPatchOperation) []mattbairdjsonpatch.JsonPatchOperation {
+					sorted := make([]mattbairdjsonpatch.JsonPatchOperation, len(ops))
+					copy(sorted, ops)
+					sort.Slice(sorted, func(i, j int) bool {
+						if sorted[i].Operation != sorted[j].Operation {
+							return sorted[i].Operation < sorted[j].Operation
+						}
+						return sorted[i].Path < sorted[j].Path
+					})
+					return sorted
+				})
+
+				if diff := cmp.Diff(got, testCase.wantPatch, sortTransformer); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
