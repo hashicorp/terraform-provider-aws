@@ -697,7 +697,7 @@ func resourceDistribution() *schema.Resource {
 						"response_completion_timeout": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  0, // Zero is equivalent to unspecified
+							Computed: true,
 						},
 						"s3_origin_config": {
 							Type:     schema.TypeList,
@@ -2217,6 +2217,8 @@ func flattenOrigin(apiObject *awstypes.Origin) map[string]any {
 
 	if apiObject.ResponseCompletionTimeout != nil {
 		tfMap["response_completion_timeout"] = aws.ToInt32(apiObject.ResponseCompletionTimeout)
+	} else {
+		tfMap["response_completion_timeout"] = 0
 	}
 
 	if apiObject.S3OriginConfig != nil && aws.ToString(apiObject.S3OriginConfig.OriginAccessIdentity) != "" {
