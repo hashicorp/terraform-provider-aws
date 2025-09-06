@@ -74,6 +74,18 @@ func resourceCluster() *schema.Resource {
 				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
 				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
 
+				newComputeConfigEnabled := aws.ToBool(newComputeConfig.Enabled)
+
+				// Do not force new if auto mode is disabled in new config and role ARN is unset
+				if !newComputeConfigEnabled && newRoleARN == "" {
+					return nil
+				}
+
+				// Do not force new if built-in node pools are zeroed in new config and role ARN is unset
+				if len(newComputeConfig.NodePools) == 0 && newRoleARN == "" {
+					return nil
+				}
+
 				// only force new if an existing role has changed, not if a new role is added
 				if oldRoleARN != "" && oldRoleARN != newRoleARN {
 					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
