@@ -6,6 +6,7 @@ package ram_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ram"
@@ -47,9 +48,115 @@ func TestAccRAMPermission_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_template"},
+			},
+		},
+	})
+}
+
+func TestAccRAMPermission_version(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var permission awstypes.ResourceSharePermissionDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ram_permission.test"
+	policyTemplateActions := []string{
+		"backup:ListProtectedResourcesByBackupVault",
+		"backup:ListRecoveryPointsByBackupVault",
+		"backup:DescribeRecoveryPoint",
+		"backup:DescribeBackupVault",
+		"backup:StartRestoreJob",
+	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RAM)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[:3], `", "`)+`"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_template"},
+			},
+			{
+				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[1:2], `", "`)+`"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_template"},
+			},
+			{
+				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[3:4], `", "`)+`"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_template"},
+			},
+			{
+				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[:4], `", "`)+`"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_template"},
+			},
+			{
+				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[2:4], `", "`)+`"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_template"},
+			},
+			{
+				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions, `", "`)+`"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				),
 			},
 		},
 	})
@@ -84,7 +191,7 @@ func TestAccRAMPermission_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -175,4 +282,24 @@ resource "aws_ram_permission" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPermissionConfig_version(rName, rPolicyTemplate string) string {
+	return fmt.Sprintf(`
+
+resource "aws_ram_permission" "test" {
+  name	    	  = %[1]q
+  policy_template = jsonencode({
+        Effect = "Allow"
+        Action = [
+	     %[2]s
+        ]
+      })
+  resource_type   = "backup:BackupVault"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, rPolicyTemplate)
 }

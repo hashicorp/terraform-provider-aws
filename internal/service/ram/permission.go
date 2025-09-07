@@ -40,6 +40,7 @@ import (
 
 // @FrameworkResource("aws_ram_permission", name="Permission")
 // @ArnIdentity(identityDuplicateAttributes="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="policy_template")
 func newPermissionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -103,12 +104,14 @@ func (r *resourcePermission) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	var input ram.CreatePermissionInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Permission")))
+	input := ram.CreatePermissionInput{
+		ClientToken: aws.String(sdkid.UniqueId()),
+	}
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input.ClientToken = aws.String(sdkid.UniqueId())
+
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreatePermission(ctx, &input)
@@ -187,7 +190,7 @@ func (r *resourcePermission) Update(ctx context.Context, req resource.UpdateRequ
 			PolicyTemplate: plan.PolicyTemplate.ValueStringPointer(),
 		}
 
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -334,8 +337,7 @@ func permissionPruneVersions(ctx context.Context, conn *ram.Client, arn string) 
 		return nil
 	}
 
-	var oldestVersion awstypes.ResourceSharePermissionSummary
-
+	oldestVersion := versions[0]
 	for _, version := range versions {
 		if *version.DefaultVersion {
 			continue
@@ -362,7 +364,7 @@ func permissionDeleteVersion(ctx context.Context, conn *ram.Client, arn string, 
 	_, err := conn.DeletePermissionVersion(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("deleting RAM Permission (%s) version (%s): %w", arn, versionID, err)
+		return fmt.Errorf("deleting RAM Permission (%s) version (%d): %w", arn, versionID, err)
 	}
 
 	return nil
