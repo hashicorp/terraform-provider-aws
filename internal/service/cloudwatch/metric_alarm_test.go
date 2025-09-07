@@ -1177,7 +1177,7 @@ resource "aws_cloudwatch_metric_alarm" "second" {
   period              = "300"
   statistic           = "Average"
   threshold           = "90"
-  
+
   depends_on = [aws_cloudwatch_metric_alarm.first]
 }
 `, rName)

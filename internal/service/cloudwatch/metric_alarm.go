@@ -325,7 +325,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	name := d.Get("alarm_name").(string)
-	
+
 	// Check if alarm already exists to prevent silent overwrites
 	existing, err := findMetricAlarmByName(ctx, conn, name)
 	if err != nil && !retry.NotFound(err) {
