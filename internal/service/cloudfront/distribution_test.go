@@ -4737,7 +4737,7 @@ resource "aws_cloudfront_distribution" "test" {
 func testAccDistributionConfig_minimalMultiTenant() string {
 	return `
 resource "aws_cloudfront_cache_policy" "tf-policy" {
-  name        = "tfpolicy"
+  name        = "tfpolicy1"
   comment     = "test tenant cache policy"
   default_ttl = 50
   max_ttl     = 100
@@ -4798,7 +4798,7 @@ resource "aws_cloudfront_distribution" "test" {
 func testAccDistributionConfig_multiTenantWithConfig() string {
 	return `
 resource "aws_cloudfront_cache_policy" "tf-policy" {
-  name        = "tfpolicy"
+  name        = "tfpolicy2"
   comment     = "test tenant cache policy"
   default_ttl = 50
   max_ttl     = 100

@@ -1407,7 +1407,7 @@ func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id st
 }
 
 func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConfig {
-	isMultiTenant := d.Get("connection_mode").(string) == "tenant-only"
+	isMultiTenant := d.Get("connection_mode").(string) == string(awstypes.ConnectionModeTenantOnly)
 
 	apiObject := &awstypes.DistributionConfig{
 		CacheBehaviors:       expandCacheBehaviors(d.Get("ordered_cache_behavior").([]any), isMultiTenant),
