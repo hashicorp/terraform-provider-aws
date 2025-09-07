@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -812,6 +813,14 @@ func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, 
 	// * Separate setting Identity spec and Import spec
 	if v, ok := inner.(framework.ImportByIdentityer); ok {
 		v.SetIdentitySpec(spec.Identity, inttypes.FrameworkImport{})
+	}
+
+	if v, ok := inner.(framework.Lister); ok {
+		v.AppendResultInterceptor(listresource.IdentityInterceptor(spec.Identity.Attributes))
+
+		if !tfunique.IsHandleNil(spec.Tags) {
+			v.AppendResultInterceptor(listresource.TagsInterceptor(spec.Tags))
+		}
 	}
 
 	return &wrappedListResource{
