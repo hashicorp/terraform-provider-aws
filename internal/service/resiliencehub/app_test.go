@@ -202,7 +202,7 @@ resource "aws_resiliencehub_app" "test" {
 
   app_template {
     version = "2.0"
-    
+
     app_component {
       name = "appcommon"
       type = "AWS::ResilienceHub::AppCommonAppComponent"
@@ -283,23 +283,23 @@ resource "aws_resiliencehub_app" "test" {
 
   app_template {
     version = "2.0"
-    
+
     resource {
       name = "lambda-function"
       type = "AWS::Lambda::Function"
-      
+
       logical_resource_id {
         identifier = "MyLambda"
         terraform_source_name = "my-terraform-source"
       }
     }
-    
+
     app_component {
       name = "appcommon"
       type = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
-    
+
     app_component {
       name = "compute-tier"
       type = "AWS::ResilienceHub::ComputeAppComponent"
@@ -311,7 +311,7 @@ resource "aws_resiliencehub_app" "test" {
     mapping_type = "Terraform"
     resource_name = "lambda-function"
     terraform_source_name = "my-terraform-source"
-    
+
     physical_resource_id {
       type = "Native"
       identifier = "s3://${aws_s3_bucket.test.bucket}/terraform.tfstate"
@@ -332,39 +332,37 @@ resource "aws_resiliencehub_app" "test" {
 
   app_template {
     version = "2.0"
-    
+
     resource {
       name = "lambda-function"
       type = "AWS::Lambda::Function"
-      
+
       logical_resource_id {
         identifier = "MyLambda"
         logical_stack_name = "my-stack"
       }
     }
-    
     resource {
       name = "database"
       type = "AWS::RDS::DBInstance"
-      
+
       logical_resource_id {
         identifier = "MyDatabase"
         logical_stack_name = "my-stack"
       }
     }
-    
+
     app_component {
       name = "appcommon"
       type = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
-    
     app_component {
       name = "compute-tier"
       type = "AWS::ResilienceHub::ComputeAppComponent"
       resource_names = ["lambda-function"]
     }
-    
+
     app_component {
       name = "database-tier"
       type = "AWS::ResilienceHub::DatabaseAppComponent"
@@ -389,23 +387,23 @@ resource "aws_resiliencehub_app" "test" {
 
   app_template {
     version = "2.0"
-    
+
     resource {
       name = "updated-lambda"
       type = "AWS::Lambda::Function"
-      
+
       logical_resource_id {
         identifier = "UpdatedLambda"
         logical_stack_name = "updated-stack"
       }
     }
-    
+
     app_component {
       name = "appcommon"
       type = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
-    
+
     app_component {
       name = "updated-compute-tier"
       type = "AWS::ResilienceHub::ComputeAppComponent"
@@ -425,23 +423,23 @@ resource "aws_resiliencehub_app" "test" {
 
   app_template {
     version = "2.0"
-    
+
     resource {
       name = "updated-lambda"
       type = "AWS::Lambda::Function"
-      
+
       logical_resource_id {
         identifier = "UpdatedLambda"
         terraform_source_name = "updated-terraform-source"
       }
     }
-    
+
     app_component {
       name = "appcommon"
       type = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
-    
+
     app_component {
       name = "updated-compute-tier"
       type = "AWS::ResilienceHub::ComputeAppComponent"
@@ -453,7 +451,7 @@ resource "aws_resiliencehub_app" "test" {
     mapping_type = "Terraform"
     resource_name = "updated-lambda"
     terraform_source_name = "updated-terraform-source"
-    
+
     physical_resource_id {
       type = "Native"
       identifier = "s3://updated-terraform-bucket/terraform.tfstate"
