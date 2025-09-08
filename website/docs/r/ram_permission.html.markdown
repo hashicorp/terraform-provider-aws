@@ -5,16 +5,6 @@ page_title: "AWS: aws_ram_permission"
 description: |-
   Manages an AWS RAM (Resource Access Manager) Permission.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_ram_permission
 
@@ -26,47 +16,69 @@ Manages an AWS RAM (Resource Access Manager) Permission.
 
 ```terraform
 resource "aws_ram_permission" "example" {
+  name            = "custom-backup"
+  policy_template = <<EOF
+{
+    "Effect": "Allow",
+    "Action": [
+	"backup:ListProtectedResourcesByBackupVault",
+	"backup:ListRecoveryPointsByBackupVault",
+	"backup:DescribeRecoveryPoint",
+	"backup:DescribeBackupVault"
+    ]
+}
+EOF
+  resource_type   = "backup:BackupVault"
+
+  tags = {
+    Name = "custom-backup"
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `example_arg` - (Required) Brief description of the required argument.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Specifies the name of the customer managed permission. The name must be unique within the AWS Region.
+* `policy_template` - (Required) A string in JSON format string that contains the following elements of a resource-based policy:
+  - Effect
+  - Action
+  - Condition
+* `resource_type` - Specifies the name of the resource type that this customer managed permission applies to. The format is `<service-code>:<resource-type>` and is not case sensitive.
+* `tags` - (Optional) A map of tags to assign to the resource share. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Permission.
-* `example_attribute` - Brief description of the attribute.
+* `creation_time` - The date and time when the permission was created.
+* `default_version` - Specifies whether the version of the managed permission used by this resource share is the default version for this managed permission.
+* `last_updated_time` - The date and time when the permission was last updated.
+* `status` - The current status of the permission.
+* `version` - The version of the permission associated with this resource share.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RAM (Resource Access Manager) Permission using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RAM (Resource Access Manager) Permission using the `arn`. For example:
 
 ```terraform
 import {
   to = aws_ram_permission.example
-  id = "permission-id-12345678"
+  id = "arn:aws:ram:us-west-1:123456789012:permission/test-permission"
 }
 ```
 
 Using `terraform import`, import RAM (Resource Access Manager) Permission using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_ram_permission.example permission-id-12345678
+% terraform import aws_ram_permission.example arn:aws:ram:us-west-1:123456789012:permission/test-permission
 ```
