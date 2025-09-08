@@ -28,7 +28,7 @@ type ServicePackageWithEphemeralResources interface {
 	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
 }
 
-type ServicePackageWithListResources interface {
+type ServicePackageWithFrameworkListResources interface {
 	ServicePackage
 	FrameworkListResources(context.Context) iter.Seq[*types.ServicePackageFrameworkListResource]
 }

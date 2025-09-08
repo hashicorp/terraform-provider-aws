@@ -638,7 +638,7 @@ func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.Ident
 	}
 }
 
-type wrappedListResource struct {
+type wrappedListResourceFramework struct {
 	inner              list.ListResourceWithConfigure
 	meta               *conns.AWSClient
 	servicePackageName string
@@ -646,7 +646,7 @@ type wrappedListResource struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
+func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
 	var interceptors interceptorInvocations
 
 	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
@@ -670,7 +670,7 @@ func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, 
 		}
 	}
 
-	return &wrappedListResource{
+	return &wrappedListResourceFramework{
 		inner:              inner,
 		servicePackageName: servicePackageName,
 		spec:               spec,
@@ -679,7 +679,7 @@ func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, 
 }
 
 // context is run on all wrapped methods before any interceptors.
-func (w *wrappedListResource) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var overrideRegion string
 
@@ -712,7 +712,7 @@ func (w *wrappedListResource) context(ctx context.Context, getAttribute getAttri
 	return ctx, diags
 }
 
-func (w *wrappedListResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+func (w *wrappedListResourceFramework) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
 		w.meta = v
 	}
@@ -726,7 +726,7 @@ func (w *wrappedListResource) Configure(ctx context.Context, request resource.Co
 	w.inner.Configure(ctx, request, response)
 }
 
-func (w *wrappedListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (w *wrappedListResourceFramework) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	stream.Results = tfiter.Null[list.ListResult]()
 
 	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
@@ -741,7 +741,7 @@ func (w *wrappedListResource) List(ctx context.Context, request list.ListRequest
 }
 
 // ListResourceConfigSchema implements list.ListResourceWithConfigure.
-func (w *wrappedListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+func (w *wrappedListResourceFramework) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	ctx, diags := w.context(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
@@ -752,7 +752,7 @@ func (w *wrappedListResource) ListResourceConfigSchema(ctx context.Context, requ
 }
 
 // Metadata implements list.ListResourceWithConfigure.
-func (w *wrappedListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (w *wrappedListResourceFramework) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	// This method does not call down to the inner resource.
 	response.TypeName = w.spec.TypeName
 }
