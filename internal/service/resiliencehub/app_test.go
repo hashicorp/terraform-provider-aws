@@ -9,10 +9,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfresiliencehub "github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -158,8 +160,11 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfresiliencehub.FindAppByARN(ctx, conn, rs.Primary.ID)
-			if err != nil {
+			if errs.IsA[*retry.NotFoundError](err) {
 				return nil
+			}
+			if err != nil {
+				return err
 			}
 
 			return fmt.Errorf("ResilienceHub App %s still exists", rs.Primary.ID)

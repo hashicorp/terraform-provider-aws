@@ -392,9 +392,10 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if output.AssessmentSchedule != "" {
 		scheduleValue := string(output.AssessmentSchedule)
 		// Normalize case - AWS might return uppercase
-		if scheduleValue == "DISABLED" {
+		switch scheduleValue {
+		case "DISABLED":
 			scheduleValue = "Disabled"
-		} else if scheduleValue == "DAILY" {
+		case "DAILY":
 			scheduleValue = "Daily"
 		}
 		state.AppAssessmentSchedule = types.StringValue(scheduleValue)
@@ -466,9 +467,7 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if inputSourcesErr != nil || inputSourcesOutput == nil || len(inputSourcesOutput.AppInputSources) == 0 {
 		// Input sources might not be immediately available after app creation/update
 		// Preserve existing resource mappings from state to prevent unnecessary drift
-		if !state.ResourceMapping.IsNull() && !state.ResourceMapping.IsUnknown() {
-			// Keep existing resource mappings - they're already correctly set in state
-		} else {
+		if state.ResourceMapping.IsNull() || state.ResourceMapping.IsUnknown() {
 			// No previous state exists, set to null
 			state.ResourceMapping = types.ListNull(resourceMappingObjectType())
 		}
@@ -514,7 +513,6 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	if !plan.Description.Equal(state.Description) ||
 		!plan.AppAssessmentSchedule.Equal(state.AppAssessmentSchedule) ||
 		!plan.ResiliencyPolicyArn.Equal(state.ResiliencyPolicyArn) {
-
 		input := &resiliencehub.UpdateAppInput{
 			AppArn: aws.String(plan.ID.ValueString()),
 		}
