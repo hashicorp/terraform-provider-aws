@@ -588,7 +588,7 @@ func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, reque
 	}
 
 	_, err := conn.DeleteBucketLifecycle(ctx, &input)
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeMethodNotAllowed) {
 		return
 	}
 	if err != nil {
