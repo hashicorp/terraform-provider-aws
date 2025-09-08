@@ -93,10 +93,6 @@ func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData
 		return findVoiceConnectorGroupByID(ctx, conn, d.Id())
 	})
 
-	if tfresource.TimedOut(err) {
-		resp, err = findVoiceConnectorGroupByID(ctx, conn, d.Id())
-	}
-
 	if !d.IsNewResource() && errs.IsA[*awstypes.NotFoundException](err) {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 		d.SetId("")

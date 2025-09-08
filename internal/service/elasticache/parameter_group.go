@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -361,14 +360,13 @@ func resourceResetParameterGroup(ctx context.Context, conn *elasticache.Client, 
 		ParameterNameValues:     tfslices.Values(parameters),
 	}
 
-	// TODO: Migrate to retry.Operation
-	return sdkretry.RetryContext(ctx, 30*time.Second, func() *sdkretry.RetryError {
+	return tfresource.Retry(ctx, 30*time.Second, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.ResetCacheParameterGroup(ctx, &input)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheParameterGroupStateFault](err, " has pending changes") {
-				return sdkretry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return sdkretry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
