@@ -3397,6 +3397,7 @@ func TestAccEC2LaunchTemplate_upgradeFromV5(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_gpu_specifications"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_inference_accelerator"), knownvalue.ListSizeExact(0)),
 				},
 			},
 			{
@@ -3415,6 +3416,7 @@ func TestAccEC2LaunchTemplate_upgradeFromV5(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("elastic_gpu_specifications")),
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("elastic_inference_accelerator")),
 				},
 			},
 		},
@@ -3455,6 +3457,7 @@ func TestAccEC2LaunchTemplate_upgradeFromV5PlanRefreshFalse(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_gpu_specifications"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_inference_accelerator"), knownvalue.ListSizeExact(0)),
 					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
 				},
 			},
@@ -3474,6 +3477,7 @@ func TestAccEC2LaunchTemplate_upgradeFromV5PlanRefreshFalse(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("elastic_gpu_specifications")),
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("elastic_inference_accelerator")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 				},
 			},
