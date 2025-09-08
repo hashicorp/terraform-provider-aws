@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"testing"
 	"time"
 
 	smithydocument "github.com/aws/smithy-go/document"
@@ -701,4 +702,89 @@ type tfSetOfStringEnum struct {
 
 type awsSliceOfStringEnum struct {
 	Field1 []testEnum
+}
+
+func TestFindFieldFuzzy_Combinations(t *testing.T) {
+	t.Parallel()
+
+	type builder func() (typeFrom reflect.Type, typeTo reflect.Type, fieldNameFrom string, expectedFieldName string)
+
+	cases := map[string]struct {
+		prefix string
+		suffix string
+		build  builder
+	}{
+		// 1) suffix-only on target; source has neither
+		"suffix on target only (prefix configured but not applied)": {
+			prefix: "Cluster",
+			suffix: "Input",
+			build: func() (reflect.Type, reflect.Type, string, string) {
+				type source struct{ ExecutionConfig string }
+				type target struct{ ExecutionConfigInput string }
+				return reflect.TypeFor[source](), reflect.TypeFor[target](), "ExecutionConfig", "ExecutionConfigInput"
+			},
+		},
+		// 2) trim prefix on source, then add suffix
+		"trim prefix on source then add suffix": {
+			prefix: "Cluster",
+			suffix: "Input",
+			build: func() (reflect.Type, reflect.Type, string, string) {
+				type source struct{ ClusterExecutionConfig string }
+				type target struct{ ExecutionConfigInput string }
+				return reflect.TypeFor[source](), reflect.TypeFor[target](), "ClusterExecutionConfig", "ExecutionConfigInput"
+			},
+		},
+		// 3) add prefix and suffix on target (source has neither)
+		"add prefix and suffix on target": {
+			prefix: "Cluster",
+			suffix: "Input",
+			build: func() (reflect.Type, reflect.Type, string, string) {
+				type source struct{ ExecutionConfig string }
+				type target struct{ ClusterExecutionConfigInput string }
+				return reflect.TypeFor[source](), reflect.TypeFor[target](), "ExecutionConfig", "ClusterExecutionConfigInput"
+			},
+		},
+		// 4) trim suffix on source (target has neither)
+		"trim suffix on source": {
+			prefix: "Cluster",
+			suffix: "Input",
+			build: func() (reflect.Type, reflect.Type, string, string) {
+				type source struct{ ExecutionConfigInput string }
+				type target struct{ ExecutionConfig string }
+				return reflect.TypeFor[source](), reflect.TypeFor[target](), "ExecutionConfigInput", "ExecutionConfig"
+			},
+		},
+		// 5) trim both on source (target has neither)
+		"trim both prefix and suffix on source": {
+			prefix: "Cluster",
+			suffix: "Input",
+			build: func() (reflect.Type, reflect.Type, string, string) {
+				type source struct{ ClusterExecutionConfigInput string }
+				type target struct{ ExecutionConfig string }
+				return reflect.TypeFor[source](), reflect.TypeFor[target](), "ClusterExecutionConfigInput", "ExecutionConfig"
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			typeFrom, typeTo, fieldNameFrom, expected := tc.build()
+			ctx := context.Background()
+			opts := []AutoFlexOptionsFunc{
+				WithFieldNamePrefix(tc.prefix),
+				WithFieldNameSuffix(tc.suffix),
+			}
+			flexer := newAutoExpander(opts)
+
+			field, found := findFieldFuzzy(ctx, fieldNameFrom, typeFrom, typeTo, flexer)
+			if !found {
+				t.Fatalf("expected to find field, but found==false")
+			}
+			if field.Name != expected {
+				t.Fatalf("expected field name %q, got %q", expected, field.Name)
+			}
+		})
+	}
 }
