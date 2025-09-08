@@ -107,7 +107,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.251.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.2
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.4
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.5
 	github.com/aws/aws-sdk-go-v2/service/efs v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/eks v1.73.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.50.1
@@ -193,7 +193,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.56.2
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.2
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.12.1
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.1
@@ -226,7 +226,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.4
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.213.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.214.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.2
@@ -311,7 +311,7 @@ require (
 	github.com/pquerna/otp v1.5.0
 	github.com/shopspring/decimal v1.4.0
 	golang.org/x/crypto v0.41.0
-	golang.org/x/text v0.28.0
+	golang.org/x/text v0.29.0
 	golang.org/x/tools v0.36.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.5
 )
@@ -377,7 +377,7 @@ require (
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250505200425-f936aa4a68b2 // indirect
