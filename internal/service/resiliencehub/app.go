@@ -473,7 +473,7 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		}
 	} else {
 		// Parse the app template JSON for resource mappings
-		var appTemplateMap map[string]interface{}
+		var appTemplateMap map[string]any
 		if err := json.Unmarshal([]byte(*templateOutput.AppTemplateBody), &appTemplateMap); err != nil {
 			resp.Diagnostics.AddError("Failed to parse app template", err.Error())
 			return
@@ -740,7 +740,7 @@ func waitAppDeleted(ctx context.Context, conn *resiliencehub.Client, arn string,
 }
 
 func statusApp(ctx context.Context, conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindAppByARN(ctx, conn, arn)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -791,7 +791,7 @@ func (r *appResource) expandAppTemplate(ctx context.Context, tfList types.List) 
 	appTemplate := appTemplates[0]
 
 	// Build the JSON structure that ResilienceHub expects
-	template := map[string]interface{}{
+	template := map[string]any{
 		"version": appTemplate.Version.ValueString(),
 	}
 
@@ -816,7 +816,7 @@ func (r *appResource) expandAppTemplate(ctx context.Context, tfList types.List) 
 		}
 		template["resources"] = resources
 	} else {
-		template["resources"] = []interface{}{}
+		template["resources"] = []any{}
 	}
 
 	// Expand app components
@@ -828,7 +828,7 @@ func (r *appResource) expandAppTemplate(ctx context.Context, tfList types.List) 
 		}
 		template["appComponents"] = appComponents
 	} else {
-		template["appComponents"] = []interface{}{}
+		template["appComponents"] = []any{}
 	}
 
 	templateJSON, err := json.Marshal(template)
@@ -840,11 +840,11 @@ func (r *appResource) expandAppTemplate(ctx context.Context, tfList types.List) 
 	return string(templateJSON), diags
 }
 
-func (r *appResource) expandAppTemplateResources(ctx context.Context, tfList types.List) ([]interface{}, diag.Diagnostics) {
+func (r *appResource) expandAppTemplateResources(ctx context.Context, tfList types.List) ([]any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if tfList.IsNull() || tfList.IsUnknown() {
-		return []interface{}{}, diags
+		return []any{}, diags
 	}
 
 	var resources []resourceModel
@@ -853,9 +853,9 @@ func (r *appResource) expandAppTemplateResources(ctx context.Context, tfList typ
 		return nil, diags
 	}
 
-	result := make([]interface{}, len(resources))
+	result := make([]any, len(resources))
 	for i, resource := range resources {
-		resourceMap := map[string]interface{}{
+		resourceMap := map[string]any{
 			"name": resource.Name.ValueString(),
 			"type": resource.Type.ValueString(),
 		}
@@ -870,7 +870,7 @@ func (r *appResource) expandAppTemplateResources(ctx context.Context, tfList typ
 
 			if len(logicalIds) > 0 {
 				logicalId := logicalIds[0]
-				logicalResourceId := map[string]interface{}{
+				logicalResourceId := map[string]any{
 					"identifier": logicalId.Identifier.ValueString(),
 				}
 
@@ -909,11 +909,11 @@ func (r *appResource) expandAppTemplateResources(ctx context.Context, tfList typ
 	return result, diags
 }
 
-func (r *appResource) expandAppTemplateComponents(ctx context.Context, tfList types.List) ([]interface{}, diag.Diagnostics) {
+func (r *appResource) expandAppTemplateComponents(ctx context.Context, tfList types.List) ([]any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if tfList.IsNull() || tfList.IsUnknown() {
-		return []interface{}{}, diags
+		return []any{}, diags
 	}
 
 	var components []appComponentModel
@@ -922,9 +922,9 @@ func (r *appResource) expandAppTemplateComponents(ctx context.Context, tfList ty
 		return nil, diags
 	}
 
-	result := make([]interface{}, len(components))
+	result := make([]any, len(components))
 	for i, component := range components {
-		componentMap := map[string]interface{}{
+		componentMap := map[string]any{
 			"name": component.Name.ValueString(),
 			"type": component.Type.ValueString(),
 		}
@@ -1076,7 +1076,7 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 	}
 
 	// Parse JSON from AWS API
-	var template map[string]interface{}
+	var template map[string]any
 	if err := json.Unmarshal([]byte(templateBody), &template); err != nil {
 		diags.AddError("Failed to parse app template JSON", err.Error())
 		return types.ListNull(types.ObjectType{}), diags
@@ -1097,7 +1097,7 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 	}
 
 	// Handle additional info
-	if additionalInfo, ok := template["additionalInfo"].(map[string]interface{}); ok {
+	if additionalInfo, ok := template["additionalInfo"].(map[string]any); ok {
 		additionalInfoMap := make(map[string]attr.Value)
 		for k, v := range additionalInfo {
 			additionalInfoMap[k] = types.StringValue(v.(string))
@@ -1108,7 +1108,7 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 	}
 
 	// Handle resources
-	if resources, ok := template["resources"].([]interface{}); ok {
+	if resources, ok := template["resources"].([]any); ok {
 		resourceList, flattenDiags := r.flattenAppTemplateResources(ctx, resources)
 		diags.Append(flattenDiags...)
 		if diags.HasError() {
@@ -1120,7 +1120,7 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 	}
 
 	// Handle app components
-	if appComponents, ok := template["appComponents"].([]interface{}); ok {
+	if appComponents, ok := template["appComponents"].([]any); ok {
 		componentList, flattenDiags := r.flattenAppTemplateComponents(ctx, appComponents)
 		diags.Append(flattenDiags...)
 		if diags.HasError() {
@@ -1210,7 +1210,7 @@ func physicalResourceIdObjectType() types.ObjectType {
 	}
 }
 
-func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources []interface{}) (types.List, diag.Diagnostics) {
+func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources []any) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if len(resources) == 0 {
@@ -1219,7 +1219,7 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 
 	resourceValues := make([]attr.Value, len(resources))
 	for i, res := range resources {
-		resource := res.(map[string]interface{})
+		resource := res.(map[string]any)
 
 		resourceModel := resourceModel{
 			Name: types.StringValue(resource["name"].(string)),
@@ -1227,7 +1227,7 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 		}
 
 		// Handle additional info
-		if additionalInfo, ok := resource["additionalInfo"].(map[string]interface{}); ok {
+		if additionalInfo, ok := resource["additionalInfo"].(map[string]any); ok {
 			additionalInfoMap := make(map[string]attr.Value)
 			for k, v := range additionalInfo {
 				additionalInfoMap[k] = types.StringValue(v.(string))
@@ -1238,7 +1238,7 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 		}
 
 		// Handle logical resource ID
-		if logicalResourceId, ok := resource["logicalResourceId"].(map[string]interface{}); ok {
+		if logicalResourceId, ok := resource["logicalResourceId"].(map[string]any); ok {
 			logicalId := logicalResourceIdModel{}
 
 			if identifier, exists := logicalResourceId["identifier"]; exists && identifier != nil {
@@ -1320,7 +1320,7 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 	}, resourceValues), diags
 }
 
-func (r *appResource) flattenAppTemplateComponents(ctx context.Context, components []interface{}) (types.List, diag.Diagnostics) {
+func (r *appResource) flattenAppTemplateComponents(ctx context.Context, components []any) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if len(components) == 0 {
@@ -1329,7 +1329,7 @@ func (r *appResource) flattenAppTemplateComponents(ctx context.Context, componen
 
 	componentValues := make([]attr.Value, len(components))
 	for i, comp := range components {
-		component := comp.(map[string]interface{})
+		component := comp.(map[string]any)
 
 		componentModel := appComponentModel{
 			Name: types.StringValue(component["name"].(string)),
@@ -1337,7 +1337,7 @@ func (r *appResource) flattenAppTemplateComponents(ctx context.Context, componen
 		}
 
 		// Handle resource names
-		if resourceNames, ok := component["resourceNames"].([]interface{}); ok && len(resourceNames) > 0 {
+		if resourceNames, ok := component["resourceNames"].([]any); ok && len(resourceNames) > 0 {
 			resourceNameValues := make([]attr.Value, len(resourceNames))
 			for j, name := range resourceNames {
 				resourceNameValues[j] = types.StringValue(name.(string))
@@ -1348,7 +1348,7 @@ func (r *appResource) flattenAppTemplateComponents(ctx context.Context, componen
 		}
 
 		// Handle additional info
-		if additionalInfo, ok := component["additionalInfo"].(map[string]interface{}); ok {
+		if additionalInfo, ok := component["additionalInfo"].(map[string]any); ok {
 			additionalInfoMap := make(map[string]attr.Value)
 			for k, v := range additionalInfo {
 				additionalInfoMap[k] = types.StringValue(v.(string))
@@ -1382,7 +1382,7 @@ func (r *appResource) flattenAppTemplateComponents(ctx context.Context, componen
 	}, componentValues), diags
 }
 
-func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources []awstypes.AppInputSource, appTemplate map[string]interface{}) (types.List, diag.Diagnostics) {
+func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources []awstypes.AppInputSource, appTemplate map[string]any) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if len(inputSources) == 0 {
@@ -1393,11 +1393,11 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 
 	// Parse app template to find resources with terraform source names
 	terraformResourceMap := make(map[string]string) // terraformSourceName -> resourceName
-	if resources, ok := appTemplate["resources"].([]interface{}); ok {
+	if resources, ok := appTemplate["resources"].([]any); ok {
 		for _, res := range resources {
-			if resource, ok := res.(map[string]interface{}); ok {
+			if resource, ok := res.(map[string]any); ok {
 				if resourceName, hasName := resource["name"].(string); hasName {
-					if logicalResourceId, hasLogical := resource["logicalResourceId"].(map[string]interface{}); hasLogical {
+					if logicalResourceId, hasLogical := resource["logicalResourceId"].(map[string]any); hasLogical {
 						if terraformSourceName, hasTerraform := logicalResourceId["terraformSourceName"].(string); hasTerraform {
 							terraformResourceMap[terraformSourceName] = resourceName
 						}
