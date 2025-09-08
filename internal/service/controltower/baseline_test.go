@@ -169,6 +169,7 @@ func testAccBaselineConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 data "aws_organizations_organization" "current" {}
 
@@ -183,7 +184,7 @@ resource "aws_controltower_baseline" "test" {
   target_identifier   = aws_organizations_organizational_unit.test.arn
   parameters {
     key   = "IdentityCenterEnabledBaselineArn"
-    value = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}:664418989480:enabledbaseline/XALULM96QHI525UOC"
+    value = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}:{data.aws_caller_identity.current.account_id}:enabledbaseline/XALULM96QHI525UOC"
   }
 }
 `, rName)
