@@ -6,6 +6,7 @@ package controltower
 import (
 	"context"
 	"errors"
+	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -358,41 +359,60 @@ type parameters struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (p parameters) Expand(ctx context.Context) (any, diag.Diagnostics) {
+//func (p parameters) Expand(ctx context.Context) (any, diag.Diagnostics) {
+//	var diags diag.Diagnostics
+//	var r awstypes.EnabledBaselineParameter
+//	if !p.Key.IsNull() {
+//		r.Key = fwflex.StringFromFramework(ctx, p.Key)
+//	}
+//
+//	if !p.Value.IsNull() {
+//		r.Value = document.NewLazyDocument(fwflex.StringValueFromFramework(ctx, p.Value))
+//	}
+//
+//	return &r, diags
+//}
+//
+//func (p *parameters) Flatten(ctx context.Context, v any) diag.Diagnostics {
+//	var diags diag.Diagnostics
+//
+//	switch v.(type) {
+//	case awstypes.EnabledBaselineParameter:
+//		param := v.(awstypes.EnabledBaselineParameter)
+//		p.Key = fwflex.StringToFramework(ctx, param.Key)
+//		if param.Value != nil {
+//			var value any
+//			err := param.Value.UnmarshalSmithyDocument(&value)
+//			if err != nil {
+//				diags.AddError(
+//					"Error Reading Control Tower Baseline Parameter",
+//					"Could not read Control Tower Baseline Parameter: "+err.Error(),
+//				)
+//				return diags
+//			}
+//			p.Value = fwflex.StringValueToFramework(ctx, value.(string))
+//		} else {
+//			p.Value = types.StringNull()
+//		}
+//	}
+//	return diags
+//}
+
+func (p parameters) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var r awstypes.EnabledBaselineParameter
-	if !p.Key.IsNull() {
-		r.Key = fwflex.StringFromFramework(ctx, p.Key)
-	}
-
-	if !p.Value.IsNull() {
-		r.Value = document.NewLazyDocument(fwflex.StringValueFromFramework(ctx, p.Value))
-	}
-
-	return &r, diags
-}
-
-func (p *parameters) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	switch v.(type) {
-	case awstypes.EnabledBaselineParameter:
-		param := v.(awstypes.EnabledBaselineParameter)
-		p.Key = fwflex.StringToFramework(ctx, param.Key)
-		if param.Value != nil {
-			var value any
-			err := param.Value.UnmarshalSmithyDocument(&value)
-			if err != nil {
-				diags.AddError(
-					"Error Reading Control Tower Baseline Parameter",
-					"Could not read Control Tower Baseline Parameter: "+err.Error(),
-				)
-				return diags
-			}
-			p.Value = fwflex.StringValueToFramework(ctx, value.(string))
-		} else {
-			p.Value = types.StringNull()
+	switch targetType {
+	case reflect.TypeOf(awstypes.EnabledBaselineParameter{}):
+		var r awstypes.EnabledBaselineParameter
+		if !p.Key.IsNull() {
+			r.Key = fwflex.StringFromFramework(ctx, p.Key)
 		}
+
+		if !p.Value.IsNull() {
+			r.Value = document.NewLazyDocument(fwflex.StringValueFromFramework(ctx, p.Value))
+		}
+
+		return &r, diags
 	}
-	return diags
+
+	return nil, diags
 }
