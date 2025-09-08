@@ -225,8 +225,8 @@ github.com/aws/aws-sdk-go-v2/service/ecr v1.50.1 h1:lcwFjRx3C/hBxJzoWkD6DIG2jeB+
 github.com/aws/aws-sdk-go-v2/service/ecr v1.50.1/go.mod h1:qt9OL5kXqWoSub4QAkOF74mS3M2zOTNxMODqgwEUjt8=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.2 h1:EfatDVSMFxaS5TiR0C0zssQU1Nm+rGx3VbUGIH1y274=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.2/go.mod h1:oRy1IEgzXtOkEk4B/J7HZbXUC258drDLtkmc++lN7IA=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.63.4 h1:X6XL3qIpS7u/rVfuqt18ra9ySaiZKp3nA4pqgIODScw=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.63.4/go.mod h1:Cr5XpL/mBhaOKU1/kyVlQ/Zxs6d9RPcMRyI1DRXmFms=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.63.5 h1:AGhQaUug+K/NvkLssgyN0hGs0e56TR4HWDl24RmLZHM=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.63.5/go.mod h1:Cr5XpL/mBhaOKU1/kyVlQ/Zxs6d9RPcMRyI1DRXmFms=
 github.com/aws/aws-sdk-go-v2/service/efs v1.40.3 h1:xzZVMU2lDWKq9yENGNGXujl/x3GBdd40VtTorzAhp60=
 github.com/aws/aws-sdk-go-v2/service/efs v1.40.3/go.mod h1:hvE2jEAz+1qmX4MbQ6MvsE0rC3hV5lILFdtooRxA2fQ=
 github.com/aws/aws-sdk-go-v2/service/eks v1.73.1 h1:Txq5jxY/ao+2Vx/kX9+65WTqkzCnxSlXnwIj+Cr/fng=
@@ -407,8 +407,8 @@ github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.23.2 h1:FS7YSZwM+gtZ
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.23.2/go.mod h1:8j3CgvUAWVP5ugpdLtdj7gtilRNgQV5cd2pzToN06qg=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.2 h1:xGUYI7u/Z3XkFhwx5AXq6PcxzYagcEEZJIbhAIhPBxw=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.2/go.mod h1:dt6dIEsrU9x4xAhlqL+aKa5aHL1ld3Cx+PyIvB6iM8w=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.12.1 h1:fqq56R6CEKiBOGKV9AmCG1vEiS3UDvkawNLu8yJRPPg=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.12.1/go.mod h1:XPQAXDqJoSDJS919hZDgE8M64Dr3nvzwSWIHqopdAm8=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.12.2 h1:uIbbgGebIlEo/eLyKsaQA7O4I0AYZcFmclHdqkxaflo=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.12.2/go.mod h1:XPQAXDqJoSDJS919hZDgE8M64Dr3nvzwSWIHqopdAm8=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.2 h1:52j59BkbBW0Zp1IvEmv4IcQQ3TX/5G+OLUk8ix8p7EE=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.2/go.mod h1:lxI1V2S0N3rKdpp/1AkgrEfr/W6r0LtfdTw/I0/iT7c=
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.25.1 h1:5OVK43kiMcc6tgBgPKGNDFbiV5nsBt1BrDBrdXjNpAc=
@@ -473,8 +473,8 @@ github.com/aws/aws-sdk-go-v2/service/s3tables v1.10.1 h1:S/XTt495b8Gq/LG8Qk6n+nX
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.10.1/go.mod h1:KdvVQdbQpmJPR7Sc5Dhl6BDoeDdIzbNNjVW1ngESq+A=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.4 h1:+voCWwzv0hjPAYlPgFK5O/1Jbih2Kmis2GdGRm/ez4U=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.4/go.mod h1:BSxggpM5AIOTMl1ViayZKQW/3i08ticdyCClQohrdNk=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.213.1 h1:8wwJGiYXEG5hSGbtQnwcsdGnspIkS9TNwRf6vf1JVxM=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.213.1/go.mod h1:Ae028fYUbRG3E4ufQ2Kbia4VtG9C9enwh6pYCsHxonI=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.214.0 h1:0oO2/J3a8KFjId1p3zInJUlBg8NUabxSMAUA2LSMCaI=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.214.0/go.mod h1:Ae028fYUbRG3E4ufQ2Kbia4VtG9C9enwh6pYCsHxonI=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.1 h1:ogjtKXvsyTDbARaUOJyzrAGzffSpPUo4wq04pift9g0=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.1/go.mod h1:ByEOJKwZ6GhUoex+J2CAsw3axuWo/Xe0F7qOLAeNwH8=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.33.1 h1:kHBF/4k2+qSE7NducknUvqy4fNkuomJwc1Uu1frUIhs=

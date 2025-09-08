@@ -107,7 +107,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.251.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.2
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.4
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.5
 	github.com/aws/aws-sdk-go-v2/service/efs v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/eks v1.73.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.50.1
@@ -193,7 +193,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.56.2
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.2
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.12.1
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.1
@@ -226,7 +226,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.4
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.213.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.214.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.2
