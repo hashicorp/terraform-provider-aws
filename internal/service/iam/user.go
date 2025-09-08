@@ -431,7 +431,7 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, username stri
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
 	}
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err = conn.DeleteLoginProfile(ctx, input)
 		if err != nil {
 			var errNoSuchEntityException *awstypes.NoSuchEntityException
@@ -441,15 +441,13 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, username stri
 			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
 			var etu *awstypes.EntityTemporarilyUnmodifiableException
 			if tfawserr.ErrCodeEquals(err, etu.ErrorCode()) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteLoginProfile(ctx, input)
-	}
+
 	if err != nil {
 		return fmt.Errorf("deleting Account Login Profile: %w", err)
 	}

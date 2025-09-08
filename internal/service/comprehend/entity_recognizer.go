@@ -541,9 +541,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 		return nil
 	}, tfresource.WithPollInterval(entityRegcognizerPollInterval))
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateEntityRecognizer(ctx, in)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get(names.AttrName).(string), err)
 	}
