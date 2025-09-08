@@ -6,13 +6,11 @@ package logs
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -39,10 +37,6 @@ import (
 func newResourceTransformer(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTransformer{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -51,8 +45,6 @@ const (
 )
 
 type resourceTransformer struct {
-	framework.ResourceWithConfigure
-	framework.WithTimeouts
 	framework.ResourceWithModel[resourceTransformerModel]
 }
 
@@ -738,11 +730,6 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -775,22 +762,6 @@ func (r *resourceTransformer) Create(ctx context.Context, req resource.CreateReq
 			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameTransformer, plan.LogGroupIdentifier.String(), nil),
 			errors.New("empty output").Error(),
 		)
-		return
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	transformer, err := waitTransformerCreated(ctx, conn, plan.LogGroupIdentifier.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForCreation, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	// PutTransformer returns an empty body, so we propagate the state from the status call
-	resp.Diagnostics.Append(flex.Flatten(ctx, transformer, &plan)...)
-	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -868,22 +839,6 @@ func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	transformer, err := waitTransformerUpdated(ctx, conn, plan.LogGroupIdentifier.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForUpdate, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	// PutTransformer returns an empty body, so we propagate the state from the status call
-	resp.Diagnostics.Append(flex.Flatten(ctx, transformer, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -912,91 +867,10 @@ func (r *resourceTransformer) Delete(ctx context.Context, req resource.DeleteReq
 		)
 		return
 	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitTransformerDeleted(ctx, conn, state.LogGroupIdentifier.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForDeletion, ResNameTransformer, state.LogGroupIdentifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
 }
 
 func (r *resourceTransformer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("log_group_identifier"), req, resp)
-}
-
-const (
-	statusNormal = "Normal"
-)
-
-func waitTransformerCreated(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusTransformer(conn, logGroupIdentifier),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*cloudwatchlogs.GetTransformerOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitTransformerUpdated(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusTransformer(conn, logGroupIdentifier),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*cloudwatchlogs.GetTransformerOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitTransformerDeleted(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{},
-		Refresh: statusTransformer(conn, logGroupIdentifier),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*cloudwatchlogs.GetTransformerOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusTransformer(conn *cloudwatchlogs.Client, logGroupIdentifier string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		out, err := findTransformerByLogGroupIdentifier(ctx, conn, logGroupIdentifier)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, statusNormal, nil
-	}
 }
 
 func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string) (*cloudwatchlogs.GetTransformerOutput, error) {
@@ -1026,7 +900,6 @@ type resourceTransformerModel struct {
 	framework.WithRegionModel
 	LogGroupIdentifier types.String                                            `tfsdk:"log_group_identifier"`
 	TransformerConfig  fwtypes.ListNestedObjectValueOf[transformerConfigModel] `tfsdk:"transformer_config"`
-	Timeouts           timeouts.Value                                          `tfsdk:"timeouts"`
 }
 
 type transformerConfigModel struct {
