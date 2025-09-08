@@ -516,6 +516,31 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 								},
 							},
 						},
+						"parse_to_ocsf": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parseToOCSFModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"event_source": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.EventSource](),
+										Required:   true,
+									},
+									"oscf_version": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.OCSFVersion](),
+										Required:   true,
+									},
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+								},
+							},
+						},
 						"parse_vpc": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[parseVPCModel](ctx),
 							Validators: []validator.List{
@@ -918,6 +943,7 @@ type transformerConfigModel struct {
 	ParseKeyValue     fwtypes.ListNestedObjectValueOf[parseKeyValueModel]     `tfsdk:"parse_key_value"`
 	ParsePostgres     fwtypes.ListNestedObjectValueOf[parsePostgresModel]     `tfsdk:"parse_postgres"`
 	ParseRoute53      fwtypes.ListNestedObjectValueOf[parseRoute53Model]      `tfsdk:"parse_route53"`
+	ParseToOCSF       fwtypes.ListNestedObjectValueOf[parseToOCSFModel]       `tfsdk:"parse_to_ocsf"`
 	ParseVPC          fwtypes.ListNestedObjectValueOf[parseVPCModel]          `tfsdk:"parse_vpc"`
 	ParseWAF          fwtypes.ListNestedObjectValueOf[parseWAFModel]          `tfsdk:"parse_waf"`
 	RenameEntries     fwtypes.ListNestedObjectValueOf[renameKeysModel]        `tfsdk:"rename_entries"`
@@ -1022,6 +1048,12 @@ type parsePostgresModel struct {
 
 type parseRoute53Model struct {
 	Source types.String `tfsdk:"source"`
+}
+
+type parseToOCSFModel struct {
+	EventSource fwtypes.StringEnum[awstypes.EventSource] `tfsdk:"event_source"`
+	OCSFVersion fwtypes.StringEnum[awstypes.OCSFVersion] `tfsdk:"oscf_version"`
+	Source      types.String                             `tfsdk:"source"`
 }
 
 type parseVPCModel struct {
