@@ -134,11 +134,7 @@ type logGroupListResourceModel struct {
 
 func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			"region": listschema.StringAttribute{
-				Optional: true,
-			},
-		},
+		Attributes: map[string]listschema.Attribute{},
 	}
 }
 
