@@ -84,7 +84,7 @@ resource "aws_appsync_api" "example" {
     auth_provider {
       auth_type = "AWS_LAMBDA"
       lambda_authorizer_config {
-        authorizer_uri                   = aws_lambda_function.example.invoke_arn
+        authorizer_uri                   = aws_lambda_function.example.arn
         authorizer_result_ttl_in_seconds = 300
       }
     }
