@@ -426,10 +426,10 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			}
 		}
 
-		if v, ok := sp.(conns.ServicePackageWithListResources); ok {
+		if v, ok := sp.(conns.ServicePackageWithFrameworkListResources); ok {
 			for listResourceSpec := range v.FrameworkListResources(ctx) {
 				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
-					return newWrappedListResource(listResourceSpec, servicePackageName)
+					return newWrappedListResourceFramework(listResourceSpec, servicePackageName)
 				})
 			}
 		}
