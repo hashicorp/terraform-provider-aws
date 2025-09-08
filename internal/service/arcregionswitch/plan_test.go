@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-// lintignore:AWSAT003,AWSAT005
+// lintignore:AWSAT003,AWSAT005,AT004
 package arcregionswitch_test
 
 import (
@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	sdktypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -47,7 +48,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.execution_block_type", "ManualApproval"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.1.step.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.1.step.0.execution_block_type", "ManualApproval"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(`^arn:aws:arc-region-switch:.*:.*:plan/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role"),
 				),
 			},
@@ -123,10 +124,10 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "triggers.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "triggers.*", map[string]string{
-						"action": "activate",
+						names.AttrAction: "activate",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "triggers.*", map[string]string{
-						"action": "deactivate",
+						names.AttrAction: "deactivate",
 					}),
 				),
 			},
@@ -325,7 +326,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Complex test plan with multiple execution block types"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_time_objective_minutes", "60"),
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(`^arn:aws:arc-region-switch:.*:.*:plan/.+`)),
 
 					// Verify CustomActionLambda execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
