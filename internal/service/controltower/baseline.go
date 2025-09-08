@@ -363,11 +363,11 @@ func (p *parameters) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch v.(type) {
-	case awstypes.EnabledBaselineParameter:
-		param := v.(awstypes.EnabledBaselineParameter)
+	case awstypes.EnabledBaselineParameterSummary:
+		param := v.(awstypes.EnabledBaselineParameterSummary)
 		p.Key = fwflex.StringToFramework(ctx, param.Key)
 		if param.Value != nil {
-			var value any
+			var value string
 			err := param.Value.UnmarshalSmithyDocument(&value)
 			if err != nil {
 				diags.AddError(
@@ -376,7 +376,8 @@ func (p *parameters) Flatten(ctx context.Context, v any) diag.Diagnostics {
 				)
 				return diags
 			}
-			p.Value = fwflex.StringValueToFramework(ctx, value.(string))
+
+			p.Value = fwflex.StringValueToFramework(ctx, value)
 		} else {
 			p.Value = types.StringNull()
 		}
