@@ -915,8 +915,8 @@ The `managed_rule_group_configs` block support the following arguments:
 ### `json` Block
 
 * `identifier` (Required) The identifier for the value to match against in the JSON.
-* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
-* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
+* `success_values` (Required) Strings in the response JSON that indicate a successful login attempt.
+* `failure_values` (Required) Strings in the response JSON that indicate a failed login attempt.
 
 ### `status_code` Block
 
