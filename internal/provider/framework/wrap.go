@@ -395,15 +395,18 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags))
 	}
 
+	inner, _ := spec.Factory(context.TODO())
+
 	if len(spec.Identity.Attributes) > 0 {
 		interceptors = append(interceptors, newIdentityInterceptor(spec.Identity.Attributes))
+		if v, ok := inner.(framework.Identityer); ok {
+			v.SetIdentitySpec(spec.Identity)
+		}
 	}
-
-	inner, _ := spec.Factory(context.TODO())
 
 	if spec.Import.WrappedImport {
 		if v, ok := inner.(framework.ImportByIdentityer); ok {
-			v.SetIdentitySpec(spec.Identity, spec.Import)
+			v.SetImportSpec(spec.Import)
 		}
 		// If the resource does not implement framework.ImportByIdentityer,
 		// it will be caught by `validateResourceSchemas`, so we can ignore it here.
@@ -656,10 +659,8 @@ func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListR
 
 	inner := spec.Factory()
 
-	// TODO: This should not just be on importable resource types.
-	// * Separate setting Identity spec and Import spec
-	if v, ok := inner.(framework.ImportByIdentityer); ok {
-		v.SetIdentitySpec(spec.Identity, inttypes.FrameworkImport{})
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
 	}
 
 	if v, ok := inner.(framework.Lister); ok {
