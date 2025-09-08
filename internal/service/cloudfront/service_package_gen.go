@@ -129,6 +129,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  resourceConnectionGroup,
+			TypeName: "aws_cloudfront_connection_group",
+			Name:     "Connection Group",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  resourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
 			Name:     "Distribution",
