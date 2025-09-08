@@ -55,10 +55,12 @@ func TagsInterceptor(tags unique.Handle[inttypes.ServicePackageResourceTags]) ta
 }
 
 // Copied from tagsResourceInterceptor.read()
-func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) (diags diag.Diagnostics) {
+func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
-		return
+		return diags
 	}
 
 	switch params.When {
@@ -71,7 +73,7 @@ func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) (di
 				if err := r.ListTags(ctx, sp, params.C, identifier); err != nil {
 					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
 
-					return
+					return diags
 				}
 			}
 		}
@@ -88,18 +90,18 @@ func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) (di
 		}
 		diags.Append(params.Result.Resource.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 		if diags.HasError() {
-			return
+			return diags
 		}
 
 		// Computed tags_all do.
 		stateTagsAll := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(params.C.IgnoreTagsConfig(ctx)).Map())
 		diags.Append(params.Result.Resource.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 		if diags.HasError() {
-			return
+			return diags
 		}
 	}
 
-	return
+	return diags
 }
 
 type identityInterceptor struct {
@@ -112,7 +114,9 @@ func IdentityInterceptor(attributes []inttypes.IdentityAttribute) identityInterc
 	}
 }
 
-func (r identityInterceptor) Read(ctx context.Context, params InterceptorParams) (diags diag.Diagnostics) {
+func (r identityInterceptor) Read(ctx context.Context, params InterceptorParams) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	awsClient := params.C
 
 	switch params.When {
@@ -123,12 +127,12 @@ func (r identityInterceptor) Read(ctx context.Context, params InterceptorParams)
 		obj, d := newEmptyObject(identityType)
 		diags.Append(d...)
 		if diags.HasError() {
-			return
+			return diags
 		}
 
 		diags.Append(params.Result.Identity.Set(ctx, obj)...)
 		if diags.HasError() {
-			return
+			return diags
 		}
 
 	case After:
@@ -137,31 +141,31 @@ func (r identityInterceptor) Read(ctx context.Context, params InterceptorParams)
 			case names.AttrAccountID:
 				diags.Append(params.Result.Identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
 				if diags.HasError() {
-					return
+					return diags
 				}
 
 			case names.AttrRegion:
 				diags.Append(params.Result.Identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
 				if diags.HasError() {
-					return
+					return diags
 				}
 
 			default:
 				var attrVal attr.Value
 				diags.Append(params.Result.Resource.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
 				if diags.HasError() {
-					return
+					return diags
 				}
 
 				diags.Append(params.Result.Identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
 				if diags.HasError() {
-					return
+					return diags
 				}
 			}
 		}
 	}
 
-	return
+	return diags
 }
 
 func newEmptyObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
