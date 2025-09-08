@@ -998,6 +998,15 @@ func resourceLaunchTemplate() *schema.Resource {
 			},
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    launchTemplateSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: launchTemplateStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		// Enable downstream updates for resources referencing schema attributes
 		// to prevent non-empty plans after "terraform apply"
 		CustomizeDiff: customdiff.Sequence(

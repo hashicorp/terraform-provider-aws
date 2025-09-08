@@ -269,6 +269,7 @@ var (
 	InstanceStateUpgradeV1                                      = instanceStateUpgradeV1
 	InternetGatewayAttachmentParseResourceID                    = internetGatewayAttachmentParseResourceID
 	KeyPairMigrateState                                         = keyPairMigrateState
+	LaunchTemplateStateUpgradeV0                                = launchTemplateStateUpgradeV0
 	ManagedPrefixListEntryCreateResourceID                      = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules
