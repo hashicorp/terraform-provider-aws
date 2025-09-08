@@ -112,6 +112,7 @@ interpolation.
 * `outpost_arn` - ARN of the Outpost.
 * `password_data` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placement_group` - Placement group of the Instance.
+* `placement_group_id` - Placement group ID of the Instance.
 * `placement_partition_number` - Number of the partition the instance is in.
 * `private_dns` - Private DNS name assigned to the Instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `private_dns_name_options` - Options for the instance hostname.
@@ -148,4 +149,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.20.8 input-f70e1e075123a472ddd8795c02fe5708eb38af5f5278746a1d85046d66c1ebda -->
+<!-- cache-key: cdktf-0.20.8 input-78ec36eb77e46157229fa48eb9ce0bf0c9d80c9c7229d99d9267e4f5ef0906dc -->

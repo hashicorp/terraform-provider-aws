@@ -302,7 +302,8 @@ This resource supports the following arguments:
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
 * `network_interface` - (Optional, **Deprecated** to specify the primary network interface, use `primary_network_interface`, to attach additional network interfaces, use `aws_network_interface_attachment` resources) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
-* `placement_group` - (Optional) Placement Group to start the instance in.
+* `placement_group` - (Optional) Placement Group to start the instance in. Conflicts with `placement_group_id`.
+* `placement_group_id` - (Optional) Placement Group ID to start the instance in. Conflicts with `placement_group`.
 * `placement_partition_number` - (Optional) Number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
 * `primary_network_interface` - (Optional) The primary network interface. See [Primary Network Interface](#primary-network-interface) below.
 * `private_dns_name_options` - (Optional) Options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
@@ -598,4 +599,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-22e779ef252cca0daa6772edf807547cab1555b7c083bed6efe4ab25921642d0 -->
+<!-- cache-key: cdktf-0.20.8 input-a8a92955a427bc3172cd8fc04d2c2582761c5f438c82cb3912840f41192fe562 -->

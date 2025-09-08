@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `agentArns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
+* `agentArns` - (Optional) A list of DataSync Agent ARNs with which this location will be associated. For agentless cross-cloud transfers, this parameter does not need to be specified.
 * `accessKey` - (Optional) The access key is used if credentials are required to access the self-managed object storage server. If your object storage requires a user name and password to authenticate, use `accessKey` and `secretKey` to provide the user name and password, respectively.
 * `bucketName` - (Required) The bucket on the self-managed object storage server that is used to read data from.
 * `secretKey` - (Optional) The secret key is used if credentials are required to access the self-managed object storage server. If your object storage requires a user name and password to authenticate, use `accessKey` and `secretKey` to provide the user name and password, respectively.
@@ -94,4 +94,4 @@ Using `terraform import`, import `aws_datasync_location_object_storage` using th
 % terraform import aws_datasync_location_object_storage.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3193701c038fa3445dc0942aaaf938aa0783e6f6ca910d34ebeb92316a940b68 -->
+<!-- cache-key: cdktf-0.20.8 input-23ffbd5f596edf832e90250f2c0235731cac1c9e444c046908a454ea94e05529 -->
