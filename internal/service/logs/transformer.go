@@ -975,24 +975,24 @@ type copyValueEntryModel struct {
 }
 
 type csvModel struct {
-	Columns        types.List   `tfsdk:"columns"`
-	Delimiter      types.String `tfsdk:"delimiter"`
-	QuoteCharacter types.String `tfsdk:"quote_character"`
-	Source         types.String `tfsdk:"source"`
+	Columns        fwtypes.ListOfString `tfsdk:"columns"`
+	Delimiter      types.String         `tfsdk:"delimiter"`
+	QuoteCharacter types.String         `tfsdk:"quote_character"`
+	Source         types.String         `tfsdk:"source"`
 }
 
 type dateTimeConverterModel struct {
-	Locale         types.String `tfsdk:"locale"`
-	MatchPatterns  types.List   `tfsdk:"match_patterns"`
-	Source         types.String `tfsdk:"source"`
-	SourceTimezone types.String `tfsdk:"source_timezone"`
-	Target         types.String `tfsdk:"target"`
-	TargetFormat   types.String `tfsdk:"target_format"`
-	TargetTimezone types.String `tfsdk:"target_timezone"`
+	Locale         types.String         `tfsdk:"locale"`
+	MatchPatterns  fwtypes.ListOfString `tfsdk:"match_patterns"`
+	Source         types.String         `tfsdk:"source"`
+	SourceTimezone types.String         `tfsdk:"source_timezone"`
+	Target         types.String         `tfsdk:"target"`
+	TargetFormat   types.String         `tfsdk:"target_format"`
+	TargetTimezone types.String         `tfsdk:"target_timezone"`
 }
 
 type deleteKeysModel struct {
-	WithKeys types.List `tfsdk:"with_keys"`
+	WithKeys fwtypes.ListOfString `tfsdk:"with_keys"`
 }
 
 type grokModel struct {
@@ -1010,7 +1010,7 @@ type listToMapModel struct {
 }
 
 type lowerCaseStringModel struct {
-	WithKeys types.List `tfsdk:"with_keys"`
+	WithKeys fwtypes.ListOfString `tfsdk:"with_keys"`
 }
 
 type moveKeysModel struct {
@@ -1094,7 +1094,7 @@ type substituteStringEntryModel struct {
 }
 
 type trimStringModel struct {
-	WithKeys types.List `tfsdk:"with_keys"`
+	WithKeys fwtypes.ListOfString `tfsdk:"with_keys"`
 }
 
 type typeConverterModel struct {
@@ -1107,7 +1107,7 @@ type typeConverterEntryModel struct {
 }
 
 type upperCaseStringModel struct {
-	WithKeys types.List `tfsdk:"with_keys"`
+	WithKeys fwtypes.ListOfString `tfsdk:"with_keys"`
 }
 
 func sweepTransformers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
