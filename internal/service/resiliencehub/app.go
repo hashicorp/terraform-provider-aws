@@ -66,21 +66,17 @@ type appResource struct {
 	framework.WithTimeouts
 }
 
-func (r *appResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_resiliencehub_app"
-}
-
 func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"app_assessment_schedule": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("Daily", "Disabled"),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 500),
@@ -89,8 +85,8 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 			"drift_status": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -116,7 +112,7 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"version": schema.StringAttribute{
+						names.AttrVersion: schema.StringAttribute{
 							Required: true,
 						},
 						"additional_info": schema.MapAttribute{
@@ -128,10 +124,10 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 						"app_component": schema.ListNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Required: true,
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Required: true,
 									},
 									"resource_names": schema.ListAttribute{
@@ -148,10 +144,10 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 						"resource": schema.ListNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Required: true,
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Required: true,
 									},
 									"additional_info": schema.MapAttribute{
@@ -167,7 +163,7 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"identifier": schema.StringAttribute{
+												names.AttrIdentifier: schema.StringAttribute{
 													Required: true,
 												},
 												"logical_stack_name": schema.StringAttribute{
@@ -215,7 +211,7 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"identifier": schema.StringAttribute{
+									names.AttrIdentifier: schema.StringAttribute{
 										Required: true,
 									},
 									"type": schema.StringAttribute{
@@ -224,7 +220,7 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 											stringvalidator.OneOf("Arn", "Native"),
 										},
 									},
-									"aws_account_id": schema.StringAttribute{
+									names.AttrAWSAccountID: schema.StringAttribute{
 										Optional: true,
 									},
 									"aws_region": schema.StringAttribute{
@@ -236,7 +232,7 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -261,7 +257,7 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	if !plan.Description.IsNull() {
-		input.Description = aws.String(plan.Description.ValueString())
+		input.Description = plan.Description.ValueStringPointer()
 	}
 
 	if !plan.AppAssessmentSchedule.IsNull() {
@@ -269,7 +265,7 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	if !plan.ResiliencyPolicyArn.IsNull() {
-		input.PolicyArn = aws.String(plan.ResiliencyPolicyArn.ValueString())
+		input.PolicyArn = plan.ResiliencyPolicyArn.ValueStringPointer()
 	}
 
 	output, err := conn.CreateApp(ctx, input)
@@ -414,7 +410,7 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	// Read app template from draft version
 	templateInput := &resiliencehub.DescribeAppVersionTemplateInput{
-		AppArn:     aws.String(state.ID.ValueString()),
+		AppArn:     state.ID.ValueStringPointer(),
 		AppVersion: aws.String("draft"),
 	}
 
@@ -452,7 +448,7 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	// First try draft version
 	inputSourcesInput := &resiliencehub.ListAppInputSourcesInput{
-		AppArn:     aws.String(state.ID.ValueString()),
+		AppArn:     state.ID.ValueStringPointer(),
 		AppVersion: aws.String("draft"),
 	}
 
@@ -514,11 +510,11 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		!plan.AppAssessmentSchedule.Equal(state.AppAssessmentSchedule) ||
 		!plan.ResiliencyPolicyArn.Equal(state.ResiliencyPolicyArn) {
 		input := &resiliencehub.UpdateAppInput{
-			AppArn: aws.String(plan.ID.ValueString()),
+			AppArn: plan.ID.ValueStringPointer(),
 		}
 
 		if !plan.Description.IsNull() {
-			input.Description = aws.String(plan.Description.ValueString())
+			input.Description = plan.Description.ValueStringPointer()
 		}
 
 		if !plan.AppAssessmentSchedule.IsNull() {
@@ -526,7 +522,7 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		}
 
 		if !plan.ResiliencyPolicyArn.IsNull() {
-			input.PolicyArn = aws.String(plan.ResiliencyPolicyArn.ValueString())
+			input.PolicyArn = plan.ResiliencyPolicyArn.ValueStringPointer()
 		}
 
 		_, err := conn.UpdateApp(ctx, input)
@@ -549,7 +545,7 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 			}
 
 			templateInput := &resiliencehub.PutDraftAppVersionTemplateInput{
-				AppArn:          aws.String(plan.ID.ValueString()),
+				AppArn:          plan.ID.ValueStringPointer(),
 				AppTemplateBody: aws.String(templateBody),
 			}
 
@@ -576,7 +572,7 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 			// Only call ImportResourcesToDraftAppVersion if we have actual sources to import
 			if len(sourceArns) > 0 || len(terraformSources) > 0 {
 				importInput := &resiliencehub.ImportResourcesToDraftAppVersionInput{
-					AppArn:           aws.String(plan.ID.ValueString()),
+					AppArn:           plan.ID.ValueStringPointer(),
 					SourceArns:       sourceArns,
 					TerraformSources: terraformSources,
 				}
@@ -634,7 +630,7 @@ func (r *appResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	conn := r.Meta().ResilienceHubClient(ctx)
 
 	_, err := conn.DeleteApp(ctx, &resiliencehub.DeleteAppInput{
-		AppArn: aws.String(state.ID.ValueString()),
+		AppArn: state.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -661,7 +657,7 @@ func (r *appResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 }
 
 func (r *appResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindAppByARN(ctx context.Context, conn *resiliencehub.Client, arn string) (*awstypes.App, error) {
@@ -792,7 +788,7 @@ func (r *appResource) expandAppTemplate(ctx context.Context, tfList types.List) 
 
 	// Build the JSON structure that ResilienceHub expects
 	template := map[string]any{
-		"version": appTemplate.Version.ValueString(),
+		names.AttrVersion: appTemplate.Version.ValueString(),
 	}
 
 	// Add additional info if present
@@ -814,9 +810,9 @@ func (r *appResource) expandAppTemplate(ctx context.Context, tfList types.List) 
 		if diags.HasError() {
 			return "", diags
 		}
-		template["resources"] = resources
+		template[names.AttrResources] = resources
 	} else {
-		template["resources"] = []any{}
+		template[names.AttrResources] = []any{}
 	}
 
 	// Expand app components
@@ -856,8 +852,8 @@ func (r *appResource) expandAppTemplateResources(ctx context.Context, tfList typ
 	result := make([]any, len(resources))
 	for i, resource := range resources {
 		resourceMap := map[string]any{
-			"name": resource.Name.ValueString(),
-			"type": resource.Type.ValueString(),
+			names.AttrName: resource.Name.ValueString(),
+			names.AttrType: resource.Type.ValueString(),
 		}
 
 		// Add logical resource ID
@@ -871,7 +867,7 @@ func (r *appResource) expandAppTemplateResources(ctx context.Context, tfList typ
 			if len(logicalIds) > 0 {
 				logicalId := logicalIds[0]
 				logicalResourceId := map[string]any{
-					"identifier": logicalId.Identifier.ValueString(),
+					names.AttrIdentifier: logicalId.Identifier.ValueString(),
 				}
 
 				if !logicalId.LogicalStackName.IsNull() {
@@ -925,8 +921,8 @@ func (r *appResource) expandAppTemplateComponents(ctx context.Context, tfList ty
 	result := make([]any, len(components))
 	for i, component := range components {
 		componentMap := map[string]any{
-			"name": component.Name.ValueString(),
-			"type": component.Type.ValueString(),
+			names.AttrName: component.Name.ValueString(),
+			names.AttrType: component.Type.ValueString(),
 		}
 
 		// Add resource names if present
@@ -1034,7 +1030,7 @@ func (r *appResource) expandResourceMappingsToSources(ctx context.Context, tfLis
 					physicalId := physicalIds[0]
 					// Use the identifier as the S3 state file URL for Terraform sources
 					terraformSource := awstypes.TerraformSource{
-						S3StateFileUrl: aws.String(physicalId.Identifier.ValueString()),
+						S3StateFileUrl: physicalId.Identifier.ValueStringPointer(),
 					}
 					terraformSources = append(terraformSources, terraformSource)
 				}
@@ -1084,9 +1080,9 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 
 	// Build app template model
 	var version string
-	if v, ok := template["version"].(string); ok {
+	if v, ok := template[names.AttrVersion].(string); ok {
 		version = v
-	} else if v, ok := template["version"].(float64); ok {
+	} else if v, ok := template[names.AttrVersion].(float64); ok {
 		version = fmt.Sprintf("%.1f", v)
 	} else {
 		version = "2.0" // default
@@ -1108,7 +1104,7 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 	}
 
 	// Handle resources
-	if resources, ok := template["resources"].([]any); ok {
+	if resources, ok := template[names.AttrResources].([]any); ok {
 		resourceList, flattenDiags := r.flattenAppTemplateResources(ctx, resources)
 		diags.Append(flattenDiags...)
 		if diags.HasError() {
@@ -1241,7 +1237,7 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 		if logicalResourceId, ok := resource["logicalResourceId"].(map[string]any); ok {
 			logicalId := logicalResourceIdModel{}
 
-			if identifier, exists := logicalResourceId["identifier"]; exists && identifier != nil {
+			if identifier, exists := logicalResourceId[names.AttrIdentifier]; exists && identifier != nil {
 				logicalId.Identifier = types.StringValue(identifier.(string))
 			} else {
 				logicalId.Identifier = types.StringNull()
@@ -1393,7 +1389,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 
 	// Parse app template to find resources with terraform source names
 	terraformResourceMap := make(map[string]string) // terraformSourceName -> resourceName
-	if resources, ok := appTemplate["resources"].([]any); ok {
+	if resources, ok := appTemplate[names.AttrResources].([]any); ok {
 		for _, res := range resources {
 			if resource, ok := res.(map[string]any); ok {
 				if resourceName, hasName := resource["name"].(string); hasName {
@@ -1410,7 +1406,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 	for _, inputSource := range inputSources {
 		// Handle Terraform sources
 		if inputSource.TerraformSource != nil {
-			s3Url := *inputSource.TerraformSource.S3StateFileUrl
+			s3Url := aws.ToString(inputSource.TerraformSource.S3StateFileUrl)
 
 			// Match S3 URL with terraform source name from app template
 			// Look through all terraform resources to find the one with matching S3 URL
@@ -1496,7 +1492,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 			// Create physical resource ID with ARN
 			physicalId := physicalResourceIdModel{
 				Type:       types.StringValue("Arn"),
-				Identifier: types.StringValue(*inputSource.SourceArn),
+				Identifier: types.StringValue(aws.ToString(inputSource.SourceArn)),
 			}
 
 			physicalIdValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
