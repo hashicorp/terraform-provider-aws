@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_arcregionswitch_plan",
 			Name:     "Plan",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "names.AttrARN",
+				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

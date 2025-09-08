@@ -6,14 +6,13 @@ package arcregionswitch
 import (
 	"context"
 	"errors"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -64,6 +63,7 @@ func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 
 type resourcePlan struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schema) fwdiag.Diagnostics {
@@ -457,8 +457,14 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 	// Handle Workflows with complex nested transformations
 	if len(plan.Workflows) > 0 {
 		// Sort workflows by target action for consistent ordering (activate before deactivate)
-		sort.Slice(plan.Workflows, func(i, j int) bool {
-			return string(plan.Workflows[i].WorkflowTargetAction) < string(plan.Workflows[j].WorkflowTargetAction)
+		slices.SortFunc(plan.Workflows, func(i, j awstypes.Workflow) int {
+			if string(i.WorkflowTargetAction) < string(j.WorkflowTargetAction) {
+				return -1
+			}
+			if string(i.WorkflowTargetAction) > string(j.WorkflowTargetAction) {
+				return 1
+			}
+			return 0
 		})
 
 		workflows := make([]workflowModel, len(plan.Workflows))
@@ -550,7 +556,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 									arns := make([]string, len(controlStates))
 									for i, state := range controlStates {
 										if state.RoutingControlArn != nil {
-											arns[i] = *state.RoutingControlArn
+											arns[i] = aws.ToString(state.RoutingControlArn)
 										}
 									}
 
@@ -946,7 +952,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Convert CreatePlanInput to UpdatePlanInput (only updatable fields)
 	var input arcregionswitch.UpdatePlanInput
-	input.Arn = aws.String(state.ID.ValueString())
+	input.Arn = state.ID.ValueStringPointer()
 	input.ExecutionRole = createInput.ExecutionRole
 	input.Description = createInput.Description
 	input.RecoveryTimeObjectiveMinutes = createInput.RecoveryTimeObjectiveMinutes
@@ -981,7 +987,7 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
 	input := arcregionswitch.DeletePlanInput{
-		Arn: aws.String(state.ID.ValueString()),
+		Arn: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePlan(ctx, &input)
@@ -995,16 +1001,8 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *resourcePlan) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
 func (r *resourcePlan) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	// Basic validation is handled by the schema validators
-}
-
-func (r *resourcePlan) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = request.ProviderTypeName + "_arcregionswitch_plan"
 }
 
 func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -1074,7 +1072,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"cross_account_role": fwschema.StringAttribute{
 							Optional: true,
 						},
-						"external_id": fwschema.StringAttribute{
+						names.AttrExternalID: fwschema.StringAttribute{
 							Optional: true,
 						},
 					},
@@ -1136,7 +1134,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 													CustomType: fwtypes.NewListNestedObjectTypeOf[route53HealthCheckConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
-															"hosted_zone_id": fwschema.StringAttribute{
+															names.AttrHostedZoneID: fwschema.StringAttribute{
 																Required: true,
 															},
 															"record_name": fwschema.StringAttribute{
@@ -1145,7 +1143,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"cross_account_role": fwschema.StringAttribute{
 																Optional: true,
 															},
-															"external_id": fwschema.StringAttribute{
+															names.AttrExternalID: fwschema.StringAttribute{
 																Optional: true,
 															},
 															"timeout_minutes": fwschema.Int64Attribute{
@@ -1160,7 +1158,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		"record_set_identifier": fwschema.StringAttribute{
 																			Required: true,
 																		},
-																		"region": fwschema.StringAttribute{
+																		names.AttrRegion: fwschema.StringAttribute{
 																			Required: true,
 																		},
 																	},
@@ -1188,13 +1186,13 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
-																		"arn": fwschema.StringAttribute{
+																		names.AttrARN: fwschema.StringAttribute{
 																			Required: true,
 																		},
 																		"cross_account_role": fwschema.StringAttribute{
 																			Optional: true,
 																		},
-																		"external_id": fwschema.StringAttribute{
+																		names.AttrExternalID: fwschema.StringAttribute{
 																			Optional: true,
 																		},
 																	},
@@ -1232,7 +1230,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"cross_account_role": fwschema.StringAttribute{
 																Optional: true,
 															},
-															"external_id": fwschema.StringAttribute{
+															names.AttrExternalID: fwschema.StringAttribute{
 																Optional: true,
 															},
 															"timeout_minutes": fwschema.Int64Attribute{
@@ -1274,13 +1272,13 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																CustomType: fwtypes.NewListNestedObjectTypeOf[asgModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
-																		"arn": fwschema.StringAttribute{
+																		names.AttrARN: fwschema.StringAttribute{
 																			Required: true,
 																		},
 																		"cross_account_role": fwschema.StringAttribute{
 																			Optional: true,
 																		},
-																		"external_id": fwschema.StringAttribute{
+																		names.AttrExternalID: fwschema.StringAttribute{
 																			Optional: true,
 																		},
 																	},
@@ -1328,7 +1326,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		"cross_account_role": fwschema.StringAttribute{
 																			Optional: true,
 																		},
-																		"external_id": fwschema.StringAttribute{
+																		names.AttrExternalID: fwschema.StringAttribute{
 																			Optional: true,
 																		},
 																	},
@@ -1386,7 +1384,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		"cross_account_role": fwschema.StringAttribute{
 																			Optional: true,
 																		},
-																		"external_id": fwschema.StringAttribute{
+																		names.AttrExternalID: fwschema.StringAttribute{
 																			Optional: true,
 																		},
 																	},
@@ -1401,7 +1399,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		},
 																	},
 																	Blocks: map[string]fwschema.Block{
-																		"resources": fwschema.ListNestedBlock{
+																		names.AttrResources: fwschema.ListNestedBlock{
 																			CustomType: fwtypes.NewListNestedObjectTypeOf[kubernetesScalingResourceModel](ctx),
 																			NestedObject: fwschema.NestedBlockObject{
 																				Attributes: map[string]fwschema.Attribute{
@@ -1443,7 +1441,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"cross_account_role": fwschema.StringAttribute{
 																Optional: true,
 															},
-															"external_id": fwschema.StringAttribute{
+															names.AttrExternalID: fwschema.StringAttribute{
 																Optional: true,
 															},
 															"timeout_minutes": fwschema.Int64Attribute{
@@ -1455,7 +1453,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																CustomType: fwtypes.NewListNestedObjectTypeOf[regionAndRoutingControlsModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
-																		"region": fwschema.StringAttribute{
+																		names.AttrRegion: fwschema.StringAttribute{
 																			Required: true,
 																		},
 																		"routing_control_arns": fwschema.ListAttribute{
@@ -1520,13 +1518,13 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																						CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaModel](ctx),
 																						NestedObject: fwschema.NestedBlockObject{
 																							Attributes: map[string]fwschema.Attribute{
-																								"arn": fwschema.StringAttribute{
+																								names.AttrARN: fwschema.StringAttribute{
 																									Required: true,
 																								},
 																								"cross_account_role": fwschema.StringAttribute{
 																									Optional: true,
 																								},
-																								"external_id": fwschema.StringAttribute{
+																								names.AttrExternalID: fwschema.StringAttribute{
 																									Optional: true,
 																								},
 																							},
@@ -1561,11 +1559,11 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
-			"triggers": fwschema.ListNestedBlock{
+			names.AttrTriggers: fwschema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[triggerModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
-						"action": fwschema.StringAttribute{
+						names.AttrAction: fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
 							Required:   true,
 							Validators: []validator.String{
@@ -1590,7 +1588,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"associated_alarm_name": fwschema.StringAttribute{
 										Required: true,
 									},
-									"condition": fwschema.StringAttribute{
+									names.AttrCondition: fwschema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.AlarmCondition](),
 										Required:   true,
 										Validators: []validator.String{

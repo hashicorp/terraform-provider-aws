@@ -25,11 +25,11 @@ import (
 )
 
 func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planArn string) ([]awstypes.Route53HealthCheck, error) {
-	input := &arcregionswitch.ListRoute53HealthChecksInput{
+	input := arcregionswitch.ListRoute53HealthChecksInput{
 		Arn: aws.String(planArn),
 	}
 
-	output, err := conn.ListRoute53HealthChecks(ctx, input)
+	output, err := conn.ListRoute53HealthChecks(ctx, &input)
 
 	if err != nil {
 		return nil, err
@@ -46,10 +46,6 @@ func newDataSourcePlan(context.Context) (datasource.DataSourceWithConfigure, err
 
 type dataSourcePlan struct {
 	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourcePlan) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = request.ProviderTypeName + "_arcregionswitch_plan"
 }
 
 func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
