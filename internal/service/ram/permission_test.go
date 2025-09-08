@@ -44,7 +44,12 @@ func TestAccRAMPermission_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, "default_version"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
 			},
 			{
@@ -85,7 +90,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
 			},
 			{
@@ -99,7 +104,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
 			},
 			{
@@ -113,7 +118,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
 			},
 			{
@@ -127,7 +132,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
 			},
 			{
@@ -141,7 +146,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
 			},
 			{
@@ -155,7 +160,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
 			},
 		},
@@ -208,18 +213,18 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			output, err := tfram.FindPermissionByArn(ctx, conn, rs.Primary.Attributes["arn"])
+			output, err := tfram.FindPermissionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if output != nil && output.Status == awstypes.PermissionStatusDeleted {
 				return nil
 			}
 			if err != nil {
 				return err
 			}
+			if output != nil && output.Status == awstypes.PermissionStatusDeleted {
+				return nil
+			}
 
-			return fmt.Errorf("RAM Permission %s still exists", rs.Primary.Attributes["arn"])
+			return fmt.Errorf("RAM Permission %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
@@ -235,7 +240,7 @@ func testAccCheckPermissionExists(ctx context.Context, name string, permission *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
 
-		resp, err := tfram.FindPermissionByArn(ctx, conn, rs.Primary.Attributes["arn"])
+		resp, err := tfram.FindPermissionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
 			return err
 		}
@@ -263,18 +268,19 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccPermissionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_ram_permission" "test" {
-  name	    	  = %[1]q
-  policy_template = jsonencode({
-        Effect = "Allow"
-        Action = [
-	     "backup:ListProtectedResourcesByBackupVault",
-		 "backup:ListRecoveryPointsByBackupVault",
-		 "backup:DescribeRecoveryPoint",
-		 "backup:DescribeBackupVault"
-        ]
-      })
+  name            = %[1]q
+  policy_template = <<EOF
+{
+    "Effect": "Allow",
+    "Action": [
+	"backup:ListProtectedResourcesByBackupVault",
+	"backup:ListRecoveryPointsByBackupVault",
+	"backup:DescribeRecoveryPoint",
+	"backup:DescribeBackupVault"
+    ]
+}
+EOF
   resource_type   = "backup:BackupVault"
 
   tags = {
@@ -286,15 +292,16 @@ resource "aws_ram_permission" "test" {
 
 func testAccPermissionConfig_version(rName, rPolicyTemplate string) string {
 	return fmt.Sprintf(`
-
 resource "aws_ram_permission" "test" {
-  name	    	  = %[1]q
-  policy_template = jsonencode({
-        Effect = "Allow"
-        Action = [
+  name            = %[1]q
+  policy_template = <<EOF
+{
+	"Effect": "Allow",
+	"Action": [
 	     %[2]s
-        ]
-      })
+	]
+}
+EOF
   resource_type   = "backup:BackupVault"
 
   tags = {

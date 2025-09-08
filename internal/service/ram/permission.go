@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -61,7 +62,18 @@ func (r *resourcePermission) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
+			names.AttrCreationTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"default_version": schema.BoolAttribute{
+				Computed: true,
+			},
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
+			names.AttrLastUpdatedTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -84,8 +96,14 @@ func (r *resourcePermission) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrStatus: schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrVersion: schema.StringAttribute{
+				Computed: true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -141,7 +159,7 @@ func (r *resourcePermission) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	out, err := findPermissionByArn(ctx, conn, state.ID.ValueString())
+	out, err := findPermissionByARN(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -215,7 +233,6 @@ func (r *resourcePermission) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *resourcePermission) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().RAMClient(ctx)
 
 	var state resourcePermissionModel
@@ -266,7 +283,7 @@ func waitPermissionDeleted(ctx context.Context, conn *ram.Client, arn string, ti
 
 func statusPermission(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findPermissionByArn(ctx, conn, arn)
+		output, err := findPermissionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -280,7 +297,7 @@ func statusPermission(ctx context.Context, conn *ram.Client, arn string) retry.S
 	}
 }
 
-func findPermissionByArn(ctx context.Context, conn *ram.Client, arn string) (*awstypes.ResourceSharePermissionDetail, error) {
+func findPermissionByARN(ctx context.Context, conn *ram.Client, arn string) (*awstypes.ResourceSharePermissionDetail, error) {
 	input := ram.GetPermissionInput{
 		PermissionArn: &arn,
 	}
@@ -306,14 +323,19 @@ func findPermissionByArn(ctx context.Context, conn *ram.Client, arn string) (*aw
 
 type resourcePermissionModel struct {
 	framework.WithRegionModel
-	ID             types.String   `tfsdk:"id"`
-	ARN            types.String   `tfsdk:"arn"`
-	Name           types.String   `tfsdk:"name"`
-	PolicyTemplate types.String   `tfsdk:"policy_template"`
-	ResourceType   types.String   `tfsdk:"resource_type"`
-	Tags           tftags.Map     `tfsdk:"tags"`
-	TagsAll        tftags.Map     `tfsdk:"tags_all"`
-	Timeouts       timeouts.Value `tfsdk:"timeouts"`
+	ARN             types.String      `tfsdk:"arn"`
+	CreationTime    timetypes.RFC3339 `tfsdk:"creation_time"`
+	ID              types.String      `tfsdk:"id"`
+	DefaultVersion  types.Bool        `tfsdk:"default_version"`
+	LastUpdatedTime timetypes.RFC3339 `tfsdk:"last_updated_time"`
+	Name            types.String      `tfsdk:"name"`
+	PolicyTemplate  types.String      `tfsdk:"policy_template"`
+	ResourceType    types.String      `tfsdk:"resource_type"`
+	Tags            tftags.Map        `tfsdk:"tags"`
+	TagsAll         tftags.Map        `tfsdk:"tags_all"`
+	Timeouts        timeouts.Value    `tfsdk:"timeouts"`
+	Status          types.String      `tfsdk:"status"`
+	Version         types.String      `tfsdk:"version"`
 }
 
 func (data *resourcePermissionModel) setID() {

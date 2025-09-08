@@ -17,5 +17,5 @@ var (
 	FindResourceShareOwnerOtherAccountsByARN = findResourceShareOwnerOtherAccountsByARN
 	FindResourceShareOwnerSelfByARN          = findResourceShareOwnerSelfByARN
 	FindSharingWithOrganization              = findSharingWithOrganization
-	FindPermissionByArn                      = findPermissionByArn
+	FindPermissionByARN                      = findPermissionByARN
 )
