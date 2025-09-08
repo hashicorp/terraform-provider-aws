@@ -173,14 +173,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
-	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
-	d.Set("log_group_class", lg.LogGroupClass)
-	d.Set(names.AttrName, lg.LogGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
-	d.Set("retention_in_days", lg.RetentionInDays)
-	// Support in-place update of non-refreshable attribute.
-	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+	resourceGroupFlatten(ctx, d, *lg)
 
 	return diags
 }
