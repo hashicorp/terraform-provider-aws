@@ -19,7 +19,7 @@ func RegionalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttyp
 	if rd.Id() != "" {
 		arnARN, err := arn.Parse(rd.Id())
 		if err != nil {
-			return fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
+			return fmt.Errorf("could not parse import ID %q as ARN: %w", rd.Id(), err)
 		}
 		rd.Set(attr.ResourceAttributeName(), rd.Id())
 		for _, attr := range identitySpec.IdentityDuplicateAttrs {
@@ -54,7 +54,7 @@ func RegionalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttyp
 
 	arnARN, err := arn.Parse(arnVal)
 	if err != nil {
-		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", attr.Name(), arnVal, err)
+		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %w", attr.Name(), arnVal, err)
 	}
 
 	rd.Set(names.AttrRegion, arnARN.Region)

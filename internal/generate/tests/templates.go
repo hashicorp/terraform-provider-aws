@@ -18,12 +18,12 @@ var resourceTestGoTmpl string
 func AddCommonResourceTestTemplates(template *template.Template) (*template.Template, error) {
 	result, err := template.Parse(commonTestGoTmpl)
 	if err != nil {
-		return nil, fmt.Errorf("parsing common \"common_test.go.gtpl\" test template: %s", err)
+		return nil, fmt.Errorf("parsing common \"common_test.go.gtpl\" test template: %w", err)
 	}
 
 	result, err = result.Parse(resourceTestGoTmpl)
 	if err != nil {
-		return nil, fmt.Errorf("parsing common \"resource_test.go.gtpl\" test template: %s", err)
+		return nil, fmt.Errorf("parsing common \"resource_test.go.gtpl\" test template: %w", err)
 	}
 
 	return result, nil
