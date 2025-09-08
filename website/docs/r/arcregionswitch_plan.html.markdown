@@ -81,12 +81,12 @@ resource "aws_arcregionswitch_plan" "example" {
 
 ```terraform
 resource "aws_arcregionswitch_plan" "complex" {
-  name                             = "complex-plan"
-  execution_role                   = aws_iam_role.example.arn
-  recovery_approach                = "activeActive"
-  regions                          = ["us-east-1", "us-west-2"]
-  description                      = "Complex plan with multiple execution block types"
-  recovery_time_objective_minutes  = 60
+  name                            = "complex-plan"
+  execution_role                  = aws_iam_role.example.arn
+  recovery_approach               = "activeActive"
+  regions                         = ["us-east-1", "us-west-2"]
+  description                     = "Complex plan with multiple execution block types"
+  recovery_time_objective_minutes = 60
 
   associated_alarms {
     name                = "application-health-alarm"
@@ -104,9 +104,9 @@ resource "aws_arcregionswitch_plan" "complex" {
 
       execution_block_configuration {
         custom_action_lambda_config {
-          region_to_run           = "activatingRegion"
-          retry_interval_minutes  = 5.0
-          timeout_minutes         = 30
+          region_to_run          = "activatingRegion"
+          retry_interval_minutes = 5.0
+          timeout_minutes        = 30
 
           lambda {
             arn = aws_lambda_function.example.arn
@@ -188,7 +188,7 @@ resource "aws_arcregionswitch_plan" "complex" {
 
 ## Argument Reference
 
-### Required
+The following arguments are required:
 
 * `execution_role` - ARN of the IAM role that ARC Region Switch will assume to execute the plan.
 * `name` - Name of the plan. Must be unique within the account.
@@ -196,12 +196,13 @@ resource "aws_arcregionswitch_plan" "complex" {
 * `regions` - List of AWS regions involved in the plan.
 * `workflow` - List of workflows that define the steps to execute. See [Workflow](#workflow) below.
 
-### Optional
+The following arguments are optional:
 
 * `associated_alarms` - Set of CloudWatch alarms associated with the plan. See [Associated Alarms](#associated-alarms) below.
 * `description` - Description of the plan.
 * `primary_region` - Primary region for the plan.
 * `recovery_time_objective_minutes` - Recovery time objective in minutes.
+* `region` - (Optional) AWS region where the plan will be created. If not specified, the provider region is used.
 * `tags` - Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `triggers` - Set of triggers that can initiate the plan execution. See [Trigger](#trigger) below.
 
@@ -215,7 +216,7 @@ resource "aws_arcregionswitch_plan" "complex" {
 ### Step
 
 * `name` - (Required) Name of the step.
-* `execution_block_type` - (Required) Type of execution block. Valid values: `CustomActionLambda`, `ManualApproval`, `AuroraGlobalDatabase`, `EC2AutoScaling`, `ARCRoutingControl`, `ARCRegionSwitchPlan`, `Parallel`, `ECSServiceScaling`, `EKSResourceScaling`, `Route53HealthCheck`.
+* `execution_block_type` - (Required) Type of execution block. Valid values: `CustomActionLambda`, `ManualApproval`, `AuroraGlobalDatabase`, `EC2AutoScaling`, `ARCRoutingControl`, `Parallel`, `ECSServiceScaling`, `EKSResourceScaling`, `Route53HealthCheck`.
 * `description` - (Optional) Description of the step.
 * `execution_block_configuration` - (Required) Configuration block for the execution block. Contains one of the following nested configuration blocks based on the `execution_block_type`:
 
@@ -231,7 +232,6 @@ The `execution_block_configuration` block contains one of the following configur
 * `ecs_capacity_increase_config` - Configuration for ECS service capacity increase. See [ECS Capacity Increase Config](#ecs-capacity-increase-config) below.
 * `eks_resource_scaling_config` - Configuration for EKS resource scaling. See [EKS Resource Scaling Config](#eks-resource-scaling-config) below.
 * `route53_health_check_config` - Configuration for Route53 health check operations. See [Route53 Health Check Config](#route53-health-check-config) below.
-* `region_switch_plan_config` - Configuration for nested region switch plan execution. See [Region Switch Plan Config](#region-switch-plan-config) below.
 * `parallel_config` - Configuration for parallel execution of multiple steps. See [Parallel Config](#parallel-config) below.
 
 ### Execution Approval Config
@@ -399,9 +399,7 @@ The `execution_block_configuration` block contains one of the following configur
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the plan.
-* `owner` - Owner of the plan.
-* `updated_at` - Timestamp when the plan was last updated.
-* `version` - Version of the plan.
+* `id` - ARN of the plan.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
