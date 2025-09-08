@@ -5,15 +5,15 @@ package odb
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -50,11 +50,12 @@ const (
 	ResNameNetworkPeeringConnection = "Network Peering Connection"
 )
 
-var OdbNetworkPeeringConnection = newResourceNetworkPeeringConnection
+var OracleDBNetworkPeeringConnection = newResourceNetworkPeeringConnection
 
 type resourceNetworkPeeringConnection struct {
 	framework.ResourceWithModel[odbNetworkPeeringConnectionResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -323,10 +324,6 @@ func (r *resourceNetworkPeeringConnection) Delete(ctx context.Context, req resou
 		)
 		return
 	}
-}
-
-func (r *resourceNetworkPeeringConnection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitNetworkPeeringConnectionCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {

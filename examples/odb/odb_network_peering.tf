@@ -5,6 +5,6 @@ resource "aws_odb_network_peering_connection" "test" {
   odb_network_id  = "<aws_odb_network.test.id>"
   peer_network_id = "<vpc_id>"
   tags = {
-    "env"="dev"
+    "env" = "dev"
   }
 }

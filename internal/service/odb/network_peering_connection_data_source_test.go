@@ -23,13 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type odbPeeringDataSourceTest struct {
+type oracleDBNetPeeringDataSourceTest struct {
 	odbNetDisplayNamePrefix            string
 	odbNetworkPeeringDisplayNamePrefix string
 	vpcNamePrefix                      string
 }
 
-var odbPeeringDSTest = odbPeeringDataSourceTest{
+var oracleDBNetPeeringDSTestEntity = oracleDBNetPeeringDataSourceTest{
 	odbNetDisplayNamePrefix:            "tf",
 	odbNetworkPeeringDisplayNamePrefix: "tf",
 	vpcNamePrefix:                      "tf",
@@ -43,19 +43,19 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 	}
 	networkPeeringResource := "aws_odb_network_peering_connection.test"
 	networkPerringDataSource := "data.aws_odb_network_peering_connection.test"
-	odbNetPeeringDisplayName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetworkPeeringDisplayNamePrefix)
-	odbNetDispName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.vpcNamePrefix)
+	odbNetPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNetPeeringDSTestEntity.odbNetworkPeeringDisplayNamePrefix)
+	odbNetDispName := sdkacctest.RandomWithPrefix(oracleDBNetPeeringDSTestEntity.odbNetDisplayNamePrefix)
+	vpcName := sdkacctest.RandomWithPrefix(oracleDBNetPeeringDSTestEntity.vpcNamePrefix)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             odbPeeringDSTest.testAccCheckCloudOdbNetworkPeeringDestroy(ctx),
+		CheckDestroy:             oracleDBNetPeeringDSTestEntity.testAccCheckCloudOracleDBNetworkPeeringDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: odbPeeringDSTest.basicPeeringConfig(vpcName, odbNetDispName, odbNetPeeringDisplayName),
+				Config: oracleDBNetPeeringDSTestEntity.basicPeeringConfig(vpcName, odbNetDispName, odbNetPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(networkPeeringResource, names.AttrID, networkPerringDataSource, names.AttrID),
 				),
@@ -64,14 +64,14 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 	})
 }
 
-func (odbPeeringDataSourceTest) testAccCheckCloudOdbNetworkPeeringDestroy(ctx context.Context) resource.TestCheckFunc {
+func (oracleDBNetPeeringDataSourceTest) testAccCheckCloudOracleDBNetworkPeeringDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_network_peering_connection" {
 				continue
 			}
-			_, err := odbPeeringDSTest.findOdbPeering(ctx, conn, rs.Primary.ID)
+			_, err := oracleDBNetPeeringDSTestEntity.findOracleDBNetworkPeering(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
 				if tfresource.NotFound(err) {
@@ -85,7 +85,7 @@ func (odbPeeringDataSourceTest) testAccCheckCloudOdbNetworkPeeringDestroy(ctx co
 	}
 }
 
-func (odbPeeringDataSourceTest) findOdbPeering(ctx context.Context, conn *odb.Client, id string) (output *odb.GetOdbPeeringConnectionOutput, err error) {
+func (oracleDBNetPeeringDataSourceTest) findOracleDBNetworkPeering(ctx context.Context, conn *odb.Client, id string) (output *odb.GetOdbPeeringConnectionOutput, err error) {
 	input := odb.GetOdbPeeringConnectionInput{
 		OdbPeeringConnectionId: &id,
 	}
@@ -105,35 +105,37 @@ func (odbPeeringDataSourceTest) findOdbPeering(ctx context.Context, conn *odb.Cl
 	}
 	return out, nil
 }
-func (odbPeeringDataSourceTest) basicPeeringConfig(vpcName, odbNetDisplayName, odbPeeringDisplayName string) string {
+func (oracleDBNetPeeringDataSourceTest) basicPeeringConfig(vpcName, odbNetDisplayName, odbPeeringDisplayName string) string {
 	testData := fmt.Sprintf(`
 
+
 resource "aws_vpc" "test" {
-  cidr_block       = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_odb_network" "test" {
-  display_name          = %[2]q
+  display_name         = %[2]q
   availability_zone_id = "use1-az6"
   client_subnet_cidr   = "10.2.0.0/24"
   backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access = "DISABLED"
-  zero_etl_access = "DISABLED"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
 }
 
 resource "aws_odb_network_peering_connection" "test" {
-  display_name = %[3]q
-  odb_network_id = aws_odb_network.test.id
+  display_name    = %[3]q
+  odb_network_id  = aws_odb_network.test.id
   peer_network_id = aws_vpc.test.id
-  
+
 }
 
 data "aws_odb_network_peering_connection" "test" {
-  id=aws_odb_network_peering_connection.test.id
+  id = aws_odb_network_peering_connection.test.id
 }
+
 
 `, vpcName, odbNetDisplayName, odbPeeringDisplayName)
 	return testData
