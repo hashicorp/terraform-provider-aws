@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"iter"
 	"slices"
 	"strconv"
 	"strings"
@@ -434,37 +435,44 @@ func findInstanceCreditSpecificationByID(ctx context.Context, conn *ec2.Client, 
 	return output, nil
 }
 
-func findInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) ([]awstypes.Instance, error) {
-	var output []awstypes.Instance
+// DescribeInstances is an "All-Or-Some" call.
+func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) iter.Seq2[awstypes.Instance, error] {
+	return func(yield func(awstypes.Instance, error) bool) {
+		pages := ec2.NewDescribeInstancesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 
-	pages := ec2.NewDescribeInstancesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+				yield(awstypes.Instance{}, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: &input,
+				})
+				return
+			}
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			if err != nil {
+				yield(awstypes.Instance{}, err)
+				return
+			}
+
+			for _, v := range page.Reservations {
+				for _, instance := range v.Instances {
+					if !yield(instance, nil) {
+						return
+					}
+				}
 			}
 		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Reservations {
-			output = append(output, v.Instances...)
-		}
 	}
-
-	return output, nil
 }
 
 func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
-	output, err := findInstances(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
+	var output []awstypes.Instance
+	for v, err := range listInstances(ctx, conn, input) {
+		if err != nil {
+			return nil, err
+		}
+		output = append(output, v)
 	}
 
 	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
