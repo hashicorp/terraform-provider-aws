@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,7 +39,7 @@ func resourceAccountSettingDefault() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(append(enum.Values[awstypes.SettingName](), "dualStackIPv6"), false),
+				ValidateFunc: validation.StringInSlice(settingName_Values(), false),
 			},
 			"principal_arn": {
 				Type:     schema.TypeString,
@@ -177,4 +178,8 @@ func findEffectiveAccountSettingByName(ctx context.Context, conn *ecs.Client, na
 	}
 
 	return findSetting(ctx, conn, input)
+}
+
+func settingName_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.SettingName](), "dualStackIPv6")
 }
