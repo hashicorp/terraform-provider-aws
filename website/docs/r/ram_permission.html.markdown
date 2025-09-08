@@ -42,10 +42,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Specifies the name of the customer managed permission. The name must be unique within the AWS Region.
-* `policy_template` - (Required) A string in JSON format string that contains the following elements of a resource-based policy:
-  - Effect
-  - Action
-  - Condition
+* `policy_template` - (Required) A string in JSON format string that contains the following elements of a resource-based policy: Effect, Action and Condition
 * `resource_type` - Specifies the name of the resource type that this customer managed permission applies to. The format is `<service-code>:<resource-type>` and is not case sensitive.
 * `tags` - (Optional) A map of tags to assign to the resource share. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
