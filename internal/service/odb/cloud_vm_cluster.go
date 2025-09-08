@@ -327,7 +327,7 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				CustomType: fwtypes.NewListNestedObjectTypeOf[cloudVMCDataCollectionOptionsResourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
-					listvalidator.SizeAtLeast(0),
+					listvalidator.SizeAtLeast(1),
 				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),

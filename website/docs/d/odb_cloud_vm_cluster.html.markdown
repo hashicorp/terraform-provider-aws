@@ -24,7 +24,7 @@ data "aws_odb_db_servers_list" "example" {
 
 ## Argument Reference
 
-The following arguments are mandatory:
+The following arguments are required:
 
 * `id` - (Required) The unique identifier of the Exadata infrastructure.
 

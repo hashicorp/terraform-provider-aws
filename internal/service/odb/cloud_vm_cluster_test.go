@@ -245,8 +245,8 @@ func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterExists(ctx context.C
 
 func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-	input := &odb.ListCloudVmClustersInput{}
-	_, err := conn.ListCloudVmClusters(ctx, input)
+	input := odb.ListCloudVmClustersInput{}
+	_, err := conn.ListCloudVmClusters(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -259,7 +259,7 @@ func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(vmClusterDisp
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
 	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
-	odbNet := vmClusterTestEntity.odbNetwork(odbNetDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 	res := fmt.Sprintf(`
 
 %s
@@ -299,7 +299,7 @@ func (cloudVmClusterResourceTest) cloudVmClusterWithAllParameters(vmClusterDispl
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
 	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
-	odbNet := vmClusterTestEntity.odbNetwork(odbNetDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 
 	res := fmt.Sprintf(`
 
@@ -347,7 +347,7 @@ func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigUpdatedTags(vmClust
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
 	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
-	odbNet := vmClusterTestEntity.odbNetwork(odbNetDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 	res := fmt.Sprintf(`
 %s
 
@@ -406,7 +406,7 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
 	return resource
 }
 
-func (cloudVmClusterResourceTest) odbNetwork(rName string) string {
+func (cloudVmClusterResourceTest) oracleDBNetwork(rName string) string {
 	resource := fmt.Sprintf(`
 resource "aws_odb_network" "test" {
   display_name         = %[1]q

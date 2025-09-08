@@ -1,4 +1,4 @@
-//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,10 +19,6 @@ import (
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-import (
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 type cloudVmClusterDSTest struct {
@@ -115,8 +112,8 @@ func (cloudVmClusterDSTest) testAccCheckCloudVmClusterExists(ctx context.Context
 
 func (cloudVmClusterDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-	input := &odb.ListCloudVmClustersInput{}
-	_, err := conn.ListCloudVmClusters(ctx, input)
+	input := odb.ListCloudVmClustersInput{}
+	_, err := conn.ListCloudVmClusters(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
