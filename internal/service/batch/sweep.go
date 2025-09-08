@@ -60,7 +60,7 @@ func sweepComputeEnvironments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &batch.DescribeComputeEnvironmentsInput{}
 	conn := client.BatchClient(ctx)
@@ -172,7 +172,7 @@ func sweepJobDefinitions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &batch.DescribeJobDefinitionsInput{
 		Status: aws.String("ACTIVE"),
@@ -215,7 +215,7 @@ func sweepJobQueues(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &batch.DescribeJobQueuesInput{}
 	conn := client.BatchClient(ctx)
@@ -256,7 +256,7 @@ func sweepSchedulingPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &batch.ListSchedulingPoliciesInput{}
 	conn := client.BatchClient(ctx)
