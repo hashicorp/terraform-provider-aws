@@ -946,7 +946,7 @@ type transformerConfigModel struct {
 	ParseToOCSF       fwtypes.ListNestedObjectValueOf[parseToOCSFModel]       `tfsdk:"parse_to_ocsf"`
 	ParseVPC          fwtypes.ListNestedObjectValueOf[parseVPCModel]          `tfsdk:"parse_vpc"`
 	ParseWAF          fwtypes.ListNestedObjectValueOf[parseWAFModel]          `tfsdk:"parse_waf"`
-	RenameEntries     fwtypes.ListNestedObjectValueOf[renameKeysModel]        `tfsdk:"rename_entries"`
+	RenameKeys        fwtypes.ListNestedObjectValueOf[renameKeysModel]        `tfsdk:"rename_keys"`
 	SplitString       fwtypes.ListNestedObjectValueOf[splitStringModel]       `tfsdk:"split_string"`
 	SubstituteString  fwtypes.ListNestedObjectValueOf[substituteStringModel]  `tfsdk:"substitute_string"`
 	TrimString        fwtypes.ListNestedObjectValueOf[trimStringModel]        `tfsdk:"trim_string"`
