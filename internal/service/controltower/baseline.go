@@ -38,7 +38,6 @@ import (
 
 // @FrameworkResource("aws_controltower_baseline", name="Baseline")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
 func newResourceBaseline(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBaseline{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -55,7 +54,6 @@ const (
 type resourceBaseline struct {
 	framework.ResourceWithModel[resourceBaselineData]
 	framework.WithTimeouts
-	framework.WithImportByIdentity
 }
 
 func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -294,6 +292,10 @@ func (r *resourceBaseline) Delete(ctx context.Context, request resource.DeleteRe
 		)
 		return
 	}
+}
+
+func (r *resourceBaseline) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 func waitBaselineReady(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*awstypes.EnabledBaselineDetails, error) { //nolint:unparam
