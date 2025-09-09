@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -19,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -106,15 +105,15 @@ func testAccCheckBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &controltower.GetEnabledBaselineInput{
-				EnabledBaselineIdentifier: aws.String(rs.Primary.Attributes[names.AttrARN]),
+			arn := rs.Primary.Attributes[names.AttrARN]
+			_, err := tfcontroltower.FindBaselineByID(ctx, conn, rs.Primary.Attributes[arn])
+
+			if retry.NotFound(err) {
+				continue
 			}
-			_, err := conn.GetEnabledBaseline(ctx, input)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
+
 			if err != nil {
-				return create.Error(names.ControlTower, create.ErrActionCheckingDestroyed, tfcontroltower.ResNameBaseline, rs.Primary.ID, err)
+				return create.Error(names.ControlTower, create.ErrActionCheckingDestroyed, tfcontroltower.ResNameBaseline, arn, err)
 			}
 
 			return create.Error(names.ControlTower, create.ErrActionCheckingDestroyed, tfcontroltower.ResNameBaseline, rs.Primary.ID, errors.New("not destroyed"))
@@ -135,17 +134,14 @@ func testAccCheckBaselineExists(ctx context.Context, name string, baseline *type
 			return create.Error(names.ControlTower, create.ErrActionCheckingExistence, tfcontroltower.ResNameBaseline, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
-		input := controltower.GetEnabledBaselineInput{
-			EnabledBaselineIdentifier: aws.String(rs.Primary.Attributes[names.AttrARN]),
-		}
-		resp, err := conn.GetEnabledBaseline(ctx, &input)
+		arn := rs.Primary.Attributes[names.AttrARN]
+		resp, err := tfcontroltower.FindBaselineByID(ctx, acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx), arn)
 
 		if err != nil {
-			return create.Error(names.ControlTower, create.ErrActionCheckingExistence, tfcontroltower.ResNameBaseline, rs.Primary.ID, err)
+			return create.Error(names.ControlTower, create.ErrActionCheckingExistence, tfcontroltower.ResNameBaseline, arn, err)
 		}
 
-		*baseline = *resp.EnabledBaselineDetails
+		*baseline = *resp
 
 		return nil
 	}

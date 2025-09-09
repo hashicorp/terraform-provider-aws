@@ -9,6 +9,7 @@ var (
 	ResourceLandingZone = resourceLandingZone
 	ResourceBaseline    = newResourceBaseline
 
+	FindBaselineByID               = findBaselineByID
 	FindEnabledControlByTwoPartKey = findEnabledControlByTwoPartKey
 	FindLandingZoneByID            = findLandingZoneByID
 )
