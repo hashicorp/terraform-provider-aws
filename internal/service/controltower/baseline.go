@@ -362,9 +362,8 @@ type parameters struct {
 func (p *parameters) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	switch v.(type) {
+	switch param := v.(type) {
 	case awstypes.EnabledBaselineParameterSummary:
-		param := v.(awstypes.EnabledBaselineParameterSummary)
 		p.Key = fwflex.StringToFramework(ctx, param.Key)
 		if param.Value != nil {
 			var value string
