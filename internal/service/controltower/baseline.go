@@ -212,7 +212,7 @@ func (r *resourceBaseline) Update(ctx context.Context, request resource.UpdateRe
 		return
 	}
 
-	if !diff.HasChanges() {
+	if diff.HasChanges() {
 		in := controltower.UpdateEnabledBaselineInput{
 			EnabledBaselineIdentifier: plan.ARN.ValueStringPointer(),
 		}
