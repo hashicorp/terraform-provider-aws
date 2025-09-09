@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -502,12 +503,13 @@ func TestAccCodeBuildWebhook_gitHubWithPullRequestBuildPolicy(t *testing.T) {
 				Config: testAccWebhookConfig_gitHubWithPullRequestBuildPolicy(
 					rName,
 					string(types.PullRequestBuildCommentApprovalAllPullRequests),
-					[]string{
-						string(types.PullRequestBuildApproverRoleGithubRead),
-						string(types.PullRequestBuildApproverRoleGithubWrite),
-						string(types.PullRequestBuildApproverRoleGithubMaintain),
-						string(types.PullRequestBuildApproverRoleGithubAdmin),
-					}),
+					enum.Slice(
+						types.PullRequestBuildApproverRoleGithubRead,
+						types.PullRequestBuildApproverRoleGithubWrite,
+						types.PullRequestBuildApproverRoleGithubMaintain,
+						types.PullRequestBuildApproverRoleGithubAdmin,
+					),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
@@ -529,10 +531,11 @@ func TestAccCodeBuildWebhook_gitHubWithPullRequestBuildPolicy(t *testing.T) {
 				Config: testAccWebhookConfig_gitHubWithPullRequestBuildPolicy(
 					rName,
 					string(types.PullRequestBuildCommentApprovalForkPullRequests),
-					[]string{
-						string(types.PullRequestBuildApproverRoleGithubMaintain),
-						string(types.PullRequestBuildApproverRoleGithubAdmin),
-					}),
+					enum.Slice(
+						types.PullRequestBuildApproverRoleGithubMaintain,
+						types.PullRequestBuildApproverRoleGithubAdmin,
+					),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
