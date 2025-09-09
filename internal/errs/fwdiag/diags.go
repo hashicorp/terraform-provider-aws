@@ -70,6 +70,7 @@ func NewListResultErrorDiagnostic(err error) list.ListResult {
 		},
 	}
 }
+
 func AsError[T any](x T, diags diag.Diagnostics) (T, error) {
 	return x, DiagnosticsError(diags)
 }
