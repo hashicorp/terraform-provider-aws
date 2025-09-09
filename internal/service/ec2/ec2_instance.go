@@ -46,6 +46,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1070,7 +1071,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 }
 
 // @SDKListResource("aws_instance")
-func instanceResourceAsListResource() list.ListResourceWithConfigure {
+func instanceResourceAsListResource() inttypes.ListResourceForSDK {
 	l := instanceListResource{}
 	l.SetResource(resourceInstance())
 
