@@ -2376,7 +2376,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 	return nil
 }
 
-func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance, ds bool) error {
+func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta *conns.AWSClient, instance *awstypes.Instance, ds bool) error {
 	ibds, err := readBlockDevicesFromInstance(ctx, d, meta, instance, ds)
 	if err != nil {
 		return fmt.Errorf("reading block devices: %w", err)
@@ -2426,7 +2426,7 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta any, ins
 	return nil
 }
 
-func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance, ds bool) (map[string]any, error) {
+func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta *conns.AWSClient, instance *awstypes.Instance, ds bool) (map[string]any, error) {
 	blockDevices := make(map[string]any)
 	blockDevices["ebs"] = make([]map[string]any, 0)
 	blockDevices["root"] = nil
@@ -2450,7 +2450,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 
 	// Need to call DescribeVolumes to get volume_size and volume_type for each
 	// EBS block device
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.EC2Client(ctx)
 	input := ec2.DescribeVolumesInput{
 		VolumeIds: volIDs,
 	}
@@ -2459,8 +2459,8 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		return nil, err
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+	defaultTagsConfig := meta.DefaultTagsConfig(ctx)
+	ignoreTagsConfig := meta.IgnoreTagsConfig(ctx)
 
 	for _, vol := range volResp.Volumes {
 		instanceBd := instanceBlockDevices[aws.ToString(vol.VolumeId)]
