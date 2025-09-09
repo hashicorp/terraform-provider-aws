@@ -93,6 +93,12 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.requires_comment_approval", string(types.PullRequestBuildCommentApprovalAllPullRequests)),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.approver_roles.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubWrite)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubMaintain)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubAdmin)),
 				),
 			},
 			{
