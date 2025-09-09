@@ -1576,7 +1576,7 @@ func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, v *lambd
 
 			if err != nil {
 				return tfresource.NonRetryableError(
-					fmt.Errorf("Error getting Lambda Event Source Mapping: %s", err))
+					fmt.Errorf("Error getting Lambda Event Source Mapping: %w", err))
 			}
 
 			if state := aws.ToString(output.State); state != "Disabled" {
