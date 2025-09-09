@@ -1933,11 +1933,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 					)
 
 					if err != nil {
-						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %s", d.Id(), err)
+						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %w", d.Id(), err)
 					}
 
 					if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete)); err != nil {
-						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %w", d.Id(), err)
 					}
 				}
 
