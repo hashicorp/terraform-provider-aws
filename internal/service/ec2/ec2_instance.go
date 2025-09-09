@@ -33,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -4328,8 +4327,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
-			resourceSchema := l.ResourceSchema()
-			rd := resourceSchema.Data(&terraform.InstanceState{})
+			rd := l.ResourceData()
 			rd.SetId(aws.ToString(output.InstanceId))
 			resourceInstanceFlatten(ctx, awsClient, &output, rd)
 

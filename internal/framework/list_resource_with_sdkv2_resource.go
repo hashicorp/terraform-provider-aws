@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -48,10 +49,6 @@ func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list
 	response.ProtoV5IdentitySchema = l.resourceSchema.ProtoIdentitySchema(ctx)()
 }
 
-func (l *ListResourceWithSDKv2Resource) ResourceSchema() *schema.Resource {
-	return l.resourceSchema
-}
-
 func (l *ListResourceWithSDKv2Resource) SetResourceSchema(resource *schema.Resource) {
 	// Add region attribute if it does not exit
 	if _, ok := resource.SchemaMap()[names.AttrRegion]; !ok {
@@ -63,6 +60,10 @@ func (l *ListResourceWithSDKv2Resource) SetResourceSchema(resource *schema.Resou
 	}
 
 	l.resourceSchema = resource
+}
+
+func (l *ListResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
+	return l.resourceSchema.Data(&terraform.InstanceState{})
 }
 
 func (l *ListResourceWithSDKv2Resource) SetIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
