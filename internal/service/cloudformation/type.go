@@ -465,7 +465,7 @@ func expandOperationPreferences(tfMap map[string]any) *awstypes.StackSetOperatio
 	if v, ok := tfMap["region_concurrency_type"].(string); ok && v != "" {
 		apiObject.RegionConcurrencyType = awstypes.RegionConcurrencyType(v)
 	}
-	if v, ok := tfMap["region_order"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["region_order"].([]any); ok && len(v) > 0 {
 		for _, region := range v {
 			apiObject.RegionOrder = append(apiObject.RegionOrder, region.(string))
 		}
