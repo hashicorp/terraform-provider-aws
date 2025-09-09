@@ -56,14 +56,15 @@ func TestAccLogsTransformer_basic(t *testing.T) {
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.parse_json.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTransformerImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
 		},
 	})
@@ -151,15 +152,11 @@ func testAccCheckTransformerExists(ctx context.Context, t *testing.T, name strin
 			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameTransformer, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameTransformer, name, errors.New("not set"))
-		}
-
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
-		resp, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.ID)
+		resp, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.Attributes["log_group_identifier"])
 		if err != nil {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameTransformer, rs.Primary.ID, err)
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameTransformer, rs.Primary.Attributes["log_group_identifier"], err)
 		}
 
 		*transformer = *resp
