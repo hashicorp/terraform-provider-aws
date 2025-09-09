@@ -347,7 +347,8 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
-		for output, err := range listLogGroups(ctx, conn, &cloudwatchlogs.DescribeLogGroupsInput{}, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
+		var input cloudwatchlogs.DescribeLogGroupsInput
+		for output, err := range listLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -358,7 +359,8 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 			rd := logGroupResource.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.LogGroupName))
 			resourceGroupFlatten(ctx, rd, output)
-			result.DisplayName = fmt.Sprintf("%s: (%s)", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
+
+			result.DisplayName = aws.ToString(output.LogGroupName)
 
 			// set tags
 			err = l.SetTags(ctx, awsClient, rd)
