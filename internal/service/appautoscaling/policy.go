@@ -58,9 +58,10 @@ func resourcePolicy() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"policy_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "StepScaling",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.PolicyTypeStepScaling,
+				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
 			},
 			names.AttrResourceID: {
 				Type:     schema.TypeString,
