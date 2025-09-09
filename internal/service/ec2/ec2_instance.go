@@ -24,6 +24,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -31,13 +33,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -1062,6 +1067,14 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 	vt := k[:i+1] + names.AttrVolumeType
 	v := d.Get(vt).(string)
 	return strings.ToLower(v) != string(awstypes.VolumeTypeGp3) && new == "0"
+}
+
+// @SDKListResource("aws_instance")
+func instanceResourceAsListResource() list.ListResourceWithConfigure {
+	l := instanceListResource{}
+	l.SetResource(resourceInstance())
+
+	return &l
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -4267,6 +4280,109 @@ func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.Arch
 	}
 	return false
 }
+
 func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) string {
 	return c.RegionalARN(ctx, names.EC2, "instance/"+instanceID)
+}
+
+var _ list.ListResourceWithRawV5Schemas = &instanceListResource{}
+
+type instanceListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type logGroupListResourceModel struct {
+	framework.WithRegionModel
+}
+
+// ListResourceConfigSchema defines the schema for the List configuration
+// might be able to intercept or wrap this for simplicity
+func (l *instanceListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+	}
+}
+
+func (l *instanceListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.EC2Client(ctx)
+
+	var query logGroupListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		result := request.NewListResult(ctx)
+		var input ec2.DescribeInstancesInput
+		for output, err := range listInstances(ctx, conn, &input) {
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			logGroupResource := l.GetResource()
+			rd := logGroupResource.Data(&terraform.InstanceState{})
+			rd.SetId(aws.ToString(output.InstanceId))
+			resourceInstanceFlatten(ctx, awsClient, &output, rd)
+
+			// set tags
+			err = l.SetTags(ctx, awsClient, rd)
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			tags := keyValueTags(ctx, output.Tags)
+			if v, ok := tags["Name"]; ok {
+				result.DisplayName = v.ValueString()
+			} else {
+				result.DisplayName = aws.ToString(output.InstanceId)
+			}
+
+			err := l.SetIdentity(ctx, awsClient, rd)
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			tfTypeResource, err := rd.TfTypeResourceState()
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			result.Diagnostics.Append(result.Resource.Set(ctx, *tfTypeResource)...)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			tfTypeIdentity, err := rd.TfTypeIdentityState()
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			result.Diagnostics.Append(result.Identity.Set(ctx, *tfTypeIdentity)...)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
 }
