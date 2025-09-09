@@ -382,7 +382,7 @@ func resourceRepositoryUpdateCatalogData(ctx context.Context, conn *ecrpublic.Cl
 			_, err := conn.PutRepositoryCatalogData(ctx, &input)
 
 			if err != nil {
-				return fmt.Errorf("updating catalog data for repository(%s): %s", d.Id(), err)
+				return fmt.Errorf("updating catalog data for repository (%s): %w", d.Id(), err)
 			}
 		}
 	}
