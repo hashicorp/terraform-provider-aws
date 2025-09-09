@@ -1,5 +1,25 @@
 ## 6.13.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_dynamodb_table: Add `warm_throughput` and `global_secondary_index.warm_throughput` attributes ([#41308](https://github.com/hashicorp/terraform-provider-aws/issues/41308))
+* data-source/aws_elastic_beanstalk_hosted_zone: Add hosted zone IDs for `ap-southeast-5`, `ap-southeast-7`, `eu-south-2`, and `me-central-1` AWS Regions ([#44132](https://github.com/hashicorp/terraform-provider-aws/issues/44132))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-6` AWS Region ([#44132](https://github.com/hashicorp/terraform-provider-aws/issues/44132))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-southeast-6` AWS Region ([#44132](https://github.com/hashicorp/terraform-provider-aws/issues/44132))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-6` AWS Region ([#44132](https://github.com/hashicorp/terraform-provider-aws/issues/44132))
+* resource/aws_cloudfront_distribution: Add `origin.response_completion_timeout` argument ([#44163](https://github.com/hashicorp/terraform-provider-aws/issues/44163))
+* resource/aws_dynamodb_table: Add `warm_throughput` and `global_secondary_index.warm_throughput` arguments ([#41308](https://github.com/hashicorp/terraform-provider-aws/issues/41308))
+* resource/aws_ecs_account_setting_default: Support `dualStackIPv6` as a valid value for `name` ([#44165](https://github.com/hashicorp/terraform-provider-aws/issues/44165))
+* resource/aws_opensearch_package: Add `engine_version` argument ([#44155](https://github.com/hashicorp/terraform-provider-aws/issues/44155))
+* resource/aws_opensearch_package: Add waiter to ensure package validation completes ([#44155](https://github.com/hashicorp/terraform-provider-aws/issues/44155))
+
+BUG FIXES:
+
+* resource/aws_flow_log: Fix `Error decoding ... from prior state: unsupported attribute "log_group_name"` errors when upgrading from a pre-v6.0.0 provider version ([#44191](https://github.com/hashicorp/terraform-provider-aws/issues/44191))
+* resource/aws_launch_template: Fix `Error decoding ... from prior state: unsupported attribute "elastic_gpu_specifications"` errors when upgrading from a pre-v6.0.0 provider version ([#44195](https://github.com/hashicorp/terraform-provider-aws/issues/44195))
+* resource/aws_rds_cluster_role_association: Make `feature_name` optional ([#44143](https://github.com/hashicorp/terraform-provider-aws/issues/44143))
+* resource/aws_s3_bucket_lifecycle_configuration: Ignore `MethodNotAllowed` errors when deleting non-existent lifecycle configurations ([#44189](https://github.com/hashicorp/terraform-provider-aws/issues/44189))
+
 ## 6.12.0 (September 4, 2025)
 
 NOTES:

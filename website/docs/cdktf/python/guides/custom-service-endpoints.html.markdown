@@ -358,6 +358,7 @@ class MyConvertedCode(TerraformStack):
 |WAF Classic Regional|`wafregional`|`AWS_ENDPOINT_URL_WAF_REGIONAL`|`waf_regional`|
 |WAF|`wafv2`|`AWS_ENDPOINT_URL_WAFV2`|`wafv2`|
 |Well-Architected Tool|`wellarchitected`|`AWS_ENDPOINT_URL_WELLARCHITECTED`|`wellarchitected`|
+|WorkMail|`workmail`|`AWS_ENDPOINT_URL_WORKMAIL`|`workmail`|
 |WorkSpaces|`workspaces`|`AWS_ENDPOINT_URL_WORKSPACES`|`workspaces`|
 |WorkSpaces Web|`workspacesweb`|`AWS_ENDPOINT_URL_WORKSPACES_WEB`|`workspaces_web`|
 |X-Ray|`xray`|`AWS_ENDPOINT_URL_XRAY`|`xray`|
@@ -460,4 +461,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-426cdf48df000b89630fd93e29bfdb4a87171b64da10764bd968e1034f7a24ac -->
+<!-- cache-key: cdktf-0.20.8 input-2d189b69b48f538edfb5faf6832fb3d5759a5fe2c468ba857facc367f4a1c3fa -->

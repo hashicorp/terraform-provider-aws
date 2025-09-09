@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -125,393 +124,416 @@ func resourceTable() *schema.Resource {
 			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta any) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			customdiff.ForceNewIfChange("warm_throughput.0.read_units_per_second", func(_ context.Context, old, new, meta any) bool {
+				// warm_throughput can only be increased, not decreased
+				// i.e., "api error ValidationException: One or more parameter values were invalid: Requested ReadUnitsPerSecond for WarmThroughput for table is lower than current WarmThroughput, decreasing WarmThroughput is not supported"
+				if old, new := old.(int), new.(int); new != 0 && new < old {
+					return true
+				}
+
+				return false
+			}),
+			customdiff.ForceNewIfChange("warm_throughput.0.write_units_per_second", func(_ context.Context, old, new, meta any) bool {
+				// warm_throughput can only be increased, not decreased
+				// i.e., "api error ValidationException: One or more parameter values were invalid: Requested ReadUnitsPerSecond for WarmThroughput for table is lower than current WarmThroughput, decreasing WarmThroughput is not supported"
+				if old, new := old.(int), new.(int); new != 0 && new < old {
+					return true
+				}
+
+				return false
+			}),
+			validateWarmThroughputCustomDiff,
 			validateTTLCustomDiff,
 		),
 
 		SchemaVersion: 1,
 		MigrateState:  resourceTableMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attribute": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ScalarAttributeType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attribute": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ScalarAttributeType](),
+							},
 						},
 					},
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
 				},
-				Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
-			},
-			"billing_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.BillingModeProvisioned,
-				ValidateDiagFunc: enum.Validate[awstypes.BillingMode](),
-			},
-			"deletion_protection_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"global_secondary_index": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hash_key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"on_demand_throughput": onDemandThroughputSchema(),
-						"projection_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"read_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"write_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-					},
+				"billing_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.BillingModeProvisioned,
+					ValidateDiagFunc: enum.Validate[awstypes.BillingMode](),
 				},
-			},
-			"hash_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"local_secondary_index": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"projection_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
+				"deletion_protection_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-				Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"on_demand_throughput": onDemandThroughputSchema(),
-			"point_in_time_recovery": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"recovery_period_in_days": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 35),
-							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-								return !d.Get("point_in_time_recovery.0.enabled").(bool)
+				"global_secondary_index": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hash_key": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"non_key_attributes": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"on_demand_throughput": onDemandThroughputSchema(),
+							"projection_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
+							},
+							"range_key": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"read_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"warm_throughput": warmThroughputSchema(),
+							"write_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			"range_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"read_capacity": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"on_demand_throughput"},
-			},
-			"replica": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"consistency_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.MultiRegionConsistencyEventual,
-							ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
-						},
-						"deletion_protection_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-							// update is equivalent of force a new *replica*, not table
-						},
-						"point_in_time_recovery": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrPropagateTags: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"region_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							// update is equivalent of force a new *replica*, not table
-						},
-						names.AttrStreamARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"stream_label": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"hash_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
 				},
-			},
-			"import_table": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_compression_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InputCompressionType](),
-						},
-						"input_format": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InputFormat](),
-						},
-						"input_format_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"csv": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"delimiter": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"header_list": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+				"import_table": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"input_compression_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InputCompressionType](),
+							},
+							"input_format": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InputFormat](),
+							},
+							"input_format_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"csv": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"delimiter": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"header_list": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"s3_bucket_source": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"bucket_owner": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"key_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
+							"s3_bucket_source": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"bucket_owner": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"key_prefix": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"restore_date_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidUTCTimestamp,
-			},
-			"restore_source_table_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"import_table", "restore_source_name"},
-			},
-			"restore_source_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"import_table", "restore_source_table_arn"},
-			},
-			"restore_to_latest_time": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"server_side_encryption": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			names.AttrStreamARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"stream_label": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_view_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				StateFunc:    sdkv2.ToUpperSchemaStateFunc,
-				ValidateFunc: validation.StringInSlice(append(enum.Values[awstypes.StreamViewType](), ""), false),
-			},
-			"table_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  awstypes.TableClassStandard,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == "" && new == string(awstypes.TableClassStandard)
-				},
-				ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"ttl": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// AWS requires the attribute name to be set when disabling TTL but
-								// does not return it so it causes a diff.
-								if old == "" && new != "" && !d.Get("ttl.0.enabled").(bool) {
-									return true
-								}
-								return false
+				"local_secondary_index": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"non_key_attributes": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"projection_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
+							},
+							"range_key": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
 							},
 						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+					},
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"on_demand_throughput": onDemandThroughputSchema(),
+				"point_in_time_recovery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"recovery_period_in_days": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(1, 35),
+								DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+									return !d.Get("point_in_time_recovery.0.enabled").(bool)
+								},
+							},
 						},
 					},
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			"write_capacity": {
-				Type:          schema.TypeInt,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"on_demand_throughput"},
-			},
+				"range_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"read_capacity": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"on_demand_throughput"},
+				},
+				"replica": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"consistency_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.MultiRegionConsistencyEventual,
+								ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
+							},
+							"deletion_protection_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+								// update is equivalent of force a new *replica*, not table
+							},
+							"point_in_time_recovery": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrPropagateTags: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"region_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								// update is equivalent of force a new *replica*, not table
+							},
+							names.AttrStreamARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"stream_label": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"restore_date_time": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidUTCTimestamp,
+				},
+				"restore_source_table_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"import_table", "restore_source_name"},
+				},
+				"restore_source_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"import_table", "restore_source_table_arn"},
+				},
+				"restore_to_latest_time": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"server_side_encryption": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				names.AttrStreamARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"stream_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"stream_label": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"stream_view_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					StateFunc:    sdkv2.ToUpperSchemaStateFunc,
+					ValidateFunc: validation.StringInSlice(append(enum.Values[awstypes.StreamViewType](), ""), false),
+				},
+				"table_class": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  awstypes.TableClassStandard,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "" && new == string(awstypes.TableClassStandard)
+					},
+					ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"ttl": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// AWS requires the attribute name to be set when disabling TTL but
+									// does not return it so it causes a diff.
+									if old == "" && new != "" && !d.Get("ttl.0.enabled").(bool) {
+										return true
+									}
+									return false
+								},
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+						},
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				"warm_throughput": warmThroughputSchema(),
+				"write_capacity": {
+					Type:          schema.TypeInt,
+					Computed:      true,
+					Optional:      true,
+					ConflictsWith: []string{"on_demand_throughput"},
+				},
+			}
 		},
 	}
 }
@@ -538,6 +560,31 @@ func onDemandThroughputSchema() *schema.Schema {
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return old == "0" && new == "-1"
 					},
+				},
+			},
+		},
+	}
+}
+
+func warmThroughputSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"read_units_per_second": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(12000),
+				},
+				"write_units_per_second": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(4000),
 				},
 			},
 		},
@@ -777,6 +824,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.TableClass = awstypes.TableClass(v.(string))
 		}
 
+		if v, ok := d.GetOk("warm_throughput"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.WarmThroughput = expandWarmThroughput(v.([]any)[0].(map[string]any))
+		}
+
 		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
 			return conn.CreateTable(ctx, input)
 		}, func(err error) (bool, error) {
@@ -789,7 +840,6 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "indexed tables that can be created simultaneously") {
 				return true, err
 			}
-
 			return false, err
 		})
 
@@ -804,6 +854,9 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var err error
 	if output, err = waitTableActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTable, d.Id(), err)
+	}
+	if err := waitTableWarmThroughputActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("global_secondary_index"); ok {
@@ -947,6 +1000,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
 		d.Set("table_class", awstypes.TableClassStandard)
+	}
+
+	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "warm_throughput", err)
 	}
 
 	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
@@ -1102,7 +1159,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// Must update all indexes when switching BillingMode from PAY_PER_REQUEST to PROVISIONED
 	if newBillingMode == awstypes.BillingModeProvisioned {
 		for _, gsiUpdate := range gsiUpdates {
-			if gsiUpdate.Update == nil {
+			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.WarmThroughput != nil) {
 				continue
 			}
 
@@ -1111,7 +1168,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST
+	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST in Phase 2a
 	if newBillingMode == awstypes.BillingModePayPerRequest {
 		for _, gsiUpdate := range gsiUpdates {
 			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.OnDemandThroughput == nil) {
@@ -1134,6 +1191,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
 		}
 
+		if err := waitTableWarmThroughputActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
+		}
+
 		for _, gsiUpdate := range gsiUpdates {
 			if gsiUpdate.Update == nil {
 				continue
@@ -1144,6 +1205,35 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 			}
+
+			if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
+			}
+		}
+	}
+
+	// Phase 2b: update indexes in two steps when warm throughput is set
+	for _, gsiUpdate := range gsiUpdates {
+		if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.WarmThroughput == nil) {
+			continue
+		}
+
+		idxName := aws.ToString(gsiUpdate.Update.IndexName)
+		input := &dynamodb.UpdateTableInput{
+			GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{gsiUpdate},
+			TableName:                   aws.String(d.Id()),
+		}
+
+		if _, err := conn.UpdateTable(ctx, input); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("updating GSI for warm throughput (%s): %w", idxName, err))
+		}
+
+		if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("%s GSI (%s): %w", create.ErrActionWaitingForCreation, idxName, err))
+		}
+
+		if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 		}
 	}
 
@@ -1167,6 +1257,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("%s GSI (%s): %w", create.ErrActionWaitingForCreation, idxName, err))
+		}
+
+		if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 		}
 	}
 
@@ -1280,6 +1374,12 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChange("point_in_time_recovery") {
 		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), aws.Int32(int32(d.Get("point_in_time_recovery.0.recovery_period_in_days").(int))), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+		}
+	}
+
+	if d.HasChange("warm_throughput") {
+		if err := updateWarmThroughput(ctx, conn, d.Get("warm_throughput").([]any), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1436,30 +1536,26 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			MultiRegionConsistency: mrscInput,
 		}
 
-		err := retry.RetryContext(ctx, max(replicaUpdateTimeout, timeout), func() *retry.RetryError {
+		err := tfresource.Retry(ctx, max(replicaUpdateTimeout, timeout), func(ctx context.Context) *tfresource.RetryError {
 			_, err := conn.UpdateTable(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created.") {
-					return retry.NonRetryableError(err)
+					return tfresource.NonRetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsA[*awstypes.ResourceInUseException](err) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateTable(ctx, input)
-		}
 
 		if err != nil {
 			return err
@@ -1533,30 +1629,26 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				}
 			}
 
-			err := retry.RetryContext(ctx, max(replicaUpdateTimeout, timeout), func() *retry.RetryError {
+			err := tfresource.Retry(ctx, max(replicaUpdateTimeout, timeout), func(ctx context.Context) *tfresource.RetryError {
 				_, err := conn.UpdateTable(ctx, input)
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-						return retry.RetryableError(err)
+						return tfresource.RetryableError(err)
 					}
 					if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-						return retry.RetryableError(err)
+						return tfresource.RetryableError(err)
 					}
 					if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
-						return retry.RetryableError(err)
+						return tfresource.RetryableError(err)
 					}
 					if errs.IsA[*awstypes.ResourceInUseException](err) {
-						return retry.RetryableError(err)
+						return tfresource.RetryableError(err)
 					}
 
-					return retry.NonRetryableError(err)
+					return tfresource.NonRetryableError(err)
 				}
 				return nil
 			})
-
-			if tfresource.TimedOut(err) {
-				_, err = conn.UpdateTable(ctx, input)
-			}
 
 			// An update that doesn't (makes no changes) returns ValidationException
 			// (same region_name and kms_key_arn as currently) throws unhelpfully worded exception:
@@ -1667,21 +1759,17 @@ func updatePITR(ctx context.Context, conn *dynamodb.Client, tableName string, en
 	optFn := func(o *dynamodb.Options) {
 		o.Region = region
 	}
-	err := retry.RetryContext(ctx, updateTableContinuousBackupsTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, updateTableContinuousBackupsTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.UpdateContinuousBackups(ctx, input, optFn)
 		if err != nil {
 			// Backups are still being enabled for this newly created table
 			if errs.IsAErrorMessageContains[*awstypes.ContinuousBackupsUnavailableException](err, "Backups are being enabled") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateContinuousBackups(ctx, input, optFn)
-	}
 
 	if err != nil {
 		return fmt.Errorf("updating PITR: %w", err)
@@ -1831,6 +1919,33 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 	return nil
 }
 
+func updateWarmThroughput(ctx context.Context, conn *dynamodb.Client, warmList []any, tableName string, timeout time.Duration) error {
+	if len(warmList) < 1 || warmList[0] == nil {
+		return nil
+	}
+
+	warmMap := warmList[0].(map[string]any)
+
+	input := &dynamodb.UpdateTableInput{
+		TableName:      aws.String(tableName),
+		WarmThroughput: expandWarmThroughput(warmMap),
+	}
+
+	if _, err := conn.UpdateTable(ctx, input); err != nil {
+		return err
+	}
+
+	if _, err := waitTableActive(ctx, conn, tableName, timeout); err != nil {
+		return fmt.Errorf("waiting for warm throughput: %s", err)
+	}
+
+	if err := waitTableWarmThroughputActive(ctx, conn, tableName, timeout); err != nil {
+		return fmt.Errorf("waiting for warm throughput: %s", err)
+	}
+
+	return nil
+}
+
 func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]awstypes.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]any)
@@ -1869,6 +1984,10 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 				c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
 			}
 
+			if v, ok := m["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				c.WarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
 			ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
 				Create: &c,
 			})
@@ -1902,6 +2021,27 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 				onDemandThroughputChanged = true
 			}
 
+			var oldWarmThroughput *awstypes.WarmThroughput
+			var newWarmThroughput *awstypes.WarmThroughput
+			if v, ok := oldMap["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				oldWarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
+			if v, ok := newMap["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				newWarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
+			var warmThroughputChanged bool
+			if !reflect.DeepEqual(oldWarmThroughput, newWarmThroughput) {
+				warmThroughputChanged = true
+			}
+
+			var warmThroughPutDecreased bool
+			if warmThroughputChanged && newWarmThroughput != nil && oldWarmThroughput != nil {
+				warmThroughPutDecreased = (aws.ToInt64(newWarmThroughput.ReadUnitsPerSecond) < aws.ToInt64(oldWarmThroughput.ReadUnitsPerSecond) ||
+					aws.ToInt64(newWarmThroughput.WriteUnitsPerSecond) < aws.ToInt64(oldWarmThroughput.WriteUnitsPerSecond))
+			}
+
 			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
@@ -1918,6 +2058,10 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			if err != nil {
 				return ops, err
 			}
+			oldAttributes, err = stripWarmThroughputAttributes(oldAttributes)
+			if err != nil {
+				return ops, err
+			}
 			newAttributes, err := stripCapacityAttributes(newMap)
 			if err != nil {
 				return ops, err
@@ -1930,9 +2074,14 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			if err != nil {
 				return ops, err
 			}
-			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
+			newAttributes, err = stripWarmThroughputAttributes(newAttributes)
+			if err != nil {
+				return ops, err
+			}
+			gsiNeedsRecreate := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes) || warmThroughPutDecreased
 
-			if capacityChanged && !otherAttributesChanged && billingMode == awstypes.BillingModeProvisioned {
+			// One step in most cases, an extra step in case of warmThroughputChanged without recreation necessity:
+			if (capacityChanged) && !gsiNeedsRecreate && billingMode == awstypes.BillingModeProvisioned {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
@@ -1940,7 +2089,7 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 					},
 				}
 				ops = append(ops, update)
-			} else if onDemandThroughputChanged && !otherAttributesChanged && billingMode == awstypes.BillingModePayPerRequest {
+			} else if onDemandThroughputChanged && !gsiNeedsRecreate && billingMode == awstypes.BillingModePayPerRequest {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:          aws.String(idxName),
@@ -1948,7 +2097,7 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 					},
 				}
 				ops = append(ops, update)
-			} else if otherAttributesChanged {
+			} else if gsiNeedsRecreate {
 				// Other attributes cannot be updated
 				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
 					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
@@ -1962,8 +2111,19 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 						KeySchema:             expandKeySchema(newMap),
 						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
 						Projection:            expandProjection(newMap),
+						WarmThroughput:        newWarmThroughput,
 					},
 				})
+			}
+			// Separating the WarmThroughput updates from the others
+			if !gsiNeedsRecreate && warmThroughputChanged {
+				update := awstypes.GlobalSecondaryIndexUpdate{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName:      aws.String(idxName),
+						WarmThroughput: newWarmThroughput,
+					},
+				}
+				ops = append(ops, update)
 			}
 		} else {
 			idxName := oldName
@@ -2043,35 +2203,31 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			TableName:      aws.String(tableName),
 			ReplicaUpdates: replicaDeletes,
 		}
-		err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
+		err := tfresource.Retry(ctx, updateTableTimeout, func(ctx context.Context) *tfresource.RetryError {
 			_, err := conn.UpdateTable(ctx, input)
 			notFoundRetries := 0
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					notFoundRetries++
 					if notFoundRetries > 3 {
-						return retry.NonRetryableError(err)
+						return tfresource.NonRetryableError(err)
 					}
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsA[*awstypes.ResourceInUseException](err) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateTable(ctx, input)
-		}
 
 		if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return fmt.Errorf("deleting replica(s): %w", err)
@@ -2118,35 +2274,31 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 					},
 				}
 
-				err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
+				err := tfresource.Retry(ctx, updateTableTimeout, func(ctx context.Context) *tfresource.RetryError {
 					_, err := conn.UpdateTable(ctx, input)
 					notFoundRetries := 0
 					if err != nil {
 						if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-							return retry.RetryableError(err)
+							return tfresource.RetryableError(err)
 						}
 						if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 							notFoundRetries++
 							if notFoundRetries > 3 {
-								return retry.NonRetryableError(err)
+								return tfresource.NonRetryableError(err)
 							}
-							return retry.RetryableError(err)
+							return tfresource.RetryableError(err)
 						}
 						if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-							return retry.RetryableError(err)
+							return tfresource.RetryableError(err)
 						}
 						if errs.IsA[*awstypes.ResourceInUseException](err) {
-							return retry.RetryableError(err)
+							return tfresource.RetryableError(err)
 						}
 
-						return retry.NonRetryableError(err)
+						return tfresource.NonRetryableError(err)
 					}
 					return nil
 				})
-
-				if tfresource.TimedOut(err) {
-					_, err = conn.UpdateTable(ctx, input)
-				}
 
 				if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return fmt.Errorf("deleting replica (%s): %w", regionName, err)
@@ -2433,6 +2585,10 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 			gsi["on_demand_throughput"] = flattenOnDemandThroughput(g.OnDemandThroughput)
 		}
 
+		if g.WarmThroughput != nil {
+			gsi["warm_throughput"] = flattenGSIWarmThroughput(g.WarmThroughput)
+		}
+
 		output = append(output, gsi)
 	}
 
@@ -2477,6 +2633,62 @@ func flattenOnDemandThroughput(apiObject *awstypes.OnDemandThroughput) []any {
 
 	if v := apiObject.MaxWriteRequestUnits; v != nil {
 		m["max_write_request_units"] = aws.ToInt64(v)
+	}
+
+	return []any{m}
+}
+
+func flattenTableWarmThroughput(apiObject *awstypes.TableWarmThroughputDescription) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	// AWS may return values below the minimum when warm throughput is not actually configured
+	// Also treat exact minimum values as defaults since AWS sets these automatically
+	readUnits := aws.ToInt64(apiObject.ReadUnitsPerSecond)
+	writeUnits := aws.ToInt64(apiObject.WriteUnitsPerSecond)
+
+	// Return empty if values are below minimums OR exactly at minimums (AWS defaults)
+	if (readUnits < 12000 && writeUnits < 4000) || (readUnits == 12000 && writeUnits == 4000) {
+		return []any{}
+	}
+
+	m := map[string]any{}
+
+	if v := apiObject.ReadUnitsPerSecond; v != nil {
+		m["read_units_per_second"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.WriteUnitsPerSecond; v != nil {
+		m["write_units_per_second"] = aws.ToInt64(v)
+	}
+
+	return []any{m}
+}
+
+func flattenGSIWarmThroughput(apiObject *awstypes.GlobalSecondaryIndexWarmThroughputDescription) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	// AWS may return values below the minimum when warm throughput is not actually configured
+	// Also treat exact minimum values as defaults since AWS sets these automatically
+	readUnits := aws.ToInt64(apiObject.ReadUnitsPerSecond)
+	writeUnits := aws.ToInt64(apiObject.WriteUnitsPerSecond)
+
+	// Return empty if values are below minimums OR exactly at minimums (AWS defaults)
+	if (readUnits < 12000 && writeUnits < 4000) || (readUnits == 12000 && writeUnits == 4000) {
+		return []any{}
+	}
+
+	m := map[string]any{}
+
+	if v := apiObject.ReadUnitsPerSecond; v != nil {
+		m["read_units_per_second"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.WriteUnitsPerSecond; v != nil {
+		m["write_units_per_second"] = aws.ToInt64(v)
 	}
 
 	return []any{m}
@@ -2611,6 +2823,10 @@ func expandGlobalSecondaryIndex(data map[string]any, billingMode awstypes.Billin
 		output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
 	}
 
+	if v, ok := data["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+		output.WarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+	}
+
 	return &output
 }
 
@@ -2733,6 +2949,24 @@ func expandOnDemandThroughput(tfMap map[string]any) *awstypes.OnDemandThroughput
 
 	if v, ok := tfMap["max_write_request_units"].(int); ok && v != 0 {
 		apiObject.MaxWriteRequestUnits = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandWarmThroughput(tfMap map[string]any) *awstypes.WarmThroughput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.WarmThroughput{}
+
+	if v, ok := tfMap["read_units_per_second"].(int); ok && v != 0 {
+		apiObject.ReadUnitsPerSecond = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["write_units_per_second"].(int); ok && v != 0 {
+		apiObject.WriteUnitsPerSecond = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -2866,6 +3100,65 @@ func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) e
 			return fmt.Errorf("%s can not be set when billing_mode is %q", key, awstypes.BillingModePayPerRequest)
 		}
 	}
+	return nil
+}
+
+func validateWarmThroughputCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	// Handle table-level warm throughput suppression
+	if err := suppressTableWarmThroughputDefaults(d, configRaw); err != nil {
+		return err
+	}
+
+	// Handle GSI warm throughput suppression
+	if err := suppressGSIWarmThroughputDefaults(d, configRaw); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
+	// If warm throughput is explicitly configured, don't suppress any diffs
+	if warmThroughput := configRaw.GetAttr("warm_throughput"); warmThroughput.IsKnown() && !warmThroughput.IsNull() && warmThroughput.LengthInt() > 0 {
+		return nil
+	}
+
+	// If warm throughput is not explicitly configured, suppress AWS default values
+	if !d.HasChange("warm_throughput") {
+		return nil
+	}
+
+	_, new := d.GetChange("warm_throughput")
+	newList, ok := new.([]any)
+	if !ok || len(newList) == 0 {
+		return nil
+	}
+
+	newMap, ok := newList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	readUnits := newMap["read_units_per_second"]
+	writeUnits := newMap["write_units_per_second"]
+
+	// If AWS returns default values and no explicit config, suppress the diff
+	if (readUnits == 1 && writeUnits == 1) || (readUnits == 12000 && writeUnits == 4000) {
+		return d.Clear("warm_throughput")
+	}
+
+	return nil
+}
+
+func suppressGSIWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
+	// GSI warm throughput defaults are now handled in the flattenGSIWarmThroughput function
+	// by filtering out AWS default values during the read operation.
+	// This approach is more reliable than trying to suppress diffs on Set-based fields.
 	return nil
 }
 
