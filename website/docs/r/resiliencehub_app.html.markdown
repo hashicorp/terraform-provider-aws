@@ -156,6 +156,7 @@ The following arguments are optional:
 
 * `app_assessment_schedule` - (Optional) Assessment schedule for the application. Valid values are `Disabled` and `Daily`.
 * `description` - (Optional) Description of the application. Maximum 500 characters.
+* `region` - (Optional) AWS region where the application will be created.
 * `resiliency_policy_arn` - (Optional) ARN of the resiliency policy to associate with the application.
 * `resource_mapping` - (Optional) Resource mapping configuration. See [resource_mapping](#resource_mapping) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
