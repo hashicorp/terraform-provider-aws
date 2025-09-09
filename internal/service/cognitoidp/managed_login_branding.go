@@ -276,6 +276,10 @@ func (r *managedLoginBrandingResource) Read(ctx context.Context, request resourc
 			}
 			mlb, err := findManagedLoginBrandingByClient(ctx, conn, &input)
 
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding by client (%s)", clientID), err.Error())
 
