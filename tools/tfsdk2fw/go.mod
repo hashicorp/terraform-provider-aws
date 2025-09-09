@@ -320,8 +320,8 @@ require (
 	github.com/hashicorp/hc-install v0.9.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/terraform-exec v0.23.1 // indirect
-	github.com/hashicorp/terraform-json v0.26.0 // indirect
+	github.com/hashicorp/terraform-exec v0.23.2-0.20250903143921-c05687bce503 // indirect
+	github.com/hashicorp/terraform-json v0.26.1-0.20250829125600-5c1a00f3ccc4 // indirect
 	github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250828103048-e39d5775ca20 // indirect
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0 // indirect
@@ -329,7 +329,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.18.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.29.0-beta.1 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
-	github.com/hashicorp/terraform-plugin-testing v1.13.3-0.20250828090315-edcb05726aa6 // indirect
+	github.com/hashicorp/terraform-plugin-testing v1.13.3-0.20250904181708-22e003c0645d // indirect
 	github.com/hashicorp/terraform-registry-address v0.3.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
