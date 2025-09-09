@@ -696,7 +696,7 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return nil, fmt.Errorf("configuration contains an invalid JSON: %v", err)
+			return nil, fmt.Errorf("configuration contains an invalid JSON: %w", err)
 		}
 		crawlerInput.Configuration = aws.String(configuration)
 	}
@@ -748,7 +748,7 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
+			return nil, fmt.Errorf("Configuration contains an invalid JSON: %w", err)
 		}
 		crawlerInput.Configuration = aws.String(configuration)
 	} else {

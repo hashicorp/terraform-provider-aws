@@ -382,7 +382,7 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 
 		decryptedPassword, err := pgpkeys.DecryptBytes(password, key)
 		if err != nil {
-			return fmt.Errorf("decrypting password: %s", err)
+			return fmt.Errorf("decrypting password: %w", err)
 		}
 
 		iamAsCreatedUserSession, err := config.LoadDefaultConfig(ctx,
@@ -390,7 +390,7 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKeyId, secretAccessKey, "")),
 		)
 		if err != nil {
-			return fmt.Errorf("creating session: %s", err)
+			return fmt.Errorf("creating session: %w", err)
 		}
 
 		return tfresource.Retry(ctx, 2*time.Minute, func(ctx context.Context) *tfresource.RetryError {
@@ -415,7 +415,7 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 					return tfresource.RetryableError(err)
 				}
 
-				return tfresource.NonRetryableError(fmt.Errorf("changing decrypted password: %s", err))
+				return tfresource.NonRetryableError(fmt.Errorf("changing decrypted password: %w", err))
 			}
 
 			return nil

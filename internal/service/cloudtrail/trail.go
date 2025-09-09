@@ -672,7 +672,7 @@ func setEventSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.R
 	input.EventSelectors = eventSelectors
 
 	if _, err := conn.PutEventSelectors(ctx, input); err != nil {
-		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %s", d.Id(), err)
+		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %w", d.Id(), err)
 	}
 
 	return nil

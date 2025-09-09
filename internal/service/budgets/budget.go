@@ -707,14 +707,14 @@ func updateBudgetNotifications(ctx context.Context, conn *budgets.Client, d *sch
 			_, err := conn.DeleteNotification(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("deleting Budget (%s) notification: %s", d.Id(), err)
+				return fmt.Errorf("deleting Budget (%s) notification: %w", d.Id(), err)
 			}
 		}
 
 		err = createBudgetNotifications(ctx, conn, addNotifications, addSubscribers, budgetName, accountID)
 
 		if err != nil {
-			return fmt.Errorf("creating Budget (%s) notifications: %s", d.Id(), err)
+			return fmt.Errorf("creating Budget (%s) notifications: %w", d.Id(), err)
 		}
 	}
 

@@ -112,7 +112,7 @@ func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainNam
 	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
 	if err != nil {
-		return fmt.Errorf("waiting for OpenSearch Domain to be deleted: %s", err)
+		return fmt.Errorf("waiting for OpenSearch Domain to be deleted: %w", err)
 	}
 
 	// opensearch maintains information about the domain in multiple (at least 2) places that need

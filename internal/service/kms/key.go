@@ -444,7 +444,7 @@ func findDefaultKeyARNForService(ctx context.Context, conn *kms.Client, service,
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("reading KMS Key (%s): %s", keyID, err)
+		return "", fmt.Errorf("reading KMS Key (%s): %w", keyID, err)
 	}
 
 	return aws.ToString(key.Arn), nil
