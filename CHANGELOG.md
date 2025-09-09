@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_codebuild_webhook: Add `pull_request_build_policy` configuration block ([#44201](https://github.com/hashicorp/terraform-provider-aws/issues/44201))
 * resource/aws_dynamodb_table: Add `warm_throughput` and `global_secondary_index.warm_throughput` arguments ([#41308](https://github.com/hashicorp/terraform-provider-aws/issues/41308))
 * resource/aws_ecs_account_setting_default: Support `dualStackIPv6` as a valid value for `name` ([#44165](https://github.com/hashicorp/terraform-provider-aws/issues/44165))
+* resource/aws_glue_catalog_table_optimizer: Add `iceberg_configuration.run_rate_in_hours` argument to `retention_configuration` and `orphan_file_deletion_configuration` blocks ([#44207](https://github.com/hashicorp/terraform-provider-aws/issues/44207))
 * resource/aws_opensearch_package: Add `engine_version` argument ([#44155](https://github.com/hashicorp/terraform-provider-aws/issues/44155))
 * resource/aws_opensearch_package: Add waiter to ensure package validation completes ([#44155](https://github.com/hashicorp/terraform-provider-aws/issues/44155))
 * resource/aws_vpc_endpoint: Add resource identity support ([#44194](https://github.com/hashicorp/terraform-provider-aws/issues/44194))
