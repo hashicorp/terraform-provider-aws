@@ -21,6 +21,7 @@ var (
 	ResourceResourcePolicy            = resourceResourcePolicy
 	ResourceStream                    = resourceStream
 	ResourceSubscriptionFilter        = resourceSubscriptionFilter
+	ResourceTransformer               = newResourceTransformer
 
 	FindAccountPolicyByTwoPartKey                          = findAccountPolicyByTwoPartKey
 	FindDataProtectionPolicyByLogGroupName                 = findDataProtectionPolicyByLogGroupName

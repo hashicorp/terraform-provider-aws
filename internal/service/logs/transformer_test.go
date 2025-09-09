@@ -71,43 +71,30 @@ func TestAccLogsTransformer_basic(t *testing.T) {
 }
 
 func TestAccLogsTransformer_disappears(t *testing.T) {
-	t.Skip("temporarily disabled")
+	ctx := acctest.Context(t)
+	var transformer cloudwatchlogs.GetTransformerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_transformer.test"
 
-	// ctx := acctest.Context(t)
-	// var transformer cloudwatchlogs.GetTransformerOutput
-	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// resourceName := "aws_logs_transformer.test"
-
-	// resource.ParallelTest(t, resource.TestCase{
-	// 	PreCheck: func() {
-	// 		acctest.PreCheck(ctx, t)
-	// 		acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-	// 	},
-	// 	ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-	// 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-	// 	CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
-	// 	Steps: []resource.TestStep{
-	// 		{
-	// 			Config: testAccTransformerConfig_basic(rName, testAccTransformerVersionNewer),
-	// 			Check: resource.ComposeAggregateTestCheckFunc(
-	// 				testAccCheckTransformerExists(ctx, resourceName, &transformer),
-	// 				// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-	// 				// but expects a new resource factory function as the third argument. To expose this
-	// 				// private function to the testing package, you may need to add a line like the following
-	// 				// to exports_test.go:
-	// 				//
-	// 				//   var ResourceTransformer = newResourceTransformer
-	// 				acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceTransformer, resourceName),
-	// 			),
-	// 			ExpectNonEmptyPlan: true,
-	// 			ConfigPlanChecks: resource.ConfigPlanChecks{
-	// 				PostApplyPostRefresh: []plancheck.PlanCheck{
-	// 					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-	// 				},
-	// 			},
-	// 		},
-	// 	},
-	// })
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformerConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceTransformer, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 func testAccTransformerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
@@ -164,16 +151,6 @@ func testAccCheckTransformerExists(ctx context.Context, t *testing.T, name strin
 		return nil
 	}
 }
-
-// func testAccCheckTransformerNotRecreated(before, after *cloudwatchlogs.DescribeTransformerResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.TransformerId), aws.ToString(after.TransformerId); before != after {
-// 			return create.Error(names.Logs, create.ErrActionCheckingNotRecreated, tflogs.ResNameTransformer, aws.ToString(before.TransformerId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccTransformerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
