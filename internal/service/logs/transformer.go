@@ -796,6 +796,21 @@ func (r *resourceTransformer) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	transformer, err := findTransformerByLogGroupIdentifier(ctx, conn, plan.LogGroupIdentifier.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Logs, create.ErrActionReading, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Set values for unknowns
+	resp.Diagnostics.Append(flex.Flatten(ctx, transformer, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -868,6 +883,21 @@ func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateReq
 			)
 			return
 		}
+	}
+
+	transformer, err := findTransformerByLogGroupIdentifier(ctx, conn, plan.LogGroupIdentifier.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Logs, create.ErrActionReading, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Set values for unknowns
+	resp.Diagnostics.Append(flex.Flatten(ctx, transformer, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
