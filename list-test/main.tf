@@ -1,6 +1,6 @@
 provider "aws" {
- 	region = "us-west-2"
-    profile = "provider5"
+  region  = "us-west-2"
+  profile = "provider5"
 }
 
 resource "aws_batch_job_queue" "test" {
@@ -27,7 +27,7 @@ resource "aws_batch_compute_environment" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "batch_service" {
-  name = "list-test-batch-service"
+  name_prefix = "tf-test-list-batch-service"
 
   assume_role_policy = <<EOF
 {
@@ -51,7 +51,7 @@ resource "aws_iam_role_policy_attachment" "batch_service" {
 }
 
 resource "aws_iam_role" "ecs_instance" {
-  name = "list-test-ecs-instance"
+  name_prefix = "tf-test-list-ecs-instance"
 
   assume_role_policy = <<EOF
 {
