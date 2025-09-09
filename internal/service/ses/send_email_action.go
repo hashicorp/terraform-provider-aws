@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @Action(aws_ses_send_email, name="Send Email")
@@ -49,7 +50,7 @@ func (a *sendEmailAction) Schema(ctx context.Context, req action.SchemaRequest, 
 	resp.Schema = schema.UnlinkedSchema{
 		Description: "Sends an email using Amazon SES. This action allows for imperative email sending with full control over recipients, content, and formatting.",
 		Attributes: map[string]schema.Attribute{
-			"source": schema.StringAttribute{
+			names.AttrSource: schema.StringAttribute{
 				Description: "The email address that is sending the email. This address must be either individually verified with Amazon SES, or from a domain that has been verified with Amazon SES.",
 				Required:    true,
 			},
@@ -120,10 +121,10 @@ func (a *sendEmailAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 	subject := config.Subject.ValueString()
 
 	tflog.Info(ctx, "Starting SES send email action", map[string]any{
-		"source":        source,
-		"subject":       subject,
-		"has_text_body": !config.TextBody.IsNull(),
-		"has_html_body": !config.HtmlBody.IsNull(),
+		names.AttrSource: source,
+		"subject":        subject,
+		"has_text_body":  !config.TextBody.IsNull(),
+		"has_html_body":  !config.HtmlBody.IsNull(),
 	})
 
 	resp.SendProgress(action.InvokeProgressEvent{
@@ -152,12 +153,12 @@ func (a *sendEmailAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 
 	if !config.TextBody.IsNull() {
 		message.Body.Text = &awstypes.Content{
-			Data: aws.String(config.TextBody.ValueString()),
+			Data: config.TextBody.ValueStringPointer(),
 		}
 	}
 	if !config.HtmlBody.IsNull() {
 		message.Body.Html = &awstypes.Content{
-			Data: aws.String(config.HtmlBody.ValueString()),
+			Data: config.HtmlBody.ValueStringPointer(),
 		}
 	}
 
@@ -192,7 +193,7 @@ func (a *sendEmailAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 	})
 
 	tflog.Info(ctx, "SES send email action completed successfully", map[string]any{
-		"source":     source,
-		"message_id": messageId,
+		names.AttrSource: source,
+		"message_id":     messageId,
 	})
 }
