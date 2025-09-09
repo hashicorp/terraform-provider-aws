@@ -112,7 +112,7 @@ func resourceGroup() *schema.Resource {
 // @SDKListResource("aws_cloudwatch_log_group")
 func logGroupResourceAsListResource() inttypes.ListResourceForSDK {
 	l := logGroupListResource{}
-	l.SetResource(resourceGroup())
+	l.SetResourceSchema(resourceGroup())
 
 	return &l
 }
@@ -356,8 +356,8 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
-			logGroupResource := l.GetResource()
-			rd := logGroupResource.Data(&terraform.InstanceState{})
+			resourceSchema := l.ResourceSchema()
+			rd := resourceSchema.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.LogGroupName))
 			resourceGroupFlatten(ctx, rd, output)
 

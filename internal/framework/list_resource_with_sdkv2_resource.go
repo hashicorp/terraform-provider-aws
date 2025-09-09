@@ -48,11 +48,11 @@ func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list
 	response.ProtoV5IdentitySchema = l.resourceSchema.ProtoIdentitySchema(ctx)()
 }
 
-func (l *ListResourceWithSDKv2Resource) GetResource() *schema.Resource {
+func (l *ListResourceWithSDKv2Resource) ResourceSchema() *schema.Resource {
 	return l.resourceSchema
 }
 
-func (l *ListResourceWithSDKv2Resource) SetResource(resource *schema.Resource) {
+func (l *ListResourceWithSDKv2Resource) SetResourceSchema(resource *schema.Resource) {
 	// Add region attribute if it does not exit
 	if _, ok := resource.SchemaMap()[names.AttrRegion]; !ok {
 		resource.SchemaMap()[names.AttrRegion] = &schema.Schema{
