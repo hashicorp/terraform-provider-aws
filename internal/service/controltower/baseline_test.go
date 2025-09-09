@@ -116,7 +116,7 @@ func testAccCheckBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 				return create.Error(names.ControlTower, create.ErrActionCheckingDestroyed, tfcontroltower.ResNameBaseline, arn, err)
 			}
 
-			return create.Error(names.ControlTower, create.ErrActionCheckingDestroyed, tfcontroltower.ResNameBaseline, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.ControlTower, create.ErrActionCheckingDestroyed, tfcontroltower.ResNameBaseline, arn, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -182,6 +182,9 @@ resource "aws_controltower_baseline" "test" {
     key   = "IdentityCenterEnabledBaselineArn"
     value = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:enabledbaseline/XALULM96QHI525UOC"
   }
+  depends_on = [
+    aws_organizations_organizational_unit.test
+  ]
 }
 `, rName)
 }
