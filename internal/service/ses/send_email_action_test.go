@@ -1,0 +1,203 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package ses_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccSESSendEmailAction_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testEmail := acctest.DefaultEmailAddress
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SESEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSendEmailActionConfig_basic(rName, testEmail),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSendEmailAction(ctx, testEmail),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSESSendEmailAction_htmlBody(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testEmail := acctest.DefaultEmailAddress
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SESEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSendEmailActionConfig_htmlBody(rName, testEmail),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSendEmailAction(ctx, testEmail),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSESSendEmailAction_multipleRecipients(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testEmail := acctest.DefaultEmailAddress
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SESEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSendEmailActionConfig_multipleRecipients(rName, testEmail),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSendEmailAction(ctx, testEmail),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSendEmailAction verifies the action can send emails
+func testAccCheckSendEmailAction(ctx context.Context, sourceEmail string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
+
+		// Verify the source email is verified in SES
+		input := &ses.GetIdentityVerificationAttributesInput{
+			Identities: []string{sourceEmail},
+		}
+
+		output, err := conn.GetIdentityVerificationAttributes(ctx, input)
+		if err != nil {
+			return fmt.Errorf("Failed to get identity verification attributes: %s", err)
+		}
+
+		if attrs, ok := output.VerificationAttributes[sourceEmail]; ok {
+			if attrs.VerificationStatus != awstypes.VerificationStatusSuccess {
+				return fmt.Errorf("Email %s is not verified in SES (status: %s)", sourceEmail, string(attrs.VerificationStatus))
+			}
+		} else {
+			return fmt.Errorf("Email %s not found in SES identities", sourceEmail)
+		}
+
+		return nil
+	}
+}
+
+// Configuration functions
+
+func testAccSendEmailActionConfig_basic(rName, testEmail string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_email_identity" "test" {
+  email = %[2]q
+}
+
+action "aws_ses_send_email" "test" {
+  config {
+    source       = aws_ses_email_identity.test.email
+    subject      = "Test Email from %[1]s"
+    text_body    = "This is a test email sent from Terraform action test."
+    to_addresses = [%[2]q]
+  }
+}
+
+resource "terraform_data" "trigger" {
+  input = "trigger"
+  lifecycle {
+    action_trigger {
+      events  = [before_create]
+      actions = [action.aws_ses_send_email.test]
+    }
+  }
+}
+`, rName, testEmail)
+}
+
+func testAccSendEmailActionConfig_htmlBody(rName, testEmail string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_email_identity" "test" {
+  email = %[2]q
+}
+
+action "aws_ses_send_email" "test" {
+  config {
+    source       = aws_ses_email_identity.test.email
+    subject      = "HTML Test Email from %[1]s"
+    html_body    = "<h1>Test Email</h1><p>This is a <strong>test email</strong> sent from Terraform action test.</p>"
+    to_addresses = [%[2]q]
+  }
+}
+
+resource "terraform_data" "trigger" {
+  input = "trigger"
+  lifecycle {
+    action_trigger {
+      events  = [before_create]
+      actions = [action.aws_ses_send_email.test]
+    }
+  }
+}
+`, rName, testEmail)
+}
+
+func testAccSendEmailActionConfig_multipleRecipients(rName, testEmail string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_email_identity" "test" {
+  email = %[2]q
+}
+
+action "aws_ses_send_email" "test" {
+  config {
+    source             = aws_ses_email_identity.test.email
+    subject            = "Multi-recipient Test Email from %[1]s"
+    text_body          = "This is a test email sent to multiple recipients."
+    to_addresses       = [%[2]q]
+    cc_addresses       = [%[2]q]
+    reply_to_addresses = [%[2]q]
+  }
+}
+
+resource "terraform_data" "trigger" {
+  input = "trigger"
+  lifecycle {
+    action_trigger {
+      events  = [before_create]
+      actions = [action.aws_ses_send_email.test]
+    }
+  }
+}
+`, rName, testEmail)
+}
