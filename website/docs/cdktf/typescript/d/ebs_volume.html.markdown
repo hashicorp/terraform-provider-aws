@@ -75,6 +75,7 @@ This data source exports the following attributes in addition to the arguments a
 * `throughput` - Throughput that the volume supports, in MiB/s.
 * `volumeId` - Volume ID (e.g., vol-59fcb34e).
 * `volumeType` - Type of EBS volume.
+* `volumeInitializationRate` - EBS provisioned rate for volume initialization, in MiB/s, at which to download the snapshot blocks from Amazon S3 to the volume.
 
 ## Timeouts
 
@@ -84,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html
 
-<!-- cache-key: cdktf-0.20.8 input-c8552ff178cfdd4368925bffd2f2424ea86b7ebb1e20c825ca11afc2e04ccf29 -->
+<!-- cache-key: cdktf-0.20.8 input-482e12664407431b2090499f23de9884c316239acea4040045270a2d863576e6 -->

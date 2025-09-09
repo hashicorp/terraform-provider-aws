@@ -112,7 +112,7 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		{{- end }}
 		Schema: map[string]*schema.Schema{
-			"arn": { {{- if .IncludeComments }} // TIP: Many, but not all, data sources have an `arn` attribute.{{- end }}
+			names.AttrARN: { {{- if .IncludeComments }} // TIP: Many, but not all, data sources have an `arn` attribute.{{- end }}
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 				},
 			},
 			{{- if .IncludeTags }}
-			"tags":         tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
+			names.AttrTags: tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
 			{{- end }}
 		},
 	}
@@ -175,7 +175,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// elements. However, a data source will have perhaps one or a few arguments
 	// that are key to finding the relevant information, such as 'name' below.
 	{{- end }}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	out, err := find{{ .DataSource }}ByName(ctx, conn, name)
 	if err != nil {
@@ -198,7 +198,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	//
 	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
 	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
-	// d.Set("arn", out.Arn) is sufficient. No error or nil checking is
+	// d.Set(names.AttrARN, out.Arn) is sufficient. No error or nil checking is
 	// necessary.
 	//
 	// However, there are some situations where more handling is needed.
@@ -208,8 +208,8 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON.
 	{{- end }}
-	d.Set("arn", out.ARN)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.ARN)
+	d.Set(names.AttrName, out.Name)
 	{{ if .IncludeComments }}
 	// TIP: Setting a complex type.
 	// For more information, see:
@@ -246,7 +246,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	{{- if .IncludeTags }}
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		return diags
 	}

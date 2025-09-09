@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params qldb.EndpointPar
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up qldb endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up qldb endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {
