@@ -17,6 +17,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			acctest.CtBasic: testAccEBSEncryptionByDefault_basic,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
 func testAccEBSEncryptionByDefault_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_encryption_by_default.test"
