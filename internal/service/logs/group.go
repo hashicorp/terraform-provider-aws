@@ -30,6 +30,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -109,7 +110,7 @@ func resourceGroup() *schema.Resource {
 }
 
 // @SDKListResource("aws_cloudwatch_log_group")
-func logGroupResourceAsListResource() list.ListResourceWithConfigure {
+func logGroupResourceAsListResource() inttypes.ListResourceForSDK {
 	l := logGroupListResource{}
 	l.SetResource(resourceGroup())
 
@@ -313,7 +314,7 @@ func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 	}
 }
 
-var _ list.ListResourceWithRawV5Schemas = &logGroupListResource{}
+var _ inttypes.ListResourceForSDK = &logGroupListResource{}
 
 type logGroupListResource struct {
 	framework.ResourceWithConfigure
@@ -360,8 +361,6 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 			rd.SetId(aws.ToString(output.LogGroupName))
 			resourceGroupFlatten(ctx, rd, output)
 
-			result.DisplayName = aws.ToString(output.LogGroupName)
-
 			// set tags
 			err = l.SetTags(ctx, awsClient, rd)
 			if err != nil {
@@ -369,6 +368,8 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				yield(result)
 				return
 			}
+
+			result.DisplayName = aws.ToString(output.LogGroupName)
 
 			err := l.SetIdentity(ctx, awsClient, rd)
 			if err != nil {

@@ -115,8 +115,13 @@ type ServicePackageSDKResource struct {
 	Import   SDKv2Import
 }
 
+type ListResourceForSDK interface {
+	list.ListResourceWithRawV5Schemas
+	list.ListResourceWithConfigure
+}
+
 type ServicePackageSDKListResource struct {
-	Factory  func() list.ListResourceWithConfigure
+	Factory  func() ListResourceForSDK
 	TypeName string
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
