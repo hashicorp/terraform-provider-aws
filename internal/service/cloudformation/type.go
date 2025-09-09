@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -466,9 +467,7 @@ func expandOperationPreferences(tfMap map[string]any) *awstypes.StackSetOperatio
 		apiObject.RegionConcurrencyType = awstypes.RegionConcurrencyType(v)
 	}
 	if v, ok := tfMap["region_order"].([]any); ok && len(v) > 0 {
-		for _, region := range v {
-			apiObject.RegionOrder = append(apiObject.RegionOrder, region.(string))
-		}
+		apiObject.RegionOrder = flex.ExpandStringValueList(v)
 	}
 
 	if ftc, ftp := aws.ToInt32(apiObject.FailureToleranceCount), aws.ToInt32(apiObject.FailureTolerancePercentage); ftp == 0 {
