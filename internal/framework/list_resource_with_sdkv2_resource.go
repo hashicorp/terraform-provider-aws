@@ -15,13 +15,13 @@ import (
 
 type ListResourceWithSDKv2Resource struct {
 	resourceSchema *schema.Resource
-	identity       inttypes.Identity
+	identitySpec   inttypes.Identity
 	identitySchema *schema.ResourceIdentity
 }
 
-func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identity inttypes.Identity) {
+func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Identity) {
 	out := make(map[string]*schema.Schema)
-	for _, v := range identity.Attributes {
+	for _, v := range identitySpec.Attributes {
 		out[v.Name()] = &schema.Schema{
 			Type: schema.TypeString,
 		}
@@ -40,7 +40,7 @@ func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identity inttypes.Identi
 
 	l.identitySchema = &identitySchema
 	l.resourceSchema.Identity = &identitySchema
-	l.identity = identity
+	l.identitySpec = identitySpec
 }
 
 func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
@@ -66,21 +66,23 @@ func (l *ListResourceWithSDKv2Resource) SetResource(resource *schema.Resource) {
 }
 
 func (l *ListResourceWithSDKv2Resource) SetIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
-	ident, err := d.Identity()
+	identity, err := d.Identity()
 	if err != nil {
 		return err
 	}
 
-	for _, v := range l.identity.Attributes {
-		switch v.Name() {
-		case names.AttrRegion:
-			if err := ident.Set(v.Name(), client.Region(ctx)); err != nil {
-				return err
-			}
+	for _, attr := range l.identitySpec.Attributes {
+		switch attr.Name() {
 		case names.AttrAccountID:
-			if err := ident.Set(v.Name(), client.AccountID(ctx)); err != nil {
+			if err := identity.Set(attr.Name(), client.AccountID(ctx)); err != nil {
 				return err
 			}
+
+		case names.AttrRegion:
+			if err := identity.Set(attr.Name(), client.Region(ctx)); err != nil {
+				return err
+			}
+
 		default:
 			val, ok := getAttributeOk(d, attr.ResourceAttributeName())
 			if !ok {
