@@ -303,7 +303,7 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.Client, name st
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting ElastiCache Parameter Group (%s): %s", name, err)
+		return fmt.Errorf("deleting ElastiCache Parameter Group (%s): %w", name, err)
 	}
 
 	return err

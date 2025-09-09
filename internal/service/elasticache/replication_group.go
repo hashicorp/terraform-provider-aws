@@ -1006,7 +1006,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				if err != nil {
-					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
+					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %w", d.Id(), err)
 				}
 				return nil
 			})
@@ -1028,7 +1028,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				if err != nil {
-					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %s", d.Id(), err)
+					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %w", d.Id(), err)
 				}
 				return nil
 			})
