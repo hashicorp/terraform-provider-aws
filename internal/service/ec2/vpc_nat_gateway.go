@@ -369,14 +369,14 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 		if diff.Id() != "" && diff.HasChange("secondary_private_ip_address_count") {
 			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
 				if err := diff.ForceNew("secondary_private_ip_address_count"); err != nil {
-					return fmt.Errorf("setting secondary_private_ip_address_count to ForceNew: %s", err)
+					return fmt.Errorf("setting secondary_private_ip_address_count to ForceNew: %w", err)
 				}
 			}
 		}
 
 		if diff.Id() != "" && diff.HasChange("secondary_private_ip_addresses") {
 			if err := diff.SetNewComputed("secondary_private_ip_address_count"); err != nil {
-				return fmt.Errorf("setting secondary_private_ip_address_count to computed: %s", err)
+				return fmt.Errorf("setting secondary_private_ip_address_count to Computed: %w", err)
 			}
 		}
 	case awstypes.ConnectivityTypePublic:
@@ -387,12 +387,12 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 		if diff.Id() != "" {
 			if v := diff.GetRawConfig().GetAttr("secondary_allocation_ids"); diff.HasChange("secondary_allocation_ids") || !v.IsWhollyKnown() {
 				if err := diff.SetNewComputed("secondary_private_ip_address_count"); err != nil {
-					return fmt.Errorf("setting secondary_private_ip_address_count to computed: %s", err)
+					return fmt.Errorf("setting secondary_private_ip_address_count to Computed: %w", err)
 				}
 
 				if v := diff.GetRawConfig().GetAttr("secondary_private_ip_addresses"); !v.IsKnown() || v.IsNull() {
 					if err := diff.SetNewComputed("secondary_private_ip_addresses"); err != nil {
-						return fmt.Errorf("setting secondary_private_ip_addresses to computed: %s", err)
+						return fmt.Errorf("setting secondary_private_ip_addresses to Computed: %w", err)
 					}
 				}
 			}

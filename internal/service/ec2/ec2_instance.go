@@ -2325,7 +2325,7 @@ func disableInstanceAPIStop(ctx context.Context, conn *ec2.Client, id string, di
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %s", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %w", id, err)
 	}
 
 	return nil
@@ -2347,7 +2347,7 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id str
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %s", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %w", id, err)
 	}
 
 	return nil
@@ -2570,7 +2570,7 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 	})
 
 	if err != nil {
-		return fmt.Errorf("associating instance profile: %s", err)
+		return fmt.Errorf("associating instance profile: %w", err)
 	}
 
 	return nil
@@ -2888,7 +2888,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([]awstypes.Tag, error) {
 	volIDs, err := getInstanceVolIDs(ctx, conn, instanceId)
 	if err != nil {
-		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
+		return nil, fmt.Errorf("getting tags for volumes (%s): %w", volIDs, err)
 	}
 
 	input := ec2.DescribeTagsInput{
@@ -2898,7 +2898,7 @@ func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([
 	}
 	resp, err := conn.DescribeTags(ctx, &input)
 	if err != nil {
-		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
+		return nil, fmt.Errorf("getting tags for volumes (%s): %w", volIDs, err)
 	}
 
 	return tagsFromTagDescriptions(resp.Tags), nil
@@ -3512,7 +3512,7 @@ func getInstanceVolIDs(ctx context.Context, conn *ec2.Client, instanceId string)
 	}
 	resp, err := conn.DescribeVolumes(ctx, &input)
 	if err != nil {
-		return nil, fmt.Errorf("getting volumes: %s", err)
+		return nil, fmt.Errorf("getting volumes: %w", err)
 	}
 
 	for _, v := range resp.Volumes {

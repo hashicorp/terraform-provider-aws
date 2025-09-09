@@ -23,3 +23,18 @@ func TestAccEC2EBSDefaultKMSKey_serial(t *testing.T) {
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
+
+func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			acctest.CtBasic: testAccEBSEncryptionByDefault_basic,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
