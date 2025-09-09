@@ -106,7 +106,7 @@ func testAccCheckBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			arn := rs.Primary.Attributes[names.AttrARN]
-			_, err := tfcontroltower.FindBaselineByID(ctx, conn, rs.Primary.Attributes[arn])
+			_, err := tfcontroltower.FindBaselineByID(ctx, conn, arn)
 
 			if retry.NotFound(err) {
 				continue
