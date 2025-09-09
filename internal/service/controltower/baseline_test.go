@@ -59,7 +59,7 @@ func TestAccControlTowerBaseline_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateVerifyIgnore:              []string{names.AttrID},
+				ImportStateVerifyIgnore:              []string{"operation_identifier"},
 			},
 		},
 	})
@@ -184,7 +184,7 @@ resource "aws_controltower_baseline" "test" {
   target_identifier   = aws_organizations_organizational_unit.test.arn
   parameters {
     key   = "IdentityCenterEnabledBaselineArn"
-    value = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}:{data.aws_caller_identity.current.account_id}:enabledbaseline/XALULM96QHI525UOC"
+    value = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:enabledbaseline/XALULM96QHI525UOC"
   }
 }
 `, rName)
