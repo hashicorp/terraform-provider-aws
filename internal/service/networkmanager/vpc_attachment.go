@@ -136,24 +136,29 @@ func resourceVPCAttachment() *schema.Resource {
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"appliance_mode_support": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"dns_support": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"ipv6_support": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"security_group_referencing_support": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
