@@ -85,16 +85,18 @@ func resourcePolicy() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"adjustment_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AdjustmentType](),
 						},
 						"cooldown": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
 						"metric_aggregation_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.MetricAggregationType](),
 						},
 						"min_adjustment_magnitude": {
 							Type:     schema.TypeInt,
