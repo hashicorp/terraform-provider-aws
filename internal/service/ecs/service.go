@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -562,7 +564,7 @@ func resourceService() *schema.Resource {
 			"availability_zone_rebalancing": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          awstypes.AvailabilityZoneRebalancingDisabled,
+				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneRebalancing](),
 			},
 			names.AttrCapacityProviderStrategy: {
@@ -614,18 +616,14 @@ func resourceService() *schema.Resource {
 			"deployment_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          string(awstypes.DeploymentStrategyRolling),
-							ValidateDiagFunc: enum.Validate[awstypes.DeploymentStrategy](),
-						},
 						"bake_time_in_minutes": {
 							Type:         nullable.TypeNullableInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 1440),
 						},
 						"lifecycle_hook": {
@@ -638,11 +636,6 @@ func resourceService() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
 									"lifecycle_stages": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -651,8 +644,19 @@ func resourceService() *schema.Resource {
 											ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookStage](),
 										},
 									},
+									names.AttrRoleARN: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 								},
 							},
+						},
+						"strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DeploymentStrategy](),
 						},
 					},
 				},
@@ -1097,6 +1101,10 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"sigint_rollback": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"task_definition": {
@@ -1412,6 +1420,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.VolumeConfigurations = expandServiceVolumeConfigurations(ctx, v.([]any))
 	}
 
+	operationTime := time.Now().UTC()
 	output, err := retryServiceCreate(ctx, conn, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
@@ -1428,11 +1437,11 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId(aws.ToString(output.Service.ServiceArn))
 	d.Set(names.AttrARN, output.Service.ServiceArn)
 
-	fn := waitServiceActive
 	if d.Get("wait_for_steady_state").(bool) {
-		fn = waitServiceStable
-	}
-	if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get("cluster").(string), operationTime, d.Get("sigint_rollback").(bool), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
+		}
+	} else if _, err := waitServiceActive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 	}
 
@@ -1470,6 +1479,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, service.ServiceArn)
 	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
@@ -1498,6 +1508,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 		} else {
 			d.Set("deployment_circuit_breaker", nil)
+		}
+
+		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
 		}
 	}
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
@@ -1555,6 +1569,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(v)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
 				}
+			} else {
+				d.Set("service_connect_configuration", nil)
 			}
 			if v := deployment.VolumeConfigurations; len(v) > 0 {
 				if err := d.Set("volume_configuration", flattenServiceVolumeConfigurations(ctx, v)); err != nil {
@@ -1766,8 +1782,9 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			serviceUpdateTimeout = 2 * time.Minute
 			timeout              = propagationTimeout + serviceUpdateTimeout
 		)
+		operationTime := time.Now().UTC()
 		_, err := tfresource.RetryWhen(ctx, timeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateService(ctx, &input)
 			},
 			func(err error) (bool, error) {
@@ -1787,11 +1804,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Id(), err)
 		}
 
-		fn := waitServiceActive
 		if d.Get("wait_for_steady_state").(bool) {
-			fn = waitServiceStable
-		}
-		if _, err := fn(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, operationTime, d.Get("sigint_rollback").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
+			}
+		} else if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1838,7 +1855,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	log.Printf("[DEBUG] Deleting ECS Service: %s", d.Id())
 	_, err = tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteService(ctx, &ecs.DeleteServiceInput{
 				Cluster: aws.String(cluster),
 				Force:   aws.Bool(forceDelete),
@@ -1908,7 +1925,7 @@ func retryServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 		timeout              = propagationTimeout + serviceCreateTimeout
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateService(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -2031,33 +2048,29 @@ func (e *expectServiceActiveError) Error() string {
 func findServiceByTwoPartKeyWaitForActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) (*awstypes.Service, error) {
 	var service *awstypes.Service
 
-	// Use the retry.RetryContext function instead of WaitForState() because we don't want the timeout error, if any.
+	// Use the tfresource.Retry function instead of WaitForState() because we don't want the timeout error, if any.
 	const (
 		timeout = 2 * time.Minute
 	)
-	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		service, err = findServiceByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
 
 		if tfresource.NotFound(err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if status := aws.ToString(service.Status); status != serviceStatusActive {
-			return retry.RetryableError(newExpectServiceActiveError(status))
+			return tfresource.RetryableError(newExpectServiceActiveError(status))
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		service, err = findServiceByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
-	}
 
 	if errs.IsA[*expectServiceActiveError](err) {
 		return nil, &retry.NotFoundError{
@@ -2078,6 +2091,13 @@ const (
 	serviceStatusStable  = "tfSTABLE"
 )
 
+var deploymentTerminalStates = enum.Slice(
+	awstypes.ServiceDeploymentStatusSuccessful,
+	awstypes.ServiceDeploymentStatusStopped,
+	awstypes.ServiceDeploymentStatusRollbackFailed,
+	awstypes.ServiceDeploymentStatusRollbackSuccessful,
+)
+
 func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
@@ -2094,106 +2114,116 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
-	cachedDeploymentArn := new(string)
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
+	var primaryTaskSet *awstypes.Deployment
+	var primaryDeploymentArn *string
+	var isNewPrimaryDeployment bool
 
 	return func() (any, string, error) {
-		outputRaw, status, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
+		outputRaw, serviceStatus, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if status != serviceStatusActive {
-			return outputRaw, status, nil
+		if serviceStatus != serviceStatusActive {
+			return outputRaw, serviceStatus, nil
 		}
 
 		output := outputRaw.(*awstypes.Service)
 
-		// For ECS deployment controller, check the deployment status
-		if output.DeploymentController != nil && output.DeploymentController.Type == awstypes.DeploymentControllerTypeEcs {
-			status, err := checkServiceDeploymentStatus(ctx, conn, aws.ToString(output.ServiceArn), clusterNameOrARN, cachedDeploymentArn)
+		if primaryTaskSet == nil {
+			primaryTaskSet = findPrimaryTaskSet(output.Deployments)
+
+			if primaryTaskSet != nil && primaryTaskSet.CreatedAt != nil {
+				createdAtUTC := primaryTaskSet.CreatedAt.UTC()
+				isNewPrimaryDeployment = createdAtUTC.After(operationTime)
+			}
+		}
+
+		isNewECSDeployment := output.DeploymentController != nil &&
+			output.DeploymentController.Type == awstypes.DeploymentControllerTypeEcs &&
+			isNewPrimaryDeployment
+
+		// For new deployments with ECS deployment controller, check the deployment status
+		if isNewECSDeployment {
+			if primaryDeploymentArn == nil {
+				serviceArn := aws.ToString(output.ServiceArn)
+
+				var err error
+				primaryDeploymentArn, err = findPrimaryDeploymentARN(ctx, conn, primaryTaskSet, serviceArn, clusterNameOrARN, operationTime)
+				if err != nil {
+					return nil, "", err
+				}
+				if primaryDeploymentArn == nil {
+					return output, serviceStatusPending, nil
+				}
+			}
+
+			if sigintConfig.rollbackConfigured && !sigintConfig.rollbackRoutineStarted {
+				sigintConfig.waitGroup.Add(1)
+				go rollbackRoutine(ctx, conn, sigintConfig, primaryDeploymentArn)
+				sigintConfig.rollbackRoutineStarted = true
+			}
+
+			deploymentStatus, err := findDeploymentStatus(ctx, conn, *primaryDeploymentArn)
 			if err != nil {
 				return nil, "", err
 			}
-			return output, status, nil
+			return output, deploymentStatus, nil
 		}
 
-		// For other deployment controllers, check based on desired count
+		// For other deployment controllers or in-place updates, check based on desired count
 		if n, dc, rc := len(output.Deployments), output.DesiredCount, output.RunningCount; n == 1 && dc == rc {
-			status = serviceStatusStable
+			serviceStatus = serviceStatusStable
 		} else {
-			status = serviceStatusPending
+			serviceStatus = serviceStatusPending
 		}
 
-		return output, status, nil
+		return output, serviceStatus, nil
 	}
 }
 
-func checkServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, serviceArn, clusterNameOrARN string, cachedDeploymentArn *string) (string, error) {
-	primaryDeployment, err := getPrimaryDeployment(ctx, conn, serviceArn, clusterNameOrARN)
-	if err != nil {
-		return "", err
+func findPrimaryTaskSet(deployments []awstypes.Deployment) *awstypes.Deployment {
+	for _, deployment := range deployments {
+		if aws.ToString(deployment.Status) == taskSetStatusPrimary {
+			return &deployment
+		}
 	}
-	if primaryDeployment == nil {
-		return serviceStatusPending, nil
-	}
-
-	deploymentArn, err := getDeploymentARN(ctx, conn, primaryDeployment, serviceArn, clusterNameOrARN, cachedDeploymentArn)
-	if err != nil {
-		return "", err
-	}
-	if deploymentArn == nil {
-		return serviceStatusPending, nil
-	}
-
-	return getDeploymentStatus(ctx, conn, *deploymentArn)
+	return nil
 }
 
-func getPrimaryDeployment(ctx context.Context, conn *ecs.Client, serviceArn, clusterNameOrARN string) (*awstypes.Deployment, error) {
-	input := ecs.DescribeServicesInput{
-		Services: []string{serviceArn},
-		Cluster:  aws.String(clusterNameOrARN),
+func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTaskSet *awstypes.Deployment, serviceNameOrARN, clusterNameOrARN string, operationTime time.Time) (*string, error) {
+	parts := strings.Split(aws.ToString(primaryTaskSet.Id), "/")
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("invalid primary task set ID format: %s", aws.ToString(primaryTaskSet.Id))
+	}
+	taskSetID := parts[1]
+
+	input := &ecs.ListServiceDeploymentsInput{
+		Cluster: aws.String(clusterNameOrARN),
+		Service: aws.String(serviceNameFromARN(serviceNameOrARN)),
+		CreatedAt: &awstypes.CreatedAt{
+			After: &operationTime,
+		},
 	}
 
-	output, err := conn.DescribeServices(ctx, &input)
+	output, err := conn.ListServiceDeployments(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output.Services) == 0 {
-		return nil, fmt.Errorf("service not found")
-	}
-
-	service := output.Services[0]
-
-	for _, deployment := range service.Deployments {
-		if aws.ToString(deployment.Status) == "PRIMARY" {
-			return &deployment, nil
+	// Find deployment matching task set
+	for _, deployment := range output.ServiceDeployments {
+		if strings.Contains(aws.ToString(deployment.TargetServiceRevisionArn), taskSetID) {
+			return deployment.ServiceDeploymentArn, nil
 		}
 	}
 
 	return nil, nil
 }
 
-func getDeploymentARN(ctx context.Context, conn *ecs.Client, primaryDeployment *awstypes.Deployment, serviceArn, clusterNameOrARN string, cachedDeploymentArn *string) (*string, error) {
-	if aws.ToString(cachedDeploymentArn) != "" {
-		return cachedDeploymentArn, nil
-	}
-
-	deploymentArn, err := getLatestDeployment(ctx, conn, primaryDeployment, serviceArn, clusterNameOrARN)
-	if err != nil {
-		return nil, err
-	}
-
-	if deploymentArn != nil {
-		*cachedDeploymentArn = *deploymentArn
-	}
-
-	return deploymentArn, nil
-}
-
-func getDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn string) (string, error) {
+func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn string) (string, error) {
 	input := ecs.DescribeServiceDeploymentsInput{
 		ServiceDeploymentArns: []string{deploymentArn},
 	}
@@ -2227,47 +2257,101 @@ func getDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn st
 	}
 }
 
-func getLatestDeployment(ctx context.Context, conn *ecs.Client, primaryTaskSet *awstypes.Deployment, serviceArn, clusterNameOrARN string) (*string, error) {
-	parts := strings.Split(aws.ToString(primaryTaskSet.Id), "/")
-	if len(parts) < 2 {
-		return nil, fmt.Errorf("invalid primary task set ID format: %s", aws.ToString(primaryTaskSet.Id))
-	}
-	taskSetID := parts[1]
+type rollbackState struct {
+	rollbackConfigured     bool
+	rollbackRoutineStarted bool
+	rollbackRoutineStopped chan struct{}
+	waitGroup              sync.WaitGroup
+}
 
-	input := ecs.ListServiceDeploymentsInput{
-		Cluster: aws.String(clusterNameOrARN),
-		Service: aws.String(serviceNameFromARN(serviceArn)),
-		CreatedAt: &awstypes.CreatedAt{
-			After: primaryTaskSet.CreatedAt,
-		},
-	}
+func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollbackState, primaryDeploymentArn *string) {
+	defer rollbackState.waitGroup.Done()
 
-	output, err := conn.ListServiceDeployments(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
+	select {
+	case <-ctx.Done():
+		log.Printf("[INFO] SIGINT detected. Initiating rollback for deployment: %s", *primaryDeploymentArn)
+		ctx, cancel := context.WithTimeout(context.Background(), (1 * time.Hour)) // Maximum time before SIGKILL
+		defer cancel()
 
-	// Find deployment matching task set
-	for _, deployment := range output.ServiceDeployments {
-		if strings.Contains(aws.ToString(deployment.TargetServiceRevisionArn), taskSetID) {
-			return deployment.ServiceDeploymentArn, nil
+		if err := rollbackDeployment(ctx, conn, primaryDeploymentArn); err != nil { //nolint:contextcheck // Original Context has been cancelled
+			log.Printf("[ERROR] Failed to rollback deployment: %s. Err: %s", *primaryDeploymentArn, err)
+		} else {
+			log.Printf("[INFO] Deployment: %s rolled back successfully.", *primaryDeploymentArn)
 		}
+
+	case <-rollbackState.rollbackRoutineStopped:
+		return
+	}
+}
+
+func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeploymentArn *string) error {
+	// Check if deployment is already in terminal state, meaning rollback is not needed
+	deploymentStatus, err := findDeploymentStatus(ctx, conn, *primaryDeploymentArn)
+	if err != nil {
+		return err
+	}
+	if slices.Contains(deploymentTerminalStates, deploymentStatus) {
+		return nil
 	}
 
-	return nil, nil
+	log.Printf("[INFO] Rolling back deployment %s. This may take a few minutes...", *primaryDeploymentArn)
+
+	input := &ecs.StopServiceDeploymentInput{
+		ServiceDeploymentArn: primaryDeploymentArn,
+		StopType:             awstypes.StopServiceDeploymentStopTypeRollback,
+	}
+
+	_, err = conn.StopServiceDeployment(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	return waitForDeploymentTerminalStatus(ctx, conn, *primaryDeploymentArn)
+}
+
+func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, primaryDeploymentArn string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.ServiceDeploymentStatusPending,
+			awstypes.ServiceDeploymentStatusInProgress,
+			awstypes.ServiceDeploymentStatusRollbackRequested,
+			awstypes.ServiceDeploymentStatusRollbackInProgress,
+		),
+		Target: deploymentTerminalStates,
+		Refresh: func() (any, string, error) {
+			status, err := findDeploymentStatus(ctx, conn, primaryDeploymentArn)
+			return nil, status, err
+		},
+		Timeout: 1 * time.Hour, // Maximum time before SIGKILL
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
 // Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, sigintCancellation bool, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
+	sigintConfig := &rollbackState{
+		rollbackConfigured:     sigintCancellation,
+		rollbackRoutineStarted: false,
+		rollbackRoutineStopped: make(chan struct{}),
+		waitGroup:              sync.WaitGroup{},
+	}
+
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if sigintConfig.rollbackRoutineStarted {
+		close(sigintConfig.rollbackRoutineStopped)
+		sigintConfig.waitGroup.Wait()
+	}
 
 	if output, ok := outputRaw.(*awstypes.Service); ok {
 		return output, err
@@ -2277,7 +2361,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 }
 
 // Does not return tags.
-func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
@@ -2459,6 +2543,64 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 	tfMap["rollback"] = apiObject.Rollback
 
 	return tfMap
+}
+
+func flattenDeploymentConfiguration(apiObject *awstypes.DeploymentConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.BakeTimeInMinutes; v != nil {
+		tfMap["bake_time_in_minutes"] = flex.Int32ToStringValue(v)
+	}
+
+	if v := apiObject.LifecycleHooks; len(v) > 0 {
+		tfMap["lifecycle_hook"] = flattenLifecycleHooks(v)
+	}
+
+	if v := apiObject.Strategy; v != "" {
+		tfMap["strategy"] = v
+	}
+
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []any{tfMap}
+}
+
+func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.HookTargetArn; v != nil {
+			tfMap["hook_target_arn"] = aws.ToString(v)
+		}
+
+		if v := apiObject.RoleArn; v != nil {
+			tfMap[names.AttrRoleARN] = aws.ToString(v)
+		}
+
+		if v := apiObject.LifecycleStages; len(v) > 0 {
+			stages := make([]string, 0, len(v))
+			for _, stage := range v {
+				stages = append(stages, string(stage))
+			}
+			tfMap["lifecycle_stages"] = stages
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func expandLifecycleHooks(tfList []any) []awstypes.DeploymentLifecycleHook {
@@ -2843,8 +2985,10 @@ func expandServiceLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 			apiObject.AdvancedConfiguration = &awstypes.AdvancedConfiguration{
 				AlternateTargetGroupArn: aws.String(config["alternate_target_group_arn"].(string)),
 				ProductionListenerRule:  aws.String(config["production_listener_rule"].(string)),
-				TestListenerRule:        aws.String(config["test_listener_rule"].(string)),
 				RoleArn:                 aws.String(config[names.AttrRoleARN].(string)),
+			}
+			if v, ok := config["test_listener_rule"].(string); ok && v != "" {
+				apiObject.AdvancedConfiguration.TestListenerRule = aws.String(v)
 			}
 		}
 
@@ -2876,9 +3020,11 @@ func flattenServiceLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 				map[string]any{
 					"alternate_target_group_arn": aws.ToString(apiObject.AdvancedConfiguration.AlternateTargetGroupArn),
 					"production_listener_rule":   aws.ToString(apiObject.AdvancedConfiguration.ProductionListenerRule),
-					"test_listener_rule":         aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule),
 					names.AttrRoleARN:            aws.ToString(apiObject.AdvancedConfiguration.RoleArn),
 				},
+			}
+			if apiObject.AdvancedConfiguration.TestListenerRule != nil {
+				tfMap["advanced_configuration"].([]any)[0].(map[string]any)["test_listener_rule"] = aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule)
 			}
 		}
 

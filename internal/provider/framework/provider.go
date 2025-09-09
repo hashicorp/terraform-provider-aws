@@ -9,25 +9,27 @@ import (
 	"fmt"
 	"iter"
 	"log"
+	"reflect"
 	"slices"
+	"sync"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	empemeralschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/function"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -35,7 +37,7 @@ import (
 )
 
 var (
-	resourceSchemasValidated bool
+	resourceSchemasValidated sync.Once
 )
 
 var (
@@ -65,27 +67,17 @@ func NewProvider(ctx context.Context, primary interface{ Meta() any }) (provider
 		servicePackages:    primary.Meta().(*conns.AWSClient).ServicePackages(ctx),
 	}
 
-	// Acceptance tests call this function multiple times, potentially in parallel.
-	// To avoid "fatal error: concurrent map writes", take a lock.
-	const (
-		mutexKVKey = "provider.New"
-	)
-	conns.GlobalMutexKV.Lock(mutexKVKey)
-	defer conns.GlobalMutexKV.Unlock(mutexKVKey)
-
 	// Because we try and share resource schemas as much as possible,
 	// we need to ensure that we only validate the resource schemas once.
-	if !resourceSchemasValidated {
-		if err := provider.validateResourceSchemas(ctx); err != nil {
-			return nil, err
-		}
-
-		resourceSchemasValidated = true
-	}
-
-	if err := provider.initialize(ctx); err != nil {
+	var err error
+	resourceSchemasValidated.Do(func() {
+		err = provider.validateResourceSchemas(ctx)
+	})
+	if err != nil {
 		return nil, err
 	}
+
+	provider.initialize(ctx)
 
 	return provider, nil
 }
@@ -392,231 +384,32 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 }
 
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
-func (p *frameworkProvider) initialize(ctx context.Context) error {
+func (p *frameworkProvider) initialize(ctx context.Context) {
 	log.Printf("Initializing Terraform AWS Provider (Framework-style)...")
-
-	var errs []error
 
 	for sp := range p.servicePackages {
 		servicePackageName := sp.ServicePackageName()
 
-		for _, v := range sp.FrameworkDataSources(ctx) {
-			typeName := v.TypeName
-			inner, err := v.Factory(ctx)
-
-			if err != nil {
-				errs = append(errs, fmt.Errorf("creating data source (%s): %w", typeName, err))
-				continue
-			}
-
-			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
-			}
-
-			var interceptors interceptorInvocations
-
-			if isRegionOverrideEnabled {
-				v := v.Region.Value()
-
-				interceptors = append(interceptors, dataSourceInjectRegionAttribute())
-				if v.IsValidateOverrideInPartition {
-					interceptors = append(interceptors, dataSourceValidateRegion())
-				}
-				interceptors = append(interceptors, dataSourceSetRegionInState())
-			}
-
-			if !tfunique.IsHandleNil(v.Tags) {
-				interceptors = append(interceptors, dataSourceTransparentTagging(v.Tags))
-			}
-
-			opts := wrappedDataSourceOptions{
-				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
-					var overrideRegion string
-
-					if isRegionOverrideEnabled && getAttribute != nil {
-						var target types.String
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
-						if diags.HasError() {
-							return ctx, diags
-						}
-
-						overrideRegion = target.ValueString()
-					}
-
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
-					if c != nil {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
-						ctx = c.RegisterLogger(ctx)
-						ctx = fwflex.RegisterLogger(ctx)
-					}
-
-					return ctx, diags
-				},
-				interceptors: interceptors,
-				typeName:     typeName,
-			}
-			p.dataSources = append(p.dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(inner, opts)
+		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
+			p.dataSources = append(p.dataSources, func() datasource.DataSource { //nolint:contextcheck // must be a func()
+				return newWrappedDataSource(dataSourceSpec, servicePackageName)
 			})
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
-			for _, v := range v.EphemeralResources(ctx) {
-				typeName := v.TypeName
-				inner, err := v.Factory(ctx)
-
-				if err != nil {
-					errs = append(errs, fmt.Errorf("creating ephemeral resource (%s): %w", typeName, err))
-					continue
-				}
-
-				var isRegionOverrideEnabled bool
-				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-					isRegionOverrideEnabled = true
-				}
-
-				var interceptors interceptorInvocations
-
-				if isRegionOverrideEnabled {
-					v := v.Region.Value()
-
-					interceptors = append(interceptors, ephemeralResourceInjectRegionAttribute())
-					if v.IsValidateOverrideInPartition {
-						interceptors = append(interceptors, ephemeralResourceValidateRegion())
-					}
-					interceptors = append(interceptors, ephemeralResourceSetRegionInResult())
-				}
-
-				opts := wrappedEphemeralResourceOptions{
-					// bootstrapContext is run on all wrapped methods before any interceptors.
-					bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-						var diags diag.Diagnostics
-						var overrideRegion string
-
-						if isRegionOverrideEnabled && getAttribute != nil {
-							var target types.String
-							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
-							if diags.HasError() {
-								return ctx, diags
-							}
-
-							overrideRegion = target.ValueString()
-						}
-
-						ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
-						if c != nil {
-							ctx = c.RegisterLogger(ctx)
-							ctx = fwflex.RegisterLogger(ctx)
-							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
-						}
-						return ctx, diags
-					},
-					interceptors: interceptors,
-					typeName:     v.TypeName,
-				}
-				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(inner, opts)
+			for _, ephemeralResourceSpec := range v.EphemeralResources(ctx) {
+				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource { //nolint:contextcheck // must be a func()
+					return newWrappedEphemeralResource(ephemeralResourceSpec, servicePackageName)
 				})
 			}
 		}
 
-		for _, res := range sp.FrameworkResources(ctx) {
-			typeName := res.TypeName
-			inner, err := res.Factory(ctx)
-
-			if err != nil {
-				errs = append(errs, fmt.Errorf("creating resource (%s): %w", typeName, err))
-				continue
-			}
-
-			var isRegionOverrideEnabled bool
-			if v := res.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
-			}
-
-			var interceptors interceptorInvocations
-
-			if isRegionOverrideEnabled {
-				v := res.Region.Value()
-
-				interceptors = append(interceptors, resourceInjectRegionAttribute())
-				if v.IsValidateOverrideInPartition {
-					interceptors = append(interceptors, resourceValidateRegion())
-				}
-				interceptors = append(interceptors, resourceDefaultRegion())
-				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
-				interceptors = append(interceptors, resourceSetRegionInState())
-				if res.Identity.HasInherentRegion() {
-					interceptors = append(interceptors, resourceImportRegionNoDefault())
-				} else {
-					interceptors = append(interceptors, resourceImportRegion())
-				}
-			}
-
-			if !tfunique.IsHandleNil(res.Tags) {
-				interceptors = append(interceptors, resourceTransparentTagging(res.Tags))
-			}
-
-			if res.Import.WrappedImport {
-				if res.Import.SetIDAttr {
-					if _, ok := res.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
-						errs = append(errs, fmt.Errorf("resource type %s: importer sets \"id\" attribute, but creator isn't configured", typeName))
-						continue
-					}
-				}
-				switch v := inner.(type) {
-				case framework.ImportByIdentityer:
-					v.SetIdentitySpec(res.Identity, res.Import)
-
-				default:
-					errs = append(errs, fmt.Errorf("resource type %s: cannot configure importer", typeName))
-					continue
-				}
-			}
-
-			opts := wrappedResourceOptions{
-				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
-					var overrideRegion string
-
-					if isRegionOverrideEnabled && getAttribute != nil {
-						var target types.String
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
-						if diags.HasError() {
-							return ctx, diags
-						}
-
-						overrideRegion = target.ValueString()
-					}
-
-					ctx = conns.NewResourceContext(ctx, servicePackageName, res.Name, overrideRegion)
-					if c != nil {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
-						ctx = c.RegisterLogger(ctx)
-						ctx = fwflex.RegisterLogger(ctx)
-					}
-
-					return ctx, diags
-				},
-				interceptors: interceptors,
-				typeName:     typeName,
-			}
-			if len(res.Identity.Attributes) > 0 {
-				opts.identity = res.Identity
-				opts.interceptors = append(opts.interceptors, newIdentityInterceptor(res.Identity.Attributes))
-			}
-
-			p.resources = append(p.resources, func() resource.Resource {
-				return newWrappedResource(inner, opts)
+		for _, resourceSpec := range sp.FrameworkResources(ctx) {
+			p.resources = append(p.resources, func() resource.Resource { //nolint:contextcheck // must be a func()
+				return newWrappedResource(resourceSpec, servicePackageName)
 			})
 		}
 	}
-
-	return errors.Join(errs...)
 }
 
 // validateResourceSchemas is called from `New` to validate Terraform Plugin Framework-style resource schemas.
@@ -624,100 +417,81 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 	var errs []error
 
 	for sp := range p.servicePackages {
-		for _, v := range sp.FrameworkDataSources(ctx) {
-			typeName := v.TypeName
-			ds, err := v.Factory(ctx)
+		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
+			typeName := dataSourceSpec.TypeName
+			inner, err := dataSourceSpec.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating data source (%s): %w", typeName, err))
+				errs = append(errs, fmt.Errorf("creating data source type (%s): %w", typeName, err))
 				continue
 			}
 
 			schemaResponse := datasource.SchemaResponse{}
-			ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+			inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
-					continue
-				}
+			if err := validateSchemaRegionForDataSource(dataSourceSpec.Region, schemaResponse.Schema); err != nil {
+				errs = append(errs, fmt.Errorf("data source type %q: %w", typeName, err))
+				continue
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
-				// The data source has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
-					if !v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
-					continue
-				}
+			if err := validateSchemaTagsForDataSource(dataSourceSpec.Tags, schemaResponse.Schema); err != nil {
+				errs = append(errs, fmt.Errorf("data source type %q: %w", typeName, err))
+				continue
 			}
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
-			for _, v := range v.EphemeralResources(ctx) {
-				typeName := v.TypeName
-				er, err := v.Factory(ctx)
+			for _, ephemeralResourceSpec := range v.EphemeralResources(ctx) {
+				typeName := ephemeralResourceSpec.TypeName
+				inner, err := ephemeralResourceSpec.Factory(ctx)
 
 				if err != nil {
-					errs = append(errs, fmt.Errorf("creating ephemeral resource (%s): %w", typeName, err))
+					errs = append(errs, fmt.Errorf("creating ephemeral resource type (%s): %w", typeName, err))
 					continue
 				}
 
 				schemaResponse := ephemeral.SchemaResponse{}
-				er.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
+				inner.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
-				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
-						errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s ephemeral resource", names.AttrRegion, typeName))
-						continue
-					}
+				if err := validateSchemaRegionForEphemeralResource(ephemeralResourceSpec.Region, schemaResponse.Schema); err != nil {
+					errs = append(errs, fmt.Errorf("ephemeral resource type %q: %w", typeName, err))
+					continue
 				}
 			}
 		}
 
-		for _, v := range sp.FrameworkResources(ctx) {
-			typeName := v.TypeName
-			r, err := v.Factory(ctx)
+		for _, resourceSpec := range sp.FrameworkResources(ctx) {
+			typeName := resourceSpec.TypeName
+			inner, err := resourceSpec.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating resource (%s): %w", typeName, err))
+				errs = append(errs, fmt.Errorf("creating resource type (%s): %w", typeName, err))
 				continue
 			}
 
 			schemaResponse := resource.SchemaResponse{}
-			r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+			inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
-					continue
-				}
+			if err := validateSchemaRegionForResource(resourceSpec.Region, schemaResponse.Schema); err != nil {
+				errs = append(errs, fmt.Errorf("resource type %q: %w", typeName, err))
+				continue
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
-				// The resource has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
-					if v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
+			if err := validateSchemaTagsForResource(resourceSpec.Tags, schemaResponse.Schema); err != nil {
+				errs = append(errs, fmt.Errorf("resource type %q: %w", typeName, err))
+				continue
+			}
+
+			if resourceSpec.Import.WrappedImport {
+				if resourceSpec.Import.SetIDAttr {
+					if _, ok := resourceSpec.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
+						errs = append(errs, fmt.Errorf("resource type %q: importer sets `%s` attribute, but creator isn't configured", resourceSpec.TypeName, names.AttrID))
 						continue
 					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
-					continue
 				}
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTagsAll]; ok {
-					if !v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTagsAll, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+
+				if _, ok := inner.(framework.ImportByIdentityer); !ok {
+					errs = append(errs, fmt.Errorf("resource type %q: cannot configure importer, does not implement %q", resourceSpec.TypeName, reflect.TypeFor[framework.ImportByIdentityer]()))
 					continue
 				}
 			}
@@ -725,4 +499,64 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func validateSchemaRegionForDataSource(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schema datasourceschema.Schema) error {
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		if _, ok := schema.Attributes[names.AttrRegion]; ok {
+			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
+}
+
+func validateSchemaRegionForEphemeralResource(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schema empemeralschema.Schema) error {
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		if _, ok := schema.Attributes[names.AttrRegion]; ok {
+			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
+}
+
+func validateSchemaRegionForResource(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schema resourceschema.Schema) error {
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		if _, ok := schema.Attributes[names.AttrRegion]; ok {
+			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
+}
+
+func validateSchemaTagsForDataSource(tagsSpec unique.Handle[inttypes.ServicePackageResourceTags], schema datasourceschema.Schema) error {
+	if !tfunique.IsHandleNil(tagsSpec) {
+		if v, ok := schema.Attributes[names.AttrTags]; ok {
+			if !v.IsComputed() {
+				return fmt.Errorf("`%s` attribute must be Computed", names.AttrTags)
+			}
+		} else {
+			return fmt.Errorf("configured for tags but no `%s` attribute defined in schema", names.AttrTags)
+		}
+	}
+	return nil
+}
+
+func validateSchemaTagsForResource(tagsSpec unique.Handle[inttypes.ServicePackageResourceTags], schema resourceschema.Schema) error {
+	if !tfunique.IsHandleNil(tagsSpec) {
+		if v, ok := schema.Attributes[names.AttrTags]; ok {
+			if v.IsComputed() {
+				return fmt.Errorf("`%s` attribute cannot be Computed", names.AttrTags)
+			}
+		} else {
+			return fmt.Errorf("configured for tags but no `%s` attribute defined in schema", names.AttrTags)
+		}
+		if v, ok := schema.Attributes[names.AttrTagsAll]; ok {
+			if !v.IsComputed() {
+				return fmt.Errorf("`%s` attribute must be Computed", names.AttrTagsAll)
+			}
+		} else {
+			return fmt.Errorf("configured for tags but no `%s` attribute defined in schema", names.AttrTagsAll)
+		}
+	}
+	return nil
 }

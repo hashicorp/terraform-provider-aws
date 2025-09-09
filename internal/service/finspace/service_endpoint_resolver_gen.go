@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params finspace.Endpoin
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up finspace endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up finspace endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

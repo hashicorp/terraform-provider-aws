@@ -95,8 +95,7 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 			})
 			d.SetId(tc.inputID)
 
-			attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
-			err := importer.RegionalSingleParameterized(ctx, d, attr, client)
+			err := importer.RegionalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -282,8 +281,7 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalSingleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			attr := tc.identitySpec.Attributes[len(tc.identitySpec.Attributes)-1]
-			err := importer.RegionalSingleParameterized(ctx, d, attr, client)
+			err := importer.RegionalSingleParameterized(ctx, d, tc.identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -375,8 +373,7 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, globalSingleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
-			err := importer.GlobalSingleParameterized(ctx, d, attr, client)
+			err := importer.GlobalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -505,8 +502,7 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalSingleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
-			err := importer.GlobalSingleParameterized(ctx, d, attr, client)
+			err := importer.GlobalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -630,7 +626,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			})
 			d.SetId(tc.inputID)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -787,7 +783,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec.Attributes, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -896,7 +892,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, globalMultipleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -989,7 +985,7 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec.Attributes, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")

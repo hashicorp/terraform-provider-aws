@@ -106,6 +106,7 @@ type Identity struct {
 	IdentityDuplicateAttrs []string
 	IsSingleParameter      bool
 	IsMutable              bool
+	IsSetOnUpdate          bool
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -355,15 +356,24 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	}
 }
 
-// WithV6_0SDKv2Fix is for use ONLY for resource types affected by the v6.0 SDKv2 existing resource issue
-func WithV6_0SDKv2Fix() IdentityOptsFunc {
+// WithMutableIdentity is for use for resource types that normally have a mutable identity
+// If Identity must be mutable to fix potential errors, use WithIdentityFix()
+func WithMutableIdentity() IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IsMutable = true
+		opts.IsSetOnUpdate = true
 	}
 }
 
 // WithIdentityFix is for use ONLY for resource types that must be able to modify Resource Identity due to an error
 func WithIdentityFix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
+	}
+}
+
+// WithV6_0SDKv2Fix is for use ONLY for resource types affected by the v6.0 SDKv2 existing resource issue
+func WithV6_0SDKv2Fix() IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IsMutable = true
 	}
@@ -390,5 +400,6 @@ type SDKv2ImportID interface {
 
 type SDKv2Import struct {
 	WrappedImport bool
+	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
 }

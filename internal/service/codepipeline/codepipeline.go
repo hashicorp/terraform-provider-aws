@@ -653,7 +653,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Tags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStructureException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidStructureException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreatePipeline(ctx, input)
 	}, "not authorized")
 

@@ -112,7 +112,7 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 		PrincipalArn: aws.String(principalARN),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ResourceNotFoundException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.ResourceNotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AssociateAccessPolicy(ctx, input)
 	}, "The specified principalArn could not be found")
 

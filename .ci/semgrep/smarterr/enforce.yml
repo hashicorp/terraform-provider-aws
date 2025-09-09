@@ -7,7 +7,7 @@ rules:
     fix: smerr.Append(ctx, $DIAGS, $ERR)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-sdkdiag-appenderrorf
     languages: [go]
@@ -18,7 +18,7 @@ rules:
       - pattern: sdkdiag.AppendErrorf($DIAGS, $FMT, $ERR)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-create-appenddiagerror
     languages: [go]
@@ -27,7 +27,7 @@ rules:
     pattern: create.AppendDiagError($DIAGS, ...)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-diagnostics-adderror
     languages: [go]
@@ -40,7 +40,7 @@ rules:
       - pattern-not-inside: smerr.AddError(...)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-create-adderror
     languages: [go]
@@ -49,7 +49,7 @@ rules:
     pattern: create.AddError(&$RESP.Diagnostics, ...)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-direct-diag-adderror
     languages: [go]
@@ -60,7 +60,7 @@ rules:
       - pattern-not-inside: smerr.AddError(...)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-direct-diag-appenderrorf
     languages: [go]
@@ -69,7 +69,7 @@ rules:
     pattern: diag.AppendErrorf(...)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-direct-diag-appendfromerr
     languages: [go]
@@ -78,7 +78,7 @@ rules:
     pattern: diag.AppendFromErr(...)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-direct-diag-append
     languages: [go]
@@ -89,7 +89,7 @@ rules:
       - pattern-not-inside: smerr.EnrichAppend(...)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-bare-return-err
     languages: [go]
@@ -102,7 +102,7 @@ rules:
           return nil, smarterr.NewError(...)
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-bare-assertsinglevalueresult
     languages: [go]
@@ -114,7 +114,7 @@ rules:
       - pattern-not-inside: smarterr.Assert(tfresource.AssertSingleValueResult(...))
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"
 
   - id: go-no-bare-empty-result-error
     languages: [go]
@@ -126,4 +126,4 @@ rules:
       - pattern-not-inside: smarterr.NewError(tfresource.NewEmptyResultError(...))
     paths:
       include:
-        - internal/service/cloudwatch/
+        - "/internal/service/cloudwatch/"

@@ -74,7 +74,7 @@ func (r *drtAccessRoleARNAssociationResource) Create(ctx context.Context, reques
 		RoleArn: aws.String(roleARN),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AssociateDRTRole(ctx, input)
 	}, "role does not have a valid DRT managed policy")
 
@@ -147,7 +147,7 @@ func (r *drtAccessRoleARNAssociationResource) Update(ctx context.Context, reques
 			RoleArn: aws.String(roleARN),
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.AssociateDRTRole(ctx, input)
 		}, "role does not have a valid DRT managed policy")
 

@@ -643,6 +643,8 @@ class MyConvertedCode extends TerraformStack {
 
 #### Custom Error Response Arguments
 
+~> **NOTE:** When specifying either `responsePagePath` or `responseCode`, **both** must be set.
+
 * `errorCachingMinTtl` (Optional) - Minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
 * `errorCode` (Required) - 4xx or 5xx HTTP status code that you want to customize.
 * `responseCode` (Optional) - HTTP status code that you want CloudFront to return with the custom error page to the viewer.
@@ -794,4 +796,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-88763f6d6675ec94b0e8d27cf47d4155c496c4221e40c994a1a244d35703e943 -->
+<!-- cache-key: cdktf-0.20.8 input-d2ff98f96013d63117f5475c6cdc94f218c94787983824f24b3f840a85875ef4 -->
