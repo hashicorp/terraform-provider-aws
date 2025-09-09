@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -57,6 +59,9 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(regexache.MustCompile(`[\w#+=/:,.@-]*`), "must be a valid log group name or ARN"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
