@@ -144,7 +144,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.6.5
 	github.com/aws/aws-sdk-go-v2/service/iot v1.69.2
-	github.com/aws/aws-sdk-go-v2/service/ivs v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/ivs v1.47.3
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.27.1
