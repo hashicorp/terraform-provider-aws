@@ -6,6 +6,7 @@ package framework
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -66,7 +67,7 @@ func (l *ListResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
 	return l.resourceSchema.Data(&terraform.InstanceState{})
 }
 
-func (l *ListResourceWithSDKv2Resource) SetIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
+func (l *ListResourceWithSDKv2Resource) setResourceIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
 	identity, err := d.Identity()
 	if err != nil {
 		return err
@@ -112,4 +113,53 @@ func getAttributeOk(d resourceData, name string) (string, bool) {
 	} else {
 		return v.(string), true
 	}
+}
+
+func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, result *list.ListResult, rd *schema.ResourceData) {
+	err := l.setResourceIdentity(ctx, awsClient, rd)
+	if err != nil {
+		result.Diagnostics.Append(diag.NewErrorDiagnostic(
+			"Error Listing Remote Resources",
+			"An unexpected error occurred setting resource identity. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"Error:"+err.Error(),
+		))
+		return
+	}
+
+	tfTypeResource, err := rd.TfTypeResourceState()
+	if err != nil {
+		result.Diagnostics.Append(diag.NewErrorDiagnostic(
+			"Error Listing Remote Resources",
+			"An unexpected error occurred converting resource state. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"Error:"+err.Error(),
+		))
+		return
+	}
+
+	result.Diagnostics.Append(result.Resource.Set(ctx, *tfTypeResource)...)
+	if result.Diagnostics.HasError() {
+		return
+	}
+
+	tfTypeIdentity, err := rd.TfTypeIdentityState()
+	if err != nil {
+		result.Diagnostics.Append(diag.NewErrorDiagnostic(
+			"Error Listing Remote Resources",
+			"An unexpected error occurred converting identity state. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"Error:"+err.Error(),
+		))
+		return
+	}
+
+	result.Diagnostics.Append(result.Identity.Set(ctx, *tfTypeIdentity)...)
+	if result.Diagnostics.HasError() {
+		return
+	}
+
 }

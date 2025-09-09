@@ -4346,34 +4346,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 				result.DisplayName = aws.ToString(output.InstanceId)
 			}
 
-			err := l.SetIdentity(ctx, awsClient, rd)
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			tfTypeResource, err := rd.TfTypeResourceState()
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			result.Diagnostics.Append(result.Resource.Set(ctx, *tfTypeResource)...)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			tfTypeIdentity, err := rd.TfTypeIdentityState()
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			result.Diagnostics.Append(result.Identity.Set(ctx, *tfTypeIdentity)...)
+			l.SetResult(ctx, awsClient, &result, rd)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
