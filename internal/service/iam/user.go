@@ -543,7 +543,7 @@ func deleteUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing/deleting IAM User (%s) inline policies: %s", username, err)
+		return fmt.Errorf("listing/deleting IAM User (%s) inline policies: %w", username, err)
 	}
 
 	for _, name := range output.PolicyNames {
@@ -558,7 +558,7 @@ func deleteUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 			if errs.IsA[*awstypes.NoSuchEntityException](err) {
 				continue
 			}
-			return fmt.Errorf("deleting IAM User (%s) inline policies: %s", username, err)
+			return fmt.Errorf("deleting IAM User (%s) inline policies: %w", username, err)
 		}
 	}
 
@@ -577,7 +577,7 @@ func detachUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing/detaching IAM User (%s) attached policy: %s", username, err)
+		return fmt.Errorf("listing/detaching IAM User (%s) attached policy: %w", username, err)
 	}
 
 	for _, policy := range output.AttachedPolicies {
@@ -586,7 +586,7 @@ func detachUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 		log.Printf("[DEBUG] Detaching IAM User (%s) attached policy: %s", username, policyARN)
 
 		if err := detachPolicyFromUser(ctx, conn, username, policyARN); err != nil {
-			return fmt.Errorf("detaching IAM User (%s) attached policy: %s", username, err)
+			return fmt.Errorf("detaching IAM User (%s) attached policy: %w", username, err)
 		}
 	}
 
