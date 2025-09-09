@@ -1073,7 +1073,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 // @SDKListResource("aws_instance")
 func instanceResourceAsListResource() inttypes.ListResourceForSDK {
 	l := instanceListResource{}
-	l.SetResource(resourceInstance())
+	l.SetResourceSchema(resourceInstance())
 
 	return &l
 }
@@ -4328,8 +4328,8 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
-			logGroupResource := l.GetResource()
-			rd := logGroupResource.Data(&terraform.InstanceState{})
+			resourceSchema := l.ResourceSchema()
+			rd := resourceSchema.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.InstanceId))
 			resourceInstanceFlatten(ctx, awsClient, &output, rd)
 
