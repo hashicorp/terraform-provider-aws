@@ -787,8 +787,8 @@ func testAccWebhookConfig_gitHubWithPullRequestBuildPolicy(rName, requiresCommen
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
   pull_request_build_policy {
-     requires_comment_approval = %[1]q
-     approver_roles            = ["%[2]s"]
+    requires_comment_approval = %[1]q
+    approver_roles            = ["%[2]s"]
   }
 }
 `, requiresCommentApproval, strings.Join(approverRoles, "\", \"")))
@@ -799,7 +799,7 @@ func testAccWebhookConfig_gitHubWithPullRequestBuildPolicyNoApproverRoles(rName,
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
   pull_request_build_policy {
-     requires_comment_approval = %[1]q
+    requires_comment_approval = %[1]q
   }
 }
 `, requiresCommentApproval))
