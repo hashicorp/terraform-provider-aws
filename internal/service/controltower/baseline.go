@@ -43,6 +43,7 @@ func newResourceBaseline(_ context.Context) (resource.ResourceWithConfigure, err
 	r := &resourceBaseline{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -87,7 +88,7 @@ func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest,
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrParameters: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[parameters](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[parameter](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -105,6 +106,7 @@ func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest,
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
+				Delete: true,
 			}),
 		},
 	}
@@ -242,7 +244,6 @@ func (r *resourceBaseline) Update(ctx context.Context, request resource.UpdateRe
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		_, err = waitBaselineReady(ctx, conn, plan.ARN.ValueString(), updateTimeout)
 		if err != nil {
-			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN.ValueString())...)
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.ControlTower, create.ErrActionWaitingForUpdate, ResNameBaseline, plan.ARN.String(), err),
 				err.Error(),
@@ -283,12 +284,40 @@ func (r *resourceBaseline) Delete(ctx context.Context, request resource.DeleteRe
 		)
 		return
 	}
+
+	deleteTimeout := r.UpdateTimeout(ctx, state.Timeouts)
+	_, err = waitBaselineDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ControlTower, create.ErrActionWaitingForDeletion, ResNameBaseline, state.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
 }
 
 func waitBaselineReady(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*awstypes.EnabledBaselineDetails, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EnablementStatusUnderChange),
 		Target:                    enum.Slice(awstypes.EnablementStatusSucceeded),
+		Refresh:                   statusBaseline(conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.EnabledBaselineDetails); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitBaselineDeleted(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*awstypes.EnabledBaselineDetails, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.EnablementStatusUnderChange),
+		Target:                    []string{},
 		Refresh:                   statusBaseline(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -343,23 +372,23 @@ func findBaselineByID(ctx context.Context, conn *controltower.Client, id string)
 
 type resourceBaselineData struct {
 	framework.WithRegionModel
-	ARN                 types.String                                `tfsdk:"arn"`
-	BaselineIdentifier  types.String                                `tfsdk:"baseline_identifier"`
-	BaselineVersion     types.String                                `tfsdk:"baseline_version"`
-	OperationIdentifier types.String                                `tfsdk:"operation_identifier"`
-	Parameters          fwtypes.ListNestedObjectValueOf[parameters] `tfsdk:"parameters"`
-	Tags                tftags.Map                                  `tfsdk:"tags"`
-	TagsAll             tftags.Map                                  `tfsdk:"tags_all"`
-	TargetIdentifier    types.String                                `tfsdk:"target_identifier"`
-	Timeouts            timeouts.Value                              `tfsdk:"timeouts"`
+	ARN                 types.String                               `tfsdk:"arn"`
+	BaselineIdentifier  types.String                               `tfsdk:"baseline_identifier"`
+	BaselineVersion     types.String                               `tfsdk:"baseline_version"`
+	OperationIdentifier types.String                               `tfsdk:"operation_identifier"`
+	Parameters          fwtypes.ListNestedObjectValueOf[parameter] `tfsdk:"parameters"`
+	Tags                tftags.Map                                 `tfsdk:"tags"`
+	TagsAll             tftags.Map                                 `tfsdk:"tags_all"`
+	TargetIdentifier    types.String                               `tfsdk:"target_identifier"`
+	Timeouts            timeouts.Value                             `tfsdk:"timeouts"`
 }
 
-type parameters struct {
+type parameter struct {
 	Key   types.String `tfsdk:"key"`
 	Value types.String `tfsdk:"value"`
 }
 
-func (p *parameters) Flatten(ctx context.Context, v any) diag.Diagnostics {
+func (p *parameter) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch param := v.(type) {
@@ -384,7 +413,7 @@ func (p *parameters) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	return diags
 }
 
-func (p parameters) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+func (p parameter) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch targetType {
 	case reflect.TypeOf(awstypes.EnabledBaselineParameter{}):
