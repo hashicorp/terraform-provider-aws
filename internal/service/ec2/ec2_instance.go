@@ -24,8 +24,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	frameworkdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -1246,7 +1248,7 @@ func resourceInstanceRead(ctx context.Context, rd *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
 	}
 
-	resourceInstanceFlatten(ctx, c, instance, rd)
+	diags = append(diags, resourceInstanceFlatten(ctx, c, instance, rd)...)
 
 	return diags
 }
@@ -4328,7 +4330,11 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 
 			rd := l.ResourceData()
 			rd.SetId(aws.ToString(output.InstanceId))
-			resourceInstanceFlatten(ctx, awsClient, &output, rd)
+			result.Diagnostics.Append(translateDiags(resourceInstanceFlatten(ctx, awsClient, &output, rd))...)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 
 			// set tags
 			err = l.SetTags(ctx, awsClient, rd)
@@ -4356,4 +4362,59 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 		}
 	}
+}
+
+func translateDiags(in diag.Diagnostics) frameworkdiag.Diagnostics {
+	out := make(frameworkdiag.Diagnostics, len(in))
+	for i, diagIn := range in {
+		var diagOut frameworkdiag.Diagnostic
+		if diagIn.Severity == diag.Error {
+			if len(diagIn.AttributePath) == 0 {
+				diagOut = frameworkdiag.NewErrorDiagnostic(diagIn.Summary, diagIn.Detail)
+			} else {
+				diagOut = frameworkdiag.NewAttributeErrorDiagnostic(translatePath(diagIn.AttributePath), diagIn.Summary, diagIn.Detail)
+			}
+		} else {
+			if len(diagIn.AttributePath) == 0 {
+				diagOut = frameworkdiag.NewWarningDiagnostic(diagIn.Summary, diagIn.Detail)
+			} else {
+				diagOut = frameworkdiag.NewAttributeWarningDiagnostic(translatePath(diagIn.AttributePath), diagIn.Summary, diagIn.Detail)
+			}
+		}
+		out[i] = diagOut
+	}
+	return out
+}
+
+func translatePath(in cty.Path) path.Path {
+	var out path.Path
+
+	if len(in) == 0 {
+		return out
+	}
+
+	step := in[0]
+	switch v := step.(type) {
+	case cty.GetAttrStep:
+		out = path.Root(v.Name)
+	}
+
+	for i := 1; i < len(in); i++ {
+		step := in[i]
+		switch v := step.(type) {
+		case cty.GetAttrStep:
+			out = out.AtName(v.Name)
+
+		case cty.IndexStep:
+			switch v.Key.Type() {
+			case cty.Number:
+				v, _ := v.Key.AsBigFloat().Int64()
+				out = out.AtListIndex(int(v))
+			case cty.String:
+				out = out.AtMapKey(v.Key.AsString())
+			}
+		}
+	}
+
+	return out
 }
