@@ -57,6 +57,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_kms_alias.example
+  identity = {
+    name = "alias/my-key-alias"
+  }
+}
+
+resource "aws_kms_alias" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the KMS key alias.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS aliases using the `name`. For example:
 
 ```python
@@ -80,4 +106,4 @@ Using `terraform import`, import KMS aliases using the `name`. For example:
 % terraform import aws_kms_alias.a alias/my-key-alias
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b86e781afb927ac5351d0560a9ea553517b79aa1472e349a96aa868cd39e7c2d -->
+<!-- cache-key: cdktf-0.20.8 input-c017bf9b3d49f24e56bb7e869062e118494d13ef36e5ba52b752f6ec12e4c776 -->

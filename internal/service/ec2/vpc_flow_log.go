@@ -152,6 +152,15 @@ func resourceFlowLog() *schema.Resource {
 				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    flowLogSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: flowLogStateUpgradeV0,
+				Version: 0,
+			},
+		},
 	}
 }
 

@@ -102,6 +102,7 @@ provider "aws" {
 |App Runner|`apprunner`|`AWS_ENDPOINT_URL_APPRUNNER`|`apprunner`|
 |AppStream 2.0|`appstream`|`AWS_ENDPOINT_URL_APPSTREAM`|`appstream`|
 |AppSync|`appsync`|`AWS_ENDPOINT_URL_APPSYNC`|`appsync`|
+|Application Resilience Controller Region Switch|`arcregionswitch`|`AWS_ENDPOINT_URL_ARC_REGION_SWITCH`|`arc_region_switch`|
 |Athena|`athena`|`AWS_ENDPOINT_URL_ATHENA`|`athena`|
 |Audit Manager|`auditmanager`|`AWS_ENDPOINT_URL_AUDITMANAGER`|`auditmanager`|
 |Auto Scaling|`autoscaling`|`AWS_ENDPOINT_URL_AUTO_SCALING`|`auto_scaling`|
@@ -333,6 +334,7 @@ provider "aws" {
 |WAF Classic Regional|`wafregional`|`AWS_ENDPOINT_URL_WAF_REGIONAL`|`waf_regional`|
 |WAF|`wafv2`|`AWS_ENDPOINT_URL_WAFV2`|`wafv2`|
 |Well-Architected Tool|`wellarchitected`|`AWS_ENDPOINT_URL_WELLARCHITECTED`|`wellarchitected`|
+|WorkMail|`workmail`|`AWS_ENDPOINT_URL_WORKMAIL`|`workmail`|
 |WorkSpaces|`workspaces`|`AWS_ENDPOINT_URL_WORKSPACES`|`workspaces`|
 |WorkSpaces Web|`workspacesweb`|`AWS_ENDPOINT_URL_WORKSPACES_WEB`|`workspaces_web`|
 |X-Ray|`xray`|`AWS_ENDPOINT_URL_XRAY`|`xray`|

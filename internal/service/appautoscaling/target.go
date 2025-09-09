@@ -295,7 +295,7 @@ func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta any)
 
 func registerScalableTarget(ctx context.Context, conn *applicationautoscaling.Client, input *applicationautoscaling.RegisterScalableTargetInput) error {
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RegisterScalableTarget(ctx, input)
 		},
 		func(err error) (bool, error) {

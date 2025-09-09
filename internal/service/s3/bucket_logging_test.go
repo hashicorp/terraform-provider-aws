@@ -141,8 +141,7 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// DisplayName is eventually consistent when the grant is assigned by ID.
-				// Ignore verification to prevent flaky test results.
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
 				ImportStateVerifyIgnore: []string{"target_grant.0.grantee.0.display_name"},
 			},
 			{
@@ -162,8 +161,7 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// DisplayName is eventually consistent when the grant is assigned by ID.
-				// Ignore verification to prevent flaky test results.
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
 				ImportStateVerifyIgnore: []string{"target_grant.0.grantee.0.display_name"},
 			},
 			{

@@ -37,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -46,9 +47,13 @@ import (
 
 // @SDKResource("aws_instance", name="Instance")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Instance")
 // @Testing(importIgnore="user_data_replace_on_change")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(plannableImportAction="NoOp")
 func resourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -59,8 +64,12 @@ func resourceInstance() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				rd.Set(names.AttrForceDestroy, false)
+				identitySpec := importer.IdentitySpec(ctx)
+				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
 
+				rd.Set(names.AttrForceDestroy, false)
 				return []*schema.ResourceData{rd}, nil
 			},
 		},
@@ -387,7 +396,7 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"placement_group"},
+				ConflictsWith: []string{"placement_group", "placement_group_id"},
 			},
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
@@ -609,6 +618,7 @@ func resourceInstance() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						// Note: Changes to `network_interface.network_card_index` should be mirrored in `aws_spot_instance_request`
 						"network_card_index": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -637,7 +647,14 @@ func resourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"host_resource_group_arn"},
+				ConflictsWith: []string{"host_resource_group_arn", "placement_group_id"},
+			},
+			"placement_group_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"host_resource_group_arn", "placement_group"},
 			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
@@ -1227,17 +1244,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v := instance.Placement; v != nil {
 		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
-
-		d.Set("placement_group", v.GroupName)
-
 		d.Set("host_id", v.HostId)
-
 		if v := v.HostResourceGroupArn; v != nil {
 			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 		}
-
+		d.Set("placement_group", v.GroupName)
+		d.Set("placement_group_id", v.GroupId)
 		d.Set("placement_partition_number", v.PartitionNumber)
-
 		d.Set("tenancy", v.Tenancy)
 	}
 
@@ -1333,10 +1346,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			// Otherwise, assume the network device was attached via an outside resource.
 			for _, index := range configuredDeviceIndexes {
 				if index == int(aws.ToInt32(iNi.Attachment.DeviceIndex)) {
+					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 					ni["device_index"] = aws.ToInt32(iNi.Attachment.DeviceIndex)
 					ni["network_card_index"] = aws.ToInt32(iNi.Attachment.NetworkCardIndex)
 					ni[names.AttrNetworkInterfaceID] = aws.ToString(iNi.NetworkInterfaceId)
-					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 				}
 			}
 			// Don't add empty network interfaces to schema
@@ -1659,19 +1672,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 						}
 					} else {
-						err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
+						err := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-									return retry.RetryableError(err)
+									return tfresource.RetryableError(err)
 								}
-								return retry.NonRetryableError(err)
+								return tfresource.NonRetryableError(err)
 							}
 							return nil
 						})
-						if tfresource.TimedOut(err) {
-							_, err = conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
-						}
+
 						if err != nil {
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): replacing instance profile: %s", d.Id(), err)
 						}
@@ -2547,22 +2558,21 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.AssociateIamInstanceProfile(ctx, &input)
-	}
+
 	if err != nil {
 		return fmt.Errorf("associating instance profile: %s", err)
 	}
+
 	return nil
 }
 
@@ -2680,16 +2690,18 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 		networkInterfaces = append(networkInterfaces, ni)
 	} else if nInterfaces != nil && nInterfaces.(*schema.Set).Len() > 0 {
 		// If we have manually specified network interfaces, build and attach those here.
-		vL := nInterfaces.(*schema.Set).List()
-		for _, v := range vL {
-			ini := v.(map[string]any)
-			ni := awstypes.InstanceNetworkInterfaceSpecification{
-				DeviceIndex:         aws.Int32(int32(ini["device_index"].(int))),
-				NetworkCardIndex:    aws.Int32(int32(ini["network_card_index"].(int))),
-				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
-				DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
+		tfList := nInterfaces.(*schema.Set).List()
+		for _, tfMapRaw := range tfList {
+			tfMap := tfMapRaw.(map[string]any)
+			apiObject := awstypes.InstanceNetworkInterfaceSpecification{
+				DeleteOnTermination: aws.Bool(tfMap[names.AttrDeleteOnTermination].(bool)),
+				DeviceIndex:         aws.Int32(int32(tfMap["device_index"].(int))),
+				NetworkInterfaceId:  aws.String(tfMap[names.AttrNetworkInterfaceID].(string)),
 			}
-			networkInterfaces = append(networkInterfaces, ni)
+			if v, ok := tfMap["network_card_index"]; ok && v != 0 {
+				apiObject.NetworkCardIndex = aws.Int32(int32(v.(int)))
+			}
+			networkInterfaces = append(networkInterfaces, apiObject)
 		}
 	} else {
 		v := primaryNetworkInterface.([]any)
@@ -2972,16 +2984,16 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 	input := ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
-	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		resp, err = conn.GetPasswordData(ctx, &input)
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if resp.PasswordData == nil || aws.ToString(resp.PasswordData) == "" {
-			return retry.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
+			return tfresource.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
 		}
 
 		passwordData = strings.TrimSpace(aws.ToString(resp.PasswordData))
@@ -2989,16 +3001,7 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 		log.Printf("[INFO] Password data read for instance %s", instanceID)
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.GetPasswordData(ctx, &input)
-		if err != nil {
-			return "", fmt.Errorf("getting password data: %s", err)
-		}
-		if resp.PasswordData == nil || aws.ToString(resp.PasswordData) == "" {
-			return "", errors.New("password data is blank")
-		}
-		passwordData = strings.TrimSpace(aws.ToString(resp.PasswordData))
-	}
+
 	if err != nil {
 		return "", err
 	}
@@ -3062,7 +3065,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		opts.InstanceType = awstypes.InstanceType(v.(string))
 	}
 
-	var instanceInterruptionBehavior string
+	var instanceInterruptionBehavior awstypes.InstanceInterruptionBehavior
 
 	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any))
@@ -3075,7 +3078,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		opts.LaunchTemplate = launchTemplateSpecification
 
 		if launchTemplateData.InstanceMarketOptions != nil && launchTemplateData.InstanceMarketOptions.SpotOptions != nil {
-			instanceInterruptionBehavior = string(launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior)
+			instanceInterruptionBehavior = launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior
 		}
 	}
 
@@ -3149,9 +3152,15 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 	}
 
-	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == string(awstypes.InstanceInterruptionBehaviorTerminate)) {
+	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == awstypes.InstanceInterruptionBehaviorTerminate) {
 		opts.Placement.GroupName = aws.String(v.(string))
 		opts.SpotPlacement.GroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("placement_group_id"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == awstypes.InstanceInterruptionBehaviorTerminate) {
+		opts.Placement.GroupId = aws.String(v.(string))
+		// AWS SDK missing groupID in type for spotplacement
+		// opts.SpotPlacement.GroupId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tenancy"); ok {

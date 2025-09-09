@@ -303,22 +303,18 @@ func (r *resourceLFTagResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var output *lakeformation.AddLFTagsToResourceOutput
-	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		output, err = conn.AddLFTagsToResource(ctx, in)
 		if err != nil {
 			if errs.IsA[*awstypes.ConcurrentModificationException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.AddLFTagsToResource(ctx, in)
-	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -465,26 +461,22 @@ func (r *resourceLFTagResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	err := retry.RetryContext(ctx, deleteTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, deleteTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		_, err = conn.RemoveLFTagsFromResource(ctx, in)
 		if err != nil {
 			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("removing Lake Formation LF-Tags: %w", err))
+			return tfresource.NonRetryableError(fmt.Errorf("removing Lake Formation LF-Tags: %w", err))
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.RemoveLFTagsFromResource(ctx, in)
-	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

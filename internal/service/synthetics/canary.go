@@ -133,6 +133,12 @@ func ResourceCanary() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"ephemeral_storage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1024, 5120),
+						},
 						"memory_in_mb": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -336,7 +342,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	iamwaiterStopTime := time.Now().Add(propagationTimeout)
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout+canaryCreatedTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return retryCreateCanary(ctx, conn, d, input)
 		},
 		func(err error) (bool, error) {
@@ -388,7 +394,11 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}.String()
 	d.Set(names.AttrARN, canaryArn)
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
-	d.Set("engine_arn", canary.EngineArn)
+	if len(canary.EngineConfigs) > 0 {
+		d.Set("engine_arn", canary.EngineConfigs[0].EngineArn)
+	} else {
+		d.Set("engine_arn", canary.EngineArn)
+	}
 	d.Set(names.AttrExecutionRoleARN, canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
@@ -718,6 +728,10 @@ func expandCanaryRunConfig(l []any) *awstypes.CanaryRunConfigInput {
 		codeConfig.EnvironmentVariables = flex.ExpandStringValueMap(vars)
 	}
 
+	if v, ok := m["ephemeral_storage"].(int); ok && v > 0 {
+		codeConfig.EphemeralStorage = aws.Int32(int32(v))
+	}
+
 	return codeConfig
 }
 
@@ -734,6 +748,10 @@ func flattenCanaryRunConfig(canaryCodeOut *awstypes.CanaryRunConfigOutput, envVa
 
 	if envVars != nil {
 		m["environment_variables"] = envVars
+	}
+
+	if canaryCodeOut.EphemeralStorage != nil {
+		m["ephemeral_storage"] = aws.ToInt32(canaryCodeOut.EphemeralStorage)
 	}
 
 	return []any{m}

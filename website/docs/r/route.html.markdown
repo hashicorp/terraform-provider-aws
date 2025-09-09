@@ -95,6 +95,46 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route.example
+  identity = {
+    route_table_id         = "rtb-656C65616E6F72"
+    destination_cidr_block = "10.42.0.0/16"
+
+    ### OR by IPv6 CIDR block
+    # destination_ipv6_cidr_block = "10.42.0.0/16"
+
+    ### OR by prefix list ID
+    # destination_prefix_list_id = "pl-0570a1d2d725c16be"
+  }
+}
+
+resource "aws_route" "example" {
+  route_table_id            = "rtb-656C65616E6F72"
+  destination_cidr_block    = "10.42.0.0/16"
+  vpc_peering_connection_id = "pcx-45ff3dc1"
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `route_table_id` - (String) ID of the route table.
+
+#### Optional
+
+~> Exactly one of of `destination_cidr_block`, `destination_ipv6_cidr_block`, or `destination_prefix_list_id` is required.
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `destination_cidr_block` - (String) Destination IPv4 CIDR block.
+- `destination_ipv6_cidr_block` - (String) Destination IPv6 CIDR block.
+- `destination_prefix_list_id` - (String) Destination IPv6 CIDR block.
+- `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual routes using `ROUTETABLEID_DESTINATION`. Import [local routes](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html#RouteTables) using the VPC's IPv4 or IPv6 CIDR blocks. For example:
 
 Import a route in route table `rtb-656C65616E6F72` with an IPv4 destination CIDR of `10.42.0.0/16`:
