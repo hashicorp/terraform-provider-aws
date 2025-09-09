@@ -774,7 +774,7 @@ func testAccCheckIntentNotExists(ctx context.Context, intentName, intentVersion 
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("error getting intent %s version %s: %s", intentName, intentVersion, err)
+			return fmt.Errorf("error getting intent %s version %s: %w", intentName, intentVersion, err)
 		}
 
 		return fmt.Errorf("error intent %s version %s exists", intentName, intentVersion)
