@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -64,6 +64,7 @@ const (
 type appResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -214,7 +215,7 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 									names.AttrIdentifier: schema.StringAttribute{
 										Required: true,
 									},
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf("Arn", "Native"),
@@ -425,7 +426,7 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		// Template doesn't exist, set to null
 		state.AppTemplate = types.ListNull(types.ObjectType{
 			AttrTypes: map[string]attr.Type{
-				"version":         types.StringType,
+				names.AttrVersion: types.StringType,
 				"additional_info": types.MapType{ElemType: types.StringType},
 				"app_component":   types.ListType{ElemType: appComponentObjectType()},
 				"resource":        types.ListType{ElemType: resourceObjectType()},
@@ -656,10 +657,6 @@ func (r *appResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 }
 
-func (r *appResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func FindAppByARN(ctx context.Context, conn *resiliencehub.Client, arn string) (*awstypes.App, error) {
 	input := &resiliencehub.DescribeAppInput{
 		AppArn: aws.String(arn),
@@ -686,7 +683,7 @@ func FindAppByARN(ctx context.Context, conn *resiliencehub.Client, arn string) (
 func waitAppCreated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.App, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{string(awstypes.AppStatusTypeActive)},
+		Target:                    enum.Slice(awstypes.AppStatusTypeActive),
 		Refresh:                   statusApp(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -704,7 +701,7 @@ func waitAppCreated(ctx context.Context, conn *resiliencehub.Client, arn string,
 func waitAppUpdated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.App, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{string(awstypes.AppStatusTypeActive)},
+		Target:                    enum.Slice(awstypes.AppStatusTypeActive),
 		Refresh:                   statusApp(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -721,7 +718,7 @@ func waitAppUpdated(ctx context.Context, conn *resiliencehub.Client, arn string,
 
 func waitAppDeleted(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.App, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.AppStatusTypeActive), "Deleting"},
+		Pending: append(enum.Slice(awstypes.AppStatusTypeActive), "Deleting"),
 		Target:  []string{},
 		Refresh: statusApp(ctx, conn, arn),
 		Timeout: timeout,
@@ -1063,7 +1060,7 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 	if templateBody == "" {
 		return types.ListNull(types.ObjectType{
 			AttrTypes: map[string]attr.Type{
-				"version":         types.StringType,
+				names.AttrVersion: types.StringType,
 				"additional_info": types.MapType{ElemType: types.StringType},
 				"app_component":   types.ListType{ElemType: appComponentObjectType()},
 				"resource":        types.ListType{ElemType: resourceObjectType()},
@@ -1129,7 +1126,7 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 
 	// Convert to types.List
 	appTemplateValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-		"version":         types.StringType,
+		names.AttrVersion: types.StringType,
 		"additional_info": types.MapType{ElemType: types.StringType},
 		"app_component":   types.ListType{ElemType: appComponentObjectType()},
 		"resource":        types.ListType{ElemType: resourceObjectType()},
@@ -1141,7 +1138,7 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 
 	return types.ListValueMust(types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"version":         types.StringType,
+			names.AttrVersion: types.StringType,
 			"additional_info": types.MapType{ElemType: types.StringType},
 			"app_component":   types.ListType{ElemType: appComponentObjectType()},
 			"resource":        types.ListType{ElemType: resourceObjectType()},
@@ -1153,8 +1150,8 @@ func (r *appResource) flattenAppTemplate(ctx context.Context, templateBody strin
 func appComponentObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":            types.StringType,
-			"type":            types.StringType,
+			names.AttrName:    types.StringType,
+			names.AttrType:    types.StringType,
 			"resource_names":  types.ListType{ElemType: types.StringType},
 			"additional_info": types.MapType{ElemType: types.StringType},
 		},
@@ -1164,8 +1161,8 @@ func appComponentObjectType() types.ObjectType {
 func resourceObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":                types.StringType,
-			"type":                types.StringType,
+			names.AttrName:        types.StringType,
+			names.AttrType:        types.StringType,
 			"additional_info":     types.MapType{ElemType: types.StringType},
 			"logical_resource_id": types.ListType{ElemType: logicalResourceIdObjectType()},
 		},
@@ -1175,7 +1172,7 @@ func resourceObjectType() types.ObjectType {
 func logicalResourceIdObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"identifier":            types.StringType,
+			names.AttrIdentifier:    types.StringType,
 			"logical_stack_name":    types.StringType,
 			"resource_group_name":   types.StringType,
 			"terraform_source_name": types.StringType,
@@ -1198,10 +1195,10 @@ func resourceMappingObjectType() types.ObjectType {
 func physicalResourceIdObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"type":           types.StringType,
-			"identifier":     types.StringType,
-			"aws_account_id": types.StringType,
-			"aws_region":     types.StringType,
+			names.AttrType:         types.StringType,
+			names.AttrIdentifier:   types.StringType,
+			names.AttrAWSAccountID: types.StringType,
+			"aws_region":           types.StringType,
 		},
 	}
 }
@@ -1218,8 +1215,8 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 		resource := res.(map[string]any)
 
 		resourceModel := resourceModel{
-			Name: types.StringValue(resource["name"].(string)),
-			Type: types.StringValue(resource["type"].(string)),
+			Name: types.StringValue(resource[names.AttrName].(string)),
+			Type: types.StringValue(resource[names.AttrType].(string)),
 		}
 
 		// Handle additional info
@@ -1268,7 +1265,7 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 			}
 
 			logicalIdValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-				"identifier":            types.StringType,
+				names.AttrIdentifier:    types.StringType,
 				"logical_stack_name":    types.StringType,
 				"resource_group_name":   types.StringType,
 				"terraform_source_name": types.StringType,
@@ -1281,7 +1278,7 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 
 			resourceModel.LogicalResourceId = types.ListValueMust(types.ObjectType{
 				AttrTypes: map[string]attr.Type{
-					"identifier":            types.StringType,
+					names.AttrIdentifier:    types.StringType,
 					"logical_stack_name":    types.StringType,
 					"resource_group_name":   types.StringType,
 					"terraform_source_name": types.StringType,
@@ -1293,8 +1290,8 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 		}
 
 		resourceValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-			"name":                types.StringType,
-			"type":                types.StringType,
+			names.AttrName:        types.StringType,
+			names.AttrType:        types.StringType,
 			"additional_info":     types.MapType{ElemType: types.StringType},
 			"logical_resource_id": types.ListType{ElemType: logicalResourceIdObjectType()},
 		}, resourceModel)
@@ -1308,8 +1305,8 @@ func (r *appResource) flattenAppTemplateResources(ctx context.Context, resources
 
 	return types.ListValueMust(types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":                types.StringType,
-			"type":                types.StringType,
+			names.AttrName:        types.StringType,
+			names.AttrType:        types.StringType,
 			"additional_info":     types.MapType{ElemType: types.StringType},
 			"logical_resource_id": types.ListType{ElemType: logicalResourceIdObjectType()},
 		},
@@ -1328,8 +1325,8 @@ func (r *appResource) flattenAppTemplateComponents(ctx context.Context, componen
 		component := comp.(map[string]any)
 
 		componentModel := appComponentModel{
-			Name: types.StringValue(component["name"].(string)),
-			Type: types.StringValue(component["type"].(string)),
+			Name: types.StringValue(component[names.AttrName].(string)),
+			Type: types.StringValue(component[names.AttrType].(string)),
 		}
 
 		// Handle resource names
@@ -1355,8 +1352,8 @@ func (r *appResource) flattenAppTemplateComponents(ctx context.Context, componen
 		}
 
 		componentValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-			"name":            types.StringType,
-			"type":            types.StringType,
+			names.AttrName:    types.StringType,
+			names.AttrType:    types.StringType,
 			"resource_names":  types.ListType{ElemType: types.StringType},
 			"additional_info": types.MapType{ElemType: types.StringType},
 		}, componentModel)
@@ -1370,8 +1367,8 @@ func (r *appResource) flattenAppTemplateComponents(ctx context.Context, componen
 
 	return types.ListValueMust(types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":            types.StringType,
-			"type":            types.StringType,
+			names.AttrName:    types.StringType,
+			names.AttrType:    types.StringType,
 			"resource_names":  types.ListType{ElemType: types.StringType},
 			"additional_info": types.MapType{ElemType: types.StringType},
 		},
@@ -1392,7 +1389,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 	if resources, ok := appTemplate[names.AttrResources].([]any); ok {
 		for _, res := range resources {
 			if resource, ok := res.(map[string]any); ok {
-				if resourceName, hasName := resource["name"].(string); hasName {
+				if resourceName, hasName := resource[names.AttrName].(string); hasName {
 					if logicalResourceId, hasLogical := resource["logicalResourceId"].(map[string]any); hasLogical {
 						if terraformSourceName, hasTerraform := logicalResourceId["terraformSourceName"].(string); hasTerraform {
 							terraformResourceMap[terraformSourceName] = resourceName
@@ -1448,10 +1445,10 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 			}
 
 			physicalIdValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-				"type":           types.StringType,
-				"identifier":     types.StringType,
-				"aws_account_id": types.StringType,
-				"aws_region":     types.StringType,
+				names.AttrType:         types.StringType,
+				names.AttrIdentifier:   types.StringType,
+				names.AttrAWSAccountID: types.StringType,
+				"aws_region":           types.StringType,
 			}, physicalId)
 			diags.Append(convertDiags...)
 			if diags.HasError() {
@@ -1460,10 +1457,10 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 
 			mappingModel.PhysicalResourceId = types.ListValueMust(types.ObjectType{
 				AttrTypes: map[string]attr.Type{
-					"type":           types.StringType,
-					"identifier":     types.StringType,
-					"aws_account_id": types.StringType,
-					"aws_region":     types.StringType,
+					names.AttrType:         types.StringType,
+					names.AttrIdentifier:   types.StringType,
+					names.AttrAWSAccountID: types.StringType,
+					"aws_region":           types.StringType,
 				},
 			}, []attr.Value{physicalIdValue})
 
@@ -1496,10 +1493,10 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 			}
 
 			physicalIdValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-				"type":           types.StringType,
-				"identifier":     types.StringType,
-				"aws_account_id": types.StringType,
-				"aws_region":     types.StringType,
+				names.AttrType:         types.StringType,
+				names.AttrIdentifier:   types.StringType,
+				names.AttrAWSAccountID: types.StringType,
+				"aws_region":           types.StringType,
 			}, physicalId)
 			diags.Append(convertDiags...)
 			if diags.HasError() {
@@ -1508,10 +1505,10 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 
 			mappingModel.PhysicalResourceId = types.ListValueMust(types.ObjectType{
 				AttrTypes: map[string]attr.Type{
-					"type":           types.StringType,
-					"identifier":     types.StringType,
-					"aws_account_id": types.StringType,
-					"aws_region":     types.StringType,
+					names.AttrType:         types.StringType,
+					names.AttrIdentifier:   types.StringType,
+					names.AttrAWSAccountID: types.StringType,
+					"aws_region":           types.StringType,
 				},
 			}, []attr.Value{physicalIdValue})
 

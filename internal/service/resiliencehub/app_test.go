@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +39,7 @@ func TestAccResilienceHubApp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resiliencehub", regexache.MustCompile(`app/.+`)),
 				),
 			},
 			{
@@ -69,7 +70,7 @@ func TestAccResilienceHubApp_terraformSource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resiliencehub", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_mapping.0.mapping_type", "Terraform"),
 				),
@@ -98,7 +99,7 @@ func TestAccResilienceHubApp_complete(t *testing.T) {
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Complete test app"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resiliencehub", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "app_template.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_template.0.version", "2.0"),
 				),
@@ -197,15 +198,15 @@ func testAccCheckAppExists(ctx context.Context, n string, v *resiliencehub.Descr
 func testAccAppConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_app" "test" {
-  name = %[1]q
+  name                    = %[1]q
   app_assessment_schedule = "Disabled"
 
   app_template {
     version = "2.0"
 
     app_component {
-      name = "appcommon"
-      type = "AWS::ResilienceHub::AppCommonAppComponent"
+      name           = "appcommon"
+      type           = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
   }
@@ -251,23 +252,23 @@ resource "aws_s3_object" "tfstate" {
   bucket = aws_s3_bucket.test.bucket
   key    = "terraform.tfstate"
   content = jsonencode({
-    version = 4
+    version           = 4
     terraform_version = "1.0.0"
-    serial = 1
-    lineage = "test"
-    outputs = {}
+    serial            = 1
+    lineage           = "test"
+    outputs           = {}
     resources = [
       {
-        mode = "managed"
-        type = "aws_lambda_function"
-        name = "test"
+        mode     = "managed"
+        type     = "aws_lambda_function"
+        name     = "test"
         provider = "provider[\"registry.terraform.io/hashicorp/aws\"]"
         instances = [
           {
             schema_version = 0
             attributes = {
               function_name = "test-function"
-              arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:test-function"
+              arn           = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:test-function"
             }
           }
         ]
@@ -277,8 +278,8 @@ resource "aws_s3_object" "tfstate" {
 }
 
 resource "aws_resiliencehub_app" "test" {
-  name = %[1]q
-  description = "Test app with S3 Terraform source"
+  name                    = %[1]q
+  description             = "Test app with S3 Terraform source"
   app_assessment_schedule = "Disabled"
 
   app_template {
@@ -289,31 +290,31 @@ resource "aws_resiliencehub_app" "test" {
       type = "AWS::Lambda::Function"
 
       logical_resource_id {
-        identifier = "MyLambda"
+        identifier            = "MyLambda"
         terraform_source_name = "my-terraform-source"
       }
     }
 
     app_component {
-      name = "appcommon"
-      type = "AWS::ResilienceHub::AppCommonAppComponent"
+      name           = "appcommon"
+      type           = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
 
     app_component {
-      name = "compute-tier"
-      type = "AWS::ResilienceHub::ComputeAppComponent"
+      name           = "compute-tier"
+      type           = "AWS::ResilienceHub::ComputeAppComponent"
       resource_names = ["lambda-function"]
     }
   }
 
   resource_mapping {
-    mapping_type = "Terraform"
-    resource_name = "lambda-function"
+    mapping_type          = "Terraform"
+    resource_name         = "lambda-function"
     terraform_source_name = "my-terraform-source"
 
     physical_resource_id {
-      type = "Native"
+      type       = "Native"
       identifier = "s3://${aws_s3_bucket.test.bucket}/terraform.tfstate"
     }
   }
@@ -326,8 +327,8 @@ resource "aws_resiliencehub_app" "test" {
 func testAccAppConfig_complete(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_app" "test" {
-  name = %[1]q
-  description = "Complete test app"
+  name                    = %[1]q
+  description             = "Complete test app"
   app_assessment_schedule = "Daily"
 
   app_template {
@@ -338,7 +339,7 @@ resource "aws_resiliencehub_app" "test" {
       type = "AWS::Lambda::Function"
 
       logical_resource_id {
-        identifier = "MyLambda"
+        identifier         = "MyLambda"
         logical_stack_name = "my-stack"
       }
     }
@@ -347,32 +348,32 @@ resource "aws_resiliencehub_app" "test" {
       type = "AWS::RDS::DBInstance"
 
       logical_resource_id {
-        identifier = "MyDatabase"
+        identifier         = "MyDatabase"
         logical_stack_name = "my-stack"
       }
     }
 
     app_component {
-      name = "appcommon"
-      type = "AWS::ResilienceHub::AppCommonAppComponent"
+      name           = "appcommon"
+      type           = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
     app_component {
-      name = "compute-tier"
-      type = "AWS::ResilienceHub::ComputeAppComponent"
+      name           = "compute-tier"
+      type           = "AWS::ResilienceHub::ComputeAppComponent"
       resource_names = ["lambda-function"]
     }
 
     app_component {
-      name = "database-tier"
-      type = "AWS::ResilienceHub::DatabaseAppComponent"
+      name           = "database-tier"
+      type           = "AWS::ResilienceHub::DatabaseAppComponent"
       resource_names = ["database"]
     }
   }
 
   tags = {
     Environment = "test"
-    Purpose = "testing"
+    Purpose     = "testing"
   }
 }
 `, rName)
@@ -381,8 +382,8 @@ resource "aws_resiliencehub_app" "test" {
 func testAccAppConfig_updateTemplate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_app" "test" {
-  name = %[1]q
-  description = "Updated description"
+  name                    = %[1]q
+  description             = "Updated description"
   app_assessment_schedule = "Disabled"
 
   app_template {
@@ -393,20 +394,20 @@ resource "aws_resiliencehub_app" "test" {
       type = "AWS::Lambda::Function"
 
       logical_resource_id {
-        identifier = "UpdatedLambda"
+        identifier         = "UpdatedLambda"
         logical_stack_name = "updated-stack"
       }
     }
 
     app_component {
-      name = "appcommon"
-      type = "AWS::ResilienceHub::AppCommonAppComponent"
+      name           = "appcommon"
+      type           = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
 
     app_component {
-      name = "updated-compute-tier"
-      type = "AWS::ResilienceHub::ComputeAppComponent"
+      name           = "updated-compute-tier"
+      type           = "AWS::ResilienceHub::ComputeAppComponent"
       resource_names = ["updated-lambda"]
     }
   }
@@ -417,8 +418,8 @@ resource "aws_resiliencehub_app" "test" {
 func testAccAppConfig_updateResourceMapping(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_app" "test" {
-  name = %[1]q
-  description = "Updated description"
+  name                    = %[1]q
+  description             = "Updated description"
   app_assessment_schedule = "Disabled"
 
   app_template {
@@ -429,31 +430,31 @@ resource "aws_resiliencehub_app" "test" {
       type = "AWS::Lambda::Function"
 
       logical_resource_id {
-        identifier = "UpdatedLambda"
+        identifier            = "UpdatedLambda"
         terraform_source_name = "updated-terraform-source"
       }
     }
 
     app_component {
-      name = "appcommon"
-      type = "AWS::ResilienceHub::AppCommonAppComponent"
+      name           = "appcommon"
+      type           = "AWS::ResilienceHub::AppCommonAppComponent"
       resource_names = []
     }
 
     app_component {
-      name = "updated-compute-tier"
-      type = "AWS::ResilienceHub::ComputeAppComponent"
+      name           = "updated-compute-tier"
+      type           = "AWS::ResilienceHub::ComputeAppComponent"
       resource_names = ["updated-lambda"]
     }
   }
 
   resource_mapping {
-    mapping_type = "Terraform"
-    resource_name = "updated-lambda"
+    mapping_type          = "Terraform"
+    resource_name         = "updated-lambda"
     terraform_source_name = "updated-terraform-source"
 
     physical_resource_id {
-      type = "Native"
+      type       = "Native"
       identifier = "s3://updated-terraform-bucket/terraform.tfstate"
     }
   }
