@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"maps"
 	"slices"
@@ -3292,6 +3293,77 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 	}
 
 	return opts, nil
+}
+
+func findInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
+	input := ec2.DescribeInstancesInput{
+		InstanceIds: []string{id},
+	}
+
+	output, err := findInstance(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State.Name; state == awstypes.InstanceStateNameTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.InstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
+func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
+	var output []awstypes.Instance
+	for v, err := range listInstances(ctx, conn, input) {
+		if err != nil {
+			return nil, err
+		}
+		output = append(output, v)
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
+}
+
+// DescribeInstances is an "All-Or-Some" call.
+func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) iter.Seq2[awstypes.Instance, error] {
+	return func(yield func(awstypes.Instance, error) bool) {
+		pages := ec2.NewDescribeInstancesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+				yield(awstypes.Instance{}, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: &input,
+				})
+				return
+			}
+
+			if err != nil {
+				yield(awstypes.Instance{}, err)
+				return
+			}
+
+			for _, v := range page.Reservations {
+				for _, instance := range v.Instances {
+					if !yield(instance, nil) {
+						return
+					}
+				}
+			}
+		}
+	}
 }
 
 // startInstance starts an EC2 instance and waits for the instance to start.
