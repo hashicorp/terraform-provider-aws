@@ -93,7 +93,7 @@ This resource supports the following arguments:
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filter_group` over `branch_filter`.
 * `filter_group` - (Optional) Information about the webhook's trigger. See [filter_group](#filter_group) for details.
 * `scope_configuration` - (Optional) Scope configuration for global or organization webhooks. See [scope_configuration](#scope_configuration) for details.
-* `pull_request_build_policy` - (Optional) Defines comment-based approval requirements for triggering builds on pull requests. See [Pull Request Build Policy](#pull_request_build_policy) for details.
+* `pull_request_build_policy` - (Optional) Defines comment-based approval requirements for triggering builds on pull requests. See [pull_request_build_policy](#pull_request_build_policy) for details.
 
 ### filter_group
 
@@ -113,8 +113,8 @@ This resource supports the following arguments:
 
 ### pull_request_build_policy
 
-* `requires_comment_approval` - (Required) Specifies when comment-based approval is required before triggering a build on pull requests. Valid values for this parameter are: `DISABLED`, `ALL_PULL_REQUESTS`, and `FORK_PULL_REQUESTS`.
-* `approver_roles` - (Optional) List of repository roles that have approval privileges for pull request builds when comment approval is required. This field must be specified only when `requires_comment_approval` is not `DISABLED`. See the [AWS documentation](https://docs.aws.amazon.com/codebuild/latest/userguide/pull-request-build-policy.html#pull-request-build-policy.configuration) for its valid values and defaults.
+* `requires_comment_approval` - (Required) Specifies when comment-based approval is required before triggering a build on pull requests. Valid values are: `DISABLED`, `ALL_PULL_REQUESTS`, and `FORK_PULL_REQUESTS`.
+* `approver_roles` - (Optional) List of repository roles that have approval privileges for pull request builds when comment approval is required. This argument must be specified only when `requires_comment_approval` is not `DISABLED`. See the [AWS documentation](https://docs.aws.amazon.com/codebuild/latest/userguide/pull-request-build-policy.html#pull-request-build-policy.configuration) for valid values and defaults.
 
 ## Attribute Reference
 
