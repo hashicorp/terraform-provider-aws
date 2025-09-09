@@ -596,7 +596,7 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 
 			params.When = listresource.Before
 			for interceptor := range slices.Values(resultInterceptors) {
-				d := interceptor.Read(ctx, params)
+				d := interceptor.Read(ctx, params) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 				result.Diagnostics.Append(d...)
 				if d.HasError() {
 					result = list.ListResult{Diagnostics: result.Diagnostics}
@@ -620,7 +620,7 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 
 			params.When = listresource.After
 			for interceptor := range tfslices.BackwardValues(resultInterceptors) {
-				d := interceptor.Read(ctx, params)
+				d := interceptor.Read(ctx, params) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 				result.Diagnostics.Append(d...)
 				if d.HasError() {
 					result = list.ListResult{Diagnostics: result.Diagnostics}
