@@ -82,12 +82,31 @@ func (l *ListResourceWithSDKv2Resource) SetIdentity(ctx context.Context, client 
 				return err
 			}
 		default:
-			attributeValue := d.Get(v.Name()).(string)
-			if err := ident.Set(v.Name(), attributeValue); err != nil {
+			val, ok := getAttributeOk(d, attr.ResourceAttributeName())
+			if !ok {
+				continue
+			}
+			if err := identity.Set(attr.Name(), val); err != nil {
 				return err
 			}
 		}
 	}
 
 	return nil
+}
+
+type resourceData interface {
+	Id() string
+	GetOk(string) (any, bool)
+}
+
+func getAttributeOk(d resourceData, name string) (string, bool) {
+	if name == "id" {
+		return d.Id(), true
+	}
+	if v, ok := d.GetOk(name); !ok {
+		return "", false
+	} else {
+		return v.(string), true
+	}
 }
