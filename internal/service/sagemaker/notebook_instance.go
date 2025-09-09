@@ -420,23 +420,23 @@ func startNotebookInstance(ctx context.Context, conn *sagemaker.Client, id strin
 	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.StartNotebookInstance(ctx, startOpts)
 		if err != nil {
-			return tfresource.NonRetryableError(fmt.Errorf("starting: %s", err))
+			return tfresource.NonRetryableError(fmt.Errorf("starting: %w", err))
 		}
 
 		err = waitNotebookInstanceStarted(ctx, conn, id)
 		if err != nil {
-			return tfresource.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
+			return tfresource.RetryableError(fmt.Errorf("starting: waiting for completion: %w", err))
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("starting: %s", err)
+		return fmt.Errorf("starting: %w", err)
 	}
 
 	if err := waitNotebookInstanceInService(ctx, conn, id); err != nil {
-		return fmt.Errorf("starting: waiting to be in service: %s", err)
+		return fmt.Errorf("starting: waiting to be in service: %w", err)
 	}
 	return nil
 }
@@ -460,11 +460,11 @@ func stopNotebookInstance(ctx context.Context, conn *sagemaker.Client, id string
 	}
 
 	if _, err := conn.StopNotebookInstance(ctx, stopOpts); err != nil {
-		return fmt.Errorf("stopping: %s", err)
+		return fmt.Errorf("stopping: %w", err)
 	}
 
 	if err := waitNotebookInstanceStopped(ctx, conn, id); err != nil {
-		return fmt.Errorf("stopping: waiting for completion: %s", err)
+		return fmt.Errorf("stopping: waiting for completion: %w", err)
 	}
 
 	return nil
