@@ -153,7 +153,7 @@ func resourcePolicy() *schema.Resource {
 									},
 								},
 							},
-							"mode": {
+							names.AttrMode: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Computed:         true,
@@ -423,7 +423,7 @@ func predictiveScalingCustomizedMetricSpecificationSchema() *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"expression": {
+							names.AttrExpression: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -479,7 +479,7 @@ func predictiveScalingCustomizedMetricSpecificationSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Required: true,
 										},
-										"unit": {
+										names.AttrUnit: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -1174,7 +1174,7 @@ func expandPredictiveScalingPolicyConfiguration(tfMap map[string]any) *awstypes.
 		apiObject.MetricSpecifications = expandPredictiveScalingMetricSpecifications(v)
 	}
 
-	if v, ok := tfMap["mode"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 		apiObject.Mode = awstypes.PredictiveScalingMode(v)
 	}
 
@@ -1296,7 +1296,7 @@ func expandPredictiveScalingMetricDataQuery(tfMap map[string]any) *awstypes.Pred
 
 	apiObject := &awstypes.PredictiveScalingMetricDataQuery{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		apiObject.Expression = aws.String(v)
 	}
 
@@ -1334,7 +1334,7 @@ func expandPredictiveScalingMetricStat(tfMap map[string]any) *awstypes.Predictiv
 		apiObject.Stat = aws.String(v)
 	}
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		apiObject.Unit = aws.String(v)
 	}
 
@@ -1467,7 +1467,7 @@ func flattenPredictiveScalingPolicyConfiguration(apiObject *awstypes.PredictiveS
 
 	tfMap := map[string]any{
 		"max_capacity_breach_behavior": apiObject.MaxCapacityBreachBehavior,
-		"mode":                         apiObject.Mode,
+		names.AttrMode:                 apiObject.Mode,
 	}
 
 	if v := apiObject.MaxCapacityBuffer; v != nil {
@@ -1573,7 +1573,7 @@ func flattenPredictiveScalingMetricDataQuery(apiObject *awstypes.PredictiveScali
 	tfMap := map[string]any{}
 
 	if v := apiObject.Expression; v != nil {
-		tfMap["expression"] = aws.ToString(v)
+		tfMap[names.AttrExpression] = aws.ToString(v)
 	}
 
 	if v := apiObject.Id; v != nil {
@@ -1611,7 +1611,7 @@ func flattenPredictiveScalingMetricStat(apiObject *awstypes.PredictiveScalingMet
 	}
 
 	if v := apiObject.Unit; v != nil {
-		tfMap["unit"] = aws.ToString(v)
+		tfMap[names.AttrUnit] = aws.ToString(v)
 	}
 
 	return tfMap
