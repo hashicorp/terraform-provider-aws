@@ -14,12 +14,17 @@ import (
 func TestValidFunctionName(t *testing.T) {
 	t.Parallel()
 
+	fullARNPrefix := "arn:aws:lambda:us-west-2:123456789012:function:" //lintignore:AWSAT003,AWSAT005
+	partialARNPrefix := "123456789012:function:"
 	validNames := []string{
 		"arn:aws:lambda:us-west-2:123456789012:function:ThumbNail",            //lintignore:AWSAT003,AWSAT005
 		"arn:aws-us-gov:lambda:us-west-2:123456789012:function:ThumbNail",     //lintignore:AWSAT003,AWSAT005
 		"arn:aws-us-gov:lambda:us-gov-west-1:123456789012:function:ThumbNail", //lintignore:AWSAT003,AWSAT005
+		fullARNPrefix + strings.Repeat("F", 64),
+		partialARNPrefix + strings.Repeat("F", 64),
 		"FunctionName",
 		"function-name",
+		strings.Repeat("F", 64),
 	}
 	for _, v := range validNames {
 		_, errors := tflambda.ValidFunctionName()(v, names.AttrName)
@@ -35,6 +40,9 @@ func TestValidFunctionName(t *testing.T) {
 		"arn:aws:lambda:us-west-2:123456789012:function:TooLoooooo" + //lintignore:AWSAT003,AWSAT005
 			"ooooooooooooooooooooooooooooooooooooooooooooooooooooooo" +
 			"ooooooooooooooooongFunctionName",
+		fullARNPrefix + strings.Repeat("F", 65),
+		partialARNPrefix + strings.Repeat("F", 65),
+		strings.Repeat("F", 65),
 	}
 	for _, v := range invalidNames {
 		_, errors := tflambda.ValidFunctionName()(v, names.AttrName)
