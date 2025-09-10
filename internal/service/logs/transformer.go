@@ -304,6 +304,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 									"flattened_element": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.FlattenedElement](),
 										Optional:   true,
+										Computed:   true,
 									},
 									names.AttrKey: schema.StringAttribute{
 										Required: true,
