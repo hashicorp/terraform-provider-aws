@@ -18,6 +18,17 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newPublishMessageAction,
+			TypeName: "aws_sns_publish_message",
+			Name:     "Publish Message",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
