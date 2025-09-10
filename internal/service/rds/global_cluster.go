@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -131,6 +133,19 @@ func resourceGlobalCluster() *schema.Resource {
 				ConflictsWith: []string{names.AttrEngine},
 				RequiredWith:  []string{names.AttrForceDestroy},
 			},
+			"source_db_cluster_identifier_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				ConflictsWith: []string{"source_db_cluster_identifier"},
+				RequiredWith:  []string{names.AttrForceDestroy, "source_db_cluster_identifier_wo_version"},
+			},
+			"source_db_cluster_identifier_wo_version": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{names.AttrForceDestroy, "source_db_cluster_identifier_wo"},
+			},
 			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -171,6 +186,17 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
+	}
+
+	sourceClusterWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("source_db_cluster_identifier_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+	if sourceClusterWO != "" {
+		input.SourceDBClusterIdentifier = aws.String(sourceClusterWO)
+		input.Engine = nil
+		input.EngineVersion = nil
 	}
 
 	if v, ok := d.GetOk("source_db_cluster_identifier"); ok {
