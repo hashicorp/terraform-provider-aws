@@ -393,7 +393,7 @@ rules:
       include:
         - "/internal"
     patterns:
-      - pattern: 'if d.HasChangeExcept("tags_all") {...}'
+      - pattern: 'if d.HasChangeExcept(names.AttrTagsAll) {...}'
     severity: WARNING
 
   - id: unnecessary-literal-type-conversion
