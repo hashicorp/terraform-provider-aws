@@ -880,6 +880,11 @@ func resourceDeliveryStream() *schema.Resource {
 								ForceNew:     true,
 								ValidateFunc: verify.ValidARN,
 							},
+							"warehouse_location": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^s3://.*`), "must be a valid S3 URI"),
+							},
 							"cloudwatch_logging_options":      cloudWatchLoggingOptionsSchema(),
 							"destination_table_configuration": destinationTableConfigurationSchema(),
 							"processing_configuration":        processingConfigurationSchema(),
@@ -909,7 +914,7 @@ func resourceDeliveryStream() *schema.Resource {
 					ForceNew:      true,
 					Optional:      true,
 					MaxItems:      1,
-					ConflictsWith: []string{"msk_source_configuration", "server_side_encryption"},
+					ConflictsWith: []string{"msk_source_configuration", "database_source_configuration", "server_side_encryption"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"kinesis_stream_arn": {
@@ -927,12 +932,174 @@ func resourceDeliveryStream() *schema.Resource {
 						},
 					},
 				},
+				"database_source_configuration": {
+					Type:          schema.TypeList,
+					ForceNew:      true,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"kinesis_source_configuration", "msk_source_configuration", "server_side_encryption"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrEndpoint: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							"ssl_mode": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Default:  "Disabled",
+							},
+							"databases": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"include": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"exclude": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"tables": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"include": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"exclude": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"include": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"exclude": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"surrogate_keys": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"snapshot_watermark_table": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"database_source_authentication_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"secrets_manager_configuration": {
+											Type:     schema.TypeList,
+											Required: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"secret_arn": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													names.AttrRoleARN: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Optional: true,
+														ForceNew: true,
+														Default:  true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"database_source_vpc_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"vpc_endpoint_service_name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"msk_source_configuration": {
 					Type:          schema.TypeList,
 					ForceNew:      true,
 					Optional:      true,
 					MaxItems:      1,
-					ConflictsWith: []string{"kinesis_source_configuration", "server_side_encryption"},
+					ConflictsWith: []string{"kinesis_source_configuration", "database_source_configuration", "server_side_encryption"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"authentication_configuration": {
@@ -1240,7 +1407,7 @@ func resourceDeliveryStream() *schema.Resource {
 					Optional:         true,
 					MaxItems:         1,
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-					ConflictsWith:    []string{"kinesis_source_configuration", "msk_source_configuration"},
+					ConflictsWith:    []string{"kinesis_source_configuration", "msk_source_configuration", "database_source_configuration"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrEnabled: {
@@ -1499,6 +1666,9 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	} else if v, ok := d.GetOk("msk_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.DeliveryStreamType = types.DeliveryStreamTypeMSKAsSource
 		input.MSKSourceConfiguration = expandMSKSourceConfiguration(v.([]any)[0].(map[string]any))
+	} else if v, ok := d.GetOk("database_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DeliveryStreamType = types.DeliveryStreamTypeDatabaseAsSource
+		input.DatabaseSourceConfiguration = expandDatabaseSourceConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	switch v := destinationType(d.Get(names.AttrDestination).(string)); v {
@@ -1603,6 +1773,11 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 		if v := v.MSKSourceDescription; v != nil {
 			if err := d.Set("msk_source_configuration", []any{flattenMSKSourceDescription(v)}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting msk_source_configuration: %s", err)
+			}
+		}
+		if v := v.DatabaseSourceDescription; v != nil {
+			if err := d.Set("database_source_configuration", flattenDatabaseSourceDescription(v)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting database_source_configuration: %s", err)
 			}
 		}
 	}
@@ -1995,6 +2170,105 @@ func expandKinesisStreamSourceConfiguration(source map[string]any) *types.Kinesi
 	}
 
 	return configuration
+}
+
+func expandDatabaseSourceConfiguration(tfMap map[string]any) *types.DatabaseSourceConfiguration {
+	apiObject := &types.DatabaseSourceConfiguration{
+		Type:     types.DatabaseType(tfMap[names.AttrType].(string)),
+		Endpoint: aws.String(tfMap[names.AttrEndpoint].(string)),
+		Port:     aws.Int32(int32(tfMap[names.AttrPort].(int))),
+		SSLMode:  types.SSLMode(tfMap["ssl_mode"].(string)),
+	}
+
+	if v, ok := tfMap["databases"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Databases = expandDatabaseList(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["tables"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Tables = expandDatabaseTableList(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["columns"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Columns = expandDatabaseColumnList(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["surrogate_keys"].([]any); ok && len(v) > 0 {
+		apiObject.SurrogateKeys = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["snapshot_watermark_table"].(string); ok && v != "" {
+		apiObject.SnapshotWatermarkTable = aws.String(v)
+	}
+
+	if v, ok := tfMap["database_source_authentication_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DatabaseSourceAuthenticationConfiguration = expandDatabaseSourceAuthenticationConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["database_source_vpc_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DatabaseSourceVPCConfiguration = expandDatabaseSourceVPCConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandDatabaseList(tfMap map[string]any) *types.DatabaseList {
+	apiObject := &types.DatabaseList{}
+
+	if v, ok := tfMap["include"].([]any); ok && len(v) > 0 {
+		apiObject.Include = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["exclude"].([]any); ok && len(v) > 0 {
+		apiObject.Exclude = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
+func expandDatabaseTableList(tfMap map[string]any) *types.DatabaseTableList {
+	apiObject := &types.DatabaseTableList{}
+
+	if v, ok := tfMap["include"].([]any); ok && len(v) > 0 {
+		apiObject.Include = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["exclude"].([]any); ok && len(v) > 0 {
+		apiObject.Exclude = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
+func expandDatabaseColumnList(tfMap map[string]any) *types.DatabaseColumnList {
+	apiObject := &types.DatabaseColumnList{}
+
+	if v, ok := tfMap["include"].([]any); ok && len(v) > 0 {
+		apiObject.Include = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["exclude"].([]any); ok && len(v) > 0 {
+		apiObject.Exclude = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
+func expandDatabaseSourceAuthenticationConfiguration(tfMap map[string]any) *types.DatabaseSourceAuthenticationConfiguration {
+	apiObject := &types.DatabaseSourceAuthenticationConfiguration{}
+
+	if v, ok := tfMap["secrets_manager_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandDatabaseSourceVPCConfiguration(tfMap map[string]any) *types.DatabaseSourceVPCConfiguration {
+	apiObject := &types.DatabaseSourceVPCConfiguration{
+		VpcEndpointServiceName: aws.String(tfMap["vpc_endpoint_service_name"].(string)),
+	}
+
+	return apiObject
 }
 
 func expandS3DestinationConfiguration(tfList []any) *types.S3DestinationConfiguration {
@@ -2454,7 +2728,15 @@ func expandProcessorParameter(processorParameter map[string]any) types.Processor
 }
 
 func expandSecretsManagerConfiguration(tfMap map[string]any) *types.SecretsManagerConfiguration {
-	config := tfMap["secrets_manager_configuration"].([]any)
+	var config []any
+
+	// Handle both calling patterns
+	if v, ok := tfMap["secrets_manager_configuration"].([]any); ok {
+		config = v
+	} else {
+		// This means tfMap is already the secrets manager configuration
+		config = []any{tfMap}
+	}
 
 	if len(config) == 0 || config[0] == nil {
 		return nil
@@ -2553,6 +2835,10 @@ func expandIcebergDestinationConfiguration(tfMap map[string]any) *types.IcebergD
 		apiObject.AppendOnly = aws.Bool(v)
 	}
 
+	if warehouseLocation, ok := tfMap["warehouse_location"].(string); ok && warehouseLocation != "" {
+		apiObject.CatalogConfiguration.WarehouseLocation = aws.String(warehouseLocation)
+	}
+
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
@@ -2593,6 +2879,9 @@ func expandIcebergDestinationUpdate(tfMap map[string]any) *types.IcebergDestinat
 	if catalogARN, ok := tfMap["catalog_arn"].(string); ok {
 		apiObject.CatalogConfiguration = &types.CatalogConfiguration{
 			CatalogARN: aws.String(catalogARN),
+		}
+		if warehouseLocation, ok := tfMap["warehouse_location"].(string); ok && warehouseLocation != "" {
+			apiObject.CatalogConfiguration.WarehouseLocation = aws.String(warehouseLocation)
 		}
 	}
 
@@ -4221,6 +4510,129 @@ func flattenKinesisStreamSourceDescription(desc *types.KinesisStreamSourceDescri
 	return []any{mDesc}
 }
 
+func flattenDatabaseSourceDescription(apiObject *types.DatabaseSourceDescription) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrType:     string(apiObject.Type),
+		names.AttrEndpoint: aws.ToString(apiObject.Endpoint),
+		names.AttrPort:     aws.ToInt32(apiObject.Port),
+		"ssl_mode":         string(apiObject.SSLMode),
+	}
+
+	if apiObject.Databases != nil {
+		tfMap["databases"] = []any{flattenDatabaseList(apiObject.Databases)}
+	}
+
+	if apiObject.Tables != nil {
+		tfMap["tables"] = []any{flattenDatabaseTableList(apiObject.Tables)}
+	}
+
+	if apiObject.Columns != nil {
+		tfMap["columns"] = []any{flattenDatabaseColumnList(apiObject.Columns)}
+	}
+
+	if apiObject.SurrogateKeys != nil {
+		tfMap["surrogate_keys"] = flex.FlattenStringValueList(apiObject.SurrogateKeys)
+	}
+
+	if apiObject.SnapshotWatermarkTable != nil {
+		tfMap["snapshot_watermark_table"] = aws.ToString(apiObject.SnapshotWatermarkTable)
+	}
+
+	if apiObject.DatabaseSourceAuthenticationConfiguration != nil {
+		tfMap["database_source_authentication_configuration"] = []any{flattenDatabaseSourceAuthenticationConfiguration(apiObject.DatabaseSourceAuthenticationConfiguration)}
+	}
+
+	if apiObject.DatabaseSourceVPCConfiguration != nil {
+		tfMap["database_source_vpc_configuration"] = []any{flattenDatabaseSourceVPCConfiguration(apiObject.DatabaseSourceVPCConfiguration)}
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDatabaseList(apiObject *types.DatabaseList) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.Include != nil {
+		tfMap["include"] = flex.FlattenStringValueList(apiObject.Include)
+	}
+
+	if apiObject.Exclude != nil {
+		tfMap["exclude"] = flex.FlattenStringValueList(apiObject.Exclude)
+	}
+
+	return tfMap
+}
+
+func flattenDatabaseTableList(apiObject *types.DatabaseTableList) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.Include != nil {
+		tfMap["include"] = flex.FlattenStringValueList(apiObject.Include)
+	}
+
+	if apiObject.Exclude != nil {
+		tfMap["exclude"] = flex.FlattenStringValueList(apiObject.Exclude)
+	}
+
+	return tfMap
+}
+
+func flattenDatabaseColumnList(apiObject *types.DatabaseColumnList) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.Include != nil {
+		tfMap["include"] = flex.FlattenStringValueList(apiObject.Include)
+	}
+
+	if apiObject.Exclude != nil {
+		tfMap["exclude"] = flex.FlattenStringValueList(apiObject.Exclude)
+	}
+
+	return tfMap
+}
+
+func flattenDatabaseSourceAuthenticationConfiguration(apiObject *types.DatabaseSourceAuthenticationConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.SecretsManagerConfiguration != nil {
+		tfMap["secrets_manager_configuration"] = flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration)
+	}
+
+	return tfMap
+}
+
+func flattenDatabaseSourceVPCConfiguration(apiObject *types.DatabaseSourceVPCConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"vpc_endpoint_service_name": aws.ToString(apiObject.VpcEndpointServiceName),
+	}
+
+	return tfMap
+}
+
 func flattenHTTPEndpointDestinationDescription(apiObject *types.HttpEndpointDestinationDescription, configuredAccessKey string) []any {
 	if apiObject == nil {
 		return []any{}
@@ -4257,7 +4669,6 @@ func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDes
 	}
 
 	tfMap := map[string]any{
-		"append_only":      aws.ToBool(apiObject.AppendOnly),
 		"catalog_arn":      aws.ToString(apiObject.CatalogConfiguration.CatalogARN),
 		"s3_configuration": flattenS3DestinationDescription(apiObject.S3DestinationDescription),
 		names.AttrRoleARN:  aws.ToString(apiObject.RoleARN),

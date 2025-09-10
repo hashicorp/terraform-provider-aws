@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Add `database_source_configuration` block to support database replication from MySQL and PostgreSQL
+```
+
+```release-note:enhancement
+data-source/aws_kinesis_firehose_delivery_stream: Add `database_source_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Add `warehouse_location` argument to `iceberg_configuration` block
+```

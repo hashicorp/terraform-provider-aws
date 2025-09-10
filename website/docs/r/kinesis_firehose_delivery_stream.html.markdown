@@ -699,6 +699,81 @@ resource "aws_kinesis_firehose_delivery_stream" "example_snowflake_destination" 
 }
 ```
 
+### Database Source with Iceberg Destination
+
+```terraform
+resource "aws_kinesis_firehose_delivery_stream" "database_to_iceberg" {
+  name        = "database-to-iceberg-stream"
+  destination = "iceberg"
+
+  database_source_configuration {
+    type     = "MySQL"
+    endpoint = "mysql.example.com"
+    port     = 3306
+    ssl_mode = "Disabled"
+
+    databases {
+      include = ["myapp_db", "analytics_db"]
+    }
+
+    tables {
+      include = ["users", "orders", "products"]
+      exclude = ["temp_*"]
+    }
+
+    columns {
+      exclude = ["password", "ssn"]
+    }
+
+    surrogate_keys = ["id", "created_at"]
+
+    database_source_authentication_configuration {
+      secrets_manager_configuration {
+        secret_arn = aws_secretsmanager_secret.db_credentials.arn
+        role_arn   = aws_iam_role.firehose_role.arn
+        enabled    = true
+      }
+    }
+
+    database_source_vpc_configuration {
+      vpc_endpoint_service_name = "com.amazonaws.vpce.us-east-1.vpce-svc-123456789abcdef01"
+    }
+  }
+
+  iceberg_configuration {
+    role_arn = aws_iam_role.firehose_role.arn
+
+    catalog_configuration {
+      catalog_arn        = aws_glue_catalog_database.iceberg_catalog.arn
+      warehouse_location = "s3://my-iceberg-warehouse/"
+    }
+
+    destination_table_configuration {
+      database_name = "iceberg_db"
+      table_name    = "replicated_data"
+      unique_keys   = ["id"]
+    }
+
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose_role.arn
+      bucket_arn = aws_s3_bucket.firehose_bucket.arn
+    }
+  }
+}
+
+resource "aws_secretsmanager_secret" "db_credentials" {
+  name = "database-credentials"
+}
+
+resource "aws_secretsmanager_secret_version" "db_credentials" {
+  secret_id = aws_secretsmanager_secret.db_credentials.id
+  secret_string = jsonencode({
+    username = "db_user"
+    password = "db_password"
+  })
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -708,6 +783,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `kinesis_source_configuration` - (Optional) The stream and role Amazon Resource Names (ARNs) for a Kinesis data stream used as the source for a delivery stream. See [`kinesis_source_configuration` block](#kinesis_source_configuration-block) below for details.
 * `msk_source_configuration` - (Optional) The configuration for the Amazon MSK cluster to be used as the source for a delivery stream. See [`msk_source_configuration` block](#msk_source_configuration-block) below for details.
+* `database_source_configuration` - (Optional) The configuration for a database source for a delivery stream. When using database sources, the destination must be `iceberg`. See [`database_source_configuration` block](#database_source_configuration-block) below for details.
 * `server_side_encryption` - (Optional) Encrypt at rest options. See [`server_side_encryption` block](#server_side_encryption-block) below for details.
 * `destination` - (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
 * `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. See [`elasticsearch_configuration` block](#elasticsearch_configuration-block) below for details.
@@ -737,6 +813,55 @@ The `msk_source_configuration` configuration block supports the following argume
 * `msk_cluster_arn` - (Required) The ARN of the Amazon MSK cluster.
 * `topic_name` - (Required) The topic name within the Amazon MSK cluster.
 * `read_from_timestamp` - (Optional) The start date and time in UTC for the offset position within your MSK topic from where Firehose begins to read. By default, this is set to timestamp when Firehose becomes Active. If you want to create a Firehose stream with Earliest start position set the `read_from_timestamp` parameter to Epoch (1970-01-01T00:00:00Z).
+
+### `database_source_configuration` block
+
+The `database_source_configuration` configuration block supports the following arguments:
+
+* `type` - (Required) The type of database. Valid values: `MySQL`.
+* `endpoint` - (Required) The endpoint of the database.
+* `port` - (Required) The port of the database.
+* `ssl_mode` - (Optional) The SSL mode to use for the connection. Valid values: `Disabled`, `Preferred`, `Required`, `VerifyCA`, `VerifyFull`. Default is `Disabled`.
+* `databases` - (Optional) Configuration for filtering databases. See [`databases` block](#databases-block) below for details.
+* `tables` - (Optional) Configuration for filtering tables. See [`tables` block](#tables-block) below for details.
+* `columns` - (Optional) Configuration for filtering columns. See [`columns` block](#columns-block) below for details.
+* `surrogate_keys` - (Optional) List of column names to be used as surrogate keys for the tables.
+* `snapshot_watermark_table` - (Optional) The name of the table to use for watermarking during snapshot.
+* `database_source_authentication_configuration` - (Required) The authentication configuration for the database source. See [`database_source_authentication_configuration` block](#database_source_authentication_configuration-block) below for details.
+* `database_source_vpc_configuration` - (Optional) The VPC configuration for the database source. See [`database_source_vpc_configuration` block](#database_source_vpc_configuration-block) below for details.
+
+### `databases` block
+
+The `databases` configuration block supports the following arguments:
+
+* `include` - (Optional) List of database names to include.
+* `exclude` - (Optional) List of database names to exclude.
+
+### `tables` block
+
+The `tables` configuration block supports the following arguments:
+
+* `include` - (Optional) List of table names to include.
+* `exclude` - (Optional) List of table names to exclude.
+
+### `columns` block
+
+The `columns` configuration block supports the following arguments:
+
+* `include` - (Optional) List of column names to include.
+* `exclude` - (Optional) List of column names to exclude.
+
+### `database_source_authentication_configuration` block
+
+The `database_source_authentication_configuration` configuration block supports the following arguments:
+
+* `secrets_manager_configuration` - (Required) The Secrets Manager configuration for authentication. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details.
+
+### `database_source_vpc_configuration` block
+
+The `database_source_vpc_configuration` configuration block supports the following arguments:
+
+* `vpc_endpoint_service_name` - (Required) The name of the VPC endpoint service.
 
 ### `authentication_configuration` block
 

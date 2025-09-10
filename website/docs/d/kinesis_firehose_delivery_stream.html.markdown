@@ -33,5 +33,15 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ARN of the Kinesis Firehose Delivery Stream.
 * `arn` - ARN of the Kinesis Firehose Delivery Stream (same as `id`).
+* `database_source_configuration` - Configuration for database source. See [`database_source_configuration` block](#database_source_configuration-block) below for details.
+
+### `database_source_configuration` block
+
+The `database_source_configuration` configuration block exports the following attributes:
+
+* `type` - The type of database.
+* `endpoint` - The endpoint of the database.
+* `port` - The port of the database.
+* `ssl_mode` - The SSL mode used for the connection.
 
 [1]: https://aws.amazon.com/documentation/firehose/
