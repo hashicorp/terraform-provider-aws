@@ -258,7 +258,7 @@ func inviteMemberWaiter(ctx context.Context, accountID, detectorID string, timeo
 		out, err = conn.GetMembers(ctx, &input)
 
 		if err != nil {
-			return tfresource.NonRetryableError(fmt.Errorf("reading GuardDuty Member %q: %s", accountID, err))
+			return tfresource.NonRetryableError(fmt.Errorf("reading GuardDuty Member %q: %w", accountID, err))
 		}
 
 		retryable, err := memberInvited(out, accountID)

@@ -92,7 +92,7 @@ func resourceTable() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && (diff.HasChange("stream_enabled") || (diff.Get("stream_view_type") != "" && diff.HasChange("stream_view_type"))) {
 					if err := diff.SetNewComputed(names.AttrStreamARN); err != nil {
-						return fmt.Errorf("setting stream_arn to computed: %s", err)
+						return fmt.Errorf("setting stream_arn to computed: %w", err)
 					}
 				}
 				return nil
@@ -1446,11 +1446,11 @@ func cycleStreamEnabled(ctx context.Context, conn *dynamodb.Client, id string, s
 	_, err := conn.UpdateTable(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("cycling stream enabled: %s", err)
+		return fmt.Errorf("cycling stream enabled: %w", err)
 	}
 
 	if _, err := waitTableActive(ctx, conn, id, timeout); err != nil {
-		return fmt.Errorf("waiting for stream cycle: %s", err)
+		return fmt.Errorf("waiting for stream cycle: %w", err)
 	}
 
 	input.StreamSpecification = &awstypes.StreamSpecification{
@@ -1461,11 +1461,11 @@ func cycleStreamEnabled(ctx context.Context, conn *dynamodb.Client, id string, s
 	_, err = conn.UpdateTable(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("cycling stream enabled: %s", err)
+		return fmt.Errorf("cycling stream enabled: %w", err)
 	}
 
 	if _, err := waitTableActive(ctx, conn, id, timeout); err != nil {
-		return fmt.Errorf("waiting for stream cycle: %s", err)
+		return fmt.Errorf("waiting for stream cycle: %w", err)
 	}
 
 	return nil
@@ -1936,11 +1936,11 @@ func updateWarmThroughput(ctx context.Context, conn *dynamodb.Client, warmList [
 	}
 
 	if _, err := waitTableActive(ctx, conn, tableName, timeout); err != nil {
-		return fmt.Errorf("waiting for warm throughput: %s", err)
+		return fmt.Errorf("waiting for warm throughput: %w", err)
 	}
 
 	if err := waitTableWarmThroughputActive(ctx, conn, tableName, timeout); err != nil {
-		return fmt.Errorf("waiting for warm throughput: %s", err)
+		return fmt.Errorf("waiting for warm throughput: %w", err)
 	}
 
 	return nil
@@ -2388,7 +2388,7 @@ func enrichReplicas(ctx context.Context, conn *dynamodb.Client, arn, tableName s
 
 		newARN, err := arnForNewRegion(arn, tfMap["region_name"].(string))
 		if err != nil {
-			return nil, fmt.Errorf("creating new-region ARN: %s", err)
+			return nil, fmt.Errorf("creating new-region ARN: %w", err)
 		}
 		tfMap[names.AttrARN] = newARN
 
