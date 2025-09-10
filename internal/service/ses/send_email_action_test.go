@@ -21,7 +21,8 @@ import (
 func TestAccSESSendEmailAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	testEmail := acctest.DefaultEmailAddress
+
+	testEmail := acctest.SkipIfEnvVarNotSet(t, "SES_VERIFIED_EMAIL")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -45,7 +46,8 @@ func TestAccSESSendEmailAction_basic(t *testing.T) {
 func TestAccSESSendEmailAction_htmlBody(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	testEmail := acctest.DefaultEmailAddress
+
+	testEmail := acctest.SkipIfEnvVarNotSet(t, "SES_VERIFIED_EMAIL")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -69,7 +71,8 @@ func TestAccSESSendEmailAction_htmlBody(t *testing.T) {
 func TestAccSESSendEmailAction_multipleRecipients(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	testEmail := acctest.DefaultEmailAddress
+
+	testEmail := acctest.SkipIfEnvVarNotSet(t, "SES_VERIFIED_EMAIL")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -121,13 +124,9 @@ func testAccCheckSendEmailAction(ctx context.Context, sourceEmail string) resour
 
 func testAccSendEmailActionConfig_basic(rName, testEmail string) string {
 	return fmt.Sprintf(`
-resource "aws_ses_email_identity" "test" {
-  email = %[2]q
-}
-
 action "aws_ses_send_email" "test" {
   config {
-    source       = aws_ses_email_identity.test.email
+    source       = %[2]q
     subject      = "Test Email from %[1]s"
     text_body    = "This is a test email sent from Terraform action test."
     to_addresses = [%[2]q]
@@ -148,13 +147,9 @@ resource "terraform_data" "trigger" {
 
 func testAccSendEmailActionConfig_htmlBody(rName, testEmail string) string {
 	return fmt.Sprintf(`
-resource "aws_ses_email_identity" "test" {
-  email = %[2]q
-}
-
 action "aws_ses_send_email" "test" {
   config {
-    source       = aws_ses_email_identity.test.email
+    source       = %[2]q
     subject      = "HTML Test Email from %[1]s"
     html_body    = "<h1>Test Email</h1><p>This is a <strong>test email</strong> sent from Terraform action test.</p>"
     to_addresses = [%[2]q]
@@ -175,13 +170,9 @@ resource "terraform_data" "trigger" {
 
 func testAccSendEmailActionConfig_multipleRecipients(rName, testEmail string) string {
 	return fmt.Sprintf(`
-resource "aws_ses_email_identity" "test" {
-  email = %[2]q
-}
-
 action "aws_ses_send_email" "test" {
   config {
-    source             = aws_ses_email_identity.test.email
+    source             = %[2]q
     subject            = "Multi-recipient Test Email from %[1]s"
     text_body          = "This is a test email sent to multiple recipients."
     to_addresses       = [%[2]q]
