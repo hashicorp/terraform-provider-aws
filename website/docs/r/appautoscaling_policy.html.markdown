@@ -196,6 +196,28 @@ resource "aws_appautoscaling_policy" "example" {
 }
 ```
 
+### Predictive Scaling
+
+```terraform
+resource "aws_appautoscaling_policy" "example" {
+  name               = %[1]q
+  resource_id        = aws_appautoscaling_target.example.resource_id
+  scalable_dimension = aws_appautoscaling_target.example.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.example.service_namespace
+  policy_type        = "PredictiveScaling"
+
+  predictive_scaling_policy_configuration {
+    metric_specification {
+      target_value = 40
+
+      predefined_metric_pair_specification {
+        predefined_metric_type = "ECSServiceMemoryUtilization"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
