@@ -307,10 +307,11 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s): %s", d.Id(), err)
 		}
+	}
 
-		if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
-		}
+	// An update (via transparent tagging) to tags can put the attachment into PENDING_NETWORK_UPDATE state.
+	if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
@@ -498,7 +499,7 @@ func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, 
 
 func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.VpcAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStateUpdating),
+		Pending: enum.Slice(awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStateUpdating),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
 		Timeout: timeout,
 		Refresh: statusVPCAttachment(ctx, conn, id),
