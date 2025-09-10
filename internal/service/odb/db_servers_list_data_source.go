@@ -1,14 +1,13 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -41,45 +40,9 @@ func (d *dataSourceDbServersList) Schema(ctx context.Context, req datasource.Sch
 				Description: "The cloud exadata infrastructure ID. Mandatory field.",
 			},
 			"db_servers": schema.ListAttribute{
-				Description: "List of database servers associated with cloud_exadata_infrastructure_id.",
-				Computed:    true,
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[dbServerForDbServersListDataSourceModel](ctx),
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"id":                      types.StringType,
-						"status":                  fwtypes.StringEnumType[odbtypes.ResourceStatus](),
-						"status_reason":           types.StringType,
-						"cpu_core_count":          types.Int32Type,
-						"cpu_core_count_per_node": types.Int32Type,
-						"db_server_patching_details": types.ObjectType{
-							AttrTypes: map[string]attr.Type{
-								"estimated_patch_duration": types.Int32Type,
-								"patching_status":          fwtypes.StringEnumType[odbtypes.DbServerPatchingStatus](),
-								"time_patching_ended":      types.StringType,
-								"time_patching_started":    types.StringType,
-							},
-						},
-						"display_name":               types.StringType,
-						"exadata_infrastructure_id":  types.StringType,
-						"ocid":                       types.StringType,
-						"oci_resource_anchor_name":   types.StringType,
-						"max_cpu_count":              types.Int32Type,
-						"max_db_node_storage_in_gbs": types.Int32Type,
-						"max_memory_in_gbs":          types.Int32Type,
-						"memory_size_in_gbs":         types.Int32Type,
-						"shape":                      types.StringType,
-						"vm_cluster_ids": types.ListType{
-							ElemType: types.StringType,
-						},
-						"compute_model": fwtypes.StringEnumType[odbtypes.ComputeModel](),
-						"autonomous_vm_cluster_ids": types.ListType{
-							ElemType: types.StringType,
-						},
-						"autonomous_virtual_machine_ids": types.ListType{
-							ElemType: types.StringType,
-						},
-					},
-				},
+				Computed:    true,
+				Description: "List of database servers associated with cloud_exadata_infrastructure_id.",
 			},
 		},
 	}
@@ -87,7 +50,6 @@ func (d *dataSourceDbServersList) Schema(ctx context.Context, req datasource.Sch
 
 // Data sources only have a read method.
 func (d *dataSourceDbServersList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
 	conn := d.Meta().ODBClient(ctx)
 	var data dbServersListDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -98,15 +60,18 @@ func (d *dataSourceDbServersList) Read(ctx context.Context, req datasource.ReadR
 	if !data.CloudExadataInfrastructureId.IsNull() && !data.CloudExadataInfrastructureId.IsUnknown() {
 		input.CloudExadataInfrastructureId = data.CloudExadataInfrastructureId.ValueStringPointer()
 	}
-	out, err := conn.ListDbServers(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDbServersList, "", err),
-			err.Error(),
-		)
-		return
+	paginator := odb.NewListDbServersPaginator(conn, &input)
+	var out odb.ListDbServersOutput
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDbServersList, "", err),
+				err.Error(),
+			)
+		}
+		out.DbServers = append(out.DbServers, page.DbServers...)
 	}
-
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,26 +86,26 @@ type dbServersListDataSourceModel struct {
 }
 
 type dbServerForDbServersListDataSourceModel struct {
-	DbServerId              types.String                                                                `tfsdk:"id"`
-	Status                  fwtypes.StringEnum[odbtypes.ResourceStatus]                                 `tfsdk:"status"`
-	StatusReason            types.String                                                                `tfsdk:"status_reason"`
-	CpuCoreCount            types.Int32                                                                 `tfsdk:"cpu_core_count"`
-	DbNodeStorageSizeInGBs  types.Int32                                                                 `tfsdk:"db_node_storage_size_in_gbs"`
-	DbServerPatchingDetails fwtypes.ObjectValueOf[dbNodePatchingDetailsForDbServersListDataSourceModel] `tfsdk:"db_server_patching_details"`
-	DisplayName             types.String                                                                `tfsdk:"display_name"`
-	ExadataInfrastructureId types.String                                                                `tfsdk:"exadata_infrastructure_id"`
-	OCID                    types.String                                                                `tfsdk:"ocid"`
-	OciResourceAnchorName   types.String                                                                `tfsdk:"oci_resource_anchor_name"`
-	MaxCpuCount             types.Int32                                                                 `tfsdk:"max_cpu_count"`
-	MaxDbNodeStorageInGBs   types.Int32                                                                 `tfsdk:"max_db_node_storage_in_gbs"`
-	MaxMemoryInGBs          types.Int32                                                                 `tfsdk:"max_memory_in_gbs"`
-	MemorySizeInGBs         types.Int32                                                                 `tfsdk:"memory_size_in_gbs"`
-	Shape                   types.String                                                                `tfsdk:"shape"`
-	//CreatedAt                   types.String                                                                `tfsdk:"created_at"`
-	VmClusterIds                fwtypes.ListOfString                      `tfsdk:"vm_cluster_ids"`
-	ComputeModel                fwtypes.StringEnum[odbtypes.ComputeModel] `tfsdk:"compute_model"`
-	AutonomousVmClusterIds      fwtypes.ListOfString                      `tfsdk:"autonomous_vm_cluster_ids"`
-	AutonomousVirtualMachineIds fwtypes.ListOfString                      `tfsdk:"autonomous_virtual_machine_ids"`
+	AutonomousVirtualMachineIds fwtypes.ListOfString                                                                  `tfsdk:"autonomous_virtual_machine_ids"`
+	AutonomousVmClusterIds      fwtypes.ListOfString                                                                  `tfsdk:"autonomous_vm_cluster_ids"`
+	ComputeModel                fwtypes.StringEnum[odbtypes.ComputeModel]                                             `tfsdk:"compute_model"`
+	CreatedAt                   timetypes.RFC3339                                                                     `tfsdk:"created_at"`
+	CpuCoreCount                types.Int32                                                                           `tfsdk:"cpu_core_count"`
+	DbNodeStorageSizeInGBs      types.Int32                                                                           `tfsdk:"db_node_storage_size_in_gbs"`
+	DbServerId                  types.String                                                                          `tfsdk:"id"`
+	DbServerPatchingDetails     fwtypes.ListNestedObjectValueOf[dbNodePatchingDetailsForDbServersListDataSourceModel] `tfsdk:"db_server_patching_details"`
+	DisplayName                 types.String                                                                          `tfsdk:"display_name"`
+	ExadataInfrastructureId     types.String                                                                          `tfsdk:"exadata_infrastructure_id"`
+	MaxCpuCount                 types.Int32                                                                           `tfsdk:"max_cpu_count"`
+	MaxDbNodeStorageInGBs       types.Int32                                                                           `tfsdk:"max_db_node_storage_in_gbs"`
+	MaxMemoryInGBs              types.Int32                                                                           `tfsdk:"max_memory_in_gbs"`
+	MemorySizeInGBs             types.Int32                                                                           `tfsdk:"memory_size_in_gbs"`
+	OCID                        types.String                                                                          `tfsdk:"ocid"`
+	OciResourceAnchorName       types.String                                                                          `tfsdk:"oci_resource_anchor_name"`
+	Shape                       types.String                                                                          `tfsdk:"shape"`
+	Status                      fwtypes.StringEnum[odbtypes.ResourceStatus]                                           `tfsdk:"status"`
+	StatusReason                types.String                                                                          `tfsdk:"status_reason"`
+	VmClusterIds                fwtypes.ListOfString                                                                  `tfsdk:"vm_cluster_ids"`
 }
 
 type dbNodePatchingDetailsForDbServersListDataSourceModel struct {

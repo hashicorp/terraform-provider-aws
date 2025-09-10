@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -6,22 +6,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"testing"
-
-	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,16 +35,12 @@ var dbServerDataSourceTestEntity = testDbServerDataSourceTest{
 // Acceptance test access AWS and cost money to run.
 func TestAccODBDbServerDataSource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	var dbServer odb.GetDbServerOutput
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTests.displayNamePrefix)
-
 	dataSourceName := "data.aws_odb_db_server.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -86,24 +81,19 @@ func (testDbServerDataSourceTest) testAccCheckDbServerExists(ctx context.Context
 func (testDbServerDataSourceTest) testAccCheckDbServersDestroyed(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
 			}
-
 			_, err := dbServerDataSourceTestEntity.findExaInfra(ctx, conn, rs.Primary.ID)
-
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServer, rs.Primary.ID, err)
 			}
-
 			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServer, rs.Primary.ID, errors.New("not destroyed"))
 		}
-
 		return nil
 	}
 }
@@ -112,7 +102,6 @@ func (testDbServerDataSourceTest) findExaInfra(ctx context.Context, conn *odb.Cl
 	input := odb.GetCloudExadataInfrastructureInput{
 		CloudExadataInfrastructureId: aws.String(id),
 	}
-
 	out, err := conn.GetCloudExadataInfrastructure(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
@@ -121,14 +110,12 @@ func (testDbServerDataSourceTest) findExaInfra(ctx context.Context, conn *odb.Cl
 				LastRequest: &input,
 			}
 		}
-
 		return nil, err
 	}
 
 	if out == nil || out.CloudExadataInfrastructure == nil {
 		return nil, tfresource.NewEmptyResultError(&input)
 	}
-
 	return out.CloudExadataInfrastructure, nil
 }
 
