@@ -35,7 +35,11 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arns` - A list that contains the Amazon Resource Names (ARNs) of the retrieved parameters.
-* `names` - A list that contains the names of the retrieved parameters.
-* `types` - A list that contains the types (`String`, `StringList`, or `SecureString`) of retrieved parameters.
-* `values` - A list that contains the retrieved parameter values. **Note:** This value is always marked as sensitive in the Terraform plan output, regardless of whether any retrieved parameters are of `SecureString` type. Use the [`nonsensitive` function](https://developer.hashicorp.com/terraform/language/functions/nonsensitive) to override the behavior at your own risk and discretion, if you are certain that there are no sensitive values being retrieved.
+* `parameters` - A list of the parameters discovered in the requested `path`.
+
+The elements of the `parameters` are exported with the following attributes:
+
+* `arn` - The Amazon Resource Name (ARN) of the retrieved parameter.
+* `name` - The name of the retrieved parameter.
+* `type` - The type (`String`, `StringList`, or `SecureString`) of the retrieved parameter.
+* `value` - The value of the retrieved parameter. **Note:** This value is always marked as sensitive in the Terraform plan output, regardless of whether any retrieved parameters are of `SecureString` type. Use the [`nonsensitive` function](https://developer.hashicorp.com/terraform/language/functions/nonsensitive) to override the behavior at your own risk and discretion, if you are certain that there are no sensitive values being retrieved.
