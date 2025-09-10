@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccControlTowerBaseline_basic(t *testing.T) {
+func testAccBaseline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -64,7 +64,7 @@ func TestAccControlTowerBaseline_basic(t *testing.T) {
 	})
 }
 
-func TestAccControlTowerBaseline_disappears(t *testing.T) {
+func testAccBaseline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
