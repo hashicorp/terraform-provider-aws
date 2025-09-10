@@ -38,265 +38,458 @@ func resourcePolicy() *schema.Resource {
 			StateContext: resourcePolicyImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"alarm_arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"alarm_arns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"policy_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.PolicyTypeStepScaling,
-				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"scalable_dimension": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"service_namespace": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"step_scaling_policy_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"adjustment_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AdjustmentType](),
-						},
-						"cooldown": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"metric_aggregation_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MetricAggregationType](),
-						},
-						"min_adjustment_magnitude": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"step_adjustment": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"metric_interval_lower_bound": {
-										Type:         nullable.TypeNullableFloat,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableFloat,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"policy_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.PolicyTypeStepScaling,
+					ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+				},
+				"predictive_scaling_policy_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_capacity_breach_behavior": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PredictiveScalingMaxCapacityBreachBehavior](),
+							},
+							"max_capacity_buffer": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 100),
+							},
+							"metric_specification": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"customized_capacity_metric_specification": predictiveScalingCustomizedMetricSpecificationSchema(),
+										"customized_load_metric_specification":     predictiveScalingCustomizedMetricSpecificationSchema(),
+										"customized_scaling_metric_specification":  predictiveScalingCustomizedMetricSpecificationSchema(),
+										"predefined_load_metric_specification": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"predefined_metric_type": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 128),
+													},
+													"resource_label": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1023),
+													},
+												},
+											},
+										},
+										"predefined_metric_pair_specification": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"predefined_metric_type": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 128),
+													},
+													"resource_label": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1023),
+													},
+												},
+											},
+										},
+										"predefined_scaling_metric_specification": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"predefined_metric_type": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 128),
+													},
+													"resource_label": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1023),
+													},
+												},
+											},
+										},
+										"target_value": {
+											Type:         nullable.TypeNullableFloat,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableFloat,
+										},
 									},
-									"metric_interval_upper_bound": {
-										Type:         nullable.TypeNullableFloat,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableFloat,
-									},
-									"scaling_adjustment": {
-										Type:     schema.TypeInt,
-										Required: true,
+								},
+							},
+							"mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PredictiveScalingMode](),
+							},
+							"scheduling_buffer_time": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(0, 3600),
+							},
+						},
+					},
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"scalable_dimension": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"service_namespace": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"step_scaling_policy_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"adjustment_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AdjustmentType](),
+							},
+							"cooldown": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"metric_aggregation_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MetricAggregationType](),
+							},
+							"min_adjustment_magnitude": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"step_adjustment": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metric_interval_lower_bound": {
+											Type:         nullable.TypeNullableFloat,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableFloat,
+										},
+										"metric_interval_upper_bound": {
+											Type:         nullable.TypeNullableFloat,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableFloat,
+										},
+										"scaling_adjustment": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"target_tracking_scaling_policy_configuration": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"customized_metric_specification": {
-							Type:          schema.TypeList,
-							MaxItems:      1,
-							Optional:      true,
-							ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.predefined_metric_specification"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dimensions": {
-										Type:          schema.TypeSet,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValue: {
-													Type:     schema.TypeString,
-													Required: true,
+				"target_tracking_scaling_policy_configuration": {
+					Type:     schema.TypeList,
+					MinItems: 1,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"customized_metric_specification": {
+								Type:          schema.TypeList,
+								MaxItems:      1,
+								Optional:      true,
+								ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.predefined_metric_specification"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dimensions": {
+											Type:          schema.TypeSet,
+											Optional:      true,
+											ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									names.AttrMetricName: {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
-									},
-									"metrics": {
-										Type:          schema.TypeSet,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.dimensions", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metric_name", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.namespace", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.statistic", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.unit"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrExpression: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(1, 2047),
-												},
-												names.AttrID: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 255),
-												},
-												"label": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(1, 2047),
-												},
-												"metric_stat": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"metric": {
-																Type:     schema.TypeList,
-																Required: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"dimensions": {
-																			Type:     schema.TypeSet,
-																			Optional: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					names.AttrName: {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-																					names.AttrValue: {
-																						Type:     schema.TypeString,
-																						Required: true,
+										names.AttrMetricName: {
+											Type:          schema.TypeString,
+											Optional:      true,
+											ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
+										},
+										"metrics": {
+											Type:          schema.TypeSet,
+											Optional:      true,
+											ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.dimensions", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metric_name", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.namespace", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.statistic", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.unit"},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrExpression: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringLenBetween(1, 2047),
+													},
+													names.AttrID: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 255),
+													},
+													"label": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringLenBetween(1, 2047),
+													},
+													"metric_stat": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"metric": {
+																	Type:     schema.TypeList,
+																	Required: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"dimensions": {
+																				Type:     schema.TypeSet,
+																				Optional: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						names.AttrName: {
+																							Type:     schema.TypeString,
+																							Required: true,
+																						},
+																						names.AttrValue: {
+																							Type:     schema.TypeString,
+																							Required: true,
+																						},
 																					},
 																				},
 																			},
-																		},
-																		names.AttrMetricName: {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		names.AttrNamespace: {
-																			Type:     schema.TypeString,
-																			Required: true,
+																			names.AttrMetricName: {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			names.AttrNamespace: {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"stat": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 100),
-															},
-															names.AttrUnit: {
-																Type:     schema.TypeString,
-																Optional: true,
+																"stat": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 100),
+																},
+																names.AttrUnit: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"return_data": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  true,
+													"return_data": {
+														Type:     schema.TypeBool,
+														Optional: true,
+														Default:  true,
+													},
 												},
 											},
 										},
-									},
-									names.AttrNamespace: {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
-									},
-									"statistic": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ConflictsWith:    []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
-										ValidateDiagFunc: enum.Validate[awstypes.MetricStatistic](),
-									},
-									names.AttrUnit: {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
-									},
-								},
-							},
-						},
-						"disable_scale_in": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"predefined_metric_specification": {
-							Type:          schema.TypeList,
-							MaxItems:      1,
-							Optional:      true,
-							ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"predefined_metric_type": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"resource_label": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1023),
+										names.AttrNamespace: {
+											Type:          schema.TypeString,
+											Optional:      true,
+											ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
+										},
+										"statistic": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ConflictsWith:    []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
+											ValidateDiagFunc: enum.Validate[awstypes.MetricStatistic](),
+										},
+										names.AttrUnit: {
+											Type:          schema.TypeString,
+											Optional:      true,
+											ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
+										},
 									},
 								},
 							},
+							"disable_scale_in": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								Optional: true,
+							},
+							"predefined_metric_specification": {
+								Type:          schema.TypeList,
+								MaxItems:      1,
+								Optional:      true,
+								ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"predefined_metric_type": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"resource_label": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 1023),
+										},
+									},
+								},
+							},
+							"scale_in_cooldown": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"scale_out_cooldown": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"target_value": {
+								Type:     schema.TypeFloat,
+								Required: true,
+							},
 						},
-						"scale_in_cooldown": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"scale_out_cooldown": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"target_value": {
-							Type:     schema.TypeFloat,
-							Required: true,
+					},
+				},
+			}
+		},
+	}
+}
+
+func predictiveScalingCustomizedMetricSpecificationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"metric_data_query": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"expression": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"label": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"metric_stat": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"metric": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"dimension": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrName: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																names.AttrValue: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+															},
+														},
+													},
+													names.AttrMetricName: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrNamespace: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"stat": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"unit": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"return_data": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
@@ -317,6 +510,10 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if v, ok := d.GetOk("policy_type"); ok {
 		input.PolicyType = awstypes.PolicyType(v.(string))
+	}
+
+	if v, ok := d.GetOk("predictive_scaling_policy_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.PredictiveScalingPolicyConfiguration = expandPredictiveScalingPolicyConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("scalable_dimension"); ok {
@@ -374,6 +571,13 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrARN, output.PolicyARN)
 	d.Set(names.AttrName, output.PolicyName)
 	d.Set("policy_type", output.PolicyType)
+	if output.PredictiveScalingPolicyConfiguration != nil {
+		if err := d.Set("predictive_scaling_policy_configuration", []any{flattenPredictiveScalingPolicyConfiguration(output.PredictiveScalingPolicyConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting predictive_scaling_policy_configuration: %s", err)
+		}
+	} else {
+		d.Set("predictive_scaling_policy_configuration", nil)
+	}
 	d.Set(names.AttrResourceID, output.ResourceId)
 	d.Set("scalable_dimension", output.ScalableDimension)
 	d.Set("service_namespace", output.ServiceNamespace)
@@ -949,4 +1153,574 @@ func flattenPredefinedMetricSpecification(apiObject *awstypes.PredefinedMetricSp
 	}
 
 	return []any{tfMap}
+}
+
+func expandPredictiveScalingPolicyConfiguration(tfMap map[string]any) *awstypes.PredictiveScalingPolicyConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingPolicyConfiguration{}
+
+	if v, ok := tfMap["max_capacity_breach_behavior"].(string); ok && v != "" {
+		apiObject.MaxCapacityBreachBehavior = awstypes.PredictiveScalingMaxCapacityBreachBehavior(v)
+	}
+
+	if v, ok := tfMap["max_capacity_buffer"].(int); ok && v != 0 {
+		apiObject.MaxCapacityBuffer = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["metric_specification"].([]any); ok && len(v) > 0 {
+		apiObject.MetricSpecifications = expandPredictiveScalingMetricSpecifications(v)
+	}
+
+	if v, ok := tfMap["mode"].(string); ok && v != "" {
+		apiObject.Mode = awstypes.PredictiveScalingMode(v)
+	}
+
+	if v, ok := tfMap["scheduling_buffer_time"].(int); ok && v != 0 {
+		apiObject.SchedulingBufferTime = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingMetricSpecifications(tfList []any) []awstypes.PredictiveScalingMetricSpecification {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.PredictiveScalingMetricSpecification
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := expandPredictiveScalingMetricSpecification(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandPredictiveScalingMetricSpecification(tfMap map[string]any) *awstypes.PredictiveScalingMetricSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingMetricSpecification{}
+
+	if v, ok := tfMap["customized_capacity_metric_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CustomizedCapacityMetricSpecification = expandPredictiveScalingCustomizedMetricSpecification(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["customized_load_metric_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CustomizedLoadMetricSpecification = expandPredictiveScalingCustomizedMetricSpecification(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["customized_scaling_metric_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CustomizedScalingMetricSpecification = expandPredictiveScalingCustomizedMetricSpecification(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["predefined_load_metric_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PredefinedLoadMetricSpecification = expandPredictiveScalingPredefinedLoadMetricSpecification(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["predefined_metric_pair_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PredefinedMetricPairSpecification = expandPredictiveScalingPredefinedMetricPairSpecification(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["predefined_scaling_metric_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PredefinedScalingMetricSpecification = expandPredictiveScalingPredefinedScalingMetricSpecification(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["target_value"].(string); ok {
+		if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+			apiObject.TargetValue = aws.Float64(v)
+		}
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingCustomizedMetricSpecification(tfMap map[string]any) *awstypes.PredictiveScalingCustomizedMetricSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingCustomizedMetricSpecification{}
+
+	if v, ok := tfMap["metric_data_query"].([]any); ok && len(v) > 0 {
+		apiObject.MetricDataQueries = expandPredictiveScalingMetricDataQueries(v)
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingMetricDataQueries(tfList []any) []awstypes.PredictiveScalingMetricDataQuery {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.PredictiveScalingMetricDataQuery
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := expandPredictiveScalingMetricDataQuery(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandPredictiveScalingMetricDataQuery(tfMap map[string]any) *awstypes.PredictiveScalingMetricDataQuery {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingMetricDataQuery{}
+
+	if v, ok := tfMap["expression"].(string); ok && v != "" {
+		apiObject.Expression = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
+		apiObject.Id = aws.String(v)
+	}
+
+	if v, ok := tfMap["label"].(string); ok && v != "" {
+		apiObject.Label = aws.String(v)
+	}
+
+	if v, ok := tfMap["metric_stat"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.MetricStat = expandPredictiveScalingMetricStat(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["return_data"]; ok {
+		apiObject.ReturnData = aws.Bool(v.(bool))
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingMetricStat(tfMap map[string]any) *awstypes.PredictiveScalingMetricStat {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingMetricStat{}
+
+	if v, ok := tfMap["metric"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Metric = expandPredictiveScalingMetric(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["stat"].(string); ok && v != "" {
+		apiObject.Stat = aws.String(v)
+	}
+
+	if v, ok := tfMap["unit"].(string); ok && v != "" {
+		apiObject.Unit = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingMetric(tfMap map[string]any) *awstypes.PredictiveScalingMetric {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingMetric{}
+
+	if v, ok := tfMap["dimension"].([]any); ok && len(v) > 0 {
+		apiObject.Dimensions = expandPredictiveScalingMetricDimensions(v)
+	}
+
+	if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
+		apiObject.MetricName = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+		apiObject.Namespace = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingMetricDimensions(tfList []any) []awstypes.PredictiveScalingMetricDimension {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.PredictiveScalingMetricDimension
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := expandPredictiveScalingMetricDimension(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandPredictiveScalingMetricDimension(tfMap map[string]any) *awstypes.PredictiveScalingMetricDimension {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingMetricDimension{}
+
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingPredefinedLoadMetricSpecification(tfMap map[string]any) *awstypes.PredictiveScalingPredefinedLoadMetricSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingPredefinedLoadMetricSpecification{}
+
+	if v, ok := tfMap["predefined_metric_type"].(string); ok && v != "" {
+		apiObject.PredefinedMetricType = aws.String(v)
+	}
+
+	if v, ok := tfMap["resource_label"].(string); ok && v != "" {
+		apiObject.ResourceLabel = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingPredefinedMetricPairSpecification(tfMap map[string]any) *awstypes.PredictiveScalingPredefinedMetricPairSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingPredefinedMetricPairSpecification{}
+
+	if v, ok := tfMap["predefined_metric_type"].(string); ok && v != "" {
+		apiObject.PredefinedMetricType = aws.String(v)
+	}
+
+	if v, ok := tfMap["resource_label"].(string); ok && v != "" {
+		apiObject.ResourceLabel = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPredictiveScalingPredefinedScalingMetricSpecification(tfMap map[string]any) *awstypes.PredictiveScalingPredefinedScalingMetricSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PredictiveScalingPredefinedScalingMetricSpecification{}
+
+	if v, ok := tfMap["predefined_metric_type"].(string); ok && v != "" {
+		apiObject.PredefinedMetricType = aws.String(v)
+	}
+
+	if v, ok := tfMap["resource_label"].(string); ok && v != "" {
+		apiObject.ResourceLabel = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenPredictiveScalingPolicyConfiguration(apiObject *awstypes.PredictiveScalingPolicyConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"max_capacity_breach_behavior": apiObject.MaxCapacityBreachBehavior,
+		"mode":                         apiObject.Mode,
+	}
+
+	if v := apiObject.MaxCapacityBuffer; v != nil {
+		tfMap["max_capacity_buffer"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MetricSpecifications; v != nil {
+		tfMap["metric_specification"] = flattenPredictiveScalingMetricSpecifications(v)
+	}
+
+	if v := apiObject.SchedulingBufferTime; v != nil {
+		tfMap["scheduling_buffer_time"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingMetricSpecifications(apiObjects []awstypes.PredictiveScalingMetricSpecification) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenPredictiveScalingMetricSpecification(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenPredictiveScalingMetricSpecification(apiObject *awstypes.PredictiveScalingMetricSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CustomizedCapacityMetricSpecification; v != nil {
+		tfMap["customized_capacity_metric_specification"] = []any{flattenPredictiveScalingCustomizedMetricSpecification(v)}
+	}
+
+	if v := apiObject.CustomizedLoadMetricSpecification; v != nil {
+		tfMap["customized_load_metric_specification"] = []any{flattenPredictiveScalingCustomizedMetricSpecification(v)}
+	}
+
+	if v := apiObject.CustomizedScalingMetricSpecification; v != nil {
+		tfMap["customized_scaling_metric_specification"] = []any{flattenPredictiveScalingCustomizedMetricSpecification(v)}
+	}
+
+	if v := apiObject.PredefinedLoadMetricSpecification; v != nil {
+		tfMap["predefined_load_metric_specification"] = []any{flattenPredictiveScalingPredefinedLoadMetricSpecification(v)}
+	}
+
+	if v := apiObject.PredefinedMetricPairSpecification; v != nil {
+		tfMap["predefined_metric_pair_specification"] = []any{flattenPredictiveScalingPredefinedMetricPairSpecification(v)}
+	}
+
+	if v := apiObject.PredefinedScalingMetricSpecification; v != nil {
+		tfMap["predefined_scaling_metric_specification"] = []any{flattenPredictiveScalingPredefinedScalingMetricSpecification(v)}
+	}
+
+	if apiObject.TargetValue != nil {
+		tfMap["target_value"] = flex.Float64ToStringValue(apiObject.TargetValue)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingCustomizedMetricSpecification(apiObject *awstypes.PredictiveScalingCustomizedMetricSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.MetricDataQueries; v != nil {
+		tfMap["metric_data_query"] = flattenPredictiveScalingMetricDataQueries(v)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingMetricDataQueries(apiObjects []awstypes.PredictiveScalingMetricDataQuery) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenPredictiveScalingMetricDataQuery(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenPredictiveScalingMetricDataQuery(apiObject *awstypes.PredictiveScalingMetricDataQuery) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Expression; v != nil {
+		tfMap["expression"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Id; v != nil {
+		tfMap[names.AttrID] = aws.ToString(v)
+	}
+
+	if v := apiObject.Label; v != nil {
+		tfMap["label"] = aws.ToString(v)
+	}
+
+	if v := apiObject.MetricStat; v != nil {
+		tfMap["metric_stat"] = []any{flattenPredictiveScalingMetricStat(v)}
+	}
+
+	if v := apiObject.ReturnData; v != nil {
+		tfMap["return_data"] = aws.ToBool(v)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingMetricStat(apiObject *awstypes.PredictiveScalingMetricStat) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Metric; v != nil {
+		tfMap["metric"] = []any{flattenPredictiveScalingMetric(v)}
+	}
+
+	if v := apiObject.Stat; v != nil {
+		tfMap["stat"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Unit; v != nil {
+		tfMap["unit"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingMetric(apiObject *awstypes.PredictiveScalingMetric) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Dimensions; v != nil {
+		tfMap["dimension"] = flattenPredictiveScalingMetricDimensions(v)
+	}
+
+	if v := apiObject.MetricName; v != nil {
+		tfMap[names.AttrMetricName] = aws.ToString(v)
+	}
+
+	if v := apiObject.Namespace; v != nil {
+		tfMap[names.AttrNamespace] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingMetricDimensions(apiObjects []awstypes.PredictiveScalingMetricDimension) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenPredictiveScalingMetricDimension(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenPredictiveScalingMetricDimension(apiObject *awstypes.PredictiveScalingMetricDimension) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap[names.AttrName] = aws.ToString(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap[names.AttrValue] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingPredefinedLoadMetricSpecification(apiObject *awstypes.PredictiveScalingPredefinedLoadMetricSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.PredefinedMetricType; v != nil {
+		tfMap["predefined_metric_type"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ResourceLabel; v != nil {
+		tfMap["resource_label"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingPredefinedMetricPairSpecification(apiObject *awstypes.PredictiveScalingPredefinedMetricPairSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.PredefinedMetricType; v != nil {
+		tfMap["predefined_metric_type"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ResourceLabel; v != nil {
+		tfMap["resource_label"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenPredictiveScalingPredefinedScalingMetricSpecification(apiObject *awstypes.PredictiveScalingPredefinedScalingMetricSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.PredefinedMetricType; v != nil {
+		tfMap["predefined_metric_type"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ResourceLabel; v != nil {
+		tfMap["resource_label"] = aws.ToString(v)
+	}
+
+	return tfMap
 }

@@ -117,14 +117,16 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "StepScaling"),
+					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_policy_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.cooldown", "60"),
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.step_adjustment.#", "1"),
@@ -133,6 +135,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 						"metric_interval_lower_bound": "0",
 						"metric_interval_upper_bound": "",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_scaling_policy_configuration.#", "0"),
 				),
 			},
 			{
