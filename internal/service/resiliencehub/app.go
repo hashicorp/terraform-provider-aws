@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -72,10 +73,8 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"app_assessment_schedule": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.OneOf("Daily", "Disabled"),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.AppAssessmentScheduleType](),
+				Optional:   true,
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -192,10 +191,8 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"mapping_type": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("CfnStack", "Resource", "Terraform", "EKS"),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.ResourceMappingType](),
+							Required:   true,
 						},
 						"resource_name": schema.StringAttribute{
 							Required: true,
@@ -216,10 +213,8 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 										Required: true,
 									},
 									names.AttrType: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.OneOf("Arn", "Native"),
-										},
+										CustomType: fwtypes.StringEnumType[awstypes.PhysicalIdentifierType](),
+										Required:   true,
 									},
 									names.AttrAWSAccountID: schema.StringAttribute{
 										Optional: true,
@@ -253,20 +248,13 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	name := plan.Name.ValueString()
 	input := &resiliencehub.CreateAppInput{
-		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
-	if !plan.Description.IsNull() {
-		input.Description = plan.Description.ValueStringPointer()
-	}
-
-	if !plan.AppAssessmentSchedule.IsNull() {
-		input.AssessmentSchedule = awstypes.AppAssessmentScheduleType(plan.AppAssessmentSchedule.ValueString())
-	}
-
-	if !plan.ResiliencyPolicyArn.IsNull() {
-		input.PolicyArn = plan.ResiliencyPolicyArn.ValueStringPointer()
+	// Use AutoFlex to expand plan to input
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	output, err := conn.CreateApp(ctx, input)
@@ -279,7 +267,12 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	plan.ID = types.StringValue(aws.ToString(output.App.AppArn))
-	plan.Arn = types.StringValue(aws.ToString(output.App.AppArn))
+
+	// Use AutoFlex to flatten the created app back to plan
+	resp.Diagnostics.Append(flex.Flatten(ctx, output.App, &plan, flex.WithNoIgnoredFieldNames())...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Put app template
 	if !plan.AppTemplate.IsNull() && !plan.AppTemplate.IsUnknown() {
@@ -373,41 +366,14 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	state.Arn = flex.StringToFramework(ctx, output.AppArn)
-	state.Description = flex.StringToFramework(ctx, output.Description)
-	state.Name = flex.StringToFramework(ctx, output.Name)
-	state.ResiliencyPolicyArn = flex.StringToFramework(ctx, output.PolicyArn)
-
-	// Handle drift status - ensure it's never unknown
-	if output.DriftStatus != "" {
-		state.DriftStatus = types.StringValue(string(output.DriftStatus))
-	} else {
-		state.DriftStatus = types.StringValue("NotChecked")
+	// Use AutoFlex to flatten output to state
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state, flex.WithNoIgnoredFieldNames())...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Handle assessment schedule - AWS returns empty string for "Disabled"
-	if output.AssessmentSchedule != "" {
-		scheduleValue := string(output.AssessmentSchedule)
-		// Normalize case - AWS might return uppercase
-		switch scheduleValue {
-		case "DISABLED":
-			scheduleValue = "Disabled"
-		case "DAILY":
-			scheduleValue = "Daily"
-		}
-		state.AppAssessmentSchedule = types.StringValue(scheduleValue)
-	} else {
-		// If AWS returns empty, it means "Disabled" was set but AWS doesn't return it
-		// Only set to "Disabled" if the current state has it (meaning it was configured)
-		var currentState appResourceModel
-		if req.State.Get(ctx, &currentState) == nil &&
-			!currentState.AppAssessmentSchedule.IsNull() &&
-			currentState.AppAssessmentSchedule.ValueString() == "Disabled" {
-			state.AppAssessmentSchedule = types.StringValue("Disabled")
-		} else {
-			state.AppAssessmentSchedule = types.StringNull()
-		}
-	}
+	// Ensure ID is set correctly for import
+	state.ID = types.StringValue(aws.ToString(output.AppArn))
 
 	// Read app template from draft version
 	templateInput := &resiliencehub.DescribeAppVersionTemplateInput{
@@ -508,22 +474,16 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	// Handle basic app property updates
 	if !plan.Description.Equal(state.Description) ||
-		!plan.AppAssessmentSchedule.Equal(state.AppAssessmentSchedule) ||
-		!plan.ResiliencyPolicyArn.Equal(state.ResiliencyPolicyArn) {
+		!plan.AssessmentSchedule.Equal(state.AssessmentSchedule) ||
+		!plan.PolicyArn.Equal(state.PolicyArn) {
 		input := &resiliencehub.UpdateAppInput{
 			AppArn: plan.ID.ValueStringPointer(),
 		}
 
-		if !plan.Description.IsNull() {
-			input.Description = plan.Description.ValueStringPointer()
-		}
-
-		if !plan.AppAssessmentSchedule.IsNull() {
-			input.AssessmentSchedule = awstypes.AppAssessmentScheduleType(plan.AppAssessmentSchedule.ValueString())
-		}
-
-		if !plan.ResiliencyPolicyArn.IsNull() {
-			input.PolicyArn = plan.ResiliencyPolicyArn.ValueStringPointer()
+		// Use AutoFlex to expand plan to input
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
 		_, err := conn.UpdateApp(ctx, input)
@@ -748,19 +708,19 @@ func statusApp(ctx context.Context, conn *resiliencehub.Client, arn string) retr
 
 // Data model
 type appResourceModel struct {
-	Arn                   types.String   `tfsdk:"arn"`
-	AppAssessmentSchedule types.String   `tfsdk:"app_assessment_schedule"`
-	AppTemplate           types.List     `tfsdk:"app_template"`
-	Description           types.String   `tfsdk:"description"`
-	DriftStatus           types.String   `tfsdk:"drift_status"`
-	ID                    types.String   `tfsdk:"id"`
-	Name                  types.String   `tfsdk:"name"`
-	Region                types.String   `tfsdk:"region"`
-	ResiliencyPolicyArn   types.String   `tfsdk:"resiliency_policy_arn"`
-	ResourceMapping       types.List     `tfsdk:"resource_mapping"`
-	Tags                  tftags.Map     `tfsdk:"tags"`
-	TagsAll               tftags.Map     `tfsdk:"tags_all"`
-	Timeouts              timeouts.Value `tfsdk:"timeouts"`
+	AppArn             types.String                                           `tfsdk:"arn"`
+	AssessmentSchedule fwtypes.StringEnum[awstypes.AppAssessmentScheduleType] `tfsdk:"app_assessment_schedule"`
+	AppTemplate        types.List                                             `tfsdk:"app_template" autoflex:"-"`
+	Description        types.String                                           `tfsdk:"description"`
+	DriftStatus        types.String                                           `tfsdk:"drift_status"`
+	ID                 types.String                                           `tfsdk:"id" autoflex:"-"`
+	Name               types.String                                           `tfsdk:"name"`
+	Region             types.String                                           `tfsdk:"region" autoflex:"-"`
+	PolicyArn          types.String                                           `tfsdk:"resiliency_policy_arn"`
+	ResourceMapping    types.List                                             `tfsdk:"resource_mapping" autoflex:"-"`
+	Tags               tftags.Map                                             `tfsdk:"tags" autoflex:"-"`
+	TagsAll            tftags.Map                                             `tfsdk:"tags_all" autoflex:"-"`
+	Timeouts           timeouts.Value                                         `tfsdk:"timeouts" autoflex:"-"`
 }
 
 // Helper functions for data transformation
@@ -981,17 +941,17 @@ type logicalResourceIdModel struct {
 }
 
 type resourceMappingModel struct {
-	MappingType         types.String `tfsdk:"mapping_type"`
-	ResourceName        types.String `tfsdk:"resource_name"`
-	TerraformSourceName types.String `tfsdk:"terraform_source_name"`
-	PhysicalResourceId  types.List   `tfsdk:"physical_resource_id"`
+	MappingType         fwtypes.StringEnum[awstypes.ResourceMappingType] `tfsdk:"mapping_type"`
+	ResourceName        types.String                                     `tfsdk:"resource_name"`
+	TerraformSourceName types.String                                     `tfsdk:"terraform_source_name"`
+	PhysicalResourceId  types.List                                       `tfsdk:"physical_resource_id"`
 }
 
 type physicalResourceIdModel struct {
-	Type         types.String `tfsdk:"type"`
-	Identifier   types.String `tfsdk:"identifier"`
-	AwsAccountId types.String `tfsdk:"aws_account_id"`
-	AwsRegion    types.String `tfsdk:"aws_region"`
+	Type         fwtypes.StringEnum[awstypes.PhysicalIdentifierType] `tfsdk:"type"`
+	Identifier   types.String                                        `tfsdk:"identifier"`
+	AwsAccountId types.String                                        `tfsdk:"aws_account_id"`
+	AwsRegion    types.String                                        `tfsdk:"aws_region"`
 }
 
 func (r *appResource) expandResourceMappingsToSources(ctx context.Context, tfList types.List) ([]string, []awstypes.TerraformSource, diag.Diagnostics) {
@@ -1011,10 +971,10 @@ func (r *appResource) expandResourceMappingsToSources(ctx context.Context, tfLis
 	var terraformSources []awstypes.TerraformSource
 
 	for _, mapping := range mappings {
-		mappingType := mapping.MappingType.ValueString()
+		mappingType := mapping.MappingType.ValueEnum()
 
 		switch mappingType {
-		case "Terraform":
+		case awstypes.ResourceMappingTypeTerraform:
 			// Terraform `tfstate` files in S3
 			if !mapping.PhysicalResourceId.IsNull() && !mapping.PhysicalResourceId.IsUnknown() {
 				var physicalIds []physicalResourceIdModel
@@ -1032,7 +992,7 @@ func (r *appResource) expandResourceMappingsToSources(ctx context.Context, tfLis
 					terraformSources = append(terraformSources, terraformSource)
 				}
 			}
-		case "Resource":
+		case awstypes.ResourceMappingTypeResource:
 			// Handle direct resource ARNs
 			if !mapping.PhysicalResourceId.IsNull() && !mapping.PhysicalResourceId.IsUnknown() {
 				var physicalIds []physicalResourceIdModel
@@ -1043,7 +1003,7 @@ func (r *appResource) expandResourceMappingsToSources(ctx context.Context, tfLis
 
 				if len(physicalIds) > 0 {
 					physicalId := physicalIds[0]
-					if physicalId.Type.ValueString() == "Arn" {
+					if physicalId.Type.ValueEnum() == awstypes.PhysicalIdentifierTypeArn {
 						sourceArns = append(sourceArns, physicalId.Identifier.ValueString())
 					}
 				}
@@ -1184,7 +1144,7 @@ func logicalResourceIdObjectType() types.ObjectType {
 func resourceMappingObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"mapping_type":          types.StringType,
+			"mapping_type":          fwtypes.StringEnumType[awstypes.ResourceMappingType](),
 			"resource_name":         types.StringType,
 			"terraform_source_name": types.StringType,
 			"physical_resource_id":  types.ListType{ElemType: physicalResourceIdObjectType()},
@@ -1195,7 +1155,7 @@ func resourceMappingObjectType() types.ObjectType {
 func physicalResourceIdObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			names.AttrType:         types.StringType,
+			names.AttrType:         fwtypes.StringEnumType[awstypes.PhysicalIdentifierType](),
 			names.AttrIdentifier:   types.StringType,
 			names.AttrAWSAccountID: types.StringType,
 			"aws_region":           types.StringType,
@@ -1433,19 +1393,19 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 			}
 
 			mappingModel := resourceMappingModel{
-				MappingType:         types.StringValue("Terraform"),
+				MappingType:         fwtypes.StringEnumValue(awstypes.ResourceMappingTypeTerraform),
 				ResourceName:        types.StringValue(resourceName),
 				TerraformSourceName: types.StringValue(terraformSourceName),
 			}
 
 			// Create physical resource ID with S3 URL
 			physicalId := physicalResourceIdModel{
-				Type:       types.StringValue("Native"),
+				Type:       fwtypes.StringEnumValue(awstypes.PhysicalIdentifierTypeNative),
 				Identifier: types.StringValue(s3Url),
 			}
 
 			physicalIdValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-				names.AttrType:         types.StringType,
+				names.AttrType:         fwtypes.StringEnumType[awstypes.PhysicalIdentifierType](),
 				names.AttrIdentifier:   types.StringType,
 				names.AttrAWSAccountID: types.StringType,
 				"aws_region":           types.StringType,
@@ -1457,7 +1417,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 
 			mappingModel.PhysicalResourceId = types.ListValueMust(types.ObjectType{
 				AttrTypes: map[string]attr.Type{
-					names.AttrType:         types.StringType,
+					names.AttrType:         fwtypes.StringEnumType[awstypes.PhysicalIdentifierType](),
 					names.AttrIdentifier:   types.StringType,
 					names.AttrAWSAccountID: types.StringType,
 					"aws_region":           types.StringType,
@@ -1465,7 +1425,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 			}, []attr.Value{physicalIdValue})
 
 			mappingValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-				"mapping_type":          types.StringType,
+				"mapping_type":          fwtypes.StringEnumType[awstypes.ResourceMappingType](),
 				"resource_name":         types.StringType,
 				"terraform_source_name": types.StringType,
 				"physical_resource_id":  types.ListType{ElemType: types.ObjectType{}},
@@ -1481,19 +1441,19 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 		// Handle source ARN (direct resource mapping)
 		if inputSource.SourceArn != nil {
 			mappingModel := resourceMappingModel{
-				MappingType:         types.StringValue("Resource"),
+				MappingType:         fwtypes.StringEnumValue(awstypes.ResourceMappingTypeResource),
 				ResourceName:        types.StringValue("resource"), // Default name
 				TerraformSourceName: types.StringNull(),
 			}
 
 			// Create physical resource ID with ARN
 			physicalId := physicalResourceIdModel{
-				Type:       types.StringValue("Arn"),
+				Type:       fwtypes.StringEnumValue(awstypes.PhysicalIdentifierTypeArn),
 				Identifier: types.StringValue(aws.ToString(inputSource.SourceArn)),
 			}
 
 			physicalIdValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-				names.AttrType:         types.StringType,
+				names.AttrType:         fwtypes.StringEnumType[awstypes.PhysicalIdentifierType](),
 				names.AttrIdentifier:   types.StringType,
 				names.AttrAWSAccountID: types.StringType,
 				"aws_region":           types.StringType,
@@ -1505,7 +1465,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 
 			mappingModel.PhysicalResourceId = types.ListValueMust(types.ObjectType{
 				AttrTypes: map[string]attr.Type{
-					names.AttrType:         types.StringType,
+					names.AttrType:         fwtypes.StringEnumType[awstypes.PhysicalIdentifierType](),
 					names.AttrIdentifier:   types.StringType,
 					names.AttrAWSAccountID: types.StringType,
 					"aws_region":           types.StringType,
@@ -1513,7 +1473,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 			}, []attr.Value{physicalIdValue})
 
 			mappingValue, convertDiags := types.ObjectValueFrom(ctx, map[string]attr.Type{
-				"mapping_type":          types.StringType,
+				"mapping_type":          fwtypes.StringEnumType[awstypes.ResourceMappingType](),
 				"resource_name":         types.StringType,
 				"terraform_source_name": types.StringType,
 				"physical_resource_id":  types.ListType{ElemType: types.ObjectType{}},
@@ -1533,7 +1493,7 @@ func (r *appResource) flattenResourceMappings(ctx context.Context, inputSources 
 
 	return types.ListValueMust(types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"mapping_type":          types.StringType,
+			"mapping_type":          fwtypes.StringEnumType[awstypes.ResourceMappingType](),
 			"resource_name":         types.StringType,
 			"terraform_source_name": types.StringType,
 			"physical_resource_id":  types.ListType{ElemType: types.ObjectType{}},
