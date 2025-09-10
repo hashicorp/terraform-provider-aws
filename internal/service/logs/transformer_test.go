@@ -97,6 +97,31 @@ func TestAccLogsTransformer_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLogsTransformer_disappears_logGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	var transformer cloudwatchlogs.GetTransformerOutput
+	resourceName := "aws_cloudwatch_log_transformer.test"
+	logGroupResourceName := "aws_cloudwatch_log_group.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformerConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccTransformerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
