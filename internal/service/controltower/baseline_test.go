@@ -32,6 +32,7 @@ func testAccBaseline_basic(t *testing.T) {
 	var baseline types.EnabledBaselineDetails
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_controltower_baseline.test"
+	baselineARN := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -44,7 +45,7 @@ func testAccBaseline_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBaselineConfig_basic(rName),
+				Config: testAccBaselineConfig_basic(rName, baselineARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBaselineExists(ctx, resourceName, &baseline),
 					resource.TestCheckResourceAttr(resourceName, "baseline_version", "4.0"),
@@ -73,6 +74,7 @@ func testAccBaseline_disappears(t *testing.T) {
 	var baseline types.EnabledBaselineDetails
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_controltower_baseline.test"
+	baselineARN := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -85,7 +87,7 @@ func testAccBaseline_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBaselineConfig_basic(rName),
+				Config: testAccBaselineConfig_basic(rName, baselineARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBaselineExists(ctx, resourceName, &baseline),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceBaseline, resourceName),
@@ -163,7 +165,7 @@ func testAccEnabledBaselinesPreCheck(ctx context.Context, t *testing.T) {
 
 // IdentityCenterEnabledBaselineArn needs to be updated based on user account to test
 // we can change it to data block when datasource is implemented.
-func testAccBaselineConfig_basic(rName string) string {
+func testAccBaselineConfig_basic(rName, baselineARN string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -182,11 +184,11 @@ resource "aws_controltower_baseline" "test" {
   target_identifier   = aws_organizations_organizational_unit.test.arn
   parameters {
     key   = "IdentityCenterEnabledBaselineArn"
-    value = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:enabledbaseline/XALULM96QHI525UOC"
+    value = %[2]q
   }
   depends_on = [
     aws_organizations_organizational_unit.test
   ]
 }
-`, rName)
+`, rName, baselineARN)
 }
