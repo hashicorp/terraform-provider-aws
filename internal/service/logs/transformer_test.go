@@ -212,6 +212,53 @@ func TestAccLogsTransformer_copyValue(t *testing.T) {
 	})
 }
 
+func TestAccLogsTransformer_csv(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var transformer cloudwatchlogs.GetTransformerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_transformer.test"
+	logGroupResourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformerConfig_csv(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.csv.0.columns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.csv.0.delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.csv.0.quote_character", "\""),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.csv.0.columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.csv.0.columns.0", "example1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.csv.0.columns.1", "example2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.csv.0.delimiter", ";"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.csv.0.quote_character", "'"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.csv.0.source", "source1"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+			},
+		},
+	})
+}
+
 func testAccTransformerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -338,6 +385,31 @@ resource "aws_cloudwatch_log_transformer" "test" {
 			overwrite_if_exists    = true
 		}
 	}
+  }
+}
+`, rName)
+}
+
+func testAccTransformerConfig_csv(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_transformer" "test" {
+  log_group_identifier = aws_cloudwatch_log_group.test.name
+
+  transformer_config {
+    csv {}
+  }
+  
+  transformer_config {
+    csv {
+		columns         = ["example1", "example2"]
+		delimiter       = ";"
+		quote_character = "'"
+		source          = "source1"
+    }
   }
 }
 `, rName)
