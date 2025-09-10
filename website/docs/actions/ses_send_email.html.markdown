@@ -12,7 +12,7 @@ Sends an email using Amazon SES. This action allows for imperative email sending
 
 For information about Amazon SES, see the [Amazon SES Developer Guide](https://docs.aws.amazon.com/ses/latest/dg/). For specific information about sending emails, see the [SendEmail](https://docs.aws.amazon.com/ses/latest/APIReference/API_SendEmail.html) page in the Amazon SES API Reference.
 
-~> **Note:** Terraform Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
+~> **Note:** Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
 
 ~> **Note:** All email addresses used must be verified in Amazon SES or belong to a verified domain.
 
