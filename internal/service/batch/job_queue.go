@@ -581,7 +581,7 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 			var data jobQueueResourceModel
 
 			timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTimeouts))
-			obj, _ := newEmptyObject(timeoutsType)
+			obj, _ := newNullObject(timeoutsType)
 			data.Timeouts.Object = obj
 
 			typ, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTags))
@@ -647,7 +647,7 @@ type jobQueueListModel struct {
 	Region types.String `tfsdk:"region"`
 }
 
-func newEmptyObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
+func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
 	i, ok := typ.(attr.TypeWithAttributeTypes)
 	if !ok {
 		diags.AddError(
@@ -661,16 +661,8 @@ func newEmptyObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagno
 	}
 
 	attrTypes := i.AttributeTypes()
-	attrValues := make(map[string]attr.Value, len(attrTypes))
-	// TODO: only handles string types
-	for attrName := range attrTypes {
-		attrValues[attrName] = types.StringNull()
-	}
-	obj, d := basetypes.NewObjectValue(attrTypes, attrValues)
-	diags.Append(d...)
-	if d.HasError() {
-		return basetypes.ObjectValue{}, diags
-	}
+
+	obj = basetypes.NewObjectNull(attrTypes)
 
 	return obj, diags
 }
