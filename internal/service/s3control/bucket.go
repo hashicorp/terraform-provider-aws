@@ -32,6 +32,8 @@ const (
 
 // @SDKResource("aws_s3control_bucket", name="Bucket")
 // @Tags
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.13.0")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
