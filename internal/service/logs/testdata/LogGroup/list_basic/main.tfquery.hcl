@@ -3,6 +3,4 @@
 
 list "aws_cloudwatch_log_group" "test" {
   provider = aws
-
-  include_resource = true
 }

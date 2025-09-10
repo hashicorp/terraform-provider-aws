@@ -44,6 +44,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -4296,6 +4297,7 @@ type instanceListResource struct {
 
 type logGroupListResourceModel struct {
 	framework.WithRegionModel
+	Filters customListFilters `tfsdk:"filter"`
 }
 
 // ListResourceConfigSchema defines the schema for the List configuration
@@ -4303,6 +4305,9 @@ type logGroupListResourceModel struct {
 func (l *instanceListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: customListFiltersBlock(ctx),
+		},
 	}
 }
 
@@ -4318,9 +4323,28 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 		}
 	}
 
+	var input ec2.DescribeInstancesInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
+	// If no instance-state filter is set, default to all states except terminated and shutting-down
+	if !slices.ContainsFunc(input.Filters, func(i awstypes.Filter) bool {
+		return aws.ToString(i.Name) == "instance-state-name" || aws.ToString(i.Name) == "instance-state-code"
+	}) {
+		states := enum.Slice(slices.DeleteFunc(enum.EnumValues[awstypes.InstanceStateName](), func(s awstypes.InstanceStateName) bool {
+			return s == awstypes.InstanceStateNameTerminated || s == awstypes.InstanceStateNameShuttingDown
+		})...)
+		input.Filters = append(input.Filters, awstypes.Filter{
+			Name:   aws.String("instance-state-name"),
+			Values: states,
+		})
+	}
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
-		var input ec2.DescribeInstancesInput
+
 		for output, err := range listInstances(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)

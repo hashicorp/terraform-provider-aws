@@ -3,4 +3,11 @@
 
 list "aws_instance" "test" {
   provider = aws
+
+  config {
+    filter {
+      name   = "instance-state-name"
+      values = ["stopped"]
+    }
+  }
 }
