@@ -205,44 +205,6 @@ rules:
           ...
     severity: WARNING
 
-  - id: helper-schema-TimeoutError-check-doesnt-return-output
-    languages: [go]
-    message: If the retry.RetryContext() or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
-    paths:
-      exclude:
-        - "*_test.go"
-      include:
-        - "/internal"
-    patterns:
-      - pattern-either:
-          - patterns:
-              - pattern: |
-                  if isResourceTimeoutError($ERR) {
-                    _, $ERR = $CONN.$FUNC(...)
-                  }
-              - pattern-not-inside: |
-                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-          - patterns:
-              - pattern: |
-                  if tfresource.TimedOut($ERR) {
-                    _, $ERR = $CONN.$FUNC(...)
-                  }
-              - pattern-not-inside: |
-                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-    severity: WARNING
-
   - id: is-not-found-error
     languages: [go]
     message: Check for retry.NotFoundError errors with tfresource.NotFound()
