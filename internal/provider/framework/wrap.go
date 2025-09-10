@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -394,15 +395,18 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags))
 	}
 
+	inner, _ := spec.Factory(context.TODO())
+
 	if len(spec.Identity.Attributes) > 0 {
 		interceptors = append(interceptors, newIdentityInterceptor(spec.Identity.Attributes))
+		if v, ok := inner.(framework.Identityer); ok {
+			v.SetIdentitySpec(spec.Identity)
+		}
 	}
-
-	inner, _ := spec.Factory(context.TODO())
 
 	if spec.Import.WrappedImport {
 		if v, ok := inner.(framework.ImportByIdentityer); ok {
-			v.SetIdentitySpec(spec.Identity, spec.Import)
+			v.SetImportSpec(spec.Import)
 		}
 		// If the resource does not implement framework.ImportByIdentityer,
 		// it will be caught by `validateResourceSchemas`, so we can ignore it here.
@@ -637,7 +641,7 @@ func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.Ident
 	}
 }
 
-type wrappedListResource struct {
+type wrappedListResourceFramework struct {
 	inner              list.ListResourceWithConfigure
 	meta               *conns.AWSClient
 	servicePackageName string
@@ -645,7 +649,9 @@ type wrappedListResource struct {
 	interceptors       interceptorInvocations
 }
 
-func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
+var _ list.ListResourceWithConfigure = &wrappedListResourceFramework{}
+
+func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
 	var interceptors interceptorInvocations
 
 	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
@@ -655,24 +661,19 @@ func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, 
 
 	inner := spec.Factory()
 
-	// TODO: This should not just be on importable resource types.
-	// * Separate setting Identity spec and Import spec
-	if v, ok := inner.(framework.ImportByIdentityer); ok {
-		v.SetIdentitySpec(spec.Identity, inttypes.FrameworkImport{})
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
 	}
 
-	//set SDKv2 specific specifications
-	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+	if v, ok := inner.(framework.Lister); ok {
+		v.AppendResultInterceptor(listresource.IdentityInterceptor(spec.Identity.Attributes))
+
 		if !tfunique.IsHandleNil(spec.Tags) {
-			v.SetTagsSpec(spec.Tags)
+			v.AppendResultInterceptor(listresource.TagsInterceptor(spec.Tags))
 		}
 	}
 
-	if v, ok := inner.(inttypes.SDKv2Identityer); ok {
-		v.AddIdentity(spec.Identity.Attributes)
-	}
-
-	return &wrappedListResource{
+	return &wrappedListResourceFramework{
 		inner:              inner,
 		servicePackageName: servicePackageName,
 		spec:               spec,
@@ -681,7 +682,7 @@ func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, 
 }
 
 // context is run on all wrapped methods before any interceptors.
-func (w *wrappedListResource) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var overrideRegion string
 
@@ -714,7 +715,7 @@ func (w *wrappedListResource) context(ctx context.Context, getAttribute getAttri
 	return ctx, diags
 }
 
-func (w *wrappedListResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+func (w *wrappedListResourceFramework) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
 		w.meta = v
 	}
@@ -728,7 +729,7 @@ func (w *wrappedListResource) Configure(ctx context.Context, request resource.Co
 	w.inner.Configure(ctx, request, response)
 }
 
-func (w *wrappedListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (w *wrappedListResourceFramework) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	stream.Results = tfiter.Null[list.ListResult]()
 
 	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
@@ -743,7 +744,7 @@ func (w *wrappedListResource) List(ctx context.Context, request list.ListRequest
 }
 
 // ListResourceConfigSchema implements list.ListResourceWithConfigure.
-func (w *wrappedListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+func (w *wrappedListResourceFramework) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	ctx, diags := w.context(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
@@ -754,12 +755,130 @@ func (w *wrappedListResource) ListResourceConfigSchema(ctx context.Context, requ
 }
 
 // Metadata implements list.ListResourceWithConfigure.
-func (w *wrappedListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (w *wrappedListResourceFramework) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	// This method does not call down to the inner resource.
 	response.TypeName = w.spec.TypeName
 }
 
-func (w *wrappedListResource) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+type wrappedListResourceSDK struct {
+	inner              list.ListResourceWithConfigure
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageSDKListResource
+	interceptors       interceptorInvocations
+}
+
+var _ list.ListResourceWithConfigure = &wrappedListResourceSDK{}
+var _ list.ListResourceWithRawV5Schemas = &wrappedListResourceSDK{}
+
+func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) list.ListResourceWithConfigure {
+	var interceptors interceptorInvocations
+
+	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+		interceptors = append(interceptors, listResourceInjectRegionAttribute())
+		// TODO: validate region in partition, needs tweaked error message
+	}
+
+	inner := spec.Factory()
+
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
+	}
+
+	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+		if !tfunique.IsHandleNil(spec.Tags) {
+			v.SetTagsSpec(spec.Tags)
+		}
+	}
+
+	return &wrappedListResourceSDK{
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
+	}
+}
+
+// Metadata implements list.ListResourceWithConfigure.
+func (w *wrappedListResourceSDK) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	// This method does not call down to the inner resource.
+	response.TypeName = w.spec.TypeName
+}
+
+// context is run on all wrapped methods before any interceptors.
+func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		if target.IsNull() || target.IsUnknown() {
+			overrideRegion = c.AwsConfig(ctx).Region
+		} else {
+			overrideRegion = target.ValueString()
+		}
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
+	if c != nil {
+		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	return ctx, diags
+}
+
+func (w *wrappedListResourceSDK) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedListResourceSDK) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	stream.Results = tfiter.Null[list.ListResult]()
+
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
+	if len(diags) > 0 {
+		stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
+	}
+	if diags.HasError() {
+		return
+	}
+
+	interceptedListHandler(w.interceptors.resourceList(), w.inner.List, w.meta)(ctx, request, stream)
+}
+
+// ListResourceConfigSchema implements list.ListResourceWithConfigure.
+func (w *wrappedListResourceSDK) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	interceptedHandler(w.interceptors.resourceListResourceConfigSchema(), w.inner.ListResourceConfigSchema, listResourceConfigSchemaHasError, w.meta)(ctx, request, response)
+}
+
+func (w *wrappedListResourceSDK) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
 	if v, ok := w.inner.(list.ListResourceWithRawV5Schemas); ok {
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {

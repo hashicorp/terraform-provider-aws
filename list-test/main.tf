@@ -1,6 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 provider "aws" {
- 	region = "us-west-2"
-    profile = "provider5"
+  region  = "us-west-2"
+  profile = "provider5"
 }
 
 resource "aws_batch_job_queue" "test" {
@@ -27,7 +30,7 @@ resource "aws_batch_compute_environment" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "batch_service" {
-  name = "list-test-batch-service"
+  name_prefix = "tf-test-list-batch-service"
 
   assume_role_policy = <<EOF
 {
@@ -51,7 +54,7 @@ resource "aws_iam_role_policy_attachment" "batch_service" {
 }
 
 resource "aws_iam_role" "ecs_instance" {
-  name = "list-test-ecs-instance"
+  name_prefix = "tf-test-list-ecs-instance"
 
   assume_role_policy = <<EOF
 {
@@ -77,4 +80,38 @@ resource "aws_iam_role_policy_attachment" "ecs_instance" {
 resource "aws_iam_instance_profile" "ecs_instance" {
   name = aws_iam_role.ecs_instance.name
   role = aws_iam_role_policy_attachment.ecs_instance.role
+}
+
+resource "aws_instance" "no_name" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
+  instance_type = "t4g.nano"
+}
+
+resource "aws_instance" "named" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
+  instance_type = "t4g.nano"
+
+  tags = {
+    Name = "list-test"
+  }
+}
+
+data "aws_ami" "amzn2-ami-minimal-hvm-ebs-arm64" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
+  }
 }

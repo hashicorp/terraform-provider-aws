@@ -6,22 +6,24 @@ package framework
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type ListResourceWithSDKv2Resource struct {
-	resource           *schema.Resource
-	identityAttributes []inttypes.IdentityAttribute
-	identity           *schema.ResourceIdentity
+	resourceSchema *schema.Resource
+	identitySpec   inttypes.Identity
+	identitySchema *schema.ResourceIdentity
 }
 
-func (l *ListResourceWithSDKv2Resource) AddIdentity(attrs []inttypes.IdentityAttribute) {
+func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Identity) {
 	out := make(map[string]*schema.Schema)
-	for _, v := range attrs {
+	for _, v := range identitySpec.Attributes {
 		out[v.Name()] = &schema.Schema{
 			Type: schema.TypeString,
 		}
@@ -32,27 +34,23 @@ func (l *ListResourceWithSDKv2Resource) AddIdentity(attrs []inttypes.IdentityAtt
 		}
 	}
 
-	identity := schema.ResourceIdentity{
+	identitySchema := schema.ResourceIdentity{
 		SchemaFunc: func() map[string]*schema.Schema {
 			return out
 		},
 	}
 
-	l.identity = &identity
-	l.resource.Identity = &identity
-	l.identityAttributes = attrs
+	l.identitySchema = &identitySchema
+	l.resourceSchema.Identity = &identitySchema
+	l.identitySpec = identitySpec
 }
 
 func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
-	response.ProtoV5Schema = l.resource.ProtoSchema(ctx)()
-	response.ProtoV5IdentitySchema = l.resource.ProtoIdentitySchema(ctx)()
+	response.ProtoV5Schema = l.resourceSchema.ProtoSchema(ctx)()
+	response.ProtoV5IdentitySchema = l.resourceSchema.ProtoIdentitySchema(ctx)()
 }
 
-func (l *ListResourceWithSDKv2Resource) GetResource() *schema.Resource {
-	return l.resource
-}
-
-func (l *ListResourceWithSDKv2Resource) SetResource(resource *schema.Resource) {
+func (l *ListResourceWithSDKv2Resource) SetResourceSchema(resource *schema.Resource) {
 	// Add region attribute if it does not exit
 	if _, ok := resource.SchemaMap()[names.AttrRegion]; !ok {
 		resource.SchemaMap()[names.AttrRegion] = &schema.Schema{
@@ -62,32 +60,107 @@ func (l *ListResourceWithSDKv2Resource) SetResource(resource *schema.Resource) {
 		}
 	}
 
-	l.resource = resource
+	l.resourceSchema = resource
 }
 
-func (l *ListResourceWithSDKv2Resource) SetIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
-	ident, err := d.Identity()
+func (l *ListResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
+	return l.resourceSchema.Data(&terraform.InstanceState{})
+}
+
+func (l *ListResourceWithSDKv2Resource) setResourceIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
+	identity, err := d.Identity()
 	if err != nil {
 		return err
 	}
 
-	for _, v := range l.identityAttributes {
-		switch v.Name() {
-		case names.AttrRegion:
-			if err := ident.Set(v.Name(), client.Region(ctx)); err != nil {
-				return err
-			}
+	for _, attr := range l.identitySpec.Attributes {
+		switch attr.Name() {
 		case names.AttrAccountID:
-			if err := ident.Set(v.Name(), client.AccountID(ctx)); err != nil {
+			if err := identity.Set(attr.Name(), client.AccountID(ctx)); err != nil {
 				return err
 			}
+
+		case names.AttrRegion:
+			if err := identity.Set(attr.Name(), client.Region(ctx)); err != nil {
+				return err
+			}
+
 		default:
-			attributeValue := d.Get(v.Name()).(string)
-			if err := ident.Set(v.Name(), attributeValue); err != nil {
+			val, ok := getAttributeOk(d, attr.ResourceAttributeName())
+			if !ok {
+				continue
+			}
+			if err := identity.Set(attr.Name(), val); err != nil {
 				return err
 			}
 		}
 	}
 
 	return nil
+}
+
+type resourceData interface {
+	Id() string
+	GetOk(string) (any, bool)
+}
+
+func getAttributeOk(d resourceData, name string) (string, bool) {
+	if name == "id" {
+		return d.Id(), true
+	}
+	if v, ok := d.GetOk(name); !ok {
+		return "", false
+	} else {
+		return v.(string), true
+	}
+}
+
+func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
+	err := l.setResourceIdentity(ctx, awsClient, rd)
+	if err != nil {
+		result.Diagnostics.Append(diag.NewErrorDiagnostic(
+			"Error Listing Remote Resources",
+			"An unexpected error occurred setting resource identity. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"Error:"+err.Error(),
+		))
+		return
+	}
+
+	tfTypeIdentity, err := rd.TfTypeIdentityState()
+	if err != nil {
+		result.Diagnostics.Append(diag.NewErrorDiagnostic(
+			"Error Listing Remote Resources",
+			"An unexpected error occurred converting identity state. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"Error:"+err.Error(),
+		))
+		return
+	}
+
+	result.Diagnostics.Append(result.Identity.Set(ctx, *tfTypeIdentity)...)
+	if result.Diagnostics.HasError() {
+		return
+	}
+
+	if includeResource {
+		tfTypeResource, err := rd.TfTypeResourceState()
+		if err != nil {
+			result.Diagnostics.Append(diag.NewErrorDiagnostic(
+				"Error Listing Remote Resources",
+				"An unexpected error occurred converting resource state. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					"Error:"+err.Error(),
+			))
+			return
+		}
+
+		result.Diagnostics.Append(result.Resource.Set(ctx, *tfTypeResource)...)
+		if result.Diagnostics.HasError() {
+			return
+		}
+	}
 }

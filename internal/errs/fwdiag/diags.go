@@ -65,11 +65,12 @@ func NewListResultErrorDiagnostic(err error) list.ListResult {
 		Diagnostics: diag.Diagnostics{
 			diag.NewErrorDiagnostic(
 				"Error Listing Remote Resources",
-				fmt.Sprintf("%s", err.Error()),
+				err.Error(),
 			),
 		},
 	}
 }
+
 func AsError[T any](x T, diags diag.Diagnostics) (T, error) {
 	return x, DiagnosticsError(diags)
 }

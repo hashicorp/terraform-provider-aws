@@ -41,7 +41,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "logs", fmt.Sprintf("log-group:%s", rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "logs", "log-group:{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "log_group_class", expectedLogGroupClass),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

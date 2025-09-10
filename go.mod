@@ -52,10 +52,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chime v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.26.1
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.32.0
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.28.2
-	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.65.2
+	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.1
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.250.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.251.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.4
@@ -187,7 +187,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/odb v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.1
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.25.2
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/osis v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.56.2
@@ -204,7 +204,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.93.2
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.105.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.106.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.58.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.31.2
@@ -261,7 +261,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.52.2
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.65.2
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.28.3
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.2
@@ -300,7 +300,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.21.0-alpha.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250902143515-144af2bf0d95
-	github.com/hashicorp/terraform-plugin-testing v1.13.3-0.20250903153441-d5311201d93c
+	github.com/hashicorp/terraform-plugin-testing v1.13.3-0.20250904181708-22e003c0645d
 	github.com/jaswdr/faker/v2 v2.8.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38

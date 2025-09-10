@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -30,15 +29,16 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_group", name="Log Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(destroyTakesT=true)
 // @Testing(existsTakesT=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.LogGroup")
-// @IdentityAttribute("name")
 // @Testing(idAttrDuplicates="name")
 // @Testing(preIdentityVersion="v6.7.0")
 func resourceGroup() *schema.Resource {
@@ -108,122 +108,12 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-var _ list.ListResourceWithRawV5Schemas = &logGroupListResource{}
-
-// @List("aws_cloudwatch_log_group", name="Log Group")
-func logGroupResourceAsListResource() list.ListResourceWithConfigure {
+// @SDKListResource("aws_cloudwatch_log_group")
+func logGroupResourceAsListResource() inttypes.ListResourceForSDK {
 	l := logGroupListResource{}
-	l.SetResource(resourceGroup())
+	l.SetResourceSchema(resourceGroup())
 
 	return &l
-}
-
-type logGroupListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type logGroupListResourceModel struct {
-	framework.WithRegionModel
-}
-
-// ListResourceConfigSchema defines the schema for the List configuration
-// might be able to intercept or wrap this for simplicity
-func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			names.AttrRegion: listschema.StringAttribute{
-				Optional: true,
-			},
-		},
-	}
-}
-
-func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.LogsClient(ctx)
-
-	var query logGroupListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		result := request.NewListResult(ctx)
-		for output, err := range listLogGroups(ctx, conn, &cloudwatchlogs.DescribeLogGroupsInput{}, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			logGroupResource := l.GetResource()
-			rd := logGroupResource.Data(&terraform.InstanceState{})
-			rd.SetId(aws.ToString(output.LogGroupName))
-			resourceGroupFlatten(ctx, rd, output)
-			result.DisplayName = fmt.Sprintf("%s: (%s)", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
-
-			// set tags
-			err = l.SetTags(ctx, awsClient, rd)
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			err := l.SetIdentity(ctx, awsClient, rd)
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			tfTypeResource, err := rd.TfTypeResourceState()
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			result.Diagnostics.Append(result.Resource.Set(ctx, *tfTypeResource)...)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			tfTypeIdentity, err := rd.TfTypeIdentityState()
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			result.Diagnostics.Append(result.Identity.Set(ctx, *tfTypeIdentity)...)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
-}
-
-func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
-	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
-	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
-	d.Set("log_group_class", lg.LogGroupClass)
-	d.Set(names.AttrName, lg.LogGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
-	d.Set("retention_in_days", lg.RetentionInDays)
-	// Support in-place update of non-refreshable attribute.
-	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -283,14 +173,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
-	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
-	d.Set("log_group_class", lg.LogGroupClass)
-	d.Set(names.AttrName, lg.LogGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
-	d.Set("retention_in_days", lg.RetentionInDays)
-	// Support in-place update of non-refreshable attribute.
-	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+	resourceGroupFlatten(ctx, d, *lg)
 
 	return diags
 }
@@ -428,4 +311,84 @@ func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 			}
 		}
 	}
+}
+
+var _ inttypes.ListResourceForSDK = &logGroupListResource{}
+
+type logGroupListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type logGroupListResourceModel struct {
+	framework.WithRegionModel
+}
+
+// ListResourceConfigSchema defines the schema for the List configuration
+// might be able to intercept or wrap this for simplicity
+func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+	}
+}
+
+func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.LogsClient(ctx)
+
+	var query logGroupListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		result := request.NewListResult(ctx)
+		var input cloudwatchlogs.DescribeLogGroupsInput
+		for output, err := range listLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			rd := l.ResourceData()
+			rd.SetId(aws.ToString(output.LogGroupName))
+			resourceGroupFlatten(ctx, rd, output)
+
+			// set tags
+			err = l.SetTags(ctx, awsClient, rd)
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			result.DisplayName = aws.ToString(output.LogGroupName)
+
+			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
+	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
+	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
+	d.Set("log_group_class", lg.LogGroupClass)
+	d.Set(names.AttrName, lg.LogGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
+	d.Set("retention_in_days", lg.RetentionInDays)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 }

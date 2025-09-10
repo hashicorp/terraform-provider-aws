@@ -412,18 +412,25 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			}
 		}
 
+		if v, ok := sp.(conns.ServicePackageWithFrameworkListResources); ok {
+			for listResourceSpec := range v.FrameworkListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResourceFramework(listResourceSpec, servicePackageName)
+				})
+			}
+		}
+		if v, ok := sp.(conns.ServicePackageWithSDKListResources); ok {
+			for listResourceSpec := range v.SDKListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResourceSDK(listResourceSpec, servicePackageName)
+				})
+			}
+		}
+
 		for _, resourceSpec := range sp.FrameworkResources(ctx) {
 			p.resources = append(p.resources, func() resource.Resource { //nolint:contextcheck // must be a func()
 				return newWrappedResource(resourceSpec, servicePackageName)
 			})
-		}
-
-		if v, ok := sp.(conns.ServicePackageWithFrameworkListResource); ok {
-			for _, listResourceSpec := range v.FrameworkListResources(ctx) {
-				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
-					return newWrappedListResource(listResourceSpec, servicePackageName)
-				})
-			}
 		}
 	}
 }

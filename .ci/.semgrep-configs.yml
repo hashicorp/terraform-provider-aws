@@ -6,7 +6,7 @@ rules:
     message: "Config funcs should follow form testAcc<Resource>Config_<testDetail>"
     paths:
       include:
-        - internal/service/**/*_test.go
+        - "/internal/service/**/*_test.go"
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"
@@ -28,7 +28,7 @@ rules:
     message: "Config funcs should follow form testAcc<Resource>Config_<testDetail>"
     paths:
       include:
-        - internal/service/**/*_test.go
+        - "/internal/service/**/*_test.go"
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY: acctest.ConfigCompose(..., $VALUE, ...), ...}"
@@ -49,7 +49,7 @@ rules:
     message: "Config funcs should not begin with 'testAccCheck'"
     paths:
       include:
-        - internal/service/**/*_test.go
+        - "/internal/service/**/*_test.go"
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"
@@ -69,7 +69,7 @@ rules:
     message: "Config funcs should not begin with 'testAccCheck'"
     paths:
       include:
-        - internal/service/**/*_test.go
+        - "/internal/service/**/*_test.go"
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY: acctest.ConfigCompose(..., $VALUE, ...), ...}"
