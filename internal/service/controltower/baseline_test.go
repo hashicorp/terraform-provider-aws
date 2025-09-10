@@ -98,6 +98,61 @@ func testAccBaseline_disappears(t *testing.T) {
 	})
 }
 
+func testAccBaseline_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var baseline types.EnabledBaselineDetails
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_controltower_baseline.test"
+	baselineARN := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
+			testAccEnabledBaselinesPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBaselineConfig_tags1(rName, baselineARN, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBaselineExists(ctx, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBaselineConfig_tags2(rName, baselineARN, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBaselineExists(ctx, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccLandingZoneConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBaselineExists(ctx, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
@@ -191,4 +246,71 @@ resource "aws_controltower_baseline" "test" {
   ]
 }
 `, rName, baselineARN)
+}
+
+func testAccBaselineConfig_tags1(rName, baselineARN, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+data "aws_organizations_organization" "current" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+
+resource "aws_controltower_baseline" "test" {
+  baseline_identifier = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}::baseline/17BSJV3IGJ2QSGA2"
+  baseline_version    = "4.0"
+  target_identifier   = aws_organizations_organizational_unit.test.arn
+  parameters {
+    key   = "IdentityCenterEnabledBaselineArn"
+    value = %[2]q
+  }
+
+  tags = {
+    %[3]q = %[4]q
+  }
+
+  depends_on = [
+    aws_organizations_organizational_unit.test
+  ]
+}
+`, rName, baselineARN, tagKey1, tagValue1)
+}
+
+func testAccBaselineConfig_tags2(rName, baselineARN, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+data "aws_organizations_organization" "current" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+
+resource "aws_controltower_baseline" "test" {
+  baseline_identifier = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}::baseline/17BSJV3IGJ2QSGA2"
+  baseline_version    = "4.0"
+  target_identifier   = aws_organizations_organizational_unit.test.arn
+  parameters {
+    key   = "IdentityCenterEnabledBaselineArn"
+    value = %[2]q
+  }
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+
+  depends_on = [
+    aws_organizations_organizational_unit.test
+  ]
+}
+`, rName, baselineARN, tagKey1, tagValue1, tagKey2, tagValue2)
 }

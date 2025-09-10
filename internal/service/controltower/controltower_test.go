@@ -26,6 +26,7 @@ func TestAccControlTower_serial(t *testing.T) {
 		"Baseline": {
 			acctest.CtBasic:      testAccBaseline_basic,
 			acctest.CtDisappears: testAccBaseline_disappears,
+			"tags":               testAccBaseline_tags,
 		},
 	}
 
