@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLogsGroup_basic(t *testing.T) {
+func TestAccLogsLogGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -60,7 +60,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_nameGenerate(t *testing.T) {
+func TestAccLogsLogGroup_nameGenerate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -88,7 +88,7 @@ func TestAccLogsGroup_nameGenerate(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_namePrefix(t *testing.T) {
+func TestAccLogsLogGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -116,7 +116,7 @@ func TestAccLogsGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_disappears(t *testing.T) {
+func TestAccLogsLogGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -140,7 +140,7 @@ func TestAccLogsGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_kmsKey(t *testing.T) {
+func TestAccLogsLogGroup_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -184,7 +184,7 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_logGroupClass(t *testing.T) {
+func TestAccLogsLogGroup_logGroupClass(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -211,7 +211,7 @@ func TestAccLogsGroup_logGroupClass(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_retentionPolicy(t *testing.T) {
+func TestAccLogsLogGroup_retentionPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -253,7 +253,7 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_multiple(t *testing.T) {
+func TestAccLogsLogGroup_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -279,7 +279,7 @@ func TestAccLogsGroup_multiple(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_skipDestroy(t *testing.T) {
+func TestAccLogsLogGroup_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -302,7 +302,7 @@ func TestAccLogsGroup_skipDestroy(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_skipDestroyInconsistentPlan(t *testing.T) {
+func TestAccLogsLogGroup_skipDestroyInconsistentPlan(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -334,7 +334,7 @@ func TestAccLogsGroup_skipDestroyInconsistentPlan(t *testing.T) {
 
 // Test whether the log group is successfully created with the DELIVERY log group class when retention_in_days is set.
 // Even if retention_in_days is changed in the configuration, the diff should be suppressed and the plan should be empty.
-func TestAccLogsGroup_logGroupClassDELIVERY1(t *testing.T) {
+func TestAccLogsLogGroup_logGroupClassDELIVERY1(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -375,7 +375,7 @@ func TestAccLogsGroup_logGroupClassDELIVERY1(t *testing.T) {
 }
 
 // Test whether the log group is successfully created with the DELIVERY log group class when retention_in_days is not set.
-func TestAccLogsGroup_logGroupClassDELIVERY2(t *testing.T) {
+func TestAccLogsLogGroup_logGroupClassDELIVERY2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
