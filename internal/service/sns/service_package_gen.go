@@ -21,9 +21,9 @@ type servicePackage struct{}
 func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
 	return []*inttypes.ServicePackageAction{
 		{
-			Factory:  newPublishMessageAction,
-			TypeName: "aws_sns_publish_message",
-			Name:     "Publish Message",
+			Factory:  newPublishAction,
+			TypeName: "aws_sns_publish",
+			Name:     "Publish",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
