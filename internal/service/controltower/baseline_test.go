@@ -33,7 +33,7 @@ func TestAccControlTowerBaseline_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_controltower_baseline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
@@ -74,7 +74,7 @@ func TestAccControlTowerBaseline_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_controltower_baseline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
@@ -161,6 +161,8 @@ func testAccEnabledBaselinesPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+// IdentityCenterEnabledBaselineArn needs to be updated based on user account to test
+// we can change it to data block when datasource is implemented.
 func testAccBaselineConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}

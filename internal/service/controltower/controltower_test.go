@@ -23,6 +23,10 @@ func TestAccControlTower_serial(t *testing.T) {
 			acctest.CtDisappears: testAccControl_disappears,
 			"parameters":         testAccControl_parameters,
 		},
+		"Baseline": {
+			acctest.CtBasic:      TestAccControlTowerBaseline_basic,
+			acctest.CtDisappears: TestAccControlTowerBaseline_disappears,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
