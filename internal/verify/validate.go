@@ -421,26 +421,6 @@ func ValidStringIsJSONOrYAML(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-// ValidTypeStringNullableFloat provides custom error messaging for TypeString floats
-// Some arguments require a floating point value or an unspecified, empty field.
-func ValidTypeStringNullableFloat(v any, k string) (ws []string, es []error) {
-	value, ok := v.(string)
-	if !ok {
-		es = append(es, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	if value == "" {
-		return
-	}
-
-	if _, err := strconv.ParseFloat(value, 64); err != nil {
-		es = append(es, fmt.Errorf("%s: cannot parse '%s' as float: %w", k, value, err))
-	}
-
-	return
-}
-
 // ValidUTCTimestamp validates a string in UTC Format required by APIs including:
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
 // https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceToPointInTime.html

@@ -344,6 +344,11 @@ func Float64ToStringValue(v *float64) string {
 	return strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64)
 }
 
+// Float64ValueToString converts a Go float64 value to a string pointer.
+func Float64ValueToString(v float64) *string {
+	return aws.String(strconv.FormatFloat(v, 'f', -1, 64))
+}
+
 // IntValueToString converts a Go int value to a string pointer.
 func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
