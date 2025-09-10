@@ -541,6 +541,44 @@ func TestAccAppAutoScalingPolicy_predictiveScalingSimple(t *testing.T) {
 	})
 }
 
+func TestAccAppAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.ScalingPolicy
+	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
+	resourceName := "aws_appautoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_predictiveScalingCustom(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_type", "PredictiveScaling"),
+					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_policy_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_scaling_policy_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1339,6 +1377,108 @@ resource "aws_appautoscaling_policy" "test" {
 
       predefined_metric_pair_specification {
         predefined_metric_type = "ECSServiceMemoryUtilization"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPolicyConfig_predictiveScalingCustom(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<EOF
+[
+  {
+    "name": "busybox",
+    "image": "busybox:latest",
+    "cpu": 10,
+    "memory": 128,
+    "essential": true
+  }
+]
+EOF
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                            = aws_ecs_cluster.test.id
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 50
+  desired_count                      = 2
+  name                               = %[1]q
+  task_definition                    = aws_ecs_task_definition.test.arn
+}
+
+resource "aws_appautoscaling_target" "test" {
+  max_capacity       = 4
+  min_capacity       = 0
+  resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "test" {
+  name               = %[1]q
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+  policy_type        = "PredictiveScaling"
+
+  predictive_scaling_policy_configuration {
+    scheduling_buffer_time       = 600
+    max_capacity_breach_behavior = "HonorMaxCapacity"
+    mode                         = "ForecastAndScale"
+
+    metric_specification {
+      target_value = 50
+
+      customized_scaling_metric_specification {
+        metric_data_query {
+          id          = "scaling_metric"
+          label       = "MyCustomMetricLabel"
+          return_data = true
+
+          metric_stat {
+            metric {
+              namespace   = "MyNameSpace"
+              metric_name = "MyUtilizationMetric"
+
+              dimension {
+                name  = "MyOptionalMetricDimensionName"
+                value = "MyOptionalMetricDimensionValue"
+              }
+            }
+
+            stat = "Average"
+          }
+        }
+      }
+
+      customized_load_metric_specification {
+        metric_data_query {
+          id          = "load_metric"
+          return_data = true
+
+          metric_stat {
+            metric {
+              namespace   = "MyNameSpace"
+              metric_name = "MyLoadMetric"
+
+              dimension {
+                name  = "MyOptionalMetricDimensionName"
+                value = "MyOptionalMetricDimensionValue"
+              }
+            }
+
+            stat = "Sum"
+          }
+        }
       }
     }
   }

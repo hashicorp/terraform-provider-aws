@@ -1348,8 +1348,8 @@ func expandPredictiveScalingMetric(tfMap map[string]any) *awstypes.PredictiveSca
 
 	apiObject := &awstypes.PredictiveScalingMetric{}
 
-	if v, ok := tfMap["dimension"].([]any); ok && len(v) > 0 {
-		apiObject.Dimensions = expandPredictiveScalingMetricDimensions(v)
+	if v, ok := tfMap["dimension"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Dimensions = expandPredictiveScalingMetricDimensions(v.List())
 	}
 
 	if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
