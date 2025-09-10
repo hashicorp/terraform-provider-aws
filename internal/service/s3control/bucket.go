@@ -41,10 +41,6 @@ func resourceBucket() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketUpdate,
 		DeleteWithoutTimeout: resourceBucketDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
