@@ -12,7 +12,7 @@ Publishes a message to an Amazon SNS topic. This action allows for imperative me
 
 For information about Amazon SNS, see the [Amazon SNS Developer Guide](https://docs.aws.amazon.com/sns/latest/dg/). For specific information about publishing messages, see the [Publish](https://docs.aws.amazon.com/sns/latest/api/API_Publish.html) page in the Amazon SNS API Reference.
 
-~> **Note:** Terraform Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
+~> **Note:** Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
 
 ## Example Usage
 
