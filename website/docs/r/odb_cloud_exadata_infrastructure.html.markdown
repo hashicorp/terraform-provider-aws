@@ -3,12 +3,12 @@ subcategory: "Oracle Database@AWS"
 layout: "aws"
 page_title: "AWS: aws_odb_cloud_exadata_infrastructure"
 description: |-
-  Terraform resource for managing an Oracle Database@AWS.
+  Terraform resource for managing exadata infrastructure resource for Oracle Database@AWS.
 ---
 
 # Resource: aws_odb_cloud_exadata_infrastructure
 
-Terraform resource for creating Exadata Infrastructure resource in AWS for Oracle Database@AWS.
+Terraform resource for managing exadata infrastructure resource in AWS for Oracle Database@AWS.
 
 ## Example Usage
 
@@ -70,7 +70,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `customer_contacts_to_send_to_oci` - (Optional) The email addresses of contacts to receive notification from Oracle about maintenance updates for the Exadata infrastructure. Changing this will force terraform to create new resource.
-* `availability_zone`: The name of the Availability Zone (AZ) where the Exadata infrastructure is located. Changing this will force terraform to create new resource.
+* `availability_zone`: (Optional) The name of the Availability Zone (AZ) where the Exadata infrastructure is located. Changing this will force terraform to create new resource.
 * `database_server_type` - (Optional) The database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation. This is a mandatory parameter for Exadata.X11M system shape. Changing this will force terraform to create new resource.
 * `storage_server_type` - (Optional) The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation. This is a mandatory parameter for Exadata.X11M system shape. Changing this will force terraform to create new resource.
 * `tags` - (Optional) A map of tags to assign to the exadata infrastructure. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

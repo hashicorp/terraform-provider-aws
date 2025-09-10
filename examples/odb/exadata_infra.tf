@@ -1,4 +1,5 @@
-# Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
 
 # Exadata Infrastructure with customer managed maintenance window
 resource "aws_odb_cloud_exadata_infrastructure" "exa_infra_all_params" {

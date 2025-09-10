@@ -3,12 +3,12 @@ subcategory: "Oracle Database@AWS"
 layout: "AWS: aws_odb_cloud_exadata_infrastructure"
 page_title: "AWS: aws_odb_cloud_exadata_infrastructure"
 description: |-
-  Terraform data source for managing Exadata Infrastructure resource in AWS for Oracle Database@AWS.
+  Terraform data source for managing exadata infrastructure resource in AWS for Oracle Database@AWS.
 ---
 
 # Data Source: aws_odb_cloud_exadata_infrastructure
 
-Terraform data source for Exadata Infrastructure resource in AWS for Oracle Database@AWS.
+Terraform data source for exadata infrastructure resource in AWS for Oracle Database@AWS.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -24,16 +24,18 @@ data "aws_odb_cloud_exadata_infrastructure" "example" {
 
 ## Argument Reference
 
-The following arguments are optional:
+The following arguments are required:
 
 * `id` - (Required) The unique identifier of the Exadata infrastructure.
+
+The following arguments are optional:
+
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
 * `activated_storage_count` - The number of storage servers requested for the Exadata infrastructure.
 * `additional_storage_count` - The number of storage servers requested for the Exadata infrastructure.
 * `availability_zone` - The name of the Availability Zone (AZ) where the Exadata infrastructure is located.
@@ -70,3 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `database_server_type` - The database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.
 * `storage_server_type` - The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.
 * `maintenance_window` - The scheduling details of the maintenance window. Patching and system updates take place during the maintenance window.
+* `tags` - (Optional) A map of tags to assign to the exadata infrastructure. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
