@@ -10,9 +10,11 @@ description: |-
 
 Invokes an AWS Lambda function with the specified payload. This action allows for imperative invocation of Lambda functions with full control over invocation parameters.
 
-For information about AWS Lambda functions, see the [AWS Lambda Developer Guide][1]. For specific information about invoking Lambda functions, see the [Invoke][2] page in the AWS Lambda API Reference.
+For information about AWS Lambda functions, see the [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/). For specific information about invoking Lambda functions, see the [Invoke](https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html) page in the AWS Lambda API Reference.
 
-~> **NOTE:** This action directly invokes Lambda functions and can impact your AWS Lambda costs. Synchronous invocations will wait for the function to complete execution, while asynchronous invocations return immediately after the request is accepted.
+~> **Note:** Terraform Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
+
+~> **Note:** Synchronous invocations will wait for the function to complete execution, while asynchronous invocations return immediately after the request is _accepted_.
 
 ## Example Usage
 
@@ -217,6 +219,3 @@ This action supports the following arguments:
 * `log_type` - (Optional) Set to `Tail` to include the execution log in the response. Only applies to synchronous invocations (`RequestResponse` invocation type). Defaults to `None`. When set to `Tail`, the last 4 KB of the execution log is included in the response.
 * `payload` - (Required) JSON payload to send to the Lambda function. This should be a valid JSON string that represents the event data for your function. The payload size limit is 6 MB for synchronous invocations and 256 KB for asynchronous invocations.
 * `qualifier` - (Optional) Version or alias of the Lambda function to invoke. If not specified, the `$LATEST` version will be invoked. Can be a version number (e.g., `1`) or an alias (e.g., `PROD`).
-
-[1]: https://docs.aws.amazon.com/lambda/latest/dg/
-[2]: https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html
