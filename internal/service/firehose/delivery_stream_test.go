@@ -5854,10 +5854,10 @@ func TestAccFirehoseDeliveryStream_databaseSourceConfiguration(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
+			// nosemgrep: ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				// Database source requires actual database infrastructure and credentials
 				// Plan-only test validates schema and configuration parsing
-				// nosemgrep: ci.semgrep.acctest.checks.replace-planonly-checks
 				Config:             testAccDeliveryStreamConfig_databaseSourceConfiguration(rName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,

@@ -62,10 +62,10 @@ func TestAccFirehoseDeliveryStreamDataSource_databaseSourceConfiguration(t *test
 		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// nosemgrep: ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				// Database source requires actual database infrastructure and credentials
 				// Plan-only test validates schema and configuration parsing
-				// nosemgrep: ci.semgrep.acctest.checks.replace-planonly-checks
 				Config:             testAccDeliveryStreamDataSourceConfig_databaseSourceConfiguration(rName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
