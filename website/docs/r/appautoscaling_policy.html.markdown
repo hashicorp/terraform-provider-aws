@@ -200,7 +200,7 @@ resource "aws_appautoscaling_policy" "example" {
 
 ```terraform
 resource "aws_appautoscaling_policy" "example" {
-  name               = %[1]q
+  name               = "example-policy"
   resource_id        = aws_appautoscaling_target.example.resource_id
   scalable_dimension = aws_appautoscaling_target.example.scalable_dimension
   service_namespace  = aws_appautoscaling_target.example.service_namespace
