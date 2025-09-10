@@ -12,7 +12,7 @@ Invokes an AWS Lambda function with the specified payload. This action allows fo
 
 For information about AWS Lambda functions, see the [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/). For specific information about invoking Lambda functions, see the [Invoke](https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html) page in the AWS Lambda API Reference.
 
-~> **Note:** Terraform Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
+~> **Note:** Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
 
 ~> **Note:** Synchronous invocations will wait for the function to complete execution, while asynchronous invocations return immediately after the request is _accepted_.
 
