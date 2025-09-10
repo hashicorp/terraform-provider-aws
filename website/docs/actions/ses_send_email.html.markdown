@@ -10,9 +10,11 @@ description: |-
 
 Sends an email using Amazon SES. This action allows for imperative email sending with full control over recipients, content, and formatting.
 
-For information about Amazon SES, see the [Amazon SES Developer Guide][1]. For specific information about sending emails, see the [SendEmail][2] page in the Amazon SES API Reference.
+For information about Amazon SES, see the [Amazon SES Developer Guide](https://docs.aws.amazon.com/ses/latest/dg/). For specific information about sending emails, see the [SendEmail](https://docs.aws.amazon.com/ses/latest/APIReference/API_SendEmail.html) page in the Amazon SES API Reference.
 
-~> **NOTE:** This action directly sends emails through Amazon SES and can impact your SES sending quota and costs. All email addresses used must be verified in Amazon SES or belong to a verified domain.
+~> **Note:** Terraform Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
+
+~> **Note:** All email addresses used must be verified in Amazon SES or belong to a verified domain.
 
 ## Example Usage
 
@@ -165,13 +167,10 @@ This action supports the following arguments:
 
 * `bcc_addresses` - (Optional) List of email addresses for the BCC: field of the message. Recipients in this list will receive the email but their addresses will not be visible to other recipients.
 * `cc_addresses` - (Optional) List of email addresses for the CC: field of the message. Recipients in this list will receive the email and their addresses will be visible to all recipients.
-* `html_body` - (Optional) The message body in HTML format. Either `text_body` or `html_body` (or both) must be specified. HTML content allows for rich formatting including links, images, and styling.
+* `html_body` - (Optional) Message body in HTML format. Either `text_body` or `html_body` (or both) must be specified. HTML content allows for rich formatting including links, images, and styling.
 * `reply_to_addresses` - (Optional) List of reply-to email addresses for the message. If the recipient replies to the message, each reply-to address will receive the reply. If not specified, replies will go to the source address.
-* `return_path` - (Optional) The email address that bounces and complaints will be forwarded to when feedback forwarding is enabled. This is useful for handling delivery failures and spam complaints.
-* `source` - (Required) The email address that is sending the email. This address must be either individually verified with Amazon SES, or from a domain that has been verified with Amazon SES.
-* `subject` - (Required) The subject of the message: A short summary of the content, which will appear in the recipient's inbox.
-* `text_body` - (Optional) The message body in text format. Either `text_body` or `html_body` (or both) must be specified. Text format ensures compatibility with all email clients.
+* `return_path` - (Optional) Email address that bounces and complaints will be forwarded to when feedback forwarding is enabled. This is useful for handling delivery failures and spam complaints.
+* `source` - (Required) Email address that is sending the email. This address must be either individually verified with Amazon SES, or from a domain that has been verified with Amazon SES.
+* `subject` - (Required) Subject of the message: A short summary of the content, which will appear in the recipient's inbox.
+* `text_body` - (Optional) Message body in text format. Either `text_body` or `html_body` (or both) must be specified. Text format ensures compatibility with all email clients.
 * `to_addresses` - (Optional) List of email addresses for the To: field of the message. These are the primary recipients of the email.
-
-[1]: https://docs.aws.amazon.com/ses/latest/dg/
-[2]: https://docs.aws.amazon.com/ses/latest/APIReference/API_SendEmail.html
