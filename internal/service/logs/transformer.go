@@ -402,7 +402,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 										Optional: true,
 										Computed: true,
 										Validators: []validator.String{
-											stringvalidator.LengthBetween(1, 128),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^@message$`), "must be '@message'"),
 										},
 									},
 								},
