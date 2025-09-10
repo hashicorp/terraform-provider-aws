@@ -101,7 +101,7 @@ func resourcePolicy() *schema.Resource {
 													},
 													"resource_label": {
 														Type:         schema.TypeString,
-														Required:     true,
+														Optional:     true,
 														ValidateFunc: validation.StringLenBetween(1, 1023),
 													},
 												},
@@ -120,7 +120,7 @@ func resourcePolicy() *schema.Resource {
 													},
 													"resource_label": {
 														Type:         schema.TypeString,
-														Required:     true,
+														Optional:     true,
 														ValidateFunc: validation.StringLenBetween(1, 1023),
 													},
 												},
@@ -139,7 +139,7 @@ func resourcePolicy() *schema.Resource {
 													},
 													"resource_label": {
 														Type:         schema.TypeString,
-														Required:     true,
+														Optional:     true,
 														ValidateFunc: validation.StringLenBetween(1, 1023),
 													},
 												},
@@ -147,7 +147,7 @@ func resourcePolicy() *schema.Resource {
 										},
 										"target_value": {
 											Type:         nullable.TypeNullableFloat,
-											Optional:     true,
+											Required:     true,
 											ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 										},
 									},
