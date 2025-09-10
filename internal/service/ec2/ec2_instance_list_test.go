@@ -36,9 +36,6 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
-				// Check: resource.ComposeAggregateTestCheckFunc(
-				// 	testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-				// ),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
@@ -51,6 +48,47 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
+				ConfigQueryChecks:        []querycheck.QueryCheck{
+					// TODO
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_List_Filtered(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceNameExpected1 := "aws_instance.expected[0]"
+	resourceNameExpected2 := "aws_instance.expected[1]"
+	resourceNameNotExpected1 := "aws_instance.not_expected[0]"
+	resourceNameNotExpected2 := "aws_instance.not_expected[1]"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNFormat(resourceNameExpected1, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
+					tfstatecheck.ExpectRegionalARNFormat(resourceNameExpected2, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
+					tfstatecheck.ExpectRegionalARNFormat(resourceNameNotExpected1, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
+					tfstatecheck.ExpectRegionalARNFormat(resourceNameNotExpected2, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
 				ConfigQueryChecks:        []querycheck.QueryCheck{
 					// TODO
 				},
