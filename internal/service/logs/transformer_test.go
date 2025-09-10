@@ -122,6 +122,51 @@ func TestAccLogsTransformer_disappears_logGroup(t *testing.T) {
 	})
 }
 
+func TestAccLogsTransformer_addKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var transformer cloudwatchlogs.GetTransformerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_transformer.test"
+	logGroupResourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformerConfig_addKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.0.key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.0.value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.0.overwrite_if_exists", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.1.key", "key2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.1.value", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.1.overwrite_if_exists", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+			},
+		},
+	})
+}
+
 func testAccTransformerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -188,6 +233,36 @@ resource "aws_cloudwatch_log_transformer" "test" {
 
   transformer_config {
     parse_json {}
+  }
+}
+`, rName)
+}
+
+func testAccTransformerConfig_addKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_transformer" "test" {
+  log_group_identifier = aws_cloudwatch_log_group.test.name
+
+  transformer_config {
+    parse_json {}
+  }
+  
+  transformer_config {
+    add_keys {
+		entries {
+			key   = "key1"
+			value = "value1"
+		}
+		entries {
+			key                 = "key2"
+			value               = "value2"
+			overwrite_if_exists = true
+		}
+	}
   }
 }
 `, rName)
