@@ -67,9 +67,9 @@ data "aws_ssm_parameters" "test" {
 data "aws_ssm_parameters" "filtered" {
 
   parameter_filter {
-	key = "Name"
-	option = "BeginsWith"
-	values = ["/%[1]s/"]
+    key = "Name"
+    option = "BeginsWith"
+    values = ["/%[1]s/"]
   }
 
   depends_on = [
@@ -137,7 +137,7 @@ resource "aws_ssm_parameter" "test2" {
 
   name  = "/%[2]s/param-b"
   type  = "String"
-  tier = "Advanced" #Required for RAM sharing
+  tier  = "Advanced" #Required for RAM sharing
   value = "TestValueB"
 }
 
@@ -146,7 +146,7 @@ resource "aws_ssm_parameter" "test3" {
 
   name  = "/%[2]s/param-c"
   type  = "String"
-  tier = "Advanced" #Required for RAM sharing
+  tier  = "Advanced" #Required for RAM sharing
   value = "TestValueC"
 }
 
@@ -165,7 +165,7 @@ resource "aws_ram_resource_association" "test3" {
 }
 
 data "aws_ssm_parameters" "test_shared" {
-	shared = true
+  shared = true
 }
 `, rName1, rName2))
 }
