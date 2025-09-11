@@ -161,7 +161,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Odb Network using the `id`. For example:
+Using `terraform import`, import cloud autonomous vm cluster `id`. For example:
 
 ```console
 % terraform import aws_odb_cloud_autonomous_vm_cluster.example example
