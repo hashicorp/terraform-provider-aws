@@ -2200,7 +2200,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			if v := expandCapacityReservationSpecification(v.([]any)[0].(map[string]any)); v != nil && (v.CapacityReservationPreference != "" || v.CapacityReservationTarget != nil) {
-				if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
+				if err := stopInstance(ctx, conn, d.Id(), false, false, instanceStopTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
@@ -2302,7 +2302,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if err := terminateInstance(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := terminateInstance(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -2360,7 +2360,7 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id str
 func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
 	id := aws.ToString(input.InstanceId)
 
-	if err := stopInstance(ctx, conn, id, false, instanceStopTimeout); err != nil {
+	if err := stopInstance(ctx, conn, id, false, false, instanceStopTimeout); err != nil {
 		return err
 	}
 
@@ -3318,14 +3318,15 @@ func startInstance(ctx context.Context, conn *ec2.Client, id string, retry bool,
 }
 
 // stopInstance stops an EC2 instance and waits for the instance to stop.
-func stopInstance(ctx context.Context, conn *ec2.Client, id string, force bool, timeout time.Duration) error {
+func stopInstance(ctx context.Context, conn *ec2.Client, id string, force bool, skipOsShutdown bool, timeout time.Duration) error {
 	tflog.Info(ctx, "Stopping EC2 Instance", map[string]any{
 		"ec2_instance_id": id,
 		"force":           force,
 	})
 	input := ec2.StopInstancesInput{
-		Force:       aws.Bool(force),
-		InstanceIds: []string{id},
+		Force:          aws.Bool(force),
+		SkipOsShutdown: aws.Bool(skipOsShutdown),
+		InstanceIds:    []string{id},
 	}
 	_, err := conn.StopInstances(ctx, &input)
 
@@ -3341,10 +3342,11 @@ func stopInstance(ctx context.Context, conn *ec2.Client, id string, force bool, 
 }
 
 // terminateInstance shuts down an EC2 instance and waits for the instance to be deleted.
-func terminateInstance(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) error {
+func terminateInstance(ctx context.Context, conn *ec2.Client, id string, skipOsShutdown bool, timeout time.Duration) error {
 	log.Printf("[DEBUG] Terminating EC2 Instance: %s", id)
 	input := ec2.TerminateInstancesInput{
-		InstanceIds: []string{id},
+		SkipOsShutdown: aws.Bool(skipOsShutdown),
+		InstanceIds:    []string{id},
 	}
 	_, err := conn.TerminateInstances(ctx, &input)
 
