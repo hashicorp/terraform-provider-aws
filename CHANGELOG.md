@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_budgets_budget: Add `billing_view_arn` attribute ([#44241](https://github.com/hashicorp/terraform-provider-aws/issues/44241))
 * data-source/aws_dynamodb_table: Add `warm_throughput` and `global_secondary_index.warm_throughput` attributes ([#41308](https://github.com/hashicorp/terraform-provider-aws/issues/41308))
 * data-source/aws_elastic_beanstalk_hosted_zone: Add hosted zone IDs for `ap-southeast-5`, `ap-southeast-7`, `eu-south-2`, and `me-central-1` AWS Regions ([#44132](https://github.com/hashicorp/terraform-provider-aws/issues/44132))
 * data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-6` AWS Region ([#44132](https://github.com/hashicorp/terraform-provider-aws/issues/44132))
@@ -11,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_appautoscaling_policy: Add plan-time validation of `policy_type` ([#44211](https://github.com/hashicorp/terraform-provider-aws/issues/44211))
 * resource/aws_appautoscaling_policy: Add plan-time validation of `step_scaling_policy_configuration.adjustment_type` and `step_scaling_policy_configuration.metric_aggregation_type` ([#44211](https://github.com/hashicorp/terraform-provider-aws/issues/44211))
 * resource/aws_bedrock_guardrail: Add `input_action`, `output_action`, `input_enabled`, and `output_enabled` arguments to `word_policy_config.managed_word_lists_config` and `word_policy_config.words_config` configuration blocks ([#44224](https://github.com/hashicorp/terraform-provider-aws/issues/44224))
+* resource/aws_budgets_budget: Add `billing_view_arn` argument ([#44241](https://github.com/hashicorp/terraform-provider-aws/issues/44241))
 * resource/aws_cloudfront_distribution: Add `origin.response_completion_timeout` argument ([#44163](https://github.com/hashicorp/terraform-provider-aws/issues/44163))
 * resource/aws_codebuild_webhook: Add `pull_request_build_policy` configuration block ([#44201](https://github.com/hashicorp/terraform-provider-aws/issues/44201))
 * resource/aws_dynamodb_table: Add `warm_throughput` and `global_secondary_index.warm_throughput` arguments ([#41308](https://github.com/hashicorp/terraform-provider-aws/issues/41308))
@@ -33,6 +35,7 @@ BUG FIXES:
 * resource/aws_launch_template: Fix `Error decoding ... from prior state: unsupported attribute "elastic_gpu_specifications"` errors when upgrading from a pre-v6.0.0 provider version ([#44195](https://github.com/hashicorp/terraform-provider-aws/issues/44195))
 * resource/aws_rds_cluster_role_association: Make `feature_name` optional ([#44143](https://github.com/hashicorp/terraform-provider-aws/issues/44143))
 * resource/aws_s3_bucket_lifecycle_configuration: Ignore `MethodNotAllowed` errors when deleting non-existent lifecycle configurations ([#44189](https://github.com/hashicorp/terraform-provider-aws/issues/44189))
+* resource/aws_secretsmanager_secret: Return diagnostic `warning` when remote policy is invalid ([#44228](https://github.com/hashicorp/terraform-provider-aws/issues/44228))
 * resource/aws_servicecatalog_provisioned_product: Restore `timeouts.read` arguments removed in v6.12.0 ([#44238](https://github.com/hashicorp/terraform-provider-aws/issues/44238))
 
 ## 6.12.0 (September 4, 2025)
