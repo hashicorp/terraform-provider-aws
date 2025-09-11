@@ -81,11 +81,24 @@ func resourceReplicationGroup() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
+			"auth_token_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ValidateFunc:  validReplicationGroupAuthToken,
+				ConflictsWith: []string{"user_group_ids", "auth_token"},
+			},
+			"auth_token_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"auth_token_wo"},
+			},
 			"auth_token_update_strategy": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
-				RequiredWith:     []string{"auth_token"},
+				RequiredWith:     []string{"auth_token", "auth_token_wo"},
 			},
 			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
@@ -377,7 +390,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"auth_token"},
+				ConflictsWith: []string{"auth_token", "auth_token_wo"},
 			},
 		},
 
