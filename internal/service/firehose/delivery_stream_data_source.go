@@ -24,30 +24,6 @@ func dataSourceDeliveryStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_source_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEndpoint: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"ssl_mode": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -70,14 +46,6 @@ func dataSourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(output.DeliveryStreamARN))
 	d.Set(names.AttrARN, output.DeliveryStreamARN)
 	d.Set(names.AttrName, output.DeliveryStreamName)
-
-	if v := output.Source; v != nil {
-		if v := v.DatabaseSourceDescription; v != nil {
-			if err := d.Set("database_source_configuration", flattenDatabaseSourceDescription(v)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting database_source_configuration: %s", err)
-			}
-		}
-	}
 
 	return diags
 }

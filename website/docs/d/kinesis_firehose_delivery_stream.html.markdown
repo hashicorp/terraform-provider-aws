@@ -24,8 +24,8 @@ data "aws_kinesis_firehose_delivery_stream" "stream" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Kinesis Firehose Delivery Stream.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -33,15 +33,5 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ARN of the Kinesis Firehose Delivery Stream.
 * `arn` - ARN of the Kinesis Firehose Delivery Stream (same as `id`).
-* `database_source_configuration` - Configuration for database source. See [`database_source_configuration` block](#database_source_configuration-block) below for details.
-
-### `database_source_configuration` block
-
-The `database_source_configuration` configuration block exports the following attributes:
-
-* `type` - The type of database.
-* `endpoint` - The endpoint of the database.
-* `port` - The port of the database.
-* `ssl_mode` - The SSL mode used for the connection.
 
 [1]: https://aws.amazon.com/documentation/firehose/
