@@ -255,6 +255,10 @@ func (r *resourceBaseline) Update(ctx context.Context, request resource.UpdateRe
 		}
 	}
 
+	if plan.OperationIdentifier.IsNull() || plan.BaselineIdentifier.IsUnknown() {
+		plan.OperationIdentifier = state.OperationIdentifier
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
