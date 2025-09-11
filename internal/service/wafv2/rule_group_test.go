@@ -5773,3 +5773,109 @@ resource "aws_wafv2_rule_group" "test" {
 }
 `, rName)
 }
+func TestAccWAFV2RuleGroup_rulesJSONDeepNesting(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_rulesJSONDeepNesting(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "rules_json"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rules_json", names.AttrRule},
+				ImportStateIdFunc:       testAccRuleGroupImportStateIdFunc(resourceName),
+				// This test previously failed with "Invalid address to set" error during import
+				// when using rules_json with deep nesting structures - issue #44009 is now fixed
+			},
+		},
+	})
+}
+
+func testAccRuleGroupConfig_rulesJSONDeepNesting(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 200
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rules_json = jsonencode([{
+    Name     = "rule-1"
+    Priority = 1
+    Action = {
+      Allow = {}
+    }
+    Statement = {
+      NotStatement = {
+        Statement = {
+          AndStatement = {
+            Statements = [{
+              NotStatement = {
+                Statement = {
+                  OrStatement = {
+                    Statements = [{
+                      NotStatement = {
+                        Statement = {
+                          GeoMatchStatement = {
+                            CountryCodes = ["US"]
+                          }
+                        }
+                      }
+                    }, {
+                      ByteMatchStatement = {
+                        SearchString = "badbot"
+                        FieldToMatch = {
+                          UriPath = {}
+                        }
+                        TextTransformations = [{
+                          Priority = 1
+                          Type     = "NONE"
+                        }]
+                        PositionalConstraint = "CONTAINS"
+                      }
+                    }]
+                  }
+                }
+              }
+            }, {
+              NotStatement = {
+                Statement = {
+                  GeoMatchStatement = {
+                    CountryCodes = ["NL"]
+                  }
+                }
+              }
+            }]
+          }
+        }
+      }
+    }
+    VisibilityConfig = {
+      CloudwatchMetricsEnabled = false
+      MetricName               = "friendly-rule-metric-name"
+      SampledRequestsEnabled   = false
+    }
+  }])
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
