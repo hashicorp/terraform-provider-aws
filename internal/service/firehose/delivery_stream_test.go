@@ -1096,6 +1096,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.warehouse_location", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1129,6 +1130,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.warehouse_location", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1170,6 +1172,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.warehouse_location", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1207,6 +1210,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.warehouse_location", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

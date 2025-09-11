@@ -2831,7 +2831,7 @@ func expandIcebergDestinationConfiguration(tfMap map[string]any) *types.IcebergD
 		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
 	}
 
-	if v, ok := tfMap["append_only"].(bool); ok && v {
+	if v, ok := tfMap["append_only"].(bool); ok {
 		apiObject.AppendOnly = aws.Bool(v)
 	}
 
@@ -2872,7 +2872,7 @@ func expandIcebergDestinationUpdate(tfMap map[string]any) *types.IcebergDestinat
 		RoleARN: aws.String(roleARN),
 	}
 
-	if v, ok := tfMap["append_only"].(bool); ok && v {
+	if v, ok := tfMap["append_only"].(bool); ok {
 		apiObject.AppendOnly = aws.Bool(v)
 	}
 
@@ -4670,6 +4670,7 @@ func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDes
 	}
 
 	tfMap := map[string]any{
+		"append_only":      aws.ToBool(apiObject.AppendOnly),
 		"catalog_arn":      aws.ToString(apiObject.CatalogConfiguration.CatalogARN),
 		"s3_configuration": flattenS3DestinationDescription(apiObject.S3DestinationDescription),
 		names.AttrRoleARN:  aws.ToString(apiObject.RoleARN),
