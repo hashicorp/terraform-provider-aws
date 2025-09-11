@@ -52,3 +52,28 @@ This data source exports the following attributes in addition to the arguments a
 * `created_at` - Created time of the ODB network peering connection.
 * `percent_progress` - Progress of the ODB network peering connection.
 * `tags_all` - A map of tags assigned to the resource, including inherited tags.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `24h`)
+* `update` - (Default `24h`)
+* `delete` - (Default `24h`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Pipeline using the `id`. For example:
+
+```terraform
+import {
+  to = aws_odb_network_peering_connection.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import odb network peering using the `id`. For example:
+
+```console
+% terraform import aws_odb_network_peering_connection.example example
+```

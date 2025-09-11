@@ -1,4 +1,6 @@
-# Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 
 resource "aws_odb_network_peering_connection" "test" {
   display_name    = "my_odb_net_peering"
