@@ -5,3 +5,7 @@ resource/aws_kinesis_firehose_delivery_stream: Add `database_source_configuratio
 ```release-note:enhancement
 resource/aws_kinesis_firehose_delivery_stream: Add `warehouse_location` argument to `iceberg_configuration` block
 ```
+
+```release-note:note
+resource/aws_kinesis_firehose_delivery_stream: Because we cannot easily test the `database_source_configuration` functionality, it is best effort and we ask for community help in testing
+```
