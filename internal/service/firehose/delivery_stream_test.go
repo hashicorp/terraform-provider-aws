@@ -9,14 +9,18 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/firehose/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
@@ -51,6 +55,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "database_source_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "extended_s3"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -89,12 +94,19 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "extended_s3_configuration.0.role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_mode", "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -105,6 +117,19 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			// Ensure we properly error on malformed import IDs
+			{
+				ResourceName:  resourceName,
+				ImportState:   true,
+				ImportStateId: "just-a-name",
+				ExpectError:   regexache.MustCompile(`Expected ID in format`),
+			},
+			{
+				ResourceName:  resourceName,
+				ImportState:   true,
+				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash", //lintignore:AWSAT003,AWSAT005
+				ExpectError:   regexache.MustCompile(`Expected ID in format`),
 			},
 		},
 	})
@@ -2511,6 +2536,40 @@ func TestAccFirehoseDeliveryStream_missingProcessing(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_databaseSourceConfiguration(t *testing.T) {
+	acctest.Skip(t, "Currently not able to test")
+
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_databaseSourceConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_source_configuration"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kinesis_source_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("msk_source_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDeliveryStreamExists(ctx context.Context, n string, v *types.DeliveryStreamDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2862,31 +2921,6 @@ resource "aws_iam_role_policy" "firehose" {
       "Effect": "Allow",
       "Action": [
         "lakeformation:GetDataAccess"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "VPCAccess",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:DescribeVpcEndpointServices",
-        "ec2:DescribeVpcEndpoints",
-        "ec2:CreateVpcEndpoint",
-        "ec2:DeleteVpcEndpoint",
-        "ec2:DescribeNetworkInterfaces",
-        "ec2:CreateNetworkInterface",
-        "ec2:DeleteNetworkInterface",
-        "ec2:AttachNetworkInterface",
-        "ec2:DetachNetworkInterface"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "SecretsManagerAccess",
-      "Effect": "Allow",
-      "Action": [
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:DescribeSecret"
       ],
       "Resource": "*"
     }
@@ -5844,99 +5878,18 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 `, rName)
 }
-func TestAccFirehoseDeliveryStream_databaseSourceConfiguration(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
-		Steps: []resource.TestStep{
-			// nosemgrep: ci.semgrep.acctest.checks.replace-planonly-checks
-			{
-				// Database source requires actual database infrastructure and credentials
-				// Plan-only test validates schema and configuration parsing
-				Config:             testAccDeliveryStreamConfig_databaseSourceConfiguration(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
+func testAccDeliveryStreamConfig_baseDatabaseSource(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigRandomPassword(), `
+# TODO
+`)
 }
 
 func testAccDeliveryStreamConfig_databaseSourceConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({
-    username = "testuser"
-    password = "testpass"
-  })
-}
-
-resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = [aws_iam_role_policy.firehose]
-  name        = %[1]q
-  destination = "iceberg"
-
-  database_source_configuration {
-    type     = "MySQL"
-    endpoint = "mysql.example.com"
-    port     = 3306
-    ssl_mode = "Disabled"
-
-    databases {
-      include = ["test_db"]
-    }
-
-    tables {
-      include = ["users"]
-    }
-
-    columns {
-      include = ["id", "name"]
-    }
-
-    snapshot_watermark_table = "test_db.watermark"
-
-    database_source_authentication_configuration {
-      secrets_manager_configuration {
-        secret_arn = aws_secretsmanager_secret.test.arn
-        role_arn   = aws_iam_role.firehose.arn
-        enabled    = true
-      }
-    }
-
-    database_source_vpc_configuration {
-      vpc_endpoint_service_name = "com.amazonaws.vpce.${data.aws_region.current.name}.vpce-svc-1234567890abcdef0"
-    }
-  }
-
-  iceberg_configuration {
-    role_arn           = aws_iam_role.firehose.arn
-    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:123456789012:catalog"
-    warehouse_location = "s3://${aws_s3_bucket.bucket.bucket}/warehouse/"
-
-    destination_table_configuration {
-      database_name = "test_db"
-      table_name    = "test_table"
-    }
-
-    s3_configuration {
-      role_arn   = aws_iam_role.firehose.arn
-      bucket_arn = aws_s3_bucket.bucket.arn
-    }
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_base(rName),
+		testAccDeliveryStreamConfig_baseDatabaseSource(rName),
+		`
+# TODO
+`)
 }
