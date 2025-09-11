@@ -69,6 +69,11 @@ The following arguments are optional:
 
 * `expression` - (Required) Rate expression or cron expression that defines how often the canary is to run. For rate expression, the syntax is `rate(number unit)`. _unit_ can be `minute`, `minutes`, or `hour`. For cron expression, the syntax is `cron(expression)`. For more information about the syntax for cron expressions, see [Scheduling canary runs using cron](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_cron.html).
 * `duration_in_seconds` - (Optional) Duration in seconds, for the canary to continue making regular runs according to the schedule in the Expression value.
+* `retry_config` - (Optional) Configuration block for canary retries. Detailed [below](#retry_config).
+
+### retry_config
+
+* `max_retries` - (Required) Maximum number of retries. The value must be less than or equal to `2`. If `max_retries` is `2`, `run_config.timeout_in_seconds` should be less than 600 seconds. Defaults to `0`.
 
 ### run_config
 
