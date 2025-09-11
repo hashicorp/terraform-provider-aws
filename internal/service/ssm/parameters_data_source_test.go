@@ -132,12 +132,6 @@ resource "aws_ram_principal_association" "test" {
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
-resource "aws_ssm_parameter" "test1" {
-  name  = "/%[1]s/param-a"
-  type  = "String"
-  value = "TestValueA"
-}
-
 resource "aws_ssm_parameter" "test2" {
   provider = "awsalternate"
 
