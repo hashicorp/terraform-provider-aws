@@ -2424,7 +2424,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func TestAccMSKCluster_deletionProtection(t *testing.T) {
+func TestAccKafkaCluster_deletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1 types.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
