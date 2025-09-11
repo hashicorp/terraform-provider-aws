@@ -207,6 +207,8 @@ data "aws_ssm_parameters" "test_shared" {
 `, rName1, rName2))
 }
 
+// Test helper to wait for SSM Parameter to be visible in the other account.
+// There is some inconsistency in how fast the parameter is visible after being shared via RAM; therefore, we retry a few times.
 func testAccWaitForSharedSSMParamsToBeShared(ctx context.Context, n string, v *awstypes.Parameter, maxRetries int, retryDelay time.Duration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
