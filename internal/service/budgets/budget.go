@@ -95,6 +95,11 @@ func ResourceBudget() *schema.Resource {
 					},
 				},
 			},
+			"billing_view_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"budget_type": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -378,6 +383,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	d.Set(names.AttrARN, arn.String())
 	d.Set("budget_type", budget.BudgetType)
+	d.Set("billing_view_arn", budget.BillingViewArn)
 
 	if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cost_filter: %s", err)
@@ -879,6 +885,10 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
 				}
 			}
 		}
+	}
+
+	if v, ok := d.GetOk("billing_view_arn"); ok {
+		budget.BillingViewArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cost_types"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
