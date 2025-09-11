@@ -23,6 +23,7 @@ ENHANCEMENTS:
 * resource/aws_networkmanager_vpc_attachment: Change `options` to Optional and Computed ([#43742](https://github.com/hashicorp/terraform-provider-aws/issues/43742))
 * resource/aws_opensearch_package: Add `engine_version` argument ([#44155](https://github.com/hashicorp/terraform-provider-aws/issues/44155))
 * resource/aws_opensearch_package: Add waiter to ensure package validation completes ([#44155](https://github.com/hashicorp/terraform-provider-aws/issues/44155))
+* resource/aws_synthetics_canary: Add `schedule.retry_config` configuration block ([#44244](https://github.com/hashicorp/terraform-provider-aws/issues/44244))
 * resource/aws_vpc_endpoint: Add resource identity support ([#44194](https://github.com/hashicorp/terraform-provider-aws/issues/44194))
 * resource/aws_vpc_security_group_egress_rule: Add resource identity support ([#44198](https://github.com/hashicorp/terraform-provider-aws/issues/44198))
 * resource/aws_vpc_security_group_ingress_rule: Add resource identity support ([#44198](https://github.com/hashicorp/terraform-provider-aws/issues/44198))
@@ -31,6 +32,7 @@ BUG FIXES:
 
 * resource/aws_appautoscaling_policy: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `step_scaling_policy_configuration` is empty ([#44211](https://github.com/hashicorp/terraform-provider-aws/issues/44211))
 * resource/aws_cognito_managed_login_branding: Fix `reading Cognito Managed Login Branding by client ... couldn't find resource` errors when a user pool contains multiple client apps ([#44204](https://github.com/hashicorp/terraform-provider-aws/issues/44204))
+* resource/aws_eks_cluster: Supports null `compute_config.node_role_arn` when disabling auto mode or built-in node pools ([#42483](https://github.com/hashicorp/terraform-provider-aws/issues/42483))
 * resource/aws_flow_log: Fix `Error decoding ... from prior state: unsupported attribute "log_group_name"` errors when upgrading from a pre-v6.0.0 provider version ([#44191](https://github.com/hashicorp/terraform-provider-aws/issues/44191))
 * resource/aws_launch_template: Fix `Error decoding ... from prior state: unsupported attribute "elastic_gpu_specifications"` errors when upgrading from a pre-v6.0.0 provider version ([#44195](https://github.com/hashicorp/terraform-provider-aws/issues/44195))
 * resource/aws_rds_cluster_role_association: Make `feature_name` optional ([#44143](https://github.com/hashicorp/terraform-provider-aws/issues/44143))
