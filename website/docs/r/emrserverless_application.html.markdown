@@ -59,11 +59,39 @@ resource "aws_emrserverless_application" "example" {
 }
 ```
 
+### Application Configuration Usage
+
+```terraform
+resource "aws_emrserverless_application" "example" {
+  name          = "example"
+  release_label = "emr-6.8.0"
+  type          = "spark"
+
+  application_configuration {
+    classification = "spark-executor-log4j2"
+    properties = {
+      "rootLogger.level"                       = "error"
+      "logger.IdentifierForClass.name"         = "classpathForSettingLogger"
+      "logger.IdentifierForClass.level"        = "info"
+    }
+  }
+
+  application_configuration {
+    classification = "spark-defaults"
+    properties = {
+      "spark.executor.memory" = "1g"
+      "spark.executor.cores" = "1"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `application_configuration` - (Optional) A configuration specification to be used when provisioning an application. A configuration consists of a classification, properties, and optional nested configurations. A classification refers to an application-specific configuration file. Properties are the settings you want to change in that file.
 * `architecture` - (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `auto_start_configuration` - (Optional) The configuration for an application to automatically start on job submission.
 * `auto_stop_configuration` - (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
@@ -85,6 +113,11 @@ This resource supports the following arguments:
 
 * `enabled` - (Optional) Enables the application to automatically stop after a certain amount of time being idle. Defaults to `true`.
 * `idle_timeout_minutes` - (Optional) The amount of idle time in minutes after which your application will automatically stop. Defaults to `15` minutes.
+
+### application_configuration Arguments
+
+* `classification` - (Required) The classification within a configuration.
+* `properties` - (Optional) A set of properties specified within a configuration classification.
 
 ### initial_capacity Arguments
 
