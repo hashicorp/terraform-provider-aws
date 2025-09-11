@@ -141,3 +141,28 @@ This resource exports the following attributes in addition to the arguments abov
 * `time_ords_certificate_expires` - The expiration date and time of the ORDS certificate.
 * `time_database_ssl_certificate_expires` - The expiration date and time of the database SSL certificate.
 * `tags_all` - The combined set of user-defined and provider-defined tags.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `24h`)
+* `update` - (Default `24h`)
+* `delete` - (Default `24h`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Pipeline using the `id`. For example:
+
+```terraform
+import {
+  to = aws_odb_cloud_autonomous_vm_cluster.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import Odb Network using the `id`. For example:
+
+```console
+% terraform import aws_odb_cloud_autonomous_vm_cluster.example example
+```
