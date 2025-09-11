@@ -74,6 +74,9 @@ func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest,
 			},
 			"operation_identifier": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -253,10 +256,6 @@ func (r *resourceBaseline) Update(ctx context.Context, request resource.UpdateRe
 		if response.Diagnostics.HasError() {
 			return
 		}
-	}
-
-	if plan.OperationIdentifier.IsNull() || plan.BaselineIdentifier.IsUnknown() {
-		plan.OperationIdentifier = state.OperationIdentifier
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
