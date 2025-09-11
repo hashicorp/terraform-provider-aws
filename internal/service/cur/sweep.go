@@ -30,7 +30,7 @@ func sweepReportDefinitions(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CURClient(ctx)
 	input := &cur.DescribeReportDefinitionsInput{}

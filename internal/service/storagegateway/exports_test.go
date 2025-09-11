@@ -19,6 +19,7 @@ var (
 	FindCachediSCSIVolumeByARN           = findCachediSCSIVolumeByARN
 	FindFileSystemAssociationByARN       = findFileSystemAssociationByARN
 	FindGatewayByARN                     = findGatewayByARN
+	FindGatewayInfoByARN                 = findGatewayInfoByARN
 	FindNFSFileShareByARN                = findNFSFileShareByARN
 	FindSMBFileShareByARN                = findSMBFileShareByARN
 	FindStorediSCSIVolumeByARN           = findStorediSCSIVolumeByARN

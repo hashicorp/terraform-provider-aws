@@ -39,6 +39,8 @@ func TestAccCloudFrontDistribution_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.response_completion_timeout", "0"),
 				),
 			},
 			{
@@ -590,11 +592,11 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtFalse, `""`)),
-				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
+				ExpectError: regexache.MustCompile(`.*doesn't look like AWS Region.*`),
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"US East (Ohio)"`)),
-				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
+				ExpectError: regexache.MustCompile(`.*doesn't look like AWS Region.*`),
 			},
 			{
 				Config: testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"us-east-1"`)), //lintignore:AWSAT003
@@ -1493,6 +1495,78 @@ func TestAccCloudFrontDistribution_vpcOriginConfig(t *testing.T) {
 					"retain_on_delete",
 					"wait_for_deployment",
 				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_responseCompletionTimeout(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_responseCompletionTimeout(false, false, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_header.#":             "0",
+						"custom_origin_config.#":      "1",
+						"origin_id":                   "test",
+						"origin_shield.#":             "0",
+						"s3_origin_config.#":          "0",
+						"vpc_origin_config.#":         "0",
+						"response_completion_timeout": "60",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_responseCompletionTimeout(false, false, 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_header.#":             "0",
+						"custom_origin_config.#":      "1",
+						"origin_id":                   "test",
+						"origin_shield.#":             "0",
+						"s3_origin_config.#":          "0",
+						"vpc_origin_config.#":         "0",
+						"response_completion_timeout": "30",
+					}),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_enabled(false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_header.#":             "0",
+						"custom_origin_config.#":      "1",
+						"origin_id":                   "test",
+						"origin_shield.#":             "0",
+						"s3_origin_config.#":          "0",
+						"vpc_origin_config.#":         "0",
+						"response_completion_timeout": "0",
+					}),
+				),
 			},
 		},
 	})
@@ -4586,6 +4660,54 @@ resource "aws_cloudfront_distribution" "test" {
   }
 }
 `)
+}
+
+func testAccDistributionConfig_responseCompletionTimeout(enabled, retainOnDelete bool, responseCompletionTimeout int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = %[1]t
+  retain_on_delete = %[2]t
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    response_completion_timeout = %[3]d
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, enabled, retainOnDelete, responseCompletionTimeout)
 }
 
 func testAccDistributionConfig_grpcConfig() string {

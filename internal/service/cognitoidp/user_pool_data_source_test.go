@@ -153,7 +153,7 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 		}
 		numAttributes, err := strconv.Atoi(numAttributesStr)
 		if err != nil {
-			return fmt.Errorf("error parsing schema_attributes.#: %s", err)
+			return fmt.Errorf("error parsing schema_attributes.#: %w", err)
 		}
 
 		// Loop through the schema_attributes and check the mutable key in each attribute

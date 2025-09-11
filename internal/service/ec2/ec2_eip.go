@@ -192,7 +192,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if instanceID, eniID := d.Get("instance").(string), d.Get("network_interface").(string); instanceID != "" || eniID != "" {
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return nil, associateEIP(ctx, conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
 			}, errCodeInvalidAllocationIDNotFound)
 
@@ -381,7 +381,7 @@ func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceI
 	}
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return findEIPByAssociationID(ctx, conn, aws.ToString(output.AssociationId))
 		},
 		func(err error) (bool, error) {

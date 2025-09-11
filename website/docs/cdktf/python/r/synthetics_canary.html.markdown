@@ -88,6 +88,7 @@ The following arguments are optional:
 * `memory_in_mb` - (Optional) Maximum amount of memory available to the canary while it is running, in MB. The value you specify must be a multiple of 64.
 * `active_tracing` - (Optional) Whether this canary is to use active AWS X-Ray tracing when it runs. You can enable active tracing only for canaries that use version syn-nodejs-2.0 or later for their canary runtime.
 * `environment_variables` - (Optional) Map of environment variables that are accessible from the canary during execution. Please see [AWS Docs](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-runtime) for variables reserved for Lambda.
+* `ephemeral_storage` - (Optional) Amount of ephemeral storage (in MB) allocated for the canary run during execution. Defaults to 1024.
 
 ### vpc_config
 
@@ -95,6 +96,7 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 
 * `subnet_ids` - (Required) IDs of the subnets where this canary is to run.
 * `security_group_ids` - (Required) IDs of the security groups for this canary.
+* `ipv6_allowed_for_dual_stack` - (Optional)  If `true`, allow outbound IPv6 traffic on VPC canaries that are connected to dual-stack subnets. The default is `false`.
 
 ## Attribute Reference
 
@@ -144,4 +146,4 @@ Using `terraform import`, import Synthetics Canaries using the `name`. For examp
 % terraform import aws_synthetics_canary.some some-canary
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5ba61d97d04060659c662468fa6285cd55a53f407ec55e6c642320edb2dcdc19 -->
+<!-- cache-key: cdktf-0.20.8 input-ce31e30842bcb0fef9854f7cce1c3cb76a024d5d0ab7908147cf5ae6a64428ed -->

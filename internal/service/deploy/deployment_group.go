@@ -54,7 +54,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				group, err := findDeploymentGroupByTwoPartKey(ctx, conn, applicationName, deploymentGroupName)
 
 				if err != nil {
-					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Deployment Group (%s): %s", d.Id(), err)
+					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Deployment Group (%s): %w", d.Id(), err)
 				}
 
 				d.SetId(aws.ToString(group.DeploymentGroupId))
@@ -524,7 +524,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDeploymentGroup(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -718,7 +718,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateDeploymentGroup(ctx, input)
 			},
 			func(err error) (bool, error) {

@@ -42,74 +42,58 @@ func waitUpgradeSucceeded(ctx context.Context, conn *opensearch.Client, name str
 
 func waitForDomainCreation(ctx context.Context, conn *opensearch.Client, domainName string, timeout time.Duration) error {
 	var out *awstypes.DomainStatus
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = findDomainByName(ctx, conn, domainName)
 		if tfresource.NotFound(err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if !aws.ToBool(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
 			return nil
 		}
 
-		return retry.RetryableError(
+		return tfresource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for OpenSearch Domain to be created", domainName))
 	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
-	if tfresource.TimedOut(err) {
-		out, err = findDomainByName(ctx, conn, domainName)
-		if err != nil {
-			return fmt.Errorf("describing OpenSearch Domain: %w", err)
-		}
-		if !aws.ToBool(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
-			return nil
-		}
-	}
 	if err != nil {
 		return fmt.Errorf("waiting for OpenSearch Domain to be created: %w", err)
 	}
+
 	return nil
 }
 
 func waitForDomainUpdate(ctx context.Context, conn *opensearch.Client, domainName string, timeout time.Duration) error {
 	var out *awstypes.DomainStatus
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = findDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if !aws.ToBool(out.Processing) {
 			return nil
 		}
 
-		return retry.RetryableError(
+		return tfresource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
 	}, tfresource.WithDelay(1*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
-	if tfresource.TimedOut(err) {
-		out, err = findDomainByName(ctx, conn, domainName)
-		if err != nil {
-			return fmt.Errorf("describing OpenSearch Domain: %w", err)
-		}
-		if !aws.ToBool(out.Processing) {
-			return nil
-		}
-	}
 	if err != nil {
 		return fmt.Errorf("waiting for OpenSearch Domain changes to be processed: %w", err)
 	}
+
 	return nil
 }
 
 func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainName string, timeout time.Duration) error {
 	var out *awstypes.DomainStatus
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = findDomainByName(ctx, conn, domainName)
 
@@ -117,31 +101,18 @@ func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainNam
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if out != nil && !aws.ToBool(out.Processing) {
 			return nil
 		}
 
-		return retry.RetryableError(fmt.Errorf("timeout while waiting for the OpenSearch Domain %q to be deleted", domainName))
+		return tfresource.RetryableError(fmt.Errorf("timeout while waiting for the OpenSearch Domain %q to be deleted", domainName))
 	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
-	if tfresource.TimedOut(err) {
-		out, err = findDomainByName(ctx, conn, domainName)
-		if err != nil {
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			return fmt.Errorf("describing OpenSearch Domain: %s", err)
-		}
-		if out != nil && !aws.ToBool(out.Processing) {
-			return nil
-		}
-	}
-
 	if err != nil {
-		return fmt.Errorf("waiting for OpenSearch Domain to be deleted: %s", err)
+		return fmt.Errorf("waiting for OpenSearch Domain to be deleted: %w", err)
 	}
 
 	// opensearch maintains information about the domain in multiple (at least 2) places that need

@@ -27,6 +27,10 @@ import (
 
 // @SDKResource("aws_networkmanager_site_to_site_vpn_attachment", name="Site To Site VPN Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.SiteToSiteVpnAttachment")
+// @Testing(skipEmptyTags=true)
+// @Testing(randomBgpAsn="64512;65534")
+// @Testing(randomIPv4Address="172.0.0.0/24")
 func resourceSiteToSiteVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteToSiteVPNAttachmentCreate,
@@ -271,6 +275,8 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusSiteToSiteVPNAttachment(ctx, conn, id),
+		Delay:          4 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 
