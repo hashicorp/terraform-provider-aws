@@ -145,7 +145,7 @@ func testAccBaseline_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLandingZoneConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Config: testAccBaselineConfig_tags1(rName, baselineARN, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBaselineExists(ctx, resourceName, &baseline),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
