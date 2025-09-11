@@ -51,6 +51,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "WorkspaceConfiguration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_prometheus_workspace_resource_policy",
+			Name:     "Workspace Resource Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 

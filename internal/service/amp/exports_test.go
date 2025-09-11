@@ -13,6 +13,7 @@ var (
 
 	FindAlertManagerDefinitionByID    = findAlertManagerDefinitionByID
 	FindQueryLoggingConfigurationByID = findQueryLoggingConfigurationByID
+	FindResourcePolicyByWorkspaceID   = findResourcePolicyByWorkspaceID
 	FindRuleGroupNamespaceByARN       = findRuleGroupNamespaceByARN
 	FindScraperByID                   = findScraperByID
 	FindWorkspaceByID                 = findWorkspaceByID
