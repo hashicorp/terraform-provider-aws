@@ -89,7 +89,7 @@ data "aws_ssm_parameters" "filtered" {
 `, rName1, rName2)
 }
 
-func TestAccParametersDataSourceConfig_ramShared(t *testing.T) {
+func TestAccSSMParametersDataSource_ramShared(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "data.aws_ssm_parameters.test"
