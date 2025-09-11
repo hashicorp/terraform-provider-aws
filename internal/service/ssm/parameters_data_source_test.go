@@ -4,21 +4,13 @@
 package ssm_test
 
 import (
-	"context"
-	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awsssm "github.com/aws/aws-sdk-go-v2/service/ssm"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"testing"
-	"time"
 )
 
 func TestAccSSMParametersDataSource_basic(t *testing.T) {
@@ -96,8 +88,6 @@ func TestAccSSMParametersDataSource_ramShared(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	var parameter1, parameter2 awstypes.Parameter
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -112,9 +102,10 @@ func TestAccSSMParametersDataSource_ramShared(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParametersDataSourceConfig_ramShared(rName1, rName2),
+			},
+			{
+				Config: testAccParametersDataSourceConfig_ramShared(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccWaitForSharedSSMParamsToBeShared(ctx, "aws_ssm_parameter.test2", &parameter1, 5, 5*time.Second),
-					testAccWaitForSharedSSMParamsToBeShared(ctx, "aws_ssm_parameter.test3", &parameter2, 5, 5*time.Second),
 					resource.TestCheckResourceAttr(sharedResourceName, "arns.#", "2"),
 				),
 			},
@@ -180,52 +171,7 @@ resource "aws_ram_resource_association" "test3" {
 }
 
 data "aws_ssm_parameters" "test_shared" {
-  shared = true
-
-  depends_on = [
-	aws_ram_resource_association.test2,
-	aws_ram_resource_association.test3,
-    aws_ssm_parameter.test1,
-    aws_ssm_parameter.test2,
-    aws_ssm_parameter.test3,
-  ]
+	shared = true
 }
 `, rName1, rName2))
-}
-
-// Test helper to wait for SSM Parameter to be visible in the other account.
-// There is some inconsistency in how fast the parameter is visible after being shared via RAM; therefore, we retry a few times.
-func testAccWaitForSharedSSMParamsToBeShared(ctx context.Context, n string, v *awstypes.Parameter, maxRetries int, retryDelay time.Duration) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		parameterArn := rs.Primary.Attributes["arn"]
-		if parameterArn == "" {
-			return fmt.Errorf("No SSM Parameter ARN is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
-
-		for i := 0; i < maxRetries; i++ {
-			parameters, err := conn.GetParameter(ctx, &awsssm.GetParameterInput{
-				Name: aws.String(parameterArn),
-			})
-
-			if err != nil {
-				var notFound *awstypes.ParameterNotFound
-				if !errors.As(err, &notFound) {
-					return err
-				}
-			} else {
-				*v = *parameters.Parameter
-				return nil
-			}
-			time.Sleep(retryDelay)
-		}
-
-		return nil
-	}
 }
