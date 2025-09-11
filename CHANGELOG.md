@@ -33,6 +33,7 @@ BUG FIXES:
 * resource/aws_launch_template: Fix `Error decoding ... from prior state: unsupported attribute "elastic_gpu_specifications"` errors when upgrading from a pre-v6.0.0 provider version ([#44195](https://github.com/hashicorp/terraform-provider-aws/issues/44195))
 * resource/aws_rds_cluster_role_association: Make `feature_name` optional ([#44143](https://github.com/hashicorp/terraform-provider-aws/issues/44143))
 * resource/aws_s3_bucket_lifecycle_configuration: Ignore `MethodNotAllowed` errors when deleting non-existent lifecycle configurations ([#44189](https://github.com/hashicorp/terraform-provider-aws/issues/44189))
+* resource/aws_servicecatalog_provisioned_product: Restore `timeouts.read` arguments removed in v6.12.0 ([#44238](https://github.com/hashicorp/terraform-provider-aws/issues/44238))
 
 ## 6.12.0 (September 4, 2025)
 
