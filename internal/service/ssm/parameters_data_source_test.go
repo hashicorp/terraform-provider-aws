@@ -67,7 +67,7 @@ data "aws_ssm_parameters" "test" {
 data "aws_ssm_parameters" "filtered" {
 
   parameter_filter {
-    key = "Name"
+    key    = "Name"
     option = "BeginsWith"
     values = ["/%[1]s/"]
   }
