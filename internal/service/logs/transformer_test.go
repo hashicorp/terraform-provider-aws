@@ -168,6 +168,53 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 	})
 }
 
+func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var transformer cloudwatchlogs.GetTransformerOutput
+	oldRName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	newRName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_transformer.test"
+	logGroupResourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformerConfig_basic(oldRName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+			},
+			{
+				Config: testAccTransformerConfig_basic(newRName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLogsTransformer_addKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 
