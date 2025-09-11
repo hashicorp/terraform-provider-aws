@@ -128,9 +128,12 @@ func testAccBaseline_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{"operation_identifier"},
 			},
 			{
 				Config: testAccBaselineConfig_tags2(rName, baselineARN, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
