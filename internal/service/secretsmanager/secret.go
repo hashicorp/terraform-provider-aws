@@ -273,12 +273,8 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if strings.Contains(err.Error(), "contains invalid principals") {
 			diags = sdkdiag.AppendWarningf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
 		} else {
-			diags = sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
 		}
-	}
-
-	if diags.HasError() {
-		return diags
 	}
 
 	if policy != nil && policy.ResourcePolicy != nil {
