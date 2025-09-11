@@ -679,6 +679,52 @@ func TestAccLogsTransformer_parseJSON(t *testing.T) {
 	})
 }
 
+func TestAccLogsTransformer_parseKeyValue(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var transformer cloudwatchlogs.GetTransformerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_transformer.test"
+	logGroupResourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformerConfig_parseKeyValue(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_key_value.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_key_value.0.overwrite_if_exists", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_key_value.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_key_value.0.destination", "destination1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_key_value.0.field_delimiter", ";"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_key_value.0.key_prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_key_value.0.key_value_delimiter", ":"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_key_value.0.non_match_value", "nonMatch1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_key_value.0.overwrite_if_exists", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_key_value.0.source", "source1"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+			},
+		},
+	})
+}
+
 func testAccTransformerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1067,6 +1113,34 @@ resource "aws_cloudwatch_log_transformer" "test" {
     parse_json {
 	  destination = "destination1"
       source      = "source1"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccTransformerConfig_parseKeyValue(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_transformer" "test" {
+  log_group_identifier = aws_cloudwatch_log_group.test.name
+
+  transformer_config {
+	parse_key_value {}
+  }
+
+  transformer_config {
+    parse_key_value {
+	  destination         = "destination1"
+	  field_delimiter     = ";"
+	  key_prefix          = "prefix1"
+	  key_value_delimiter = ":"
+	  non_match_value     = "nonMatch1"
+	  overwrite_if_exists = true
+      source              = "source1"
     }
   }
 }
