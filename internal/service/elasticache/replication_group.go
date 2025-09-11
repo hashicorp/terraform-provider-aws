@@ -457,6 +457,13 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:               getTagsIn(ctx),
 	}
 
+	// get write-only value from configuration
+	authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	if v, ok := d.GetOk("at_rest_encryption_enabled"); ok {
 		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AtRestEncryptionEnabled = aws.Bool(v)
@@ -465,6 +472,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("auth_token"); ok {
 		input.AuthToken = aws.String(v.(string))
+	}
+
+	if authTokenWO != "" {
+		input.AuthToken = aws.String(authTokenWO)
 	}
 
 	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
