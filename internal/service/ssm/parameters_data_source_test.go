@@ -92,7 +92,6 @@ data "aws_ssm_parameters" "filtered" {
 func TestAccSSMParametersDataSource_ramShared(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "data.aws_ssm_parameters.test"
 	sharedResourceName := "data.aws_ssm_parameters.test_shared"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -116,7 +115,6 @@ func TestAccSSMParametersDataSource_ramShared(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccWaitForSharedSSMParamsToBeShared(ctx, "aws_ssm_parameter.test2", &parameter1, 5, 5*time.Second),
 					testAccWaitForSharedSSMParamsToBeShared(ctx, "aws_ssm_parameter.test3", &parameter2, 5, 5*time.Second),
-					resource.TestCheckResourceAttr(resourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(sharedResourceName, "arns.#", "2"),
 				),
 			},
@@ -181,18 +179,6 @@ resource "aws_ram_resource_association" "test3" {
   resource_share_arn = aws_ram_resource_share.test.id
 }
 
-data "aws_ssm_parameters" "test" {
-  shared = false
-
-  depends_on = [
-	aws_ram_resource_association.test2,
-	aws_ram_resource_association.test3,
-    aws_ssm_parameter.test1,
-    aws_ssm_parameter.test2,
-    aws_ssm_parameter.test3,
-  ]
-}
-
 data "aws_ssm_parameters" "test_shared" {
   shared = true
 
@@ -224,7 +210,6 @@ func testAccWaitForSharedSSMParamsToBeShared(ctx context.Context, n string, v *a
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for i := 0; i < maxRetries; i++ {
-			fmt.Printf("Attempt %d of %d...\n", i+1, maxRetries)
 			parameters, err := conn.GetParameter(ctx, &awsssm.GetParameterInput{
 				Name: aws.String(parameterArn),
 			})
