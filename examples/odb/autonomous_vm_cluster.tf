@@ -1,4 +1,5 @@
-# Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
 
 # Autonomous VM Cluster with default maintenance window and minimum parameters
 resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
