@@ -41,9 +41,6 @@ func TestAccLogsLogGroup_List_Basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				// Check: resource.ComposeAggregateTestCheckFunc(
-				// 	testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-				// ),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
@@ -58,6 +55,54 @@ func TestAccLogsLogGroup_List_Basic(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/LogGroup/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigQueryChecks: []querycheck.QueryCheck{
+					// TODO
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsLogGroup_List_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_cloudwatch_log_group.test[0]"
+	resourceName2 := "aws_cloudwatch_log_group.test[1]"
+	resourceName3 := "aws_cloudwatch_log_group.test[2]"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
+		CheckDestroy: testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/LogGroup/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName1, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
+					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName2, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
+					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName3, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/LogGroup/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigQueryChecks: []querycheck.QueryCheck{
 					// TODO
