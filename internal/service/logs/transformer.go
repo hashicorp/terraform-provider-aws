@@ -533,7 +533,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 										CustomType: fwtypes.StringEnumType[awstypes.EventSource](),
 										Required:   true,
 									},
-									"oscf_version": schema.StringAttribute{
+									"ocsf_version": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.OCSFVersion](),
 										Required:   true,
 									},
@@ -1088,7 +1088,7 @@ type parseRoute53Model struct {
 
 type parseToOCSFModel struct {
 	EventSource fwtypes.StringEnum[awstypes.EventSource] `tfsdk:"event_source"`
-	OCSFVersion fwtypes.StringEnum[awstypes.OCSFVersion] `tfsdk:"oscf_version"`
+	OCSFVersion fwtypes.StringEnum[awstypes.OCSFVersion] `tfsdk:"ocsf_version"`
 	Source      types.String                             `tfsdk:"source"`
 }
 
