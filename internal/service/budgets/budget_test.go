@@ -509,7 +509,7 @@ func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 	})
 }
 
-func TestAccBudgetsBudget_billingViewArn(t *testing.T) {
+func TestAccBudgetsBudget_billingViewARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var budget awstypes.Budget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -522,7 +522,7 @@ func TestAccBudgetsBudget_billingViewArn(t *testing.T) {
 		CheckDestroy:             testAccCheckBudgetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetConfig_billingViewArn(rName),
+				Config: testAccBudgetConfig_billingViewARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
@@ -844,7 +844,7 @@ resource "aws_budgets_budget" "test" {
 `, rName, config)
 }
 
-func testAccBudgetConfig_billingViewArn(rName string) string {
+func testAccBudgetConfig_billingViewARN(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
