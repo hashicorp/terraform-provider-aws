@@ -5,12 +5,13 @@ package ssm_test
 
 import (
 	"fmt"
+	"testing"
+
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"testing"
 )
 
 func TestAccSSMParametersDataSource_basic(t *testing.T) {
