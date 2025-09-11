@@ -1,4 +1,6 @@
-# Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 
 resource "aws_odb_cloud_vm_cluster" "with_minimum_parameter" {
   display_name                    = "my-exa-infra"
