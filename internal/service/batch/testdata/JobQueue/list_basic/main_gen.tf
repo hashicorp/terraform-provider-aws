@@ -4,7 +4,7 @@
 provider "aws" {}
 
 resource "aws_batch_job_queue" "test" {
-  count = 3 # Should be a variable
+  count = 3
 
   name     = "${var.rName}-${count.index}"
   priority = 1
