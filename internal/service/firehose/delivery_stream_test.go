@@ -5883,7 +5883,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName)
 }
 
-func testAccDeliveryStreamConfig_baseDatabaseSource(rName string) string {
+func testAccDeliveryStreamConfig_baseDatabaseSource(_ string) string {
 	return acctest.ConfigCompose(acctest.ConfigRandomPassword(), `
 # TODO
 `)
