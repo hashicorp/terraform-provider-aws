@@ -4307,7 +4307,7 @@ type instanceListResource struct {
 	framework.ListResourceWithSDKv2Tags
 }
 
-type logGroupListResourceModel struct {
+type instanceListResourceModel struct {
 	framework.WithRegionModel
 	Filters customListFilters `tfsdk:"filter"`
 }
@@ -4327,7 +4327,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 	awsClient := l.Meta()
 	conn := awsClient.EC2Client(ctx)
 
-	var query logGroupListResourceModel
+	var query instanceListResourceModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
 			stream.Results = list.ListResultsStreamDiagnostics(diags)
