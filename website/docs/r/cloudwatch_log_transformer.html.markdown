@@ -95,6 +95,15 @@ Each `entries` block supports the following arguments:
 * `target` - (Required) Specifies the key of the field to copy the value to.
 * `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
 
+### `csv` Block
+
+Each `csv` block supports the following arguments:
+
+* `columns` - (Optional) Specifies the names to use for the columns in the transformed log event. If not specified, default column names (`[column_1, column_2 ...]`) are used.
+* `delimiter` - (Optional) Specifies the character used to separate each column in the original comma-separated value log event. Defaults to the comma `,` character.
+* `quote_character` - (Optional) Specifies the character used as a text qualifier for a single column of data. Defaults to the double quotation mark `"` character.
+* `source` - (Optional) Specifies the path to the field in the log event that has the comma separated values to be parsed. If ommited, the whole log message is processed.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
