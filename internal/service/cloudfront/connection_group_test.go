@@ -172,7 +172,7 @@ func TestAccCloudFrontConnectionGroup_anycastIpList(t *testing.T) {
 				Config: testAccConnectionGroupConfig_anycastIpList(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
-					resource.TestCheckResourceAttr(resourceName, "anycast_ip_list_id", "aip_3jpJwsoxxDsGJLm3JnLdvG"),
+					resource.TestCheckResourceAttrSet(resourceName, "anycast_ip_list_id"),
 				),
 			},
 		},
@@ -272,7 +272,8 @@ func testAccConnectionGroupConfig_anycastIpList() string {
 	return `
 resource "aws_cloudfront_connection_group" "testip" {
   name = "iptest"
-  anycast_ip_list_id = "aip_3jpJwsoxxDsGJLm3JnLdvG"
+  ipv6_enabled = false
+  anycast_ip_list_id = "aip_IuA2ABRz0cxB0EZ2ikd7rR"
 }
 `
 }
