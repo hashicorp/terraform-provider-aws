@@ -39,9 +39,8 @@ func resourceConnectionGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"anycast_ip_list_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"ipv6_enabled"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -57,9 +56,9 @@ func resourceConnectionGroup() *schema.Resource {
 				Computed: true,
 			},
 			"ipv6_enabled": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"anycast_ip_list_id"},
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"is_default": {
 				Type:     schema.TypeBool,
@@ -104,9 +103,7 @@ func resourceConnectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.AnycastIpListId = aws.String(v.(string))
 	}
 
-	if d.GetRawConfig().GetAttr("ipv6_enabled").IsKnown() {
-		input.Ipv6Enabled = aws.Bool(d.Get("ipv6_enabled").(bool))
-	}
+	input.Ipv6Enabled = aws.Bool(d.Get("ipv6_enabled").(bool))
 	input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
@@ -175,11 +172,7 @@ func resourceConnectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.AnycastIpListId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("ipv6_enabled"); ok {
-			input.Ipv6Enabled = aws.Bool(v.(bool))
-		} else if d.HasChange("ipv6_enabled") {
-			input.Ipv6Enabled = aws.Bool(d.Get("ipv6_enabled").(bool))
-		}
+		input.Ipv6Enabled = aws.Bool(d.Get("ipv6_enabled").(bool))
 
 		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
