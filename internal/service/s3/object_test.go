@@ -2148,7 +2148,7 @@ func TestAccS3Object_checksumSHA256Trigger(t *testing.T) {
 			},
 			{
 				// An object is created with checksum_algorithm=SHA256 and checksum_sha256 specified.
-				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filename),
+				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filename, filename),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -2162,7 +2162,7 @@ func TestAccS3Object_checksumSHA256Trigger(t *testing.T) {
 			},
 			{
 				// The object update is triggered by checksum_sha256 change
-				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filenameUpdated),
+				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filenameUpdated, filenameUpdated),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -2183,13 +2183,13 @@ func TestAccS3Object_checksumSHA256Trigger(t *testing.T) {
 			{
 				// The object update is triggered by checksum_sha256 change, but incorrect checksum_256 value is provided.
 				// Expect error returned from S3 API.
-				Config: testAccObjectConfig_checksumSHA256TriggerTainted(rName, filename),
+				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filename, filenameUpdated),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				ExpectError: regexache.MustCompile(`InvalidRequest`),
+				ExpectError: regexache.MustCompile(`BadDigest: The SHA256 you specified did not match the calculated checksum`),
 			},
 		},
 	})
@@ -3487,7 +3487,7 @@ resource "aws_s3_object" "object" {
 `, rName, source)
 }
 
-func testAccObjectConfig_checksumSHA256Trigger(rName string, source string) string {
+func testAccObjectConfig_checksumSHA256Trigger(rName string, source string, sha256FileName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -3498,26 +3498,9 @@ resource "aws_s3_object" "object" {
   key    = "test-key"
   source = %[2]q
 
-  checksum_sha256    = filebase64sha256(%[2]q)
+  checksum_sha256    = filebase64sha256(%[3]q)
   checksum_algorithm = "SHA256"
 
 }
-`, rName, source)
-}
-
-func testAccObjectConfig_checksumSHA256TriggerTainted(rName string, source string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_object" "object" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "test-key"
-  source = %[2]q
-
-  checksum_sha256    = "${filebase64sha256(%[2]q)}tainted"
-  checksum_algorithm = "SHA256"
-}
-`, rName, source)
+`, rName, source, sha256FileName)
 }
