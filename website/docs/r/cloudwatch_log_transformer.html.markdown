@@ -247,6 +247,19 @@ Each `entries` block supports the following arguments:
 * `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
 * `renameTo` - (Required) Specifies the new name of the key.
 
+### `split_string` Block
+
+Each `split_string` block supports the following arguments:
+
+* `entries` - (Required) Objects containing the information about the fields to split. You must include at least one entry, and ten at most. See [`split_string` `entries`](#split_string-entries-block) below for details.
+
+### `split_string` `entries` Block
+
+Each `entries` block supports the following arguments:
+
+* `delimiter` - (Required) Specifies the separator characters to split the string entry on.
+* `source` - (Required) Specifies the key of the field to split.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
