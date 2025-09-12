@@ -2119,6 +2119,82 @@ func TestAccS3Object_basicUpgrade(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_checksumSHA256Trigger(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj, updated_obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	startingData := "Ebben!"
+	updatedData := "Ne andrò lontana"
+
+	filename := testAccObjectCreateTempFile(t, startingData)
+	defer os.Remove(filename)
+
+	filenameUpdated := testAccObjectCreateTempFile(t, updatedData)
+	defer os.Remove(filenameUpdated)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// checksum_sha256 specified without checksum_algorithm.
+				// Expect error.
+				Config:      testAccObjectConfig_checksumSHA256TriggerWithoutChecksumAlgorirhm(rName, filename),
+				ExpectError: regexache.MustCompile(`checksum_sha256 can only be specified when checksum_algorithm is set to 'SHA256'`),
+			},
+			{
+				// An object is created with checksum_algorithm=SHA256 and checksum_sha256 specified.
+				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filename),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, startingData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "QifZEbR25GUM80w73rZDli2WfdThYYLK2RjGoFGGuSo="),
+				),
+			},
+			{
+				// The object update is triggered by checksum_sha256 change
+				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filenameUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &updated_obj),
+					testAccCheckObjectBody(&updated_obj, updatedData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "q2j00Vv/exbSoCQcDv7g55LgR7IadJWPXb7vJlZdimU="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "checksum_algorithm", "checksum_sha256"},
+			},
+			{
+				// The object update is triggered by checksum_sha256 change, but incorrect checksum_256 value is provided.
+				// Expect error returned from S3 API.
+				Config: testAccObjectConfig_checksumSHA256TriggerTainted(rName, filename),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectError: regexache.MustCompile(`InvalidRequest`),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectVersionIDDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(first.VersionId) == aws.ToString(second.VersionId) {
@@ -3392,4 +3468,55 @@ resource "aws_s3_object" "object" {
   kms_key_id = data.aws_kms_key.test.arn
 }
 `, rName, content)
+}
+
+func testAccObjectConfig_checksumSHA256TriggerWithoutChecksumAlgorirhm(rName string, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "test-key"
+  source = %[2]q
+
+  checksum_sha256 = filebase64sha256(%[2]q)
+}
+`, rName, source)
+}
+
+func testAccObjectConfig_checksumSHA256Trigger(rName string, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "test-key"
+  source = %[2]q
+
+  checksum_sha256    = filebase64sha256(%[2]q)
+  checksum_algorithm = "SHA256"
+
+}
+`, rName, source)
+}
+
+func testAccObjectConfig_checksumSHA256TriggerTainted(rName string, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "test-key"
+  source = %[2]q
+
+  checksum_sha256    = "${filebase64sha256(%[2]q)}tainted"
+  checksum_algorithm = "SHA256"
+}
+`, rName, source)
 }
