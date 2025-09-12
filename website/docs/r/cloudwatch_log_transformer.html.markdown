@@ -280,6 +280,19 @@ Each `trim_string` block supports the following arguments:
 
 * `with_keys` - (Required) Specifies the keys of the fields to convert to trim.
 
+### `type_converter` Block
+
+Each `type_converter` block supports the following arguments:
+
+* `entries` - (Required) Objects containing the information about the fields to change the type of. You must include at least one entry, and five at most. See [`type_converter` `entries`](#type_converter-entries-block) below for details.
+
+### `type_converter` `entries` Block
+
+Each `entries` block supports the following arguments:
+
+* `key` - (Required) Specifies the key with the value that will be converted to a different type.
+* `type` - (Required) Specifies the type to convert the field value to. Allowed values are: `integer`, `double`, `string` and `boolean`.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
