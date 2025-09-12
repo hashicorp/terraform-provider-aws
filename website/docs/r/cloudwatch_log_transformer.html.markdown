@@ -87,7 +87,7 @@ Each `entries` block supports the following arguments:
 
 The `copy_value` block supports the following arguments:
 
-* `entries` - (Required) Objects containing the information about the values to copy to the log event. You must include at least one entry, and five at most. See [`copy_value` `entries`](#substitute_string-block) below for details.
+* `entries` - (Required) Objects containing the information about the values to copy to the log event. You must include at least one entry, and five at most. See [`copy_value` `entries`](#copy_value-entries-block) below for details.
 
 ### `copy_value` `entries` Block
 
