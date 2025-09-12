@@ -278,7 +278,7 @@ Each `entries` block supports the following arguments:
 
 Each `trim_string` block supports the following arguments:
 
-* `with_keys` - (Required) Specifies the keys of the fields to convert to trim.
+* `with_keys` - (Required) Specifies the keys of the fields to trim.
 
 ### `type_converter` Block
 
@@ -292,6 +292,12 @@ Each `entries` block supports the following arguments:
 
 * `key` - (Required) Specifies the key with the value that will be converted to a different type.
 * `type` - (Required) Specifies the type to convert the field value to. Allowed values are: `integer`, `double`, `string` and `boolean`.
+
+### `upper_case_converter` Block
+
+Each `upper_case_converter` block supports the following arguments:
+
+* `upper_case_converter` - (Required) Specifies the keys of the fields to convert to uppercase.
 
 ## Attribute Reference
 
