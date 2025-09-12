@@ -797,6 +797,8 @@ func TestAccElastiCacheReplicationGroup_authTokenWriteOnly(t *testing.T) {
 				Config: testAccReplicationGroupConfig_authTokenWriteOnly(rName, "valid-password-1", 1, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				),
 			},
 		},
