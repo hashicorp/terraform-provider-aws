@@ -191,6 +191,14 @@ Each `parse_key_value` block supports the following arguments:
 * `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
 * `source` - (Optional) Specifies the path to the field in the log event that will be parsed. Defaults to `@message`.
 
+### `parse_postgres` Block
+
+~> **Note** You can only add a single `parse_postgres` processor per transformer. If specified, it must be the first processor in your transformer.
+
+The `parse_postgres` block supports the following arguments:
+
+* `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
