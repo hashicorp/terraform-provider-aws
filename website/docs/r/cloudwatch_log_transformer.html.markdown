@@ -78,8 +78,8 @@ The `add_keys` block supports the following arguments:
 Each `entries` block supports the following arguments:
 
 * `key` - (Required) Specifies the key of the new entry to be added to the log event.
-* `value` - (Required) Specifies the value of the new entry to be added to the log event.
 * `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the key already exists in the log event. Defaults to `false`.
+* `value` - (Required) Specifies the value of the new entry to be added to the log event.
 
 ### `copy_value` Block
 
@@ -91,9 +91,9 @@ Each `copy_value` block supports the following arguments:
 
 Each `entries` block supports the following arguments:
 
+* `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
 * `source` - (Required) Specifies the key to copy.
 * `target` - (Required) Specifies the key of the field to copy the value to.
-* `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
 
 ### `csv` Block
 
