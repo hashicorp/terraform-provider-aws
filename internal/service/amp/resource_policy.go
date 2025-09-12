@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -43,7 +44,6 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -55,8 +55,8 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.Sc
 				Required:   true,
 			},
 			"revision_id": schema.StringAttribute{
-				Required: false,
 				Computed: true,
+				Optional: true,
 			},
 			"workspace_id": schema.StringAttribute{
 				Required: true,
@@ -102,13 +102,8 @@ func (r *resourcePolicyResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	// Set values for unknowns.
-	// data.PolicyStatus = fwflex.StringValueToFramework(ctx, string(output.PolicyStatus))
 	data.RevisionId = fwflex.StringToFramework(ctx, output.RevisionId)
-
-	// policy, err :=
-
-	if waitResourcePolicyCreated(ctx, conn, data.WorkspaceId.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		// response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+	if _, err := waitResourcePolicyCreated(ctx, conn, data.WorkspaceId.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Workspace Resource Policy (%s) create", data.WorkspaceId.ValueString()), err.Error())
 		return
 	}
@@ -125,7 +120,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 
 	conn := r.Meta().AMPClient(ctx)
 
-	policy, err := findResourcePolicyByWorkspaceID(ctx, conn, data.WorkspaceId.ValueString())
+	output, err := findResourcePolicyByWorkspaceID(ctx, conn, data.WorkspaceId.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -139,9 +134,10 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 	}
 
 	// Set attributes for import.
-	data.PolicyDocument = fwflex.StringToFramework(ctx, policy.PolicyDocument)
-	// data.PolicyStatus = fwflex.StringValueToFramework(ctx, string(policy.PolicyStatus))
-	data.RevisionId = fwflex.StringToFramework(ctx, policy.RevisionId)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -177,9 +173,7 @@ func (r *resourcePolicyResource) Update(ctx context.Context, request resource.Up
 			return
 		}
 
-		// new.PolicyStatus = fwflex.StringValueToFramework(ctx, string(output.PolicyStatus))
 		new.RevisionId = fwflex.StringToFramework(ctx, output.RevisionId)
-
 		if _, err := waitResourcePolicyUpdated(ctx, conn, new.WorkspaceId.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Workspace Resource Policy (%s) update", new.WorkspaceId.ValueString()), err.Error())
 			return
@@ -224,14 +218,16 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 	}
 }
 
+func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("workspace_id"), request, response)
+}
+
 type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
-	// ID             types.String   `tfsdk:"id"`
-	PolicyDocument types.String `tfsdk:"policy_document"`
-	// PolicyStatus   types.String   `tfsdk:"policy_status"`
-	RevisionId  types.String   `tfsdk:"revision_id"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
-	WorkspaceId types.String   `tfsdk:"workspace_id"`
+	PolicyDocument fwtypes.IAMPolicy `tfsdk:"policy_document"`
+	RevisionId     types.String      `tfsdk:"revision_id"`
+	Timeouts       timeouts.Value    `tfsdk:"timeouts"`
+	WorkspaceId    types.String      `tfsdk:"workspace_id"`
 }
 
 func findResourcePolicyByWorkspaceID(ctx context.Context, conn *amp.Client, workspaceID string) (*amp.DescribeResourcePolicyOutput, error) {
@@ -277,8 +273,8 @@ func statusResourcePolicy(ctx context.Context, conn *amp.Client, workspaceID str
 
 func waitResourcePolicyCreated(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice("CREATING"),
-		Target:  enum.Slice("ACTIVE"),
+		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeCreating),
+		Target:  enum.Slice(awstypes.WorkspacePolicyStatusCodeActive),
 		Refresh: statusResourcePolicy(ctx, conn, workspaceID),
 		Timeout: timeout,
 	}
@@ -294,8 +290,8 @@ func waitResourcePolicyCreated(ctx context.Context, conn *amp.Client, workspaceI
 
 func waitResourcePolicyUpdated(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice("UPDATING"),
-		Target:  enum.Slice("ACTIVE"),
+		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeUpdating),
+		Target:  enum.Slice(awstypes.WorkspacePolicyStatusCodeActive),
 		Refresh: statusResourcePolicy(ctx, conn, workspaceID),
 		Timeout: timeout,
 	}
@@ -311,7 +307,7 @@ func waitResourcePolicyUpdated(ctx context.Context, conn *amp.Client, workspaceI
 
 func waitResourcePolicyDeleted(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice("ACTIVE", "DELETING"),
+		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeDeleting, awstypes.WorkspacePolicyStatusCodeActive),
 		Target:  []string{},
 		Refresh: statusResourcePolicy(ctx, conn, workspaceID),
 		Timeout: timeout,
