@@ -76,6 +76,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  dataSourceDistributionTenant,
+			TypeName: "aws_cloudfront_distribution_tenant",
+			Name:     "Distribution Tenant",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  dataSourceFunction,
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
