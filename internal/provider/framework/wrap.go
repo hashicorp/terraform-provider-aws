@@ -923,17 +923,16 @@ func (w *wrappedListResourceFramework) Metadata(_ context.Context, request resou
 }
 
 type wrappedListResourceSDK struct {
-	inner              list.ListResourceWithConfigure
+	inner              inttypes.ListResourceForSDK
 	meta               *conns.AWSClient
 	servicePackageName string
 	spec               *inttypes.ServicePackageSDKListResource
 	interceptors       interceptorInvocations
 }
 
-var _ list.ListResourceWithConfigure = &wrappedListResourceSDK{}
-var _ list.ListResourceWithRawV5Schemas = &wrappedListResourceSDK{}
+var _ inttypes.ListResourceForSDK = &wrappedListResourceSDK{}
 
-func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) list.ListResourceWithConfigure {
+func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) inttypes.ListResourceForSDK {
 	var interceptors interceptorInvocations
 
 	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
@@ -942,6 +941,10 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 	}
 
 	inner := spec.Factory()
+
+	if v, ok := inner.(framework.WithRegionSpec); ok {
+		v.SetRegionSpec(spec.Region)
+	}
 
 	if v, ok := inner.(framework.Identityer); ok {
 		v.SetIdentitySpec(spec.Identity)

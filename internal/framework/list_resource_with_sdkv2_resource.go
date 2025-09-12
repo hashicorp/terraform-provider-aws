@@ -5,6 +5,7 @@ package framework
 
 import (
 	"context"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
@@ -12,13 +13,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+type WithRegionSpec interface {
+	SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion])
+}
 
 type ListResourceWithSDKv2Resource struct {
 	resourceSchema *schema.Resource
 	identitySpec   inttypes.Identity
 	identitySchema *schema.ResourceIdentity
+	regionSpec     unique.Handle[inttypes.ServicePackageResourceRegion]
+}
+
+func (l *ListResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion]) {
+	l.regionSpec = regionSpec
+
+	var isRegionOverrideEnabled bool
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled {
+		if _, ok := l.resourceSchema.SchemaMap()[names.AttrRegion]; !ok {
+			// TODO: Use standard shared `region` attribute
+			l.resourceSchema.SchemaMap()[names.AttrRegion] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
+		}
+	}
 }
 
 func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Identity) {
@@ -51,15 +78,6 @@ func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list
 }
 
 func (l *ListResourceWithSDKv2Resource) SetResourceSchema(resource *schema.Resource) {
-	// Add region attribute if it does not exit
-	if _, ok := resource.SchemaMap()[names.AttrRegion]; !ok {
-		resource.SchemaMap()[names.AttrRegion] = &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		}
-	}
-
 	l.resourceSchema = resource
 }
 
