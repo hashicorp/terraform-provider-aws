@@ -67,7 +67,7 @@ Each `transformer_config` supports the following arguments:
 
 ### `add_keys` Block
 
-~> **Note** You can only add a single `add_keys` processor.
+~> **Note** You can only add a single `add_keys` processor per transformer.
 
 The `add_keys` block supports the following arguments:
 
@@ -83,7 +83,9 @@ Each `entries` block supports the following arguments:
 
 ### `copy_value` Block
 
-Each `copy_value` block supports the following arguments:
+~> **Note** You can only add a single `copy_value` processor per transformer.
+
+The `copy_value` block supports the following arguments:
 
 * `entries` - (Required) Objects containing the information about the values to copy to the log event. You must include at least one entry, and five at most. See [`copy_value` `entries`](#substitute_string-block) below for details.
 
