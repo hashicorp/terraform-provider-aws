@@ -331,7 +331,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				CustomType: fwtypes.NewListNestedObjectTypeOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
-					listvalidator.SizeAtLeast(1),
+					listvalidator.IsRequired(),
 				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
