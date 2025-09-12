@@ -144,6 +144,12 @@ Each `list_to_map` block supports the following arguments:
 * `target` - (Optional) Specifies the key of the field that will hold the generated map.
 * `value_key` - (Optional) Specifies the values that will be extracted from the source objects and put into the values of the generated map. If omitted, original objects in the source list will be put into the values of the generated map.
 
+### `lower_case_string` Block
+
+Each `lower_case_string` block supports the following arguments:
+
+* `with_keys` - (Required) Specifies the keys of the fields to convert to lowercase.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
