@@ -47,7 +47,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_organizations_delegated_administrator.example
   identity = {
-    service_principal = "config.amazonaws.com"
+    service_principal    = "config.amazonaws.com"
     delegated_account_id = "123456789012"
   }
 }

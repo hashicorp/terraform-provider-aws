@@ -188,7 +188,7 @@ import {
   to = aws_s3_bucket_object.example
   identity = {
     bucket = "some-bucket-name"
-    key = "some/key.txt"
+    key    = "some/key.txt"
   }
 }
 

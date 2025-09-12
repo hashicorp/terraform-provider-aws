@@ -91,7 +91,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_cloudwatch_event_rule.example
   identity = {
-    name = "capture-console-sign-in"
+    name           = "capture-console-sign-in"
     event_bus_name = "example-event-bus"
   }
 }
@@ -110,6 +110,7 @@ resource "aws_cloudwatch_event_rule" "example" {
 #### Optional
 
 * `event_bus_name` (String) Name of the event bus. If omitted, `default` is used.
+
 - `account_id` (String) AWS Account where this resource is managed.
 - `region` (String) Region where this resource is managed.
 

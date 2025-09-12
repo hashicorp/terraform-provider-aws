@@ -48,7 +48,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_vpc_security_group_vpc_association.example
   identity = {
-    vpc_id = "vpc-67890"
+    vpc_id            = "vpc-67890"
     security_group_id = "sg-12345"
   }
 }

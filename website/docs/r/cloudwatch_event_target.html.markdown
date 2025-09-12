@@ -697,8 +697,8 @@ import {
   to = aws_cloudwatch_event_target.example
   identity = {
     event_bus_name = "default"
-    rule = "rule-name"
-    target_id = "target-id"
+    rule           = "rule-name"
+    target_id      = "target-id"
   }
 }
 

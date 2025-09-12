@@ -192,6 +192,7 @@ resource "aws_s3_bucket_acl" "example" {
 
 * `expected_bucket_owner` (String) Account ID of the expected bucket owner.
 * `acl` (String) Canned ACL to apply to the bucket.
+
 - `account_id` (String) AWS Account where this resource is managed.
 - `region` (String) Region where this resource is managed.
 

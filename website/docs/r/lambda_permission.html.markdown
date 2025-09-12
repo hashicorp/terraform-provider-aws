@@ -243,7 +243,7 @@ import {
   to = aws_lambda_permission.example
   identity = {
     function_name = "my_test_lambda_function"
-    statement_id = "AllowExecutionFromCloudWatch"
+    statement_id  = "AllowExecutionFromCloudWatch"
   }
 }
 
@@ -262,6 +262,7 @@ resource "aws_lambda_permission" "example" {
 #### Optional
 
 * `qualifier` (String) Qualifier for the function version or alias.
+
 - `account_id` (String) AWS Account where this resource is managed.
 - `region` (String) Region where this resource is managed.
 

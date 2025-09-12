@@ -236,7 +236,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_sagemaker_user_profile.example
   identity = {
-    domain_id = "domain-id"
+    domain_id         = "domain-id"
     user_profile_name = "profile-name"
   }
 }

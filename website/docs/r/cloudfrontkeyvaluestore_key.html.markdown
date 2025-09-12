@@ -53,7 +53,7 @@ import {
   to = aws_cloudfrontkeyvaluestore_key.example
   identity = {
     key_value_store_arn = "arn:aws:cloudfront::111111111111:key-value-store/8562g61f-caba-2845-9d99-b97diwae5d3c"
-    key = "someKey"
+    key                 = "someKey"
   }
 }
 

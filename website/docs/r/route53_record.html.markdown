@@ -256,8 +256,8 @@ import {
   to = aws_route53_record.example
   identity = {
     zone_id = "Z4KAPRWWNC7JR"
-    name = "dev.example.com"
-    type = "NS"
+    name    = "dev.example.com"
+    type    = "NS"
   }
 }
 
@@ -277,6 +277,7 @@ resource "aws_route53_record" "example" {
 #### Optional
 
 * `set_identifier` (String) Set identifier for the record.
+
 - `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Records using the ID of the record, record name, record type, and set identifier. For example:

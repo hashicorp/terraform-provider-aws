@@ -74,7 +74,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_iam_role_policy_attachment.example
   identity = {
-    role = "test-role"
+    role       = "test-role"
     policy_arn = "arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
   }
 }
