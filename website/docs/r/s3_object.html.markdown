@@ -215,7 +215,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `checksum_crc32c` - The base64-encoded, 32-bit CRC32C checksum of the object.
 * `checksum_crc64nvme` - The base64-encoded, 64-bit CRC64NVME checksum of the object.
 * `checksum_sha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
-* `checksum_sha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version_id` - Unique version ID value for the object, if bucket versioning is enabled.
