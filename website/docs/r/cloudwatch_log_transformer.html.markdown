@@ -274,6 +274,12 @@ Each `entries` block supports the following arguments:
 * `source` - (Required) Specifies the key to modify.
 * `to` - (Required) Specifies the string to be substituted for each match of `from`.
 
+### `trim_string` Block
+
+Each `trim_string` block supports the following arguments:
+
+* `with_keys` - (Required) Specifies the keys of the fields to convert to trim.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
