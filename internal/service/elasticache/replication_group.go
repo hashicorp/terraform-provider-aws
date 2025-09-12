@@ -99,7 +99,8 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
-				RequiredWith:     []string{"auth_token", "auth_token_wo"},
+				// FIXME: actually required with auth_token OR auth_token_wo but cannot handle mutually exclusive values
+				// RequiredWith:     []string{"auth_token", "auth_token_wo"},
 			},
 			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
