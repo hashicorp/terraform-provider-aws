@@ -123,7 +123,7 @@ func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient
 			"An unexpected error occurred setting resource identity. "+
 				"This is always an error in the provider. "+
 				"Please report the following to the provider developer:\n\n"+
-				"Error:"+err.Error(),
+				"Error: "+err.Error(),
 		))
 		return
 	}
@@ -135,7 +135,7 @@ func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient
 			"An unexpected error occurred converting identity state. "+
 				"This is always an error in the provider. "+
 				"Please report the following to the provider developer:\n\n"+
-				"Error:"+err.Error(),
+				"Error: "+err.Error(),
 		))
 		return
 	}
@@ -153,7 +153,7 @@ func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient
 				"An unexpected error occurred converting resource state. "+
 					"This is always an error in the provider. "+
 					"Please report the following to the provider developer:\n\n"+
-					"Error:"+err.Error(),
+					"Error: "+err.Error(),
 			))
 			return
 		}
