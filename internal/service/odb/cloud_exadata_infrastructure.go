@@ -267,7 +267,7 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 				CustomType: fwtypes.NewListNestedObjectTypeOf[cloudExadataInfraMaintenanceWindowResourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
-					listvalidator.SizeAtLeast(1),
+					listvalidator.IsRequired(),
 				},
 				Description: " The scheduling details for the maintenance window. Patching and system updates take place during the maintenance window ",
 				NestedObject: schema.NestedBlockObject{
