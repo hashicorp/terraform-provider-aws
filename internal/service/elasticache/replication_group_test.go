@@ -803,7 +803,6 @@ func TestAccElastiCacheReplicationGroup_authTokenWriteOnly(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccElastiCacheReplicationGroup_upgrade_6_0_0(t *testing.T) {
