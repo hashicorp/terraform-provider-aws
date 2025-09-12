@@ -3401,6 +3401,7 @@ resource "aws_s3_object" "object" {
       tags = {}
     }
   }
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
 }
 `, source))
 }
