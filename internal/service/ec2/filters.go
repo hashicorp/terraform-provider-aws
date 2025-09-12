@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -168,6 +169,31 @@ type customFilterModel struct {
 type (
 	customFilters = fwtypes.SetNestedObjectValueOf[customFilterModel]
 )
+
+func customListFiltersBlock(ctx context.Context) listschema.ListNestedBlock {
+	return listschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
+		NestedObject: listschema.NestedBlockObject{
+			Attributes: map[string]listschema.Attribute{
+				names.AttrName: listschema.StringAttribute{
+					Required: true,
+				},
+				names.AttrValues: listschema.ListAttribute{
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Required:    true,
+				},
+			},
+		},
+	}
+}
+
+type customListFilterModel struct {
+	Name   types.String         `tfsdk:"name"`
+	Values fwtypes.ListOfString `tfsdk:"values"`
+}
+
+type customListFilters = fwtypes.ListNestedObjectValueOf[customListFilterModel]
 
 // newCustomFilterList takes the set value extracted from a schema
 // attribute conforming to the schema returned by CustomFiltersSchema,
