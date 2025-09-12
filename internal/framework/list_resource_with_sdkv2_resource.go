@@ -164,6 +164,19 @@ func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient
 	}
 
 	if includeResource {
+		if !tfunique.IsHandleNil(l.regionSpec) && l.regionSpec.Value().IsOverrideEnabled {
+			if err := rd.Set(names.AttrRegion, awsClient.Region(ctx)); err != nil {
+				result.Diagnostics.Append(diag.NewErrorDiagnostic(
+					"Error Listing Remote Resources",
+					"An unexpected error occurred. "+
+						"This is always an error in the provider. "+
+						"Please report the following to the provider developer:\n\n"+
+						"Error: "+err.Error(),
+				))
+				return
+			}
+		}
+
 		tfTypeResource, err := rd.TfTypeResourceState()
 		if err != nil {
 			result.Diagnostics.Append(diag.NewErrorDiagnostic(
