@@ -118,6 +118,12 @@ Each `date_time_converter` block supports the following arguments:
 * `target_format` - (Optional) Specifies the datetime format to use for the converted data in the target field. Defaults to `yyyy-MM-dd'T'HH:mm:ss.SSS'Z`.
 * `target_timezone` - (Optional) Specifies the time zone of the target field. Defaults to `UTC`.
 
+### `delete_keys` Block
+
+Each `delete_keys` block supports the following arguments:
+
+* `with_keys` - (Required) Specifies the keys to be deleted.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
