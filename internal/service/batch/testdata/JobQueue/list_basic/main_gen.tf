@@ -1,8 +1,12 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+provider "aws" {}
+
 resource "aws_batch_job_queue" "test" {
-  name     = var.rName
+  count = 3
+
+  name     = "${var.rName}-${count.index}"
   priority = 1
   state    = "DISABLED"
 
@@ -80,13 +84,3 @@ variable "rName" {
   type        = string
   nullable    = false
 }
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.0.0"
-    }
-  }
-}
-
-provider "aws" {}
