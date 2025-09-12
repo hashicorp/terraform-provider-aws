@@ -195,3 +195,24 @@ func newEmptyObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagno
 
 	return obj, diags
 }
+
+type setRegionInterceptor struct{}
+
+func SetRegionInterceptor() setRegionInterceptor {
+	return setRegionInterceptor{}
+}
+
+// Copied from resourceSetRegionInStateInterceptor.read()
+func (r setRegionInterceptor) Read(ctx context.Context, params InterceptorParams) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch params.When {
+	case After:
+		diags.Append(params.Result.Resource.SetAttribute(ctx, path.Root(names.AttrRegion), params.C.Region(ctx))...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
