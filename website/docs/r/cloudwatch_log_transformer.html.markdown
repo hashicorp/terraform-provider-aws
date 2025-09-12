@@ -174,9 +174,21 @@ The `parse_cloudfront` block supports the following arguments:
 
 ### `parse_json` Block
 
-The `parse_json` block supports the following arguments:
+Each `parse_json` block supports the following arguments:
 
 * `destination` - (Optional) Specifies the location to put the parsed key value pair into. If omitted, it will be placed under the root node.
+* `source` - (Optional) Specifies the path to the field in the log event that will be parsed. Defaults to `@message`.
+
+### `parse_key_value` Block
+
+Each `parse_key_value` block supports the following arguments:
+
+* `destination` - (Optional) Specifies the destination field to put the extracted key-value pairs into.
+* `field_delimiter` - (Optional) Specifies the field delimiter string that is used between key-value pairs in the original log events. Defaults to the ampersand `&` character.
+* `key_prefix` - (Optional) Specifies a prefix that will be added to all transformed keys.
+* `key_value_delimiter` - (Optional) Specifies the delimiter string to use between the key and value in each pair in the transformed log event. Defaults to the equal `=` character.
+* `non_match_value` - (Optional) Specifies a value to insert into the value field in the result if a key-value pair is not successfully split.
+* `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
 * `source` - (Optional) Specifies the path to the field in the log event that will be parsed. Defaults to `@message`.
 
 ## Attribute Reference
