@@ -791,7 +791,7 @@ func TestAccElastiCacheReplicationGroup_authTokenWriteOnly(t *testing.T) {
 			// Password should not be shown in error message
 			{
 				Config:      testAccReplicationGroupConfig_authTokenWriteOnly(rName, "invalid", 1, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
-				ExpectError: regexache.MustCompile(`"auth_token_wo" must contain from 16 to 128 alphanumeric characters or symbols (excluding @, \", and /)`), // https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth.html
+				ExpectError: regexache.MustCompile(`"auth_token_wo" must contain from 16 to 128 alphanumeric characters or symbols`), // https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth.html
 			},
 			{
 				Config: testAccReplicationGroupConfig_authTokenWriteOnly(rName, "valid-password-1", 1, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
