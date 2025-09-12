@@ -1,5 +1,9 @@
 ## 6.14.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_controltower_baseline` ([#42397](https://github.com/hashicorp/terraform-provider-aws/issues/42397))
+
 ## 6.13.0 (September 11, 2025)
 
 ENHANCEMENTS:
