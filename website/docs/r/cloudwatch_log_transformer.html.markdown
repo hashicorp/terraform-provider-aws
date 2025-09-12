@@ -124,6 +124,15 @@ Each `delete_keys` block supports the following arguments:
 
 * `with_keys` - (Required) Specifies the keys to be deleted.
 
+### `grok` Block
+
+~> **Note** You can only add a single `grok` processor per transformer.
+
+The `grok` block supports the following arguments:
+
+* `match` - (Required) Specifies the grok pattern to match against the log event.
+* `source` - (Optional) Specifies the path to the field in the log event that has the comma separated values to be parsed. If ommited, the whole log message is processed.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
