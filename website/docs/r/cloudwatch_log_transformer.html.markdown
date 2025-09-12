@@ -260,6 +260,20 @@ Each `entries` block supports the following arguments:
 * `delimiter` - (Required) Specifies the separator characters to split the string entry on.
 * `source` - (Required) Specifies the key of the field to split.
 
+### `substitute_string` Block
+
+Each `substitute_string` block supports the following arguments:
+
+* `entries` - (Required) Objects containing the information about the fields to substitute. You must include at least one entry, and ten at most. See [`substitute_string` `entries`](#substitute_string-entries-block) below for details.
+
+### `substitute_string` `entries` Block
+
+Each `entries` block supports the following arguments:
+
+* `from` - (Required) Specifies the regular expression string to be replaced.
+* `source` - (Required) Specifies the key to modify.
+* `to` - (Required) Specifies the string to be substituted for each match of `from`.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
