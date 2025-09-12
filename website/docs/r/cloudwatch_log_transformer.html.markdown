@@ -150,6 +150,20 @@ Each `lower_case_string` block supports the following arguments:
 
 * `with_keys` - (Required) Specifies the keys of the fields to convert to lowercase.
 
+### `move_keys` Block
+
+Each `move_keys` block supports the following arguments:
+
+* `entries` - (Required) Objects containing the information about the keys to move to the log event. You must include at least one entry, and five at most. See [`move_keys` `entries`](#move_keys-entries-block) below for details.
+
+### `move_keys` `entries` Block
+
+Each `entries` block supports the following arguments:
+
+* `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
+* `source` - (Required) Specifies the key to move.
+* `target` - (Required) Specifies the key to move to.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
