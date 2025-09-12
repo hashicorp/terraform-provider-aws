@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_controltower_baseline` ([#42397](https://github.com/hashicorp/terraform-provider-aws/issues/42397))
 
+ENHANCEMENTS:
+
+* resource/aws_scheduler_schedule: Add `action_after_completion` argument ([#44264](https://github.com/hashicorp/terraform-provider-aws/issues/44264))
+
 ## 6.13.0 (September 11, 2025)
 
 ENHANCEMENTS:
