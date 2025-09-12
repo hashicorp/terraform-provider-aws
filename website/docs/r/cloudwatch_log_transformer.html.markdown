@@ -104,6 +104,18 @@ Each `csv` block supports the following arguments:
 * `quote_character` - (Optional) Specifies the character used as a text qualifier for a single column of data. Defaults to the double quotation mark `"` character.
 * `source` - (Optional) Specifies the path to the field in the log event that has the comma separated values to be parsed. If ommited, the whole log message is processed.
 
+### `date_time_converter` Block
+
+Each `date_time_converter` block supports the following arguments:
+
+* `locale` - (Optional) Specifies the locale of the source field. Defaults to `locale.ROOT`.
+* `match_patterns` - (Required) Specifies the list of patterns to match against the `source` field.
+* `source` - (Required) Specifies the key to apply the date conversion to.
+* `source_timezone` - (Optional) Specifies the time zone of the source field. Defaults to `UTC`.
+* `target` - (Required) Specifies the JSON field to store the result in.
+* `target_format` - (Optional) Specifies the datetime format to use for the converted data in the target field. Defaults to `yyyy-MM-dd'T'HH:mm:ss.SSS'Z`.
+* `target_timezone` - (Optional) Specifies the time zone of the target field. Defaults to `UTC`.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
