@@ -172,6 +172,13 @@ The `parse_cloudfront` block supports the following arguments:
 
 * `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
 
+### `parse_json` Block
+
+The `parse_json` block supports the following arguments:
+
+* `destination` - (Optional) Specifies the location to put the parsed key value pair into. If omitted, it will be placed under the root node.
+* `source` - (Optional) Specifies the path to the field in the log event that will be parsed. Defaults to `@message`.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
