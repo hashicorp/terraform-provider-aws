@@ -20,11 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAMPWorkspaceResourcePolicy_basic(t *testing.T) {
+func TestAccAMPResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy amp.DescribeResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_workspace_resource_policy.test"
+	resourceName := "aws_prometheus_resource_policy.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -34,12 +34,12 @@ func TestAccAMPWorkspaceResourcePolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceResourcePolicyExists(ctx, resourceName, &policy),
+					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "revision_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_document"),
@@ -57,11 +57,11 @@ func TestAccAMPWorkspaceResourcePolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAMPWorkspaceResourcePolicy_update(t *testing.T) {
+func TestAccAMPResourcePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy1, policy2 amp.DescribeResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_workspace_resource_policy.test"
+	resourceName := "aws_prometheus_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -70,18 +70,18 @@ func TestAccAMPWorkspaceResourcePolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceResourcePolicyExists(ctx, resourceName, &policy1),
+					testAccCheckResourcePolicyExists(ctx, resourceName, &policy1),
 				),
 			},
 			{
-				Config: testAccWorkspaceResourcePolicyConfig_updated(rName),
+				Config: testAccResourcePolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceResourcePolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResourcePolicyExists(ctx, resourceName, &policy2),
 				),
 			},
 			{
@@ -96,11 +96,11 @@ func TestAccAMPWorkspaceResourcePolicy_update(t *testing.T) {
 	})
 }
 
-func TestAccAMPWorkspaceResourcePolicy_disappears(t *testing.T) {
+func TestAccAMPResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy amp.DescribeResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_workspace_resource_policy.test"
+	resourceName := "aws_prometheus_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -109,13 +109,13 @@ func TestAccAMPWorkspaceResourcePolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceResourcePolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceWorkspaceResourcePolicy, resourceName),
+					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,11 +123,11 @@ func TestAccAMPWorkspaceResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAMPWorkspaceResourcePolicy_disappears_Workspace(t *testing.T) {
+func TestAccAMPResourcePolicy_disappears_Workspace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy amp.DescribeResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_workspace_resource_policy.test"
+	resourceName := "aws_prometheus_resource_policy.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -137,12 +137,12 @@ func TestAccAMPWorkspaceResourcePolicy_disappears_Workspace(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceResourcePolicyExists(ctx, resourceName, &policy),
+					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceWorkspace(), workspaceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -151,12 +151,12 @@ func TestAccAMPWorkspaceResourcePolicy_disappears_Workspace(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkspaceResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_prometheus_workspace_resource_policy" {
+			if rs.Type != "aws_prometheus_resource_policy" {
 				continue
 			}
 
@@ -170,14 +170,14 @@ func testAccCheckWorkspaceResourcePolicyDestroy(ctx context.Context) resource.Te
 				return err
 			}
 
-			return fmt.Errorf("Prometheus Workspace Resource Policy %s still exists", rs.Primary.Attributes["workspace_id"])
+			return fmt.Errorf("Prometheus Resource Policy %s still exists", rs.Primary.Attributes["workspace_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckWorkspaceResourcePolicyExists(ctx context.Context, n string, v *amp.DescribeResourcePolicyOutput) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, n string, v *amp.DescribeResourcePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -198,7 +198,7 @@ func testAccCheckWorkspaceResourcePolicyExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccWorkspaceResourcePolicyConfig_basic(rName string) string {
+func testAccResourcePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = %[1]q
@@ -211,7 +211,7 @@ data "aws_iam_policy_document" "test" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = [data.aws_caller_identity.current.account_id]
     }
     actions = [
       "aps:RemoteWrite",
@@ -224,14 +224,14 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_prometheus_workspace_resource_policy" "test" {
+resource "aws_prometheus_resource_policy" "test" {
   workspace_id    = aws_prometheus_workspace.test.id
   policy_document = data.aws_iam_policy_document.test.json
 }
 `, rName)
 }
 
-func testAccWorkspaceResourcePolicyConfig_updated(rName string) string {
+func testAccResourcePolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = %[1]q
@@ -244,7 +244,7 @@ data "aws_iam_policy_document" "test" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = [data.aws_caller_identity.current.account_id]
     }
     actions = [
       "aps:RemoteWrite",
@@ -254,7 +254,7 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_prometheus_workspace_resource_policy" "test" {
+resource "aws_prometheus_resource_policy" "test" {
   workspace_id    = aws_prometheus_workspace.test.id
   policy_document = data.aws_iam_policy_document.test.json
 }

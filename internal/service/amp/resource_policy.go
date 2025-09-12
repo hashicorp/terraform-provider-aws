@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_prometheus_workspace_resource_policy", name="Workspace Resource Policy")
+// @FrameworkResource("aws_prometheus_resource_policy", name="Resource Policy")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp;amp.DescribeResourcePolicyOutput")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}

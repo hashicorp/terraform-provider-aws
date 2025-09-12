@@ -10,7 +10,7 @@ var (
 	ResourceRuleGroupNamespace        = resourceRuleGroupNamespace
 	ResourceScraper                   = newScraperResource
 	ResourceWorkspace                 = resourceWorkspace
-	ResourceWorkspaceResourcePolicy   = newResourcePolicyResource
+	ResourceResourcePolicy            = newResourcePolicyResource
 
 	FindAlertManagerDefinitionByID    = findAlertManagerDefinitionByID
 	FindQueryLoggingConfigurationByID = findQueryLoggingConfigurationByID
