@@ -233,6 +233,20 @@ The `parse_waf` block supports the following arguments:
 
 * `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
 
+### `rename_keys` Block
+
+Each `rename_keys` block supports the following arguments:
+
+* `entries` - (Required) Objects containing the information about the keys to rename. You must include at least one entry, and five at most. See [`rename_keys` `entries`](#rename_keys-entries-block) below for details.
+
+### `rename_keys` `entries` Block
+
+Each `entries` block supports the following arguments:
+
+* `key` - (Required) Specifies the key to rename.
+* `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
+* `renameTo` - (Required) Specifies the new name of the key.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
