@@ -104,7 +104,7 @@ Each `csv` block supports the following arguments:
 * `columns` - (Optional) Specifies the names to use for the columns in the transformed log event. If not specified, default column names (`[column_1, column_2 ...]`) are used.
 * `delimiter` - (Optional) Specifies the character used to separate each column in the original comma-separated value log event. Defaults to the comma `,` character.
 * `quote_character` - (Optional) Specifies the character used as a text qualifier for a single column of data. Defaults to the double quotation mark `"` character.
-* `source` - (Optional) Specifies the path to the field in the log event that has the comma separated values to be parsed. If ommited, the whole log message is processed.
+* `source` - (Optional) Specifies the path to the field in the log event that has the comma separated values to be parsed. If omitted, the whole log message is processed.
 
 ### `date_time_converter` Block
 
@@ -131,7 +131,18 @@ Each `delete_keys` block supports the following arguments:
 The `grok` block supports the following arguments:
 
 * `match` - (Required) Specifies the grok pattern to match against the log event.
-* `source` - (Optional) Specifies the path to the field in the log event that has the comma separated values to be parsed. If ommited, the whole log message is processed.
+* `source` - (Optional) Specifies the path to the field in the log event that has the comma separated values to be parsed. If omitted, the whole log message is processed.
+
+### `list_to_map` Block
+
+Each `list_to_map` block supports the following arguments:
+
+* `flatten` - (Optional) Specifies whether the list will be flattened into single items. Defaults to `false`.
+* `flattened_element` - (Optional) Required if `flatten` is set to true. Specifies the element to keep. Allowed values are `first` and `last`.
+* `key` - (Required) Specifies the key of the field to be extracted as keys in the generated map.
+* `source` - (Required) Specifies the key in the log event that has a list of objects that will be converted to a map.
+* `target` - (Optional) Specifies the key of the field that will hold the generated map.
+* `value_key` - (Optional) Specifies the values that will be extracted from the source objects and put into the values of the generated map. If omitted, original objects in the source list will be put into the values of the generated map.
 
 ## Attribute Reference
 
