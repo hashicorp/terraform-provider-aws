@@ -199,6 +199,14 @@ The `parse_postgres` block supports the following arguments:
 
 * `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
 
+### `parse_route53` Block
+
+~> **Note** You can only add a single `parse_route53` processor per transformer. If specified, it must be the first processor in your transformer.
+
+The `parse_route53` block supports the following arguments:
+
+* `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
