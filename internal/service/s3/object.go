@@ -117,6 +117,7 @@ func resourceObject() *schema.Resource {
 			},
 			"checksum_sha256": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			names.AttrContent: {
@@ -507,6 +508,10 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 		input.ChecksumAlgorithm = types.ChecksumAlgorithm(v.(string))
 	}
 
+	if v, ok := d.GetOk("checksum_sha256"); ok && input.ChecksumAlgorithm == types.ChecksumAlgorithmSha256 {
+		input.ChecksumSHA256 = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("content_disposition"); ok {
 		input.ContentDisposition = aws.String(v.(string))
 	}
@@ -601,6 +606,12 @@ func validateMetadataIsLowerCase(v any, k string) (ws []string, errors []error) 
 }
 
 func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	if !d.GetRawConfig().GetAttr("checksum_sha256").IsNull() {
+		if v, ok := d.GetOk("checksum_algorithm"); !ok || types.ChecksumAlgorithm(v.(string)) != types.ChecksumAlgorithmSha256 {
+			return fmt.Errorf("checksum_sha256 can only be specified when checksum_algorithm is set to 'SHA256'")
+		}
+	}
+
 	if hasObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
@@ -618,6 +629,7 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"bucket_key_enabled",
 		"cache_control",
 		"checksum_algorithm",
+		"checksum_sha256",
 		"content_base64",
 		"content_disposition",
 		"content_encoding",
