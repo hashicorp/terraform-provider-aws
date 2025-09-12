@@ -805,7 +805,12 @@ type wrappedListResourceFramework struct {
 func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
 	var interceptors interceptorInvocations
 
-	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled {
 		interceptors = append(interceptors, listResourceInjectRegionAttribute())
 		// TODO: validate region in partition, needs tweaked error message
 	}
@@ -817,6 +822,10 @@ func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListR
 	}
 
 	if v, ok := inner.(framework.Lister); ok {
+		if isRegionOverrideEnabled {
+			v.AppendResultInterceptor(listresource.SetRegionInterceptor())
+		}
+
 		v.AppendResultInterceptor(listresource.IdentityInterceptor(spec.Identity.Attributes))
 
 		if !tfunique.IsHandleNil(spec.Tags) {
