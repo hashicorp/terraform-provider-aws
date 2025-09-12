@@ -217,6 +217,14 @@ The `parse_to_ocsf` block supports the following arguments:
 * `ocsf_version` - (Optional) Specifies the version of the OCSF schema to use for the transformed log events. The only allowed value is `V1.1`.
 * `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
 
+### `parse_vpc` Block
+
+~> **Note** You can only add a single `parse_vpc` processor per transformer. If specified, it must be the first processor in your transformer.
+
+The `parse_vpc` block supports the following arguments:
+
+* `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
