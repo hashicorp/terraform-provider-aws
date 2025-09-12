@@ -79,7 +79,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional:      true,
 				Sensitive:     true,
 				ValidateFunc:  validReplicationGroupAuthToken,
-				ConflictsWith: []string{"user_group_ids"},
+				ConflictsWith: []string{"user_group_ids", "auth_token_wo"},
 			},
 			"auth_token_wo": {
 				Type:          schema.TypeString,
@@ -88,6 +88,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Sensitive:     true,
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids", "auth_token"},
+				RequiredWith:  []string{"auth_token_wo_version"},
 			},
 			"auth_token_wo_version": {
 				Type:         schema.TypeInt,
