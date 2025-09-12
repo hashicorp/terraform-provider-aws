@@ -293,11 +293,11 @@ Each `entries` block supports the following arguments:
 * `key` - (Required) Specifies the key with the value that will be converted to a different type.
 * `type` - (Required) Specifies the type to convert the field value to. Allowed values are: `integer`, `double`, `string` and `boolean`.
 
-### `upper_case_converter` Block
+### `upper_case_string` Block
 
-Each `upper_case_converter` block supports the following arguments:
+Each `upper_case_string` block supports the following arguments:
 
-* `upper_case_converter` - (Required) Specifies the keys of the fields to convert to uppercase.
+* `with_keys` - (Required) Specifies the keys of the fields to convert to uppercase.
 
 ## Attribute Reference
 
