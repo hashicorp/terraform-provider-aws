@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_outpost" "test" {
@@ -5,8 +8,11 @@ data "aws_outposts_outpost" "test" {
 }
 
 resource "aws_s3control_bucket" "test" {
-{{- template "region" }}
   bucket     = var.rName
   outpost_id = data.aws_outposts_outpost.test.id
-{{- template "tags" }}
+}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
