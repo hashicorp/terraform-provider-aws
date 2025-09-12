@@ -112,6 +112,10 @@ This resource supports the following arguments:
 * `workspace_id` - (Required) The ID of the workspace to attach the resource-based policy to.
 * `policy_document` - (Required) The JSON policy document to use as the resource-based policy. This policy defines the permissions that other AWS accounts or services have to access your workspace.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
