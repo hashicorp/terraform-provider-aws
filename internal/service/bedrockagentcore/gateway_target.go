@@ -254,7 +254,8 @@ func (r *resourceGatewayTarget) Schema(ctx context.Context, req resource.SchemaR
 										Optional: true,
 									},
 									"provider_arn": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 								},
 							},
@@ -1040,12 +1041,12 @@ type apiKeyCredentialProviderModel struct {
 	CredentialLocation      fwtypes.StringEnum[awstypes.ApiKeyCredentialLocation] `tfsdk:"credential_location"`
 	CredentialParameterName types.String                                          `tfsdk:"credential_parameter_name"`
 	CredentialPrefix        types.String                                          `tfsdk:"credential_prefix"`
-	ProviderArn             types.String                                          `tfsdk:"provider_arn"`
+	ProviderARN             fwtypes.ARN                                           `tfsdk:"provider_arn"`
 }
 
 type oauthCredentialProviderModel struct {
 	CustomParameters fwtypes.MapOfString `tfsdk:"custom_parameters"`
-	ProviderArn      types.String        `tfsdk:"provider_arn"`
+	ProviderARN      fwtypes.ARN         `tfsdk:"provider_arn"`
 	Scopes           fwtypes.SetOfString `tfsdk:"scopes"`
 }
 

@@ -80,6 +80,8 @@ func TestAccBedrockAgentCoreMemory_full(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryExists(ctx, resourceName, &m3),
 					testAccCheckMemoryRecreated(&m2, &m3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_execution_role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_key_arn"),
 				),
 			},

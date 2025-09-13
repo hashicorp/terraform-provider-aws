@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -54,7 +55,13 @@ type resourceMemory struct {
 func (r *resourceMemory) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"client_token": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -65,7 +72,8 @@ func (r *resourceMemory) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 			},
 			"encryption_key_arn": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -308,10 +316,10 @@ func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, i
 
 type resourceMemoryModel struct {
 	framework.WithRegionModel
-	ARN                    types.String   `tfsdk:"arn"`
+	ARN                    fwtypes.ARN    `tfsdk:"arn"`
 	ClientToken            types.String   `tfsdk:"client_token"`
 	Description            types.String   `tfsdk:"description"`
-	EncryptionKeyArn       types.String   `tfsdk:"encryption_key_arn"`
+	EncryptionKeyArn       fwtypes.ARN    `tfsdk:"encryption_key_arn"`
 	EventExpiryDuration    types.Int32    `tfsdk:"event_expiry_duration"`
 	ID                     types.String   `tfsdk:"id"`
 	MemoryExecutionRoleArn types.String   `tfsdk:"memory_execution_role_arn"`

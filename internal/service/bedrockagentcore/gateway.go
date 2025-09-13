@@ -63,7 +63,13 @@ func (r *resourceGateway) Schema(ctx context.Context, req resource.SchemaRequest
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"authorizer_type": schema.StringAttribute{
 				Computed:   true,
 				Optional:   true,
@@ -91,7 +97,8 @@ func (r *resourceGateway) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrKMSKeyARN: schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -109,7 +116,8 @@ func (r *resourceGateway) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			names.AttrRoleARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			"workload_identity_details": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[workloadIdentityDetailsModel](ctx),
@@ -434,17 +442,17 @@ func findGatewayByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, 
 type resourceGatewayModel struct {
 	framework.WithRegionModel
 
-	ARN            types.String                                     `tfsdk:"arn"`
+	ARN            fwtypes.ARN                                      `tfsdk:"arn"`
 	AuthorizerType fwtypes.StringEnum[awstypes.AuthorizerType]      `tfsdk:"authorizer_type"`
 	ClientToken    types.String                                     `tfsdk:"client_token"`
 	Description    types.String                                     `tfsdk:"description"`
 	ExceptionLevel fwtypes.StringEnum[awstypes.ExceptionLevel]      `tfsdk:"exception_level" autoflex:",omitempty"`
 	GatewayURL     types.String                                     `tfsdk:"gateway_url"`
 	ID             types.String                                     `tfsdk:"id"`
-	KMSKeyArn      types.String                                     `tfsdk:"kms_key_arn"`
+	KMSKeyArn      fwtypes.ARN                                      `tfsdk:"kms_key_arn"`
 	Name           types.String                                     `tfsdk:"name"`
 	ProtocolType   fwtypes.StringEnum[awstypes.GatewayProtocolType] `tfsdk:"protocol_type"`
-	RoleArn        types.String                                     `tfsdk:"role_arn"`
+	RoleArn        fwtypes.ARN                                      `tfsdk:"role_arn"`
 
 	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]      `tfsdk:"authorizer_configuration"`
 	ProtocolConfiguration   fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel] `tfsdk:"protocol_configuration"`

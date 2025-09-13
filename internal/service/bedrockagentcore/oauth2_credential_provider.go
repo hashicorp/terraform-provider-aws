@@ -148,9 +148,16 @@ func (r *resourceOauth2CredentialProvider) Schema(ctx context.Context, req resou
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"client_secret_arn": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
 			},
 			"vendor": schema.StringAttribute{
 				Computed:    true,
@@ -323,7 +330,7 @@ func (r *resourceOauth2CredentialProvider) Create(ctx context.Context, req resou
 	}
 
 	if got.ClientSecretArn != nil && got.ClientSecretArn.SecretArn != nil {
-		plan.ClientSecretArn = types.StringValue(*got.ClientSecretArn.SecretArn)
+		plan.ClientSecretARN = fwtypes.ARNValue(*got.ClientSecretArn.SecretArn)
 	}
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -368,7 +375,7 @@ func (r *resourceOauth2CredentialProvider) Read(ctx context.Context, req resourc
 	}
 
 	if out.ClientSecretArn != nil && out.ClientSecretArn.SecretArn != nil {
-		state.ClientSecretArn = types.StringValue(*out.ClientSecretArn.SecretArn)
+		state.ClientSecretARN = fwtypes.ARNValue(*out.ClientSecretArn.SecretArn)
 	}
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -439,7 +446,7 @@ func (r *resourceOauth2CredentialProvider) Update(ctx context.Context, req resou
 		}
 
 		if got.ClientSecretArn != nil && got.ClientSecretArn.SecretArn != nil {
-			plan.ClientSecretArn = types.StringValue(*got.ClientSecretArn.SecretArn)
+			plan.ClientSecretARN = fwtypes.ARNValue(*got.ClientSecretArn.SecretArn)
 		}
 	}
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -500,9 +507,9 @@ func findOAuth2CredentialProviderByName(ctx context.Context, conn *bedrockagentc
 type oauth2CredsKey struct{}
 
 type oauth2Creds struct {
-	ClientId             types.String
+	ClientID             types.String
 	ClientSecret         types.String
-	ClientIdWo           types.String
+	ClientIDWo           types.String
 	ClientSecretWo       types.String
 	ClientCredsWoVersion types.Int64
 }
@@ -519,8 +526,8 @@ func oauth2CredsFrom(ctx context.Context) (oauth2Creds, bool) {
 
 type resourceOauth2CredentialProviderModel struct {
 	framework.WithRegionModel
-	ARN                  types.String                                                    `tfsdk:"arn"`
-	ClientSecretArn      types.String                                                    `tfsdk:"client_secret_arn" autoflex:"-"`
+	ARN                  fwtypes.ARN                                                     `tfsdk:"arn"`
+	ClientSecretARN      fwtypes.ARN                                                     `tfsdk:"client_secret_arn" autoflex:"-"`
 	Vendor               fwtypes.StringEnum[awstypes.CredentialProviderVendorType]       `tfsdk:"vendor"`
 	Name                 types.String                                                    `tfsdk:"name"`
 	Oauth2ProviderConfig fwtypes.ListNestedObjectValueOf[oauth2ProviderConfigInputModel] `tfsdk:"config"`
@@ -603,18 +610,18 @@ func (m *resourceOauth2CredentialProviderModel) CredsValue(ctx context.Context) 
 	}
 
 	return oauth2Creds{
-		ClientId:             model.ClientId,
+		ClientID:             model.ClientID,
 		ClientSecret:         model.ClientSecret,
-		ClientIdWo:           model.ClientIdWo,
+		ClientIDWo:           model.ClientIDWo,
 		ClientSecretWo:       model.ClientSecretWo,
 		ClientCredsWoVersion: model.ClientCredsWoVersion,
 	}, diags
 }
 
 type oauth2ProviderConfigModel struct {
-	ClientId             types.String                                          `tfsdk:"client_id"`
+	ClientID             types.String                                          `tfsdk:"client_id"`
 	ClientSecret         types.String                                          `tfsdk:"client_secret"`
-	ClientIdWo           types.String                                          `tfsdk:"client_id_wo"`
+	ClientIDWo           types.String                                          `tfsdk:"client_id_wo"`
 	ClientSecretWo       types.String                                          `tfsdk:"client_secret_wo"`
 	ClientCredsWoVersion types.Int64                                           `tfsdk:"client_credentials_wo_version"`
 	OauthDiscovery       fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
@@ -638,7 +645,7 @@ func (m *oauth2ProviderConfigInputModel) Flatten(ctxWithCreds context.Context, v
 	// We need to flatten "read-write" credentials and "write-only" credentials version as only those are stored in the state.
 	// AutoFlex zeroes them because those are not returned by the AWS API.
 	if creds, ok := oauth2CredsFrom(ctxWithCreds); ok {
-		model.ClientId = creds.ClientId
+		model.ClientID = creds.ClientID
 		model.ClientSecret = creds.ClientSecret
 		model.ClientCredsWoVersion = creds.ClientCredsWoVersion
 	}
@@ -742,8 +749,8 @@ func (m oauth2ProviderConfigInputModel) Expand(ctxWithCreds context.Context) (re
 	}
 
 	if creds, ok := oauth2CredsFrom(ctxWithCreds); ok {
-		if !creds.ClientIdWo.IsNull() && !creds.ClientSecretWo.IsNull() {
-			from.ClientId = creds.ClientIdWo
+		if !creds.ClientIDWo.IsNull() && !creds.ClientSecretWo.IsNull() {
+			from.ClientID = creds.ClientIDWo
 			from.ClientSecret = creds.ClientSecretWo
 		}
 	}

@@ -65,8 +65,14 @@ func (r *resourceAgentRuntime) Schema(ctx context.Context, req resource.SchemaRe
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -106,7 +112,8 @@ func (r *resourceAgentRuntime) Schema(ctx context.Context, req resource.SchemaRe
 				},
 			},
 			names.AttrRoleARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			"workload_identity_details": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[workloadIdentityDetailsModel](ctx),
@@ -441,11 +448,11 @@ func findAgentRuntimeByID(ctx context.Context, conn *bedrockagentcorecontrol.Cli
 type resourceAgentRuntimeModel struct {
 	framework.WithRegionModel
 
-	ARN         types.String `tfsdk:"arn"`
+	ARN         fwtypes.ARN  `tfsdk:"arn"`
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
-	RoleArn     types.String `tfsdk:"role_arn"`
+	RoleArn     fwtypes.ARN  `tfsdk:"role_arn"`
 	ClientToken types.String `tfsdk:"client_token"`
 	Version     types.String `tfsdk:"version"`
 
