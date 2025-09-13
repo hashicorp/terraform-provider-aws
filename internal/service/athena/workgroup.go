@@ -359,8 +359,8 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 
 	configuration := &types.WorkGroupConfiguration{}
 
-	if v, ok := m["bytes_scanned_cutoff_per_query"].(int); ok && v > 0 {
-		configuration.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
+	if v, ok := m["bytes_scanned_cutoff_per_query"].(int64); ok && v > 0 {
+		configuration.BytesScannedCutoffPerQuery = aws.Int64(v)
 	}
 
 	if v, ok := m["enforce_workgroup_configuration"].(bool); ok {
@@ -419,8 +419,8 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 
 	configurationUpdates := &types.WorkGroupConfigurationUpdates{}
 
-	if v, ok := m["bytes_scanned_cutoff_per_query"].(int); ok && v > 0 {
-		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
+	if v, ok := m["bytes_scanned_cutoff_per_query"].(int64); ok && v > 0 {
+		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(v)
 	} else {
 		configurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
 	}
