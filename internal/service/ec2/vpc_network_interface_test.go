@@ -566,7 +566,7 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 
 func TestAccVPCNetworkInterface_associatePublicIPAddress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -579,7 +579,7 @@ func TestAccVPCNetworkInterface_associatePublicIPAddress(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_associatePublicIPAddress(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 				),
 			},
@@ -592,14 +592,14 @@ func TestAccVPCNetworkInterface_associatePublicIPAddress(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_associatePublicIPAddress(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_associatePublicIPAddress(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 				),
 			},

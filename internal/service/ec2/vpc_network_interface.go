@@ -599,7 +599,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	attribute, err := conn.DescribeNetworkInterfaceAttribute(ctx, &ec2.DescribeNetworkInterfaceAttributeInput{
 		NetworkInterfaceId: aws.String(d.Id()),
-		Attribute:          types.NetworkInterfaceAttributeAssociatePublicIpAddress,
+		Attribute:          awstypes.NetworkInterfaceAttributeAssociatePublicIpAddress,
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s) AssociatePublicIpAddress: %s", d.Id(), err)
