@@ -37,7 +37,7 @@ func TestAccBillingViewsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "billing_view.*", map[string]string{
 						"billing_view_type": "PRIMARY",
-						"name":              "Primary View",
+						names.AttrName:      "Primary View",
 					}),
 				),
 			},
