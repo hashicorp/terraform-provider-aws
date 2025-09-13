@@ -157,6 +157,39 @@ func resourceWorkGroup() *schema.Resource {
 									"output_location": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ConflictsWith: []string{
+											"configuration.0.managed_query_results_configuration",
+										},
+									},
+								},
+							},
+						},
+						"managed_query_results_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ConflictsWith: []string{
+								"configuration.0.result_configuration",
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									names.AttrEncryptionConfiguration: {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrKMSKeyARN: {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -387,6 +420,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]any))
 	}
 
+	if v, ok := m["managed_query_results_configuration"]; ok {
+		configuration.ManagedQueryResultsConfiguration = expandManagedQueryResultsConfiguration(v.([]any))
+	}
+
 	if v, ok := m["requester_pays_enabled"].(bool); ok {
 		configuration.RequesterPaysEnabled = aws.Bool(v)
 	}
@@ -443,6 +480,10 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 
 	if v, ok := m["result_configuration"]; ok {
 		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]any))
+	}
+
+	if v, ok := m["managed_query_results_configuration"]; ok {
+		configurationUpdates.ManagedQueryResultsConfigurationUpdates = expandManagedQueryResultsConfigurationUpdates(v.([]any))
 	}
 
 	if v, ok := m["requester_pays_enabled"].(bool); ok {
@@ -556,20 +597,71 @@ func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfigurat
 	return encryptionConfiguration
 }
 
+func expandManagedQueryResultsConfiguration(l []any) *types.ManagedQueryResultsConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+	managedQueryResultsConfiguration := &types.ManagedQueryResultsConfiguration{}
+
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		managedQueryResultsConfiguration.Enabled = aws.ToBool(aws.Bool(v))
+	}
+
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
+		managedQueryResultsConfiguration.EncryptionConfiguration = expandManagedQueryResultsKMSConfig(v.([]any))
+	}
+	return managedQueryResultsConfiguration
+}
+
+func expandManagedQueryResultsKMSConfig(l []any) *types.ManagedQueryResultsEncryptionConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+	managedQueryResultsKMSConfiguration := &types.ManagedQueryResultsEncryptionConfiguration{}
+
+	if v, ok := m[names.AttrKMSKeyARN]; ok && v.(string) != "" {
+		managedQueryResultsKMSConfiguration.KmsKey = aws.String(v.(string))
+	}
+	return managedQueryResultsKMSConfiguration
+}
+
+func expandManagedQueryResultsConfigurationUpdates(l []any) *types.ManagedQueryResultsConfigurationUpdates {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+	managedQueryResultsConfigurationUpdates := &types.ManagedQueryResultsConfigurationUpdates{}
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		managedQueryResultsConfigurationUpdates.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
+		managedQueryResultsConfigurationUpdates.EncryptionConfiguration = expandManagedQueryResultsKMSConfig(v.([]any))
+	}
+
+	return managedQueryResultsConfigurationUpdates
+}
+
 func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) []any {
 	if configuration == nil {
 		return []any{}
 	}
 
 	m := map[string]any{
-		"bytes_scanned_cutoff_per_query":     aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
-		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
-		"execution_role":                     aws.ToString(configuration.ExecutionRole),
-		"identity_center_configuration":      flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
-		"publish_cloudwatch_metrics_enabled": aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
-		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
-		"requester_pays_enabled":             aws.ToBool(configuration.RequesterPaysEnabled),
+		"bytes_scanned_cutoff_per_query":      aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
+		"enforce_workgroup_configuration":     aws.ToBool(configuration.EnforceWorkGroupConfiguration),
+		names.AttrEngineVersion:               flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                      aws.ToString(configuration.ExecutionRole),
+		"identity_center_configuration":       flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
+		"publish_cloudwatch_metrics_enabled":  aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
+		"result_configuration":                flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"managed_query_results_configuration": flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
+		"requester_pays_enabled":              aws.ToBool(configuration.RequesterPaysEnabled),
 	}
 
 	return []any{m}
@@ -644,5 +736,32 @@ func flattenWorkGroupACLConfiguration(aclConfig *types.AclConfiguration) []any {
 		"s3_acl_option": aclConfig.S3AclOption,
 	}
 
+	return []any{m}
+}
+
+func flattenWorkGroupManagedQueryResultsConfiguration(managedQueryResultsConfiguration *types.ManagedQueryResultsConfiguration) []any {
+	if managedQueryResultsConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrEnabled: managedQueryResultsConfiguration.Enabled,
+	}
+
+	if managedQueryResultsConfiguration.EncryptionConfiguration != nil {
+		m[names.AttrEncryptionConfiguration] = flattenManagedQueryResultsKMSConfig(managedQueryResultsConfiguration.EncryptionConfiguration)
+	}
+
+	return []any{m}
+}
+
+func flattenManagedQueryResultsKMSConfig(managedQueryResultsKMSConfiguration *types.ManagedQueryResultsEncryptionConfiguration) []any {
+	if managedQueryResultsKMSConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrKMSKeyARN: aws.ToString(managedQueryResultsKMSConfiguration.KmsKey),
+	}
 	return []any{m}
 }
