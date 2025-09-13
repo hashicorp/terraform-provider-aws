@@ -115,6 +115,9 @@ func resourceWorkGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
+							ConflictsWith: []string{
+								"configuration.0.managed_query_results_configuration",
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"acl_configuration": {
@@ -157,9 +160,6 @@ func resourceWorkGroup() *schema.Resource {
 									"output_location": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ConflictsWith: []string{
-											"configuration.0.managed_query_results_configuration",
-										},
 									},
 								},
 							},
