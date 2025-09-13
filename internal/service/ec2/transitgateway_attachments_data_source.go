@@ -38,19 +38,19 @@ func dataSourceTransitGatewayAttachments() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, v.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			svcTags(tftags.New(ctx, v.(map[string]any))),
 		)...)
 	}
 
@@ -66,7 +66,7 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 		attachmentIDs = append(attachmentIDs, aws.ToString(v.TransitGatewayAttachmentId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, attachmentIDs)
 
 	return diags

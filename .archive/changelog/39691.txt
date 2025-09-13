@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Treat `storage-optimization` status as success when creating or updating cluster DB instances
+```

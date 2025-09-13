@@ -42,19 +42,19 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRoleResourceName, names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "AWSCloudFormationStackSetExecutionRole"),
-					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SELF_MANAGED"),
 					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName)+"\n"),
 					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
 				),
@@ -244,7 +244,7 @@ func TestAccCloudFormationStackSet_managedExecution(t *testing.T) {
 				Config: testAccStackSetConfig_managedExecution(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", acctest.CtTrue),
 				),
 			},
@@ -283,7 +283,7 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 				ExpectError: regexache.MustCompile(`(cannot be longer|expected length)`),
 			},
 			{
-				Config:      testAccStackSetConfig_name(acctest.Ct1),
+				Config:      testAccStackSetConfig_name("1"),
 				ExpectError: regexache.MustCompile(`must begin with alphabetic character`),
 			},
 			{
@@ -334,11 +334,11 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				Config: testAccStackSetConfig_operationPreferences(rName, 1, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
@@ -356,11 +356,11 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				Config: testAccStackSetConfig_operationPreferences(rName, 3, 12),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "12"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
@@ -368,10 +368,10 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				Config: testAccStackSetConfig_operationPreferencesUpdated(rName, 15, 75),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "15"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "75"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
@@ -380,11 +380,11 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				Config: testAccStackSetConfig_operationPreferences(rName, 2, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "8"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
@@ -392,11 +392,11 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				Config: testAccStackSetConfig_operationPreferences(rName, 0, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
@@ -404,10 +404,10 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 				Config: testAccStackSetConfig_operationPreferencesUpdated(rName, 0, 95),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "95"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
@@ -432,7 +432,7 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				Config: testAccStackSetConfig_parameters1(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue1),
 				),
 			},
@@ -450,7 +450,7 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter2", acctest.CtValue2),
 				),
@@ -459,7 +459,7 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				Config: testAccStackSetConfig_parameters1(rName, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue1Updated),
 				),
 			},
@@ -467,7 +467,7 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				Config: testAccStackSetConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 				),
 			},
 		},
@@ -494,7 +494,7 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				Config: testAccStackSetConfig_parametersDefault0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "defaultvalue"),
 				),
 			},
@@ -512,7 +512,7 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue1),
 				),
 			},
@@ -520,7 +520,7 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				Config: testAccStackSetConfig_parametersDefault0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "defaultvalue"),
 				),
 			},
@@ -548,7 +548,7 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 				Config: testAccStackSetConfig_parametersNoEcho1(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "****"),
 				),
 			},
@@ -566,7 +566,7 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "****"),
 				),
 			},
@@ -596,9 +596,9 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 				Config: testAccStackSetConfig_permissionModel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SERVICE_MANAGED"),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
@@ -633,7 +633,7 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				Config: testAccStackSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -651,7 +651,7 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -660,7 +660,7 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				Config: testAccStackSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -681,10 +681,10 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetConfig_templateBody(rName, testAccStackSetTemplateBodyVPC(rName+acctest.Ct1)),
+				Config: testAccStackSetConfig_templateBody(rName, testAccStackSetTemplateBodyVPC(rName+"1")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName+acctest.Ct1)+"\n"),
+					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName+"1")+"\n"),
 				),
 			},
 			{
@@ -697,11 +697,11 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetConfig_templateBody(rName, testAccStackSetTemplateBodyVPC(rName+acctest.Ct2)),
+				Config: testAccStackSetConfig_templateBody(rName, testAccStackSetTemplateBodyVPC(rName+"2")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
-					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName+acctest.Ct2)+"\n"),
+					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName+"2")+"\n"),
 				),
 			},
 		},
@@ -771,7 +771,7 @@ func TestAccCloudFormationStackSet_autoDeploymentEnabled(t *testing.T) {
 				Config: testAccStackSetConfig_autoDeployment(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", acctest.CtFalse),
 				),
@@ -810,7 +810,7 @@ func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 				Config: testAccStackSetConfig_autoDeployment(rName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", acctest.CtFalse),
 				),
@@ -864,7 +864,7 @@ func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
 				Config: testAccStackSetConfig_delegatedAdministrator(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", acctest.CtFalse),
 				),
@@ -1386,7 +1386,7 @@ resource "aws_cloudformation_stack_set" "test" {
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName+acctest.Ct1)))
+`, rName, testAccStackSetTemplateBodyVPC(rName+"1")))
 }
 
 func testAccStackSetConfig_templateURL2(rName string) string {
@@ -1409,7 +1409,7 @@ resource "aws_cloudformation_stack_set" "test" {
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
-`, rName, testAccStackSetTemplateBodyVPC(rName+acctest.Ct2)))
+`, rName, testAccStackSetTemplateBodyVPC(rName+"2")))
 }
 
 func testAccStackSetConfig_permissionModel(rName string) string {

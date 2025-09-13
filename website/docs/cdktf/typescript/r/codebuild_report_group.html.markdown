@@ -92,6 +92,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of a Report Group.
 * `type` - (Required) The type of the Report Group. Valid value are `TEST` and `CODE_COVERAGE`.
 * `exportConfig` - (Required) Information about the destination where the raw data of this Report Group is exported. see [Export Config](#export-config) documented below.
@@ -153,4 +154,4 @@ Using `terraform import`, import CodeBuild Report Group using the CodeBuild Repo
 % terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8ad57ea33f51d8c292612a210a7b0152c2dbf1d07a6f6d7699514cc614c46f5d -->
+<!-- cache-key: cdktf-0.20.8 input-25b9334b88ebbecd60d2c5e4dcf48a26e87fafd1bd6398a5a7960787a264ec0f -->

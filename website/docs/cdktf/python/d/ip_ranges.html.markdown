@@ -50,10 +50,11 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `regions` - (Optional) Filter IP ranges by regions (or include all regions, if
 omitted). Valid items are `global` (for `cloudfront`) as well as all AWS regions
 (e.g., `eu-central-1`)
-
 * `services` - (Required) Filter IP ranges by services. Valid items are `amazon`
 (for amazon.com), `amazon_connect`, `api_gateway`, `cloud9`, `cloudfront`,
 `codebuild`, `dynamodb`, `ec2`, `ec2_instance_connect`, `globalaccelerator`,
@@ -78,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 [1]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html
 [2]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html#aws-ip-syntax
 
-<!-- cache-key: cdktf-0.20.1 input-73d6997abbb59dd921b8bcd692995e1403416e2fa26a744feb3a7bbef5d83b63 -->
+<!-- cache-key: cdktf-0.20.8 input-f942c46ded9e08a88e07c378603bff37c315abab8169491f68a31c9b218498ae -->

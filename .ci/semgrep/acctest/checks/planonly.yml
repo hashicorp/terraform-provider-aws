@@ -1,0 +1,15 @@
+rules:
+  - id: replace-planonly-checks
+    languages: [go]
+    message: Replace `PlanOnly` acceptance test steps with `plancheck`s
+    paths:
+      include:
+        - "/internal/service/*/*_test.go"
+    patterns:
+      - pattern: |
+          {
+            ...,
+            PlanOnly: true,
+            ...
+          }
+    severity: ERROR

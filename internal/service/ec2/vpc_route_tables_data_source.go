@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route_tables")
-func DataSourceRouteTables() *schema.Resource {
+// @SDKDataSource("aws_route_tables", name="Route Tables")
+func dataSourceRouteTables() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteTablesRead,
 
@@ -42,25 +42,25 @@ func DataSourceRouteTables() *schema.Resource {
 	}
 }
 
-func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeRouteTablesInput{}
 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
-		input.Filters = append(input.Filters, newAttributeFilterListV2(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
 		)...)
 	}
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -80,7 +80,7 @@ func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta
 		routeTableIDs = append(routeTableIDs, aws.ToString(v.RouteTableId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, routeTableIDs)
 
 	return diags

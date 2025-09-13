@@ -5,11 +5,9 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -37,8 +35,6 @@ func resourceTrafficMirrorTarget() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -91,13 +87,13 @@ func resourceTrafficMirrorTarget() *schema.Resource {
 	}
 }
 
-func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorTargetInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTrafficMirrorTarget),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorTarget),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -127,9 +123,10 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTrafficMirrorTargetRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	target, err := findTrafficMirrorTargetByID(ctx, conn, d.Id())
 
@@ -144,26 +141,19 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	ownerID := aws.ToString(target.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("traffic-mirror-target/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, trafficMirrorTargetARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrDescription, target.Description)
 	d.Set("gateway_load_balancer_endpoint_id", target.GatewayLoadBalancerEndpointId)
 	d.Set(names.AttrNetworkInterfaceID, target.NetworkInterfaceId)
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	setTagsOutV2(ctx, target.Tags)
+	setTagsOut(ctx, target.Tags)
 
 	return diags
 }
 
-func resourceTrafficMirrorTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only
@@ -171,14 +161,15 @@ func resourceTrafficMirrorTargetUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTrafficMirrorTargetRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Target: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorTarget(ctx, &ec2.DeleteTrafficMirrorTargetInput{
+	input := ec2.DeleteTrafficMirrorTargetInput{
 		TrafficMirrorTargetId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorTarget(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorTargetIdNotFound) {
 		return diags
@@ -189,4 +180,8 @@ func resourceTrafficMirrorTargetDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
+}
+
+func trafficMirrorTargetARN(ctx context.Context, c *conns.AWSClient, accountID, trafficMirrorTargetID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "traffic-mirror-target/"+trafficMirrorTargetID)
 }

@@ -31,6 +31,9 @@ class MyConvertedCode extends TerraformStack {
       name: "example",
       signingDisabled: false,
       status: "ACTIVE",
+      tags: {
+        Name: "example",
+      },
       tokenKeyName: "Token-Header",
       tokenSigningPublicKeys: {
         Key1: Token.asString(
@@ -45,11 +48,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizerFunctionArn` - (Required) The ARN of the authorizer's Lambda function.
 * `enableCachingForHttp`  - (Optional) Specifies whether the HTTP caching is enabled or not. Default: `false`.
 * `name` - (Required) The name of the authorizer.
 * `signingDisabled` - (Optional) Specifies whether AWS IoT validates the token signature in an authorization request. Default: `false`.
 * `status` - (Optional) The status of Authorizer request at creation. Valid values: `ACTIVE`, `INACTIVE`. Default: `ACTIVE`.
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`defaultTags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tokenKeyName` - (Optional) The name of the token key used to extract the token from the HTTP headers. This value is required if signing is enabled in your authorizer.
 * `tokenSigningPublicKeys` - (Optional) The public keys used to verify the digital signature returned by your custom authentication service. This value is required if signing is enabled in your authorizer.
 
@@ -58,6 +65,7 @@ class MyConvertedCode extends TerraformStack {
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the authorizer.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -87,4 +95,4 @@ Using `terraform import`, import IOT Authorizers using the name. For example:
 % terraform import aws_iot_authorizer.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cf8f96f38c8639fbcddf19f56615da17a9607ba975bea77bb2b1ea3d089fe7c3 -->
+<!-- cache-key: cdktf-0.20.8 input-20ce0de0e39a1c1bba34229da617821343acba3c6dcab34b78f2adcf637f476b -->

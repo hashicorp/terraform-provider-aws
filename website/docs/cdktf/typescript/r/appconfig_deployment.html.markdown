@@ -55,6 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required, Forces new resource) Application ID. Must be between 4 and 7 characters in length.
 * `configurationProfileId` - (Required, Forces new resource) Configuration profile ID. Must be between 4 and 7 characters in length.
 * `configurationVersion` - (Required, Forces new resource) Configuration version to deploy. Can be at most 1024 characters.
@@ -107,4 +108,4 @@ Using `terraform import`, import AppConfig Deployments using the application ID,
 % terraform import aws_appconfig_deployment.example 71abcde/11xxxxx/1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b28a22238098100a56c2a4bbf6608e5f5bc5f358b2cc7561613a4ab90ab4d8a1 -->
+<!-- cache-key: cdktf-0.20.8 input-143392904ed7e5f5acf7d8bd83f5b10c66b6368b56da700f38961d00a8db11a3 -->

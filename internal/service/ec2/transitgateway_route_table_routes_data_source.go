@@ -60,13 +60,13 @@ func dataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	tgwRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	input := &ec2.SearchTransitGatewayRoutesInput{
-		Filters:                    newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set)),
+		Filters:                    newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
 		TransitGatewayRouteTableId: aws.String(tgwRouteTableID),
 	}
 
@@ -78,9 +78,9 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 
 	d.SetId(tgwRouteTableID)
 
-	routes := []interface{}{}
+	routes := []any{}
 	for _, route := range output {
-		routes = append(routes, map[string]interface{}{
+		routes = append(routes, map[string]any{
 			"destination_cidr_block": aws.ToString(route.DestinationCidrBlock),
 			"prefix_list_id":         aws.ToString(route.PrefixListId),
 			names.AttrState:          route.State,

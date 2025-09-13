@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_qldb_ledger")
+// @SDKDataSource("aws_qldb_ledger", name="Ledger")
 func dataSourceLedger() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLedgerRead,
@@ -52,10 +52,10 @@ func dataSourceLedger() *schema.Resource {
 	}
 }
 
-func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	ledger, err := findLedgerByName(ctx, conn, name)

@@ -36,8 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identity_id`- (Optional) The globally unique identifier (GUID) of the user or group from the Amazon Web Services SSO Identity Store.
 * `identity_name` - (Optional) The name of the user or group from the Amazon Web Services SSO Identity Store.
 * `identity_type` - (Required) Specifies whether the identity to map to the Amazon EMR Studio is a `USER` or a `GROUP`.
@@ -75,4 +76,4 @@ Using `terraform import`, import EMR studio session mappings using `studio-id:id
 % terraform import aws_emr_studio_session_mapping.example es-xxxxx:USER:xxxxx-xxx-xxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6be21ee08f5326f461796bd38e16a942ea254529c5e303950bf2b3a3f049afa4 -->
+<!-- cache-key: cdktf-0.20.8 input-4501fce45223dcabcb37c109602b3f851539b17ba205e9b4aa2025369662640a -->

@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `customer_managed_key_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Key Management Service (AWS KMS) key to use to encrypt the application data. If this is not specified, an AWS owned key is used for encryption.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -75,4 +76,4 @@ Using `terraform import`, import AppFabric AppBundle using the `arn`. For exampl
 % terraform import aws_appfabric_app_bundle.example arn:aws:appfabric:[region]:[account]:appbundle/ee5587b4-5765-4288-a202-xxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-29d27eaca85b0b1ba64cf8cc214f41167fefbd972688956f6a164cba558173ba -->
+<!-- cache-key: cdktf-0.20.8 input-52d5d75f58a7d7cd9c69185369acf2ef23361c0f1ffebf684a6cc6d285c2d6e0 -->

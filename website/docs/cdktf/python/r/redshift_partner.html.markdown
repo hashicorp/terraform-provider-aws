@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Required) The Amazon Web Services account ID that owns the cluster.
 * `cluster_identifier` - (Required) The cluster identifier of the cluster that receives data from the partner.
 * `database_name` - (Required) The name of the database that receives data from the partner.
@@ -76,4 +77,4 @@ Using `terraform import`, import Redshift usage limits using the `id`. For examp
 % terraform import aws_redshift_partner.example 01234567910:cluster-example-id:example:example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d4438832cfe9bd08e76f7dbce4113e2e512ea90f05f4a5914f89a70db35ad904 -->
+<!-- cache-key: cdktf-0.20.8 input-1b5ee9a0fd8ae2e9d18f34acb51eaec1df060a92a0ff8c4d63e67c99379b454d -->

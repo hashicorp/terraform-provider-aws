@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -241,11 +242,11 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 		// have it. We can verify that decrypting it does not error
 		_, err := pgpkeys.DecryptBytes(secret, key)
 		if err != nil {
-			return fmt.Errorf("Error decrypting secret: %s", err)
+			return fmt.Errorf("Error decrypting secret: %w", err)
 		}
 		_, err = pgpkeys.DecryptBytes(password, key)
 		if err != nil {
-			return fmt.Errorf("Error decrypting password: %s", err)
+			return fmt.Errorf("Error decrypting password: %w", err)
 		}
 
 		return nil
@@ -301,10 +302,10 @@ func TestSESSMTPPasswordFromSecretKeySigV4(t *testing.T) {
 		Input    string
 		Expected string
 	}{
-		{names.EUCentral1RegionID, "some+secret+key", "BMXhUYlu5Z3gSXVQORxlVa7XPaz91aGWdfHxvkOZdWZ2"},
-		{names.EUCentral1RegionID, "another+secret+key", "BBbphbrQmrKMx42d1N6+C7VINYEBGI5v9VsZeTxwskfh"},
-		{names.USWest1RegionID, "some+secret+key", "BH+jbMzper5WwlwUar9E1ySBqHa9whi0GPo+sJ0mVYJj"},
-		{names.USWest1RegionID, "another+secret+key", "BKVmjjMDFk/qqw8EROW99bjCS65PF8WKvK5bSr4Y6EqF"},
+		{endpoints.EuCentral1RegionID, "some+secret+key", "BMXhUYlu5Z3gSXVQORxlVa7XPaz91aGWdfHxvkOZdWZ2"},
+		{endpoints.EuCentral1RegionID, "another+secret+key", "BBbphbrQmrKMx42d1N6+C7VINYEBGI5v9VsZeTxwskfh"},
+		{endpoints.UsWest1RegionID, "some+secret+key", "BH+jbMzper5WwlwUar9E1ySBqHa9whi0GPo+sJ0mVYJj"},
+		{endpoints.UsWest1RegionID, "another+secret+key", "BKVmjjMDFk/qqw8EROW99bjCS65PF8WKvK5bSr4Y6EqF"},
 	}
 
 	for _, tc := range cases {

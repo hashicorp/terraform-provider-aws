@@ -175,7 +175,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     asn_ranges = ["65022-65534"]
 
     edge_locations {
-      location = data.aws_region.current.name
+      location = data.aws_region.current.region
     }
   }
 

@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of S3 bucket to save the results of the query execution.
 * `name` - (Required) Name of the database to create.
 * `acl_configuration` - (Optional) That an Amazon S3 canned ACL should be set to control ownership of stored query results. See [ACL Configuration](#acl-configuration) below.
@@ -50,6 +51,7 @@ This resource supports the following arguments:
 * `expected_bucket_owner` - (Optional) AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `force_destroy` - (Optional, Default: false) Boolean that indicates all tables should be deleted from the database so that the database can be destroyed without error. The tables are *not* recoverable.
 * `properties` - (Optional) Key-value map of custom metadata properties for the database definition.
+* `workgroup` - (Optional) Name of the workgroup.
 
 ### ACL Configuration
 
@@ -117,4 +119,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-189ae35c915899617823f1aa58e52b808e9d89a93ad41348d3b67590fd2c7244 -->
+<!-- cache-key: cdktf-0.20.8 input-66cca99c501b9baea3d362cfd3062fce5d9e8e3593666bc4d9977dae22e196e7 -->

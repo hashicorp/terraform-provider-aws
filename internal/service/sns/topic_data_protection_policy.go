@@ -23,17 +23,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sns_topic_data_protection_policy")
+// @SDKResource("aws_sns_topic_data_protection_policy", name="Topic Data Protection Policy")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.8.0")
 func resourceTopicDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicDataProtectionPolicyUpsert,
 		ReadWithoutTimeout:   resourceTopicDataProtectionPolicyRead,
 		UpdateWithoutTimeout: resourceTopicDataProtectionPolicyUpsert,
 		DeleteWithoutTimeout: resourceTopicDataProtectionPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -48,7 +46,7 @@ func resourceTopicDataProtectionPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -57,7 +55,7 @@ func resourceTopicDataProtectionPolicy() *schema.Resource {
 	}
 }
 
-func resourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -85,7 +83,7 @@ func resourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.Reso
 	return append(diags, resourceTopicDataProtectionPolicyRead(ctx, d, meta)...)
 }
 
-func resourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -107,7 +105,7 @@ func resourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 

@@ -45,7 +45,7 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 				Config: testAccInputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "input:{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
@@ -85,7 +85,7 @@ func TestAccMediaLiveInput_update(t *testing.T) {
 				Config: testAccInputConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "input:{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
@@ -95,59 +95,10 @@ func TestAccMediaLiveInput_update(t *testing.T) {
 				Config: testAccInputConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "input:{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccMediaLiveInput_updateTags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var input medialive.DescribeInputOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_medialive_input.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
-			testAccInputsPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInputConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccInputConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccInputConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -278,37 +229,4 @@ resource "aws_medialive_input" "test" {
   }
 }
 `, rName))
-}
-
-func testAccInputConfig_tags1(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(
-		testAccInputBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_medialive_input" "test" {
-  name                  = %[1]q
-  input_security_groups = [aws_medialive_input_security_group.test.id]
-  type                  = "UDP_PUSH"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, key1, value1))
-}
-
-func testAccInputConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		testAccInputBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_medialive_input" "test" {
-  name                  = %[1]q
-  input_security_groups = [aws_medialive_input_security_group.test.id]
-  type                  = "UDP_PUSH"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, key1, value1, key2, value2))
 }

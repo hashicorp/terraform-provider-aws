@@ -53,7 +53,9 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [`aws_globalaccelerator_accelerator` resource](/docs/providers/aws/r/globalaccelerator_accelerator.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.1 input-cb1337cef607f58a3c97dc590b01ec464124ea11b4eae120be4bb79fd188c55c -->
+<!-- cache-key: cdktf-0.20.8 input-5ac478ccfd3688b0a3e6820728a2f8cd9edfdb3e8f7a3822fbc2362864e2365d -->

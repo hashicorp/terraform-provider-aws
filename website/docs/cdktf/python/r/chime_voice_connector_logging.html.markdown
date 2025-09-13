@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `enable_sip_logs` - (Optional) When true, enables SIP message logs for sending to Amazon CloudWatch Logs.
 * `enable_media_metric_logs` - (Optional) When true, enables logging of detailed media metrics for Voice Connectors to Amazon CloudWatch logs.
@@ -79,4 +80,4 @@ Using `terraform import`, import Chime Voice Connector Logging using the `voice_
 % terraform import aws_chime_voice_connector_logging.default abcdef1ghij2klmno3pqr4
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-361c57bb71aad3cb46b58306335292d5a69d6d2855bbf5152806871405e9e3ff -->
+<!-- cache-key: cdktf-0.20.8 input-40c95092f3f61802087af8c143f1d179bd30e1fb606dfbed051079dfc5064197 -->

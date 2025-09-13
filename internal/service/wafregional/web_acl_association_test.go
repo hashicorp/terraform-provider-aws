@@ -222,7 +222,7 @@ resource "aws_wafregional_web_acl_association" "foo" {
 }
 `
 
-const testAccWebACLAssociationConfig_multiples = testAccWebACLAssociationConfig_basic + `
+var testAccWebACLAssociationConfig_multiples = acctest.ConfigCompose(testAccWebACLAssociationConfig_basic, `
 resource "aws_alb" "bar" {
   internal = true
   subnets  = [aws_subnet.foo.id, aws_subnet.bar.id]
@@ -232,7 +232,7 @@ resource "aws_wafregional_web_acl_association" "bar" {
   resource_arn = aws_alb.bar.arn
   web_acl_id   = aws_wafregional_web_acl.foo.id
 }
-`
+`)
 
 func testAccWebACLAssociationConfig_checkResourceARNAPIGatewayStage(rName string) string {
 	return fmt.Sprintf(`

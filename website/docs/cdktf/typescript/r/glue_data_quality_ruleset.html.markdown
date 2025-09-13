@@ -118,6 +118,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the data quality ruleset.
 * `name` - (Required, Forces new resource) Name of the data quality ruleset.
 * `ruleset` - (Optional) A Data Quality Definition Language (DQDL) ruleset. For more information, see the AWS Glue developer guide.
@@ -172,4 +173,4 @@ Using `terraform import`, import Glue Data Quality Ruleset using the `name`. For
 % terraform import aws_glue_data_quality_ruleset.example exampleName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1c73af64f9d424d885b65e53dcc6d2467ecb21df266c61f99fe72cab1b72c68d -->
+<!-- cache-key: cdktf-0.20.8 input-df3804bf73892a41ac55a11d9671a4e8d97ae814f30a62e5109cbae81e30e0f1 -->

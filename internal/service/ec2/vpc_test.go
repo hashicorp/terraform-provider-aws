@@ -6,16 +6,23 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -36,8 +43,8 @@ func TestAccVPC_basic(t *testing.T) {
 			{
 				Config: testAccVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
@@ -54,10 +61,10 @@ func TestAccVPC_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -83,10 +90,15 @@ func TestAccVPC_disappears(t *testing.T) {
 			{
 				Config: testAccVPCConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -111,12 +123,12 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 			{
 				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
@@ -129,12 +141,12 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 			{
 				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
@@ -166,11 +178,11 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 			{
 				Config: testAccVPCConfig_ignoreChangesDynamicTags,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
 				),
@@ -182,11 +194,11 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 			{
 				Config: testAccVPCConfig_ignoreChangesDynamicTags,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
 				),
@@ -212,9 +224,14 @@ func TestAccVPC_tags_defaultAndIgnoreTags(t *testing.T) {
 			{
 				Config: testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					testAccCheckVPCUpdateTags(ctx, &vpc, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 			{
@@ -222,14 +239,28 @@ func TestAccVPC_tags_defaultAndIgnoreTags(t *testing.T) {
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
 					testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
 					testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -249,18 +280,37 @@ func TestAccVPC_tags_ignoreTags(t *testing.T) {
 			{
 				Config: testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					testAccCheckVPCUpdateTags(ctx, &vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
-				PlanOnly: true,
+				Config: acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:   acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
-				PlanOnly: true,
+				Config: acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -268,8 +318,7 @@ func TestAccVPC_tags_ignoreTags(t *testing.T) {
 
 func TestAccVPC_tenancy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpcDedicated awstypes.Vpc
-	var vpcDefault awstypes.Vpc
+	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -282,9 +331,16 @@ func TestAccVPC_tenancy(t *testing.T) {
 			{
 				Config: testAccVPCConfig_dedicatedTenancy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpcDedicated),
-					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "dedicated"),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_tenancy"), knownvalue.StringExact("dedicated")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -294,18 +350,30 @@ func TestAccVPC_tenancy(t *testing.T) {
 			{
 				Config: testAccVPCConfig_default(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpcDefault),
-					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
-					testAccCheckVPCIDsEqual(&vpcDedicated, &vpcDefault),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_tenancy"), knownvalue.StringExact("default")),
+				},
 			},
 			{
 				Config: testAccVPCConfig_dedicatedTenancy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpcDedicated),
-					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "dedicated"),
-					testAccCheckVPCIDsNotEqual(&vpcDedicated, &vpcDefault),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_tenancy"), knownvalue.StringExact("dedicated")),
+				},
 			},
 		},
 	})
@@ -326,14 +394,14 @@ func TestAccVPC_updateDNSHostnames(t *testing.T) {
 			{
 				Config: testAccVPCConfig_default(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccVPCConfig_enableDNSHostnames(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
 				),
 			},
@@ -357,7 +425,7 @@ func TestAccVPC_bothDNSOptionsSet(t *testing.T) {
 			{
 				Config: testAccVPCConfig_bothDNSOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
 				),
@@ -387,7 +455,7 @@ func TestAccVPC_disabledDNSSupport(t *testing.T) {
 			{
 				Config: testAccVPCConfig_disabledDNSSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtFalse),
 				),
 			},
@@ -407,7 +475,7 @@ func TestAccVPC_enableNetworkAddressUsageMetrics(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCDestroy(ctx),
@@ -415,7 +483,7 @@ func TestAccVPC_enableNetworkAddressUsageMetrics(t *testing.T) {
 			{
 				Config: testAccVPCConfig_enableNetworkAddressUsageMetrics(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtTrue),
 				),
 			},
@@ -443,7 +511,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			{
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
@@ -458,7 +526,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			{
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
@@ -468,7 +536,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			{
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
@@ -489,7 +557,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 			// https://docs.aws.amazon.com/vpc/latest/userguide/Extend_VPCs.html#local-zone:
 			// "You can request the IPv6 Amazon-provided IP addresses and associate them with the network border group
 			//  for a new or existing VPCs only for us-west-2-lax-1a and use-west-2-lax-1b. All other Local Zones don't support IPv6."
@@ -502,13 +570,13 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 			{
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_cidr_block_network_border_group", azDataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 				),
 			},
 			{
@@ -519,13 +587,13 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 			{
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 				),
 			},
 		},
@@ -551,7 +619,7 @@ func TestAccVPC_IPAMIPv4BasicNetmask(t *testing.T) {
 			{
 				Config: testAccVPCConfig_ipamIPv4(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					testAccCheckVPCCIDRPrefix(&vpc, "28"),
 				),
 			},
@@ -579,7 +647,7 @@ func TestAccVPC_IPAMIPv4BasicExplicitCIDR(t *testing.T) {
 			{
 				Config: testAccVPCConfig_ipamIPv4ExplicitCIDR(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, cidr),
 				),
 			},
@@ -607,7 +675,7 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 			{
 				Config: testAccVPCConfig_ipamIPv6(rName, 28),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
@@ -616,6 +684,454 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_ipam_pool_id", ipamPoolResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "56"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVPC_upgradeFromV5(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t),
+		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.92.0",
+					},
+				},
+				Config: testAccVPCConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPC_upgradeFromV5PlanRefreshFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t),
+		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccVPCConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPC_upgradeFromV5WithUpdatePlanRefreshFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t),
+		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1Updated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPC_upgradeFromV5WithDefaultRegionRefreshFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t),
+		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccVPCConfig_tags1("Name", rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCConfig_region(rName, acctest.Region()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPC_upgradeFromV5WithNewRegionRefreshFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t),
+		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccVPCConfig_tags1("Name", rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCConfig_region(rName, acctest.AlternateRegion()),
+				// Can't call 'acctest.CheckVPCExists' as the VPC's in the alternate Region.
+				// Check: resource.ComposeAggregateTestCheckFunc(
+				// 	acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				// ),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPC_regionCreateNull(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_region(rName, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCConfig_region(rName, acctest.Region()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCConfig_region(rName, acctest.AlternateRegion()),
+				// Can't call 'acctest.CheckVPCExists' as the VPC's in the alternate Region.
+				// Check: resource.ComposeAggregateTestCheckFunc(
+				// 	acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				// ),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccVPCRegionImportStateIDFunc(resourceName, acctest.AlternateRegion()),
+			},
+		},
+	})
+}
+
+func TestAccVPC_regionCreateNonNull(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_region(rName, acctest.AlternateRegion()),
+				// Can't call 'acctest.CheckVPCExists' as the VPC's in the alternate Region.
+				// Check: resource.ComposeAggregateTestCheckFunc(
+				// 	acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				// ),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccVPCRegionImportStateIDFunc(resourceName, acctest.AlternateRegion()),
+			},
+			{
+				Config: testAccVPCConfig_region(rName, acctest.Region()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -630,7 +1146,7 @@ func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -647,11 +1163,15 @@ func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckVPCExists(ctx context.Context, n string, v *awstypes.Vpc) resource.TestCheckFunc {
+	return acctest.CheckVPCExists(ctx, n, v)
+}
+
 func testAccCheckVPCUpdateTags(ctx context.Context, vpc *awstypes.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.UpdateTagsV2(ctx, conn, aws.ToString(vpc.VpcId), oldTags, newTags)
+		return tfec2.UpdateTags(ctx, conn, aws.ToString(vpc.VpcId), oldTags, newTags)
 	}
 }
 
@@ -665,28 +1185,15 @@ func testAccCheckVPCCIDRPrefix(vpc *awstypes.Vpc, expected string) resource.Test
 	}
 }
 
-func testAccCheckVPCIDsEqual(vpc1, vpc2 *awstypes.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(vpc1.VpcId) != aws.ToString(vpc2.VpcId) {
-			return fmt.Errorf("VPC IDs are not equal")
+func testAccVPCRegionImportStateIDFunc(n, region string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		return nil
+		return fmt.Sprintf("%s@%s", rs.Primary.Attributes[names.AttrID], region), nil
 	}
-}
-
-func testAccCheckVPCIDsNotEqual(vpc1, vpc2 *awstypes.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(vpc1.VpcId) == aws.ToString(vpc2.VpcId) {
-			return fmt.Errorf("VPC IDs are equal")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVPCExists(ctx context.Context, n string, v *awstypes.Vpc) resource.TestCheckFunc {
-	return acctest.CheckVPCExistsV2(ctx, n, v)
 }
 
 const testAccVPCConfig_basic = `
@@ -792,7 +1299,7 @@ data "aws_availability_zone" "test" {
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block     = true
   cidr_block                           = "10.1.0.0/16"
-  ipv6_cidr_block_network_border_group = %[2]t ? data.aws_availability_zone.test.network_border_group : data.aws_region.current.name
+  ipv6_cidr_block_network_border_group = %[2]t ? data.aws_availability_zone.test.network_border_group : data.aws_region.current.region
 
   tags = {
     Name = %[1]q
@@ -885,7 +1392,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   tags = {
@@ -896,7 +1403,7 @@ resource "aws_vpc_ipam" "test" {
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 
   tags = {
     Name = %[1]q
@@ -946,7 +1453,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   tags = {
@@ -957,7 +1464,7 @@ resource "aws_vpc_ipam" "test" {
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv6"
   ipam_scope_id  = aws_vpc_ipam.test.public_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
   aws_service    = "ec2"
 
   public_ip_source              = "amazon"
@@ -989,4 +1496,22 @@ resource "aws_vpc" "test" {
   depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
 `, rName, netmaskLength))
+}
+
+func testAccVPCConfig_region(rName, region string) string {
+	if region != "null" {
+		region = strconv.Quote(region)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  region = %[2]s
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, region)
 }

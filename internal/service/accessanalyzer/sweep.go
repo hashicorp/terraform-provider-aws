@@ -25,13 +25,13 @@ func sweepAnalyzers(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.AccessAnalyzerClient(ctx)
-	input := &accessanalyzer.ListAnalyzersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := accessanalyzer.NewListAnalyzersPaginator(conn, input)
+	input := accessanalyzer.ListAnalyzersInput{}
+	pages := accessanalyzer.NewListAnalyzersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

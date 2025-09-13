@@ -99,6 +99,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Required) Domain name. Must be between 1 and 512 characters in length.
 * `domainNameConfiguration` - (Required) Domain name configuration. See below.
 * `mutualTlsAuthentication` - (Optional) Mutual TLS authentication configuration for the domain name.
@@ -109,6 +110,7 @@ This resource supports the following arguments:
 * `certificateArn` - (Required) ARN of an AWS-managed certificate that will be used by the endpoint for the domain name. AWS Certificate Manager is the only supported source. Use the [`aws_acm_certificate`](/docs/providers/aws/r/acm_certificate.html) resource to configure an ACM certificate.
 * `endpointType` - (Required) Endpoint type. Valid values: `REGIONAL`.
 * `hostedZoneId` - (Computed) Amazon Route 53 Hosted Zone ID of the endpoint.
+* `ipAddressType` - (Optional) The IP address types that can invoke the domain name. Valid values: `ipv4`, `dualstack`. Use `ipv4` to allow only IPv4 addresses to invoke your domain name, or use `dualstack` to allow both IPv4 and IPv6 addresses to invoke your domain name. Defaults to `ipv4`.
 * `ownershipVerificationCertificateArn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificateArn` is issued via an ACM Private CA or `mutualTlsAuthentication` is configured with an ACM-imported certificate.)
 * `securityPolicy` - (Required) Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `TLS_1_2`.
 * `targetDomainName` - (Computed) Target domain name.
@@ -166,4 +168,4 @@ Using `terraform import`, import `aws_apigatewayv2_domain_name` using the domain
 % terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-590fddf6e18ec896623edea239e232e92d9d62cdcbd1d648d652e4699c95dd9a -->
+<!-- cache-key: cdktf-0.20.8 input-5f699acd9463f40094c80534ca2da9b45a4f1e0655b29e14eb047eb33297e0a3 -->

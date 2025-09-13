@@ -68,6 +68,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sourceType` - (Optional) Type of source that will be generating the events. Valid options are db-instance, db-security-group, db-parameter-group, db-snapshot, db-cluster or db-cluster-snapshot.
 
 ## Attribute Reference
@@ -77,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 * `eventCategories` - List of the event categories.
 * `id` - Region of the event categories.
 
-<!-- cache-key: cdktf-0.20.1 input-d1d5b27d77d80317092ac76176fc6ee08cb96d448e528e2d6bdc53e0d6fff300 -->
+<!-- cache-key: cdktf-0.20.8 input-38e71e7f9a961054735debb92cb7c7eccf05773775a64ae772137868949d3e0b -->

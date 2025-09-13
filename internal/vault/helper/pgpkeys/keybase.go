@@ -11,7 +11,7 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
-	"github.com/hashicorp/terraform-provider-aws/internal/vault/sdk/helper/jsonutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 const (
@@ -35,8 +35,8 @@ func FetchKeybasePubkeys(input []string) (map[string]string, error) {
 
 	usernames := make([]string, 0, len(input))
 	for _, v := range input {
-		if strings.HasPrefix(v, kbPrefix) {
-			usernames = append(usernames, strings.TrimSuffix(strings.TrimPrefix(v, kbPrefix), "\n"))
+		if trimmed, ok := strings.CutPrefix(v, kbPrefix); ok {
+			usernames = append(usernames, strings.TrimSuffix(trimmed, "\n"))
 		}
 	}
 
@@ -73,7 +73,7 @@ func FetchKeybasePubkeys(input []string) (map[string]string, error) {
 		Them: []LThem{},
 	}
 
-	if err := jsonutil.DecodeJSONFromReader(resp.Body, out); err != nil {
+	if err := json.DecodeFromReader(resp.Body, out); err != nil {
 		return nil, err
 	}
 

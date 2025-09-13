@@ -67,6 +67,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Redshift Subnet group.
 * `description` - (Optional) The description of the Redshift Subnet group. Defaults to "Managed by Terraform".
 * `subnetIds` - (Required) An array of VPC subnet IDs.
@@ -112,4 +113,4 @@ Using `terraform import`, import Redshift subnet groups using the `name`. For ex
 % terraform import aws_redshift_subnet_group.testgroup1 test-cluster-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3d603e489c1bb01bdc966a54771f0f1ba11b9496fe058472a61fd0520c9b7c8c -->
+<!-- cache-key: cdktf-0.20.8 input-9c052c10b5f717cc5b7d5a667d521d0e0ba8dbe9402f14b777f8a2eeb81332d6 -->

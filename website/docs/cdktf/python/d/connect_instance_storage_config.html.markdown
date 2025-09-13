@@ -27,7 +27,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         DataAwsConnectInstanceStorageConfig(self, "example",
-            association_id="1234567890123456789012345678901234567890123456789012345678901234",
+            association_id="1234567891234567890122345678912345678901223456789123456789012234",
             instance_id="aaaaaaaa-bbbb-cccc-dddd-111111111111",
             resource_type="CONTACT_TRACE_RECORDS"
         )
@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `association_id` - (Required) The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `resource_type` - (Required) A valid resource type. Valid Values: `AGENT_EVENTS` | `ATTACHMENTS` | `CALL_RECORDINGS` | `CHAT_TRANSCRIPTS` | `CONTACT_EVALUATIONS` | `CONTACT_TRACE_RECORDS` | `MEDIA_STREAMS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS` | `SCHEDULED_REPORTS` |  `SCREEN_RECORDINGS`.
@@ -93,4 +94,4 @@ The `encryption_config` configuration block supports the following arguments:
 * `encryption_type` - The type of encryption. Valid Values: `KMS`.
 * `key_id` - The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
-<!-- cache-key: cdktf-0.20.1 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->
+<!-- cache-key: cdktf-0.20.8 input-c2280c5eeca144a452cbcd302c11079849e2095b23890630b8a30b2f93ddc361 -->

@@ -15,11 +15,9 @@ import (
 	"strings"
 	"testing"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -29,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -84,13 +82,14 @@ const (
 )
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
+	ctx := t.Context()
 	const providerRegion = "us-west-2" //lintignore:AWSAT003
 	const expectedEndpointRegion = providerRegion
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(t, expectedEndpointRegion),
+			expected: expectDefaultEndpoint(ctx, t, expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -224,7 +223,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			with: []setupFunc{
 				withUseFIPSInConfig,
 			},
-			expected: expectDefaultFIPSEndpoint(t, expectedEndpointRegion),
+			expected: expectDefaultFIPSEndpoint(ctx, t, expectedEndpointRegion),
 		},
 
 		"use fips config with package name endpoint config": {
@@ -236,32 +235,18 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV2)
-			})
-		}
-	})
+	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+		t.Run(name, func(t *testing.T) {
+			testEndpointCase(ctx, t, providerRegion, testcase, callService)
+		})
+	}
 }
 
-func defaultEndpoint(region string) (url.URL, error) {
-	r := ec2_sdkv2.NewDefaultEndpointResolverV2()
+func defaultEndpoint(ctx context.Context, region string) (url.URL, error) {
+	r := ec2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), ec2_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
+	ep, err := r.ResolveEndpoint(ctx, ec2.EndpointParameters{
+		Region: aws.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -274,12 +259,12 @@ func defaultEndpoint(region string) (url.URL, error) {
 	return ep.URI, nil
 }
 
-func defaultFIPSEndpoint(region string) (url.URL, error) {
-	r := ec2_sdkv2.NewDefaultEndpointResolverV2()
+func defaultFIPSEndpoint(ctx context.Context, region string) (url.URL, error) {
+	r := ec2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), ec2_sdkv2.EndpointParameters{
-		Region:  aws_sdkv2.String(region),
-		UseFIPS: aws_sdkv2.Bool(true),
+	ep, err := r.ResolveEndpoint(ctx, ec2.EndpointParameters{
+		Region:  aws.String(region),
+		UseFIPS: aws.Bool(true),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -292,15 +277,16 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 	return ep.URI, nil
 }
 
-func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.EC2Client(ctx)
 
 	var result apiCallParams
 
-	_, err := client.DescribeVpcs(ctx, &ec2_sdkv2.DescribeVpcsInput{},
-		func(opts *ec2_sdkv2.Options) {
+	input := ec2.DescribeVpcsInput{}
+	_, err := client.DescribeVpcs(ctx, &input,
+		func(opts *ec2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
 				addRetrieveRegionMiddleware(&result.region),
@@ -315,21 +301,6 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) api
 	}
 
 	return result
-}
-
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
-	t.Helper()
-
-	client := meta.EC2Conn(ctx)
-
-	req, _ := client.DescribeVpcsRequest(&ec2_sdkv1.DescribeVpcsInput{})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	return apiCallParams{
-		endpoint: req.HTTPRequest.URL.String(),
-		region:   aws_sdkv1.StringValue(client.Config.Region),
-	}
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -366,10 +337,10 @@ func withUseFIPSInConfig(setup *caseSetup) {
 	setup.config["use_fips_endpoint"] = true
 }
 
-func expectDefaultEndpoint(t *testing.T, region string) caseExpectations {
+func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) caseExpectations {
 	t.Helper()
 
-	endpoint, err := defaultEndpoint(region)
+	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
 		t.Fatalf("resolving accessanalyzer default endpoint: %s", err)
 	}
@@ -380,10 +351,10 @@ func expectDefaultEndpoint(t *testing.T, region string) caseExpectations {
 	}
 }
 
-func expectDefaultFIPSEndpoint(t *testing.T, region string) caseExpectations {
+func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string) caseExpectations {
 	t.Helper()
 
-	endpoint, err := defaultFIPSEndpoint(region)
+	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
 		t.Fatalf("resolving accessanalyzer FIPS endpoint: %s", err)
 	}
@@ -391,7 +362,7 @@ func expectDefaultFIPSEndpoint(t *testing.T, region string) caseExpectations {
 	hostname := endpoint.Hostname()
 	_, err = net.LookupHost(hostname)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
-		return expectDefaultEndpoint(t, region)
+		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
 		t.Fatalf("looking up accessanalyzer endpoint %q: %s", hostname, err)
 	}
@@ -437,10 +408,8 @@ func expectBaseConfigFileEndpoint() caseExpectations {
 	}
 }
 
-func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, callF callFunc) {
+func testEndpointCase(ctx context.Context, t *testing.T, region string, testcase endpointTestCase, callF callFunc) {
 	t.Helper()
-
-	ctx := context.Background()
 
 	setup := caseSetup{
 		config:               map[string]any{},
@@ -471,20 +440,14 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 		t.Setenv(k, v)
 	}
 
-	p, err := provider.New(ctx)
+	p, err := sdkv2.NewProvider(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expectedDiags := testcase.expected.diags
-	expectedDiags = append(
-		expectedDiags,
-		errs.NewWarningDiagnostic(
-			"AWS account ID not found for provider",
-			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-		),
-	)
+	p.TerraformVersion = "1.0.0"
 
+	expectedDiags := testcase.expected.diags
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
@@ -558,7 +521,7 @@ func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
 	)
 }
 
-var errCancelOperation = fmt.Errorf("Test: Canceling request")
+var errCancelOperation = errors.New("Test: Canceling request")
 
 func addCancelRequestMiddleware() func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
@@ -578,7 +541,7 @@ func cancelRequestMiddleware() middleware.FinalizeMiddleware {
 		})
 }
 
-func fullTypeName(i interface{}) string {
+func fullTypeName(i any) string {
 	return fullValueTypeName(reflect.ValueOf(i))
 }
 
@@ -600,17 +563,17 @@ aws_access_key_id = DefaultSharedCredentialsAccessKey
 aws_secret_access_key = DefaultSharedCredentialsSecretKey
 `)
 	if config.baseUrl != "" {
-		buf.WriteString(fmt.Sprintf("endpoint_url = %s\n", config.baseUrl))
+		fmt.Fprintf(&buf, "endpoint_url = %s\n", config.baseUrl)
 	}
 
 	if config.serviceUrl != "" {
-		buf.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&buf, `
 services = endpoint-test
 
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, configParam, serviceConfigFileEndpoint))
+`, configParam, serviceConfigFileEndpoint)
 	}
 
 	return buf.String()

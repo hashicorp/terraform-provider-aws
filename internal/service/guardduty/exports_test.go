@@ -5,5 +5,15 @@ package guardduty
 
 // Exports for use in tests only.
 var (
-	ResourceMalwareProtectionPlan = newResourceMalwareProtectionPlan
+	ResourceFilter                = resourceFilter
+	ResourceInviteAccepter        = resourceInviteAccepter
+	ResourceMalwareProtectionPlan = newMalwareProtectionPlanResource
+	ResourcePublishingDestination = resourcePublishingDestination
+
+	FindDetectorByID                        = findDetectorByID
+	FindDetectorFeatureByTwoPartKey         = findDetectorFeatureByTwoPartKey
+	FindMalwareProtectionPlanByID           = findMalwareProtectionPlanByID
+	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
+
+	GetOrganizationAdminAccount = getOrganizationAdminAccount
 )

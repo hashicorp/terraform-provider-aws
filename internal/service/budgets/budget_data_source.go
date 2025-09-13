@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_budgets_budget")
+// @SDKDataSource("aws_budgets_budget", name="Budget")
+// @Tags(identifierAttribute="arn")
 func DataSourceBudget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBudgetRead,
@@ -66,6 +67,10 @@ func DataSourceBudget() *schema.Resource {
 						},
 					},
 				},
+			},
+			"billing_view_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"budget_type": {
 				Type:     schema.TypeString,
@@ -271,16 +276,15 @@ const (
 	DSNameBudget = "Budget Data Source"
 )
 
-func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	d.Set(names.AttrAccountID, accountID)
 
@@ -292,12 +296,14 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(fmt.Sprintf("%s:%s", accountID, budgetName))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "budgets",
 		AccountID: accountID,
 		Resource:  "budget/" + budgetName,
 	}
 	d.Set(names.AttrARN, arn.String())
+
+	d.Set("billing_view_arn", budget.BillingViewArn)
 
 	d.Set("budget_type", budget.BudgetType)
 
@@ -332,39 +338,29 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrName, budget.BudgetName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
-	tags, err := listTags(ctx, conn, arn.String())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Budget (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
 	return diags
 }
 
-func flattenCalculatedSpend(apiObject *awstypes.CalculatedSpend) []interface{} {
+func flattenCalculatedSpend(apiObject *awstypes.CalculatedSpend) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	attrs := map[string]interface{}{
+	attrs := map[string]any{
 		"actual_spend": flattenSpend(apiObject.ActualSpend),
 	}
-	return []interface{}{attrs}
+	return []any{attrs}
 }
 
-func flattenSpend(apiObject *awstypes.Spend) []interface{} {
+func flattenSpend(apiObject *awstypes.Spend) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	attrs := map[string]interface{}{
+	attrs := map[string]any{
 		"amount":       aws.ToString(apiObject.Amount),
 		names.AttrUnit: aws.ToString(apiObject.Unit),
 	}
 
-	return []interface{}{attrs}
+	return []any{attrs}
 }

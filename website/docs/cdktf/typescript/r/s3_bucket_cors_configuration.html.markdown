@@ -65,6 +65,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `corsRule` - (Required) Set of origins and methods (cross-origin access that you want to allow). [See below](#cors_rule). You can configure up to 100 rules.
@@ -152,4 +153,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_cors_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-46d05f4edffda026c1ba9028dbaf7808b8d38daf8758aaa695e27c27b121e258 -->
+<!-- cache-key: cdktf-0.20.8 input-29833684c5d5df261914e367197484410dc75473416f8870b4e10332c4b6edb1 -->

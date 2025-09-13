@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name that lets you identify the rule group, to manage and use it.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -83,4 +84,4 @@ Using `terraform import`, import  Route 53 Resolver DNS Firewall rule groups usi
 % terraform import aws_route53_resolver_firewall_rule_group.example rslvr-frg-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a7027280b0156439ca87c0646923dbb1f2fe11c7d16f7cb2dd4b81387e289185 -->
+<!-- cache-key: cdktf-0.20.8 input-9fd4b3de5dbfb9a2cda4135f629225b1849580a5d1d3373bb19a5dffbfb96015 -->

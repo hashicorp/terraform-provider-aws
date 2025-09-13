@@ -39,7 +39,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 				Config: testAccSecretConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "secretsmanager", regexache.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "secretsmanager", regexache.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
@@ -168,7 +168,7 @@ func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
 		},
@@ -264,14 +264,14 @@ func TestAccSecretsManagerSecret_RecoveryWindowInDays_recreate(t *testing.T) {
 				Config: testAccSecretConfig_recoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
 				),
 			},
 			{
 				Config: testAccSecretConfig_recoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
 				),
 				Taint: []string{resourceName},
 			},
@@ -408,7 +408,7 @@ resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 
   replica {
-    region = data.aws_region.alternate.name
+    region = data.aws_region.alternate.region
   }
 }
 `, rName))
@@ -419,11 +419,13 @@ func testAccSecretConfig_overwriteReplica(rName string, force_overwrite_replica_
 resource "aws_kms_key" "test" {
   provider                = awsalternate
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   provider                = awsthird
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_region" "alternate" {
@@ -436,7 +438,7 @@ resource "aws_secretsmanager_secret" "test" {
 
   replica {
     kms_key_id = aws_kms_key.test.key_id
-    region     = data.aws_region.alternate.name
+    region     = data.aws_region.alternate.region
   }
 }
 `, rName, force_overwrite_replica_secret))
@@ -447,11 +449,13 @@ func testAccSecretConfig_overwriteReplicaUpdate(rName string, force_overwrite_re
 resource "aws_kms_key" "test" {
   provider                = awsalternate
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   provider                = awsthird
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_region" "third" {
@@ -464,7 +468,7 @@ resource "aws_secretsmanager_secret" "test" {
 
   replica {
     kms_key_id = aws_kms_key.test2.key_id
-    region     = data.aws_region.third.name
+    region     = data.aws_region.third.region
   }
 }
 `, rName, force_overwrite_replica_secret))
@@ -490,10 +494,12 @@ func testAccSecretConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_secretsmanager_secret" "test" {
@@ -507,10 +513,12 @@ func testAccSecretConfig_kmsKeyIDUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_secretsmanager_secret" "test" {

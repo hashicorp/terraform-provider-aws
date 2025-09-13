@@ -93,6 +93,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository` - (Required) The name of the repository to set the resource policy on.
 * `domain` - (Required) The name of the domain on which to set the resource policy.
 * `policyDocument` - (Required) A JSON policy string to be set as the access control resource policy on the provided domain.
@@ -138,4 +139,4 @@ Using `terraform import`, import CodeArtifact Repository Permissions Policies us
 % terraform import aws_codeartifact_repository_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2609ffac94d64cc0a79333020641c78ce36e999d6d8358e8f31df4a0ce52ddb0 -->
+<!-- cache-key: cdktf-0.20.8 input-67711a3a4aa4d0f5f8059dc33a8972e13bff56da2a95882748e689ea8ac61b9a -->

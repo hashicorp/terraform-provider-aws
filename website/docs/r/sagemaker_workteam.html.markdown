@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_workteam"
 description: |-
-  Provides a SageMaker Workteam resource.
+  Provides a SageMaker AI Workteam resource.
 ---
 
 # Resource: aws_sagemaker_workteam
 
-Provides a SageMaker Workteam resource.
+Provides a SageMaker AI Workteam resource.
 
 ## Example Usage
 
@@ -24,7 +24,7 @@ resource "aws_sagemaker_workteam" "example" {
     cognito_member_definition {
       client_id  = aws_cognito_user_pool_client.example.id
       user_pool  = aws_cognito_user_pool_domain.example.user_pool_id
-      user_group = aws_cognito_user_group.example.id
+      user_group = aws_cognito_user_group.example.name
     }
   }
 }
@@ -50,9 +50,10 @@ resource "aws_sagemaker_workteam" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required) A description of the work team.
-* `workforce_name` - (Required) The name of the Workteam (must be unique).
-* `workteam_name` - (Required) The name of the workforce.
+* `workforce_name` - (Optional) The name of the workforce.
+* `workteam_name` - (Required) The name of the Workteam (must be unique).
 * `member_definition` - (Required) A list of Member Definitions that contains objects that identify the workers that make up the work team. Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use `cognito_member_definition`. For workforces created using your own OIDC identity provider (IdP) use `oidc_member_definition`. Do not provide input for both of these parameters in a single request. see [Member Definition](#member-definition) details below.
 * `notification_configuration` - (Optional) Configures notification of workers regarding available or expiring work items. see [Notification Configuration](#notification-configuration) details below.
 * `worker_access_configuration` - (Optional) Use this optional parameter to constrain access to an Amazon S3 resource based on the IP address using supported IAM global condition keys. The Amazon S3 resource is accessed in the worker portal using a Amazon S3 presigned URL. see [Worker Access Configuration](#worker-access-configuration) details below.
@@ -101,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Workteams using the `workteam_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Workteams using the `workteam_name`. For example:
 
 ```terraform
 import {
@@ -110,7 +111,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Workteams using the `workteam_name`. For example:
+Using `terraform import`, import SageMaker AI Workteams using the `workteam_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_workteam.example example

@@ -41,8 +41,6 @@ func resourceFileSystem() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -181,7 +179,7 @@ func resourceFileSystem() *schema.Resource {
 	}
 }
 
-func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -239,7 +237,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("lifecycle_policy"); ok {
 		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandLifecyclePolicies(v.([]interface{})),
+			LifecyclePolicies: expandLifecyclePolicies(v.([]any)),
 		}
 
 		_, err := conn.PutLifecycleConfiguration(ctx, input)
@@ -249,8 +247,8 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("protection"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]any)[0].(map[string]any))
 
 		_, err := conn.UpdateFileSystemProtection(ctx, input)
 
@@ -262,7 +260,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -315,7 +313,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -344,7 +342,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("lifecycle_policy") {
 		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
+			LifecyclePolicies: expandLifecyclePolicies(d.Get("lifecycle_policy").([]any)),
 		}
 
 		// Prevent the following error during removal:
@@ -362,8 +360,8 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChanges("protection") {
-		if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("protection"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]any)[0].(map[string]any))
 
 			_, err := conn.UpdateFileSystemProtection(ctx, input)
 
@@ -376,7 +374,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -460,7 +458,7 @@ func findFileSystemByID(ctx context.Context, conn *efs.Client, id string) (*awst
 }
 
 func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFileSystemByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -519,11 +517,11 @@ func waitFileSystemDeleted(ctx context.Context, conn *efs.Client, fileSystemID s
 	return nil, err
 }
 
-func flattenLifecyclePolicies(apiObjects []awstypes.LifecyclePolicy) []interface{} {
-	var tfList []interface{}
+func flattenLifecyclePolicies(apiObjects []awstypes.LifecyclePolicy) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		tfMap["transition_to_archive"] = apiObject.TransitionToArchive
 		tfMap["transition_to_ia"] = apiObject.TransitionToIA
@@ -535,11 +533,11 @@ func flattenLifecyclePolicies(apiObjects []awstypes.LifecyclePolicy) []interface
 	return tfList
 }
 
-func expandLifecyclePolicies(tfList []interface{}) []awstypes.LifecyclePolicy {
+func expandLifecyclePolicies(tfList []any) []awstypes.LifecyclePolicy {
 	var apiObjects []awstypes.LifecyclePolicy
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -564,12 +562,12 @@ func expandLifecyclePolicies(tfList []interface{}) []awstypes.LifecyclePolicy {
 	return apiObjects
 }
 
-func flattenFileSystemSize(apiObject *awstypes.FileSystemSize) []interface{} {
+func flattenFileSystemSize(apiObject *awstypes.FileSystemSize) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrValue: apiObject.Value,
 	}
 
@@ -581,10 +579,10 @@ func flattenFileSystemSize(apiObject *awstypes.FileSystemSize) []interface{} {
 		m["value_in_standard"] = aws.ToInt64(apiObject.ValueInStandard)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandUpdateFileSystemProtectionInput(fileSystemID string, tfMap map[string]interface{}) *efs.UpdateFileSystemProtectionInput {
+func expandUpdateFileSystemProtectionInput(fileSystemID string, tfMap map[string]any) *efs.UpdateFileSystemProtectionInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -600,14 +598,14 @@ func expandUpdateFileSystemProtectionInput(fileSystemID string, tfMap map[string
 	return apiObject
 }
 
-func flattenFileSystemProtectionDescription(apiObject *awstypes.FileSystemProtectionDescription) []interface{} {
+func flattenFileSystemProtectionDescription(apiObject *awstypes.FileSystemProtectionDescription) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["replication_overwrite"] = apiObject.ReplicationOverwriteProtection
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

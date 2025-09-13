@@ -42,3 +42,9 @@ func PredicateTrue[T any]() Predicate[T] {
 		return true
 	}
 }
+
+func PredicateValue[T any](predicate Predicate[*T]) Predicate[T] {
+	return func(v T) bool {
+		return predicate(&v)
+	}
+}

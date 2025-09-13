@@ -31,6 +31,10 @@ func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"dx_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -45,35 +49,36 @@ func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"resource-type": string(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
 		}),
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, v.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			svcTags(tftags.New(ctx, v.(map[string]any))),
 		)...)
 	}
 
 	// to preserve original functionality
 	if v, ok := d.GetOk("dx_gateway_id"); ok {
-		input.Filters = append(input.Filters, newAttributeFilterListV2(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"resource-id": v.(string),
 		})...)
 	}
 
 	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
-		input.Filters = append(input.Filters, newAttributeFilterListV2(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"transit-gateway-id": v.(string),
 		})...)
 	}
@@ -85,10 +90,12 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 	}
 
 	d.SetId(aws.ToString(transitGatewayAttachment.TransitGatewayAttachmentId))
+	resourceOwnerID := aws.ToString(transitGatewayAttachment.ResourceOwnerId)
+	d.Set(names.AttrARN, transitGatewayAttachmentARN(ctx, c, resourceOwnerID, d.Id()))
 	d.Set("dx_gateway_id", transitGatewayAttachment.ResourceId)
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 
-	setTagsOutV2(ctx, transitGatewayAttachment.Tags)
+	setTagsOut(ctx, transitGatewayAttachment.Tags)
 
 	return diags
 }

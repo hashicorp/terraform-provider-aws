@@ -50,6 +50,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name that lets you identify the rule group association, to manage and use it.
 * `firewallRuleGroupId` - (Required) The unique identifier of the firewall rule group.
 * `mutationProtection` - (Optional) If enabled, this setting disallows modification or removal of the association, to help prevent against accidentally altering DNS firewall protections. Valid values: `ENABLED`, `DISABLED`.
@@ -97,4 +98,4 @@ Using `terraform import`, import Route 53 Resolver DNS Firewall rule group assoc
 % terraform import aws_route53_resolver_firewall_rule_group_association.example rslvr-frgassoc-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-51bb172b49b6d58bc2272c4f5a68cd66487cbbaeb7680be17082513297427b44 -->
+<!-- cache-key: cdktf-0.20.8 input-4241924d5682d901dbafba383b6e276cabb68b624ca8d0b53b4beaa787b2d98d -->

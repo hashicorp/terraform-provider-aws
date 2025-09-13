@@ -10,14 +10,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -28,8 +30,12 @@ import (
 )
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
-// @Tags(identifierAttribute="id")
-func ResourceReplicationConfig() *schema.Resource {
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
+// @Testing(importIgnore="start_replication", plannableImportAction="NoOp")
+func resourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,
 		ReadWithoutTimeout:   resourceReplicationConfigRead,
@@ -40,10 +46,6 @@ func ResourceReplicationConfig() *schema.Resource {
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -127,9 +129,9 @@ func ResourceReplicationConfig() *schema.Resource {
 				DiffSuppressOnRefresh: true,
 			},
 			"replication_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(dms.MigrationTypeValue_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
 			},
 			"resource_identifier": {
 				Type:     schema.TypeString,
@@ -167,27 +169,25 @@ func ResourceReplicationConfig() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	replicationConfigID := d.Get("replication_config_identifier").(string)
 	input := &dms.CreateReplicationConfigInput{
 		ReplicationConfigIdentifier: aws.String(replicationConfigID),
-		ReplicationType:             aws.String(d.Get("replication_type").(string)),
+		ReplicationType:             awstypes.MigrationTypeValue(d.Get("replication_type").(string)),
 		SourceEndpointArn:           aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:               aws.String(d.Get("table_mappings").(string)),
 		Tags:                        getTagsIn(ctx),
 		TargetEndpointArn:           aws.String(d.Get("target_endpoint_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ComputeConfig = expandComputeConfigInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("compute_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ComputeConfig = expandComputeConfigInput(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("replication_settings"); ok {
@@ -202,13 +202,13 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 		input.SupplementalSettings = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateReplicationConfigWithContext(ctx, input)
+	output, err := conn.CreateReplicationConfig(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Config (%s): %s", replicationConfigID, err)
 	}
 
-	d.SetId(aws.StringValue(output.ReplicationConfig.ReplicationConfigArn))
+	d.SetId(aws.ToString(output.ReplicationConfig.ReplicationConfigArn))
 
 	if d.Get("start_replication").(bool) {
 		if err := startReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -219,11 +219,11 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	replicationConfig, err := FindReplicationConfigByARN(ctx, conn, d.Id())
+	replicationConfig, err := findReplicationConfigByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Config (%s) not found, removing from state", d.Id())
@@ -250,9 +250,9 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_replication") {
 		if err := stopReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -264,8 +264,8 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("compute_config") {
-			if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ComputeConfig = expandComputeConfigInput(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("compute_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ComputeConfig = expandComputeConfigInput(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -274,7 +274,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("replication_type") {
-			input.ReplicationType = aws.String(d.Get("replication_type").(string))
+			input.ReplicationType = awstypes.MigrationTypeValue(d.Get("replication_type").(string))
 		}
 
 		if d.HasChange("source_endpoint_arn") {
@@ -293,7 +293,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 			input.TargetEndpointArn = aws.String(d.Get("target_endpoint_arn").(string))
 		}
 
-		_, err := conn.ModifyReplicationConfigWithContext(ctx, input)
+		_, err := conn.ModifyReplicationConfig(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Config (%s): %s", d.Id(), err)
@@ -307,7 +307,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if d.HasChange("start_replication") {
-		var f func(context.Context, *dms.DatabaseMigrationService, string, time.Duration) error
+		var f func(context.Context, *dms.Client, string, time.Duration) error
 		if d.Get("start_replication").(bool) {
 			f = startReplication
 		} else {
@@ -321,20 +321,21 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	if err := stopReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting DMS Replication Config: %s", d.Id())
-	_, err := conn.DeleteReplicationConfigWithContext(ctx, &dms.DeleteReplicationConfigInput{
+	input := dms.DeleteReplicationConfigInput{
 		ReplicationConfigArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteReplicationConfig(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
 	}
 
@@ -349,112 +350,100 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindReplicationConfigByARN(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) (*dms.ReplicationConfig, error) {
+func findReplicationConfigByARN(ctx context.Context, conn *dms.Client, arn string) (*awstypes.ReplicationConfig, error) {
 	input := &dms.DescribeReplicationConfigsInput{
-		Filters: []*dms.Filter{{
+		Filters: []awstypes.Filter{{
 			Name:   aws.String("replication-config-arn"),
-			Values: aws.StringSlice([]string{arn}),
+			Values: []string{arn},
 		}},
 	}
 
 	return findReplicationConfig(ctx, conn, input)
 }
 
-func findReplicationConfig(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationConfigsInput) (*dms.ReplicationConfig, error) {
+func findReplicationConfig(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationConfigsInput) (*awstypes.ReplicationConfig, error) {
 	output, err := findReplicationConfigs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationConfigs(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationConfigsInput) ([]*dms.ReplicationConfig, error) {
-	var output []*dms.ReplicationConfig
+func findReplicationConfigs(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationConfigsInput) ([]awstypes.ReplicationConfig, error) {
+	var output []awstypes.ReplicationConfig
 
-	err := conn.DescribeReplicationConfigsPagesWithContext(ctx, input, func(page *dms.DescribeReplicationConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := dms.NewDescribeReplicationConfigsPaginator(conn, input)
 
-		for _, v := range page.ReplicationConfigs {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.ReplicationConfigs...)
 	}
 
 	return output, nil
 }
 
-func findReplicationByReplicationConfigARN(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) (*dms.Replication, error) {
+func findReplicationByReplicationConfigARN(ctx context.Context, conn *dms.Client, arn string) (*awstypes.Replication, error) {
 	input := &dms.DescribeReplicationsInput{
-		Filters: []*dms.Filter{{
+		Filters: []awstypes.Filter{{
 			Name:   aws.String("replication-config-arn"),
-			Values: aws.StringSlice([]string{arn}),
+			Values: []string{arn},
 		}},
 	}
 
 	return findReplication(ctx, conn, input)
 }
 
-func findReplication(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationsInput) (*dms.Replication, error) {
+func findReplication(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationsInput) (*awstypes.Replication, error) {
 	output, err := findReplications(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplications(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationsInput) ([]*dms.Replication, error) {
-	var output []*dms.Replication
+func findReplications(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationsInput) ([]awstypes.Replication, error) {
+	var output []awstypes.Replication
 
-	err := conn.DescribeReplicationsPagesWithContext(ctx, input, func(page *dms.DescribeReplicationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := dms.NewDescribeReplicationsPaginator(conn, input)
 
-		for _, v := range page.Replications {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.Replications...)
 	}
 
 	return output, nil
 }
 
-func statusReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusReplication(ctx context.Context, conn *dms.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -465,27 +454,24 @@ func statusReplication(ctx context.Context, conn *dms.DatabaseMigrationService, 
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func setLastReplicationError(err error, replication *dms.Replication) {
+func setLastReplicationError(err error, replication *awstypes.Replication) {
 	var errs []error
 
-	errs = append(errs, tfslices.ApplyToAll(replication.FailureMessages, func(v *string) error {
-		if v := aws.StringValue(v); v != "" {
-			return errors.New(v)
-		}
-		return nil
+	errs = append(errs, tfslices.ApplyToAll(replication.FailureMessages, func(v string) error {
+		return errors.New(v)
 	})...)
-	if v := aws.StringValue(replication.StopReason); v != "" {
+	if v := aws.ToString(replication.StopReason); v != "" {
 		errs = append(errs, errors.New(v))
 	}
 
 	tfresource.SetLastError(err, errors.Join(errs...))
 }
 
-func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
+func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			replicationStatusReady,
@@ -506,7 +492,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationServ
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.Replication); ok {
+	if output, ok := outputRaw.(*awstypes.Replication); ok {
 		setLastReplicationError(err, output)
 		return output, err
 	}
@@ -514,7 +500,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationServ
 	return nil, err
 }
 
-func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
+func waitReplicationStopped(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationStatusStopping, replicationStatusRunning},
 		Target:     []string{replicationStatusStopped},
@@ -526,7 +512,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationServ
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.Replication); ok {
+	if output, ok := outputRaw.(*awstypes.Replication); ok {
 		setLastReplicationError(err, output)
 		return output, err
 	}
@@ -534,7 +520,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationServ
 	return nil, err
 }
 
-func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
+func waitReplicationDeleted(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting, replicationStatusStopped},
 		Target:     []string{},
@@ -546,7 +532,7 @@ func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationServ
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.Replication); ok {
+	if output, ok := outputRaw.(*awstypes.Replication); ok {
 		setLastReplicationError(err, output)
 		return output, err
 	}
@@ -554,14 +540,14 @@ func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationServ
 	return nil, err
 }
 
-func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) error {
+func startReplication(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) error {
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %w", arn, err)
 	}
 
-	replicationStatus := aws.StringValue(replication.Status)
+	replicationStatus := aws.ToString(replication.Status)
 	if replicationStatus == replicationStatusRunning {
 		return nil
 	}
@@ -575,7 +561,7 @@ func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, a
 		StartReplicationType: aws.String(startReplicationType),
 	}
 
-	_, err = conn.StartReplicationWithContext(ctx, input)
+	_, err = conn.StartReplication(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("starting DMS Serverless Replication (%s): %w", arn, err)
@@ -588,7 +574,7 @@ func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, a
 	return nil
 }
 
-func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) error {
+func stopReplication(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) error {
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 	if tfresource.NotFound(err) {
@@ -596,11 +582,10 @@ func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, ar
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %w", arn, err)
 	}
 
-	replicationStatus := aws.StringValue(replication.Status)
-	if replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
+	if replicationStatus := aws.ToString(replication.Status); replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
 		return nil
 	}
 
@@ -608,7 +593,7 @@ func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, ar
 		ReplicationConfigArn: aws.String(arn),
 	}
 
-	_, err = conn.StopReplicationWithContext(ctx, input)
+	_, err = conn.StopReplication(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("stopping DMS Serverless Replication (%s): %w", arn, err)
@@ -621,32 +606,32 @@ func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, ar
 	return nil
 }
 
-func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
+func flattenComputeConfig(apiObject *awstypes.ComputeConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		names.AttrAvailabilityZone:           aws.StringValue(apiObject.AvailabilityZone),
-		"dns_name_servers":                   aws.StringValue(apiObject.DnsNameServers),
-		names.AttrKMSKeyID:                   aws.StringValue(apiObject.KmsKeyId),
-		"max_capacity_units":                 aws.Int64Value(apiObject.MaxCapacityUnits),
-		"min_capacity_units":                 aws.Int64Value(apiObject.MinCapacityUnits),
-		"multi_az":                           aws.BoolValue(apiObject.MultiAZ),
-		names.AttrPreferredMaintenanceWindow: aws.StringValue(apiObject.PreferredMaintenanceWindow),
-		"replication_subnet_group_id":        aws.StringValue(apiObject.ReplicationSubnetGroupId),
-		names.AttrVPCSecurityGroupIDs:        flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
+	tfMap := map[string]any{
+		names.AttrAvailabilityZone:           aws.ToString(apiObject.AvailabilityZone),
+		"dns_name_servers":                   aws.ToString(apiObject.DnsNameServers),
+		names.AttrKMSKeyID:                   aws.ToString(apiObject.KmsKeyId),
+		"max_capacity_units":                 aws.ToInt32(apiObject.MaxCapacityUnits),
+		"min_capacity_units":                 aws.ToInt32(apiObject.MinCapacityUnits),
+		"multi_az":                           aws.ToBool(apiObject.MultiAZ),
+		names.AttrPreferredMaintenanceWindow: aws.ToString(apiObject.PreferredMaintenanceWindow),
+		"replication_subnet_group_id":        aws.ToString(apiObject.ReplicationSubnetGroupId),
+		names.AttrVPCSecurityGroupIDs:        apiObject.VpcSecurityGroupIds,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
+func expandComputeConfigInput(tfMap map[string]any) *awstypes.ComputeConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &dms.ComputeConfig{}
+	apiObject := &awstypes.ComputeConfig{}
 
 	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
@@ -661,11 +646,11 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 	}
 
 	if v, ok := tfMap["max_capacity_units"].(int); ok && v != 0 {
-		apiObject.MaxCapacityUnits = aws.Int64(int64(v))
+		apiObject.MaxCapacityUnits = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["min_capacity_units"].(int); ok && v != 0 {
-		apiObject.MinCapacityUnits = aws.Int64(int64(v))
+		apiObject.MinCapacityUnits = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["multi_az"].(bool); ok {
@@ -681,7 +666,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 	}
 
 	if v, ok := tfMap[names.AttrVPCSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+		apiObject.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject

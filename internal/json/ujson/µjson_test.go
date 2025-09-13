@@ -316,7 +316,6 @@ func TestWalk(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run("Walk/"+tt.input, func(t *testing.T) {
 			t.Parallel()
 
@@ -335,7 +334,6 @@ func TestWalk(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run("Reconstruct/"+tt.input, func(t *testing.T) {
 			t.Parallel()
 

@@ -53,7 +53,7 @@ func dataSourceTransitGatewayConnect() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -63,7 +63,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 		input.TransitGatewayAttachmentIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -79,7 +79,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrTransitGatewayID, transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	setTagsOutV2(ctx, transitGatewayConnect.Tags)
+	setTagsOut(ctx, transitGatewayConnect.Tags)
 
 	return diags
 }

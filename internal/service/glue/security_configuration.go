@@ -7,23 +7,26 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_security_configuration")
-func ResourceSecurityConfiguration() *schema.Resource {
+// @SDKResource("aws_glue_security_configuration", name="Security Configuration")
+func resourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
 		ReadWithoutTimeout:   resourceSecurityConfigurationRead,
 		DeleteWithoutTimeout: resourceSecurityConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -44,14 +47,11 @@ func ResourceSecurityConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cloudwatch_encryption_mode": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  glue.CloudWatchEncryptionModeDisabled,
-										ValidateFunc: validation.StringInSlice([]string{
-											glue.CloudWatchEncryptionModeDisabled,
-											glue.CloudWatchEncryptionModeSseKms,
-										}, false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										Default:          awstypes.CloudWatchEncryptionModeDisabled,
+										ValidateDiagFunc: enum.Validate[awstypes.CloudWatchEncryptionMode](),
 									},
 									names.AttrKMSKeyARN: {
 										Type:     schema.TypeString,
@@ -69,14 +69,11 @@ func ResourceSecurityConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"job_bookmarks_encryption_mode": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  glue.JobBookmarksEncryptionModeDisabled,
-										ValidateFunc: validation.StringInSlice([]string{
-											glue.JobBookmarksEncryptionModeCseKms,
-											glue.JobBookmarksEncryptionModeDisabled,
-										}, false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										Default:          awstypes.JobBookmarksEncryptionModeDisabled,
+										ValidateDiagFunc: enum.Validate[awstypes.JobBookmarksEncryptionMode](),
 									},
 									names.AttrKMSKeyARN: {
 										Type:     schema.TypeString,
@@ -99,15 +96,11 @@ func ResourceSecurityConfiguration() *schema.Resource {
 										ForceNew: true,
 									},
 									"s3_encryption_mode": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  glue.S3EncryptionModeDisabled,
-										ValidateFunc: validation.StringInSlice([]string{
-											glue.S3EncryptionModeDisabled,
-											glue.S3EncryptionModeSseKms,
-											glue.S3EncryptionModeSseS3,
-										}, false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										Default:          awstypes.S3EncryptionModeDisabled,
+										ValidateDiagFunc: enum.Validate[awstypes.S3EncryptionMode](),
 									},
 								},
 							},
@@ -125,18 +118,18 @@ func ResourceSecurityConfiguration() *schema.Resource {
 	}
 }
 
-func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 	name := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
-		EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+		EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]any)),
 		Name:                    aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Creating Glue Security Configuration: %s", input)
-	_, err := conn.CreateSecurityConfigurationWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Glue Security Configuration: %+v", input)
+	_, err := conn.CreateSecurityConfiguration(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Security Configuration (%s): %s", name, err)
 	}
@@ -146,18 +139,18 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceSecurityConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.GetSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading Glue Security Configuration: %s", input)
-	output, err := conn.GetSecurityConfigurationWithContext(ctx, input)
+	log.Printf("[DEBUG] Reading Glue Security Configuration: %+v", input)
+	output, err := conn.GetSecurityConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		log.Printf("[WARN] Glue Security Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -183,12 +176,12 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
-	err := DeleteSecurityConfiguration(ctx, conn, d.Id())
+	err := deleteSecurityConfiguration(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Security Configuration (%s): %s", d.Id(), err)
 	}
@@ -196,29 +189,29 @@ func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func DeleteSecurityConfiguration(ctx context.Context, conn *glue.Glue, name string) error {
+func deleteSecurityConfiguration(ctx context.Context, conn *glue.Client, name string) error {
 	input := &glue.DeleteSecurityConfigurationInput{
 		Name: aws.String(name),
 	}
 
-	_, err := conn.DeleteSecurityConfigurationWithContext(ctx, input)
+	_, err := conn.DeleteSecurityConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil
 	}
 
 	return err
 }
 
-func expandCloudWatchEncryption(l []interface{}) *glue.CloudWatchEncryption {
+func expandCloudWatchEncryption(l []any) *awstypes.CloudWatchEncryption {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	cloudwatchEncryption := &glue.CloudWatchEncryption{
-		CloudWatchEncryptionMode: aws.String(m["cloudwatch_encryption_mode"].(string)),
+	cloudwatchEncryption := &awstypes.CloudWatchEncryption{
+		CloudWatchEncryptionMode: awstypes.CloudWatchEncryptionMode(m["cloudwatch_encryption_mode"].(string)),
 	}
 
 	if v, ok := m[names.AttrKMSKeyARN]; ok && v.(string) != "" {
@@ -228,31 +221,31 @@ func expandCloudWatchEncryption(l []interface{}) *glue.CloudWatchEncryption {
 	return cloudwatchEncryption
 }
 
-func expandEncryptionConfiguration(l []interface{}) *glue.EncryptionConfiguration {
+func expandEncryptionConfiguration(l []any) *awstypes.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	encryptionConfiguration := &glue.EncryptionConfiguration{
-		CloudWatchEncryption:   expandCloudWatchEncryption(m["cloudwatch_encryption"].([]interface{})),
-		JobBookmarksEncryption: expandJobBookmarksEncryption(m["job_bookmarks_encryption"].([]interface{})),
-		S3Encryption:           expandS3Encryptions(m["s3_encryption"].([]interface{})),
+	encryptionConfiguration := &awstypes.EncryptionConfiguration{
+		CloudWatchEncryption:   expandCloudWatchEncryption(m["cloudwatch_encryption"].([]any)),
+		JobBookmarksEncryption: expandJobBookmarksEncryption(m["job_bookmarks_encryption"].([]any)),
+		S3Encryption:           expandS3Encryptions(m["s3_encryption"].([]any)),
 	}
 
 	return encryptionConfiguration
 }
 
-func expandJobBookmarksEncryption(l []interface{}) *glue.JobBookmarksEncryption {
+func expandJobBookmarksEncryption(l []any) *awstypes.JobBookmarksEncryption {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	jobBookmarksEncryption := &glue.JobBookmarksEncryption{
-		JobBookmarksEncryptionMode: aws.String(m["job_bookmarks_encryption_mode"].(string)),
+	jobBookmarksEncryption := &awstypes.JobBookmarksEncryption{
+		JobBookmarksEncryptionMode: awstypes.JobBookmarksEncryptionMode(m["job_bookmarks_encryption_mode"].(string)),
 	}
 
 	if v, ok := m[names.AttrKMSKeyARN]; ok && v.(string) != "" {
@@ -262,22 +255,22 @@ func expandJobBookmarksEncryption(l []interface{}) *glue.JobBookmarksEncryption 
 	return jobBookmarksEncryption
 }
 
-func expandS3Encryptions(l []interface{}) []*glue.S3Encryption {
-	s3Encryptions := make([]*glue.S3Encryption, 0)
+func expandS3Encryptions(l []any) []awstypes.S3Encryption {
+	s3Encryptions := make([]awstypes.S3Encryption, 0)
 
 	for _, s3Encryption := range l {
 		if s3Encryption == nil {
 			continue
 		}
-		s3Encryptions = append(s3Encryptions, expandS3Encryption(s3Encryption.(map[string]interface{})))
+		s3Encryptions = append(s3Encryptions, expandS3Encryption(s3Encryption.(map[string]any)))
 	}
 
 	return s3Encryptions
 }
 
-func expandS3Encryption(m map[string]interface{}) *glue.S3Encryption {
-	s3Encryption := &glue.S3Encryption{
-		S3EncryptionMode: aws.String(m["s3_encryption_mode"].(string)),
+func expandS3Encryption(m map[string]any) awstypes.S3Encryption {
+	s3Encryption := awstypes.S3Encryption{
+		S3EncryptionMode: awstypes.S3EncryptionMode(m["s3_encryption_mode"].(string)),
 	}
 
 	if v, ok := m[names.AttrKMSKeyARN]; ok && v.(string) != "" {
@@ -287,63 +280,60 @@ func expandS3Encryption(m map[string]interface{}) *glue.S3Encryption {
 	return s3Encryption
 }
 
-func flattenCloudWatchEncryption(cloudwatchEncryption *glue.CloudWatchEncryption) []interface{} {
+func flattenCloudWatchEncryption(cloudwatchEncryption *awstypes.CloudWatchEncryption) []any {
 	if cloudwatchEncryption == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"cloudwatch_encryption_mode": aws.StringValue(cloudwatchEncryption.CloudWatchEncryptionMode),
-		names.AttrKMSKeyARN:          aws.StringValue(cloudwatchEncryption.KmsKeyArn),
+	m := map[string]any{
+		"cloudwatch_encryption_mode": string(cloudwatchEncryption.CloudWatchEncryptionMode),
+		names.AttrKMSKeyARN:          aws.ToString(cloudwatchEncryption.KmsKeyArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEncryptionConfiguration(encryptionConfiguration *glue.EncryptionConfiguration) []interface{} {
+func flattenEncryptionConfiguration(encryptionConfiguration *awstypes.EncryptionConfiguration) []any {
 	if encryptionConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cloudwatch_encryption":    flattenCloudWatchEncryption(encryptionConfiguration.CloudWatchEncryption),
 		"job_bookmarks_encryption": flattenJobBookmarksEncryption(encryptionConfiguration.JobBookmarksEncryption),
 		"s3_encryption":            flattenS3Encryptions(encryptionConfiguration.S3Encryption),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenJobBookmarksEncryption(jobBookmarksEncryption *glue.JobBookmarksEncryption) []interface{} {
+func flattenJobBookmarksEncryption(jobBookmarksEncryption *awstypes.JobBookmarksEncryption) []any {
 	if jobBookmarksEncryption == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"job_bookmarks_encryption_mode": aws.StringValue(jobBookmarksEncryption.JobBookmarksEncryptionMode),
-		names.AttrKMSKeyARN:             aws.StringValue(jobBookmarksEncryption.KmsKeyArn),
+	m := map[string]any{
+		"job_bookmarks_encryption_mode": string(jobBookmarksEncryption.JobBookmarksEncryptionMode),
+		names.AttrKMSKeyARN:             aws.ToString(jobBookmarksEncryption.KmsKeyArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenS3Encryptions(s3Encryptions []*glue.S3Encryption) []interface{} {
-	l := make([]interface{}, 0)
+func flattenS3Encryptions(s3Encryptions []awstypes.S3Encryption) []any {
+	l := make([]any, 0)
 
 	for _, s3Encryption := range s3Encryptions {
-		if s3Encryption == nil {
-			continue
-		}
 		l = append(l, flattenS3Encryption(s3Encryption))
 	}
 
 	return l
 }
 
-func flattenS3Encryption(s3Encryption *glue.S3Encryption) map[string]interface{} {
-	m := map[string]interface{}{
-		names.AttrKMSKeyARN:  aws.StringValue(s3Encryption.KmsKeyArn),
-		"s3_encryption_mode": aws.StringValue(s3Encryption.S3EncryptionMode),
+func flattenS3Encryption(s3Encryption awstypes.S3Encryption) map[string]any {
+	m := map[string]any{
+		names.AttrKMSKeyARN:  aws.ToString(s3Encryption.KmsKeyArn),
+		"s3_encryption_mode": string(s3Encryption.S3EncryptionMode),
 	}
 
 	return m

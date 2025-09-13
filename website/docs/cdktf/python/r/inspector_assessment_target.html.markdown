@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the assessment target.
 * `resource_group_arn` (Optional) Inspector Resource Group Amazon Resource Name (ARN) stating tags for instance matching. If not specified, all EC2 instances in the current AWS account and region are included in the assessment target.
 
@@ -77,4 +78,4 @@ Using `terraform import`, import Inspector Classic Assessment Targets using thei
 % terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-751090ce084efdbf0b345dca096fd95c6240e0d6d09be01dcacf39cbb869bd19 -->
+<!-- cache-key: cdktf-0.20.8 input-c0ce9ee931838d61b9770f7d749286750d0e999701cb989ce47a5d3846f8d7f5 -->

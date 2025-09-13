@@ -4,13 +4,10 @@
 package dynamodb
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"strings"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -18,14 +15,10 @@ import (
 
 func expandTableItemAttributes(jsonStream string) (map[string]awstypes.AttributeValue, error) {
 	var m map[string]any
-	dec := json.NewDecoder(strings.NewReader(jsonStream))
 
-	for {
-		if err := dec.Decode(&m); err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, err
-		}
+	err := tfjson.DecodeFromString(jsonStream, &m)
+	if err != nil {
+		return nil, err
 	}
 
 	return tfmaps.ApplyToAllValuesWithError(m, attributeFromRaw)
@@ -37,14 +30,7 @@ func flattenTableItemAttributes(apiObject map[string]awstypes.AttributeValue) (s
 		return "", err
 	}
 
-	b := new(bytes.Buffer)
-	enc := json.NewEncoder(b)
-
-	if err := enc.Encode(m); err != nil {
-		return "", err
-	}
-
-	return b.String(), nil
+	return tfjson.EncodeToString(m)
 }
 
 func attributeFromRaw(v any) (awstypes.AttributeValue, error) {

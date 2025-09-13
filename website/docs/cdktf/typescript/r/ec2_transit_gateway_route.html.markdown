@@ -72,6 +72,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destinationCidrBlock` - (Required) IPv4 or IPv6 RFC1924 CIDR used for destination matches. Routing decisions are based on the most specific match.
 * `transitGatewayAttachmentId` - (Optional) Identifier of EC2 Transit Gateway Attachment (required if `blackhole` is set to false).
 * `blackhole` - (Optional) Indicates whether to drop traffic that matches this route (default to `false`).
@@ -115,4 +116,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_route` using the EC2 T
 % terraform import aws_ec2_transit_gateway_route.example tgw-rtb-12345678_0.0.0.0/0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3f4289296824edee3b69e6fca23a5970445532afeb5abfc08517d091ea79a4c6 -->
+<!-- cache-key: cdktf-0.20.8 input-f3770974381fcdfb2de58076e11ae2efd7d494ebc05861b16b3bba99b4cfbb54 -->

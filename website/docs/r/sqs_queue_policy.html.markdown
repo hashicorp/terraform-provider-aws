@@ -8,10 +8,13 @@ description: |-
 
 # Resource: aws_sqs_queue_policy
 
-Allows you to set a policy of an SQS Queue
-while referencing ARN of the queue within the policy.
+Allows you to set a policy of an SQS Queue while referencing the ARN of the queue within the policy.
+
+!> AWS will hang indefinitely when creating or updating an [`aws_sqs_queue`](/docs/providers/aws/r/sqs_queue.html) with an associated policy if `Version = "2012-10-17"` is not explicitly set in the policy. [See below](#timeout-problems-creatingupdating) for an example of how to avoid this issue.
 
 ## Example Usage
+
+### Basic Usage
 
 ```terraform
 resource "aws_sqs_queue" "q" {
@@ -45,12 +48,49 @@ resource "aws_sqs_queue_policy" "test" {
 }
 ```
 
+### Timeout Problems Creating/Updating
+
+If `Version = "2012-10-17"` is not explicitly set in the policy, AWS may hang, causing the AWS provider to time out. To avoid this, make sure to include `Version` as shown in the example below.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "brodobaggins"
+}
+
+resource "aws_sqs_queue" "example" {
+  name = "be-giant"
+}
+
+resource "aws_sqs_queue_policy" "example" {
+  queue_url = aws_sqs_queue.example.id
+
+  policy = jsonencode({
+    Version = "2012-10-17" # !! Important !!
+    Statement = [{
+      Sid    = "Cejuwdam"
+      Effect = "Allow"
+      Principal = {
+        Service = "s3.amazonaws.com"
+      }
+      Action   = "SQS:SendMessage"
+      Resource = aws_sqs_queue.example.arn
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = aws_s3_bucket.example.arn
+        }
+      }
+    }]
+  })
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
-* `queue_url` - (Required) The URL of the SQS Queue to which to attach the policy
-* `policy` - (Required) The JSON policy for the SQS queue. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `policy` - (Required) JSON policy for the SQS queue. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Ensure that `Version = "2012-10-17"` is set in the policy or AWS may hang in creating the queue.
+* `queue_url` - (Required) URL of the SQS Queue to which to attach the policy.
 
 ## Attribute Reference
 
@@ -63,12 +103,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sqs_queue_policy.test
-  id = "https://queue.amazonaws.com/0123456789012/myqueue"
+  id = "https://queue.amazonaws.com/123456789012/myqueue"
 }
 ```
 
 Using `terraform import`, import SQS Queue Policies using the queue URL. For example:
 
 ```console
-% terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+% terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```

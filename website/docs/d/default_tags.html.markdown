@@ -49,7 +49,7 @@ resource "aws_autoscaling_group" "example" {
 
 ## Argument Reference
 
-This data source has no arguments.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

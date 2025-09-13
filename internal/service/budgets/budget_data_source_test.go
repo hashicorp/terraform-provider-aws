@@ -34,13 +34,14 @@ func TestAccBudgetsBudgetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBudgetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
-					acctest.CheckResourceAttrAccountID(dataSourceName, names.AttrAccountID),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "calculated_spend.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "budget_limit.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "billing_view_arn", resourceName, "billing_view_arn"),
 				),
 			},
 		},

@@ -5,12 +5,10 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_security_groups")
-func DataSourceSecurityGroups() *schema.Resource {
+// @SDKDataSource("aws_security_groups", name="Security Groups")
+func dataSourceSecurityGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityGroupsRead,
 
@@ -50,15 +48,15 @@ func DataSourceSecurityGroups() *schema.Resource {
 	}
 }
 
-func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -69,7 +67,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	output, err := FindSecurityGroups(ctx, conn, input)
+	output, err := findSecurityGroups(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Security Groups: %s", err)
@@ -78,19 +76,13 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	var arns, securityGroupIDs, vpcIDs []string
 
 	for _, v := range output {
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   ec2.ServiceName,
-			Region:    meta.(*conns.AWSClient).Region,
-			AccountID: aws.StringValue(v.OwnerId),
-			Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(v.GroupId)),
-		}.String()
-		arns = append(arns, arn)
-		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.GroupId))
-		vpcIDs = append(vpcIDs, aws.StringValue(v.VpcId))
+		ownerID, sgID := aws.ToString(v.OwnerId), aws.ToString(v.GroupId)
+		arns = append(arns, securityGroupARN(ctx, c, ownerID, sgID))
+		securityGroupIDs = append(securityGroupIDs, sgID)
+		vpcIDs = append(vpcIDs, aws.ToString(v.VpcId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(c.Region(ctx))
 	d.Set(names.AttrARNs, arns)
 	d.Set(names.AttrIDs, securityGroupIDs)
 	d.Set("vpc_ids", vpcIDs)

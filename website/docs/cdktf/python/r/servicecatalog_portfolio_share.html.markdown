@@ -53,6 +53,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `share_principals` - (Optional) Enables or disables Principal sharing when creating the portfolio share. If this flag is not provided, principal sharing is disabled.
 * `share_tag_options` - (Optional) Whether to enable sharing of `aws_servicecatalog_tag_option` resources when creating the portfolio share.
@@ -98,4 +99,4 @@ Using `terraform import`, import `aws_servicecatalog_portfolio_share` using the 
 % terraform import aws_servicecatalog_portfolio_share.example port-12344321:ACCOUNT:123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2bfc4e872e821217e1db9b54e4495ec060f98eb8c8810ca144d89c25443c542e -->
+<!-- cache-key: cdktf-0.20.8 input-4cbf119057df42a6a2e1b0ab1f227e2cb35a63f0921dff43497dc1cc9842b138 -->

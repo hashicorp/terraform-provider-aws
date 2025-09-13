@@ -109,6 +109,7 @@ resource "github_repository_webhook" "bar" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the webhook.
 * `authentication` - (Required) The type of authentication  to use. One of `IP`, `GITHUB_HMAC`, or `UNAUTHENTICATED`.
 * `authentication_configuration` - (Optional) An `auth` block. Required for `IP` and `GITHUB_HMAC`. Auth blocks are documented below.
@@ -137,6 +138,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `url` - The CodePipeline webhook's URL. POST events to this endpoint to trigger the target.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codepipeline_webhook.example
+  identity = {
+    "arn" = "arn:aws:codepipeline:us-west-2:123456789012:webhook:example-webhook"
+  }
+}
+
+resource "aws_codepipeline_webhook" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodePipeline webhook.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodePipeline Webhooks using their ARN. For example:
 

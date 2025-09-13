@@ -175,7 +175,7 @@ func testAccCheckRegistryPolicy(ctx context.Context, name string, expectedSid st
 	return func(s *terraform.State) error {
 		partition := acctest.Partition()
 		region := acctest.Region()
-		account_id := acctest.AccountID()
+		account_id := acctest.AccountID(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -213,7 +213,7 @@ func testAccCheckRegistryPolicy(ctx context.Context, name string, expectedSid st
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("Error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",

@@ -7,8 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/inspector"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_inspector_resource_group")
+// @SDKResource("aws_inspector_resource_group", name="Resource Group")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.ResourceGroup")
+// @Testing(preIdentityVersion="v6.4.0")
+// @Testing(checkDestroyNoop=true)
 func ResourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceGroupCreate,
@@ -38,31 +43,31 @@ func ResourceResourceGroup() *schema.Resource {
 	}
 }
 
-func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	req := &inspector.CreateResourceGroupInput{
-		ResourceGroupTags: expandResourceGroupTags(d.Get(names.AttrTags).(map[string]interface{})),
+		ResourceGroupTags: expandResourceGroupTags(d.Get(names.AttrTags).(map[string]any)),
 	}
 	log.Printf("[DEBUG] Creating Inspector Classic Resource Group: %#v", req)
-	resp, err := conn.CreateResourceGroupWithContext(ctx, req)
+	resp, err := conn.CreateResourceGroup(ctx, req)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Inspector Classic Resource Group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.ResourceGroupArn))
+	d.SetId(aws.ToString(resp.ResourceGroupArn))
 
 	return append(diags, resourceResourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	resp, err := conn.DescribeResourceGroupsWithContext(ctx, &inspector.DescribeResourceGroupsInput{
-		ResourceGroupArns: aws.StringSlice([]string{d.Id()}),
+	resp, err := conn.DescribeResourceGroups(ctx, &inspector.DescribeResourceGroupsInput{
+		ResourceGroupArns: []string{d.Id()},
 	})
 
 	if err != nil {
@@ -71,14 +76,13 @@ func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if len(resp.ResourceGroups) == 0 {
 		if failedItem, ok := resp.FailedItems[d.Id()]; ok {
-			failureCode := aws.StringValue(failedItem.FailureCode)
-			if failureCode == inspector.FailedItemErrorCodeItemDoesNotExist {
+			if failedItem.FailureCode == awstypes.FailedItemErrorCodeItemDoesNotExist {
 				log.Printf("[WARN] Inspector Classic Resource Group (%s) not found, removing from state", d.Id())
 				d.SetId("")
 				return diags
 			}
 
-			return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %s", d.Id(), failureCode)
+			return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %s", d.Id(), string(failedItem.FailureCode))
 		}
 
 		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %v", d.Id(), resp.FailedItems)
@@ -87,7 +91,6 @@ func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	resourceGroup := resp.ResourceGroups[0]
 	d.Set(names.AttrARN, resourceGroup.Arn)
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, flattenResourceGroupTags(resourceGroup.Tags)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
@@ -95,16 +98,16 @@ func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceResourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	return diags
 }
 
-func expandResourceGroupTags(m map[string]interface{}) []*inspector.ResourceGroupTag {
-	var result []*inspector.ResourceGroupTag
+func expandResourceGroupTags(m map[string]any) []awstypes.ResourceGroupTag {
+	var result []awstypes.ResourceGroupTag
 
 	for k, v := range m {
-		result = append(result, &inspector.ResourceGroupTag{
+		result = append(result, awstypes.ResourceGroupTag{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		})
@@ -113,11 +116,11 @@ func expandResourceGroupTags(m map[string]interface{}) []*inspector.ResourceGrou
 	return result
 }
 
-func flattenResourceGroupTags(tags []*inspector.ResourceGroupTag) map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenResourceGroupTags(tags []awstypes.ResourceGroupTag) map[string]any {
+	m := map[string]any{}
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+		m[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
 	}
 
 	return m

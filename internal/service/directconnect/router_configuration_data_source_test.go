@@ -5,10 +5,8 @@ package directconnect_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,11 +14,7 @@ import (
 
 func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "VIRTUAL_INTERFACE_ID"
-	virtualInterfaceId := os.Getenv(key)
-	if virtualInterfaceId == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
+	vifID := acctest.SkipIfEnvVarNotSet(t, "VIRTUAL_INTERFACE_ID")
 
 	dataSourceName := "data.aws_dx_router_configuration.test"
 	routerTypeIdentifier := "CiscoSystemsInc-2900SeriesRouters-IOS124"
@@ -28,15 +22,15 @@ func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, directconnect.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.DirectConnectEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouterConfigurationDataSourceConfig_basic(virtualInterfaceId, routerTypeIdentifier),
+				Config: testAccRouterConfigurationDataSourceConfig_basic(vifID, routerTypeIdentifier),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "virtual_interface_id", virtualInterfaceId),
+					resource.TestCheckResourceAttr(dataSourceName, "virtual_interface_id", vifID),
 					resource.TestCheckResourceAttr(dataSourceName, "router_type_identifier", routerTypeIdentifier),
 					resource.TestCheckResourceAttrSet(dataSourceName, "virtual_interface_name"),
 					resource.TestCheckResourceAttr(dataSourceName, "router.0.platform", "2900 Series Routers"),

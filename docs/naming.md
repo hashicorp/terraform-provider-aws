@@ -82,7 +82,8 @@ A correct example is `accessanalyzer_analyzer.html.markdown`. An incorrect examp
 
 ## Mixed Caps
 
-**NOTE:** Mixed Caps is different than camel case, Pascal case, or snake case!
+!!! note
+    Mixed Caps is different than camel case, Pascal case, or snake case!
 
 Idiomatic Go uses [_Mixed Caps_](https://go.dev/wiki/CodeReviewComments#initialisms) for multiword names in code. Mixed caps is similar to camel case except **initialisms and abbreviations in mixed caps should be the correct, human-readable case**, such as `VPCEndpoint` not `VpcEndpoint`. After all, names in code _are for humans_.
 

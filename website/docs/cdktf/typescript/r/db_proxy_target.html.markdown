@@ -82,6 +82,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbProxyName` - (Required, Forces new resource) The name of the DB proxy.
 * `targetGroupName` - (Required, Forces new resource) The name of the target group.
 * `dbInstanceIdentifier` - (Optional, Forces new resource) DB instance identifier.
@@ -167,4 +168,4 @@ Provisioned Clusters:
 % terraform import aws_db_proxy_target.example example-proxy/default/TRACKED_CLUSTER/example-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7434cf3969d924cf4dd540c487f947d3059ac1146283da81333dc7dd742fe6ae -->
+<!-- cache-key: cdktf-0.20.8 input-3656c90962c023489fdf7a1d72df5f0d34adbc25cd496d3b61a1028949466263 -->

@@ -64,7 +64,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 }
 ```
 
-The example below creates a CloudFront response headers policy with a custom headers config and server timing headers config.
+The example below creates a CloudFront response headers policy with a custom headers config, remove headers config and server timing headers config.
 
 ```terraform
 resource "aws_cloudfront_response_headers_policy" "example" {
@@ -75,6 +75,12 @@ resource "aws_cloudfront_response_headers_policy" "example" {
       header   = "X-Permitted-Cross-Domain-Policies"
       override = true
       value    = "none"
+    }
+  }
+
+  remove_headers_config {
+    items {
+      header = "Set-Cookie"
     }
   }
 
@@ -168,6 +174,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The response headers policy ARN.
 * `etag` - The current version of the response headers policy.
 * `id` - The identifier for the response headers policy.
 

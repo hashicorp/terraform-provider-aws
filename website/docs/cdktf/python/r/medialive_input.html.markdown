@@ -60,6 +60,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destinations` - (Optional) Destination settings for PUSH type inputs. See [Destinations](#destinations) for more details.
 * `input_devices` - (Optional) Settings for the devices. See [Input Devices](#input-devices) for more details.
 * `media_connect_flows` - (Optional) A list of the MediaConnect Flows. See [Media Connect Flows](#media-connect-flows) for more details.
@@ -134,4 +135,4 @@ Using `terraform import`, import MediaLive Input using the `id`. For example:
 % terraform import aws_medialive_input.example 12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e7c2ee81ba845515caa1acd230663186d94a15faebb59c803051c3bdd77ad5df -->
+<!-- cache-key: cdktf-0.20.8 input-331d984864d5395e7d2ac505571a83ee97b2a6cf657ea39bf26152bb3ad61174 -->

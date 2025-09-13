@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,8 +40,8 @@ func testAccVoiceConnectorGroup_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "1"),
 				),
 			},
 			{
@@ -102,14 +102,14 @@ func testAccVoiceConnectorGroup_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorGroupConfig_updated(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-updated-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "3"),
 				),
 			},
 			{
@@ -196,7 +196,7 @@ func testAccCheckVoiceConnectorGroupDestroy(ctx context.Context) resource.TestCh
 				return tfchime.FindVoiceConnectorGroupByID(ctx, conn, rs.Primary.ID)
 			})
 
-			if tfresource.NotFound(err) {
+			if errs.IsA[*awstypes.NotFoundException](err) {
 				continue
 			}
 

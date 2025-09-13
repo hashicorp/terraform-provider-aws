@@ -6,8 +6,8 @@ package ds
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_directory_service_directory")
-func DataSourceDirectory() *schema.Resource {
+// @SDKDataSource("aws_directory_service_directory", name="Directory")
+func dataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDirectoryRead,
 
@@ -172,46 +172,47 @@ func DataSourceDirectory() *schema.Resource {
 	}
 }
 
-func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	dir, err := FindDirectoryByID(ctx, conn, d.Get("directory_id").(string))
+	dir, err := findDirectoryByID(ctx, conn, d.Get("directory_id").(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Directory Service Directory", err))
 	}
 
-	d.SetId(aws.StringValue(dir.DirectoryId))
+	d.SetId(aws.ToString(dir.DirectoryId))
 	d.Set("access_url", dir.AccessUrl)
 	d.Set(names.AttrAlias, dir.Alias)
 	if dir.ConnectSettings != nil {
-		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
+		if err := d.Set("connect_settings", []any{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connect_settings: %s", err)
 		}
 	} else {
 		d.Set("connect_settings", nil)
 	}
 	d.Set(names.AttrDescription, dir.Description)
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
-	} else if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeSharedMicrosoftAd {
-		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.OwnerDirectoryDescription.DnsIpAddrs))
-	} else {
-		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.DnsIpAddrs))
+	switch dir.Type {
+	case awstypes.DirectoryTypeAdConnector:
+		d.Set("dns_ip_addresses", dir.ConnectSettings.ConnectIps)
+	case awstypes.DirectoryTypeSharedMicrosoftAd:
+		d.Set("dns_ip_addresses", dir.OwnerDirectoryDescription.DnsIpAddrs)
+	default:
+		d.Set("dns_ip_addresses", dir.DnsIpAddrs)
 	}
 	d.Set("edition", dir.Edition)
 	d.Set("enable_sso", dir.SsoEnabled)
 	d.Set(names.AttrName, dir.Name)
 	if dir.RadiusSettings != nil {
-		if err := d.Set("radius_settings", []interface{}{flattenRadiusSettings(dir.RadiusSettings)}); err != nil {
+		if err := d.Set("radius_settings", []any{flattenRadiusSettings(dir.RadiusSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting radius_settings: %s", err)
 		}
 	} else {
 		d.Set("radius_settings", nil)
 	}
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+	if dir.Type == awstypes.DirectoryTypeAdConnector {
 		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
 	} else if dir.VpcSettings != nil {
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
@@ -222,7 +223,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrSize, dir.Size)
 	d.Set(names.AttrType, dir.Type)
 	if dir.VpcSettings != nil {
-		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
+		if err := d.Set("vpc_settings", []any{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
 		}
 	} else {
@@ -242,39 +243,31 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func flattenRadiusSettings(apiObject *directoryservice.RadiusSettings) map[string]interface{} {
+func flattenRadiusSettings(apiObject *awstypes.RadiusSettings) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.AuthenticationProtocol; v != nil {
-		tfMap["authentication_protocol"] = aws.StringValue(v)
+	tfMap := map[string]any{
+		"authentication_protocol": apiObject.AuthenticationProtocol,
+		"radius_retries":          apiObject.RadiusRetries,
+		"use_same_username":       apiObject.UseSameUsername,
 	}
 
 	if v := apiObject.DisplayLabel; v != nil {
-		tfMap["display_label"] = aws.StringValue(v)
+		tfMap["display_label"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RadiusPort; v != nil {
-		tfMap["radius_port"] = aws.Int64Value(v)
-	}
-
-	if v := apiObject.RadiusRetries; v != nil {
-		tfMap["radius_retries"] = aws.Int64Value(v)
+		tfMap["radius_port"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.RadiusServers; v != nil {
-		tfMap["radius_servers"] = aws.StringValueSlice(v)
+		tfMap["radius_servers"] = v
 	}
 
 	if v := apiObject.RadiusTimeout; v != nil {
-		tfMap["radius_timeout"] = aws.Int64Value(v)
-	}
-
-	if v := apiObject.UseSameUsername; v != nil {
-		tfMap["use_same_username"] = aws.BoolValue(v)
+		tfMap["radius_timeout"] = aws.ToInt32(v)
 	}
 
 	return tfMap

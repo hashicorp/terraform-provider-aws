@@ -54,8 +54,8 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-gateway/vgw-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-gateway/vgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -208,8 +208,8 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 			{
 				Config: testAccSiteVPNGatewayConfig_reattach(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName1, &vpc1),
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName2, &vpc2),
+					acctest.CheckVPCExists(ctx, vpcResourceName1, &vpc1),
+					acctest.CheckVPCExists(ctx, vpcResourceName2, &vpc2),
 					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
 					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
 					testAttachmentFunc(&vgw1, &vpc1),
@@ -264,7 +264,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -277,7 +277,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -286,7 +286,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

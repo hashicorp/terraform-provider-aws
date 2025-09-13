@@ -38,12 +38,12 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/usageplans/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/usageplans/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.%", "0"),
 				),
 			},
 			{
@@ -183,7 +183,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "0"),
 				),
 			},
 			{
@@ -196,7 +196,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "5"),
 				),
 			},
@@ -205,7 +205,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", "3"),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "6"),
 				),
 			},
@@ -214,7 +214,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "0"),
 				),
 			},
 		},
@@ -267,7 +267,7 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.#", "0"),
 				),
 			},
 			{
@@ -300,7 +300,7 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.#", "0"),
 				),
 			},
 		},
@@ -342,7 +342,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "0"),
 				),
 			},
 			// Handle api stages additions
@@ -385,7 +385,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "0"),
 				),
 			},
 		},
@@ -443,14 +443,14 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						names.AttrStage: "test",
-						"throttle.#":    acctest.Ct1,
+						"throttle.#":    "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.*", map[string]string{
 						names.AttrPath: "/test/GET",
-						"burst_limit":  acctest.Ct3,
+						"burst_limit":  "3",
 						"rate_limit":   "6",
 					}),
 				),
@@ -460,18 +460,18 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						names.AttrStage: "foo",
-						"throttle.#":    acctest.Ct1,
+						"throttle.#":    "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						names.AttrStage: "test",
-						"throttle.#":    acctest.Ct1,
+						"throttle.#":    "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.*", map[string]string{
 						names.AttrPath: "/test/GET",
-						"burst_limit":  acctest.Ct3,
+						"burst_limit":  "3",
 						"rate_limit":   "6",
 					}),
 				),
@@ -603,12 +603,17 @@ resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "test"
   description = "This is a test"
 
   variables = {
     "a" = "2"
   }
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "test"
+  deployment_id = aws_api_gateway_deployment.test.id
 }
 
 resource "aws_api_gateway_deployment" "foo" {
@@ -618,8 +623,13 @@ resource "aws_api_gateway_deployment" "foo" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "foo"
   description = "This is a prod stage"
+}
+
+resource "aws_api_gateway_stage" "foo" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "foo"
+  deployment_id = aws_api_gateway_deployment.foo.id
 }
 `, rName)
 }
@@ -711,7 +721,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
   }
 }
 `, rName))
@@ -729,7 +739,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
 
     throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
@@ -753,7 +763,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
 
     throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
@@ -764,7 +774,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    stage  = aws_api_gateway_stage.foo.stage_name
 
     throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
@@ -783,7 +793,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    stage  = aws_api_gateway_stage.foo.stage_name
   }
 }
 `, rName))
@@ -796,12 +806,12 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    stage  = aws_api_gateway_stage.foo.stage_name
   }
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
   }
 }
 `, rName))

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -17,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -58,7 +58,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentJSONWithEmptyDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -82,7 +82,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -90,6 +90,12 @@ var (
 		names.AttrDisplayName: {
 			Type:     schema.TypeString,
 			Optional: true,
+		},
+		"fifo_throughput_scope": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(topicFIFOThroughputScope_Values(), false),
 		},
 		"fifo_topic": {
 			Type:     schema.TypeBool,
@@ -171,7 +177,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -218,6 +224,7 @@ var (
 		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
 		names.AttrDisplayName:                      topicAttributeNameDisplayName,
 		"fifo_topic":                               topicAttributeNameFIFOTopic,
+		"fifo_throughput_scope":                    topicAttributeNameFIFOThroughputScope,
 		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
 		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,
 		"firehose_success_feedback_sample_rate":    topicAttributeNameFirehoseSuccessFeedbackSampleRate,
@@ -239,7 +246,9 @@ var (
 )
 
 // @SDKResource("aws_sns_topic", name="Topic")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="map[string]string")
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
@@ -248,20 +257,13 @@ func resourceTopic() *schema.Resource {
 		UpdateWithoutTimeout: resourceTopicUpdate,
 		DeleteWithoutTimeout: resourceTopicDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: customdiff.Sequence(
-			resourceTopicCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceTopicCustomizeDiff,
 
 		Schema: topicSchema,
 	}
 }
 
-func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -281,14 +283,18 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Attributes = map[string]string{
 			topicAttributeNameFIFOTopic: v,
 		}
+		if w, ok := attributes[topicAttributeNameFIFOThroughputScope]; ok && v == strconv.FormatBool(true) {
+			input.Attributes[topicAttributeNameFIFOThroughputScope] = w
+		}
 
 		delete(attributes, topicAttributeNameFIFOTopic)
+		delete(attributes, topicAttributeNameFIFOThroughputScope)
 	}
 
 	output, err := conn.CreateTopic(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		output, err = conn.CreateTopic(ctx, input)
@@ -303,7 +309,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Retry for eventual consistency; if ABAC is in use, this takes some time
 	// usually about 10s, presumably for tags really to be there, and we get a
 	// permissions error.
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.AuthorizationErrorException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *types.AuthorizationErrorException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
 	}, "no identity-based policy allows")
 
@@ -316,7 +322,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceTopicRead(ctx, d, meta)...)
 		}
 
@@ -364,7 +370,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	return diags
 }
 
-func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -383,7 +389,7 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceTopicRead(ctx, d, meta)...)
 }
 
-func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -403,8 +409,9 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoTopic := diff.Get("fifo_topic").(bool)
+	fifoTopicThroughputScope := diff.Get("fifo_throughput_scope").(string)
 	archivePolicy := diff.Get("archive_policy").(string)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 
@@ -427,6 +434,9 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	if !fifoTopic {
 		if archivePolicy != "" {
 			return errors.New("message archive policy can only be set for FIFO topics")
+		}
+		if fifoTopicThroughputScope != "" {
+			return errors.New("FIFO throughput scope can only be set for FIFO topics")
 		}
 		if contentBasedDeduplication {
 			return errors.New("content-based deduplication can only be set for FIFO topics")
@@ -463,7 +473,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 		TopicArn:       aws.String(arn),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidParameterException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.SetTopicAttributes(ctx, input)
 	})
 
@@ -487,19 +497,19 @@ func topicName(d sdkv2.ResourceDiffer) string {
 // nosemgrep:ci.aws-in-func-name
 func findTopicAttributesWithValidAWSPrincipalsByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
 	var attributes map[string]string
-	err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		attributes, err = findTopicAttributesByARN(ctx, conn, arn)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		valid, err := tfiam.PolicyHasValidAWSPrincipals(attributes[topicAttributeNamePolicy])
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		if !valid {
-			return retry.RetryableError(errors.New("contains invalid principals"))
+			return tfresource.RetryableError(errors.New("contains invalid principals"))
 		}
 
 		return nil

@@ -42,8 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoScalingConfigurationName` - (Required, Forces new resource) Name of the auto scaling configuration.
 * `maxConcurrency` - (Optional, Forces new resource) Maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.
 * `maxSize` - (Optional, Forces new resource) Maximal number of instances that App Runner provisions for your service.
@@ -92,4 +93,4 @@ Using `terraform import`, import App Runner AutoScaling Configuration Versions u
 % terraform import aws_apprunner_auto_scaling_configuration_version.example "arn:aws:apprunner:us-east-1:1234567890:autoscalingconfiguration/example/1/69bdfe0115224b0db49398b7beb68e0f
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7aac7f85f31408240e0b57ce4afb75ca1e0d9a5e1f5c9aa2ba1d6961146bc1ac -->
+<!-- cache-key: cdktf-0.20.8 input-f0d0fec8a60dc01e31b8e2009293a581be38d645b2f272894706bd7997e3761e -->

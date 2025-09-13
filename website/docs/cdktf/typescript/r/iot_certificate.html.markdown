@@ -84,6 +84,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active
 * `csr` - (Optional) The certificate signing request. Review
   [CreateCertificateFromCsr](https://docs.aws.amazon.com/iot/latest/apireference/API_CreateCertificateFromCsr.html)
@@ -108,4 +111,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `publicKey` - When neither CSR nor certificate is provided, the public key.
 * `privateKey` - When neither CSR nor certificate is provided, the private key.
 
-<!-- cache-key: cdktf-0.20.1 input-cd4ec9a7a491e894c7c1bf387191cc12633a4113cd2e7bf2fe6ecc7c3615caa6 -->
+<!-- cache-key: cdktf-0.20.8 input-4dc5a24579e02caa93934cb266036c6a14f9df13bb9b4b183037cdb4ca450b80 -->

@@ -42,8 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destinationCidrBlock` - (Required) IPv4 CIDR range used for destination matches. Routing decisions are based on the most specific match.
 * `localGatewayRouteTableId` - (Required) Identifier of EC2 Local Gateway Route Table.
 * `localGatewayVirtualInterfaceGroupId` - (Required) Identifier of EC2 Local Gateway Virtual Interface Group.
@@ -86,4 +87,4 @@ Using `terraform import`, import `aws_ec2_local_gateway_route` using the EC2 Loc
 % terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678_172.16.0.0/16
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-760f4fd810c3df45b557ef2e81d281f4a76d35aed253a5917f9f7fd6971b06b0 -->
+<!-- cache-key: cdktf-0.20.8 input-9bf40e13f9993bb7f077a7b1fdffabf110c9ee785392fcecf59aa28a8987ad32 -->

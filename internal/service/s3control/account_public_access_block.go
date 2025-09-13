@@ -25,16 +25,17 @@ import (
 )
 
 // @SDKResource("aws_s3_account_public_access_block", name="Account Public Access Block")
+// @Region(global=true)
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3control/types;awstypes;awstypes.PublicAccessBlockConfiguration")
+// @Testing(generator=false)
 func resourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPublicAccessBlockCreate,
 		ReadWithoutTimeout:   resourceAccountPublicAccessBlockRead,
 		UpdateWithoutTimeout: resourceAccountPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceAccountPublicAccessBlockDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {
@@ -68,11 +69,11 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 	}
 }
 
-func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
@@ -95,7 +96,7 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockByAccountID(ctx, conn, d.Id())
 	})
 
@@ -106,7 +107,7 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceAccountPublicAccessBlockRead(ctx, d, meta)...)
 }
 
-func resourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -131,7 +132,7 @@ func resourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceAccountPublicAccessBlockUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPublicAccessBlockUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -159,7 +160,7 @@ func resourceAccountPublicAccessBlockUpdate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceAccountPublicAccessBlockRead(ctx, d, meta)...)
 }
 
-func resourceAccountPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -174,6 +175,14 @@ func resourceAccountPublicAccessBlockDelete(ctx context.Context, d *schema.Resou
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Account Public Access Block (%s): %s", d.Id(), err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
+		return findPublicAccessBlockByAccountID(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Account Public Access Block (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -205,7 +214,7 @@ func findPublicAccessBlockByAccountID(ctx context.Context, conn *s3control.Clien
 }
 
 func statusPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, accountID string, target *types.PublicAccessBlockConfiguration) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPublicAccessBlockByAccountID(ctx, conn, accountID)
 
 		if tfresource.NotFound(err) {
@@ -225,7 +234,7 @@ func waitPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, acc
 		Pending:                   []string{strconv.FormatBool(false)},
 		Target:                    []string{strconv.FormatBool(true)},
 		Refresh:                   statusPublicAccessBlockEqual(ctx, conn, accountID, target),
-		Timeout:                   propagationTimeout,
+		Timeout:                   s3PropagationTimeout,
 		MinTimeout:                5 * time.Second,
 		ContinuousTargetOccurence: 2,
 	}

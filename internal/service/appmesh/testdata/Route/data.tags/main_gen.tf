@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_appmesh_route" "test" {
   name                = aws_appmesh_route.test.name
   mesh_name           = aws_appmesh_route.test.mesh_name
@@ -56,7 +57,7 @@ resource "aws_appmesh_virtual_node" "test1" {
     listener {
       port_mapping {
         port     = 8080
-        protocol ="http"
+        protocol = "http"
       }
     }
 

@@ -20,13 +20,11 @@ An S3 Lifecycle configuration consists of one or more Lifecycle rules. Each rule
 
 For more information see the Amazon S3 User Guide on [`Lifecycle Configuration Elements`](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html).
 
-~> **NOTE:** S3 Buckets only support a single lifecycle configuration. Declaring multiple `aws_s3_bucket_lifecycle_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
+~> S3 Buckets only support a single lifecycle configuration. Declaring multiple `aws_s3_bucket_lifecycle_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
-~> **NOTE:** Lifecycle configurations may take some time to fully propagate to all AWS S3 systems.
+~> Lifecycle configurations may take some time to fully propagate to all AWS S3 systems.
 Running Terraform operations shortly after creating a lifecycle configuration may result in changes that affect configuration idempotence.
 See the Amazon S3 User Guide on [setting lifecycle configuration on a bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/how-to-set-lifecycle-configuration-intro.html).
-
--> This resource cannot be used with S3 directory buckets.
 
 ## Example Usage
 
@@ -83,7 +81,7 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          filter: {},
+          filter: [{}],
           id: "rule-1",
           status: "Enabled",
         },
@@ -114,9 +112,11 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          filter: {
-            prefix: "logs/",
-          },
+          filter: [
+            {
+              prefix: "logs/",
+            },
+          ],
           id: "rule-1",
           status: "Enabled",
         },
@@ -145,16 +145,20 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          filter: {
-            prefix: "logs/",
-          },
+          filter: [
+            {
+              prefix: "logs/",
+            },
+          ],
           id: "rule-1",
           status: "Enabled",
         },
         {
-          filter: {
-            prefix: "tmp/",
-          },
+          filter: [
+            {
+              prefix: "tmp/",
+            },
+          ],
           id: "rule-2",
           status: "Enabled",
         },
@@ -185,12 +189,16 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          filter: {
-            tag: {
-              key: "Name",
-              value: "Staging",
+          filter: [
+            {
+              tag: [
+                {
+                  key: "Name",
+                  value: "Staging",
+                },
+              ],
             },
-          },
+          ],
           id: "rule-1",
           status: "Enabled",
         },
@@ -221,14 +229,18 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          filter: {
-            and: {
-              tags: {
-                key1: "Value1",
-                key2: "Value2",
-              },
+          filter: [
+            {
+              and: [
+                {
+                  tags: {
+                    key1: "Value1",
+                    key2: "Value2",
+                  },
+                },
+              ],
             },
-          },
+          ],
           id: "rule-1",
           status: "Enabled",
         },
@@ -259,15 +271,19 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          filter: {
-            and: {
-              prefix: "logs/",
-              tags: {
-                key1: "Value1",
-                key2: "Value2",
-              },
+          filter: [
+            {
+              and: [
+                {
+                  prefix: "logs/",
+                  tags: {
+                    key1: "Value1",
+                    key2: "Value2",
+                  },
+                },
+              ],
             },
-          },
+          ],
           id: "rule-1",
           status: "Enabled",
         },
@@ -280,12 +296,12 @@ class MyConvertedCode extends TerraformStack {
 
 ### Specifying a filter based on object size
 
-Object size values are in bytes. Maximum filter size is 5TB. Some storage classes have minimum object size limitations, for more information, see [Comparing the Amazon S3 storage classes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html#sc-compare).
+Object size values are in bytes. Maximum filter size is 5TB. Amazon S3 applies a default behavior to your Lifecycle configuration that prevents objects smaller than 128 KB from being transitioned to any storage class. You can allow smaller objects to transition by adding a minimum size (`objectSizeGreaterThan`) or a maximum size (`objectSizeLessThan`) filter that specifies a smaller size to the configuration. This example allows any object smaller than 128 KB to transition to the S3 Glacier Instant Retrieval storage class:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
-import { Token, TerraformStack } from "cdktf";
+import { TerraformStack } from "cdktf";
 /*
  * Provider bindings are generated by running `cdktf get`.
  * See https://cdk.tf/provider-generation for more details.
@@ -298,11 +314,19 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          filter: {
-            objectSizeGreaterThan: Token.asString(500),
-          },
-          id: "rule-1",
+          filter: [
+            {
+              objectSizeGreaterThan: 1,
+            },
+          ],
+          id: "Allow small object transitions",
           status: "Enabled",
+          transition: [
+            {
+              days: 365,
+              storageClass: "GLACIER_IR",
+            },
+          ],
         },
       ],
     });
@@ -331,13 +355,17 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          filter: {
-            and: {
-              objectSizeGreaterThan: 500,
-              objectSizeLessThan: 64000,
-              prefix: "logs/",
+          filter: [
+            {
+              and: [
+                {
+                  objectSizeGreaterThan: 500,
+                  objectSizeLessThan: 64000,
+                  prefix: "logs/",
+                },
+              ],
             },
-          },
+          ],
           id: "rule-1",
           status: "Enabled",
         },
@@ -383,18 +411,24 @@ class MyConvertedCode extends TerraformStack {
       bucket: bucket.id,
       rule: [
         {
-          expiration: {
-            days: 90,
-          },
-          filter: {
-            and: {
-              prefix: "log/",
-              tags: {
-                autoclean: "true",
-                rule: "log",
-              },
+          expiration: [
+            {
+              days: 90,
             },
-          },
+          ],
+          filter: [
+            {
+              and: [
+                {
+                  prefix: "log/",
+                  tags: {
+                    autoclean: "true",
+                    rule: "log",
+                  },
+                },
+              ],
+            },
+          ],
           id: "log",
           status: "Enabled",
           transition: [
@@ -409,12 +443,16 @@ class MyConvertedCode extends TerraformStack {
           ],
         },
         {
-          expiration: {
-            date: "2023-01-13T00:00:00Z",
-          },
-          filter: {
-            prefix: "tmp/",
-          },
+          expiration: [
+            {
+              date: "2023-01-13T00:00:00Z",
+            },
+          ],
+          filter: [
+            {
+              prefix: "tmp/",
+            },
+          ],
           id: "tmp",
           status: "Enabled",
         },
@@ -431,13 +469,17 @@ class MyConvertedCode extends TerraformStack {
       dependsOn: [versioning],
       rule: [
         {
-          filter: {
-            prefix: "config/",
-          },
+          filter: [
+            {
+              prefix: "config/",
+            },
+          ],
           id: "config",
-          noncurrentVersionExpiration: {
-            noncurrentDays: 90,
-          },
+          noncurrentVersionExpiration: [
+            {
+              noncurrentDays: 90,
+            },
+          ],
           noncurrentVersionTransition: [
             {
               noncurrentDays: 30,
@@ -461,28 +503,35 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `expectedBucketOwner` - (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
 * `rule` - (Required) List of configuration blocks describing the rules managing the replication. [See below](#rule).
+* `transitionDefaultMinimumObjectSize` - (Optional) The default minimum object size behavior applied to the lifecycle configuration. Valid values: `all_storage_classes_128K` (default), `varies_by_storage_class`. To customize the minimum object size for any transition you can add a `filter` that specifies a custom `objectSizeGreaterThan` or `objectSizeLessThan` value. Custom filters always take precedence over the default transition behavior.
 
 ### rule
 
-~> **NOTE:** The `filter` argument, while Optional, is required if the `rule` configuration block does not contain a `prefix` **and** you intend to override the default behavior of setting the rule to filter objects with the empty string prefix (`""`).
-Since `prefix` is deprecated by Amazon S3 and will be removed in the next major version of the Terraform AWS Provider, we recommend users either specify `filter` or leave both `filter` and `prefix` unspecified.
+~> The `filter` argument, while Optional, is required if the `rule` configuration block does not contain a `prefix` **and** you intend to override the default behavior of setting the rule to filter objects with the empty string prefix (`""`).
+Since `prefix` is deprecated by Amazon S3 and will be removed in the next major version of the Terraform AWS Provider, we recommend users specify `filter`.
 
-~> **NOTE:** A rule cannot be updated from having a filter (via either the `rule.filter` parameter or when neither `rule.filter` and `rule.prefix` are specified) to only having a prefix via the `rule.prefix` parameter.
-
-~> **NOTE** Terraform cannot distinguish a difference between configurations that use `rule.filter {}` and configurations that neither use `rule.filter` nor `rule.prefix`, so a rule cannot be updated from applying to all objects in the bucket via `rule.filter {}` to applying to a subset of objects based on the key prefix `""` and vice versa.
+~> A rule cannot be updated from having a filter (via either the `rule.filter` parameter or when neither `rule.filter` and `rule.prefix` are specified) to only having a prefix via the `rule.prefix` parameter.
 
 The `rule` configuration block supports the following arguments:
 
 * `abortIncompleteMultipartUpload` - (Optional) Configuration block that specifies the days since the initiation of an incomplete multipart upload that Amazon S3 will wait before permanently removing all parts of the upload. [See below](#abort_incomplete_multipart_upload).
 * `expiration` - (Optional) Configuration block that specifies the expiration for the lifecycle of the object in the form of date, days and, whether the object has a delete marker. [See below](#expiration).
-* `filter` - (Optional) Configuration block used to identify objects that a Lifecycle Rule applies to. [See below](#filter). If not specified, the `rule` will default to using `prefix`.
+* `filter` - (Optional) Configuration block used to identify objects that a Lifecycle Rule applies to.
+  [See below](#filter).
+  If not specified, the `rule` will default to using `prefix`.
+  One of `filter` or `prefix` should be specified.
 * `id` - (Required) Unique identifier for the rule. The value cannot be longer than 255 characters.
 * `noncurrentVersionExpiration` - (Optional) Configuration block that specifies when noncurrent object versions expire. [See below](#noncurrent_version_expiration).
 * `noncurrentVersionTransition` - (Optional) Set of configuration blocks that specify the transition rule for the lifecycle rule that describes when noncurrent objects transition to a specific storage class. [See below](#noncurrent_version_transition).
-* `prefix` - (Optional) **DEPRECATED** Use `filter` instead. This has been deprecated by Amazon S3. Prefix identifying one or more objects to which the rule applies. Defaults to an empty string (`""`) if `filter` is not specified.
+* `prefix` - (Optional) **DEPRECATED** Use `filter` instead.
+  This has been deprecated by Amazon S3.
+  Prefix identifying one or more objects to which the rule applies.
+  Defaults to an empty string (`""`) if `filter` is not specified.
+  One of `prefix` or `filter` should be specified.
 * `status` - (Required) Whether the rule is currently being applied. Valid values: `Enabled` or `Disabled`.
 * `transition` - (Optional) Set of configuration blocks that specify when an Amazon S3 object transitions to a specified storage class. [See below](#transition).
 
@@ -502,7 +551,7 @@ The `expiration` configuration block supports the following arguments:
 
 ### filter
 
-~> **NOTE:** The `filter` configuration block must either be specified as the empty configuration block (`filter {}`) or with exactly one of `prefix`, `tag`, `and`, `objectSizeGreaterThan` or `objectSizeLessThan` specified.
+~> The `filter` configuration block must either be specified as the empty configuration block (`filter {}`) or with exactly one of `prefix`, `tag`, `and`, `objectSizeGreaterThan` or `objectSizeLessThan` specified.
 
 The `filter` configuration block supports the following arguments:
 
@@ -517,21 +566,21 @@ The `filter` configuration block supports the following arguments:
 The `noncurrentVersionExpiration` configuration block supports the following arguments:
 
 * `newerNoncurrentVersions` - (Optional) Number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
-* `noncurrentDays` - (Optional) Number of days an object is noncurrent before Amazon S3 can perform the associated action. Must be a positive integer.
+* `noncurrentDays` - (Required) Number of days an object is noncurrent before Amazon S3 can perform the associated action. Must be a positive integer.
 
 ### noncurrent_version_transition
 
 The `noncurrentVersionTransition` configuration block supports the following arguments:
 
 * `newerNoncurrentVersions` - (Optional) Number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
-* `noncurrentDays` - (Optional) Number of days an object is noncurrent before Amazon S3 can perform the associated action.
+* `noncurrentDays` - (Required) Number of days an object is noncurrent before Amazon S3 can perform the associated action.
 * `storageClass` - (Required) Class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
 ### transition
 
 The `transition` configuration block supports the following arguments:
 
-~> **Note:** Only one of `date` or `days` should be specified. If neither are specified, the `transition` will default to 0 `days`.
+~> Only one of `date` or `days` should be specified. If neither are specified, the `transition` will default to 0 `days`.
 
 * `date` - (Optional, Conflicts with `days`) Date objects are transitioned to the specified storage class. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `2023-08-22`.
 * `days` - (Optional, Conflicts with `date`) Number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storageClass`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
@@ -541,10 +590,12 @@ The `transition` configuration block supports the following arguments:
 
 The `and` configuration block supports the following arguments:
 
-* `objectSizeGreaterThan` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified.
+* `objectSizeGreaterThan` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified. Defaults to 128000 (128 KB) for all `storageClass` values unless `transitionDefaultMinimumObjectSize` specifies otherwise.
 * `objectSizeLessThan` - (Optional) Maximum object size to which the rule applies. Value must be at least `1` if specified.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
-* `tags` - (Optional) Key-value map of resource tags. All of these tags must exist in the object's tag set in order for the rule to apply.
+* `tags` - (Optional) Key-value map of resource tags.
+  All of these tags must exist in the object's tag set in order for the rule to apply.
+  If set, must contain at least one key-value pair.
 
 ### tag
 
@@ -561,7 +612,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket lifecycle configuration using the `bucket` or using the `bucket` and `expectedBucketOwner` separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an S3 bucket lifecycle configuration using the `bucket` or the `bucket` and `expectedBucketOwner` separated by a comma (`,`). For example:
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
@@ -611,7 +662,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-**Using `terraform import` to import** S3 bucket lifecycle configuration using the `bucket` or using the `bucket` and `expectedBucketOwner` separated by a comma (`,`). For example:
+Using `terraform import`, import an S3 bucket lifecycle configuration using the `bucket` or the `bucket` and `expectedBucketOwner` separated by a comma (`,`). For example:
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
@@ -625,4 +676,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-09c85db0718dbe9da94d83ba043b896029c3cb4f61db2f24a7bdb8ad04b786bc -->
+<!-- cache-key: cdktf-0.20.8 input-1e6502cd817f3a3ccd8407fd6d401855e2d6773f4629763c8a1870acd94a37ba -->

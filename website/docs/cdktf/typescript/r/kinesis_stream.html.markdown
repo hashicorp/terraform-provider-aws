@@ -50,8 +50,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in.
-* `shardCount` – (Optional) The number of shards that the stream will use. If the `streamMode` is `PROVISIONED`, this field is required.
+* `shardCount` - (Optional) The number of shards that the stream will use. If the `streamMode` is `PROVISIONED`, this field is required.
 Amazon has guidelines for specifying the Stream size that should be referenced when creating a Kinesis stream. See [Amazon Kinesis Streams][2] for more.
 * `retentionPeriod` - (Optional) Length of time data records are accessible after they are added to the stream. The maximum value of a stream's retention period is 8760 hours. Minimum value is 24. Default is 24.
 * `shardLevelMetrics` - (Optional) A list of shard-level CloudWatch metrics which can be enabled for the stream. See [Monitoring with CloudWatch][3] for more. Note that the value ALL should not be used; instead you should provide an explicit list of metrics you wish to enable.
@@ -119,4 +120,4 @@ Using `terraform import`, import Kinesis Streams using the `name`. For example:
 [2]: https://docs.aws.amazon.com/kinesis/latest/dev/amazon-kinesis-streams.html
 [3]: https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html
 
-<!-- cache-key: cdktf-0.20.1 input-972fc2cd811ba5b65f65f723f0cb5a041ff08e4079315825ec1e475538220367 -->
+<!-- cache-key: cdktf-0.20.8 input-808f8fa3a64c1291f555abccf5001eb743fd470c271fa5386ddc0dee1b808e3a -->

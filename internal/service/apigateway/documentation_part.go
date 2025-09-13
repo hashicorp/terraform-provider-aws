@@ -87,18 +87,18 @@ func resourceDocumentationPart() *schema.Resource {
 	}
 }
 
-func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
-	input := &apigateway.CreateDocumentationPartInput{
-		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]interface{})),
+	input := apigateway.CreateDocumentationPartInput{
+		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]any)),
 		Properties: aws.String(d.Get(names.AttrProperties).(string)),
 		RestApiId:  aws.String(apiID),
 	}
 
-	output, err := conn.CreateDocumentationPart(ctx, input)
+	output, err := conn.CreateDocumentationPart(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Documentation Part: %s", err)
@@ -109,7 +109,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceDocumentationPartRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -147,7 +147,7 @@ func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &apigateway.UpdateDocumentationPartInput{
+	input := apigateway.UpdateDocumentationPartInput{
 		DocumentationPartId: aws.String(documentationPartID),
 		RestApiId:           aws.String(apiID),
 	}
@@ -164,7 +164,7 @@ func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData
 
 	input.PatchOperations = operations
 
-	_, err = conn.UpdateDocumentationPart(ctx, input)
+	_, err = conn.UpdateDocumentationPart(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Documentation Part (%s): %s", d.Id(), err)
@@ -173,7 +173,7 @@ func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceDocumentationPartRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -183,10 +183,11 @@ func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Deleting API Gateway Documentation Part: %s", d.Id())
-	_, err = conn.DeleteDocumentationPart(ctx, &apigateway.DeleteDocumentationPartInput{
+	input := apigateway.DeleteDocumentationPartInput{
 		DocumentationPartId: aws.String(documentationPartID),
 		RestApiId:           aws.String(apiID),
-	})
+	}
+	_, err = conn.DeleteDocumentationPart(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -200,12 +201,12 @@ func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func findDocumentationPartByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, documentationPartID string) (*apigateway.GetDocumentationPartOutput, error) {
-	input := &apigateway.GetDocumentationPartInput{
+	input := apigateway.GetDocumentationPartInput{
 		DocumentationPartId: aws.String(documentationPartID),
 		RestApiId:           aws.String(apiID),
 	}
 
-	output, err := conn.GetDocumentationPart(ctx, input)
+	output, err := conn.GetDocumentationPart(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -243,11 +244,11 @@ func documentationPartParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandDocumentationPartLocation(l []interface{}) *types.DocumentationPartLocation {
+func expandDocumentationPartLocation(l []any) *types.DocumentationPartLocation {
 	if len(l) == 0 {
 		return nil
 	}
-	loc := l[0].(map[string]interface{})
+	loc := l[0].(map[string]any)
 	out := &types.DocumentationPartLocation{
 		Type: types.DocumentationPartType(loc[names.AttrType].(string)),
 	}
@@ -266,12 +267,12 @@ func expandDocumentationPartLocation(l []interface{}) *types.DocumentationPartLo
 	return out
 }
 
-func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []interface{} {
+func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []any {
 	if l == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if v := l.Method; v != nil {
 		m["method"] = aws.ToString(v)
@@ -291,5 +292,5 @@ func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []inte
 
 	m[names.AttrType] = string(l.Type)
 
-	return []interface{}{m}
+	return []any{m}
 }

@@ -47,7 +47,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the traffic policy
+* `arn` - Amazon Resource Name (ARN) of the traffic policy.
+* `id` - ID of the traffic policy.
 * `type` - DNS type of the resource record sets that Amazon Route 53 creates when you use a traffic policy to create a traffic policy instance.
 * `version` - Version number of the traffic policy. This value is automatically incremented by AWS after each update of this resource.
 

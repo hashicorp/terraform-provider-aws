@@ -83,7 +83,7 @@ func testAccVocabularyDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccVocabularyBaseDataSourceConfig(rName, rName2 string) string {
+func testAccVocabularyDataSourceConfig_base(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -107,7 +107,7 @@ resource "aws_connect_vocabulary" "test" {
 
 func testAccVocabularyDataSourceConfig_id(rName, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccVocabularyBaseDataSourceConfig(rName, rName2),
+		testAccVocabularyDataSourceConfig_base(rName, rName2),
 		`
 data "aws_connect_vocabulary" "test" {
   instance_id   = aws_connect_instance.test.id
@@ -118,7 +118,7 @@ data "aws_connect_vocabulary" "test" {
 
 func testAccVocabularyDataSourceConfig_name(rName, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccVocabularyBaseDataSourceConfig(rName, rName2),
+		testAccVocabularyDataSourceConfig_base(rName, rName2),
 		`
 data "aws_connect_vocabulary" "test" {
   instance_id = aws_connect_instance.test.id

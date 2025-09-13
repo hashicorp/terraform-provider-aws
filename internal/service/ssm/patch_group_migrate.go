@@ -28,9 +28,9 @@ func resourcePatchGroupV0() *schema.Resource {
 	}
 }
 
-func patchGroupStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func patchGroupStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	rawState[names.AttrID] = fmt.Sprintf("%s,%s", rawState["patch_group"], rawState["baseline_id"])

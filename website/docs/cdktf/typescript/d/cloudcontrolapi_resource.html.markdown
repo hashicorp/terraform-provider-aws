@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `roleArn` - (Optional) ARN of the IAM Role to assume for operations.
 * `typeVersionId` - (Optional) Identifier of the CloudFormation resource type version.
 
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudcontrolapi_resource.example.properties)["example"]`.
 
-<!-- cache-key: cdktf-0.20.1 input-619243038d5099b2d587f9f52a10ce00ce779e82bd95bb840d0d03a6570a1a61 -->
+<!-- cache-key: cdktf-0.20.8 input-4a921e5dc2bbaebdb9e5a84ae7e68931141e8309fdf07ba3caf15bdf3684fbca -->

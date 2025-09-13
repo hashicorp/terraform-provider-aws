@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -26,7 +25,7 @@ func sweepDeliveryStreams(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.FirehoseClient(ctx)
 	input := &firehose.ListDeliveryStreamsInput{}
@@ -37,18 +36,10 @@ func sweepDeliveryStreams(region string) error {
 			return !lastPage
 		}
 
-		for _, v := range page.DeliveryStreamNames {
+		for _, name := range page.DeliveryStreamNames {
 			r := resourceDeliveryStream()
 			d := r.Data(nil)
-			name := v
-			arn := arn.ARN{
-				Partition: client.Partition,
-				Service:   "firehose",
-				Region:    client.Region,
-				AccountID: client.AccountID,
-				Resource:  fmt.Sprintf("deliverystream/%s", name),
-			}.String()
-			d.SetId(arn)
+			d.SetId(client.RegionalARN(ctx, "firehose", fmt.Sprintf("deliverystream/%s", name)))
 			d.Set(names.AttrName, name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

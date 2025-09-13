@@ -59,7 +59,7 @@ func resourceStreamResourceV0() *schema.Resource {
 	}
 }
 
-func StreamStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func StreamStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	rawState["enforce_consumer_deletion"] = false
 
 	return rawState, nil

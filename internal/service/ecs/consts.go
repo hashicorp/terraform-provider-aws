@@ -17,7 +17,3 @@ const (
 	clusterStatusInactive       = "INACTIVE"
 	clusterStatusProvisioning   = "PROVISIONING"
 )
-
-const (
-	fargateTaskRetirementWaitPeriodValue = "7"
-)

@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_route_table_association")
-func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_route_table_association", name="VPC Endpoint Route Table Association")
+func resourceVPCEndpointRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRouteTableAssociationRead,
@@ -45,7 +45,7 @@ func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -65,7 +65,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Route Table Association (%s): %s", id, err)
 	}
 
-	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
+	d.SetId(vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 
 	err = waitVPCEndpointRouteTableAssociationReady(ctx, conn, endpointID, routeTableID)
 
@@ -76,7 +76,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 	return append(diags, resourceVPCEndpointRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -85,7 +85,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return nil, findVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
 	}, d.IsNewResource())
 
@@ -102,7 +102,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	return diags
 }
 
-func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -136,7 +136,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 	return diags
 }
 
-func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/route-table-id'", d.Id())
@@ -146,7 +146,7 @@ func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *sche
 	routeTableID := parts[1]
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Route Table (%s) Association", endpointID, routeTableID)
 
-	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
+	d.SetId(vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 	d.Set(names.AttrVPCEndpointID, endpointID)
 	d.Set("route_table_id", routeTableID)
 

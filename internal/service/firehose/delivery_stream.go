@@ -38,6 +38,7 @@ const (
 	destinationTypeElasticsearch        destinationType = "elasticsearch"
 	destinationTypeExtendedS3           destinationType = "extended_s3"
 	destinationTypeHTTPEndpoint         destinationType = "http_endpoint"
+	destinationTypeIceberg              destinationType = "iceberg"
 	destinationTypeOpenSearch           destinationType = "opensearch"
 	destinationTypeOpenSearchServerless destinationType = "opensearchserverless"
 	destinationTypeRedshift             destinationType = "redshift"
@@ -50,6 +51,7 @@ func (destinationType) Values() []destinationType {
 		destinationTypeElasticsearch,
 		destinationTypeExtendedS3,
 		destinationTypeHTTPEndpoint,
+		destinationTypeIceberg,
 		destinationTypeOpenSearch,
 		destinationTypeOpenSearchServerless,
 		destinationTypeRedshift,
@@ -61,7 +63,7 @@ func (destinationType) Values() []destinationType {
 // @SDKResource("aws_kinesis_firehose_delivery_stream", name="Delivery Stream")
 // @Tags(identifierAttribute="name")
 func resourceDeliveryStream() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeliveryStreamCreate,
 		ReadWithoutTimeout:   resourceDeliveryStreamRead,
@@ -69,7 +71,7 @@ func resourceDeliveryStream() *schema.Resource {
 		DeleteWithoutTimeout: resourceDeliveryStreamDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:firehose:REGION:ACCOUNTID:deliverystream/NAME and provided: %s", d.Id())
 				resARN, err := arn.Parse(d.Id())
 				if err != nil {
@@ -113,6 +115,35 @@ func resourceDeliveryStream() *schema.Resource {
 							"log_stream_name": {
 								Type:     schema.TypeString,
 								Optional: true,
+							},
+						},
+					},
+				}
+			}
+			destinationTableConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"s3_error_output_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							"unique_keys": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 						},
 					},
@@ -290,6 +321,34 @@ func resourceDeliveryStream() *schema.Resource {
 					Elem:     s3ConfigurationElem(),
 				}
 			}
+			secretsManagerConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"secret_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				}
+			}
 
 			return map[string]*schema.Schema{
 				names.AttrARN: {
@@ -301,7 +360,7 @@ func resourceDeliveryStream() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
-					StateFunc: func(v interface{}) string {
+					StateFunc: func(v any) string {
 						value := v.(string)
 						return strings.ToLower(value)
 					},
@@ -780,7 +839,8 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.HttpEndpointS3BackupModeFailedDataOnly,
 								ValidateDiagFunc: enum.Validate[types.HttpEndpointS3BackupMode](),
 							},
-							"s3_configuration": s3ConfigurationSchema(),
+							"s3_configuration":              s3ConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
 							names.AttrURL: {
 								Type:     schema.TypeString,
 								Required: true,
@@ -789,6 +849,58 @@ func resourceDeliveryStream() *schema.Resource {
 									validation.StringMatch(regexache.MustCompile(`^https://.*$`), ""),
 								),
 							},
+						},
+					},
+				},
+				"iceberg_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"append_only": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"buffering_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  300,
+							},
+							"buffering_size": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  5,
+							},
+							"catalog_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"cloudwatch_logging_options":      cloudWatchLoggingOptionsSchema(),
+							"destination_table_configuration": destinationTableConfigurationSchema(),
+							"processing_configuration":        processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.IcebergS3BackupModeFailedDataOnly,
+								ValidateDiagFunc: enum.Validate[types.IcebergS3BackupMode](),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
 						},
 					},
 				},
@@ -850,6 +962,12 @@ func resourceDeliveryStream() *schema.Resource {
 								Required:     true,
 								ForceNew:     true,
 								ValidateFunc: verify.ValidARN,
+							},
+							"read_from_timestamp": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsRFC3339Time,
 							},
 							"topic_name": {
 								Type:     schema.TypeString,
@@ -979,119 +1097,6 @@ func resourceDeliveryStream() *schema.Resource {
 						},
 					},
 				},
-				"snowflake_configuration": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"account_url": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-							"content_column_name": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(1, 255),
-							},
-							"data_loading_option": {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Default:          types.SnowflakeDataLoadingOptionJsonMapping,
-								ValidateDiagFunc: enum.Validate[types.SnowflakeDataLoadingOption](),
-							},
-							names.AttrDatabase: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 255),
-							},
-							"key_passphrase": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Sensitive:    true,
-								ValidateFunc: validation.StringLenBetween(7, 255),
-							},
-							"metadata_column_name": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(1, 255),
-							},
-							names.AttrPrivateKey: {
-								Type:      schema.TypeString,
-								Required:  true,
-								Sensitive: true,
-							},
-							"processing_configuration": processingConfigurationSchema(),
-							"retry_duration": {
-								Type:         schema.TypeInt,
-								Optional:     true,
-								Default:      60,
-								ValidateFunc: validation.IntBetween(0, 7200),
-							},
-							names.AttrRoleARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
-							"s3_backup_mode": {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Default:          types.SnowflakeS3BackupModeFailedDataOnly,
-								ValidateDiagFunc: enum.Validate[types.SnowflakeS3BackupMode](),
-							},
-							"s3_configuration": s3ConfigurationSchema(),
-							names.AttrSchema: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 255),
-							},
-							"snowflake_role_configuration": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										names.AttrEnabled: {
-											Type:     schema.TypeBool,
-											Optional: true,
-											Default:  false,
-										},
-										"snowflake_role": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringLenBetween(1, 255),
-										},
-									},
-								},
-								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							},
-							"snowflake_vpc_configuration": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"private_link_vpce_id": {
-											Type:     schema.TypeString,
-											Required: true,
-										},
-									},
-								},
-							},
-							"table": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 255),
-							},
-							"user": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 255),
-							},
-						},
-					},
-				},
 				"opensearchserverless_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1199,7 +1204,7 @@ func resourceDeliveryStream() *schema.Resource {
 							},
 							names.AttrPassword: {
 								Type:      schema.TypeString,
-								Required:  true,
+								Optional:  true,
 								Sensitive: true,
 							},
 							"processing_configuration": processingConfigurationSchema(),
@@ -1221,10 +1226,11 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.RedshiftS3BackupModeDisabled,
 								ValidateDiagFunc: enum.Validate[types.RedshiftS3BackupMode](),
 							},
-							"s3_configuration": s3ConfigurationSchema(),
+							"s3_configuration":              s3ConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
 							names.AttrUsername: {
 								Type:     schema.TypeString,
-								Required: true,
+								Optional: true,
 							},
 						},
 					},
@@ -1254,6 +1260,132 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.KeyTypeAwsOwnedCmk,
 								ValidateDiagFunc: enum.Validate[types.KeyType](),
 								RequiredWith:     []string{"server_side_encryption.0.enabled"},
+							},
+						},
+					},
+				},
+				"snowflake_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_url": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"buffering_interval": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      0,
+								ValidateFunc: validation.IntBetween(0, 900),
+							},
+							"buffering_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      1,
+								ValidateFunc: validation.IntBetween(1, 128),
+							},
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"content_column_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"data_loading_option": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.SnowflakeDataLoadingOptionJsonMapping,
+								ValidateDiagFunc: enum.Validate[types.SnowflakeDataLoadingOption](),
+							},
+							names.AttrDatabase: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"key_passphrase": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringLenBetween(7, 255),
+							},
+							"metadata_column_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							names.AttrPrivateKey: {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      60,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.SnowflakeS3BackupModeFailedDataOnly,
+								ValidateDiagFunc: enum.Validate[types.SnowflakeS3BackupMode](),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
+							names.AttrSchema: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
+							"snowflake_role_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"snowflake_role": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+									},
+								},
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							},
+							"snowflake_vpc_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"private_link_vpce_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							"table": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"user": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
 					},
@@ -1295,7 +1427,7 @@ func resourceDeliveryStream() *schema.Resource {
 							},
 							"hec_token": {
 								Type:     schema.TypeString,
-								Required: true,
+								Optional: true,
 							},
 							"processing_configuration": processingConfigurationSchema(),
 							"retry_duration": {
@@ -1310,7 +1442,8 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.SplunkS3BackupModeFailedEventsOnly,
 								ValidateDiagFunc: enum.Validate[types.SplunkS3BackupMode](),
 							},
-							"s3_configuration": s3ConfigurationSchema(),
+							"s3_configuration":              s3ConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
 						},
 					},
 				},
@@ -1325,13 +1458,13 @@ func resourceDeliveryStream() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 				destination := destinationType(d.Get(names.AttrDestination).(string))
 				requiredAttribute := map[destinationType]string{
 					destinationTypeElasticsearch:        "elasticsearch_configuration",
 					destinationTypeExtendedS3:           "extended_s3_configuration",
 					destinationTypeHTTPEndpoint:         "http_endpoint_configuration",
+					destinationTypeIceberg:              "iceberg_configuration",
 					destinationTypeOpenSearch:           "opensearch_configuration",
 					destinationTypeOpenSearchServerless: "opensearchserverless_configuration",
 					destinationTypeRedshift:             "redshift_configuration",
@@ -1349,7 +1482,7 @@ func resourceDeliveryStream() *schema.Resource {
 	}
 }
 
-func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
 
@@ -1362,48 +1495,52 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
 		input.DeliveryStreamType = types.DeliveryStreamTypeKinesisStreamAsSource
-		input.KinesisStreamSourceConfiguration = expandKinesisStreamSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
-	} else if v, ok := d.GetOk("msk_source_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.KinesisStreamSourceConfiguration = expandKinesisStreamSourceConfiguration(v.([]any)[0].(map[string]any))
+	} else if v, ok := d.GetOk("msk_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.DeliveryStreamType = types.DeliveryStreamTypeMSKAsSource
-		input.MSKSourceConfiguration = expandMSKSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.MSKSourceConfiguration = expandMSKSourceConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	switch v := destinationType(d.Get(names.AttrDestination).(string)); v {
 	case destinationTypeElasticsearch:
-		if v, ok := d.GetOk("elasticsearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ElasticsearchDestinationConfiguration = expandElasticsearchDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("elasticsearch_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ElasticsearchDestinationConfiguration = expandElasticsearchDestinationConfiguration(v.([]any)[0].(map[string]any))
 		}
 	case destinationTypeExtendedS3:
-		if v, ok := d.GetOk("extended_s3_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ExtendedS3DestinationConfiguration = expandExtendedS3DestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("extended_s3_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ExtendedS3DestinationConfiguration = expandExtendedS3DestinationConfiguration(v.([]any)[0].(map[string]any))
 		}
 	case destinationTypeHTTPEndpoint:
-		if v, ok := d.GetOk("http_endpoint_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.HttpEndpointDestinationConfiguration = expandHTTPEndpointDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("http_endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.HttpEndpointDestinationConfiguration = expandHTTPEndpointDestinationConfiguration(v.([]any)[0].(map[string]any))
+		}
+	case destinationTypeIceberg:
+		if v, ok := d.GetOk("iceberg_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.IcebergDestinationConfiguration = expandIcebergDestinationConfiguration(v.([]any)[0].(map[string]any))
 		}
 	case destinationTypeOpenSearch:
-		if v, ok := d.GetOk("opensearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.AmazonopensearchserviceDestinationConfiguration = expandAmazonopensearchserviceDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("opensearch_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.AmazonopensearchserviceDestinationConfiguration = expandAmazonopensearchserviceDestinationConfiguration(v.([]any)[0].(map[string]any))
 		}
 	case destinationTypeOpenSearchServerless:
-		if v, ok := d.GetOk("opensearchserverless_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.AmazonOpenSearchServerlessDestinationConfiguration = expandAmazonOpenSearchServerlessDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("opensearchserverless_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.AmazonOpenSearchServerlessDestinationConfiguration = expandAmazonOpenSearchServerlessDestinationConfiguration(v.([]any)[0].(map[string]any))
 		}
 	case destinationTypeRedshift:
-		if v, ok := d.GetOk("redshift_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.RedshiftDestinationConfiguration = expandRedshiftDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("redshift_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.RedshiftDestinationConfiguration = expandRedshiftDestinationConfiguration(v.([]any)[0].(map[string]any))
 		}
 	case destinationTypeSnowflake:
-		if v, ok := d.GetOk("snowflake_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.SnowflakeDestinationConfiguration = expandSnowflakeDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("snowflake_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.SnowflakeDestinationConfiguration = expandSnowflakeDestinationConfiguration(v.([]any)[0].(map[string]any))
 		}
 	case destinationTypeSplunk:
-		if v, ok := d.GetOk("splunk_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.SplunkDestinationConfiguration = expandSplunkDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("splunk_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.SplunkDestinationConfiguration = expandSplunkDestinationConfiguration(v.([]any)[0].(map[string]any))
 		}
 	}
 
-	_, err := retryDeliveryStreamOp(ctx, func() (interface{}, error) {
+	_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 		return conn.CreateDeliveryStream(ctx, input)
 	})
 
@@ -1421,7 +1558,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("server_side_encryption"); ok && !isDeliveryStreamOptionDisabled(v) {
 		input := &firehose.StartDeliveryStreamEncryptionInput{
-			DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]interface{})),
+			DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]any)),
 			DeliveryStreamName:                         aws.String(sn),
 		}
 
@@ -1439,7 +1576,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDeliveryStreamRead(ctx, d, meta)...)
 }
 
-func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
 
@@ -1464,7 +1601,7 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 		if v := v.MSKSourceDescription; v != nil {
-			if err := d.Set("msk_source_configuration", []interface{}{flattenMSKSourceDescription(v)}); err != nil {
+			if err := d.Set("msk_source_configuration", []any{flattenMSKSourceDescription(v)}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting msk_source_configuration: %s", err)
 			}
 		}
@@ -1472,7 +1609,7 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrName, s.DeliveryStreamName)
 	d.Set("version_id", s.VersionId)
 
-	sseOptions := map[string]interface{}{
+	sseOptions := map[string]any{
 		names.AttrEnabled: false,
 		"key_type":        types.KeyTypeAwsOwnedCmk,
 	}
@@ -1484,7 +1621,7 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 			sseOptions["key_arn"] = aws.ToString(v)
 		}
 	}
-	if err := d.Set("server_side_encryption", []map[string]interface{}{sseOptions}); err != nil {
+	if err := d.Set("server_side_encryption", []map[string]any{sseOptions}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting server_side_encryption: %s", err)
 	}
 
@@ -1501,6 +1638,11 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
 			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointDestinationDescription(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting http_endpoint_configuration: %s", err)
+			}
+		case destination.IcebergDestinationDescription != nil:
+			d.Set(names.AttrDestination, destinationTypeIceberg)
+			if err := d.Set("iceberg_configuration", flattenIcebergDestinationDescription(destination.IcebergDestinationDescription)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting iceberg_configuration: %s", err)
 			}
 		case destination.AmazonopensearchserviceDestinationDescription != nil:
 			d.Set(names.AttrDestination, destinationTypeOpenSearch)
@@ -1542,7 +1684,7 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
 
@@ -1557,40 +1699,44 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		switch v := destinationType(d.Get(names.AttrDestination).(string)); v {
 		case destinationTypeElasticsearch:
-			if v, ok := d.GetOk("elasticsearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ElasticsearchDestinationUpdate = expandElasticsearchDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("elasticsearch_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ElasticsearchDestinationUpdate = expandElasticsearchDestinationUpdate(v.([]any)[0].(map[string]any))
 			}
 		case destinationTypeExtendedS3:
-			if v, ok := d.GetOk("extended_s3_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ExtendedS3DestinationUpdate = expandExtendedS3DestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("extended_s3_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ExtendedS3DestinationUpdate = expandExtendedS3DestinationUpdate(v.([]any)[0].(map[string]any))
 			}
 		case destinationTypeHTTPEndpoint:
-			if v, ok := d.GetOk("http_endpoint_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.HttpEndpointDestinationUpdate = expandHTTPEndpointDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("http_endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.HttpEndpointDestinationUpdate = expandHTTPEndpointDestinationUpdate(v.([]any)[0].(map[string]any))
+			}
+		case destinationTypeIceberg:
+			if v, ok := d.GetOk("iceberg_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.IcebergDestinationUpdate = expandIcebergDestinationUpdate(v.([]any)[0].(map[string]any))
 			}
 		case destinationTypeOpenSearch:
-			if v, ok := d.GetOk("opensearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.AmazonopensearchserviceDestinationUpdate = expandAmazonopensearchserviceDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("opensearch_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AmazonopensearchserviceDestinationUpdate = expandAmazonopensearchserviceDestinationUpdate(v.([]any)[0].(map[string]any))
 			}
 		case destinationTypeOpenSearchServerless:
-			if v, ok := d.GetOk("opensearchserverless_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.AmazonOpenSearchServerlessDestinationUpdate = expandAmazonOpenSearchServerlessDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("opensearchserverless_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AmazonOpenSearchServerlessDestinationUpdate = expandAmazonOpenSearchServerlessDestinationUpdate(v.([]any)[0].(map[string]any))
 			}
 		case destinationTypeRedshift:
-			if v, ok := d.GetOk("redshift_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.RedshiftDestinationUpdate = expandRedshiftDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("redshift_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.RedshiftDestinationUpdate = expandRedshiftDestinationUpdate(v.([]any)[0].(map[string]any))
 			}
 		case destinationTypeSnowflake:
-			if v, ok := d.GetOk("snowflake_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.SnowflakeDestinationUpdate = expandSnowflakeDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("snowflake_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.SnowflakeDestinationUpdate = expandSnowflakeDestinationUpdate(v.([]any)[0].(map[string]any))
 			}
 		case destinationTypeSplunk:
-			if v, ok := d.GetOk("splunk_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.SplunkDestinationUpdate = expandSplunkDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("splunk_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.SplunkDestinationUpdate = expandSplunkDestinationUpdate(v.([]any)[0].(map[string]any))
 			}
 		}
 
-		_, err := retryDeliveryStreamOp(ctx, func() (interface{}, error) {
+		_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 			return conn.UpdateDestination(ctx, input)
 		})
 
@@ -1617,7 +1763,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			}
 		} else {
 			input := &firehose.StartDeliveryStreamEncryptionInput{
-				DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]interface{})),
+				DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]any)),
 				DeliveryStreamName:                         aws.String(sn),
 			}
 
@@ -1636,7 +1782,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDeliveryStreamRead(ctx, d, meta)...)
 }
 
-func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
 
@@ -1662,7 +1808,7 @@ func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func retryDeliveryStreamOp(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
+func retryDeliveryStreamOp(ctx context.Context, f func(context.Context) (any, error)) (any, error) {
 	return tfresource.RetryWhen(ctx, propagationTimeout,
 		f,
 		func(err error) (bool, error) {
@@ -1714,7 +1860,7 @@ func findDeliveryStreamByName(ctx context.Context, conn *firehose.Client, name s
 }
 
 func statusDeliveryStream(ctx context.Context, conn *firehose.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDeliveryStreamByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -1773,7 +1919,6 @@ func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Client, name 
 
 func findDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *firehose.Client, name string) (*types.DeliveryStreamEncryptionConfiguration, error) {
 	output, err := findDeliveryStreamByName(ctx, conn, name)
-
 	if err != nil {
 		return nil, err
 	}
@@ -1786,7 +1931,7 @@ func findDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *
 }
 
 func statusDeliveryStreamEncryptionConfiguration(ctx context.Context, conn *firehose.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDeliveryStreamEncryptionConfigurationByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -1843,7 +1988,7 @@ func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Cl
 	return nil, err
 }
 
-func expandKinesisStreamSourceConfiguration(source map[string]interface{}) *types.KinesisStreamSourceConfiguration {
+func expandKinesisStreamSourceConfiguration(source map[string]any) *types.KinesisStreamSourceConfiguration {
 	configuration := &types.KinesisStreamSourceConfiguration{
 		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
 		RoleARN:          aws.String(source[names.AttrRoleARN].(string)),
@@ -1852,8 +1997,8 @@ func expandKinesisStreamSourceConfiguration(source map[string]interface{}) *type
 	return configuration
 }
 
-func expandS3DestinationConfiguration(tfList []interface{}) *types.S3DestinationConfiguration {
-	s3 := tfList[0].(map[string]interface{})
+func expandS3DestinationConfiguration(tfList []any) *types.S3DestinationConfiguration {
+	s3 := tfList[0].(map[string]any)
 
 	configuration := &types.S3DestinationConfiguration{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
@@ -1878,13 +2023,13 @@ func expandS3DestinationConfiguration(tfList []interface{}) *types.S3Destination
 	return configuration
 }
 
-func expandS3DestinationConfigurationBackup(d map[string]interface{}) *types.S3DestinationConfiguration {
-	config := d["s3_backup_configuration"].([]interface{})
+func expandS3DestinationConfigurationBackup(d map[string]any) *types.S3DestinationConfiguration {
+	config := d["s3_backup_configuration"].([]any)
 	if len(config) == 0 {
 		return nil
 	}
 
-	s3 := config[0].(map[string]interface{})
+	s3 := config[0].(map[string]any)
 
 	configuration := &types.S3DestinationConfiguration{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
@@ -1909,7 +2054,7 @@ func expandS3DestinationConfigurationBackup(d map[string]interface{}) *types.S3D
 	return configuration
 }
 
-func expandExtendedS3DestinationConfiguration(s3 map[string]interface{}) *types.ExtendedS3DestinationConfiguration {
+func expandExtendedS3DestinationConfiguration(s3 map[string]any) *types.ExtendedS3DestinationConfiguration {
 	roleARN := s3[names.AttrRoleARN].(string)
 	configuration := &types.ExtendedS3DestinationConfiguration{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
@@ -1921,7 +2066,7 @@ func expandExtendedS3DestinationConfiguration(s3 map[string]interface{}) *types.
 		Prefix:                            expandPrefix(s3),
 		CompressionFormat:                 types.CompressionFormat(s3["compression_format"].(string)),
 		CustomTimeZone:                    aws.String(s3["custom_time_zone"].(string)),
-		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
+		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]any)),
 		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
 		FileExtension:                     aws.String(s3["file_extension"].(string)),
 	}
@@ -1950,8 +2095,8 @@ func expandExtendedS3DestinationConfiguration(s3 map[string]interface{}) *types.
 	return configuration
 }
 
-func expandS3DestinationUpdate(tfList []interface{}) *types.S3DestinationUpdate {
-	s3 := tfList[0].(map[string]interface{})
+func expandS3DestinationUpdate(tfList []any) *types.S3DestinationUpdate {
+	s3 := tfList[0].(map[string]any)
 	configuration := &types.S3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3[names.AttrRoleARN].(string)),
@@ -1973,13 +2118,13 @@ func expandS3DestinationUpdate(tfList []interface{}) *types.S3DestinationUpdate 
 	return configuration
 }
 
-func expandS3DestinationUpdateBackup(d map[string]interface{}) *types.S3DestinationUpdate {
-	config := d["s3_backup_configuration"].([]interface{})
+func expandS3DestinationUpdateBackup(d map[string]any) *types.S3DestinationUpdate {
+	config := d["s3_backup_configuration"].([]any)
 	if len(config) == 0 {
 		return nil
 	}
 
-	s3 := config[0].(map[string]interface{})
+	s3 := config[0].(map[string]any)
 
 	configuration := &types.S3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
@@ -2002,7 +2147,7 @@ func expandS3DestinationUpdateBackup(d map[string]interface{}) *types.S3Destinat
 	return configuration
 }
 
-func expandExtendedS3DestinationUpdate(s3 map[string]interface{}) *types.ExtendedS3DestinationUpdate {
+func expandExtendedS3DestinationUpdate(s3 map[string]any) *types.ExtendedS3DestinationUpdate {
 	roleARN := s3[names.AttrRoleARN].(string)
 	configuration := &types.ExtendedS3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
@@ -2017,7 +2162,7 @@ func expandExtendedS3DestinationUpdate(s3 map[string]interface{}) *types.Extende
 		Prefix:                            expandPrefix(s3),
 		CompressionFormat:                 types.CompressionFormat(s3["compression_format"].(string)),
 		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
-		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
+		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]any)),
 		CloudWatchLoggingOptions:          expandCloudWatchLoggingOptions(s3),
 		ProcessingConfiguration:           expandProcessingConfiguration(s3, destinationTypeExtendedS3, roleARN),
 	}
@@ -2038,7 +2183,7 @@ func expandExtendedS3DestinationUpdate(s3 map[string]interface{}) *types.Extende
 	return configuration
 }
 
-func expandDataFormatConversionConfiguration(l []interface{}) *types.DataFormatConversionConfiguration {
+func expandDataFormatConversionConfiguration(l []any) *types.DataFormatConversionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
@@ -2047,42 +2192,42 @@ func expandDataFormatConversionConfiguration(l []interface{}) *types.DataFormatC
 		}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &types.DataFormatConversionConfiguration{
 		Enabled:                   aws.Bool(m[names.AttrEnabled].(bool)),
-		InputFormatConfiguration:  expandInputFormatConfiguration(m["input_format_configuration"].([]interface{})),
-		OutputFormatConfiguration: expandOutputFormatConfiguration(m["output_format_configuration"].([]interface{})),
-		SchemaConfiguration:       expandSchemaConfiguration(m["schema_configuration"].([]interface{})),
+		InputFormatConfiguration:  expandInputFormatConfiguration(m["input_format_configuration"].([]any)),
+		OutputFormatConfiguration: expandOutputFormatConfiguration(m["output_format_configuration"].([]any)),
+		SchemaConfiguration:       expandSchemaConfiguration(m["schema_configuration"].([]any)),
 	}
 }
 
-func expandInputFormatConfiguration(l []interface{}) *types.InputFormatConfiguration {
+func expandInputFormatConfiguration(l []any) *types.InputFormatConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &types.InputFormatConfiguration{
-		Deserializer: expandDeserializer(m["deserializer"].([]interface{})),
+		Deserializer: expandDeserializer(m["deserializer"].([]any)),
 	}
 }
 
-func expandDeserializer(l []interface{}) *types.Deserializer {
+func expandDeserializer(l []any) *types.Deserializer {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &types.Deserializer{
-		HiveJsonSerDe:  expandHiveJSONSerDe(m["hive_json_ser_de"].([]interface{})),
-		OpenXJsonSerDe: expandOpenXJSONSerDe(m["open_x_json_ser_de"].([]interface{})),
+		HiveJsonSerDe:  expandHiveJSONSerDe(m["hive_json_ser_de"].([]any)),
+		OpenXJsonSerDe: expandOpenXJSONSerDe(m["open_x_json_ser_de"].([]any)),
 	}
 }
 
-func expandHiveJSONSerDe(l []interface{}) *types.HiveJsonSerDe {
+func expandHiveJSONSerDe(l []any) *types.HiveJsonSerDe {
 	if len(l) == 0 {
 		return nil
 	}
@@ -2091,14 +2236,14 @@ func expandHiveJSONSerDe(l []interface{}) *types.HiveJsonSerDe {
 		return &types.HiveJsonSerDe{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &types.HiveJsonSerDe{
-		TimestampFormats: flex.ExpandStringValueList(m["timestamp_formats"].([]interface{})),
+		TimestampFormats: flex.ExpandStringValueList(m["timestamp_formats"].([]any)),
 	}
 }
 
-func expandOpenXJSONSerDe(l []interface{}) *types.OpenXJsonSerDe {
+func expandOpenXJSONSerDe(l []any) *types.OpenXJsonSerDe {
 	if len(l) == 0 {
 		return nil
 	}
@@ -2107,41 +2252,41 @@ func expandOpenXJSONSerDe(l []interface{}) *types.OpenXJsonSerDe {
 		return &types.OpenXJsonSerDe{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &types.OpenXJsonSerDe{
 		CaseInsensitive:                    aws.Bool(m["case_insensitive"].(bool)),
-		ColumnToJsonKeyMappings:            flex.ExpandStringValueMap(m["column_to_json_key_mappings"].(map[string]interface{})),
+		ColumnToJsonKeyMappings:            flex.ExpandStringValueMap(m["column_to_json_key_mappings"].(map[string]any)),
 		ConvertDotsInJsonKeysToUnderscores: aws.Bool(m["convert_dots_in_json_keys_to_underscores"].(bool)),
 	}
 }
 
-func expandOutputFormatConfiguration(l []interface{}) *types.OutputFormatConfiguration {
+func expandOutputFormatConfiguration(l []any) *types.OutputFormatConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &types.OutputFormatConfiguration{
-		Serializer: expandSerializer(m["serializer"].([]interface{})),
+		Serializer: expandSerializer(m["serializer"].([]any)),
 	}
 }
 
-func expandSerializer(l []interface{}) *types.Serializer {
+func expandSerializer(l []any) *types.Serializer {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &types.Serializer{
-		OrcSerDe:     expandOrcSerDe(m["orc_ser_de"].([]interface{})),
-		ParquetSerDe: expandParquetSerDe(m["parquet_ser_de"].([]interface{})),
+		OrcSerDe:     expandOrcSerDe(m["orc_ser_de"].([]any)),
+		ParquetSerDe: expandParquetSerDe(m["parquet_ser_de"].([]any)),
 	}
 }
 
-func expandOrcSerDe(l []interface{}) *types.OrcSerDe {
+func expandOrcSerDe(l []any) *types.OrcSerDe {
 	if len(l) == 0 {
 		return nil
 	}
@@ -2150,7 +2295,7 @@ func expandOrcSerDe(l []interface{}) *types.OrcSerDe {
 		return &types.OrcSerDe{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	orcSerDe := &types.OrcSerDe{
 		BlockSizeBytes:                      aws.Int32(int32(m["block_size_bytes"].(int))),
@@ -2164,14 +2309,14 @@ func expandOrcSerDe(l []interface{}) *types.OrcSerDe {
 		StripeSizeBytes:                     aws.Int32(int32(m["stripe_size_bytes"].(int))),
 	}
 
-	if v, ok := m["bloom_filter_columns"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["bloom_filter_columns"].([]any); ok && len(v) > 0 {
 		orcSerDe.BloomFilterColumns = flex.ExpandStringValueList(v)
 	}
 
 	return orcSerDe
 }
 
-func expandParquetSerDe(l []interface{}) *types.ParquetSerDe {
+func expandParquetSerDe(l []any) *types.ParquetSerDe {
 	if len(l) == 0 {
 		return nil
 	}
@@ -2180,7 +2325,7 @@ func expandParquetSerDe(l []interface{}) *types.ParquetSerDe {
 		return &types.ParquetSerDe{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &types.ParquetSerDe{
 		BlockSizeBytes:              aws.Int32(int32(m["block_size_bytes"].(int))),
@@ -2192,12 +2337,12 @@ func expandParquetSerDe(l []interface{}) *types.ParquetSerDe {
 	}
 }
 
-func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
+func expandSchemaConfiguration(l []any) *types.SchemaConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &types.SchemaConfiguration{
 		DatabaseName: aws.String(m[names.AttrDatabaseName].(string)),
@@ -2216,13 +2361,13 @@ func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
 	return config
 }
 
-func expandDynamicPartitioningConfiguration(s3 map[string]interface{}) *types.DynamicPartitioningConfiguration {
-	config := s3["dynamic_partitioning_configuration"].([]interface{})
+func expandDynamicPartitioningConfiguration(s3 map[string]any) *types.DynamicPartitioningConfiguration {
+	config := s3["dynamic_partitioning_configuration"].([]any)
 	if len(config) == 0 {
 		return nil
 	}
 
-	dynamicPartitioningConfig := config[0].(map[string]interface{})
+	dynamicPartitioningConfig := config[0].(map[string]any)
 	DynamicPartitioningConfiguration := &types.DynamicPartitioningConfiguration{
 		Enabled: aws.Bool(dynamicPartitioningConfig[names.AttrEnabled].(bool)),
 	}
@@ -2236,8 +2381,8 @@ func expandDynamicPartitioningConfiguration(s3 map[string]interface{}) *types.Dy
 	return DynamicPartitioningConfiguration
 }
 
-func expandProcessingConfiguration(tfMap map[string]interface{}, destinationType destinationType, roleARN string) *types.ProcessingConfiguration {
-	config := tfMap["processing_configuration"].([]interface{})
+func expandProcessingConfiguration(tfMap map[string]any, destinationType destinationType, roleARN string) *types.ProcessingConfiguration {
+	config := tfMap["processing_configuration"].([]any)
 	if len(config) == 0 || config[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
@@ -2247,19 +2392,19 @@ func expandProcessingConfiguration(tfMap map[string]interface{}, destinationType
 		}
 	}
 
-	processingConfiguration := config[0].(map[string]interface{})
+	processingConfiguration := config[0].(map[string]any)
 
 	return &types.ProcessingConfiguration{
 		Enabled:    aws.Bool(processingConfiguration[names.AttrEnabled].(bool)),
-		Processors: expandProcessors(processingConfiguration["processors"].([]interface{}), destinationType, roleARN),
+		Processors: expandProcessors(processingConfiguration["processors"].([]any), destinationType, roleARN),
 	}
 }
 
-func expandProcessors(processingConfigurationProcessors []interface{}, destinationType destinationType, roleARN string) []types.Processor {
+func expandProcessors(processingConfigurationProcessors []any, destinationType destinationType, roleARN string) []types.Processor {
 	processors := []types.Processor{}
 
 	for _, processor := range processingConfigurationProcessors {
-		extractedProcessor := expandProcessor(processor.(map[string]interface{}))
+		extractedProcessor := expandProcessor(processor.(map[string]any))
 		if extractedProcessor != nil {
 			// Merge in defaults.
 			for name, value := range defaultProcessorParameters(destinationType, extractedProcessor.Type, roleARN) {
@@ -2277,7 +2422,7 @@ func expandProcessors(processingConfigurationProcessors []interface{}, destinati
 	return processors
 }
 
-func expandProcessor(processingConfigurationProcessor map[string]interface{}) *types.Processor {
+func expandProcessor(processingConfigurationProcessor map[string]any) *types.Processor {
 	var processor *types.Processor
 	processorType := processingConfigurationProcessor[names.AttrType].(string)
 	if processorType != "" {
@@ -2289,17 +2434,17 @@ func expandProcessor(processingConfigurationProcessor map[string]interface{}) *t
 	return processor
 }
 
-func expandProcessorParameters(processorParameters []interface{}) []types.ProcessorParameter {
+func expandProcessorParameters(processorParameters []any) []types.ProcessorParameter {
 	parameters := []types.ProcessorParameter{}
 
 	for _, attr := range processorParameters {
-		parameters = append(parameters, expandProcessorParameter(attr.(map[string]interface{})))
+		parameters = append(parameters, expandProcessorParameter(attr.(map[string]any)))
 	}
 
 	return parameters
 }
 
-func expandProcessorParameter(processorParameter map[string]interface{}) types.ProcessorParameter {
+func expandProcessorParameter(processorParameter map[string]any) types.ProcessorParameter {
 	parameter := types.ProcessorParameter{
 		ParameterName:  types.ProcessorParameterName(processorParameter["parameter_name"].(string)),
 		ParameterValue: aws.String(processorParameter["parameter_value"].(string)),
@@ -2308,7 +2453,30 @@ func expandProcessorParameter(processorParameter map[string]interface{}) types.P
 	return parameter
 }
 
-func expandEncryptionConfiguration(s3 map[string]interface{}) *types.EncryptionConfiguration {
+func expandSecretsManagerConfiguration(tfMap map[string]any) *types.SecretsManagerConfiguration {
+	config := tfMap["secrets_manager_configuration"].([]any)
+
+	if len(config) == 0 || config[0] == nil {
+		return nil
+	}
+
+	secretsManagerConfiguration := config[0].(map[string]any)
+	configuration := &types.SecretsManagerConfiguration{
+		Enabled: aws.Bool(secretsManagerConfiguration[names.AttrEnabled].(bool)),
+	}
+
+	if v, ok := secretsManagerConfiguration["secret_arn"]; ok && len(v.(string)) > 0 {
+		configuration.SecretARN = aws.String(v.(string))
+	}
+
+	if v, ok := secretsManagerConfiguration[names.AttrRoleARN]; ok && len(v.(string)) > 0 {
+		configuration.RoleARN = aws.String(v.(string))
+	}
+
+	return configuration
+}
+
+func expandEncryptionConfiguration(s3 map[string]any) *types.EncryptionConfiguration {
 	if key, ok := s3[names.AttrKMSKeyARN]; ok && len(key.(string)) > 0 {
 		return &types.EncryptionConfiguration{
 			KMSEncryptionConfig: &types.KMSEncryptionConfig{
@@ -2322,13 +2490,13 @@ func expandEncryptionConfiguration(s3 map[string]interface{}) *types.EncryptionC
 	}
 }
 
-func expandCloudWatchLoggingOptions(s3 map[string]interface{}) *types.CloudWatchLoggingOptions {
-	config := s3["cloudwatch_logging_options"].([]interface{})
+func expandCloudWatchLoggingOptions(s3 map[string]any) *types.CloudWatchLoggingOptions {
+	config := s3["cloudwatch_logging_options"].([]any)
 	if len(config) == 0 {
 		return nil
 	}
 
-	loggingConfig := config[0].(map[string]interface{})
+	loggingConfig := config[0].(map[string]any)
 	loggingOptions := &types.CloudWatchLoggingOptions{
 		Enabled: aws.Bool(loggingConfig[names.AttrEnabled].(bool)),
 	}
@@ -2344,13 +2512,13 @@ func expandCloudWatchLoggingOptions(s3 map[string]interface{}) *types.CloudWatch
 	return loggingOptions
 }
 
-func expandVPCConfiguration(es map[string]interface{}) *types.VpcConfiguration {
-	config := es[names.AttrVPCConfig].([]interface{})
+func expandVPCConfiguration(es map[string]any) *types.VpcConfiguration {
+	config := es[names.AttrVPCConfig].([]any)
 	if len(config) == 0 {
 		return nil
 	}
 
-	vpcConfig := config[0].(map[string]interface{})
+	vpcConfig := config[0].(map[string]any)
 
 	return &types.VpcConfiguration{
 		RoleARN:          aws.String(vpcConfig[names.AttrRoleARN].(string)),
@@ -2359,7 +2527,7 @@ func expandVPCConfiguration(es map[string]interface{}) *types.VpcConfiguration {
 	}
 }
 
-func expandPrefix(s3 map[string]interface{}) *string {
+func expandPrefix(s3 map[string]any) *string {
 	if v, ok := s3[names.AttrPrefix]; ok {
 		return aws.String(v.(string))
 	}
@@ -2367,71 +2535,183 @@ func expandPrefix(s3 map[string]interface{}) *string {
 	return nil
 }
 
-func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *types.RedshiftDestinationConfiguration {
-	roleARN := redshift[names.AttrRoleARN].(string)
-	configuration := &types.RedshiftDestinationConfiguration{
-		ClusterJDBCURL:  aws.String(redshift["cluster_jdbcurl"].(string)),
-		RetryOptions:    expandRedshiftRetryOptions(redshift),
-		Password:        aws.String(redshift[names.AttrPassword].(string)),
-		Username:        aws.String(redshift[names.AttrUsername].(string)),
+func expandIcebergDestinationConfiguration(tfMap map[string]any) *types.IcebergDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.IcebergDestinationConfiguration{
+		BufferingHints: &types.BufferingHints{
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
+		},
+		CatalogConfiguration: &types.CatalogConfiguration{
+			CatalogARN: aws.String(tfMap["catalog_arn"].(string)),
+		},
 		RoleARN:         aws.String(roleARN),
-		CopyCommand:     expandCopyCommand(redshift),
-		S3Configuration: expandS3DestinationConfiguration(redshift["s3_configuration"].([]interface{})),
+		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
 	}
 
-	if _, ok := redshift["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(redshift)
-	}
-	if _, ok := redshift["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(redshift, destinationTypeRedshift, roleARN)
-	}
-	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.RedshiftS3BackupMode(s3BackupMode.(string))
-		configuration.S3BackupConfiguration = expandS3DestinationConfigurationBackup(redshift)
+	if v, ok := tfMap["append_only"].(bool); ok && v {
+		apiObject.AppendOnly = aws.Bool(v)
 	}
 
-	return configuration
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if _, ok := tfMap["destination_table_configuration"]; ok {
+		apiObject.DestinationTableConfigurationList = expandDestinationTableConfigurationList(tfMap)
+	}
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeIceberg, roleARN)
+	}
+
+	if _, ok := tfMap["retry_duration"]; ok {
+		apiObject.RetryOptions = expandIcebergRetryOptions(tfMap)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.IcebergS3BackupMode(v.(string))
+	}
+
+	return apiObject
 }
 
-func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *types.RedshiftDestinationUpdate {
-	roleARN := redshift[names.AttrRoleARN].(string)
-	configuration := &types.RedshiftDestinationUpdate{
-		ClusterJDBCURL: aws.String(redshift["cluster_jdbcurl"].(string)),
-		RetryOptions:   expandRedshiftRetryOptions(redshift),
-		Password:       aws.String(redshift[names.AttrPassword].(string)),
-		Username:       aws.String(redshift[names.AttrUsername].(string)),
-		RoleARN:        aws.String(roleARN),
-		CopyCommand:    expandCopyCommand(redshift),
+func expandIcebergDestinationUpdate(tfMap map[string]any) *types.IcebergDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.IcebergDestinationUpdate{
+		BufferingHints: &types.BufferingHints{
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
+		},
+		RoleARN: aws.String(roleARN),
 	}
 
-	s3Config := expandS3DestinationUpdate(redshift["s3_configuration"].([]interface{}))
+	if v, ok := tfMap["append_only"].(bool); ok && v {
+		apiObject.AppendOnly = aws.Bool(v)
+	}
+
+	if catalogARN, ok := tfMap["catalog_arn"].(string); ok {
+		apiObject.CatalogConfiguration = &types.CatalogConfiguration{
+			CatalogARN: aws.String(catalogARN),
+		}
+	}
+
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if _, ok := tfMap["destination_table_configuration"]; ok {
+		apiObject.DestinationTableConfigurationList = expandDestinationTableConfigurationList(tfMap)
+	}
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeIceberg, roleARN)
+	}
+
+	if _, ok := tfMap["retry_duration"]; ok {
+		apiObject.RetryOptions = expandIcebergRetryOptions(tfMap)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.IcebergS3BackupMode(v.(string))
+	}
+
+	if v, ok := tfMap["s3_configuration"]; ok {
+		apiObject.S3Configuration = expandS3DestinationConfiguration(v.([]any))
+	}
+
+	return apiObject
+}
+
+func expandRedshiftDestinationConfiguration(tfMap map[string]any) *types.RedshiftDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.RedshiftDestinationConfiguration{
+		ClusterJDBCURL:  aws.String(tfMap["cluster_jdbcurl"].(string)),
+		CopyCommand:     expandCopyCommand(tfMap),
+		RetryOptions:    expandRedshiftRetryOptions(tfMap),
+		RoleARN:         aws.String(roleARN),
+		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
+	}
+
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if v, ok := tfMap[names.AttrPassword]; ok && v.(string) != "" {
+		apiObject.Password = aws.String(v.(string))
+	}
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeRedshift, roleARN)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.RedshiftS3BackupMode(v.(string))
+		apiObject.S3BackupConfiguration = expandS3DestinationConfigurationBackup(tfMap)
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	if v, ok := tfMap[names.AttrUsername]; ok && v.(string) != "" {
+		apiObject.Username = aws.String(v.(string))
+	}
+
+	return apiObject
+}
+
+func expandRedshiftDestinationUpdate(tfMap map[string]any) *types.RedshiftDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.RedshiftDestinationUpdate{
+		ClusterJDBCURL: aws.String(tfMap["cluster_jdbcurl"].(string)),
+		CopyCommand:    expandCopyCommand(tfMap),
+		RetryOptions:   expandRedshiftRetryOptions(tfMap),
+		RoleARN:        aws.String(roleARN),
+	}
+
+	s3Config := expandS3DestinationUpdate(tfMap["s3_configuration"].([]any))
 	// Redshift does not currently support ErrorOutputPrefix,
 	// which is set to the empty string within "updateS3Config",
 	// thus we must remove it here to avoid an InvalidArgumentException.
 	s3Config.ErrorOutputPrefix = nil
-	configuration.S3Update = s3Config
+	apiObject.S3Update = s3Config
 
-	if _, ok := redshift["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(redshift)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
-	if _, ok := redshift["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(redshift, destinationTypeRedshift, roleARN)
+
+	if v, ok := tfMap[names.AttrPassword]; ok && v.(string) != "" {
+		apiObject.Password = aws.String(v.(string))
 	}
-	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.RedshiftS3BackupMode(s3BackupMode.(string))
-		configuration.S3BackupUpdate = expandS3DestinationUpdateBackup(redshift)
-		if configuration.S3BackupUpdate != nil {
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeRedshift, roleARN)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.RedshiftS3BackupMode(v.(string))
+		apiObject.S3BackupUpdate = expandS3DestinationUpdateBackup(tfMap)
+		if apiObject.S3BackupUpdate != nil {
 			// Redshift does not currently support ErrorOutputPrefix,
 			// which is set to the empty string within "updateS3BackupConfig",
 			// thus we must remove it here to avoid an InvalidArgumentException.
-			configuration.S3BackupUpdate.ErrorOutputPrefix = nil
+			apiObject.S3BackupUpdate.ErrorOutputPrefix = nil
 		}
 	}
 
-	return configuration
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	if v, ok := tfMap[names.AttrUsername]; ok && v.(string) != "" {
+		apiObject.Username = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
-func expandElasticsearchDestinationConfiguration(es map[string]interface{}) *types.ElasticsearchDestinationConfiguration {
+func expandElasticsearchDestinationConfiguration(es map[string]any) *types.ElasticsearchDestinationConfiguration {
 	roleARN := es[names.AttrRoleARN].(string)
 	config := &types.ElasticsearchDestinationConfiguration{
 		BufferingHints:  expandElasticsearchBufferingHints(es),
@@ -2439,7 +2719,7 @@ func expandElasticsearchDestinationConfiguration(es map[string]interface{}) *typ
 		RetryOptions:    expandElasticsearchRetryOptions(es),
 		RoleARN:         aws.String(roleARN),
 		TypeName:        aws.String(es["type_name"].(string)),
-		S3Configuration: expandS3DestinationConfiguration(es["s3_configuration"].([]interface{})),
+		S3Configuration: expandS3DestinationConfiguration(es["s3_configuration"].([]any)),
 	}
 
 	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
@@ -2472,7 +2752,7 @@ func expandElasticsearchDestinationConfiguration(es map[string]interface{}) *typ
 	return config
 }
 
-func expandElasticsearchDestinationUpdate(es map[string]interface{}) *types.ElasticsearchDestinationUpdate {
+func expandElasticsearchDestinationUpdate(es map[string]any) *types.ElasticsearchDestinationUpdate {
 	roleARN := es[names.AttrRoleARN].(string)
 	update := &types.ElasticsearchDestinationUpdate{
 		BufferingHints: expandElasticsearchBufferingHints(es),
@@ -2480,7 +2760,7 @@ func expandElasticsearchDestinationUpdate(es map[string]interface{}) *types.Elas
 		RetryOptions:   expandElasticsearchRetryOptions(es),
 		RoleARN:        aws.String(roleARN),
 		TypeName:       aws.String(es["type_name"].(string)),
-		S3Update:       expandS3DestinationUpdate(es["s3_configuration"].([]interface{})),
+		S3Update:       expandS3DestinationUpdate(es["s3_configuration"].([]any)),
 	}
 
 	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
@@ -2506,7 +2786,7 @@ func expandElasticsearchDestinationUpdate(es map[string]interface{}) *types.Elas
 	return update
 }
 
-func expandAmazonopensearchserviceDestinationConfiguration(os map[string]interface{}) *types.AmazonopensearchserviceDestinationConfiguration {
+func expandAmazonopensearchserviceDestinationConfiguration(os map[string]any) *types.AmazonopensearchserviceDestinationConfiguration {
 	roleARN := os[names.AttrRoleARN].(string)
 	config := &types.AmazonopensearchserviceDestinationConfiguration{
 		BufferingHints:  expandAmazonopensearchserviceBufferingHints(os),
@@ -2514,7 +2794,7 @@ func expandAmazonopensearchserviceDestinationConfiguration(os map[string]interfa
 		RetryOptions:    expandAmazonopensearchserviceRetryOptions(os),
 		RoleARN:         aws.String(roleARN),
 		TypeName:        aws.String(os["type_name"].(string)),
-		S3Configuration: expandS3DestinationConfiguration(os["s3_configuration"].([]interface{})),
+		S3Configuration: expandS3DestinationConfiguration(os["s3_configuration"].([]any)),
 	}
 
 	if v, ok := os["domain_arn"]; ok && v.(string) != "" {
@@ -2544,14 +2824,14 @@ func expandAmazonopensearchserviceDestinationConfiguration(os map[string]interfa
 		config.VpcConfiguration = expandVPCConfiguration(os)
 	}
 
-	if v, ok := os["document_id_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		config.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]interface{}))
+	if v, ok := os["document_id_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		config.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]any))
 	}
 
 	return config
 }
 
-func expandAmazonopensearchserviceDestinationUpdate(os map[string]interface{}) *types.AmazonopensearchserviceDestinationUpdate {
+func expandAmazonopensearchserviceDestinationUpdate(os map[string]any) *types.AmazonopensearchserviceDestinationUpdate {
 	roleARN := os[names.AttrRoleARN].(string)
 	update := &types.AmazonopensearchserviceDestinationUpdate{
 		BufferingHints: expandAmazonopensearchserviceBufferingHints(os),
@@ -2559,7 +2839,7 @@ func expandAmazonopensearchserviceDestinationUpdate(os map[string]interface{}) *
 		RetryOptions:   expandAmazonopensearchserviceRetryOptions(os),
 		RoleARN:        aws.String(roleARN),
 		TypeName:       aws.String(os["type_name"].(string)),
-		S3Update:       expandS3DestinationUpdate(os["s3_configuration"].([]interface{})),
+		S3Update:       expandS3DestinationUpdate(os["s3_configuration"].([]any)),
 	}
 
 	if v, ok := os["domain_arn"]; ok && v.(string) != "" {
@@ -2582,21 +2862,21 @@ func expandAmazonopensearchserviceDestinationUpdate(os map[string]interface{}) *
 		update.IndexRotationPeriod = types.AmazonopensearchserviceIndexRotationPeriod(indexRotationPeriod.(string))
 	}
 
-	if v, ok := os["document_id_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		update.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]interface{}))
+	if v, ok := os["document_id_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		update.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]any))
 	}
 
 	return update
 }
 
-func expandAmazonOpenSearchServerlessDestinationConfiguration(oss map[string]interface{}) *types.AmazonOpenSearchServerlessDestinationConfiguration {
+func expandAmazonOpenSearchServerlessDestinationConfiguration(oss map[string]any) *types.AmazonOpenSearchServerlessDestinationConfiguration {
 	roleARN := oss[names.AttrRoleARN].(string)
 	config := &types.AmazonOpenSearchServerlessDestinationConfiguration{
 		BufferingHints:  expandAmazonOpenSearchServerlessBufferingHints(oss),
 		IndexName:       aws.String(oss["index_name"].(string)),
 		RetryOptions:    expandAmazonOpenSearchServerlessRetryOptions(oss),
 		RoleARN:         aws.String(roleARN),
-		S3Configuration: expandS3DestinationConfiguration(oss["s3_configuration"].([]interface{})),
+		S3Configuration: expandS3DestinationConfiguration(oss["s3_configuration"].([]any)),
 	}
 
 	if v, ok := oss["collection_endpoint"]; ok && v.(string) != "" {
@@ -2622,14 +2902,14 @@ func expandAmazonOpenSearchServerlessDestinationConfiguration(oss map[string]int
 	return config
 }
 
-func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]interface{}) *types.AmazonOpenSearchServerlessDestinationUpdate {
+func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]any) *types.AmazonOpenSearchServerlessDestinationUpdate {
 	roleARN := oss[names.AttrRoleARN].(string)
 	update := &types.AmazonOpenSearchServerlessDestinationUpdate{
 		BufferingHints: expandAmazonOpenSearchServerlessBufferingHints(oss),
 		IndexName:      aws.String(oss["index_name"].(string)),
 		RetryOptions:   expandAmazonOpenSearchServerlessRetryOptions(oss),
 		RoleARN:        aws.String(roleARN),
-		S3Update:       expandS3DestinationUpdate(oss["s3_configuration"].([]interface{})),
+		S3Update:       expandS3DestinationUpdate(oss["s3_configuration"].([]any)),
 	}
 	if v, ok := oss["collection_endpoint"]; ok && v.(string) != "" {
 		update.CollectionEndpoint = aws.String(v.(string))
@@ -2646,18 +2926,21 @@ func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]interface{
 	return update
 }
 
-func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *types.SnowflakeDestinationConfiguration {
+func expandSnowflakeDestinationConfiguration(tfMap map[string]any) *types.SnowflakeDestinationConfiguration {
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.SnowflakeDestinationConfiguration{
-		AccountUrl:      aws.String(tfMap["account_url"].(string)),
-		Database:        aws.String(tfMap[names.AttrDatabase].(string)),
-		PrivateKey:      aws.String(tfMap[names.AttrPrivateKey].(string)),
-		RetryOptions:    expandSnowflakeRetryOptions(tfMap),
-		RoleARN:         aws.String(roleARN),
-		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
-		Schema:          aws.String(tfMap[names.AttrSchema].(string)),
-		Table:           aws.String(tfMap["table"].(string)),
-		User:            aws.String(tfMap["user"].(string)),
+		AccountUrl: aws.String(tfMap["account_url"].(string)),
+		BufferingHints: &types.SnowflakeBufferingHints{
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
+		},
+		Database:                  aws.String(tfMap[names.AttrDatabase].(string)),
+		RetryOptions:              expandSnowflakeRetryOptions(tfMap),
+		RoleARN:                   aws.String(roleARN),
+		S3Configuration:           expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
+		Schema:                    aws.String(tfMap[names.AttrSchema].(string)),
+		SnowflakeVpcConfiguration: expandSnowflakeVPCConfiguration(tfMap),
+		Table:                     aws.String(tfMap["table"].(string)),
 	}
 
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
@@ -2670,6 +2953,10 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *type
 
 	if v, ok := tfMap["data_loading_option"]; ok && v.(string) != "" {
 		apiObject.DataLoadingOption = types.SnowflakeDataLoadingOption(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrPrivateKey]; ok && v.(string) != "" {
+		apiObject.PrivateKey = aws.String(v.(string))
 	}
 
 	if v, ok := tfMap["key_passphrase"]; ok && v.(string) != "" {
@@ -2686,6 +2973,10 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *type
 
 	if v, ok := tfMap["s3_backup_mode"]; ok {
 		apiObject.S3BackupMode = types.SnowflakeS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
 	}
 
 	if _, ok := tfMap["snowflake_role_configuration"]; ok {
@@ -2696,21 +2987,27 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *type
 		apiObject.SnowflakeVpcConfiguration = expandSnowflakeVPCConfiguration(tfMap)
 	}
 
+	if v, ok := tfMap["user"]; ok && v.(string) != "" {
+		apiObject.User = aws.String(v.(string))
+	}
+
 	return apiObject
 }
 
-func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.SnowflakeDestinationUpdate {
+func expandSnowflakeDestinationUpdate(tfMap map[string]any) *types.SnowflakeDestinationUpdate {
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.SnowflakeDestinationUpdate{
-		AccountUrl:   aws.String(tfMap["account_url"].(string)),
+		AccountUrl: aws.String(tfMap["account_url"].(string)),
+		BufferingHints: &types.SnowflakeBufferingHints{
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
+		},
 		Database:     aws.String(tfMap[names.AttrDatabase].(string)),
-		PrivateKey:   aws.String(tfMap[names.AttrPrivateKey].(string)),
 		RetryOptions: expandSnowflakeRetryOptions(tfMap),
 		RoleARN:      aws.String(roleARN),
-		S3Update:     expandS3DestinationUpdate(tfMap["s3_configuration"].([]interface{})),
+		S3Update:     expandS3DestinationUpdate(tfMap["s3_configuration"].([]any)),
 		Schema:       aws.String(tfMap[names.AttrSchema].(string)),
 		Table:        aws.String(tfMap["table"].(string)),
-		User:         aws.String(tfMap["user"].(string)),
 	}
 
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
@@ -2723,6 +3020,10 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.Snowf
 
 	if v, ok := tfMap["data_loading_option"]; ok && v.(string) != "" {
 		apiObject.DataLoadingOption = types.SnowflakeDataLoadingOption(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrPrivateKey]; ok && v.(string) != "" {
+		apiObject.PrivateKey = aws.String(v.(string))
 	}
 
 	if v, ok := tfMap["key_passphrase"]; ok && v.(string) != "" {
@@ -2741,163 +3042,190 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.Snowf
 		apiObject.S3BackupMode = types.SnowflakeS3BackupMode(v.(string))
 	}
 
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
 	if _, ok := tfMap["snowflake_role_configuration"]; ok {
 		apiObject.SnowflakeRoleConfiguration = expandSnowflakeRoleConfiguration(tfMap)
+	}
+
+	if v, ok := tfMap["user"]; ok && v.(string) != "" {
+		apiObject.User = aws.String(v.(string))
 	}
 
 	return apiObject
 }
 
-func expandSplunkDestinationConfiguration(splunk map[string]interface{}) *types.SplunkDestinationConfiguration {
-	configuration := &types.SplunkDestinationConfiguration{
-		HECToken:                          aws.String(splunk["hec_token"].(string)),
-		HECEndpointType:                   types.HECEndpointType(splunk["hec_endpoint_type"].(string)),
-		HECEndpoint:                       aws.String(splunk["hec_endpoint"].(string)),
-		HECAcknowledgmentTimeoutInSeconds: aws.Int32(int32(splunk["hec_acknowledgment_timeout"].(int))),
-		RetryOptions:                      expandSplunkRetryOptions(splunk),
-		S3Configuration:                   expandS3DestinationConfiguration(splunk["s3_configuration"].([]interface{})),
+func expandSplunkDestinationConfiguration(tfMap map[string]any) *types.SplunkDestinationConfiguration {
+	apiObject := &types.SplunkDestinationConfiguration{
+		HECAcknowledgmentTimeoutInSeconds: aws.Int32(int32(tfMap["hec_acknowledgment_timeout"].(int))),
+		HECEndpoint:                       aws.String(tfMap["hec_endpoint"].(string)),
+		HECEndpointType:                   types.HECEndpointType(tfMap["hec_endpoint_type"].(string)),
+		RetryOptions:                      expandSplunkRetryOptions(tfMap),
+		S3Configuration:                   expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
 	}
 
 	bufferingHints := &types.SplunkBufferingHints{}
-
-	if bufferingInterval, ok := splunk["buffering_interval"].(int); ok {
+	if bufferingInterval, ok := tfMap["buffering_interval"].(int); ok {
 		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
 	}
-	if bufferingSize, ok := splunk["buffering_size"].(int); ok {
+	if bufferingSize, ok := tfMap["buffering_size"].(int); ok {
 		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
 	}
-	configuration.BufferingHints = bufferingHints
+	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := splunk["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk, destinationTypeSplunk, "")
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := splunk["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(splunk)
-	}
-	if s3BackupMode, ok := splunk["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.SplunkS3BackupMode(s3BackupMode.(string))
+	if v, ok := tfMap["hec_token"]; ok && v.(string) != "" {
+		apiObject.HECToken = aws.String(v.(string))
 	}
 
-	return configuration
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeSplunk, "")
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.SplunkS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
-func expandSplunkDestinationUpdate(splunk map[string]interface{}) *types.SplunkDestinationUpdate {
-	configuration := &types.SplunkDestinationUpdate{
-		HECToken:                          aws.String(splunk["hec_token"].(string)),
-		HECEndpointType:                   types.HECEndpointType(splunk["hec_endpoint_type"].(string)),
-		HECEndpoint:                       aws.String(splunk["hec_endpoint"].(string)),
-		HECAcknowledgmentTimeoutInSeconds: aws.Int32(int32(splunk["hec_acknowledgment_timeout"].(int))),
-		RetryOptions:                      expandSplunkRetryOptions(splunk),
-		S3Update:                          expandS3DestinationUpdate(splunk["s3_configuration"].([]interface{})),
+func expandSplunkDestinationUpdate(tfMap map[string]any) *types.SplunkDestinationUpdate {
+	apiObject := &types.SplunkDestinationUpdate{
+		HECAcknowledgmentTimeoutInSeconds: aws.Int32(int32(tfMap["hec_acknowledgment_timeout"].(int))),
+		HECEndpoint:                       aws.String(tfMap["hec_endpoint"].(string)),
+		HECEndpointType:                   types.HECEndpointType(tfMap["hec_endpoint_type"].(string)),
+		RetryOptions:                      expandSplunkRetryOptions(tfMap),
+		S3Update:                          expandS3DestinationUpdate(tfMap["s3_configuration"].([]any)),
 	}
 
 	bufferingHints := &types.SplunkBufferingHints{}
-
-	if bufferingInterval, ok := splunk["buffering_interval"].(int); ok {
+	if bufferingInterval, ok := tfMap["buffering_interval"].(int); ok {
 		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
 	}
-	if bufferingSize, ok := splunk["buffering_size"].(int); ok {
+	if bufferingSize, ok := tfMap["buffering_size"].(int); ok {
 		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
 	}
-	configuration.BufferingHints = bufferingHints
+	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := splunk["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk, destinationTypeSplunk, "")
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := splunk["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(splunk)
-	}
-	if s3BackupMode, ok := splunk["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.SplunkS3BackupMode(s3BackupMode.(string))
+	if v, ok := tfMap["hec_token"]; ok && v.(string) != "" {
+		apiObject.HECToken = aws.String(v.(string))
 	}
 
-	return configuration
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeSplunk, "")
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.SplunkS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
-func expandHTTPEndpointDestinationConfiguration(httpEndpoint map[string]interface{}) *types.HttpEndpointDestinationConfiguration {
-	roleARN := httpEndpoint[names.AttrRoleARN].(string)
-	configuration := &types.HttpEndpointDestinationConfiguration{
-		RetryOptions:    expandHTTPEndpointRetryOptions(httpEndpoint),
-		RoleARN:         aws.String(roleARN),
-		S3Configuration: expandS3DestinationConfiguration(httpEndpoint["s3_configuration"].([]interface{})),
+func expandHTTPEndpointDestinationConfiguration(tfMap map[string]any) *types.HttpEndpointDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.HttpEndpointDestinationConfiguration{
+		EndpointConfiguration: expandHTTPEndpointConfiguration(tfMap),
+		RetryOptions:          expandHTTPEndpointRetryOptions(tfMap),
+		RoleARN:               aws.String(roleARN),
+		S3Configuration:       expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
 	}
-
-	configuration.EndpointConfiguration = expandHTTPEndpointConfiguration(httpEndpoint)
 
 	bufferingHints := &types.HttpEndpointBufferingHints{}
-
-	if bufferingInterval, ok := httpEndpoint["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := httpEndpoint["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int32(int32(v))
 	}
-	configuration.BufferingHints = bufferingHints
+	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := httpEndpoint["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(httpEndpoint, destinationTypeHTTPEndpoint, roleARN)
-	}
-
-	if _, ok := httpEndpoint["request_configuration"]; ok {
-		configuration.RequestConfiguration = expandHTTPEndpointRequestConfiguration(httpEndpoint)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := httpEndpoint["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(httpEndpoint)
-	}
-	if s3BackupMode, ok := httpEndpoint["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.HttpEndpointS3BackupMode(s3BackupMode.(string))
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeHTTPEndpoint, roleARN)
 	}
 
-	return configuration
+	if _, ok := tfMap["request_configuration"]; ok {
+		apiObject.RequestConfiguration = expandHTTPEndpointRequestConfiguration(tfMap)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.HttpEndpointS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
-func expandHTTPEndpointDestinationUpdate(httpEndpoint map[string]interface{}) *types.HttpEndpointDestinationUpdate {
-	roleARN := httpEndpoint[names.AttrRoleARN].(string)
-	configuration := &types.HttpEndpointDestinationUpdate{
-		RetryOptions: expandHTTPEndpointRetryOptions(httpEndpoint),
-		RoleARN:      aws.String(roleARN),
-		S3Update:     expandS3DestinationUpdate(httpEndpoint["s3_configuration"].([]interface{})),
+func expandHTTPEndpointDestinationUpdate(tfMap map[string]any) *types.HttpEndpointDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.HttpEndpointDestinationUpdate{
+		EndpointConfiguration: expandHTTPEndpointConfiguration(tfMap),
+		RetryOptions:          expandHTTPEndpointRetryOptions(tfMap),
+		RoleARN:               aws.String(roleARN),
+		S3Update:              expandS3DestinationUpdate(tfMap["s3_configuration"].([]any)),
 	}
-
-	configuration.EndpointConfiguration = expandHTTPEndpointConfiguration(httpEndpoint)
 
 	bufferingHints := &types.HttpEndpointBufferingHints{}
-
-	if bufferingInterval, ok := httpEndpoint["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := httpEndpoint["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int32(int32(v))
 	}
-	configuration.BufferingHints = bufferingHints
+	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := httpEndpoint["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(httpEndpoint, destinationTypeHTTPEndpoint, roleARN)
-	}
-
-	if _, ok := httpEndpoint["request_configuration"]; ok {
-		configuration.RequestConfiguration = expandHTTPEndpointRequestConfiguration(httpEndpoint)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := httpEndpoint["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(httpEndpoint)
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeHTTPEndpoint, roleARN)
 	}
 
-	if s3BackupMode, ok := httpEndpoint["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.HttpEndpointS3BackupMode(s3BackupMode.(string))
+	if _, ok := tfMap["request_configuration"]; ok {
+		apiObject.RequestConfiguration = expandHTTPEndpointRequestConfiguration(tfMap)
 	}
 
-	return configuration
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.HttpEndpointS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
-func expandHTTPEndpointCommonAttributes(ca []interface{}) []types.HttpEndpointCommonAttribute {
+func expandHTTPEndpointCommonAttributes(ca []any) []types.HttpEndpointCommonAttribute {
 	commonAttributes := make([]types.HttpEndpointCommonAttribute, 0, len(ca))
 
 	for _, raw := range ca {
-		data := raw.(map[string]interface{})
+		data := raw.(map[string]any)
 
 		a := types.HttpEndpointCommonAttribute{
 			AttributeName:  aws.String(data[names.AttrName].(string)),
@@ -2909,13 +3237,13 @@ func expandHTTPEndpointCommonAttributes(ca []interface{}) []types.HttpEndpointCo
 	return commonAttributes
 }
 
-func expandHTTPEndpointRequestConfiguration(rc map[string]interface{}) *types.HttpEndpointRequestConfiguration {
-	config := rc["request_configuration"].([]interface{})
+func expandHTTPEndpointRequestConfiguration(rc map[string]any) *types.HttpEndpointRequestConfiguration {
+	config := rc["request_configuration"].([]any)
 	if len(config) == 0 {
 		return nil
 	}
 
-	requestConfig := config[0].(map[string]interface{})
+	requestConfig := config[0].(map[string]any)
 	RequestConfiguration := &types.HttpEndpointRequestConfiguration{}
 
 	if contentEncoding, ok := requestConfig["content_encoding"]; ok {
@@ -2923,13 +3251,13 @@ func expandHTTPEndpointRequestConfiguration(rc map[string]interface{}) *types.Ht
 	}
 
 	if commonAttributes, ok := requestConfig["common_attributes"]; ok {
-		RequestConfiguration.CommonAttributes = expandHTTPEndpointCommonAttributes(commonAttributes.([]interface{}))
+		RequestConfiguration.CommonAttributes = expandHTTPEndpointCommonAttributes(commonAttributes.([]any))
 	}
 
 	return RequestConfiguration
 }
 
-func expandHTTPEndpointConfiguration(ep map[string]interface{}) *types.HttpEndpointConfiguration {
+func expandHTTPEndpointConfiguration(ep map[string]any) *types.HttpEndpointConfiguration {
 	endpointConfiguration := &types.HttpEndpointConfiguration{
 		Url: aws.String(ep[names.AttrURL].(string)),
 	}
@@ -2945,7 +3273,7 @@ func expandHTTPEndpointConfiguration(ep map[string]interface{}) *types.HttpEndpo
 	return endpointConfiguration
 }
 
-func expandElasticsearchBufferingHints(es map[string]interface{}) *types.ElasticsearchBufferingHints {
+func expandElasticsearchBufferingHints(es map[string]any) *types.ElasticsearchBufferingHints {
 	bufferingHints := &types.ElasticsearchBufferingHints{}
 
 	if bufferingInterval, ok := es["buffering_interval"].(int); ok {
@@ -2958,7 +3286,7 @@ func expandElasticsearchBufferingHints(es map[string]interface{}) *types.Elastic
 	return bufferingHints
 }
 
-func expandAmazonopensearchserviceBufferingHints(es map[string]interface{}) *types.AmazonopensearchserviceBufferingHints {
+func expandAmazonopensearchserviceBufferingHints(es map[string]any) *types.AmazonopensearchserviceBufferingHints {
 	bufferingHints := &types.AmazonopensearchserviceBufferingHints{}
 
 	if bufferingInterval, ok := es["buffering_interval"].(int); ok {
@@ -2971,7 +3299,7 @@ func expandAmazonopensearchserviceBufferingHints(es map[string]interface{}) *typ
 	return bufferingHints
 }
 
-func expandAmazonOpenSearchServerlessBufferingHints(es map[string]interface{}) *types.AmazonOpenSearchServerlessBufferingHints {
+func expandAmazonOpenSearchServerlessBufferingHints(es map[string]any) *types.AmazonOpenSearchServerlessBufferingHints {
 	bufferingHints := &types.AmazonOpenSearchServerlessBufferingHints{}
 
 	if bufferingInterval, ok := es["buffering_interval"].(int); ok {
@@ -2984,7 +3312,17 @@ func expandAmazonOpenSearchServerlessBufferingHints(es map[string]interface{}) *
 	return bufferingHints
 }
 
-func expandElasticsearchRetryOptions(es map[string]interface{}) *types.ElasticsearchRetryOptions {
+func expandIcebergRetryOptions(tfMap map[string]any) *types.RetryOptions {
+	apiObject := &types.RetryOptions{}
+
+	if v, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func expandElasticsearchRetryOptions(es map[string]any) *types.ElasticsearchRetryOptions {
 	retryOptions := &types.ElasticsearchRetryOptions{}
 
 	if retryDuration, ok := es["retry_duration"].(int); ok {
@@ -2994,7 +3332,7 @@ func expandElasticsearchRetryOptions(es map[string]interface{}) *types.Elasticse
 	return retryOptions
 }
 
-func expandAmazonopensearchserviceRetryOptions(es map[string]interface{}) *types.AmazonopensearchserviceRetryOptions {
+func expandAmazonopensearchserviceRetryOptions(es map[string]any) *types.AmazonopensearchserviceRetryOptions {
 	retryOptions := &types.AmazonopensearchserviceRetryOptions{}
 
 	if retryDuration, ok := es["retry_duration"].(int); ok {
@@ -3004,7 +3342,7 @@ func expandAmazonopensearchserviceRetryOptions(es map[string]interface{}) *types
 	return retryOptions
 }
 
-func expandAmazonOpenSearchServerlessRetryOptions(es map[string]interface{}) *types.AmazonOpenSearchServerlessRetryOptions {
+func expandAmazonOpenSearchServerlessRetryOptions(es map[string]any) *types.AmazonOpenSearchServerlessRetryOptions {
 	retryOptions := &types.AmazonOpenSearchServerlessRetryOptions{}
 
 	if retryDuration, ok := es["retry_duration"].(int); ok {
@@ -3014,7 +3352,7 @@ func expandAmazonOpenSearchServerlessRetryOptions(es map[string]interface{}) *ty
 	return retryOptions
 }
 
-func expandHTTPEndpointRetryOptions(tfMap map[string]interface{}) *types.HttpEndpointRetryOptions {
+func expandHTTPEndpointRetryOptions(tfMap map[string]any) *types.HttpEndpointRetryOptions {
 	retryOptions := &types.HttpEndpointRetryOptions{}
 
 	if retryDuration, ok := tfMap["retry_duration"].(int); ok {
@@ -3024,7 +3362,7 @@ func expandHTTPEndpointRetryOptions(tfMap map[string]interface{}) *types.HttpEnd
 	return retryOptions
 }
 
-func expandRedshiftRetryOptions(redshift map[string]interface{}) *types.RedshiftRetryOptions {
+func expandRedshiftRetryOptions(redshift map[string]any) *types.RedshiftRetryOptions {
 	retryOptions := &types.RedshiftRetryOptions{}
 
 	if retryDuration, ok := redshift["retry_duration"].(int); ok {
@@ -3034,7 +3372,7 @@ func expandRedshiftRetryOptions(redshift map[string]interface{}) *types.Redshift
 	return retryOptions
 }
 
-func expandSnowflakeRetryOptions(tfMap map[string]interface{}) *types.SnowflakeRetryOptions {
+func expandSnowflakeRetryOptions(tfMap map[string]any) *types.SnowflakeRetryOptions {
 	apiObject := &types.SnowflakeRetryOptions{}
 
 	if v, ok := tfMap["retry_duration"].(int); ok {
@@ -3044,29 +3382,35 @@ func expandSnowflakeRetryOptions(tfMap map[string]interface{}) *types.SnowflakeR
 	return apiObject
 }
 
-func expandSnowflakeRoleConfiguration(tfMap map[string]interface{}) *types.SnowflakeRoleConfiguration {
-	tfList := tfMap["snowflake_role_configuration"].([]interface{})
-	if len(tfList) == 0 {
-		return nil
+func expandSnowflakeRoleConfiguration(tfMap map[string]any) *types.SnowflakeRoleConfiguration {
+	config := tfMap["snowflake_role_configuration"].([]any)
+	if len(config) == 0 || config[0] == nil {
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &types.SnowflakeRoleConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 
-	tfMap = tfList[0].(map[string]interface{})
-
+	snowflakeRoleConfiguration := config[0].(map[string]any)
 	apiObject := &types.SnowflakeRoleConfiguration{
-		Enabled:       aws.Bool(tfMap[names.AttrEnabled].(bool)),
-		SnowflakeRole: aws.String(tfMap["snowflake_role"].(string)),
+		Enabled: aws.Bool(snowflakeRoleConfiguration[names.AttrEnabled].(bool)),
+	}
+
+	if v, ok := snowflakeRoleConfiguration["snowflake_role"]; ok && len(v.(string)) > 0 {
+		apiObject.SnowflakeRole = aws.String(v.(string))
 	}
 
 	return apiObject
 }
 
-func expandSnowflakeVPCConfiguration(tfMap map[string]interface{}) *types.SnowflakeVpcConfiguration {
-	tfList := tfMap["snowflake_vpc_configuration"].([]interface{})
+func expandSnowflakeVPCConfiguration(tfMap map[string]any) *types.SnowflakeVpcConfiguration {
+	tfList := tfMap["snowflake_vpc_configuration"].([]any)
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap = tfList[0].(map[string]interface{})
+	tfMap = tfList[0].(map[string]any)
 
 	apiObject := &types.SnowflakeVpcConfiguration{
 		PrivateLinkVpceId: aws.String(tfMap["private_link_vpce_id"].(string)),
@@ -3075,7 +3419,7 @@ func expandSnowflakeVPCConfiguration(tfMap map[string]interface{}) *types.Snowfl
 	return apiObject
 }
 
-func expandSplunkRetryOptions(splunk map[string]interface{}) *types.SplunkRetryOptions {
+func expandSplunkRetryOptions(splunk map[string]any) *types.SplunkRetryOptions {
 	retryOptions := &types.SplunkRetryOptions{}
 
 	if retryDuration, ok := splunk["retry_duration"].(int); ok {
@@ -3085,7 +3429,38 @@ func expandSplunkRetryOptions(splunk map[string]interface{}) *types.SplunkRetryO
 	return retryOptions
 }
 
-func expandCopyCommand(redshift map[string]interface{}) *types.CopyCommand {
+func expandDestinationTableConfigurationList(tfMap map[string]any) []types.DestinationTableConfiguration {
+	tfList := tfMap["destination_table_configuration"].([]any)
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]types.DestinationTableConfiguration, 0, len(tfList))
+	for _, table := range tfList {
+		apiObjects = append(apiObjects, expandDestinationTableConfiguration(table.(map[string]any)))
+	}
+
+	return apiObjects
+}
+
+func expandDestinationTableConfiguration(tfMap map[string]any) types.DestinationTableConfiguration {
+	apiObject := types.DestinationTableConfiguration{
+		DestinationDatabaseName: aws.String(tfMap[names.AttrDatabaseName].(string)),
+		DestinationTableName:    aws.String(tfMap[names.AttrTableName].(string)),
+	}
+
+	if v, ok := tfMap["s3_error_output_prefix"].(string); ok {
+		apiObject.S3ErrorOutputPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["unique_keys"].([]any); ok {
+		apiObject.UniqueKeys = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
+func expandCopyCommand(redshift map[string]any) *types.CopyCommand {
 	cmd := &types.CopyCommand{
 		DataTableName: aws.String(redshift["data_table_name"].(string)),
 	}
@@ -3099,12 +3474,12 @@ func expandCopyCommand(redshift map[string]interface{}) *types.CopyCommand {
 	return cmd
 }
 
-func expandDeliveryStreamEncryptionConfigurationInput(tfList []interface{}) *types.DeliveryStreamEncryptionConfigurationInput {
+func expandDeliveryStreamEncryptionConfigurationInput(tfList []any) *types.DeliveryStreamEncryptionConfigurationInput {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -3123,19 +3498,24 @@ func expandDeliveryStreamEncryptionConfigurationInput(tfList []interface{}) *typ
 	return apiObject
 }
 
-func expandMSKSourceConfiguration(tfMap map[string]interface{}) *types.MSKSourceConfiguration {
+func expandMSKSourceConfiguration(tfMap map[string]any) *types.MSKSourceConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.MSKSourceConfiguration{}
 
-	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AuthenticationConfiguration = expandAuthenticationConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["authentication_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AuthenticationConfiguration = expandAuthenticationConfiguration(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["msk_cluster_arn"].(string); ok && v != "" {
 		apiObject.MSKClusterARN = aws.String(v)
+	}
+
+	if v, ok := tfMap["read_from_timestamp"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+		apiObject.ReadFromTimestamp = aws.Time(v)
 	}
 
 	if v, ok := tfMap["topic_name"].(string); ok && v != "" {
@@ -3145,7 +3525,7 @@ func expandMSKSourceConfiguration(tfMap map[string]interface{}) *types.MSKSource
 	return apiObject
 }
 
-func expandAuthenticationConfiguration(tfMap map[string]interface{}) *types.AuthenticationConfiguration {
+func expandAuthenticationConfiguration(tfMap map[string]any) *types.AuthenticationConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -3163,19 +3543,23 @@ func expandAuthenticationConfiguration(tfMap map[string]interface{}) *types.Auth
 	return apiObject
 }
 
-func flattenMSKSourceDescription(apiObject *types.MSKSourceDescription) map[string]interface{} {
+func flattenMSKSourceDescription(apiObject *types.MSKSourceDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AuthenticationConfiguration; v != nil {
-		tfMap["authentication_configuration"] = []interface{}{flattenAuthenticationConfiguration(v)}
+		tfMap["authentication_configuration"] = []any{flattenAuthenticationConfiguration(v)}
 	}
 
 	if v := apiObject.MSKClusterARN; v != nil {
 		tfMap["msk_cluster_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ReadFromTimestamp; v != nil {
+		tfMap["read_from_timestamp"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.TopicName; v != nil {
@@ -3185,12 +3569,12 @@ func flattenMSKSourceDescription(apiObject *types.MSKSourceDescription) map[stri
 	return tfMap
 }
 
-func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) map[string]interface{} {
+func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"connectivity": apiObject.Connectivity,
 	}
 
@@ -3201,27 +3585,27 @@ func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfigura
 	return tfMap
 }
 
-func flattenCloudWatchLoggingOptions(clo *types.CloudWatchLoggingOptions) []interface{} {
+func flattenCloudWatchLoggingOptions(clo *types.CloudWatchLoggingOptions) []any {
 	if clo == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cloudwatchLoggingOptions := map[string]interface{}{
+	cloudwatchLoggingOptions := map[string]any{
 		names.AttrEnabled: aws.ToBool(clo.Enabled),
 	}
 	if aws.ToBool(clo.Enabled) {
 		cloudwatchLoggingOptions[names.AttrLogGroupName] = aws.ToString(clo.LogGroupName)
 		cloudwatchLoggingOptions["log_stream_name"] = aws.ToString(clo.LogStreamName)
 	}
-	return []interface{}{cloudwatchLoggingOptions}
+	return []any{cloudwatchLoggingOptions}
 }
 
-func flattenElasticsearchDestinationDescription(description *types.ElasticsearchDestinationDescription) []map[string]interface{} {
+func flattenElasticsearchDestinationDescription(description *types.ElasticsearchDestinationDescription) []map[string]any {
 	if description == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"type_name":                  aws.ToString(description.TypeName),
@@ -3250,15 +3634,15 @@ func flattenElasticsearchDestinationDescription(description *types.Elasticsearch
 		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenAmazonopensearchserviceDestinationDescription(description *types.AmazonopensearchserviceDestinationDescription) []map[string]interface{} {
+func flattenAmazonopensearchserviceDestinationDescription(description *types.AmazonopensearchserviceDestinationDescription) []map[string]any {
 	if description == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"type_name":                  aws.ToString(description.TypeName),
@@ -3288,18 +3672,18 @@ func flattenAmazonopensearchserviceDestinationDescription(description *types.Ama
 	}
 
 	if v := description.DocumentIdOptions; v != nil {
-		m["document_id_options"] = []interface{}{flattenDocumentIDOptions(v)}
+		m["document_id_options"] = []any{flattenDocumentIDOptions(v)}
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenAmazonOpenSearchServerlessDestinationDescription(description *types.AmazonOpenSearchServerlessDestinationDescription) []map[string]interface{} {
+func flattenAmazonOpenSearchServerlessDestinationDescription(description *types.AmazonOpenSearchServerlessDestinationDescription) []map[string]any {
 	if description == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"index_name":                 aws.ToString(description.IndexName),
@@ -3322,30 +3706,30 @@ func flattenAmazonOpenSearchServerlessDestinationDescription(description *types.
 		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenVPCConfigurationDescription(description *types.VpcConfigurationDescription) []map[string]interface{} {
+func flattenVPCConfigurationDescription(description *types.VpcConfigurationDescription) []map[string]any {
 	if description == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrVPCID:            aws.ToString(description.VpcId),
 		names.AttrSubnetIDs:        description.SubnetIds,
 		names.AttrSecurityGroupIDs: description.SecurityGroupIds,
 		names.AttrRoleARN:          aws.ToString(description.RoleARN),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenExtendedS3DestinationDescription(description *types.ExtendedS3DestinationDescription) []map[string]interface{} {
+func flattenExtendedS3DestinationDescription(description *types.ExtendedS3DestinationDescription) []map[string]any {
 	if description == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bucket_arn":                           aws.ToString(description.BucketARN),
 		"cloudwatch_logging_options":           flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   description.CompressionFormat,
@@ -3370,105 +3754,118 @@ func flattenExtendedS3DestinationDescription(description *types.ExtendedS3Destin
 		m[names.AttrKMSKeyARN] = aws.ToString(description.EncryptionConfiguration.KMSEncryptionConfig.AWSKMSKeyARN)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenRedshiftDestinationDescription(description *types.RedshiftDestinationDescription, configuredPassword string) []map[string]interface{} {
-	if description == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"cluster_jdbcurl":            aws.ToString(description.ClusterJDBCURL),
-		names.AttrPassword:           configuredPassword,
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeRedshift, aws.ToString(description.RoleARN)),
-		names.AttrRoleARN:            aws.ToString(description.RoleARN),
-		"s3_backup_configuration":    flattenS3DestinationDescription(description.S3BackupDescription),
-		"s3_backup_mode":             description.S3BackupMode,
-		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
-		names.AttrUsername:           aws.ToString(description.Username),
-	}
-
-	if description.CopyCommand != nil {
-		m["copy_options"] = aws.ToString(description.CopyCommand.CopyOptions)
-		m["data_table_columns"] = aws.ToString(description.CopyCommand.DataTableColumns)
-		m["data_table_name"] = aws.ToString(description.CopyCommand.DataTableName)
-	}
-
-	if description.RetryOptions != nil {
-		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinationDescription, configuredKeyPassphrase, configuredPrivateKey string) []map[string]interface{} {
+func flattenRedshiftDestinationDescription(apiObject *types.RedshiftDestinationDescription, configuredPassword string) []any {
 	if apiObject == nil {
-		return []map[string]interface{}{}
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"cloudwatch_logging_options":    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		"cluster_jdbcurl":               aws.ToString(apiObject.ClusterJDBCURL),
+		names.AttrPassword:              configuredPassword,
+		"processing_configuration":      flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeRedshift, aws.ToString(apiObject.RoleARN)),
+		names.AttrRoleARN:               aws.ToString(apiObject.RoleARN),
+		"s3_backup_configuration":       flattenS3DestinationDescription(apiObject.S3BackupDescription),
+		"s3_backup_mode":                apiObject.S3BackupMode,
+		"s3_configuration":              flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		"secrets_manager_configuration": flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration),
+		names.AttrUsername:              aws.ToString(apiObject.Username),
+	}
+
+	if apiObject.CopyCommand != nil {
+		tfMap["copy_options"] = aws.ToString(apiObject.CopyCommand.CopyOptions)
+		tfMap["data_table_columns"] = aws.ToString(apiObject.CopyCommand.DataTableColumns)
+		tfMap["data_table_name"] = aws.ToString(apiObject.CopyCommand.DataTableName)
+	}
+
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = aws.ToInt32(apiObject.RetryOptions.DurationInSeconds)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinationDescription, configuredKeyPassphrase, configuredPrivateKey string) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
 	roleARN := aws.ToString(apiObject.RoleARN)
-	tfMap := map[string]interface{}{
-		"account_url":                  aws.ToString(apiObject.AccountUrl),
-		"cloudwatch_logging_options":   flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
-		"content_column_name":          aws.ToString(apiObject.ContentColumnName),
-		"data_loading_option":          apiObject.DataLoadingOption,
-		names.AttrDatabase:             aws.ToString(apiObject.Database),
-		"key_passphrase":               configuredKeyPassphrase,
-		"metadata_column_name":         aws.ToString(apiObject.MetaDataColumnName),
-		names.AttrPrivateKey:           configuredPrivateKey,
-		"processing_configuration":     flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeSnowflake, roleARN),
-		names.AttrRoleARN:              roleARN,
-		"s3_backup_mode":               apiObject.S3BackupMode,
-		"s3_configuration":             flattenS3DestinationDescription(apiObject.S3DestinationDescription),
-		names.AttrSchema:               aws.ToString(apiObject.Schema),
-		"snowflake_role_configuration": flattenSnowflakeRoleConfiguration(apiObject.SnowflakeRoleConfiguration),
-		"snowflake_vpc_configuration":  flattenSnowflakeVPCConfiguration(apiObject.SnowflakeVpcConfiguration),
-		"table":                        aws.ToString(apiObject.Table),
-		"user":                         aws.ToString(apiObject.User),
+	tfMap := map[string]any{
+		"account_url":                   aws.ToString(apiObject.AccountUrl),
+		"cloudwatch_logging_options":    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		"content_column_name":           aws.ToString(apiObject.ContentColumnName),
+		"data_loading_option":           apiObject.DataLoadingOption,
+		names.AttrDatabase:              aws.ToString(apiObject.Database),
+		"key_passphrase":                configuredKeyPassphrase,
+		"metadata_column_name":          aws.ToString(apiObject.MetaDataColumnName),
+		names.AttrPrivateKey:            configuredPrivateKey,
+		"processing_configuration":      flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeSnowflake, roleARN),
+		names.AttrRoleARN:               roleARN,
+		"s3_backup_mode":                apiObject.S3BackupMode,
+		"s3_configuration":              flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		names.AttrSchema:                aws.ToString(apiObject.Schema),
+		"secrets_manager_configuration": flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration),
+		"snowflake_role_configuration":  flattenSnowflakeRoleConfiguration(apiObject.SnowflakeRoleConfiguration),
+		"snowflake_vpc_configuration":   flattenSnowflakeVPCConfiguration(apiObject.SnowflakeVpcConfiguration),
+		"table":                         aws.ToString(apiObject.Table),
+		"user":                          aws.ToString(apiObject.User),
+	}
+
+	if v := apiObject.BufferingHints; v != nil {
+		if v.IntervalInSeconds != nil {
+			tfMap["buffering_interval"] = int(aws.ToInt32(v.IntervalInSeconds))
+		}
+		if v.SizeInMBs != nil {
+			tfMap["buffering_size"] = int(aws.ToInt32(v.SizeInMBs))
+		}
 	}
 
 	if apiObject.RetryOptions != nil {
 		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSplunkDestinationDescription(description *types.SplunkDestinationDescription) []map[string]interface{} {
-	if description == nil {
-		return []map[string]interface{}{}
-	}
-	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"hec_acknowledgment_timeout": int(aws.ToInt32(description.HECAcknowledgmentTimeoutInSeconds)),
-		"hec_endpoint_type":          description.HECEndpointType,
-		"hec_endpoint":               aws.ToString(description.HECEndpoint),
-		"hec_token":                  aws.ToString(description.HECToken),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeSplunk, ""),
-		"s3_backup_mode":             description.S3BackupMode,
-		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
+func flattenSplunkDestinationDescription(apiObject *types.SplunkDestinationDescription) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	if description.BufferingHints != nil {
-		m["buffering_interval"] = int(aws.ToInt32(description.BufferingHints.IntervalInSeconds))
-		m["buffering_size"] = int(aws.ToInt32(description.BufferingHints.SizeInMBs))
+	tfMap := map[string]any{
+		"cloudwatch_logging_options":    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		"hec_acknowledgment_timeout":    int(aws.ToInt32(apiObject.HECAcknowledgmentTimeoutInSeconds)),
+		"hec_endpoint":                  aws.ToString(apiObject.HECEndpoint),
+		"hec_endpoint_type":             apiObject.HECEndpointType,
+		"hec_token":                     aws.ToString(apiObject.HECToken),
+		"processing_configuration":      flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeSplunk, ""),
+		"s3_backup_mode":                apiObject.S3BackupMode,
+		"s3_configuration":              flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		"secrets_manager_configuration": flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration),
 	}
 
-	if description.RetryOptions != nil {
-		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
+	if apiObject.BufferingHints != nil {
+		tfMap["buffering_interval"] = int(aws.ToInt32(apiObject.BufferingHints.IntervalInSeconds))
+		tfMap["buffering_size"] = int(aws.ToInt32(apiObject.BufferingHints.SizeInMBs))
 	}
 
-	return []map[string]interface{}{m}
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
+	}
+
+	return []any{tfMap}
 }
 
-func flattenS3DestinationDescription(description *types.S3DestinationDescription) []map[string]interface{} {
+func flattenS3DestinationDescription(description *types.S3DestinationDescription) []map[string]any {
 	if description == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bucket_arn":                 aws.ToString(description.BucketARN),
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":         description.CompressionFormat,
@@ -3486,12 +3883,12 @@ func flattenS3DestinationDescription(description *types.S3DestinationDescription
 		m[names.AttrKMSKeyARN] = aws.ToString(description.EncryptionConfiguration.KMSEncryptionConfig.AWSKMSKeyARN)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDataFormatConversionConfiguration(dfcc *types.DataFormatConversionConfiguration) []map[string]interface{} {
+func flattenDataFormatConversionConfiguration(dfcc *types.DataFormatConversionConfiguration) []map[string]any {
 	if dfcc == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
 	enabled := aws.ToBool(dfcc.Enabled)
@@ -3505,62 +3902,62 @@ func flattenDataFormatConversionConfiguration(dfcc *types.DataFormatConversionCo
 	// We normalize this with an empty configuration in the state due
 	// to the existing Default: true on the enabled attribute.
 	if !enabled && len(ifc) == 0 && len(ofc) == 0 && len(sc) == 0 {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrEnabled:             enabled,
 		"input_format_configuration":  ifc,
 		"output_format_configuration": ofc,
 		"schema_configuration":        sc,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenInputFormatConfiguration(ifc *types.InputFormatConfiguration) []map[string]interface{} {
+func flattenInputFormatConfiguration(ifc *types.InputFormatConfiguration) []map[string]any {
 	if ifc == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"deserializer": flattenDeserializer(ifc.Deserializer),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDeserializer(deserializer *types.Deserializer) []map[string]interface{} {
+func flattenDeserializer(deserializer *types.Deserializer) []map[string]any {
 	if deserializer == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"hive_json_ser_de":   flattenHiveJSONSerDe(deserializer.HiveJsonSerDe),
 		"open_x_json_ser_de": flattenOpenXJSONSerDe(deserializer.OpenXJsonSerDe),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenHiveJSONSerDe(hjsd *types.HiveJsonSerDe) []map[string]interface{} {
+func flattenHiveJSONSerDe(hjsd *types.HiveJsonSerDe) []map[string]any {
 	if hjsd == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"timestamp_formats": hjsd.TimestampFormats,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenOpenXJSONSerDe(oxjsd *types.OpenXJsonSerDe) []map[string]interface{} {
+func flattenOpenXJSONSerDe(oxjsd *types.OpenXJsonSerDe) []map[string]any {
 	if oxjsd == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"column_to_json_key_mappings":              oxjsd.ColumnToJsonKeyMappings,
 		"convert_dots_in_json_keys_to_underscores": aws.ToBool(oxjsd.ConvertDotsInJsonKeysToUnderscores),
 	}
@@ -3573,40 +3970,40 @@ func flattenOpenXJSONSerDe(oxjsd *types.OpenXJsonSerDe) []map[string]interface{}
 		m["case_insensitive"] = aws.ToBool(oxjsd.CaseInsensitive)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenOutputFormatConfiguration(ofc *types.OutputFormatConfiguration) []map[string]interface{} {
+func flattenOutputFormatConfiguration(ofc *types.OutputFormatConfiguration) []map[string]any {
 	if ofc == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"serializer": flattenSerializer(ofc.Serializer),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenSerializer(serializer *types.Serializer) []map[string]interface{} {
+func flattenSerializer(serializer *types.Serializer) []map[string]any {
 	if serializer == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"orc_ser_de":     flattenOrcSerDe(serializer.OrcSerDe),
 		"parquet_ser_de": flattenParquetSerDe(serializer.ParquetSerDe),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenOrcSerDe(osd *types.OrcSerDe) []map[string]interface{} {
+func flattenOrcSerDe(osd *types.OrcSerDe) []map[string]any {
 	if osd == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bloom_filter_columns":     osd.BloomFilterColumns,
 		"dictionary_key_threshold": aws.ToFloat64(osd.DictionaryKeyThreshold),
 		"enable_padding":           aws.ToBool(osd.EnablePadding),
@@ -3650,15 +4047,15 @@ func flattenOrcSerDe(osd *types.OrcSerDe) []map[string]interface{} {
 		m["stripe_size_bytes"] = int(aws.ToInt32(osd.StripeSizeBytes))
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenParquetSerDe(psd *types.ParquetSerDe) []map[string]interface{} {
+func flattenParquetSerDe(psd *types.ParquetSerDe) []map[string]any {
 	if psd == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"enable_dictionary_compression": aws.ToBool(psd.EnableDictionaryCompression),
 		"max_padding_bytes":             int(aws.ToInt32(psd.MaxPaddingBytes)),
 	}
@@ -3686,15 +4083,15 @@ func flattenParquetSerDe(psd *types.ParquetSerDe) []map[string]interface{} {
 		m["writer_version"] = psd.WriterVersion
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]interface{} {
+func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]any {
 	if sc == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrCatalogID:    aws.ToString(sc.CatalogId),
 		names.AttrDatabaseName: aws.ToString(sc.DatabaseName),
 		names.AttrRegion:       aws.ToString(sc.Region),
@@ -3703,28 +4100,28 @@ func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]inte
 		"version_id":           aws.ToString(sc.VersionId),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenHTTPEndpointRequestConfiguration(rc *types.HttpEndpointRequestConfiguration) []map[string]interface{} {
+func flattenHTTPEndpointRequestConfiguration(rc *types.HttpEndpointRequestConfiguration) []map[string]any {
 	if rc == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	requestConfiguration := make([]map[string]interface{}, 1)
+	requestConfiguration := make([]map[string]any, 1)
 
-	commonAttributes := make([]interface{}, 0)
+	commonAttributes := make([]any, 0)
 	for _, params := range rc.CommonAttributes {
 		name := aws.ToString(params.AttributeName)
 		value := aws.ToString(params.AttributeValue)
 
-		commonAttributes = append(commonAttributes, map[string]interface{}{
+		commonAttributes = append(commonAttributes, map[string]any{
 			names.AttrName:  name,
 			names.AttrValue: value,
 		})
 	}
 
-	requestConfiguration[0] = map[string]interface{}{
+	requestConfiguration[0] = map[string]any{
 		"common_attributes": commonAttributes,
 		"content_encoding":  rc.ContentEncoding,
 	}
@@ -3732,17 +4129,17 @@ func flattenHTTPEndpointRequestConfiguration(rc *types.HttpEndpointRequestConfig
 	return requestConfiguration
 }
 
-func flattenProcessingConfiguration(pc *types.ProcessingConfiguration, destinationType destinationType, roleARN string) []map[string]interface{} {
+func flattenProcessingConfiguration(pc *types.ProcessingConfiguration, destinationType destinationType, roleARN string) []map[string]any {
 	if pc == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	processingConfiguration := make([]map[string]interface{}, 1)
+	processingConfiguration := make([]map[string]any, 1)
 
-	processors := make([]interface{}, len(pc.Processors))
+	processors := make([]any, len(pc.Processors))
 	for i, p := range pc.Processors {
 		t := p.Type
-		parameters := make([]interface{}, 0)
+		parameters := make([]any, 0)
 
 		// It is necessary to explicitly filter this out
 		// to prevent diffs during routine use and retain the ability
@@ -3758,32 +4155,49 @@ func flattenProcessingConfiguration(pc *types.ProcessingConfiguration, destinati
 				continue
 			}
 
-			parameters = append(parameters, map[string]interface{}{
+			parameters = append(parameters, map[string]any{
 				"parameter_name":  name,
 				"parameter_value": value,
 			})
 		}
 
-		processors[i] = map[string]interface{}{
+		processors[i] = map[string]any{
 			names.AttrType:       t,
 			names.AttrParameters: parameters,
 		}
 	}
-	processingConfiguration[0] = map[string]interface{}{
+	processingConfiguration[0] = map[string]any{
 		names.AttrEnabled: aws.ToBool(pc.Enabled),
 		"processors":      processors,
 	}
 	return processingConfiguration
 }
 
-func flattenDynamicPartitioningConfiguration(dpc *types.DynamicPartitioningConfiguration) []map[string]interface{} {
-	if dpc == nil {
-		return []map[string]interface{}{}
+func flattenSecretsManagerConfiguration(smc *types.SecretsManagerConfiguration) []any {
+	if smc == nil {
+		return []any{}
 	}
 
-	dynamicPartitioningConfiguration := make([]map[string]interface{}, 1)
+	secretsManagerConfiguration := map[string]any{
+		names.AttrEnabled: aws.ToBool(smc.Enabled),
+	}
+	if aws.ToBool(smc.Enabled) {
+		secretsManagerConfiguration["secret_arn"] = aws.ToString(smc.SecretARN)
+		if smc.RoleARN != nil {
+			secretsManagerConfiguration[names.AttrRoleARN] = aws.ToString(smc.RoleARN)
+		}
+	}
+	return []any{secretsManagerConfiguration}
+}
 
-	dynamicPartitioningConfiguration[0] = map[string]interface{}{
+func flattenDynamicPartitioningConfiguration(dpc *types.DynamicPartitioningConfiguration) []map[string]any {
+	if dpc == nil {
+		return []map[string]any{}
+	}
+
+	dynamicPartitioningConfiguration := make([]map[string]any, 1)
+
+	dynamicPartitioningConfiguration[0] = map[string]any{
 		names.AttrEnabled: aws.ToBool(dpc.Enabled),
 	}
 
@@ -3794,48 +4208,99 @@ func flattenDynamicPartitioningConfiguration(dpc *types.DynamicPartitioningConfi
 	return dynamicPartitioningConfiguration
 }
 
-func flattenKinesisStreamSourceDescription(desc *types.KinesisStreamSourceDescription) []interface{} {
+func flattenKinesisStreamSourceDescription(desc *types.KinesisStreamSourceDescription) []any {
 	if desc == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	mDesc := map[string]interface{}{
+	mDesc := map[string]any{
 		"kinesis_stream_arn": aws.ToString(desc.KinesisStreamARN),
 		names.AttrRoleARN:    aws.ToString(desc.RoleARN),
 	}
 
-	return []interface{}{mDesc}
+	return []any{mDesc}
 }
 
-func flattenHTTPEndpointDestinationDescription(description *types.HttpEndpointDestinationDescription, configuredAccessKey string) []map[string]interface{} {
-	if description == nil {
-		return []map[string]interface{}{}
-	}
-	m := map[string]interface{}{
-		names.AttrAccessKey:          configuredAccessKey,
-		names.AttrURL:                aws.ToString(description.EndpointConfiguration.Url),
-		names.AttrName:               aws.ToString(description.EndpointConfiguration.Name),
-		names.AttrRoleARN:            aws.ToString(description.RoleARN),
-		"s3_backup_mode":             description.S3BackupMode,
-		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
-		"request_configuration":      flattenHTTPEndpointRequestConfiguration(description.RequestConfiguration),
-		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeHTTPEndpoint, aws.ToString(description.RoleARN)),
+func flattenHTTPEndpointDestinationDescription(apiObject *types.HttpEndpointDestinationDescription, configuredAccessKey string) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	if description.RetryOptions != nil {
-		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
+	tfMap := map[string]any{
+		names.AttrAccessKey:             configuredAccessKey,
+		"cloudwatch_logging_options":    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		names.AttrName:                  aws.ToString(apiObject.EndpointConfiguration.Name),
+		"processing_configuration":      flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeHTTPEndpoint, aws.ToString(apiObject.RoleARN)),
+		"request_configuration":         flattenHTTPEndpointRequestConfiguration(apiObject.RequestConfiguration),
+		names.AttrRoleARN:               aws.ToString(apiObject.RoleARN),
+		"s3_backup_mode":                apiObject.S3BackupMode,
+		"s3_configuration":              flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		"secrets_manager_configuration": flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration),
+		names.AttrURL:                   aws.ToString(apiObject.EndpointConfiguration.Url),
 	}
 
-	if description.BufferingHints != nil {
-		m["buffering_interval"] = int(aws.ToInt32(description.BufferingHints.IntervalInSeconds))
-		m["buffering_size"] = int(aws.ToInt32(description.BufferingHints.SizeInMBs))
+	if apiObject.BufferingHints != nil {
+		tfMap["buffering_interval"] = int(aws.ToInt32(apiObject.BufferingHints.IntervalInSeconds))
+		tfMap["buffering_size"] = int(aws.ToInt32(apiObject.BufferingHints.SizeInMBs))
 	}
 
-	return []map[string]interface{}{m}
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
+	}
+
+	return []any{tfMap}
 }
 
-func expandDocumentIDOptions(tfMap map[string]interface{}) *types.DocumentIdOptions {
+func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDescription) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"append_only":      aws.ToBool(apiObject.AppendOnly),
+		"catalog_arn":      aws.ToString(apiObject.CatalogConfiguration.CatalogARN),
+		"s3_configuration": flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		names.AttrRoleARN:  aws.ToString(apiObject.RoleARN),
+	}
+
+	if apiObject.BufferingHints != nil {
+		tfMap["buffering_interval"] = int(aws.ToInt32(apiObject.BufferingHints.IntervalInSeconds))
+		tfMap["buffering_size"] = int(aws.ToInt32(apiObject.BufferingHints.SizeInMBs))
+	}
+
+	if apiObject.CloudWatchLoggingOptions != nil {
+		tfMap["cloudwatch_logging_options"] = flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions)
+	}
+
+	if apiObject.DestinationTableConfigurationList != nil {
+		tableConfigurations := make([]map[string]any, 0, len(apiObject.DestinationTableConfigurationList))
+		for _, table := range apiObject.DestinationTableConfigurationList {
+			tableConfigurations = append(tableConfigurations, map[string]any{
+				names.AttrDatabaseName:   aws.ToString(table.DestinationDatabaseName),
+				names.AttrTableName:      aws.ToString(table.DestinationTableName),
+				"s3_error_output_prefix": table.S3ErrorOutputPrefix,
+				"unique_keys":            table.UniqueKeys,
+			})
+		}
+		tfMap["destination_table_configuration"] = tableConfigurations
+	}
+
+	if apiObject.ProcessingConfiguration != nil {
+		tfMap["processing_configuration"] = flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeIceberg, aws.ToString(apiObject.RoleARN))
+	}
+
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
+	}
+
+	if apiObject.S3BackupMode != "" {
+		tfMap["s3_backup_mode"] = apiObject.S3BackupMode
+	}
+
+	return []any{tfMap}
+}
+
+func expandDocumentIDOptions(tfMap map[string]any) *types.DocumentIdOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -3849,49 +4314,51 @@ func expandDocumentIDOptions(tfMap map[string]interface{}) *types.DocumentIdOpti
 	return apiObject
 }
 
-func flattenDocumentIDOptions(apiObject *types.DocumentIdOptions) map[string]interface{} {
+func flattenDocumentIDOptions(apiObject *types.DocumentIdOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"default_document_id_format": apiObject.DefaultDocumentIdFormat,
 	}
 
 	return tfMap
 }
 
-func flattenSnowflakeRoleConfiguration(apiObject *types.SnowflakeRoleConfiguration) []map[string]interface{} {
+func flattenSnowflakeRoleConfiguration(apiObject *types.SnowflakeRoleConfiguration) []map[string]any {
 	if apiObject == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"snowflake_role":  aws.ToString(apiObject.SnowflakeRole),
+	}
+	if aws.ToBool(apiObject.Enabled) {
+		m["snowflake_role"] = aws.ToString(apiObject.SnowflakeRole)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenSnowflakeVPCConfiguration(apiObject *types.SnowflakeVpcConfiguration) []map[string]interface{} {
+func flattenSnowflakeVPCConfiguration(apiObject *types.SnowflakeVpcConfiguration) []map[string]any {
 	if apiObject == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"private_link_vpce_id": aws.ToString(apiObject.PrivateLinkVpceId),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func isDeliveryStreamOptionDisabled(v interface{}) bool {
-	tfList := v.([]interface{})
+func isDeliveryStreamOptionDisabled(v any) bool {
+	tfList := v.([]any)
 	if len(tfList) == 0 || tfList[0] == nil {
 		return true
 	}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	var enabled bool
 

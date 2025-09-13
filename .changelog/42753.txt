@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_sagemaker_app_image_config: Exactly one `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` block must be configured
+```

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -41,10 +40,7 @@ func resourceAuthorizer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			resourceAuthorizerCustomizeDiff,
-		),
+		CustomizeDiff: resourceAuthorizerCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -100,7 +96,7 @@ func resourceAuthorizer() *schema.Resource {
 	}
 }
 
-func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -119,7 +115,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("token_signing_public_keys"); ok {
-		input.TokenSigningPublicKeys = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.TokenSigningPublicKeys = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	output, err := conn.CreateAuthorizer(ctx, input)
@@ -133,7 +129,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -161,7 +157,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -186,7 +182,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange("token_signing_public_keys") {
-		input.TokenSigningPublicKeys = flex.ExpandStringValueMap(d.Get("token_signing_public_keys").(map[string]interface{}))
+		input.TokenSigningPublicKeys = flex.ExpandStringValueMap(d.Get("token_signing_public_keys").(map[string]any))
 	}
 
 	_, err := conn.UpdateAuthorizer(ctx, &input)
@@ -198,7 +194,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -234,7 +230,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if !diff.Get("signing_disabled").(bool) {
 		if _, ok := diff.GetOk("token_key_name"); !ok {
 			return errors.New(`"token_key_name" is required when signing is enabled`)

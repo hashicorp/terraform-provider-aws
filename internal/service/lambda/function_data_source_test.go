@@ -54,6 +54,7 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_profile_version_arn", resourceName, "signing_profile_version_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_code_hash", resourceName, "code_sha256"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_code_size", resourceName, "source_code_size"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "source_kms_key_arn", resourceName, "source_kms_key_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTimeout, resourceName, names.AttrTimeout),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tracing_config.#", resourceName, "tracing_config.#"),
@@ -83,8 +84,35 @@ func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "qualifier", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_versionWithReservedConcurrency(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_versionWithReservedConcurrency(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_concurrent_executions", resourceName, "reserved_concurrent_executions"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1"),
 				),
 			},
 		},
@@ -109,7 +137,7 @@ func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1"),
 				),
 			},
 		},
@@ -442,7 +470,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 data "aws_lambda_function" "test" {
@@ -459,7 +487,26 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   publish       = true
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+  qualifier     = 1
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_versionWithReservedConcurrency(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                       = "test-fixtures/lambdatest.zip"
+  function_name                  = %[1]q
+  handler                        = "exports.example"
+  publish                        = true
+  role                           = aws_iam_role.lambda.arn
+  runtime                        = "nodejs20.x"
+  reserved_concurrent_executions = 10
 }
 
 data "aws_lambda_function" "test" {
@@ -477,7 +524,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   publish       = true
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 data "aws_lambda_function" "test" {
@@ -494,7 +541,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   publish       = false
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 data "aws_lambda_function" "test" {
@@ -511,7 +558,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   publish       = true
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_alias" "test" {
@@ -532,7 +579,7 @@ func testAccFunctionDataSourceConfig_layers(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 
 resource "aws_lambda_function" "test" {
@@ -541,7 +588,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   layers        = [aws_lambda_layer_version.test.arn]
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 data "aws_lambda_function" "test" {
@@ -583,7 +630,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
@@ -604,7 +651,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   environment {
     variables = {
@@ -683,7 +730,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "lambdatest.handler"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
@@ -731,7 +778,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   architectures = ["arm64"]
 }
 
@@ -748,7 +795,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   ephemeral_storage {
     size = 1024
@@ -768,7 +815,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   logging_config {
     log_format            = "JSON"
@@ -790,7 +837,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   logging_config {
     log_format = "Text"

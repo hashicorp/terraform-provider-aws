@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `registryName` – (Required) The Name of the registry.
-* `description` – (Optional) A description of the registry.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `registryName` - (Required) The Name of the registry.
+* `description` - (Optional) A description of the registry.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -82,4 +83,4 @@ Using `terraform import`, import Glue Registries using `arn`. For example:
 % terraform import aws_glue_registry.example arn:aws:glue:us-west-2:123456789012:registry/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ca7291533ababa19fd90f315f11beb8ec44905df2527d1937679132938c2cddd -->
+<!-- cache-key: cdktf-0.20.8 input-df5aa24902b272e029932a78dd6abe4bda22054106eeae394f484de6fd2d68a9 -->

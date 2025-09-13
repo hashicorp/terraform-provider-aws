@@ -1,0 +1,9 @@
+```release-note:note
+resource/aws_elasticache_replication_group: The ability to provide an uppercase `engine` value is deprecated
+```
+```release-note:note
+resource/aws_elasticache_user: The ability to provide an uppercase `engine` value is deprecated
+```
+```release-note:note
+resource/aws_elasticache_user_group: The ability to provide an uppercase `engine` value is deprecated
+```

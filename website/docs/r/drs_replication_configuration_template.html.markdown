@@ -23,7 +23,7 @@ resource "aws_drs_replication_configuration_template" "example" {
   create_public_ip                        = false
   data_plane_routing                      = "PRIVATE_IP"
   default_large_staging_disk_type         = "GP2"
-  ebs_ecryption                           = "DEFAULT"
+  ebs_encryption                          = "DEFAULT"
   ebs_encryption_key_arn                  = "arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
   replication_server_instance_type        = "t3.small"
   replication_servers_security_groups_ids = aws_security_group.example[*].id
@@ -76,6 +76,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_replicate_new_disks` - (Optional) Whether to allow the AWS replication agent to automatically replicate newly added disks.
 * `tags` - (Optional) Set of tags to be associated with the Replication Configuration Template resource.
 

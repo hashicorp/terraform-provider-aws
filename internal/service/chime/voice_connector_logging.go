@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_chime_voice_connector_logging")
+// @SDKResource("aws_chime_voice_connector_logging", name="Voice Connector Logging")
 func ResourceVoiceConnectorLogging() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVoiceConnectorLoggingCreate,
@@ -51,7 +51,7 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -73,7 +73,7 @@ func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceVoiceConnectorLoggingRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -82,14 +82,14 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 		return findVoiceConnectorLoggingByID(ctx, conn, d.Id())
 	})
 
-	if tfresource.TimedOut(err) {
-		resp, err = findVoiceConnectorLoggingByID(ctx, conn, d.Id())
-	}
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Chime Voice Connector logging configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("enable_media_metric_logs", resp.EnableMediaMetricLogs)
@@ -99,7 +99,7 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -121,7 +121,7 @@ func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceVoiceConnectorLoggingRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)

@@ -1,30 +1,38 @@
-name: "Request an Enhancement"
-description: "Choose this option when you would like to request an enhancement to an existing resource, data source, or the provider itself."
-title: "[Enhancement]: "
-labels: ["enhancement"]
+name: Request an Enhancement
+description: Choose this option when you would like to request an enhancement to an existing resource or data source (such as the addition of new arguments), or to the provider itself.
+labels:
+  - enhancement
 body:
   - type: markdown
     attributes:
       value: |
-        # Thank you for opening an enhancement request!
+        ## Thank you for opening an enhancement request!
 
         This form is intended as a way to request additional functionality for existing resources, data sources, or the provider itself. This may include requests such as adding additional arguments or attributes enabled by upstream API changes, additional validation for arguments, etc.
 
-        If the absense of the requested feature is causing unexpected behavior in the provider, the "Report a Bug" form should be used. For entirely new resources, data sources, or services, please use the Request a "New Resource, Data Source, or AWS Service" form.
+        Before submitting an enhancement request, we ask that you first [search existing issues and pull requests](https://github.com/hashicorp/terraform-provider-aws/issues?q=label%3Aenhancement) to see if someone else has made a similar request or has already worked on adding the feature. This helps to keep all relevant discussions in one place.
+
+        > [!NOTE]
+        > If the absense of the requested feature is causing unexpected behavior in the provider, the [Report a Bug](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=00_bug_report.yml) form should be used. For entirely new resources, data sources, or services, please use the [Request Net New Functionality](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=03_new_functionality.yml) form.
 
   - type: textarea
     id: description
     attributes:
       label: Description
-      description: Please leave a brief description of the requested change.
+      description: |
+        Please provide a brief description of the requested change.
     validations:
       required: true
 
   - type: textarea
-    id: affected
+    id: affected_resource
     attributes:
-      label: Affected Resource(s) and/or Data Source(s)
-      placeholder: "* aws_xxx_yyy"
+      label: Affected Resource(s) or Data Source(s)
+      description: |
+        Where applicable, please list the resource(s) and/or data source(s) that you're requesting to be enhanced.
+      placeholder: |
+        * `aws_example_resource`
+        * `aws_example_data_source`
     validations:
       required: false
 
@@ -35,8 +43,11 @@ body:
       description: |
         If this request was implemented, what might the Terraform configuration look like? A best guess is helpful, even if you're unsure of exactly what the end result will look like. This helps maintainers and the community better understand how you (someone who is in need of this feature) envisions it.
 
-        **Note:** This field will render in HCL, so there is no need to add a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks).
-      render: terraform
+        For convenience, we pre-populate this section with a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks) to help with formatting in the resulting issue. Configurations pasted between the backticks (\```) will have the appropriate syntax highlighting for HCL. Where appropriate, feel free to delete this.
+      value: |
+        ```hcl
+
+        ```
     validations:
       required: false
 
@@ -45,7 +56,7 @@ body:
     attributes:
       label: References
       description: |
-        Where possible, please supply links to vendor documentation, other GitHub issues (open or closed) or pull requests that give additional context.
+        Where possible, please supply links to the [AWS Go SDK v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service) documentation demonstrating that the SDK supports the requested feature. Other links, such as those to the AWS API or CLI documentation, or other GitHub issues or pull requests that give additional context are also helpful.
 
         [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
     validations:
@@ -54,11 +65,15 @@ body:
   - type: dropdown
     id: will_contribute
     attributes:
-      label: Would you like to implement a fix?
+      label: Would you like to implement the enhancement?
       description: |
-        If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+        Indicate to the maintainers and community as to whether you plan to implement the enhancement yourself (you can update this later if you change your mind). This helps prevent duplication of effort, as many of our contributors look for recently filed issues as a source for their next contribution.
+
+        If this would be your first contribution, refer to the [contributor guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
       options:
         - "No"
         - "Yes"
+      multiple: false
+      default: 0
     validations:
       required: false

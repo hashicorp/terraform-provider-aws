@@ -60,7 +60,7 @@ class MyConvertedCode extends TerraformStack {
         application: "tf-test-name",
         bucket: Token.asString(awsS3BucketDefault.id),
         description: "application version created by terraform",
-        key: Token.asString(awsS3ObjectDefault.id),
+        key: Token.asString(awsS3ObjectDefault.key),
         name: "tf-test-version-label",
       });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -81,9 +81,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Short description of the Application Version.
 * `forceDelete` - (Optional) On delete, force an Application Version to be deleted when it may be in use by multiple Elastic Beanstalk Environments.
-* `tags` - (Optional) Key-value map of tags for the Elastic Beanstalk Application Version. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `process` - (Optional) Pre-processes and validates the environment manifest (env.yaml ) and configuration files (*.config files in the .ebextensions folder) in the source bundle. Validating configuration files can identify issues prior to deploying the application version to an environment. You must turn processing on for application versions that you create using AWS CodeBuild or AWS CodeCommit. For application versions built from a source bundle in Amazon S3, processing is optional. It validates Elastic Beanstalk configuration files. It doesn’t validate your application’s configuration files, like proxy server or Docker configuration.
+* `tags` - (Optional) Key-value map of tags for the Elastic Beanstalk Application Version. If configured with a provider [`defaultTags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -92,4 +94,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN assigned by AWS for this Elastic Beanstalk Application.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.1 input-751fb6889b75c7692aeacfbc770bb96d2cd80c1b9203d93fbf9daa51aef09d4a -->
+<!-- cache-key: cdktf-0.20.8 input-5842d548570f5bde5f23ea961b4e7f4778cf076094d5cebf0b90969386ce5e3d -->

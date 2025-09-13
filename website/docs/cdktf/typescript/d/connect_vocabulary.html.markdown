@@ -62,13 +62,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `vocabularyId` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Vocabulary by name
 * `vocabularyId` - (Optional) Returns information on a specific Vocabulary by Vocabulary id
+
+~> **NOTE:** `instanceId` and one of either `name` or `vocabularyId` is required.
 
 ## Attribute Reference
 
@@ -85,4 +86,4 @@ separated by a colon (`:`).
 * `tags` - A map of tags to assign to the Vocabulary.
 * `vocabularyId` - The identifier of the custom vocabulary.
 
-<!-- cache-key: cdktf-0.20.1 input-342009f7085547a66baea1db32f32c7bea60a46cb2c6aa70436452552150ca97 -->
+<!-- cache-key: cdktf-0.20.8 input-f2b1c180ce31441b4eca86144c29d7bab27dc965d2f007837a634a0edbf28b39 -->

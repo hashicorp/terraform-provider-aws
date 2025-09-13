@@ -38,18 +38,19 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `domainName` – (Required) Name of the domain.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `domainName` - (Required) Name of the domain.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `accessPolicies` – The policy document attached to the domain.
+* `accessPolicies` - The policy document attached to the domain.
 * `advancedOptions` - Key-value string pairs to specify advanced configuration options.
 * `advancedSecurityOptions` - Status of the Elasticsearch domain's advanced security options. The block consists of the following attributes:
     * `enabled` - Whether advanced security is enabled.
     * `internalUserDatabaseEnabled` - Whether the internal user database is enabled.
-* `arn` – The ARN of the domain.
+* `arn` - The ARN of the domain.
 * `autoTuneOptions` - Configuration of the Auto-Tune options of the domain.
     * `desiredState` - The Auto-Tune desired state for the domain.
     * `maintenanceSchedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
@@ -78,20 +79,20 @@ This data source exports the following attributes in addition to the arguments a
     * `userPoolId` - The Cognito User pool used by the domain.
     * `identityPoolId` - The Cognito Identity pool used by the domain.
     * `roleArn` - The IAM Role with the AmazonESCognitoAccess policy attached.
-* `created` – Status of the creation of the domain.
-* `deleted` – Status of the deletion of the domain.
-* `domainId` – Unique identifier for the domain.
+* `created` - Status of the creation of the domain.
+* `deleted` - Status of the deletion of the domain.
+* `domainId` - Unique identifier for the domain.
 * `ebsOptions` - EBS Options for the instances in the domain.
     * `ebsEnabled` - Whether EBS volumes are attached to data nodes in the domain.
     * `throughput` - The throughput (in MiB/s) of the EBS volumes attached to data nodes.
     * `volumeType` - The type of EBS volumes attached to data nodes.
     * `volumeSize` - The size of EBS volumes attached to data nodes (in GB).
     * `iops` - The baseline input/output (I/O) performance of EBS volumes attached to data nodes.
-* `elasticsearchVersion` – Elasticsearch version for the domain.
+* `elasticsearchVersion` - Elasticsearch version for the domain.
 * `encryptionAtRest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kmsKeyId` - The KMS key id used to encrypt data at rest.
-* `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
+* `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibanaEndpoint` - Domain-specific endpoint used to access the Kibana application.
 * `logPublishingOptions` - Domain log publishing related options.
     * `logType` - The type of Elasticsearch log being published.
@@ -99,7 +100,7 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether log publishing is enabled.
 * `nodeToNodeEncryption` - Domain in transit encryption related options.
     * `enabled` - Whether node to node encryption is enabled.
-* `processing` – Status of a configuration change in the domain.
+* `processing` - Status of a configuration change in the domain.
 * `snapshotOptions` – Domain snapshot related options.
     * `automatedSnapshotStartHour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
 * `tags` - Tags assigned to the domain.
@@ -109,4 +110,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` - The subnets used by the domain.
     * `vpcId` - The VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-7feb15d47a2d190cb607bbd9038a049ea8b0ea44a4960e578dae2f2fe8f04a38 -->
+<!-- cache-key: cdktf-0.20.8 input-0cd64f6fd2a1b78c58bc610d4c9ad2a4e688e36991799edc43001eebdc83b146 -->

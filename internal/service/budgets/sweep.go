@@ -34,10 +34,10 @@ func sweepBudgetActions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BudgetsClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &budgets.DescribeBudgetActionsForAccountInput{
 		AccountId: aws.String(accountID),
 	}
@@ -78,10 +78,10 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BudgetsClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &budgets.DescribeBudgetsInput{
 		AccountId: aws.String(accountID),
 	}

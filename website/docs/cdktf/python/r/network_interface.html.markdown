@@ -63,19 +63,21 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `attachment` - (Optional) Configuration block to define the attachment of the ENI. See [Attachment](#attachment) below for more details!
 * `description` - (Optional) Description for the network interface.
+* `enable_primary_ipv6` - (Optional) Enables assigning a primary IPv6 Global Unicast Address (GUA) to the network interface (ENI) in dual-stack or IPv6-only subnets. This ensures the instance attached to the ENI retains a consistent IPv6 address. Once enabled, the first IPv6 GUA becomes the primary IPv6 address and cannot be disabled. The primary IPv6 address remains assigned until the instance is terminated or the ENI is detached. Enabling and subsequent disabling forces recreation of the ENI.
 * `interface_type` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter. Changing `interface_type` will cause the resource to be destroyed and re-created.
 * `ipv4_prefix_count` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
 * `ipv4_prefixes` - (Optional) One or more IPv4 prefixes assigned to the network interface.
 * `ipv6_address_count` - (Optional) Number of IPv6 addresses to assign to a network interface. You can't use this option if specifying specific `ipv6_addresses`. If your subnet has the AssignIpv6AddressOnCreation attribute set to `true`, you can specify `0` to override this setting.
-* `ipv6_address_list_enabled` - (Optional) Whether `ipv6_address_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_address_count` become read-only. Default false.
+* `ipv6_address_list_enabled` - (Optional) Whether `ipv6_address_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_address_count` become read-only. Default is `false`.
 * `ipv6_address_list` - (Optional) List of private IPs to assign to the ENI in sequential order.
 * `ipv6_addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Addresses are assigned without regard to order. You can't use this option if you're specifying `ipv6_address_count`.
 * `ipv6_prefix_count` - (Optional) Number of IPv6 prefixes that AWS automatically assigns to the network interface.
 * `ipv6_prefixes` - (Optional) One or more IPv6 prefixes assigned to the network interface.
 * `private_ip_list` - (Optional) List of private IPs to assign to the ENI in sequential order. Requires setting `private_ip_list_enabled` to `true`.
-* `private_ip_list_enabled` - (Optional) Whether `private_ip_list` is allowed and controls the IPs to assign to the ENI and `private_ips` and `private_ips_count` become read-only. Default false.
+* `private_ip_list_enabled` - (Optional) Whether `private_ip_list` is allowed and controls the IPs to assign to the ENI and `private_ips` and `private_ips_count` become read-only. Default is `false`.
 * `private_ips` - (Optional) List of private IPs to assign to the ENI without regard to order.
 * `private_ips_count` - (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + `private_ips_count`, as a primary private IP will be assiged to an ENI by default.
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
@@ -88,6 +90,7 @@ The `attachment` block supports the following:
 
 * `instance` - (Required) ID of the instance to attach to.
 * `device_index` - (Required) Integer to define the devices index.
+* `network_card_index` - (Optional) Index of the network card. Specify a value greater than 0 when using multiple network cards, which are supported by [some instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards). The default is 0.
 
 ## Attribute Reference
 
@@ -125,4 +128,4 @@ Using `terraform import`, import Network Interfaces using the `id`. For example:
 % terraform import aws_network_interface.test eni-e5aa89a3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7f2ff19c4ccb49477839bee2fe3fa02741d97eacf5edb9c2e7ff7560c3a15031 -->
+<!-- cache-key: cdktf-0.20.8 input-88de58ff2fd649a308e97f7d2fb7359f9efc1983f6410265707ce4f34528363e -->

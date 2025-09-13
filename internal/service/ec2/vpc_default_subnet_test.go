@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +24,7 @@ import (
 )
 
 func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterList(
@@ -45,7 +46,7 @@ func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
 }
 
 func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterList(
@@ -62,7 +63,7 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 	}
 
 	for _, v := range subnets {
-		subnetID := aws.StringValue(v.SubnetId)
+		subnetID := aws.ToString(v.SubnetId)
 
 		t.Logf("Deleting existing default subnet: %s", subnetID)
 
@@ -80,7 +81,7 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 
 func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -97,14 +98,14 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 				Config: testAccVPCDefaultSubnetConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "subnet/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtTrue),
@@ -114,9 +115,9 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_hostname_type_on_launch"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -126,7 +127,7 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 
 func testAccDefaultSubnet_Existing_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -153,7 +154,7 @@ func testAccDefaultSubnet_Existing_forceDestroy(t *testing.T) {
 
 func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -170,14 +171,14 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 				Config: testAccVPCDefaultSubnetConfig_ipv6(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "subnet/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtTrue),
@@ -187,9 +188,9 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -199,7 +200,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 
 func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -217,14 +218,14 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 				Config: testAccVPCDefaultSubnetConfig_privateDNSNameOptionsOnLaunch(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "subnet/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtTrue),
@@ -234,9 +235,9 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "resource-name"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
@@ -247,7 +248,7 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 
 func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -264,14 +265,14 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 				Config: testAccVPCDefaultSubnetConfig_notFound(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "subnet/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtFalse),
@@ -281,9 +282,9 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_hostname_type_on_launch"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -293,7 +294,7 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 
 func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -310,14 +311,14 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 				Config: testAccVPCDefaultSubnetConfig_ipv6Native(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "subnet/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, ""),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtFalse),
@@ -327,9 +328,9 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_hostname_type_on_launch"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -342,7 +343,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 // Any missing default subnets are then created.
 func testAccCheckDefaultSubnetDestroyExists(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -365,7 +366,7 @@ func testAccCheckDefaultSubnetDestroyExists(ctx context.Context) resource.TestCh
 // Any missing default subnets are then created.
 func testAccCheckDefaultSubnetDestroyNotFound(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -390,27 +391,29 @@ func testAccCheckDefaultSubnetDestroyNotFound(ctx context.Context) resource.Test
 }
 
 func testAccCreateMissingDefaultSubnets(ctx context.Context) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.DescribeAvailabilityZonesWithContext(ctx, &ec2.DescribeAvailabilityZonesInput{
+	input := ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"opt-in-status": "opt-in-not-required",
 				names.AttrState: "available",
 			},
 		),
-	})
+	}
+	output, err := conn.DescribeAvailabilityZones(ctx, &input)
 
 	if err != nil {
 		return err
 	}
 
 	for _, v := range output.AvailabilityZones {
-		availabilityZone := aws.StringValue(v.ZoneName)
+		availabilityZone := aws.ToString(v.ZoneName)
 
-		_, err := conn.CreateDefaultSubnetWithContext(ctx, &ec2.CreateDefaultSubnetInput{
+		input := ec2.CreateDefaultSubnetInput{
 			AvailabilityZone: aws.String(availabilityZone),
-		})
+		}
+		_, err := conn.CreateDefaultSubnet(ctx, &input)
 
 		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone) {
 			continue

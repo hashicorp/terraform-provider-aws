@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `accountId` - (Required) Account ID number of a delegated administrator account in the organization.
 
 ## Attribute Reference
@@ -46,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
     * `delegationEnabledDate` - The date that the account became a delegated administrator for this service.
     * `servicePrincipal` - The name of an AWS service that can request an operation for the specified service.
 
-<!-- cache-key: cdktf-0.20.1 input-75948a55ba6b06c24be13238e2f8b8e4a682a05352b790ab2e35e7f82c3c8577 -->
+<!-- cache-key: cdktf-0.20.8 input-0599570da59571241937f49872d9d51984422b63b02f6137ea51f2f37f3635c7 -->

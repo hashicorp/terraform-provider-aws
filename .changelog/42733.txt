@@ -1,0 +1,4 @@
+
+```release-note:enhancement
+resource/aws_ecs_service: Add `arn` attribute
+```

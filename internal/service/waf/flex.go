@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandFieldToMatch(d map[string]interface{}) *awstypes.FieldToMatch {
+func expandFieldToMatch(d map[string]any) *awstypes.FieldToMatch {
 	ftm := &awstypes.FieldToMatch{
 		Type: awstypes.MatchFieldType(d[names.AttrType].(string)),
 	}
@@ -19,13 +19,13 @@ func expandFieldToMatch(d map[string]interface{}) *awstypes.FieldToMatch {
 	return ftm
 }
 
-func flattenFieldToMatch(fm *awstypes.FieldToMatch) []interface{} {
-	m := make(map[string]interface{})
+func flattenFieldToMatch(fm *awstypes.FieldToMatch) []any {
+	m := make(map[string]any)
 	if fm.Data != nil {
 		m["data"] = aws.ToString(fm.Data)
 	}
 
 	m[names.AttrType] = string(fm.Type)
 
-	return []interface{}{m}
+	return []any{m}
 }

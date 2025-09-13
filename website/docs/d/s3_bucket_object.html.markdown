@@ -13,7 +13,20 @@ description: |-
 The S3 object data source allows access to the metadata and
 _optionally_ (see below) content of an object stored inside S3 bucket.
 
-~> **Note:** The content of an object (`body` field) is available only for objects which have a human-readable `Content-Type` (`text/*` and `application/json`). This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
+~> **Note:** The content of an object (`body` field) is available only for objects which have a human-readable `Content-Type`:
+
+* `text/*`
+* `application/json`
+* `application/ld+json`
+* `application/x-httpd-php`
+* `application/xhtml+xml`
+* `application/x-csh`
+* `application/x-sh`
+* `application/xml`
+* `application/atom+xml`
+* `application/x-sql`
+
+This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
 
 ## Example Usage
 
@@ -59,6 +72,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `key` - (Required) Full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)

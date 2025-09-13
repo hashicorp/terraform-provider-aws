@@ -84,8 +84,8 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy` - (Required) JSON formatted policy document that controls access to the Network Firewall resource. The policy must be provided **without whitespaces**.  We recommend using [jsonencode](https://www.terraform.io/docs/configuration/functions/jsonencode.html) for formatting as seen in the examples above. For more details, including available policy statement Actions, see the [Policy](https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_PutResourcePolicy.html#API_PutResourcePolicy_RequestSyntax) parameter in the AWS API documentation.
-
 * `resource_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the rule group or firewall policy.
 
 ## Attribute Reference
@@ -119,4 +119,4 @@ Using `terraform import`, import Network Firewall Resource Policies using the `r
 % terraform import aws_networkfirewall_resource_policy.example aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c5fa671486177fa4e87a6bb581a11477626a302a6be68b0b30edb7287b73cc5c -->
+<!-- cache-key: cdktf-0.20.8 input-ed7682a2a66f98e5f0ecf2441d396e01b605388bf1767d88f1c329b0c65722e2 -->

@@ -5,20 +5,23 @@ package glue
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -29,7 +32,7 @@ import (
 
 // @SDKResource("aws_glue_dev_endpoint", name="Dev Endpoint")
 // @Tags(identifierAttribute="arn")
-func ResourceDevEndpoint() *schema.Resource {
+func resourceDevEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevEndpointCreate,
 		ReadWithoutTimeout:   resourceDevEndpointRead,
@@ -39,8 +42,6 @@ func ResourceDevEndpoint() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arguments": {
@@ -146,11 +147,11 @@ func ResourceDevEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"worker_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
-				ConflictsWith: []string{"number_of_nodes"},
-				ForceNew:      true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
+				ConflictsWith:    []string{"number_of_nodes"},
+				ForceNew:         true,
 			},
 			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
@@ -172,9 +173,9 @@ func ResourceDevEndpoint() *schema.Resource {
 	}
 }
 
-func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &glue.CreateDevEndpointInput{
@@ -184,7 +185,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
-		input.Arguments = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.Arguments = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("extra_jars_s3_path"); ok {
@@ -200,11 +201,11 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("number_of_nodes"); ok {
-		input.NumberOfNodes = aws.Int64(int64(v.(int)))
+		input.NumberOfNodes = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("number_of_workers"); ok {
-		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
+		input.NumberOfWorkers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(names.AttrPublicKey); ok {
@@ -212,7 +213,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("public_keys"); ok {
-		publicKeys := flex.ExpandStringSet(v.(*schema.Set))
+		publicKeys := flex.ExpandStringValueSet(v.(*schema.Set))
 		input.PublicKeys = publicKeys
 	}
 
@@ -221,7 +222,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		securityGroupIDs := flex.ExpandStringSet(v.(*schema.Set))
+		securityGroupIDs := flex.ExpandStringValueSet(v.(*schema.Set))
 		input.SecurityGroupIds = securityGroupIDs
 	}
 
@@ -230,32 +231,28 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("worker_type"); ok {
-		input.WorkerType = aws.String(v.(string))
+		input.WorkerType = awstypes.WorkerType(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Glue Dev Endpoint: %#v", *input)
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err := conn.CreateDevEndpointWithContext(ctx, input)
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn.CreateDevEndpoint(ctx, input)
 		if err != nil {
 			// Retry for IAM eventual consistency
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "should be given assume role permissions for Glue Service") {
-				return retry.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "should be given assume role permissions for Glue Service") {
+				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized to perform") {
-				return retry.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "is not authorized to perform") {
+				return tfresource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "S3 endpoint and NAT validation has failed for subnetId") {
-				return retry.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "S3 endpoint and NAT validation has failed for subnetId") {
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateDevEndpointWithContext(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Dev Endpoint: %s", err)
@@ -271,11 +268,11 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDevEndpointRead(ctx, d, meta)...)
 }
 
-func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	endpoint, err := FindDevEndpointByName(ctx, conn, d.Id())
+	endpoint, err := findDevEndpointByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Dev Endpoint (%s) not found, removing from state", d.Id())
@@ -288,10 +285,10 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	endpointARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("devEndpoint/%s", d.Id()),
 	}.String()
 
@@ -299,7 +296,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting arn for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("arguments", aws.StringValueMap(endpoint.Arguments)); err != nil {
+	if err := d.Set("arguments", endpoint.Arguments); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arguments for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -347,7 +344,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting public_key for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("public_keys", flex.FlattenStringSet(endpoint.PublicKeys)); err != nil {
+	if err := d.Set("public_keys", flex.FlattenStringValueSet(endpoint.PublicKeys)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting public_keys for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -359,7 +356,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting security_configuration for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(endpoint.SecurityGroupIds)); err != nil {
+	if err := d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringValueSet(endpoint.SecurityGroupIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_group_ids for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -390,9 +387,9 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.UpdateDevEndpointInput{
 		EndpointName: aws.String(d.Get(names.AttrName).(string)),
@@ -400,17 +397,17 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	hasChanged := false
 
-	customLibs := &glue.DevEndpointCustomLibraries{}
+	customLibs := &awstypes.DevEndpointCustomLibraries{}
 
 	if d.HasChange("arguments") {
 		oldRaw, newRaw := d.GetChange("arguments")
-		old := oldRaw.(map[string]interface{})
-		new := newRaw.(map[string]interface{})
-		add, remove, _ := flex.DiffStringMaps(old, new)
+		old := oldRaw.(map[string]any)
+		new := newRaw.(map[string]any)
+		add, remove, _ := flex.DiffStringValueMaps(old, new)
 
-		removeKeys := make([]*string, 0)
+		removeKeys := make([]string, 0)
 		for k := range remove {
-			removeKeys = append(removeKeys, aws.String(k))
+			removeKeys = append(removeKeys, k)
 		}
 
 		input.AddArguments = add
@@ -422,7 +419,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("extra_jars_s3_path") {
 		customLibs.ExtraJarsS3Path = aws.String(d.Get("extra_jars_s3_path").(string))
 		input.CustomLibraries = customLibs
-		input.UpdateEtlLibraries = aws.Bool(true)
+		input.UpdateEtlLibraries = true
 
 		hasChanged = true
 	}
@@ -430,7 +427,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("extra_python_libs_s3_path") {
 		customLibs.ExtraPythonLibsS3Path = aws.String(d.Get("extra_python_libs_s3_path").(string))
 		input.CustomLibraries = customLibs
-		input.UpdateEtlLibraries = aws.Bool(true)
+		input.UpdateEtlLibraries = true
 
 		hasChanged = true
 	}
@@ -454,32 +451,28 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		remove := os.Difference(ns)
 		add := ns.Difference(os)
 
-		input.AddPublicKeys = flex.ExpandStringSet(add)
+		input.AddPublicKeys = flex.ExpandStringValueSet(add)
 		log.Printf("[DEBUG] expectedCreate public keys: %v", add)
 
-		input.DeletePublicKeys = flex.ExpandStringSet(remove)
+		input.DeletePublicKeys = flex.ExpandStringValueSet(remove)
 		log.Printf("[DEBUG] remove public keys: %v", remove)
 
 		hasChanged = true
 	}
 
 	if hasChanged {
-		log.Printf("[DEBUG] Updating Glue Dev Endpoint: %s", input)
-		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-			_, err := conn.UpdateDevEndpointWithContext(ctx, input)
+		log.Printf("[DEBUG] Updating Glue Dev Endpoint: %+v", input)
+		err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
+			_, err := conn.UpdateDevEndpoint(ctx, input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {
-					return retry.RetryableError(err)
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "another concurrent update operation") {
+					return tfresource.RetryableError(err)
 				}
 
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateDevEndpointWithContext(ctx, input)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Dev Endpoint: %s", err)
@@ -489,16 +482,16 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDevEndpointRead(ctx, d, meta)...)
 }
 
-func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())
-	_, err := conn.DeleteDevEndpointWithContext(ctx, &glue.DeleteDevEndpointInput{
+	_, err := conn.DeleteDevEndpoint(ctx, &glue.DeleteDevEndpointInput{
 		EndpointName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
 	}
 
@@ -512,4 +505,87 @@ func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func findDevEndpointByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
+	input := &glue.GetDevEndpointInput{
+		EndpointName: aws.String(name),
+	}
+
+	output, err := conn.GetDevEndpoint(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DevEndpoint == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DevEndpoint, nil
+}
+
+func statusDevEndpoint(ctx context.Context, conn *glue.Client, name string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findDevEndpointByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status), nil
+	}
+}
+
+func waitDevEndpointCreated(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{devEndpointStatusProvisioning},
+		Target:  []string{devEndpointStatusReady},
+		Refresh: statusDevEndpoint(ctx, conn, name),
+		Timeout: 15 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
+		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDevEndpointDeleted(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{devEndpointStatusTerminating},
+		Target:  []string{},
+		Refresh: statusDevEndpoint(ctx, conn, name),
+		Timeout: 15 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
+		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }

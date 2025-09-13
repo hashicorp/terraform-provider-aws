@@ -86,12 +86,7 @@ func testAccCheckVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		vaiID, vatpID, err := tfec2.VerifiedAccessInstanceTrustProviderAttachmentParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		err = tfec2.FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, vaiID, vatpID)
+		err := tfec2.FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, rs.Primary.Attributes["verifiedaccess_instance_id"], rs.Primary.Attributes["verifiedaccess_trust_provider_id"])
 
 		return err
 	}
@@ -106,12 +101,7 @@ func testAccCheckVerifiedAccessInstanceTrustProviderAttachmentDestroy(ctx contex
 				continue
 			}
 
-			vaiID, vatpID, err := tfec2.VerifiedAccessInstanceTrustProviderAttachmentParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			err = tfec2.FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, vaiID, vatpID)
+			err := tfec2.FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, rs.Primary.Attributes["verifiedaccess_instance_id"], rs.Primary.Attributes["verifiedaccess_trust_provider_id"])
 
 			if tfresource.NotFound(err) {
 				continue

@@ -56,7 +56,7 @@ The following arguments are optional:
 
 * `comment` - (Optional) Comment.
 * `publish` - (Optional) Whether to publish creation/change as Live CloudFront Function Version. Defaults to `true`.
-* `keyValueStoreAssociations` - (Optional) List of `aws_cloudfront_key_value_store` ARNs to be associated to the function. AWS limits associations to on key value store per function.
+* `keyValueStoreAssociations` - (Optional) List of `aws_cloudfront_key_value_store` ARNs to be associated to the function. AWS limits associations to one key value store per function.
 
 ## Attribute Reference
 
@@ -99,4 +99,4 @@ Using `terraform import`, import CloudFront Functions using the `name`. For exam
 % terraform import aws_cloudfront_function.test my_test_function
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-029a5b94b613491d69afe8aee2a1541a7ee13f20986fd6e03fac3c2989773581 -->
+<!-- cache-key: cdktf-0.20.8 input-9ca7430ad41a22ec1ac4cbd5bb06e329d030537182cac8535e700bdbe68b6d4e -->

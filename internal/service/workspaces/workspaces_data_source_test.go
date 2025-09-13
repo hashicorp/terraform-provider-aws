@@ -17,6 +17,7 @@ func TestAccWorkSpacesDataSource_serial(t *testing.T) {
 			acctest.CtBasic:           testAccWorkspaceBundleDataSource_basic,
 			"bundleIDAndNameConflict": testAccWorkspaceBundleDataSource_bundleIDAndNameConflict,
 			"byOwnerName":             testAccWorkspaceBundleDataSource_byOwnerName,
+			"byOwnerNameMultiple":     testAccWorkspaceBundleDataSource_byOwnerNameMultiple,
 			"privateOwner":            testAccWorkspaceBundleDataSource_privateOwner,
 		},
 		"Directory": {

@@ -93,8 +93,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `releaseLabel` - (Required) Amazon EMR release label. For more information about Amazon EMR releases and their included application versions and features, see the [Amazon EMR Release Guide](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-release-components.html).
 
 ## Attribute Reference
@@ -106,15 +107,15 @@ This data source exports the following attributes in addition to the arguments a
 ### `supportedInstanceTypes` Attribute Reference
 
 * `architecture` - CPU architecture.
-* `ebsOptimizedAvailable` - Indicates whether the instance type supports Amazon EBS optimization.
-* `ebsOptimizedByDefault` - Indicates whether the instance type uses Amazon EBS optimization by default.
-* `ebsStorageOnly` - Indicates whether the instance type only supports Amazon EBS.
-* `instanceFamilyId` - The Amazon EC2 family and generation for the instance type.
-* `is64BitsOnly` - Indicates whether the instance type only supports 64-bit architecture.
-* `memoryGb` - Memory that is available to Amazon EMR from the instance type.
-* `numberOfDisks` - Number of disks for the instance type.
-* `storageGb` - Storage capacity of the instance type.
+* `ebs_optimized_available` - Indicates whether the instance type supports Amazon EBS optimization.
+* `ebs_optimized_by_default` - Indicates whether the instance type uses Amazon EBS optimization by default.
+* `ebs_storage_only` - Indicates whether the instance type only supports Amazon EBS.
+* `instance_family_id` - The Amazon EC2 family and generation for the instance type.
+* `is_64_bits_only` - Indicates whether the instance type only supports 64-bit architecture.
+* `memory_gb` - Memory that is available to Amazon EMR from the instance type.
+* `number_of_disks` - Number of disks for the instance type.
+* `storage_gb` - Storage capacity of the instance type.
 * `type` - Amazon EC2 instance type. For example, `m5.xlarge`.
 * `vcpu` - The number of vCPUs available for the instance type.
 
-<!-- cache-key: cdktf-0.20.1 input-ba212951c23add89500cd142afe5608d4a6a81dcaef51a7d3aedfa014eec03d7 -->
+<!-- cache-key: cdktf-0.20.8 input-68c200b8624ec166e2b3e52347f4f64ee2a70a35af1181d2408cefa37306f175 -->

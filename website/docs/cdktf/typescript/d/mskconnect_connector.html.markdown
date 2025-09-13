@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the connector.
 
 ## Attribute Reference
@@ -46,6 +47,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the connector.
 * `description` - Summary description of the connector.
+* `tags` - A map of tags assigned to the resource.
 * `version` - Current version of the connector.
 
-<!-- cache-key: cdktf-0.20.1 input-95d0c19f97dab5d0efafc846bda415a3a1bd7527693cac6b19d936ae768634cf -->
+<!-- cache-key: cdktf-0.20.8 input-5ec5f2840aaa692b3a761a855947dc767364c55c23411dbc628e4c82ee1ec291 -->

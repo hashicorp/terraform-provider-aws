@@ -33,6 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the connection to retrieve.
 
 ## Attribute Reference
@@ -47,7 +50,8 @@ This data source exports the following attributes in addition to the arguments a
 * `owner_account_id` - ID of the AWS account that owns the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `provider_name` - Name of the service provider associated with the connection.
+* `state` - State of the connection.
 * `tags` - Map of tags for the resource.
 * `vlan_id` - The VLAN ID.
 
-<!-- cache-key: cdktf-0.20.1 input-192e94cc169312d4fa902eb3bcc5d1de027e5be4fe92fdaf9fdbeefc124a32a8 -->
+<!-- cache-key: cdktf-0.20.8 input-fc4168b2991511014961b38b3b097d7e1ee715f0f31ac7e2d0b2a0992ca4dac4 -->

@@ -10,15 +10,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandTargets(tfList []interface{}) []awstypes.Target {
+func expandTargets(tfList []any) []awstypes.Target {
 	apiObjects := make([]awstypes.Target, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.Target{
 			Key:    aws.String(tfMap[names.AttrKey].(string)),
-			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
+			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]any)),
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -27,15 +27,15 @@ func expandTargets(tfList []interface{}) []awstypes.Target {
 	return apiObjects
 }
 
-func flattenTargets(apiObjects []awstypes.Target) []interface{} {
+func flattenTargets(apiObjects []awstypes.Target) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{}, 1)
+		tfMap := make(map[string]any, 1)
 		tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
 		tfMap[names.AttrValues] = apiObject.Values
 

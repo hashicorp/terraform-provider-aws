@@ -83,6 +83,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.
 * `included_object_versions` - (Required) Object versions to include in the inventory list. Valid values: `All`, `Current`.

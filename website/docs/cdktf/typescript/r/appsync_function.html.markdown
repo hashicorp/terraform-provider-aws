@@ -97,6 +97,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `apiId` - (Required) ID of the associated AppSync API.
 * `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
 * `dataSource` - (Required) Function data source name.
@@ -166,4 +167,4 @@ Using `terraform import`, import `aws_appsync_function` using the AppSync API ID
 % terraform import aws_appsync_function.example xxxxx-yyyyy
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8a300575c15598cb9fb3033c9f121af555947649d923354ecc0b51630bf72444 -->
+<!-- cache-key: cdktf-0.20.8 input-1d06d9e83efc2d81415ff29971c7da0957829797b735a2178aa3d72d8a0724dc -->

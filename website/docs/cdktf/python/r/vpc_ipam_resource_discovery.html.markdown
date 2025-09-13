@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
         VpcIpamResourceDiscovery(self, "main",
             description="My IPAM Resource Discovery",
             operating_regions=[VpcIpamResourceDiscoveryOperatingRegions(
-                region_name=Token.as_string(current.name)
+                region_name=Token.as_string(current.region)
             )
             ],
             tags={
@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description for the IPAM Resource Discovery.
 * `operating_regions` - (Required) Determines which regions the Resource Discovery will enable IPAM features for usage and monitoring. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM Resource Discovery. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. **You must set your provider block region as an operating_region.**
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -90,4 +91,4 @@ Using `terraform import`, import IPAMs using the IPAM resource discovery `id`. F
 % terraform import aws_vpc_ipam_resource_discovery.example ipam-res-disco-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e397380d953ebd30e61a0c3d1b2b84c946cea9f478b02e0627708ce5f413dc35 -->
+<!-- cache-key: cdktf-0.20.8 input-0a955a203b85ad7a4a57708dc5a4668f6290be469603bb4804ba493c58b22ed2 -->

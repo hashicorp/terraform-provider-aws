@@ -8,25 +8,27 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_partition")
-func ResourcePartition() *schema.Resource {
+// @SDKResource("aws_glue_partition", name="Partition")
+func resourcePartition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartitionCreate,
 		ReadWithoutTimeout:   resourcePartitionRead,
 		UpdateWithoutTimeout: resourcePartitionUpdate,
 		DeleteWithoutTimeout: resourcePartitionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -65,6 +67,11 @@ func ResourcePartition() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"additional_locations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"bucket_columns": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -205,13 +212,13 @@ func ResourcePartition() *schema.Resource {
 	}
 }
 
-func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
 	dbName := d.Get(names.AttrDatabaseName).(string)
 	tableName := d.Get(names.AttrTableName).(string)
-	values := d.Get("partition_values").([]interface{})
+	values := d.Get("partition_values").([]any)
 
 	input := &glue.CreatePartitionInput{
 		CatalogId:      aws.String(catalogID),
@@ -221,7 +228,7 @@ func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Creating Glue Partition: %#v", input)
-	_, err := conn.CreatePartitionWithContext(ctx, input)
+	_, err := conn.CreatePartition(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Partition: %s", err)
 	}
@@ -231,14 +238,14 @@ func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourcePartitionRead(ctx, d, meta)...)
 }
 
-func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
-	partition, err := FindPartitionByValues(ctx, conn, d.Id())
+	partition, err := findPartitionByValues(ctx, conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Partition (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -249,7 +256,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrTableName, partition.TableName)
 	d.Set(names.AttrCatalogID, partition.CatalogId)
 	d.Set(names.AttrDatabaseName, partition.DatabaseName)
-	d.Set("partition_values", flex.FlattenStringList(partition.Values))
+	d.Set("partition_values", flex.FlattenStringValueList(partition.Values))
 
 	if partition.LastAccessTime != nil {
 		d.Set("last_accessed_time", partition.LastAccessTime.Format(time.RFC3339))
@@ -267,16 +274,16 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
 	}
 
-	if err := d.Set(names.AttrParameters, aws.StringValueMap(partition.Parameters)); err != nil {
+	if err := d.Set(names.AttrParameters, partition.Parameters); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
 	return diags
 }
 
-func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
 	if err != nil {
@@ -288,19 +295,19 @@ func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		DatabaseName:       aws.String(dbName),
 		TableName:          aws.String(tableName),
 		PartitionInput:     expandPartitionInput(d),
-		PartitionValueList: aws.StringSlice(values),
+		PartitionValueList: values,
 	}
 
-	if _, err := conn.UpdatePartitionWithContext(ctx, input); err != nil {
+	if _, err := conn.UpdatePartition(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Glue Partition (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePartitionRead(ctx, d, meta)...)
 }
 
-func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
 	if err != nil {
@@ -308,31 +315,61 @@ func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Partition: %s", d.Id())
-	_, err = conn.DeletePartitionWithContext(ctx, &glue.DeletePartitionInput{
+	_, err = conn.DeletePartition(ctx, &glue.DeletePartitionInput{
 		CatalogId:       aws.String(catalogID),
 		TableName:       aws.String(tableName),
 		DatabaseName:    aws.String(dbName),
-		PartitionValues: aws.StringSlice(values),
+		PartitionValues: values,
 	})
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Partition: %s", err)
 	}
 	return diags
 }
 
-func expandPartitionInput(d *schema.ResourceData) *glue.PartitionInput {
-	tableInput := &glue.PartitionInput{}
+func findPartitionByValues(ctx context.Context, conn *glue.Client, id string) (*awstypes.Partition, error) {
+	catalogID, dbName, tableName, values, err := readPartitionID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &glue.GetPartitionInput{
+		CatalogId:       aws.String(catalogID),
+		DatabaseName:    aws.String(dbName),
+		TableName:       aws.String(tableName),
+		PartitionValues: values,
+	}
+
+	output, err := conn.GetPartition(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Partition == nil {
+		return nil, nil
+	}
+
+	return output.Partition, nil
+}
+
+func expandPartitionInput(d *schema.ResourceData) *awstypes.PartitionInput {
+	tableInput := &awstypes.PartitionInput{}
 
 	if v, ok := d.GetOk("storage_descriptor"); ok {
-		tableInput.StorageDescriptor = expandStorageDescriptor(v.([]interface{}))
+		tableInput.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		tableInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		tableInput.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("partition_values"); ok && len(v.([]interface{})) > 0 {
-		tableInput.Values = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := d.GetOk("partition_values"); ok && len(v.([]any)) > 0 {
+		tableInput.Values = flex.ExpandStringValueList(v.([]any))
 	}
 
 	return tableInput

@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `loggingConfigurationIdentifiers` - (Optional) List of Logging Configuration
   ARNs to attach to the room.
 * `maximumMessageLength` - (Optional) Maximum number of characters in a single
@@ -151,4 +152,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Room using the ARN
 % terraform import aws_ivschat_room.example arn:aws:ivschat:us-west-2:326937407773:room/GoXEXyB4VwHb
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3fca5b37b7d82ff4310bf108852e9d4ce3f8757446324b2c39d6248a58f1f8e6 -->
+<!-- cache-key: cdktf-0.20.8 input-5c78369cc2ab4c0013f14b83ed83bcd38d3eb8ad876e297cf56e67e3304bab23 -->

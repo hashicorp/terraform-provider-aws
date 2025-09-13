@@ -41,17 +41,16 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instance_tags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
-
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [describe-instances in the AWS CLI reference][1].
-
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
-
 * `get_user_data` - (Optional) Retrieve Base64 encoded User Data contents into the `user_data_base64` attribute. A SHA-1 hash of the User Data contents will always be present in the `user_data` attribute. Defaults to `false`.
 
 ~> **NOTE:** At least one of `filter`, `instance_tags`, or `instance_id` must be specified.
@@ -113,6 +112,7 @@ interpolation.
 * `outpost_arn` - ARN of the Outpost.
 * `password_data` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placement_group` - Placement group of the Instance.
+* `placement_group_id` - Placement group ID of the Instance.
 * `placement_partition_number` - Number of the partition the instance is in.
 * `private_dns` - Private DNS name assigned to the Instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `private_dns_name_options` - Options for the instance hostname.
@@ -149,4 +149,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.20.1 input-0360e36bcd653291899c63abe79b8fb1fd576446cfbc317105b63e631c4e981b -->
+<!-- cache-key: cdktf-0.20.8 input-78ec36eb77e46157229fa48eb9ce0bf0c9d80c9c7229d99d9267e4f5ef0906dc -->

@@ -45,6 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the project. This description will be displayed to all users of the project. We recommend providing a brief description of the project and its intended purpose.
 
 ## Attribute Reference
@@ -86,4 +87,4 @@ Using `terraform import`, import CodeCatalyst Source Repository using the `id`. 
 % terraform import aws_codecatalyst_source_repository.example example-repo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1bec0051bd4f9d6df50a3a5997bc07c4f0ca038f8f72a64f152d2bf7012ae2cb -->
+<!-- cache-key: cdktf-0.20.8 input-370b6de2fd90d9a56db31874206346eb51a4037b63d5b7c8b6b9dd58effd7090 -->

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
+func testAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -36,8 +36,8 @@ func TestAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/+.`)),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/.+$`)),
 				),
 			},
 		},
@@ -67,7 +67,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -89,15 +89,17 @@ resource "aws_oam_sink_policy" "test" {
 }
 
 resource "aws_oam_link" "test" {
-  depends_on = [aws_oam_sink_policy.test]
-
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
 
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_links "test" {

@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -477,7 +475,7 @@ func TestAccCloudControlResource_resourceSchema(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID, cloudformation.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudControlEndpointID, names.CloudFormationEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -530,7 +528,7 @@ func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcloudcontrol.FindResource(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
+			_, err := tfcloudcontrol.FindResourceByFourPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
 
 			if tfresource.NotFound(err) {
 				continue

@@ -41,9 +41,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired aws_ec2_coip_pools.
-
 * `filter` - (Optional) Custom filter block as described below.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
@@ -51,7 +53,6 @@ which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeCoipPools.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A COIP Pool will be selected if any one of the given values matches.
 
@@ -68,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-b91d2cae592ac5bf459745fca131316d289583f055df2569fd13d50a3ac7f511 -->
+<!-- cache-key: cdktf-0.20.8 input-96eb2b146a84ea6c7d4fd7c3eeb526dde04e00dfd8bb2bbf3fc575b51cca3dde -->

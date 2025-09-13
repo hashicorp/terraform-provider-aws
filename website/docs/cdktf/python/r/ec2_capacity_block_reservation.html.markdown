@@ -29,33 +29,29 @@ from cdktf import Token, TerraformStack
 from imports.aws.data_aws_ec2_capacity_block_offering import DataAwsEc2CapacityBlockOffering
 from imports.aws.ec2_capacity_block_reservation import Ec2CapacityBlockReservation
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, capacityDurationHours):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
+        test = DataAwsEc2CapacityBlockOffering(self, "test",
+            capacity_duration_hours=24,
+            end_date_range="2024-05-30T15:04:05Z",
+            instance_count=1,
+            instance_type="p4d.24xlarge",
+            start_date_range="2024-04-28T15:04:05Z"
+        )
         Ec2CapacityBlockReservation(self, "example",
-            capacity_block_offering_id=Token.as_string(test.id),
+            capacity_block_offering_id=Token.as_string(test.capacity_block_offering_id),
             instance_platform="Linux/UNIX",
             tags={
                 "Environment": "dev"
             }
         )
-        data_aws_ec2_capacity_block_offering_example =
-        DataAwsEc2CapacityBlockOffering(self, "example_1",
-            capacity_duration=24,
-            end_date="2024-05-30T15:04:05Z",
-            instance_count=1,
-            instance_platform="Linux/UNIX",
-            instance_type="p4d.24xlarge",
-            start_date="2024-04-28T15:04:05Z",
-            capacity_duration_hours=capacity_duration_hours
-        )
-        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
-        data_aws_ec2_capacity_block_offering_example.override_logical_id("example")
 ```
 
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity_block_offering_id` - (Required) The Capacity Block Reservation ID.
 * `instance_platform` - (Required) The type of operating system for which to reserve capacity. Valid options are `Linux/UNIX`, `Red Hat Enterprise Linux`, `SUSE Linux`, `Windows`, `Windows with SQL Server`, `Windows with SQL Server Enterprise`, `Windows with SQL Server Standard` or `Windows with SQL Server Web`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -80,4 +76,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tenancy` - Indicates the tenancy of the Capacity Block Reservation. Specify either `default` or `dedicated`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
 
-<!-- cache-key: cdktf-0.20.1 input-de4a54e63058184058154980dd6b982862622641c80f20ef090557139a7f57dd -->
+<!-- cache-key: cdktf-0.20.8 input-a255b5237c1c6bd40840b5df4d5b418ef6095eb8c08f619abbddc42e5c972444 -->

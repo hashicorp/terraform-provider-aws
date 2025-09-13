@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_custom_model"
 description: |-
@@ -37,7 +37,10 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `modelId` – (Required) Name or ARN of the custom model.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `modelId` - (Required) Name or ARN of the custom model.
 
 ## Attribute Reference
 
@@ -64,5 +67,5 @@ This data source exports the following attributes in addition to the arguments a
         * `s3Uri` - The S3 URI where the validation data is stored..
 * `validationMetrics` - The loss metric for each validator that you provided.
     * `validation_loss` - The validation loss associated with the validator.
-  
-<!-- cache-key: cdktf-0.20.1 input-9d7ebec3f75401eee70e98691f002ad65f0b09c6fcd48e93308bf9aa6010f5da -->
+
+<!-- cache-key: cdktf-0.20.8 input-718fae7576b0b69694f3c1eb3696eeb893ac3789465d781bc14e79fabed87996 -->

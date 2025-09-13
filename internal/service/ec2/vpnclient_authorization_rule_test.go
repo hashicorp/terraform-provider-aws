@@ -251,12 +251,7 @@ func testAccCheckClientVPNAuthorizationRuleDestroy(ctx context.Context) resource
 				continue
 			}
 
-			endpointID, targetNetworkCIDR, accessGroupID, err := tfec2.ClientVPNAuthorizationRuleParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
+			_, err := tfec2.FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.Attributes["target_network_cidr"], rs.Primary.Attributes["access_group_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -280,14 +275,9 @@ func testAccCheckClientVPNAuthorizationRuleExists(ctx context.Context, name stri
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		endpointID, targetNetworkCIDR, accessGroupID, err := tfec2.ClientVPNAuthorizationRuleParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
+		output, err := tfec2.FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.Attributes["target_network_cidr"], rs.Primary.Attributes["access_group_id"])
 
 		if err != nil {
 			return err

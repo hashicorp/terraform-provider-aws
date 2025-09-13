@@ -35,6 +35,7 @@ func TestAccCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 				Config: testAccOriginAccessIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExists(ctx, resourceName, &origin),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "origin-access-identity/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some comment"),
 					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
 					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexache.MustCompile("^[0-9a-z]+")),

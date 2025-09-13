@@ -7,7 +7,7 @@ Can be invoked using either `make gen` along with all other generators or
 
 ## Configuration
 
-The generator creates a TeamCity build configuration for each service listed in `names/data/names_data.csv`.
+The generator creates a TeamCity build configuration for each service listed in `names/data/names_data.hcl`.
 By default, the service acceptance tests do not use the VPC Lock and use the default parallelism.
 These setting can be overridden for each service by adding a `service` entry in the file `acctest_services.hcl`.
 

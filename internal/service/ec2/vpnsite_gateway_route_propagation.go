@@ -43,7 +43,7 @@ func resourceVPNGatewayRoutePropagation() *schema.Resource {
 	}
 }
 
-func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -55,16 +55,16 @@ func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(VPNGatewayRoutePropagationCreateID(routeTableID, gatewayID))
+	d.SetId(vpnGatewayRoutePropagationCreateID(routeTableID, gatewayID))
 
 	return append(diags, resourceVPNGatewayRoutePropagationRead(ctx, d, meta)...)
 }
 
-func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
+	routeTableID, gatewayID, err := vpnGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -79,11 +79,11 @@ func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.Re
 	return sdkdiag.AppendFromErr(diags, err)
 }
 
-func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
+	routeTableID, gatewayID, err := vpnGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

@@ -43,9 +43,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb-elastic/create-cluster.html).
-
 The following arguments are required:
 
 * `adminUserName` - (Required) Name of the Elastic DocumentDB cluster administrator
@@ -57,11 +54,17 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `backupRetentionPeriod` - (Optional) The number of days for which automatic snapshots are retained. It should be in between 1 and 35. If not specified, the default value of 1 is set.
 * `kmsKeyId` - (Optional) ARN of a KMS key that is used to encrypt the Elastic DocumentDB cluster. If not specified, the default encryption key that KMS creates for your account is used.
+* `preferredBackupWindow` - (Optional) The daily time range during which automated backups are created if automated backups are enabled, as determined by the `backupRetentionPeriod`.
 * `preferredMaintenanceWindow` - (Optional) Weekly time range during which system maintenance can occur in UTC. Format: `ddd:hh24:mi-ddd:hh24:mi`. If not specified, AWS will choose a random 30-minute window on a random day of the week.
 * `subnetIds` - (Optional) IDs of subnets in which the Elastic DocumentDB Cluster operates.
 * `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate with the Elastic DocumentDB Cluster
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb-elastic/create-cluster.html).
 
 ## Attribute Reference
 
@@ -110,4 +113,4 @@ Using `terraform import`, import DocDB (DocumentDB) Elastic Cluster using the `a
 % terraform import aws_docdbelastic_cluster.example arn:aws:docdb-elastic:us-east-1:000011112222:cluster/12345678-7abc-def0-1234-56789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-26732451b7a2ef7b6c83aeab3d2fff77d04f1c88b877d61b8a090cd97e23093a -->
+<!-- cache-key: cdktf-0.20.8 input-120ab0dc4dd05aacc15f79c2c915fefb98ed28e0e48054da043401038fa3c8e4 -->

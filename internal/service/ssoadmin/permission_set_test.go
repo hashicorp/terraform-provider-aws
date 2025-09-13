@@ -61,7 +61,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 				Config: testAccPermissionSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -74,7 +74,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 				Config: testAccPermissionSetConfig_tags2(rName, acctest.CtKey1, "updatedvalue1", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "updatedvalue1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -88,7 +88,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 				Config: testAccPermissionSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -291,7 +291,7 @@ func testAccCheckPermissionSetDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			_, err = tfssoadmin.FindPermissionSet(ctx, conn, permissionSetARN, instanceARN)
+			_, err = tfssoadmin.FindPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -322,7 +322,7 @@ func testAccCheckSOAdminPermissionSetExists(ctx context.Context, n string) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		_, err = tfssoadmin.FindPermissionSet(ctx, conn, permissionSetARN, instanceARN)
+		_, err = tfssoadmin.FindPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 		return err
 	}

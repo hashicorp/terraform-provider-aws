@@ -10,32 +10,32 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ivs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ivs_recording_configuration", name="Recording Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.RecordingConfiguration")
+// @Testing(preIdentityVersion="v6.7.0")
 func ResourceRecordingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRecordingConfigurationCreate,
 		ReadWithoutTimeout:   resourceRecordingConfigurationRead,
 		DeleteWithoutTimeout: resourceRecordingConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -100,10 +100,10 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recording_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ivs.RecordingMode_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RecordingMode](),
 						},
 						"target_interval_seconds": {
 							Type:         schema.TypeInt,
@@ -115,8 +115,6 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -124,13 +122,13 @@ const (
 	ResNameRecordingConfiguration = "Recording Configuration"
 )
 
-func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	in := &ivs.CreateRecordingConfigurationInput{
-		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
+		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]any)),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -139,18 +137,18 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("recording_reconnect_window_seconds"); ok {
-		in.RecordingReconnectWindowSeconds = aws.Int64(int64(v.(int)))
+		in.RecordingReconnectWindowSeconds = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("thumbnail_configuration"); ok {
-		in.ThumbnailConfiguration = expandThumbnailConfiguration(v.([]interface{}))
+		in.ThumbnailConfiguration = expandThumbnailConfiguration(v.([]any))
 
-		if aws.StringValue(in.ThumbnailConfiguration.RecordingMode) == ivs.RecordingModeDisabled && in.ThumbnailConfiguration.TargetIntervalSeconds != nil {
+		if in.ThumbnailConfiguration.RecordingMode == awstypes.RecordingModeDisabled && in.ThumbnailConfiguration.TargetIntervalSeconds != nil {
 			return sdkdiag.AppendErrorf(diags, "thumbnail configuration target interval cannot be set if recording_mode is \"DISABLED\"")
 		}
 	}
 
-	out, err := conn.CreateRecordingConfigurationWithContext(ctx, in)
+	out, err := conn.CreateRecordingConfiguration(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get(names.AttrName).(string), err)
 	}
@@ -159,7 +157,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.StringValue(out.RecordingConfiguration.Arn))
+	d.SetId(aws.ToString(out.RecordingConfiguration.Arn))
 
 	if _, err := waitRecordingConfigurationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForCreation, ResNameRecordingConfiguration, d.Id(), err)
@@ -168,10 +166,10 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceRecordingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	out, err := FindRecordingConfigurationByID(ctx, conn, d.Id())
 
@@ -202,18 +200,18 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	log.Printf("[INFO] Deleting IVS RecordingConfiguration %s", d.Id())
 
-	_, err := conn.DeleteRecordingConfigurationWithContext(ctx, &ivs.DeleteRecordingConfigurationInput{
+	_, err := conn.DeleteRecordingConfiguration(ctx, &ivs.DeleteRecordingConfigurationInput{
 		Arn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -228,73 +226,71 @@ func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func flattenDestinationConfiguration(apiObject *ivs.DestinationConfiguration) []interface{} {
+func flattenDestinationConfiguration(apiObject *awstypes.DestinationConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.S3; v != nil {
 		m["s3"] = flattenS3DestinationConfiguration(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenS3DestinationConfiguration(apiObject *ivs.S3DestinationConfiguration) []interface{} {
+func flattenS3DestinationConfiguration(apiObject *awstypes.S3DestinationConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.BucketName; v != nil {
-		m[names.AttrBucketName] = aws.StringValue(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenThumbnailConfiguration(apiObject *ivs.ThumbnailConfiguration) []interface{} {
+func flattenThumbnailConfiguration(apiObject *awstypes.ThumbnailConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
-	if v := apiObject.RecordingMode; v != nil {
-		m["recording_mode"] = aws.StringValue(v)
-	}
+	m["recording_mode"] = string(apiObject.RecordingMode)
 
 	if v := apiObject.TargetIntervalSeconds; v != nil {
-		m["target_interval_seconds"] = aws.Int64Value(v)
+		m["target_interval_seconds"] = aws.ToInt64(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandDestinationConfiguration(vSettings []interface{}) *ivs.DestinationConfiguration {
+func expandDestinationConfiguration(vSettings []any) *awstypes.DestinationConfiguration {
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return nil
 	}
-	tfMap := vSettings[0].(map[string]interface{})
-	a := &ivs.DestinationConfiguration{}
+	tfMap := vSettings[0].(map[string]any)
+	a := &awstypes.DestinationConfiguration{}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 {
 		a.S3 = expandS3DestinationConfiguration(v)
 	}
 
 	return a
 }
 
-func expandS3DestinationConfiguration(vSettings []interface{}) *ivs.S3DestinationConfiguration {
+func expandS3DestinationConfiguration(vSettings []any) *awstypes.S3DestinationConfiguration {
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return nil
 	}
 
-	tfMap := vSettings[0].(map[string]interface{})
-	a := &ivs.S3DestinationConfiguration{}
+	tfMap := vSettings[0].(map[string]any)
+	a := &awstypes.S3DestinationConfiguration{}
 
 	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
@@ -303,15 +299,15 @@ func expandS3DestinationConfiguration(vSettings []interface{}) *ivs.S3Destinatio
 	return a
 }
 
-func expandThumbnailConfiguration(vSettings []interface{}) *ivs.ThumbnailConfiguration {
+func expandThumbnailConfiguration(vSettings []any) *awstypes.ThumbnailConfiguration {
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return nil
 	}
-	a := &ivs.ThumbnailConfiguration{}
-	tfMap := vSettings[0].(map[string]interface{})
+	a := &awstypes.ThumbnailConfiguration{}
+	tfMap := vSettings[0].(map[string]any)
 
 	if v, ok := tfMap["recording_mode"].(string); ok && v != "" {
-		a.RecordingMode = aws.String(v)
+		a.RecordingMode = awstypes.RecordingMode(v)
 	}
 
 	if v, ok := tfMap["target_interval_seconds"].(int); ok {

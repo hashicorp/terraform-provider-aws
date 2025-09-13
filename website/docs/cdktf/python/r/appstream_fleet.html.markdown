@@ -58,6 +58,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description to display.
 * `disconnect_timeout_in_seconds` - (Optional) Amount of time that a streaming session remains active after users disconnect.
 * `display_name` - (Optional) Human-readable friendly name for the AppStream fleet.
@@ -65,7 +66,7 @@ The following arguments are optional:
 * `enable_default_internet_access` - (Optional) Enables or disables default internet access for the fleet.
 * `fleet_type` - (Optional) Fleet type. Valid values are: `ON_DEMAND`, `ALWAYS_ON`
 * `iam_role_arn` - (Optional) ARN of the IAM role to apply to the fleet.
-* `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins. Defaults to 60 seconds.
+* `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins. Defaults to `0`. Valid value is between `60` and `3600 `seconds.
 * `image_name` - (Optional) Name of the image used to create the fleet.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.
 * `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `APP`.
@@ -132,4 +133,4 @@ Using `terraform import`, import `aws_appstream_fleet` using the id. For example
 % terraform import aws_appstream_fleet.example fleetNameExample
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0ffddfec8544d237929e7efc0fac2d8f027e10dc241cce25884c37a1a31cc2ea -->
+<!-- cache-key: cdktf-0.20.8 input-4bf23b179acf43136f029e145655ce0ea59494badf16f0de0825bb64c13edf31 -->

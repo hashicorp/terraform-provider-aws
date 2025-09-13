@@ -39,8 +39,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `observability_configuration_name` - (Required, Forces new resource) Name of the observability configuration.
 * `trace_configuration` - (Optional) Configuration of the tracing feature within this observability configuration. If you don't specify it, App Runner doesn't enable tracing. See [Trace Configuration](#trace-configuration) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -86,4 +87,4 @@ Using `terraform import`, import App Runner Observability Configuration using th
 % terraform import aws_apprunner_observability_configuration.example arn:aws:apprunner:us-east-1:1234567890:observabilityconfiguration/example/1/d75bc7ea55b71e724fe5c23452fe22a1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8e5cebb86212015c055222a001ff7c401e6fd39752f296bb53ad2acf1c736b46 -->
+<!-- cache-key: cdktf-0.20.8 input-a77b44bdb487e055667950ee5cee00d8da8a35eab6dc88a7ceff93ef123073b6 -->

@@ -196,17 +196,123 @@ resource "aws_appautoscaling_policy" "example" {
 }
 ```
 
+### Predictive Scaling
+
+```terraform
+resource "aws_appautoscaling_policy" "example" {
+  name               = "example-policy"
+  resource_id        = aws_appautoscaling_target.example.resource_id
+  scalable_dimension = aws_appautoscaling_target.example.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.example.service_namespace
+  policy_type        = "PredictiveScaling"
+
+  predictive_scaling_policy_configuration {
+    metric_specification {
+      target_value = 40
+
+      predefined_metric_pair_specification {
+        predefined_metric_type = "ECSServiceMemoryUtilization"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `name` - (Required) Name of the policy. Must be between 1 and 255 characters in length.
-* `policy_type` - (Optional) Policy type. Valid values are `StepScaling` and `TargetTrackingScaling`. Defaults to `StepScaling`. Certain services only support only one policy type. For more information see the [Target Tracking Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html) and [Step Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html) documentation.
+* `policy_type` - (Optional) Policy type. Valid values are `StepScaling`, `TargetTrackingScaling`, and `PredictiveScaling`. Defaults to `StepScaling`. Certain services only support only one policy type. For more information see the [Target Tracking Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html), [Step Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html), and [Predictive Scaling](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-predictive-scaling.html) documentation.
+* `predictive_scaling_policy_configuration` - (Optional) Predictive scaling policy configuration, requires `policy_type = "PredictiveScaling"`. See supported fields below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_id` - (Required) Resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
 * `scalable_dimension` - (Required) Scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
 * `service_namespace` - (Required) AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
 * `step_scaling_policy_configuration` - (Optional) Step scaling policy configuration, requires `policy_type = "StepScaling"` (default). See supported fields below.
-* `target_tracking_scaling_policy_configuration` - (Optional) Target tracking policy, requires `policy_type = "TargetTrackingScaling"`. See supported fields below.
+* `target_tracking_scaling_policy_configuration` - (Optional) Target tracking policy configuration, requires `policy_type = "TargetTrackingScaling"`. See supported fields below.
+
+### predictive_scaling_policy_configuration
+
+The `predictive_scaling_policy_configuration` configuration block supports the following arguments:
+
+* `max_capacity_breach_behavior` - (Optional) The behavior that should be applied if the forecast capacity approaches or exceeds the maximum capacity. Valid values are `HonorMaxCapacity` and `IncreaseMaxCapacity`.
+* `max_capacity_buffer` - (Optional) Size of the capacity buffer to use when the forecast capacity is close to or exceeds the maximum capacity. The value is specified as a percentage relative to the forecast capacity. Required if the `max_capacity_breach_behavior` argument is set to `IncreaseMaxCapacity`, and cannot be used otherwise.
+* `metric_specification` - (Required) Metrics and target utilization to use for predictive scaling. See supported fields below.
+* `mode` - (Optional) Predictive scaling mode. Valid values are `ForecastOnly` and `ForecastAndScale`.
+* `scheduling_buffer_time` - (Optional) Amount of time, in seconds, that the start time can be advanced.
+
+### predictive_scaling_policy_configuration metric_specification
+
+The `predictive_scaling_policy_configuration` `metric_specification` configuration block supports the following arguments:
+
+* `customized_capacity_metric_specification` - (Optional) Customized capacity metric specification. See supported fields below.
+* `customized_load_metric_specification` - (Optional) Customized load metric specification. See supported fields below.
+* `customized_scaling_metric_specification` - (Optional) Customized scaling metric specification. See supported fields below.
+* `predefined_load_metric_specification` - (Optional) Predefined load metric specification. See supported fields below.
+* `predefined_metric_pair_specification` - (Optional) Predefined metric pair specification that determines the appropriate scaling metric and load metric to use. See supported fields below.
+* `predefined_scaling_metric_specification` - (Optional) Predefined scaling metric specification. See supported fields below.
+* `target_value` - (Required) Target utilization.
+
+### predictive_scaling_policy_configuration metric_specification customized_capacity_metric_specification, customized_load_metric_specification and customized_scaling_metric_specification
+
+The `predictive_scaling_policy_configuration` `metric_specification` `customized_capacity_metric_specification`, `customized_load_metric_specification`, and `customized_scaling_metric_specification` configuration blocks supports the following arguments:
+
+* `metric_data_query` - (Required) One or more metric data queries to provide data points for a metric specification. See supported fields below.
+
+### predictive_scaling_policy_configuration metric_specification customized_capacity_metric_specification metric_data_query
+
+The `predictive_scaling_policy_configuration` `metric_specification` `customized_capacity_metric_specification` `metric_data_query` configuration block supports the following arguments:
+
+* `expression` - (Optional) Math expression to perform on the returned data, if this object is performing a math expression.
+* `id` - (Required) Short name that identifies the object's results in the response.
+* `label` - (Optional) Human-readable label for this metric or expression.
+* `metric_stat` - (Optional) Information about the metric data to return. See supported fields below.
+* `return_data` - (Optional) Whether to return the timestamps and raw data values of this metric.
+
+### predictive_scaling_policy_configuration metric_specification customized_capacity_metric_specification metric_data_query metric_stat
+
+The `predictive_scaling_policy_configuration` `metric_specification` `customized_capacity_metric_specification` `metric_data_query` `metric_stat` configuration block supports the following arguments:
+
+* `metric` - (Required) CloudWatch metric to return, including the metric name, namespace, and dimensions. See supported fields below.
+* `stat` - (Required) Statistic to return.
+* `unit` - (Optional) Unit to use for the returned data points.
+
+### predictive_scaling_policy_configuration metric_specification customized_capacity_metric_specification metric_data_query metric_stat metric
+
+The `predictive_scaling_policy_configuration` `metric_specification` `customized_capacity_metric_specification` `metric_data_query` `metric_stat` `metric` configuration block supports the following arguments:
+
+* `dimension` - (Optional) Dimensions of the metric. See supported fields below.
+* `metric_name` - (Optional) Name of the metric.
+* `namespace` - (Optional) Namespace of the metric.
+
+### predictive_scaling_policy_configuration metric_specification customized_capacity_metric_specification metric_data_query metric_stat metric dimension
+
+The `predictive_scaling_policy_configuration` `metric_specification` `customized_capacity_metric_specification` `metric_data_query` `metric_stat` `metric` `dimension` configuration block supports the following arguments:
+
+* `name` - (Optional) Name of the dimension.
+* `value` - (Optional) Value of the dimension.
+
+### predictive_scaling_policy_configuration metric_specification predefined_load_metric_specification
+
+The `predictive_scaling_policy_configuration` `metric_specification` `predefined_load_metric_specification` configuration block supports the following arguments:
+
+* `predefined_metric_type` - (Required) Metric type.
+* `resource_label` - (Optional) Label that uniquely identifies a target group.
+
+### predictive_scaling_policy_configuration metric_specification predefined_metric_pair_specification
+
+The `predictive_scaling_policy_configuration` `metric_specification` `predefined_metric_pair_specification` configuration block supports the following arguments:
+
+* `predefined_metric_type` - (Required) Which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric.
+* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the total and average request count.
+
+### predictive_scaling_policy_configuration metric_specification predefined_scaling_metric_specification
+
+The `predictive_scaling_policy_configuration` `metric_specification` `predefined_scaling_metric_specification` configuration block supports the following arguments:
+
+* `predefined_metric_type` - (Required) Metric type.
+* `resource_label` - (Optional) Label that uniquely identifies a specific target group from which to determine the average request count.
 
 ### step_scaling_policy_configuration
 

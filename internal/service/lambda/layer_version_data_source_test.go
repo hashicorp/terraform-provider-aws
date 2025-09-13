@@ -138,7 +138,7 @@ func testAccLayerVersionDataSourceConfig_basic(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
@@ -152,13 +152,13 @@ func testAccLayerVersionDataSourceConfig_version(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 
 resource "aws_lambda_layer_version" "test_two" {
   filename            = "test-fixtures/lambdatest_modified.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
@@ -173,18 +173,18 @@ func testAccLayerVersionDataSourceConfig_runtimes(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["go1.x"]
+  compatible_runtimes = ["python3.12"]
 }
 
 resource "aws_lambda_layer_version" "test_two" {
   filename            = "test-fixtures/lambdatest_modified.zip"
   layer_name          = aws_lambda_layer_version.test.layer_name
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
   layer_name         = aws_lambda_layer_version.test_two.layer_name
-  compatible_runtime = "go1.x"
+  compatible_runtime = "python3.12"
 }
 `, rName)
 }
@@ -194,7 +194,7 @@ func testAccLayerVersionDataSourceConfig_architecturesX86(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
   layer_name               = %[1]q
-  compatible_runtimes      = ["nodejs16.x"]
+  compatible_runtimes      = ["nodejs20.x"]
   compatible_architectures = ["x86_64"]
 }
 
@@ -211,7 +211,7 @@ func testAccLayerVersionDataSourceConfig_architecturesARM(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
   layer_name               = %[1]q
-  compatible_runtimes      = ["nodejs16.x"]
+  compatible_runtimes      = ["nodejs20.x"]
   compatible_architectures = ["arm64"]
 }
 
@@ -227,7 +227,7 @@ func testAccLayerVersionDataSourceConfig_architecturesX86ARM(rName string) strin
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
   layer_name               = %[1]q
-  compatible_runtimes      = ["nodejs16.x"]
+  compatible_runtimes      = ["nodejs20.x"]
   compatible_architectures = ["x86_64", "arm64"]
 }
 
@@ -243,7 +243,7 @@ func testAccLayerVersionDataSourceConfig_architecturesNone(rName string) string 
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs16.x"]
+  compatible_runtimes = ["nodejs20.x"]
 }
 
 data "aws_lambda_layer_version" "test" {

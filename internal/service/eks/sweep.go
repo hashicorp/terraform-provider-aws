@@ -6,10 +6,11 @@ package eks
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -31,6 +32,7 @@ func RegisterSweepers() {
 			"aws_eks_fargate_profile",
 			"aws_eks_node_group",
 			"aws_emrcontainers_virtual_cluster",
+			"aws_prometheus_scraper",
 		},
 	})
 
@@ -54,7 +56,7 @@ func sweepAddons(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.EKSClient(ctx)
 	input := &eks.ListClustersInput{}
@@ -75,8 +77,7 @@ func sweepAddons(region string) error {
 			break
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := v
+		for _, clusterName := range page.Clusters {
 			input := &eks.ListAddonsInput{
 				ClusterName: aws.String(clusterName),
 			}
@@ -91,7 +92,7 @@ func sweepAddons(region string) error {
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					break
 				}
 
@@ -124,7 +125,7 @@ func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.EKSClient(ctx)
 	input := &eks.ListClustersInput{}
@@ -144,6 +145,21 @@ func sweepClusters(region string) error {
 		}
 
 		for _, v := range page.Clusters {
+			const (
+				timeout = 15 * time.Minute
+			)
+			err := updateClusterDeletionProtection(ctx, conn, v, false, timeout)
+
+			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+			// ¯\_(ツ)_/¯
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[WARN] Setting EKS Cluster %s DeletionProtection=false: %s", v, err)
+			}
+
 			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(v)
@@ -165,7 +181,7 @@ func sweepFargateProfiles(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.EKSClient(ctx)
 	input := &eks.ListClustersInput{}
@@ -186,8 +202,7 @@ func sweepFargateProfiles(region string) error {
 			break
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := v
+		for _, clusterName := range page.Clusters {
 			input := &eks.ListFargateProfilesInput{
 				ClusterName: aws.String(clusterName),
 			}
@@ -202,7 +217,7 @@ func sweepFargateProfiles(region string) error {
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					break
 				}
 
@@ -235,7 +250,7 @@ func sweepIdentityProvidersConfig(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.EKSClient(ctx)
 	input := &eks.ListClustersInput{}
@@ -256,8 +271,7 @@ func sweepIdentityProvidersConfig(region string) error {
 			break
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := v
+		for _, clusterName := range page.Clusters {
 			input := &eks.ListIdentityProviderConfigsInput{
 				ClusterName: aws.String(clusterName),
 			}
@@ -272,7 +286,7 @@ func sweepIdentityProvidersConfig(region string) error {
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					break
 				}
 
@@ -305,7 +319,7 @@ func sweepNodeGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.EKSClient(ctx)
 	input := &eks.ListClustersInput{}
@@ -326,8 +340,7 @@ func sweepNodeGroups(region string) error {
 			break
 		}
 
-		for _, v := range page.Clusters {
-			clusterName := v
+		for _, clusterName := range page.Clusters {
 			input := &eks.ListNodegroupsInput{
 				ClusterName: aws.String(clusterName),
 			}
@@ -342,7 +355,7 @@ func sweepNodeGroups(region string) error {
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					break
 				}
 

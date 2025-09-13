@@ -189,10 +189,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** One of `activationKey` or `gatewayIpAddress` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gatewayIpAddress`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `gatewayName` - (Required) Name of the gateway.
 * `gatewayTimezone` - (Required) Time zone for the gateway. The time zone is of the format "GMT", "GMT-hr:mm", or "GMT+hr:mm". For example, `GMT-4:00` indicates the time is 4 hours behind GMT. The time zone is used, for example, for scheduling snapshots and your gateway's maintenance schedule.
 * `activationKey` - (Optional) Gateway activation key during resource creation. Conflicts with `gatewayIpAddress`. Additional information is available in the [Storage Gateway User Guide](https://docs.aws.amazon.com/storagegateway/latest/userguide/get-activation-key.html).
@@ -210,6 +209,8 @@ This resource supports the following arguments:
 * `smbFileShareVisibility` - (Optional) Specifies whether the shares on this gateway appear when listing shares.
 * `tapeDriveType` - (Optional) Type of tape drive to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `IBM-ULT3580-TD5`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** One of `activationKey` or `gatewayIpAddress` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gatewayIpAddress`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
 
 ### maintenance_start_time
 
@@ -321,4 +322,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5866f6ee66ead8eb9860932eee948921b45d71ae074c57ea809c8f514ce41176 -->
+<!-- cache-key: cdktf-0.20.8 input-c24108b9ec3f9a042f45d8045e2350af5bced0bcb9f1cab08832a62c7fee3c25 -->

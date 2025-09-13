@@ -70,6 +70,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dashboardName` - (Required) The name of the dashboard.
 * `dashboardBody` - (Required) The detailed information about the dashboard, including what widgets are included and their location on the dashboard. You can read more about the body structure in the [documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Dashboard-Body-Structure.html).
 
@@ -111,4 +112,4 @@ Using `terraform import`, import CloudWatch dashboards using the `dashboardName`
 % terraform import aws_cloudwatch_dashboard.sample dashboard_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2364f68cbb18d2dbd2754d885496d994d344609a1d9297eee7cdf140181ca478 -->
+<!-- cache-key: cdktf-0.20.8 input-abc35cde657e17a2f1a6cc49e411572a22cc9e27859d4cd71c22467c27efbd49 -->

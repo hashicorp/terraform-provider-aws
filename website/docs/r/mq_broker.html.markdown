@@ -3,20 +3,20 @@ subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_broker"
 description: |-
-  Provides an MQ Broker Resource
+  Manages an AWS MQ broker
 ---
 
 # Resource: aws_mq_broker
 
-Provides an Amazon MQ broker resource. This resources also manages users for the broker.
+Manages an AWS MQ broker. Use to create and manage message brokers for ActiveMQ and RabbitMQ engines.
 
 -> For more information on Amazon MQ, see [Amazon MQ documentation](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html).
 
-~> **NOTE:** Amazon MQ currently places limits on **RabbitMQ** brokers. For example, a RabbitMQ broker cannot have: instances with an associated IP address of an ENI attached to the broker, an associated LDAP server to authenticate and authorize broker connections, storage type `EFS`, or audit logging. Although this resource allows you to create RabbitMQ users, RabbitMQ users cannot have console access or groups. Also, Amazon MQ does not return information about RabbitMQ users so drift detection is not possible.
+!> **Warning:** Amazon MQ currently places limits on **RabbitMQ** brokers. For example, a RabbitMQ broker cannot have: instances with an associated IP address of an ENI attached to the broker, an associated LDAP server to authenticate and authorize broker connections, storage type `EFS`, or audit logging. Although this resource allows you to create RabbitMQ users, RabbitMQ users cannot have console access or groups. Also, Amazon MQ does not return information about RabbitMQ users so drift detection is not possible.
 
-~> **NOTE:** Changes to an MQ Broker can occur when you change a parameter, such as `configuration` or `user`, and are reflected in the next maintenance window. Because of this, Terraform may report a difference in its planning phase because a modification has not yet taken place. You can use the `apply_immediately` flag to instruct the service to apply the change immediately (see documentation below). Using `apply_immediately` can result in a brief downtime as the broker reboots.
+!> **Warning:** All arguments including the username and password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-~> **NOTE:** All arguments including the username and password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
+~> **Note:** Changes to an MQ Broker can occur when you change a parameter, such as `configuration` or `user`, and are reflected in the next maintenance window. Because of this, Terraform may report a difference in its planning phase because a modification has not yet taken place. You can use the `apply_immediately` flag to instruct the service to apply the change immediately (see documentation below). Using `apply_immediately` can result in a brief downtime as the broker reboots.
 
 ## Example Usage
 
@@ -37,15 +37,13 @@ resource "aws_mq_broker" "example" {
   security_groups    = [aws_security_group.test.id]
 
   user {
-    username = "ExampleUser"
-    password = "MindTheGap"
+    username = "example_user"
+    password = "<password>"
   }
 }
 ```
 
 ### High-throughput Optimized Example
-
-This example shows the use of EBS storage for high-throughput optimized performance.
 
 ```terraform
 resource "aws_mq_broker" "example" {
@@ -63,8 +61,8 @@ resource "aws_mq_broker" "example" {
   security_groups    = [aws_security_group.test.id]
 
   user {
-    username = "ExampleUser"
-    password = "MindTheGap"
+    username = "example_user"
+    password = "<password>"
   }
 }
 ```
@@ -85,12 +83,12 @@ resource "aws_mq_broker" "example_primary" {
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
 
   user {
-    username = "ExampleUser"
-    password = "MindTheGap"
+    username = "example_user"
+    password = "<password>"
   }
   user {
-    username         = "ExampleReplicationUser"
-    password         = "Example12345"
+    username         = "example_replication_user"
+    password         = "<password>"
     replication_user = true
   }
 }
@@ -108,12 +106,12 @@ resource "aws_mq_broker" "example" {
   data_replication_primary_broker_arn = aws_mq_broker.primary.arn
 
   user {
-    username = "ExampleUser"
-    password = "MindTheGap"
+    username = "example_user"
+    password = "<password>"
   }
   user {
-    username         = "ExampleReplicationUser"
-    password         = "Example12345"
+    username         = "example_replication_user"
+    password         = "<password>"
     replication_user = true
   }
 }
@@ -127,26 +125,27 @@ The following arguments are required:
 
 * `broker_name` - (Required) Name of the broker.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
-* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.17.6`.
+* `engine_version` - (Required) Version of the broker engine.
 * `host_instance_type` - (Required) Broker's instance type. For example, `mq.t3.micro`, `mq.m5.large`.
 * `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
 The following arguments are optional:
 
-* `apply_immediately` - (Optional) Specifies whether any broker modifications are applied immediately, or during the next maintenance window. Default is `false`.
+* `apply_immediately` - (Optional) Whether to apply broker modifications immediately. Default is `false`.
 * `authentication_strategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
 * `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` and `RabbitMQ` only. Detailed below.
-* `data_replication_mode` - (Optional)  Defines whether this broker is a part of a data replication pair. Valid values are `CRDR` and `NONE`.
-* `data_replication_primary_broker_arn` - (Optional) The Amazon Resource Name (ARN) of the primary broker that is used to replicate data from in a data replication pair, and is applied to the replica broker. Must be set when `data_replication_mode` is `CRDR`.
+* `data_replication_mode` - (Optional) Whether this broker is part of a data replication pair. Valid values are `CRDR` and `NONE`.
+* `data_replication_primary_broker_arn` - (Optional) ARN of the primary broker used to replicate data in a data replication pair. Required when `data_replication_mode` is `CRDR`.
 * `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
-* `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below. (Currently, AWS may not process changes to LDAP server metadata.)
-* `logs` - (Optional) Configuration block for the logging configuration of the broker. Detailed below.
+* `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections. Not supported for `engine_type` `RabbitMQ`. Detailed below.
+* `logs` - (Optional) Configuration block for the logging configuration. Detailed below.
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
-* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`, and the AWS-default is `efs`. For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
+* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, valid values are `efs` and `ebs` (AWS-default is `efs`). For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
 * `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -154,29 +153,29 @@ The following arguments are optional:
 
 The following arguments are optional:
 
-* `id` - (Optional) The Configuration ID.
+* `id` - (Optional) Configuration ID.
 * `revision` - (Optional) Revision of the Configuration.
 
 ### encryption_options
 
 The following arguments are optional:
 
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of Key Management Service (KMS) Customer Master Key (CMK) to use for encryption at rest. Requires setting `use_aws_owned_key` to `false`. To perform drift detection when AWS-managed CMKs or customer-managed CMKs are in use, this value must be configured.
-* `use_aws_owned_key` - (Optional) Whether to enable an AWS-owned KMS CMK that is not in your account. Defaults to `true`. Setting to `false` without configuring `kms_key_id` will create an AWS-managed CMK aliased to `aws/mq` in your account.
+* `kms_key_id` - (Optional) ARN of KMS CMK to use for encryption at rest. Requires setting `use_aws_owned_key` to `false`. To perform drift detection when AWS-managed CMKs or customer-managed CMKs are in use, this value must be configured.
+* `use_aws_owned_key` - (Optional) Whether to enable an AWS-owned KMS CMK not in your account. Defaults to `true`. Setting to `false` without configuring `kms_key_id` creates an AWS-managed CMK aliased to `aws/mq` in your account.
 
 ### ldap_server_metadata
 
 The following arguments are optional:
 
-* `hosts` - (Optional) List of a fully qualified domain name of the LDAP server and an optional failover server.
-* `role_base` - (Optional) Fully qualified name of the directory to search for a user’s groups.
-* `role_name` - (Optional) Specifies the LDAP attribute that identifies the group name attribute in the object returned from the group membership query.
+* `hosts` - (Optional) List of fully qualified domain names of the LDAP server and optional failover server.
+* `role_base` - (Optional) Fully qualified name of the directory to search for a user's groups.
+* `role_name` - (Optional) LDAP attribute that identifies the group name attribute in the object returned from the group membership query.
 * `role_search_matching` - (Optional) Search criteria for groups.
 * `role_search_subtree` - (Optional) Whether the directory search scope is the entire sub-tree.
 * `service_account_password` - (Optional) Service account password.
 * `service_account_username` - (Optional) Service account username.
 * `user_base` - (Optional) Fully qualified name of the directory where you want to search for users.
-* `user_role_name` - (Optional) Specifies the name of the LDAP attribute for the user group membership.
+* `user_role_name` - (Optional) Name of the LDAP attribute for the user group membership.
 * `user_search_matching` - (Optional) Search criteria for users.
 * `user_search_subtree` - (Optional) Whether the directory search scope is the entire sub-tree.
 
@@ -184,8 +183,8 @@ The following arguments are optional:
 
 The following arguments are optional:
 
-* `audit` - (Optional) Enables audit logging. Auditing is only possible for `engine_type` of `ActiveMQ`. User management action made using JMX or the ActiveMQ Web Console is logged. Defaults to `false`.
-* `general` - (Optional) Enables general logging via CloudWatch. Defaults to `false`.
+* `audit` - (Optional) Whether to enable audit logging. Only possible for `engine_type` of `ActiveMQ`. Logs user management actions via JMX or ActiveMQ Web Console. Defaults to `false`.
+* `general` - (Optional) Whether to enable general logging via CloudWatch. Defaults to `false`.
 
 ### maintenance_window_start_time
 
@@ -197,11 +196,16 @@ The following arguments are required:
 
 ### user
 
+The following arguments are required:
+
+* `password` - (Required) Password of the user. Must be 12 to 250 characters long, contain at least 4 unique characters, and must not contain commas.
+* `username` - (Required) Username of the user.
+
+The following arguments are optional:
+
 * `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engine_type` of `ActiveMQ` only.
 * `groups` - (Optional) List of groups (20 maximum) to which the ActiveMQ user belongs. Applies to `engine_type` of `ActiveMQ` only.
-* `password` - (Required) Password of the user. It must be 12 to 250 characters long, at least 4 unique characters, and must not contain commas.
-* `replication_user` - (Optional) Whether to set set replication user. Defaults to `false`.
-* `username` - (Required) Username of the user.
+* `replication_user` - (Optional) Whether to set replication user. Defaults to `false`.
 
 ~> **NOTE:** AWS currently does not support updating RabbitMQ users. Updates to users can only be in the RabbitMQ UI.
 
@@ -212,7 +216,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the broker.
 * `id` - Unique ID that Amazon MQ generates for the broker.
 * `instances` - List of information about allocated brokers (both active & standby).
-    * `instances.0.console_url` - The URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
+    * `instances.0.console_url` - URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
     * `instances.0.ip_address` - IP Address of the broker.
     * `instances.0.endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g., as `instances.0.endpoints.0` (SSL):
         * For `ActiveMQ`:
@@ -223,8 +227,8 @@ This resource exports the following attributes in addition to the arguments abov
             * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
         * For `RabbitMQ`:
             * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
-* `pending_data_replication_mode` - (Optional) The data replication mode that will be applied after reboot.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `pending_data_replication_mode` - Data replication mode that will be applied after reboot.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

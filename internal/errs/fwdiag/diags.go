@@ -38,6 +38,20 @@ func DiagnosticString(d diag.Diagnostic) string {
 	return buf.String()
 }
 
+func NewCreatingResourceIDErrorDiagnostic(err error) diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		"Creating Resource ID",
+		err.Error(),
+	)
+}
+
+func NewParsingResourceIDErrorDiagnostic(err error) diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		"Parsing Resource ID",
+		err.Error(),
+	)
+}
+
 func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 	return diag.NewWarningDiagnostic(
 		"AWS resource not found during refresh",
@@ -47,4 +61,15 @@ func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 
 func AsError[T any](x T, diags diag.Diagnostics) (T, error) {
 	return x, DiagnosticsError(diags)
+}
+
+// DiagnosticsString formats a Diagnostics
+func DiagnosticsString(diags diag.Diagnostics) string {
+	var buf strings.Builder
+
+	for _, d := range diags {
+		fmt.Fprintln(&buf, DiagnosticString(d))
+	}
+
+	return buf.String()
 }

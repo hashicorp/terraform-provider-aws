@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skip_destroy` - (Optional) Skip disassociating the quota increase template upon destruction. This will remove the resource from Terraform state, but leave the remote association in place.
 
 ## Attribute Reference
@@ -61,13 +62,13 @@ from imports.aws.servicequotas_template_association import ServicequotasTemplate
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        ServicequotasTemplateAssociation.generate_config_for_import(self, "example", "012345678901")
+        ServicequotasTemplateAssociation.generate_config_for_import(self, "example", "123456789012")
 ```
 
 Using `terraform import`, import Service Quotas Template Association using the `id`. For example:
 
 ```console
-% terraform import aws_servicequotas_template_association.example 012345678901 
+% terraform import aws_servicequotas_template_association.example 123456789012 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8b8e59c370e620276f97759018b5888fafc9a67c14a6d02dd3c783bc716035e3 -->
+<!-- cache-key: cdktf-0.20.8 input-93047f31b30ffcdf122dea5bd950050889eb1befb004af3feda76bccd44be519 -->

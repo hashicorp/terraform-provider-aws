@@ -270,6 +270,7 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "my_
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Configuration name.
 * `resource_access_role_arn` - (Required) ARN of IAM Role used by service to invoke processors and sinks specified by configuration elements.
 * `elements` - (Required) Collection of processors and sinks to transform media and deliver data.
@@ -356,6 +357,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `30s`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example
+  identity = {
+    "arn" = "arn:aws:chime:us-east-1:123456789012:media-insights-pipeline-configuration/example-config"
+  }
+}
+
+resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Chime SDK media insights pipeline configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chime SDK Media Pipelines Media Insights Pipeline Configuration using the `id`. For example:
 

@@ -12,8 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -44,9 +48,17 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 					testAccCheckAliasInvokeARN(resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("lambda", functionArnResourcePart)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -55,8 +67,15 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccAliasConfig_usingFunctionName(roleName, policyName, attachmentName, funcName, aliasName),
-				PlanOnly: true,
+				Config: testAccAliasConfig_usingFunctionName(roleName, policyName, attachmentName, funcName, aliasName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -109,7 +128,7 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
 					testAccCheckAliasInvokeARN(resourceName, &conf),
 				),
 			},
@@ -148,7 +167,7 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -162,7 +181,7 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePartUpdate),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePartUpdate),
 				),
 			},
 		},
@@ -192,7 +211,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -207,7 +226,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingExistsConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -216,7 +235,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 		},
@@ -387,7 +406,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -410,7 +429,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -433,7 +452,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest_modified.zip")
   publish          = "true"
 }

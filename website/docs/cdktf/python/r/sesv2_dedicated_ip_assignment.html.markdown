@@ -38,8 +38,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ip` - (Required) Dedicated IP address.
 * `destination_pool_name` - (Required) Dedicated IP address.
 
@@ -48,13 +49,6 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A comma-separated string made up of `ip` and `destination_pool_name`.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `delete` - (Default `30m`)
 
 ## Import
 
@@ -81,4 +75,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Assignment
 % terraform import aws_sesv2_dedicated_ip_assignment.example "0.0.0.0,my-pool"
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ad1eca5879354d37ff31d84910a7c75bc98ff4e0846d438b18b1ca96ed71fe9f -->
+<!-- cache-key: cdktf-0.20.8 input-8aad6e0e6527f833cb94945c9e539a334170f7c710e0f2066f707f60fcf5cf40 -->

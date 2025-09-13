@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +37,7 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", names.AttrName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 			{
@@ -51,7 +52,7 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", names.AttrName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("ecr:DescribeImages")),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 		},
@@ -105,16 +106,36 @@ func TestAccECRRepositoryPolicy_IAM_principalOrder(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("iam")),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccRepositoryPolicyConfig_iamRoleNewOrderJSONEncode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:   testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName),
-				PlanOnly: true,
+				Config: testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
