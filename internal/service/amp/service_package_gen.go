@@ -37,6 +37,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_prometheus_resource_policy",
+			Name:     "Resource Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newScraperResource,
 			TypeName: "aws_prometheus_scraper",
 			Name:     "Scraper",
