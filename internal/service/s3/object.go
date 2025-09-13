@@ -508,8 +508,10 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 		input.ChecksumAlgorithm = types.ChecksumAlgorithm(v.(string))
 	}
 
-	if v, ok := d.GetOk("checksum_sha256"); ok && input.ChecksumAlgorithm == types.ChecksumAlgorithmSha256 {
-		input.ChecksumSHA256 = aws.String(v.(string))
+	if !d.GetRawConfig().GetAttr("checksum_sha256").IsNull() { // if explicitly specified in the configuration
+		if v, ok := d.GetOk("checksum_sha256"); ok && input.ChecksumAlgorithm == types.ChecksumAlgorithmSha256 {
+			input.ChecksumSHA256 = aws.String(v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("content_disposition"); ok {
@@ -606,7 +608,7 @@ func validateMetadataIsLowerCase(v any, k string) (ws []string, errors []error) 
 }
 
 func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
-	if !d.GetRawConfig().GetAttr("checksum_sha256").IsNull() {
+	if !d.GetRawConfig().GetAttr("checksum_sha256").IsNull() { // if explicitly specified in the configuration
 		if v, ok := d.GetOk("checksum_algorithm"); !ok || types.ChecksumAlgorithm(v.(string)) != types.ChecksumAlgorithmSha256 {
 			return fmt.Errorf("checksum_sha256 can only be specified when checksum_algorithm is set to 'SHA256'")
 		}
