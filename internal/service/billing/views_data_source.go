@@ -58,7 +58,7 @@ func (d *dataSourceViews) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	out, err := findViewsByBillingViewTypes(ctx, conn, billingViewTypes)
+	out, err := findViewsByViewTypes(ctx, conn, billingViewTypes)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.BillingViewTypes.String())
 		return
@@ -72,16 +72,16 @@ func (d *dataSourceViews) Read(ctx context.Context, req datasource.ReadRequest, 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.BillingViewTypes.String())
 }
 
-func findViewsByBillingViewTypes(ctx context.Context, conn *billing.Client, billingViewTypes []awstypes.BillingViewType) ([]awstypes.BillingViewListElement, error) {
+func findViewsByViewTypes(ctx context.Context, conn *billing.Client, billingViewTypes []awstypes.BillingViewType) ([]awstypes.BillingViewListElement, error) {
 	var results []awstypes.BillingViewListElement
 
-	input := &billing.ListBillingViewsInput{}
+	input := billing.ListBillingViewsInput{}
 
 	if len(billingViewTypes) > 0 {
 		input.BillingViewTypes = billingViewTypes
 	}
 
-	paginator := billing.NewListBillingViewsPaginator(conn, input)
+	paginator := billing.NewListBillingViewsPaginator(conn, &input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
