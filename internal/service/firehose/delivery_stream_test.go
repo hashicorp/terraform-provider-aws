@@ -16,8 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
@@ -52,6 +55,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "firehose", "deliverystream/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "database_source_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "extended_s3"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
@@ -1092,6 +1096,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.warehouse_location", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1125,6 +1130,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.warehouse_location", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1166,6 +1172,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.warehouse_location", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1203,6 +1210,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.warehouse_location", ""),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -2527,6 +2535,40 @@ func TestAccFirehoseDeliveryStream_missingProcessing(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_databaseSourceConfiguration(t *testing.T) {
+	acctest.Skip(t, "Currently not able to test")
+
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_databaseSourceConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_source_configuration"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kinesis_source_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("msk_source_configuration"), knownvalue.ListSizeExact(0)),
+				},
 			},
 		},
 	})
@@ -5839,4 +5881,19 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDeliveryStreamConfig_baseDatabaseSource(_ string) string {
+	return acctest.ConfigCompose(acctest.ConfigRandomPassword(), `
+# TODO
+`)
+}
+
+func testAccDeliveryStreamConfig_databaseSourceConfiguration(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_base(rName),
+		testAccDeliveryStreamConfig_baseDatabaseSource(rName),
+		`
+# TODO
+`)
 }
