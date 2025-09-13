@@ -75,9 +75,12 @@ func (d *dataSourceViews) Read(ctx context.Context, req datasource.ReadRequest, 
 func findViewsByBillingViewTypes(ctx context.Context, conn *billing.Client, billingViewTypes []awstypes.BillingViewType) ([]awstypes.BillingViewListElement, error) {
 	var results []awstypes.BillingViewListElement
 
-	input := &billing.ListBillingViewsInput{
-		BillingViewTypes: billingViewTypes,
+	input := &billing.ListBillingViewsInput{}
+
+	if len(billingViewTypes) > 0 {
+		input.BillingViewTypes = billingViewTypes
 	}
+
 	paginator := billing.NewListBillingViewsPaginator(conn, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
