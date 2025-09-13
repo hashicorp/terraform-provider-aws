@@ -1657,6 +1657,7 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	content := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1665,10 +1666,10 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC32"),
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC32", content),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					testAccCheckObjectBody(&obj, content),
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC32"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", "q/d4Ig=="),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
@@ -1684,10 +1685,10 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", names.AttrContent, names.AttrForceDestroy},
 			},
 			{
-				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256"),
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256", content),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					testAccCheckObjectBody(&obj, content),
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "SHA256"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
@@ -1697,10 +1698,23 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC64NVME"),
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256", content+"changed"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					testAccCheckObjectBody(&obj, content+"changed"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "SHA256"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "0E9UPCEIoCy+d/ArtJddbR7vfZlrDzp7VRvAm0rtMpE="),
+				),
+			},
+			{
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC64NVME", content),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, content),
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC64NVME"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
@@ -2114,6 +2128,82 @@ func TestAccS3Object_basicUpgrade(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumSHA256Trigger(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj, updated_obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	startingData := "Ebben!"
+	updatedData := "Ne andrò lontana"
+
+	filename := testAccObjectCreateTempFile(t, startingData)
+	defer os.Remove(filename)
+
+	filenameUpdated := testAccObjectCreateTempFile(t, updatedData)
+	defer os.Remove(filenameUpdated)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// checksum_sha256 specified without checksum_algorithm.
+				// Expect error.
+				Config:      testAccObjectConfig_checksumSHA256TriggerWithoutChecksumAlgorirhm(rName, filename),
+				ExpectError: regexache.MustCompile(`checksum_sha256 can only be specified when checksum_algorithm is set to 'SHA256'`),
+			},
+			{
+				// An object is created with checksum_algorithm=SHA256 and checksum_sha256 specified.
+				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filename, filename),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, startingData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "QifZEbR25GUM80w73rZDli2WfdThYYLK2RjGoFGGuSo="),
+				),
+			},
+			{
+				// The object update is triggered by checksum_sha256 change
+				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filenameUpdated, filenameUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &updated_obj),
+					testAccCheckObjectBody(&updated_obj, updatedData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "q2j00Vv/exbSoCQcDv7g55LgR7IadJWPXb7vJlZdimU="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "checksum_algorithm", "checksum_sha256"},
+			},
+			{
+				// The object update is triggered by checksum_sha256 change, but incorrect checksum_256 value is provided.
+				// Expect error returned from S3 API.
+				Config: testAccObjectConfig_checksumSHA256Trigger(rName, filename, filenameUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectError: regexache.MustCompile(`BadDigest: The SHA256 you specified did not match the calculated checksum`),
 			},
 		},
 	})
@@ -3259,7 +3349,7 @@ resource "aws_s3_object" "object" {
 `, rName, content)
 }
 
-func testAccObjectConfig_checksumAlgorithm(rName, checksumAlgorithm string) string {
+func testAccObjectConfig_checksumAlgorithm(rName, checksumAlgorithm, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -3268,11 +3358,11 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
-  content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  content = %[3]q
 
   checksum_algorithm = %[2]q
 }
-`, rName, checksumAlgorithm)
+`, rName, checksumAlgorithm, content)
 }
 
 func testAccObjectConfig_keyWithSlashes(rName string) string {
@@ -3325,6 +3415,7 @@ resource "aws_s3_object" "object" {
       tags = {}
     }
   }
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
 }
 `, source))
 }
@@ -3392,4 +3483,38 @@ resource "aws_s3_object" "object" {
   kms_key_id = data.aws_kms_key.test.arn
 }
 `, rName, content)
+}
+
+func testAccObjectConfig_checksumSHA256TriggerWithoutChecksumAlgorirhm(rName string, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "test-key"
+  source = %[2]q
+
+  checksum_sha256 = filebase64sha256(%[2]q)
+}
+`, rName, source)
+}
+
+func testAccObjectConfig_checksumSHA256Trigger(rName string, source string, sha256FileName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "test-key"
+  source = %[2]q
+
+  checksum_sha256    = filebase64sha256(%[3]q)
+  checksum_algorithm = "SHA256"
+
+}
+`, rName, source, sha256FileName)
 }

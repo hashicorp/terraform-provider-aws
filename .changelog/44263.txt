@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_object: Change `checksum_sha256` from attribute to argument
+```
