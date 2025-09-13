@@ -1657,6 +1657,7 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	content := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1665,10 +1666,10 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC32"),
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC32", content),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					testAccCheckObjectBody(&obj, content),
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC32"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", "q/d4Ig=="),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
@@ -1684,10 +1685,10 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", names.AttrContent, names.AttrForceDestroy},
 			},
 			{
-				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256"),
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256", content),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					testAccCheckObjectBody(&obj, content),
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "SHA256"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
@@ -1697,10 +1698,23 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC64NVME"),
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256", content+"changed"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					testAccCheckObjectBody(&obj, content+"changed"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "SHA256"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "0E9UPCEIoCy+d/ArtJddbR7vfZlrDzp7VRvAm0rtMpE="),
+				),
+			},
+			{
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC64NVME", content),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, content),
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC64NVME"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
@@ -3335,7 +3349,7 @@ resource "aws_s3_object" "object" {
 `, rName, content)
 }
 
-func testAccObjectConfig_checksumAlgorithm(rName, checksumAlgorithm string) string {
+func testAccObjectConfig_checksumAlgorithm(rName, checksumAlgorithm, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -3344,11 +3358,11 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
-  content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  content = %[3]q
 
   checksum_algorithm = %[2]q
 }
-`, rName, checksumAlgorithm)
+`, rName, checksumAlgorithm, content)
 }
 
 func testAccObjectConfig_keyWithSlashes(rName string) string {
