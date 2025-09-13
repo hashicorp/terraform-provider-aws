@@ -35,6 +35,7 @@ rules:
         - "/internal/service/ssoadmin/application.go"
         - "/internal/service/ssoadmin/trusted_token_issuer.go"
         - "/internal/service/verifiedpermissions/schema.go"
+        - "/internal/service/bedrockagentcore/gateway_target.go"
     patterns:
       - pattern: func $FUNC(ctx context.Context, ...)
       - metavariable-comparison:
@@ -79,6 +80,7 @@ rules:
         - "/internal/service/ssoadmin/trusted_token_issuer.go"
         - "/internal/service/verifiedpermissions/identity_source.go"
         - "/internal/service/verifiedpermissions/schema.go"
+        - "/internal/service/bedrockagentcore/gateway_target.go"
     patterns:
       - pattern: func $FUNC(ctx context.Context, ...)
       - metavariable-comparison:
