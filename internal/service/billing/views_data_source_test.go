@@ -32,6 +32,15 @@ func TestAccBillingViewsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "billing_view.0.name", "Primary View"),
 				),
 			},
+			{
+				Config: testAccViewsDataSourceConfig_noArguments(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "billing_view.*", map[string]string{
+						"billing_view_type": "PRIMARY",
+						"name":              "Primary View",
+					}),
+				),
+			},
 		},
 	})
 }
@@ -41,5 +50,11 @@ func testAccViewsDataSourceConfig_basic() string {
 data "aws_billing_views" "test" {
   billing_view_types = ["PRIMARY"]
 }
+`
+}
+
+func testAccViewsDataSourceConfig_noArguments() string {
+	return `
+data "aws_billing_views" "test" {}
 `
 }
