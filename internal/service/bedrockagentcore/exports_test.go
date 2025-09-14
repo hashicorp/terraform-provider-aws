@@ -6,6 +6,7 @@ package bedrockagentcore
 // Exports for use in tests only.
 var (
 	ResourceAgentRuntime             = newResourceAgentRuntime
+	ResourceAPIKeyCredentialProvider = newResourceAPIKeyCredentialProvider
 	ResourceCodeInterpreter          = newResourceCodeInterpreter
 	ResourceGateway                  = newResourceGateway
 	ResourceGatewayTarget            = newResourceGatewayTarget
@@ -15,6 +16,7 @@ var (
 	ResourceWorkloadIdentity         = newResourceWorkloadIdentity
 
 	FindAgentRuntimeByID               = findAgentRuntimeByID
+	FindAPIKeyCredentialProviderByName = findAPIKeyCredentialProviderByName
 	FindCodeInterpreterByID            = findCodeInterpreterByID
 	FindGatewayByID                    = findGatewayByID
 	FindGatewayTargetByID              = findGatewayTargetByID

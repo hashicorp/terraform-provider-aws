@@ -6,6 +6,8 @@ package bedrockagentcore
 import (
 	"context"
 	"errors"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -479,11 +481,14 @@ func (m *gatewayProtocolConfigurationModel) Flatten(ctx context.Context, v any) 
 			return diags
 		}
 		m.MCP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	default:
-		return diags
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("gateway protocol configuration flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
+	return diags
 }
 
 func (m gatewayProtocolConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {

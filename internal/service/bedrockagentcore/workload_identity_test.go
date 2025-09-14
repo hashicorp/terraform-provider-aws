@@ -37,7 +37,7 @@ func TestAccBedrockAgentCoreWorkloadIdentity_full(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckWorkloadIdentities(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -88,7 +88,7 @@ func TestAccBedrockAgentCoreWorkloadIdentity_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckWorkloadIdentities(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -165,6 +165,21 @@ func testAccCheckWorkloadIdentityNotRecreated(before, after *bedrockagentcorecon
 			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameWorkloadIdentity, beforeName, errors.New("recreated"))
 		}
 		return nil
+	}
+}
+
+func testAccPreCheckWorkloadIdentities(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+
+	input := bedrockagentcorecontrol.ListWorkloadIdentitiesInput{}
+
+	_, err := conn.ListWorkloadIdentities(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

@@ -6,6 +6,8 @@ package bedrockagentcore
 import (
 	"context"
 	"errors"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -484,11 +486,14 @@ func (m *artifactModel) Flatten(ctx context.Context, v any) (diags diag.Diagnost
 			return diags
 		}
 		m.ContainerConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	default:
-		return diags
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("artifact flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
+	return diags
 }
 
 func (m artifactModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -531,11 +536,14 @@ func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) (diag
 			return diags
 		}
 		m.CustomJWTAuthorizer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	default:
-		return diags
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("authorization configuration flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
+	return diags
 }
 
 func (m authorizerConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {

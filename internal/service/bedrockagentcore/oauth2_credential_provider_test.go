@@ -48,7 +48,6 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock-agentcore", regexache.MustCompile(`token-vault/default/oauth2credentialprovider/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "client_secret_arn"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.github.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.github.0.client_id", "test-client-id"),
@@ -274,15 +273,16 @@ func testAccCheckOAuth2CredentialProviderDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			_, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+			rName := rs.Primary.Attributes[names.AttrName]
+
+			_, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rName)
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rs.Primary.ID, err)
+				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rName, err)
 			}
-
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rName, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -296,15 +296,17 @@ func testAccCheckOAuth2CredentialProviderExists(ctx context.Context, name string
 			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameOAuth2CredentialProvider, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		rName := rs.Primary.Attributes[names.AttrName]
+
+		if rName == "" {
 			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameOAuth2CredentialProvider, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+		resp, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rName)
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rs.Primary.ID, err)
+			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rName, err)
 		}
 
 		*oauth2credentialprovider = *resp

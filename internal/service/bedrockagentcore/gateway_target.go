@@ -803,7 +803,6 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 				}
 				m.ApiKey = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 			}
-			return diags
 
 		case awstypes.CredentialProviderTypeOauth:
 			if oauthProvider, ok := t.CredentialProvider.(*awstypes.CredentialProviderMemberOauthCredentialProvider); ok {
@@ -814,18 +813,15 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 				}
 				m.OAuth = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 			}
-			return diags
 
 		case awstypes.CredentialProviderTypeGatewayIamRole:
 			m.GatewayIAMRole = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &gatewayIAMRoleProviderModel{})
-			return diags
 
 		default:
 			diags.AddError(
 				"Unknown Credential Provider Type",
 				fmt.Sprintf("Received unknown credential provider type: %s", t.CredentialProviderType),
 			)
-			return diags
 		}
 
 	default:
@@ -833,8 +829,8 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 			"Invalid Credential Provider Configuration",
 			fmt.Sprintf("Received unexpected type: %T", v),
 		)
-		return diags
 	}
+	return diags
 }
 
 func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -918,11 +914,13 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 		}
 
 		m.MCP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-
-		return diags
 	default:
-		return diags
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("target configuration flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
+	return diags
 }
 
 func (m targetConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -966,7 +964,6 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.
 			return diags
 		}
 		m.Lambda = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	case awstypes.McpTargetConfigurationMemberOpenApiSchema:
 		var model apiSchemaConfigurationModel
@@ -975,7 +972,6 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.
 			return diags
 		}
 		m.OpenApiSchema = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	case awstypes.McpTargetConfigurationMemberSmithyModel:
 		var model apiSchemaConfigurationModel
@@ -984,11 +980,14 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.
 			return diags
 		}
 		m.SmithyModel = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	default:
-		return diags
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("mcp configuration flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
+	return diags
 }
 
 func (m mcpConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -1082,7 +1081,6 @@ func (m *toolSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 			toolDefModels = append(toolDefModels, &model)
 		}
 		m.InlinePayload = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, toolDefModels)
-		return diags
 
 	case awstypes.ToolSchemaMemberS3:
 		var model s3ConfigurationModel
@@ -1091,11 +1089,14 @@ func (m *toolSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 			return diags
 		}
 		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	default:
-		return diags
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("tool schema configuration flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
+	return diags
 }
 
 func (m toolSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -1571,11 +1572,14 @@ func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) (diags
 			return diags
 		}
 		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	default:
-		return diags
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("api schema configuration flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
+	return diags
 }
 
 func (m apiSchemaConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {

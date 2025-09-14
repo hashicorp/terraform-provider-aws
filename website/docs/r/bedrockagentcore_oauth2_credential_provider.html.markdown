@@ -10,6 +10,8 @@ description: |-
 
 Manages an AWS Bedrock AgentCore OAuth2 Credential Provider. OAuth2 credential providers enable secure authentication with external OAuth2/OpenID Connect identity providers for agent runtimes.
 
+-> **Note:** Write-Only arguments `client_id_wo` and `client_secret_wo` are available to use in place of `client_id` and `client_secret`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### GitHub OAuth Provider
@@ -88,11 +90,11 @@ The following arguments are optional:
 The `config` block must contain exactly one of the following provider configurations:
 
 * `custom` - (Optional) Custom OAuth2 provider configuration. See [`custom`](#custom) below.
-* `github` - (Optional) GitHub OAuth provider configuration. See [`github`](#github) below.
-* `google` - (Optional) Google OAuth provider configuration. See [`google`](#google) below.
-* `microsoft` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#microsoft) below.
-* `salesforce` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#salesforce) below.
-* `slack` - (Optional) Slack OAuth provider configuration. See [`slack`](#slack) below.
+* `github` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-microsoft-salesforce-slack) below.
+* `google` - (Optional) Google OAuth provider configuration. See [`google`](#github-google-microsoft-salesforce-slack) below.
+* `microsoft` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#github-google-microsoft-salesforce-slack) below.
+* `salesforce` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#github-google-microsoft-salesforce-slack) below.
+* `slack` - (Optional) Slack OAuth provider configuration. See [`slack`](#github-google-microsoft-salesforce-slack) below.
 
 ### `custom`
 
@@ -105,9 +107,9 @@ The `custom` block supports the following:
 
 **Write-Only Credentials (choose one pair):**
 
-* `client_id_wo` - (Optional) Write-only OAuth2 client ID. This value is stored in Terraform state but never returned in plan outputs. Cannot be used with `client_id`. Must be used together with `client_secret_wo` and `client_credentials_wo_version`.
-* `client_secret_wo` - (Optional) Write-only OAuth2 client secret. This value is stored in Terraform state but never returned in plan outputs. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
-* `client_credentials_wo_version` - (Optional) Version number for write-only credentials. Must be incremented whenever credentials are rotated. Required when using write-only credentials.
+* `client_id_wo` - (Optional) Write-only OAuth2 client ID. Cannot be used with `client_id`. Must be used together with `client_secret_wo` and `client_credentials_wo_version`.
+* `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
+* `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
 
 **OAuth Discovery Configuration:**
 
@@ -126,7 +128,7 @@ These predefined provider blocks support the following:
 
 * `client_id_wo` - (Optional) Write-only OAuth2 client ID. Cannot be used with `client_id`. Must be used together with `client_secret_wo` and `client_credentials_wo_version`.
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
-* `client_credentials_wo_version` - (Optional) Version number for write-only credentials. Required when using write-only credentials.
+* `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
 
 **Note:** These predefined providers automatically configure OAuth discovery settings based on their respective authorization servers.
 
@@ -178,24 +180,3 @@ Using `terraform import`, import Bedrock AgentCore OAuth2 Credential Provider us
 ```console
 % terraform import aws_bedrockagentcore_oauth2_credential_provider.example oauth2-provider-name
 ```
-
-## Notes
-
-### Write-Only Credentials
-
-Write-only credentials (`client_id_wo`, `client_secret_wo`) provide enhanced security by ensuring sensitive values are never exposed in Terraform plan outputs or logs. When using write-only credentials:
-
-1. **Version Management**: Always increment `client_credentials_wo_version` when rotating credentials
-2. **State Considerations**: Write-only values are stored in Terraform state but never appear in plan outputs
-3. **Import Limitations**: Write-only credentials cannot be imported and must be specified in the configuration
-
-### Provider Type Changes
-
-Changing the provider type (e.g., from `github` to `custom`) will force replacement of the resource, as this fundamentally changes the OAuth2 provider configuration.
-
-### Credential Rotation
-
-When rotating OAuth2 credentials:
-
-- For standard credentials: Update `client_id` and `client_secret` values
-- For write-only credentials: Update `client_id_wo`, `client_secret_wo`, and increment `client_credentials_wo_version`

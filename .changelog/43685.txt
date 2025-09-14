@@ -3,6 +3,10 @@ aws_bedrockagentcore_agent_runtime
 ```
 
 ```release-note:new-resource
+aws_bedrockagentcore_api_key_credential_provider
+```
+
+```release-note:new-resource
 aws_bedrockagentcore_code_interpreter
 ```
 

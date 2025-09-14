@@ -30,6 +30,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceAPIKeyCredentialProvider,
+			TypeName: "aws_bedrockagentcore_api_key_credential_provider",
+			Name:     "Api Key Credential Provider",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceCodeInterpreter,
 			TypeName: "aws_bedrockagentcore_code_interpreter",
 			Name:     "Code Interpreter",

@@ -6,6 +6,8 @@ package bedrockagentcore
 import (
 	"context"
 	"errors"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -618,26 +620,10 @@ func (m *resourceOauth2CredentialProviderModel) CredsValue(ctx context.Context) 
 	}, diags
 }
 
-type oauth2ProviderConfigModel struct {
-	ClientID             types.String                                          `tfsdk:"client_id"`
-	ClientSecret         types.String                                          `tfsdk:"client_secret"`
-	ClientIDWo           types.String                                          `tfsdk:"client_id_wo"`
-	ClientSecretWo       types.String                                          `tfsdk:"client_secret_wo"`
-	ClientCredsWoVersion types.Int64                                           `tfsdk:"client_credentials_wo_version"`
-	OauthDiscovery       fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
-}
-
-type oauth2DiscoveryModel struct {
-	DiscoveryUrl                types.String                                                            `tfsdk:"discovery_url"`
-	AuthorizationServerMetadata fwtypes.ListNestedObjectValueOf[oauth2AuthorizationServerMetadataModel] `tfsdk:"authorization_server_metadata"`
-}
-
-type oauth2AuthorizationServerMetadataModel struct {
-	Issuer                types.String        `tfsdk:"issuer"`
-	AuthorizationEndpoint types.String        `tfsdk:"authorization_endpoint"`
-	TokenEndpoint         types.String        `tfsdk:"token_endpoint"`
-	ResponseTypes         fwtypes.SetOfString `tfsdk:"response_types"`
-}
+var (
+	_ flex.Flattener = &oauth2ProviderConfigInputModel{}
+	_ flex.Expander  = &oauth2ProviderConfigInputModel{}
+)
 
 func (m *oauth2ProviderConfigInputModel) Flatten(ctxWithCreds context.Context, v any) (diags diag.Diagnostics) {
 	var model oauth2ProviderConfigModel
@@ -762,11 +748,29 @@ func (m oauth2ProviderConfigInputModel) Expand(ctxWithCreds context.Context) (re
 	return result, diags
 }
 
+type oauth2ProviderConfigModel struct {
+	ClientID             types.String                                          `tfsdk:"client_id"`
+	ClientSecret         types.String                                          `tfsdk:"client_secret"`
+	ClientIDWo           types.String                                          `tfsdk:"client_id_wo"`
+	ClientSecretWo       types.String                                          `tfsdk:"client_secret_wo"`
+	ClientCredsWoVersion types.Int64                                           `tfsdk:"client_credentials_wo_version"`
+	OauthDiscovery       fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
+}
+
+type oauth2DiscoveryModel struct {
+	DiscoveryUrl                types.String                                                            `tfsdk:"discovery_url"`
+	AuthorizationServerMetadata fwtypes.ListNestedObjectValueOf[oauth2AuthorizationServerMetadataModel] `tfsdk:"authorization_server_metadata"`
+}
+
+var (
+	_ flex.Flattener = &oauth2DiscoveryModel{}
+	_ flex.Expander  = &oauth2DiscoveryModel{}
+)
+
 func (m *oauth2DiscoveryModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case awstypes.Oauth2DiscoveryMemberDiscoveryUrl:
 		m.DiscoveryUrl = types.StringValue(t.Value)
-		return diags
 
 	case awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata:
 		var model oauth2AuthorizationServerMetadataModel
@@ -775,11 +779,14 @@ func (m *oauth2DiscoveryModel) Flatten(ctx context.Context, v any) (diags diag.D
 			return diags
 		}
 		m.AuthorizationServerMetadata = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
 
 	default:
-		return diags
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("oauth2 discovery configuration flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
+	return diags
 }
 
 func (m oauth2DiscoveryModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -808,4 +815,11 @@ func (m oauth2DiscoveryModel) Expand(ctx context.Context) (result any, diags dia
 		)
 		return nil, diags
 	}
+}
+
+type oauth2AuthorizationServerMetadataModel struct {
+	Issuer                types.String        `tfsdk:"issuer"`
+	AuthorizationEndpoint types.String        `tfsdk:"authorization_endpoint"`
+	TokenEndpoint         types.String        `tfsdk:"token_endpoint"`
+	ResponseTypes         fwtypes.SetOfString `tfsdk:"response_types"`
 }
