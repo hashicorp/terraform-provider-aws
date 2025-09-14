@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,7 +38,7 @@ func TestAccCloudFrontConnectionGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "tftest"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", regexache.MustCompile(`connection-group/[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_enabled", acctest.CtFalse),
@@ -154,7 +155,7 @@ func TestAccCloudFrontConnectionGroup_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontConnectionGroup_anycastIpList(t *testing.T) {
+func TestAccCloudFrontConnectionGroup_anycastIPList(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionGroup awstypes.ConnectionGroup
 	resourceName := "aws_cloudfront_connection_group.test"
@@ -169,7 +170,7 @@ func TestAccCloudFrontConnectionGroup_anycastIpList(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionGroupConfig_anycastIpList(),
+				Config: testAccConnectionGroupConfig_anycastIPList(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
 					resource.TestCheckResourceAttrSet(resourceName, "anycast_ip_list_id"),
@@ -262,17 +263,17 @@ resource "aws_cloudfront_connection_group" "test" {
 func testAccConnectionGroupConfig_ipv6() string {
 	return `
 resource "aws_cloudfront_connection_group" "test" {
-  name = "ipv6test"
+  name 		   = "ipv6test"
   ipv6_enabled = false
 }
 `
 }
 
-func testAccConnectionGroupConfig_anycastIpList() string {
+func testAccConnectionGroupConfig_anycastIPList() string {
 	return `
 resource "aws_cloudfront_connection_group" "testip" {
-  name = "iptest"
-  ipv6_enabled = false
+  name				 = "iptest"
+  ipv6_enabled 		 = false
   anycast_ip_list_id = "aip_IuA2ABRz0cxB0EZ2ikd7rR"
 }
 `
