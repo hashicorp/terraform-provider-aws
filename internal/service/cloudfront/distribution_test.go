@@ -939,38 +939,6 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValues_headers(t
 	})
 }
 
-func TestAccCloudFrontDistribution_minimalMultiTenant(t *testing.T) {
-	ctx := acctest.Context(t)
-	var distribution awstypes.Distribution
-	resourceName := "aws_cloudfront_distribution.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDistributionConfig_minimalMultiTenant(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "connection_mode", "tenant-only"),
-					resource.TestMatchResourceAttr(resourceName, "default_cache_behavior.0.cache_policy_id", regexache.MustCompile(`^[0-9a-z]+`)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"retain_on_delete",
-					"wait_for_deployment",
-				},
-			},
-		},
-	})
-}
-
 func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedKeyGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
@@ -1557,6 +1525,47 @@ func TestAccCloudFrontDistribution_grpcConfig(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistribution_minimalMultiTenant(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_minimalMultiTenant(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "connection_mode", "tenant-only"),
+					resource.TestMatchResourceAttr(resourceName, "default_cache_behavior.0.cache_policy_id", regexache.MustCompile(`^[0-9a-z]+`)),
+					// Verify illegal fields for multi-tenant distributions are not set
+					resource.TestCheckNoResourceAttr(resourceName, "aliases"),
+					resource.TestCheckResourceAttr(resourceName, "continuous_deployment_policy_id", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "is_ipv6_enabled"),
+					resource.TestCheckNoResourceAttr(resourceName, "price_class"),
+					resource.TestCheckNoResourceAttr(resourceName, "staging"),
+					resource.TestCheckNoResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values"),
+					resource.TestCheckNoResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers"),
+					resource.TestCheckNoResourceAttr(resourceName, "default_cache_behavior.0.smooth_streaming"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontDistribution_multiTenantWithConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
@@ -1589,6 +1598,156 @@ func TestAccCloudFrontDistribution_multiTenantWithConfig(t *testing.T) {
 					"retain_on_delete",
 					"wait_for_deployment",
 				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_aliases(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_multiTenantInvalid(`aliases = ["example.com"]`, `"policy5"`),
+				ExpectError: regexache.MustCompile(`aliases is not supported for multi-tenant distributions`),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_continuousDeploymentPolicyId(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_multiTenantInvalid(`continuous_deployment_policy_id = "test-policy"`, `"policy1"`),
+				ExpectError: regexache.MustCompile(`continuous_deployment_policy_id is not supported for multi-tenant distributions`),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_isIpv6Enabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_multiTenantInvalid(`is_ipv6_enabled = true`, `"policy2"`),
+				ExpectError: regexache.MustCompile(`is_ipv6_enabled is not supported for multi-tenant distributions`),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_priceClass(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_multiTenantInvalid(`price_class = "PriceClass_100"`, `"policy3"`),
+				ExpectError: regexache.MustCompile(`price_class is not supported for multi-tenant distributions`),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_staging(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_multiTenantInvalid(`staging = true`, `"policy4"`),
+				ExpectError: regexache.MustCompile(`staging is not supported for multi-tenant distributions`),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_forwardedValues(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_multiTenantInvalidCacheBehavior(
+					`    forwarded_values { 
+      query_string = false
+      cookies { 
+        forward = "none" 
+      } 
+    }`),
+				ExpectError: regexache.MustCompile(`default_cache_behaviour.forwarded_values is not supported for multi-tenant distributions`),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_trustedSigners(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_multiTenantInvalidCacheBehavior(`trusted_signers = ["self"]`),
+				ExpectError: regexache.MustCompile(`default_cache_behaviour.trusted_signers is not supported for multi-tenant distributions`),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_smoothStreaming(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_multiTenantInvalidCacheBehavior(`smooth_streaming = true`),
+				ExpectError: regexache.MustCompile(`default_cache_behaviour.smooth_streaming is not supported for multi-tenant distributions`),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_multiTenantValidation_ttlFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_multiTenantInvalidTTL(),
+				ExpectError: regexache.MustCompile(`default_ttl, min_ttl and max_ttl cannot be specified for multi-tenant distributions`),
 			},
 		},
 	})
@@ -4852,6 +5011,149 @@ resource "aws_cloudfront_distribution" "test" {
         }
       }
     }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  retain_on_delete = false
+}
+`
+}
+
+func testAccDistributionConfig_multiTenantInvalid(config string, cachepolicy string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_cache_policy" "tf-policy" {
+  name        = %[2]s
+  comment     = "test tenant cache policy"
+  default_ttl = 50
+  max_ttl     = 100
+  min_ttl     = 1
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "none"
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+  }
+}
+
+resource "aws_cloudfront_distribution" "test" {
+  connection_mode = "tenant-only"
+  enabled         = false
+  %[1]s
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "myCustomOrigin"
+    viewer_protocol_policy = "allow-all"
+    cache_policy_id        = aws_cloudfront_cache_policy.tf-policy.id
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  retain_on_delete = false
+}
+`, config, cachepolicy)
+}
+
+func testAccDistributionConfig_multiTenantInvalidCacheBehavior(config string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  connection_mode = "tenant-only"
+  enabled         = false
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "myCustomOrigin"
+    viewer_protocol_policy = "allow-all"
+    %s
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  retain_on_delete = false
+}
+`, config)
+}
+
+func testAccDistributionConfig_multiTenantInvalidTTL() string {
+	return `
+resource "aws_cloudfront_distribution" "test" {
+  connection_mode = "tenant-only"
+  enabled         = false
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "myCustomOrigin"
+    viewer_protocol_policy = "allow-all"
+    default_ttl            = 86400
   }
 
   restrictions {
