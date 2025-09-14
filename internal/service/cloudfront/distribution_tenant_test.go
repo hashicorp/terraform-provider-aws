@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -40,7 +41,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", regexache.MustCompile(`distribution-tenant/[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
@@ -114,7 +115,7 @@ func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontDistributionTenant_customCertificateWithWebAcl(t *testing.T) {
+func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var tenant awstypes.DistributionTenant
 	resourceName := "aws_cloudfront_distribution_tenant.test"
@@ -129,7 +130,7 @@ func TestAccCloudFrontDistributionTenant_customCertificateWithWebAcl(t *testing.
 		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantConfig_customCertificateWithWebAcl(t),
+				Config: testAccDistributionTenantConfig_customCertificateWithWebACL(t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttr(resourceName, "customizations.#", "1"),
@@ -161,8 +162,8 @@ func TestAccCloudFrontDistributionTenant_parameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.name", "region"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.value", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.name", "place"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.value", "na"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.1.name", "tenantid"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.1.value", "tenant-123"),
 				),
@@ -301,10 +302,11 @@ func testAccCheckDistributionTenantExists(ctx context.Context, n string, v *awst
 func testAccDistributionTenantConfig_basic(t *testing.T) string {
 	certDomain := acctest.ACMCertificateDomainFromEnv(t)
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
 
 data "aws_acm_certificate" "test" {
-  domain   = %[1]q
-  region = "us-east-1"
+  domain      = %[1]q
+  region      = "data.aws_region.current.region"
   most_recent = true
 }
 
@@ -342,7 +344,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -350,7 +352,7 @@ resource "aws_cloudfront_distribution" "test" {
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.tf-policy.id
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -367,7 +369,7 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
   domains         = [%[1]q]
   name            = "tftenant"
-  enabled = false
+  enabled         = false
 }
 `, certDomain)
 }
@@ -375,10 +377,11 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 func testAccDistributionTenantConfig_customCertificate(t *testing.T) string {
 	certDomain := acctest.ACMCertificateDomainFromEnv(t)
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
 
 data "aws_acm_certificate" "test" {
-  domain   = %[1]q
-  region = "us-east-1"
+  domain      = %[1]q
+  region      = "data.aws_region.current.region"
   most_recent = true
 }
 
@@ -416,7 +419,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -424,7 +427,7 @@ resource "aws_cloudfront_distribution" "test" {
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.tf-policy.id
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -440,13 +443,14 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
   domains         = [%[1]q]
   name            = "tftenant"
-  enabled = false
+  enabled         = false
 
   customizations {
     geo_restriction {
-      locations = ["US", "CA"]
+      locations        = ["US", "CA"]
       restriction_type = "whitelist"
     }
+
     certificate {
       arn = data.aws_acm_certificate.test.arn
     }
@@ -455,25 +459,22 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 `, certDomain)
 }
 
-func testAccDistributionTenantConfig_customCertificateWithWebAcl(t *testing.T) string {
+func testAccDistributionTenantConfig_customCertificateWithWebACL(t *testing.T) string {
 	certDomain := acctest.ACMCertificateDomainFromEnv(t)
 	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "us-east-1"
-  region = "us-east-1"
-}
+data "aws_region" "current" {}
 
 data "aws_acm_certificate" "test" {
-  domain   = %[1]q
-  region = "us-east-1"
+  domain      = %[1]q
+  region      = "data.aws_region.current.region"
   most_recent = true
 }
 
 resource "aws_wafv2_web_acl" "testacl" {
-  provider = aws.us-east-1
   name        = "tftest"
   description = "tftest"
   scope       = "CLOUDFRONT"
+  region      = "data.aws_region.current.region"
 
   default_action {
     allow {
@@ -527,7 +528,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -535,7 +536,7 @@ resource "aws_cloudfront_distribution" "test" {
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.tf-policy.id
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -555,16 +556,18 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 
   customizations {
     geo_restriction {
-      locations = ["US", "CA"]
+      locations        = ["US", "CA"]
       restriction_type = "whitelist"
     }
+
     certificate {
       arn = data.aws_acm_certificate.test.arn
     }
-	web_acl {
-	  action = "override"
-	  arn = aws_wafv2_web_acl.testacl.arn
-	}
+
+  	web_acl {
+	    action = "override"
+	    arn    = aws_wafv2_web_acl.testacl.arn
+	  }
   }
 }
 `, certDomain)
@@ -573,10 +576,11 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 func testAccDistributionTenantConfig_parameters(t *testing.T) string {
 	certDomain := acctest.ACMCertificateDomainFromEnv(t)
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
 
 data "aws_acm_certificate" "test" {
-  domain   = %[1]q
-  region = "us-east-1"
+  domain      = %[1]q
+  region      = "data.aws_region.current.region"
   most_recent = true
 }
 
@@ -614,7 +618,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -622,7 +626,7 @@ resource "aws_cloudfront_distribution" "test" {
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.tf-policy.id
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -639,15 +643,16 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
   domains         = [%[1]q]
   name            = "tftenant"
-  enabled = false
+  enabled         = false
 
   parameters {
-		name = "tenantid"
+		name  = "tenantid"
 		value = "tenant-123"
   }
+
   parameters {
-	name = "region"
-	value = "us-east-1"
+	  name  = "place"
+	  value = "na"
   }
 }
 `, certDomain)
@@ -656,9 +661,11 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 func testAccDistributionTenantConfig_tags1(t *testing.T, tagKey1, tagValue1 string) string {
 	certDomain := acctest.ACMCertificateDomainFromEnv(t)
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 data "aws_acm_certificate" "test" {
-  domain   = %[1]q
-  region = "us-east-1"
+  domain      = %[1]q
+  region      = "data.aws_region.current.region"
   most_recent = true
 }
 
@@ -696,7 +703,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -704,7 +711,7 @@ resource "aws_cloudfront_distribution" "test" {
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.tf-policy.id
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -721,7 +728,7 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
   domains         = [%[1]q]
   name            = "tftenant"
-  enabled = false
+  enabled         = false
 
   tags = {
     %[2]q = %[3]q
@@ -733,9 +740,11 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 func testAccDistributionTenantConfig_tags2(t *testing.T, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	certDomain := acctest.ACMCertificateDomainFromEnv(t)
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 data "aws_acm_certificate" "test" {
-  domain   = %[1]q
-  region = "us-east-1"
+  domain      = %[1]q
+  region      = "data.aws_region.current.region"
   most_recent = true
 }
 
@@ -773,7 +782,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -781,7 +790,7 @@ resource "aws_cloudfront_distribution" "test" {
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.tf-policy.id
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -798,7 +807,7 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
   domains         = [%[1]q]
   name            = "tftenant"
-  enabled = false
+  enabled         = false
 
   tags = {
     %[2]q = %[3]q
@@ -812,7 +821,6 @@ func testAccDistributionTenantConfig_managedCertificateRequest(t *testing.T) str
 	zoneDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domainName := "tf." + zoneDomain
 	return fmt.Sprintf(`
-
 resource "aws_cloudfront_cache_policy" "tf-policy" {
   name        = "tfpolicy"
   comment     = "test tenant cache policy"
@@ -847,7 +855,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
@@ -855,7 +863,7 @@ resource "aws_cloudfront_distribution" "test" {
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.tf-policy.id
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -870,7 +878,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 data "aws_route53_zone" "test" {
-	name = %[1]q
+	name         = %[1]q
 	private_zone = false
 }
 
@@ -880,22 +888,22 @@ resource "aws_cloudfront_connection_group" "testgroup" {
 
 resource "aws_route53_record" "testrecord" {
 	zone_id = data.aws_route53_zone.test.id
-	type = "CNAME"
-	ttl = 300
-	name = %[2]q
+	type    = "CNAME"
+	ttl     = 300
+	name    = %[2]q
 	records = [aws_cloudfront_connection_group.testgroup.routing_endpoint]
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id = aws_cloudfront_distribution.test.id
-  domains         = [%[2]q]
-  name            = "tftenant"
-  enabled = false
+  distribution_id     = aws_cloudfront_distribution.test.id
+  domains             = [%[2]q]
+  name                = "tftenant"
+  enabled             = false
   connection_group_id = aws_cloudfront_connection_group.testgroup.id
 
   managed_certificate_request {
-	  primary_domain_name = %[2]q
-	  validation_token_host = "cloudfront"
+	  primary_domain_name                         = %[2]q
+	  validation_token_host                       = "cloudfront"
 	  certificate_transparency_logging_preference = "disabled"
   }
 }
