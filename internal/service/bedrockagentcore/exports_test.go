@@ -12,6 +12,7 @@ var (
 	ResourceMemory                   = newResourceMemory
 	ResourceMemoryStrategy           = newResourceMemoryStrategy
 	ResourceOAuth2CredentialProvider = newResourceOAuth2CredentialProvider
+	ResourceWorkloadIdentity         = newResourceWorkloadIdentity
 
 	FindAgentRuntimeByID               = findAgentRuntimeByID
 	FindCodeInterpreterByID            = findCodeInterpreterByID
@@ -20,4 +21,5 @@ var (
 	FindMemoryByID                     = findMemoryByID
 	FindOAuth2CredentialProviderByName = findOAuth2CredentialProviderByName
 	FindMemoryStrategyByID             = findMemoryStrategyByID
+	FindWorkloadIdentityByName         = findWorkloadIdentityByName
 )

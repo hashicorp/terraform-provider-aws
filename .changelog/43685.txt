@@ -25,3 +25,7 @@ aws_bedrockagentcore_memory_strategy
 ```release-note:new-resource
 aws_bedrockagentcore_oauth2_credential_provider
 ```
+
+```release-note:new-resource
+aws_bedrockagentcore_workload_identity
+```
