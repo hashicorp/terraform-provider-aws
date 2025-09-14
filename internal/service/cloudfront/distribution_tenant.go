@@ -79,7 +79,7 @@ func resourceDistributionTenant() *schema.Resource {
 								},
 							},
 						},
-						"certificate": {
+						names.AttrCertificate: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -635,12 +635,12 @@ func expandCustomizations(tfMap map[string]any) *awstypes.Customizations {
 		apiObject.GeoRestrictions = expandTenantGeoRestriction(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["certificate"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrCertificate].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Certificate = expandCertificate(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["web_acl"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.WebAcl = expandWebAcl(v[0].(map[string]any))
+		apiObject.WebAcl = expandWebACL(v[0].(map[string]any))
 	}
 
 	return apiObject
@@ -678,7 +678,7 @@ func expandCertificate(tfMap map[string]any) *awstypes.Certificate {
 	return apiObject
 }
 
-func expandWebAcl(tfMap map[string]any) *awstypes.WebAclCustomization {
+func expandWebACL(tfMap map[string]any) *awstypes.WebAclCustomization {
 	if tfMap == nil {
 		return nil
 	}
@@ -708,11 +708,11 @@ func flattenCustomizations(apiObject *awstypes.Customizations) map[string]any {
 	}
 
 	if apiObject.Certificate != nil {
-		tfMap["certificate"] = []any{flattenCertificate(apiObject.Certificate)}
+		tfMap[names.AttrCertificate] = []any{flattenCertificate(apiObject.Certificate)}
 	}
 
 	if apiObject.WebAcl != nil {
-		tfMap["web_acl"] = []any{flattenWebAcl(apiObject.WebAcl)}
+		tfMap["web_acl"] = []any{flattenWebACL(apiObject.WebAcl)}
 	}
 
 	return tfMap
@@ -748,7 +748,7 @@ func flattenCertificate(apiObject *awstypes.Certificate) map[string]any {
 	return tfMap
 }
 
-func flattenWebAcl(apiObject *awstypes.WebAclCustomization) map[string]any {
+func flattenWebACL(apiObject *awstypes.WebAclCustomization) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
