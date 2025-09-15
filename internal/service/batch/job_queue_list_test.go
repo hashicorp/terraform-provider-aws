@@ -56,7 +56,7 @@ func TestAccBatchJobQueue_List_Basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ConfigQueryChecks: []querycheck.QueryCheck{
+				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
 					// TODO
 				},
 			},
@@ -104,7 +104,7 @@ func TestAccBatchJobQueue_List_RegionOverride(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
-				ConfigQueryChecks: []querycheck.QueryCheck{
+				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
 					// TODO
 				},
 			},
