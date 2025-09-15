@@ -30,6 +30,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceAgentRuntimeEndpoint,
+			TypeName: "aws_bedrockagentcore_agent_runtime_endpoint",
+			Name:     "Agent Runtime Endpoint",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceAPIKeyCredentialProvider,
 			TypeName: "aws_bedrockagentcore_api_key_credential_provider",
 			Name:     "Api Key Credential Provider",

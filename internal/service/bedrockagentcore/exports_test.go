@@ -6,6 +6,7 @@ package bedrockagentcore
 // Exports for use in tests only.
 var (
 	ResourceAgentRuntime             = newResourceAgentRuntime
+	ResourceAgentRuntimeEndpoint     = newResourceAgentRuntimeEndpoint
 	ResourceAPIKeyCredentialProvider = newResourceAPIKeyCredentialProvider
 	ResourceBrowser                  = newResourceBrowser
 	ResourceCodeInterpreter          = newResourceCodeInterpreter
@@ -16,14 +17,15 @@ var (
 	ResourceOAuth2CredentialProvider = newResourceOAuth2CredentialProvider
 	ResourceWorkloadIdentity         = newResourceWorkloadIdentity
 
-	FindAgentRuntimeByID               = findAgentRuntimeByID
-	FindAPIKeyCredentialProviderByName = findAPIKeyCredentialProviderByName
-	FindBrowserByID                    = findBrowserByID
-	FindCodeInterpreterByID            = findCodeInterpreterByID
-	FindGatewayByID                    = findGatewayByID
-	FindGatewayTargetByID              = findGatewayTargetByID
-	FindMemoryByID                     = findMemoryByID
-	FindOAuth2CredentialProviderByName = findOAuth2CredentialProviderByName
-	FindMemoryStrategyByID             = findMemoryStrategyByID
-	FindWorkloadIdentityByName         = findWorkloadIdentityByName
+	FindAgentRuntimeByID                       = findAgentRuntimeByID
+	FindAgentRuntimeEndpointByRuntimeIDAndName = findAgentRuntimeEndpointByRuntimeIDAndName
+	FindAPIKeyCredentialProviderByName         = findAPIKeyCredentialProviderByName
+	FindBrowserByID                            = findBrowserByID
+	FindCodeInterpreterByID                    = findCodeInterpreterByID
+	FindGatewayByID                            = findGatewayByID
+	FindGatewayTargetByID                      = findGatewayTargetByID
+	FindMemoryByID                             = findMemoryByID
+	FindOAuth2CredentialProviderByName         = findOAuth2CredentialProviderByName
+	FindMemoryStrategyByID                     = findMemoryStrategyByID
+	FindWorkloadIdentityByName                 = findWorkloadIdentityByName
 )

@@ -66,6 +66,12 @@ type resourceMemoryStrategy struct {
 func (r *resourceMemoryStrategy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"client_token": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -581,6 +587,7 @@ func findMemoryStrategyByID(ctx context.Context, conn *bedrockagentcorecontrol.C
 
 type resourceMemoryStrategyModel struct {
 	framework.WithRegionModel
+	ClientToken   types.String                                              `tfsdk:"client_token"`
 	Configuration fwtypes.ListNestedObjectValueOf[CustomConfigurationModel] `tfsdk:"configuration"`
 	Description   types.String                                              `tfsdk:"description"`
 	ID            types.String                                              `tfsdk:"id"`
