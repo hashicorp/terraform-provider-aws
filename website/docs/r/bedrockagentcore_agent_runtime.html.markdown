@@ -62,6 +62,10 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
       container_uri = "${aws_ecr_repository.example.repository_url}:latest"
     }
   }
+
+  network_configuration = {
+    network_mode = "PUBLIC"
+  }
 }
 ```
 
@@ -117,7 +121,7 @@ The following arguments are optional:
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
 * `client_token` - (Optional) Unique identifier for request idempotency. If not provided, one will be generated automatically.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
-* `network_configuration` - (Optional) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration) below. Defaults to `PUBLIC` network mode.
+* `network_configuration` - (Required) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
 
 ### `artifact`
@@ -150,7 +154,7 @@ The `custom_jwt_authorizer` block supports the following:
 
 The `network_configuration` object supports the following:
 
-* `network_mode` - (Optional) Network mode for the agent runtime. Valid values: `PUBLIC`. Defaults to `PUBLIC`.
+* `network_mode` - (Required) Network mode for the agent runtime. Valid values: `PUBLIC`.
 
 ### `protocol_configuration`
 

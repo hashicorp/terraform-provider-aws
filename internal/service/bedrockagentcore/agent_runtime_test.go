@@ -456,7 +456,7 @@ func testAccCheckAgentRuntimeDestroy(ctx context.Context) resource.TestCheckFunc
 				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAgentRuntime, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAgentRuntime, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAgentRuntime, rs.Primary.ID, errors.New("no destroyed"))
 		}
 
 		return nil
@@ -579,6 +579,10 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       container_uri = %[2]q
     }
   }
+
+  network_configuration = {
+    network_mode = "PUBLIC"
+  }
 }
 `, rName, rImageUri))
 }
@@ -594,6 +598,10 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     container_configuration {
       container_uri = %[3]q
     }
+  }
+
+  network_configuration = {
+    network_mode = "PUBLIC"
   }
 }
 `, rName, description, rImageUri))
@@ -613,6 +621,10 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     container_configuration {
       container_uri = %[4]q
     }
+  }
+
+  network_configuration = {
+    network_mode = "PUBLIC"
   }
 }
 `, rName, envKey, envValue, rImageUri))
@@ -637,6 +649,10 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       allowed_clients  = [%[6]q, %[7]q]
     }
   }
+
+  network_configuration = {
+    network_mode = "PUBLIC"
+  }
 }
 `, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2))
 }
@@ -651,6 +667,10 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     container_configuration {
       container_uri = %[2]q
     }
+  }
+
+  network_configuration = {
+    network_mode = "PUBLIC"
   }
 
   protocol_configuration {
@@ -683,6 +703,10 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       allowed_audience = ["test1", "test2"]
       allowed_clients  = ["client-1", "client-2"]
     }
+  }
+
+  network_configuration = {
+    network_mode = "PUBLIC"
   }
 
   protocol_configuration {

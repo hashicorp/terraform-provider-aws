@@ -7,6 +7,7 @@ package bedrockagentcore
 var (
 	ResourceAgentRuntime             = newResourceAgentRuntime
 	ResourceAPIKeyCredentialProvider = newResourceAPIKeyCredentialProvider
+	ResourceBrowser                  = newResourceBrowser
 	ResourceCodeInterpreter          = newResourceCodeInterpreter
 	ResourceGateway                  = newResourceGateway
 	ResourceGatewayTarget            = newResourceGatewayTarget
@@ -17,6 +18,7 @@ var (
 
 	FindAgentRuntimeByID               = findAgentRuntimeByID
 	FindAPIKeyCredentialProviderByName = findAPIKeyCredentialProviderByName
+	FindBrowserByID                    = findBrowserByID
 	FindCodeInterpreterByID            = findCodeInterpreterByID
 	FindGatewayByID                    = findGatewayByID
 	FindGatewayTargetByID              = findGatewayTargetByID

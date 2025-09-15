@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -36,7 +37,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 	}
 
 	var memoryStrategy1, memoryStrategy2, memoryStrategy3, memoryStrategy4 awstypes.MemoryStrategy
-	rName := "tf_acc_test_" + sdkacctest.RandString(10)
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,7 +136,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	}
 
 	var r1, r2, r5 awstypes.MemoryStrategy
-	rName := "tf_acc_test_" + sdkacctest.RandString(10)
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -265,7 +266,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	}
 
 	var memorystrategy awstypes.MemoryStrategy
-	rName := "tf_acc_test_" + sdkacctest.RandString(10)
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{

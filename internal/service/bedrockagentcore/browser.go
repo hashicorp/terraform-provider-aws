@@ -31,9 +31,9 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_bedrockagentcore_code_interpreter", name="Code Interpreter")
-func newResourceCodeInterpreter(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCodeInterpreter{}
+// @FrameworkResource("aws_bedrockagentcore_browser", name="Browser")
+func newResourceBrowser(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceBrowser{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -42,17 +42,17 @@ func newResourceCodeInterpreter(_ context.Context) (resource.ResourceWithConfigu
 }
 
 const (
-	ResNameCodeInterpreter = "Code Interpreter"
+	ResNameBrowser = "Browser"
 )
 
-type resourceCodeInterpreter struct {
-	framework.ResourceWithModel[resourceCodeInterpreterModel]
+type resourceBrowser struct {
+	framework.ResourceWithModel[resourceBrowserModel]
+	framework.WithTimeouts
 	framework.WithImportByID
 	framework.WithNoUpdate
-	framework.WithTimeouts
 }
 
-func (r *resourceCodeInterpreter) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceBrowser) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -78,12 +78,16 @@ func (r *resourceCodeInterpreter) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"execution_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+			},
 			names.AttrNetworkConfiguration: schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[codeInterpreterNetworkConfigurationModel](ctx),
+				CustomType: fwtypes.NewObjectTypeOf[browserNetworkConfigurationModel](ctx),
 				Required:   true,
 			},
-			names.AttrExecutionRoleARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
+			"recording": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[browserRecordingModel](ctx),
 				Optional:   true,
 			},
 		},
@@ -96,22 +100,22 @@ func (r *resourceCodeInterpreter) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceCodeInterpreter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceBrowser) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan resourceCodeInterpreterModel
+	var plan resourceBrowserModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var input bedrockagentcorecontrol.CreateCodeInterpreterInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CodeInterpreter")))
+	var input bedrockagentcorecontrol.CreateBrowserInput
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Browser")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.CreateCodeInterpreter(ctx, &input)
+	out, err := conn.CreateBrowser(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
@@ -121,13 +125,13 @@ func (r *resourceCodeInterpreter) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("CodeInterpreter")))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("Browser")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitCodeInterpreterCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	_, err = waitBrowserCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
@@ -136,16 +140,16 @@ func (r *resourceCodeInterpreter) Create(ctx context.Context, req resource.Creat
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceCodeInterpreter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceBrowser) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var state resourceCodeInterpreterModel
+	var state resourceBrowserModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findCodeInterpreterByID(ctx, conn, state.ID.ValueString())
+	out, err := findBrowserByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -156,7 +160,7 @@ func (r *resourceCodeInterpreter) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("CodeInterpreter")))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Browser")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -164,20 +168,20 @@ func (r *resourceCodeInterpreter) Read(ctx context.Context, req resource.ReadReq
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceCodeInterpreter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceBrowser) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var state resourceCodeInterpreterModel
+	var state resourceBrowserModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := bedrockagentcorecontrol.DeleteCodeInterpreterInput{
-		CodeInterpreterId: state.ID.ValueStringPointer(),
+	input := bedrockagentcorecontrol.DeleteBrowserInput{
+		BrowserId: state.ID.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteCodeInterpreter(ctx, &input)
+	_, err := conn.DeleteBrowser(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -188,50 +192,49 @@ func (r *resourceCodeInterpreter) Delete(ctx context.Context, req resource.Delet
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitCodeInterpreterDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitBrowserDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 }
-
-func waitCodeInterpreterCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetCodeInterpreterOutput, error) {
+func waitBrowserCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetBrowserOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.CodeInterpreterStatusCreating),
-		Target:                    enum.Slice(awstypes.CodeInterpreterStatusReady),
-		Refresh:                   statusCodeInterpreter(ctx, conn, id),
+		Pending:                   enum.Slice(awstypes.BrowserStatusCreating),
+		Target:                    enum.Slice(awstypes.BrowserStatusReady),
+		Refresh:                   statusBrowser(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetCodeInterpreterOutput); ok {
+	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetBrowserOutput); ok {
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func waitCodeInterpreterDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetCodeInterpreterOutput, error) {
+func waitBrowserDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetBrowserOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.CodeInterpreterStatusDeleting, awstypes.CodeInterpreterStatusReady),
+		Pending: enum.Slice(awstypes.BrowserStatusDeleting, awstypes.BrowserStatusReady),
 		Target:  []string{},
-		Refresh: statusCodeInterpreter(ctx, conn, id),
+		Refresh: statusBrowser(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetCodeInterpreterOutput); ok {
+	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetBrowserOutput); ok {
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func statusCodeInterpreter(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
+func statusBrowser(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findCodeInterpreterByID(ctx, conn, id)
+		out, err := findBrowserByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -244,12 +247,12 @@ func statusCodeInterpreter(ctx context.Context, conn *bedrockagentcorecontrol.Cl
 	}
 }
 
-func findCodeInterpreterByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*bedrockagentcorecontrol.GetCodeInterpreterOutput, error) {
-	input := bedrockagentcorecontrol.GetCodeInterpreterInput{
-		CodeInterpreterId: aws.String(id),
+func findBrowserByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*bedrockagentcorecontrol.GetBrowserOutput, error) {
+	input := bedrockagentcorecontrol.GetBrowserInput{
+		BrowserId: aws.String(id),
 	}
 
-	out, err := conn.GetCodeInterpreter(ctx, &input)
+	out, err := conn.GetBrowser(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
@@ -268,18 +271,29 @@ func findCodeInterpreterByID(ctx context.Context, conn *bedrockagentcorecontrol.
 	return out, nil
 }
 
-type resourceCodeInterpreterModel struct {
+type resourceBrowserModel struct {
 	framework.WithRegionModel
-	ARN                  fwtypes.ARN                                                     `tfsdk:"arn"`
-	ClientToken          types.String                                                    `tfsdk:"client_token"`
-	Description          types.String                                                    `tfsdk:"description"`
-	ExecutionRoleARN     fwtypes.ARN                                                     `tfsdk:"execution_role_arn"`
-	ID                   types.String                                                    `tfsdk:"id"`
-	Name                 types.String                                                    `tfsdk:"name"`
-	NetworkConfiguration fwtypes.ObjectValueOf[codeInterpreterNetworkConfigurationModel] `tfsdk:"network_configuration"`
-	Timeouts             timeouts.Value                                                  `tfsdk:"timeouts"`
+	ARN                  fwtypes.ARN                                             `tfsdk:"arn"`
+	ID                   types.String                                            `tfsdk:"id"`
+	Name                 types.String                                            `tfsdk:"name"`
+	Description          types.String                                            `tfsdk:"description"`
+	ExecutionRoleARN     fwtypes.ARN                                             `tfsdk:"execution_role_arn"`
+	ClientToken          types.String                                            `tfsdk:"client_token"`
+	NetworkConfiguration fwtypes.ObjectValueOf[browserNetworkConfigurationModel] `tfsdk:"network_configuration"`
+	Recording            fwtypes.ObjectValueOf[browserRecordingModel]            `tfsdk:"recording"`
+	Timeouts             timeouts.Value                                          `tfsdk:"timeouts"`
 }
 
-type codeInterpreterNetworkConfigurationModel struct {
-	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode] `tfsdk:"network_mode"`
+type browserNetworkConfigurationModel struct {
+	NetworkMode fwtypes.StringEnum[awstypes.BrowserNetworkMode] `tfsdk:"network_mode"`
+}
+
+type browserRecordingModel struct {
+	Enabled    types.Bool                             `tfsdk:"enabled"`
+	S3Location fwtypes.ObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
+}
+
+type s3LocationModel struct {
+	Bucket types.String `tfsdk:"bucket"`
+	Prefix types.String `tfsdk:"prefix"`
 }

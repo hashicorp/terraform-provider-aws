@@ -16,12 +16,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -63,7 +60,6 @@ type resourceAgentRuntime struct {
 
 func (r *resourceAgentRuntime) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	serverProtocol := fwtypes.StringEnumType[awstypes.ServerProtocol]()
-	networkMode := fwtypes.StringEnumType[awstypes.NetworkMode]()
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -94,24 +90,10 @@ func (r *resourceAgentRuntime) Schema(ctx context.Context, req resource.SchemaRe
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 			},
+
 			names.AttrNetworkConfiguration: schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[networkConfigurationModel](ctx),
-				Optional:   true,
-				Computed:   true,
-				Default: objectdefault.StaticValue(
-					types.ObjectValueMust(
-
-						map[string]attr.Type{
-							"network_mode": networkMode,
-						},
-						map[string]attr.Value{
-							"network_mode": fwtypes.StringEnumValue(awstypes.NetworkModePublic),
-						},
-					),
-				),
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
-				},
+				Required:   true,
 			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,

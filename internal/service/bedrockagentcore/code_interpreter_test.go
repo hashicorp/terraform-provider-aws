@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func TestAccBedrockAgentCoreCodeInterpreter_basic(t *testing.T) {
 	}
 
 	var codeInterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
-	rName := "tf_acc_test_" + sdkacctest.RandString(10)
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_code_interpreter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,7 +75,7 @@ func TestAccBedrockAgentCoreCodeInterpreter_role(t *testing.T) {
 	}
 
 	var codeInterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
-	rName := "tf_acc_test_" + sdkacctest.RandString(10)
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_code_interpreter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -116,7 +117,7 @@ func TestAccBedrockAgentCoreCodeInterpreter_disappears(t *testing.T) {
 	}
 
 	var codeinterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
-	rName := "tf_acc_test_" + sdkacctest.RandString(10)
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_code_interpreter.test"
 
 	resource.ParallelTest(t, resource.TestCase{

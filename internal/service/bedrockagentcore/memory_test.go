@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func TestAccBedrockAgentCoreMemory_full(t *testing.T) {
 	}
 
 	var m1, m2, m3 bedrockagentcorecontrol.GetMemoryOutput
-	rName := "tf_acc_test_" + sdkacctest.RandString(10)
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -102,7 +103,7 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	}
 
 	var memory bedrockagentcorecontrol.GetMemoryOutput
-	rName := "tf_acc_test_" + sdkacctest.RandString(10)
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	resource.ParallelTest(t, resource.TestCase{

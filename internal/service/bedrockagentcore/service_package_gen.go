@@ -36,6 +36,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceBrowser,
+			TypeName: "aws_bedrockagentcore_browser",
+			Name:     "Browser",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceCodeInterpreter,
 			TypeName: "aws_bedrockagentcore_code_interpreter",
 			Name:     "Code Interpreter",
