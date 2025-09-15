@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,9 +43,9 @@ func TestAccBatchJobQueue_List_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "batch", "job-queue/{name}"),
-					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "batch", "job-queue/{name}"),
-					tfstatecheck.ExpectRegionalARNFormat(resourceName3, tfjsonpath.New(names.AttrARN), "batch", "job-queue/{name}"),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("batch", "job-queue/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("batch", "job-queue/"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName3, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("batch", "job-queue/"+rName+"-2")),
 				},
 			},
 
@@ -57,7 +58,16 @@ func TestAccBatchJobQueue_List_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					// TODO
+					querycheck.ExpectLength("aws_batch_job_queue.test", knownvalue.Int64Exact(3)),
+					querycheck.ExpectIdentity("aws_batch_job_queue.test", map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNExact("batch", "job-queue/"+rName+"-0"),
+					}),
+					querycheck.ExpectIdentity("aws_batch_job_queue.test", map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNExact("batch", "job-queue/"+rName+"-1"),
+					}),
+					querycheck.ExpectIdentity("aws_batch_job_queue.test", map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNExact("batch", "job-queue/"+rName+"-2"),
+					}),
 				},
 			},
 		},
@@ -89,9 +99,9 @@ func TestAccBatchJobQueue_List_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName1, tfjsonpath.New(names.AttrARN), "batch", "job-queue/{name}"),
-					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName2, tfjsonpath.New(names.AttrARN), "batch", "job-queue/{name}"),
-					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName3, tfjsonpath.New(names.AttrARN), "batch", "job-queue/{name}"),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("batch", "job-queue/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("batch", "job-queue/"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName3, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("batch", "job-queue/"+rName+"-2")),
 				},
 			},
 
@@ -105,7 +115,16 @@ func TestAccBatchJobQueue_List_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					// TODO
+					querycheck.ExpectLength("aws_batch_job_queue.test", knownvalue.Int64Exact(3)),
+					querycheck.ExpectIdentity("aws_batch_job_queue.test", map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNAlternateRegionExact("batch", "job-queue/"+rName+"-0"),
+					}),
+					querycheck.ExpectIdentity("aws_batch_job_queue.test", map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNAlternateRegionExact("batch", "job-queue/"+rName+"-1"),
+					}),
+					querycheck.ExpectIdentity("aws_batch_job_queue.test", map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNAlternateRegionExact("batch", "job-queue/"+rName+"-2"),
+					}),
 				},
 			},
 		},
