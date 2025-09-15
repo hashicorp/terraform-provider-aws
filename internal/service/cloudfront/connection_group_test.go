@@ -76,7 +76,7 @@ func TestAccCloudFrontConnectionGroup_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionGroupConfig_basic(),
+				Config: testAccConnectionGroupConfig_disappears(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceConnectionGroup(), resourceName),
@@ -155,10 +155,11 @@ func TestAccCloudFrontConnectionGroup_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontConnectionGroup_anycastIPList(t *testing.T) {
+func TestAccCloudFrontConnectionGroup_anycastIpList(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionGroup awstypes.ConnectionGroup
-	resourceName := "aws_cloudfront_connection_group.test"
+	resourceName := "aws_cloudfront_connection_group.testip"
+	anycastIPListID := "aip_IuA2ABRz0cxB0EZ2ikd7rR"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -170,10 +171,10 @@ func TestAccCloudFrontConnectionGroup_anycastIPList(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionGroupConfig_anycastIPList(),
+				Config: testAccConnectionGroupConfig_anycastIpList(anycastIPListID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
-					resource.TestCheckResourceAttrSet(resourceName, "anycast_ip_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "anycast_ip_list_id", anycastIPListID),
 				),
 			},
 		},
@@ -235,6 +236,14 @@ resource "aws_cloudfront_connection_group" "test" {
 `
 }
 
+func testAccConnectionGroupConfig_disappears() string {
+	return `
+resource "aws_cloudfront_connection_group" "test" {
+  name = "disappears"
+}
+`
+}
+
 func testAccConnectionGroupConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_connection_group" "test" {
@@ -269,12 +278,12 @@ resource "aws_cloudfront_connection_group" "test" {
 `
 }
 
-func testAccConnectionGroupConfig_anycastIPList() string {
-	return `
+func testAccConnectionGroupConfig_anycastIpList(anycastIPlistID string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudfront_connection_group" "testip" {
-  name				 = "iptest"
+  name 				 = "iptest"
   ipv6_enabled 		 = false
-  anycast_ip_list_id = "aip_IuA2ABRz0cxB0EZ2ikd7rR"
+  anycast_ip_list_id = "%s"
 }
-`
+`, anycastIPlistID)
 }
