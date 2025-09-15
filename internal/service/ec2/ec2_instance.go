@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -4297,14 +4298,20 @@ type instanceListResource struct {
 
 type instanceListResourceModel struct {
 	framework.WithRegionModel
-	Filters customListFilters `tfsdk:"filter"`
+	IncludeAutoScaled types.Bool        `tfsdk:"include_auto_scaled"`
+	Filters           customListFilters `tfsdk:"filter"`
 }
 
 // ListResourceConfigSchema defines the schema for the List configuration
 // might be able to intercept or wrap this for simplicity
 func (l *instanceListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
+		Attributes: map[string]listschema.Attribute{
+			"include_auto_scaled": listschema.BoolAttribute{
+				Description: "Whether to include instances that are part of an Auto Scaling group. Auto scaled instances are excluded by default.",
+				Optional:    true,
+			},
+		},
 		Blocks: map[string]listschema.Block{
 			names.AttrFilter: customListFiltersBlock(ctx),
 		},
@@ -4342,6 +4349,8 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 		})
 	}
 
+	includeAutoScaled := query.IncludeAutoScaled.ValueBool()
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 
@@ -4350,6 +4359,15 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
+			}
+
+			tags := keyValueTags(ctx, output.Tags)
+
+			if !includeAutoScaled {
+				// Exclude Auto Scaled Instances
+				if v, ok := tags["aws:autoscaling:groupName"]; ok && v.ValueString() != "" {
+					continue
+				}
 			}
 
 			rd := l.ResourceData()
@@ -4368,7 +4386,6 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
-			tags := keyValueTags(ctx, output.Tags)
 			if v, ok := tags["Name"]; ok {
 				result.DisplayName = v.ValueString()
 			} else {
