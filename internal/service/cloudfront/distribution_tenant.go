@@ -166,7 +166,7 @@ func resourceDistributionTenant() *schema.Resource {
 				Required: true,
 			},
 			names.AttrParameters: {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -218,7 +218,7 @@ func resourceDistributionTenantCreate(ctx context.Context, d *schema.ResourceDat
 		input.ManagedCertificateRequest = expandManagedCertificateRequest(v.([]any)[0].(map[string]any))
 	}
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		input.Parameters = expandParameters(v.([]any))
+		input.Parameters = expandParameters(v.(*schema.Set))
 	}
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.Tags = &awstypes.Tags{Items: tags}
@@ -312,7 +312,7 @@ func resourceDistributionTenantUpdate(ctx context.Context, d *schema.ResourceDat
 			input.ManagedCertificateRequest = expandManagedCertificateRequest(v.([]any)[0].(map[string]any))
 		}
 		if v, ok := d.GetOk(names.AttrParameters); ok {
-			input.Parameters = expandParameters(v.([]any))
+			input.Parameters = expandParameters(v.(*schema.Set))
 		}
 
 		// ACM and IAM certificate eventual consistency.
@@ -786,13 +786,13 @@ func expandManagedCertificateRequest(tfMap map[string]any) *awstypes.ManagedCert
 	return apiObject
 }
 
-func expandParameters(tfList []any) []awstypes.Parameter {
-	if len(tfList) == 0 {
+func expandParameters(tfSet *schema.Set) []awstypes.Parameter {
+	if tfSet.Len() == 0 {
 		return nil
 	}
 
-	parameters := make([]awstypes.Parameter, len(tfList))
-	for i, v := range tfList {
+	parameters := make([]awstypes.Parameter, tfSet.Len())
+	for i, v := range tfSet.List() {
 		tfMap := v.(map[string]any)
 		parameters[i] = awstypes.Parameter{
 			Name:  aws.String(tfMap[names.AttrName].(string)),
@@ -802,17 +802,27 @@ func expandParameters(tfList []any) []awstypes.Parameter {
 	return parameters
 }
 
-func flattenParameters(apiObjects []awstypes.Parameter) []any {
+func flattenParameters(apiObjects []awstypes.Parameter) *schema.Set {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfList := make([]any, len(apiObjects))
-	for i, apiObject := range apiObjects {
-		tfList[i] = map[string]any{
+	tfSet := schema.NewSet(schema.HashResource(&schema.Resource{
+		Schema: map[string]*schema.Schema{
+			names.AttrName: {
+				Type: schema.TypeString,
+			},
+			names.AttrValue: {
+				Type: schema.TypeString,
+			},
+		},
+	}), []any{})
+
+	for _, apiObject := range apiObjects {
+		tfSet.Add(map[string]any{
 			names.AttrName:  aws.ToString(apiObject.Name),
 			names.AttrValue: aws.ToString(apiObject.Value),
-		}
+		})
 	}
-	return tfList
+	return tfSet
 }
