@@ -66,6 +66,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_location_smb.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567"
+  }
+}
+
+resource "aws_datasync_location_smb" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync SMB location.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_smb` using the Amazon Resource Name (ARN). For example:
 
 ```python
@@ -89,4 +110,4 @@ Using `terraform import`, import `aws_datasync_location_smb` using the Amazon Re
 % terraform import aws_datasync_location_smb.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3cf7619db8f460398c962a969712fc173b287d393878c7d0f9c8601d6c22a33a -->
+<!-- cache-key: cdktf-0.20.8 input-a19eac4cf5cb0ed3454e289a7b90f098bc467eef7ed5bf8c17c9770473fe6c5e -->
