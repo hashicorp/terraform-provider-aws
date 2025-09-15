@@ -66,7 +66,7 @@ resource "aws_organizations_delegated_administrator" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_delegated_administrator` using the account ID and its service principal. For example:
 

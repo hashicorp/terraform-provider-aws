@@ -71,7 +71,7 @@ resource "aws_cloudfrontkeyvaluestore_key" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront KeyValueStore Key using the `key_value_store_arn` and 'key' separated by `,`. For example:
 
