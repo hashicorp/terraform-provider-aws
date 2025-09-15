@@ -384,7 +384,21 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	// https://github.com/hashicorp/terraform-provider-aws/pull/42740.
+	// if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChanges(
+		"association_config",
+		"captcha_config",
+		"challenge_config",
+		"custom_response_body",
+		"data_protection_config",
+		names.AttrDefaultAction,
+		names.AttrDescription,
+		"rule_json",
+		names.AttrRule,
+		"token_domains",
+		"visibility_config",
+	) {
 		aclName := d.Get(names.AttrName).(string)
 		aclScope := d.Get(names.AttrScope).(string)
 		aclLockToken := d.Get("lock_token").(string)

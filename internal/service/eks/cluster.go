@@ -74,6 +74,18 @@ func resourceCluster() *schema.Resource {
 				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
 				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
 
+				newComputeConfigEnabled := aws.ToBool(newComputeConfig.Enabled)
+
+				// Do not force new if auto mode is disabled in new config and role ARN is unset
+				if !newComputeConfigEnabled && newRoleARN == "" {
+					return nil
+				}
+
+				// Do not force new if built-in node pools are zeroed in new config and role ARN is unset
+				if len(newComputeConfig.NodePools) == 0 && newRoleARN == "" {
+					return nil
+				}
+
 				// only force new if an existing role has changed, not if a new role is added
 				if oldRoleARN != "" && oldRoleARN != newRoleARN {
 					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
@@ -563,7 +575,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateCluster(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -923,25 +935,21 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	input := eks.DeleteClusterInput{
 		Name: aws.String(d.Id()),
 	}
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		_, err = conn.DeleteCluster(ctx, &input)
 
 		if errs.IsAErrorMessageContains[*types.ResourceInUseException](err, "in progress") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(30*time.Second))
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCluster(ctx, &input)
-	}
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -859,7 +859,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.UserPoolTier = v
 	}
 
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateUserPool(ctx, input)
 	}, userPoolErrorRetryable)
 
@@ -897,7 +897,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.WebAuthnConfiguration = expandWebAuthnConfigurationConfigType(webAuthnConfig)
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
@@ -1045,7 +1045,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
@@ -1226,7 +1226,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateUserPool(ctx, input)
 			},
 			func(err error) (bool, error) {

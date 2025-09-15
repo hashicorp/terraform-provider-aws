@@ -980,7 +980,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBClusterFromS3(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1781,7 +1781,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			timeout = 5 * time.Minute
 		)
 		_, err := tfresource.RetryWhen(ctx, timeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1905,14 +1905,14 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 		timeout = 2 * time.Minute
 	)
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteDBCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 				if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 					_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-						func() (any, error) {
+						func(ctx context.Context) (any, error) {
 							return conn.ModifyDBCluster(ctx, &rds.ModifyDBClusterInput{
 								ApplyImmediately:    aws.Bool(true),
 								DBClusterIdentifier: aws.String(d.Id()),
@@ -1933,11 +1933,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 					)
 
 					if err != nil {
-						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %s", d.Id(), err)
+						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %w", d.Id(), err)
 					}
 
 					if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete)); err != nil {
-						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %w", d.Id(), err)
 					}
 				}
 

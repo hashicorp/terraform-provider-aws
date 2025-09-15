@@ -208,7 +208,7 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 				return nil
 			}
 		} else if err != nil {
-			return fmt.Errorf("Error: cannot describe thing %s: %s", thingName, err)
+			return fmt.Errorf("Error: cannot describe thing %s: %w", thingName, err)
 		} else if !exists {
 			return fmt.Errorf("Error: Thing (%s) does not exist, but expected to be", thingName)
 		}
@@ -218,7 +218,7 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error: Cannot list thing (%s) principals: %s", thingName, err)
+			return fmt.Errorf("Error: Cannot list thing (%s) principals: %w", thingName, err)
 		}
 
 		if len(res.Principals) != len(principalARNs) {

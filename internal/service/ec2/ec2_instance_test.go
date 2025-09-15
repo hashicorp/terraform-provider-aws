@@ -1189,6 +1189,35 @@ func TestAccEC2Instance_placementGroup(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_placementGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_placementGroupID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "placement_group_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -3475,9 +3504,10 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 
 					statecheck.ExpectKnownValue(eniSecondaryResourceName, tfjsonpath.New("attachment"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attachment_id": knownvalue.NotNull(),
-							"device_index":  knownvalue.Int64Exact(1),
-							"instance":      knownvalue.NotNull(),
+							"attachment_id":      knownvalue.NotNull(),
+							"device_index":       knownvalue.Int64Exact(1),
+							"instance":           knownvalue.NotNull(),
+							"network_card_index": knownvalue.Int64Exact(0),
 						}),
 					})),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), eniSecondaryResourceName, tfjsonpath.New("attachment").AtSliceIndex(0).AtMapKey("instance"), compare.ValuesSame()),
@@ -7415,6 +7445,34 @@ resource "aws_instance" "test" {
   subnet_id                   = aws_subnet.test.id
   associate_public_ip_address = true
   placement_group             = aws_placement_group.test.name
+
+  # pre-encoded base64 data
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_placementGroupID(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+# Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = "c5.large"
+  subnet_id                   = aws_subnet.test.id
+  associate_public_ip_address = true
+  placement_group_id          = aws_placement_group.test.placement_group_id
 
   # pre-encoded base64 data
   user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
