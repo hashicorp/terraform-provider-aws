@@ -44,6 +44,7 @@ func TestAccCloudFrontConnectionGroupDataSource_anycast(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudfront_connection_group.testip"
 	resourceName := "aws_cloudfront_connection_group.testip"
+	anycastIPListID := "aip_IuA2ABRz0cxB0EZ2ikd7rR"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
@@ -51,7 +52,7 @@ func TestAccCloudFrontConnectionGroupDataSource_anycast(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionGroupDataSourceConfig_anycast(),
+				Config: testAccConnectionGroupDataSourceConfig_anycast(anycastIPListID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "anycast_ip_list_id", resourceName, "anycast_ip_list_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -77,8 +78,8 @@ data "aws_cloudfront_connection_group" "test" {
 `)
 }
 
-func testAccConnectionGroupDataSourceConfig_anycast() string {
-	return acctest.ConfigCompose(testAccConnectionGroupConfig_anycastIpList(), `
+func testAccConnectionGroupDataSourceConfig_anycast(anycastIPListID string) string {
+	return acctest.ConfigCompose(testAccConnectionGroupConfig_anycastIpList(anycastIPListID), `
 data "aws_cloudfront_connection_group" "testip" {
   id = aws_cloudfront_connection_group.testip.id
 }
