@@ -49,7 +49,7 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
-				ConfigQueryChecks:        []querycheck.QueryCheck{
+				ConfigQueryResultChecks:  []querycheck.QueryResultCheck{
 					// TODO
 				},
 			},
@@ -94,7 +94,7 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
-				ConfigQueryChecks: []querycheck.QueryCheck{
+				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
 					// TODO
 				},
 			},
@@ -135,7 +135,7 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
-				ConfigQueryChecks:        []querycheck.QueryCheck{
+				ConfigQueryResultChecks:  []querycheck.QueryResultCheck{
 					// TODO
 				},
 			},
@@ -174,7 +174,7 @@ func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ConfigQueryChecks: []querycheck.QueryCheck{
+				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
 					// TODO
 				},
 			},
