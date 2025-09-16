@@ -35,7 +35,7 @@ resource "aws_iam_user" "example" {
 resource "aws_iam_service_specific_credential" "bedrock" {
   service_name        = "bedrock.amazonaws.com"
   user_name           = aws_iam_user.example.name
-  credential_age_days = 30  # API key expires after 30 days
+  credential_age_days = 30 # API key expires after 30 days
 }
 ```
 
