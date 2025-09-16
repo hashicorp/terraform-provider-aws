@@ -17,7 +17,7 @@ By default, EC2 Instances managed by an Auto Scaling Group and EC2 Instances in 
 ### Basic Usage
 
 ```terraform
-list "aws_instance" "test" {
+list "aws_instance" "example" {
   provider = aws
 }
 ```
@@ -27,7 +27,7 @@ list "aws_instance" "test" {
 This example will return instances in the `stopped` state.
 
 ```terraform
-list "aws_instance" "test" {
+list "aws_instance" "example" {
   provider = aws
 
   config {
