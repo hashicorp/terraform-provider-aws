@@ -1518,19 +1518,19 @@ resource "aws_cloudwatch_log_transformer" "test" {
   transformer_config {
     parse_json {}
   }
-  
+
   transformer_config {
     add_keys {
-		entries {
-			key   = "key1"
-			value = "value1"
-		}
-		entries {
-			key                 = "key2"
-			value               = "value2"
-			overwrite_if_exists = true
-		}
-	}
+      entries {
+        key   = "key1"
+        value = "value1"
+      }
+      entries {
+        key                 = "key2"
+        value               = "value2"
+        overwrite_if_exists = true
+      }
+    }
   }
 }
 `, rName)
@@ -1548,19 +1548,19 @@ resource "aws_cloudwatch_log_transformer" "test" {
   transformer_config {
     parse_json {}
   }
-  
+
   transformer_config {
     copy_value {
-		entries {
-			source   = "source1"
-			target   = "target1"
-		}
-		entries {
-			source              = "source2"
-			target              = "target2"
-			overwrite_if_exists = true
-		}
-	}
+      entries {
+        source = "source1"
+        target = "target1"
+      }
+      entries {
+        source              = "source2"
+        target              = "target2"
+        overwrite_if_exists = true
+      }
+    }
   }
 }
 `, rName)
@@ -1578,13 +1578,13 @@ resource "aws_cloudwatch_log_transformer" "test" {
   transformer_config {
     csv {}
   }
-  
+
   transformer_config {
     csv {
-		columns         = ["example1", "example2"]
-		delimiter       = ";"
-		quote_character = "'"
-		source          = "source1"
+      columns         = ["example1", "example2"]
+      delimiter       = ";"
+      quote_character = "'"
+      source          = "source1"
     }
   }
 }
@@ -1603,25 +1603,25 @@ resource "aws_cloudwatch_log_transformer" "test" {
   transformer_config {
     parse_json {}
   }
-  
+
   transformer_config {
     date_time_converter {
-		match_patterns = ["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'"]
-		source         = "source1"
-		target         = "target1"
-	}
+      match_patterns = ["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'"]
+      source         = "source1"
+      target         = "target1"
+    }
   }
 
   transformer_config {
     date_time_converter {
-		match_patterns  = ["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'"]
-		source          = "source2"
-		target          = "target2"
-		locale          = "en"
-		source_timezone = "Europe/Paris"
-		target_format   = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-		target_timezone = "America/Chicago"
-	}
+      match_patterns  = ["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'"]
+      source          = "source2"
+      target          = "target2"
+      locale          = "en"
+      source_timezone = "Europe/Paris"
+      target_format   = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+      target_timezone = "America/Chicago"
+    }
   }
 }
 `, rName)
@@ -1637,13 +1637,13 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_json {}
+    parse_json {}
   }
 
   transformer_config {
     delete_keys {
-		with_keys = ["key1", "key2"]
-	}
+      with_keys = ["key1", "key2"]
+    }
   }
 }
 `, rName)
@@ -1659,9 +1659,9 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	grok {
-		match = "pattern"
-	}
+    grok {
+      match = "pattern"
+    }
   }
 }
 `, rName)
@@ -1677,10 +1677,10 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	grok {
-		match  = "pattern"
-		source = "source1"
-	}
+    grok {
+      match  = "pattern"
+      source = "source1"
+    }
   }
 }
 `, rName)
@@ -1691,30 +1691,30 @@ func testAccTransformerConfig_listToMap(rName string) string {
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
-  
+
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_json {}
+    parse_json {}
   }
 
   transformer_config {
     list_to_map {
-		key    = "key1"
-		source = "source1"
-	}
+      key    = "key1"
+      source = "source1"
+    }
   }
 
   transformer_config {
     list_to_map {
-		key               = "key2"
-		source            = "source2"
-		flatten           = true
-		flattened_element = "first"
-		target            = "target1"
-		value_key         = "valueKey1"
-	}
+      key               = "key2"
+      source            = "source2"
+      flatten           = true
+      flattened_element = "first"
+      target            = "target1"
+      value_key         = "valueKey1"
+    }
   }
 }
 `, rName)
@@ -1730,13 +1730,13 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_json {}
+    parse_json {}
   }
 
   transformer_config {
     lower_case_string {
-		with_keys = ["key1", "key2"]
-	}
+      with_keys = ["key1", "key2"]
+    }
   }
 }
 `, rName)
@@ -1754,19 +1754,19 @@ resource "aws_cloudwatch_log_transformer" "test" {
   transformer_config {
     parse_json {}
   }
-  
+
   transformer_config {
     move_keys {
-		entries {
-			source   = "source1"
-			target   = "target1"
-		}
-		entries {
-			source              = "source2"
-			target              = "target2"
-			overwrite_if_exists = true
-		}
-	}
+      entries {
+        source = "source1"
+        target = "target1"
+      }
+      entries {
+        source              = "source2"
+        target              = "target2"
+        overwrite_if_exists = true
+      }
+    }
   }
 }
 `, rName)
@@ -1782,7 +1782,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_cloudfront {}
+    parse_cloudfront {}
   }
 }
 `, rName)
@@ -1798,9 +1798,9 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_cloudfront {
-		source = "@message"
-	}
+    parse_cloudfront {
+      source = "@message"
+    }
   }
 }
 `, rName)
@@ -1816,12 +1816,12 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_json {}
+    parse_json {}
   }
 
   transformer_config {
     parse_json {
-	  destination = "destination1"
+      destination = "destination1"
       source      = "source1"
     }
   }
@@ -1839,17 +1839,17 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_key_value {}
+    parse_key_value {}
   }
 
   transformer_config {
     parse_key_value {
-	  destination         = "destination1"
-	  field_delimiter     = ";"
-	  key_prefix          = "prefix1"
-	  key_value_delimiter = ":"
-	  non_match_value     = "nonMatch1"
-	  overwrite_if_exists = true
+      destination         = "destination1"
+      field_delimiter     = ";"
+      key_prefix          = "prefix1"
+      key_value_delimiter = ":"
+      non_match_value     = "nonMatch1"
+      overwrite_if_exists = true
       source              = "source1"
     }
   }
@@ -1867,7 +1867,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_postgres {}
+    parse_postgres {}
   }
 }
 `, rName)
@@ -1883,9 +1883,9 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_postgres {
-		source = "@message"
-	}
+    parse_postgres {
+      source = "@message"
+    }
   }
 }
 `, rName)
@@ -1901,7 +1901,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_route53 {}
+    parse_route53 {}
   }
 }
 `, rName)
@@ -1917,9 +1917,9 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_route53 {
-		source = "@message"
-	}
+    parse_route53 {
+      source = "@message"
+    }
   }
 }
 `, rName)
@@ -1935,10 +1935,10 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_to_ocsf {
-		event_source = "CloudTrail"
-		ocsf_version = "V1.1"
-	}
+    parse_to_ocsf {
+      event_source = "CloudTrail"
+      ocsf_version = "V1.1"
+    }
   }
 }
 `, rName)
@@ -1954,11 +1954,11 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_to_ocsf {
-		event_source = "Route53Resolver"
-		ocsf_version = "V1.1"
-		source       = "@message"
-	}
+    parse_to_ocsf {
+      event_source = "Route53Resolver"
+      ocsf_version = "V1.1"
+      source       = "@message"
+    }
   }
 }
 `, rName)
@@ -1974,7 +1974,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_vpc {}
+    parse_vpc {}
   }
 }
 `, rName)
@@ -1990,9 +1990,9 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_vpc {
-		source = "@message"
-	}
+    parse_vpc {
+      source = "@message"
+    }
   }
 }
 `, rName)
@@ -2008,7 +2008,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_waf {}
+    parse_waf {}
   }
 }
 `, rName)
@@ -2024,9 +2024,9 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_waf {
-		source = "@message"
-	}
+    parse_waf {
+      source = "@message"
+    }
   }
 }
 `, rName)
@@ -2044,19 +2044,19 @@ resource "aws_cloudwatch_log_transformer" "test" {
   transformer_config {
     parse_json {}
   }
-  
+
   transformer_config {
     rename_keys {
-		entries {
-			key       = "key1"
-			rename_to = "renamedKey1"
-		}
-		entries {
-			key                 = "key2"
-			rename_to           = "renamedKey2"
-			overwrite_if_exists = true
-		}
-	}
+      entries {
+        key       = "key1"
+        rename_to = "renamedKey1"
+      }
+      entries {
+        key                 = "key2"
+        rename_to           = "renamedKey2"
+        overwrite_if_exists = true
+      }
+    }
   }
 }
 `, rName)
@@ -2074,14 +2074,14 @@ resource "aws_cloudwatch_log_transformer" "test" {
   transformer_config {
     parse_json {}
   }
-  
+
   transformer_config {
     split_string {
-		entries {
-			delimiter = ":"
-			source    = "source1"
-		}
-	}
+      entries {
+        delimiter = ":"
+        source    = "source1"
+      }
+    }
   }
 }
 `, rName)
@@ -2099,15 +2099,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
   transformer_config {
     parse_json {}
   }
-  
+
   transformer_config {
     substitute_string {
-		entries {
-			from      = "from1"
-			source    = "source1"
-			to        = "to1"
-		}
-	}
+      entries {
+        from   = "from1"
+        source = "source1"
+        to     = "to1"
+      }
+    }
   }
 }
 `, rName)
@@ -2123,13 +2123,13 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_json {}
+    parse_json {}
   }
 
   transformer_config {
     trim_string {
-		with_keys = ["key1", "key2"]
-	}
+      with_keys = ["key1", "key2"]
+    }
   }
 }
 `, rName)
@@ -2145,16 +2145,16 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_json {}
+    parse_json {}
   }
 
   transformer_config {
-	type_converter {
-		entries {
-			key = "key1"
-			type = "boolean"
-		}
-	}
+    type_converter {
+      entries {
+        key  = "key1"
+        type = "boolean"
+      }
+    }
   }
 }
 `, rName)
@@ -2170,13 +2170,13 @@ resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
   transformer_config {
-	parse_json {}
+    parse_json {}
   }
 
   transformer_config {
     upper_case_string {
-		with_keys = ["key1", "key2"]
-	}
+      with_keys = ["key1", "key2"]
+    }
   }
 }
 `, rName)
