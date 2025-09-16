@@ -214,7 +214,7 @@ The `parse_route53` block supports the following arguments:
 The `parse_to_ocsf` block supports the following arguments:
 
 * `event_type` - (Required) Specifies the service or process that produces the log events. Allowed values are: `CloudTrail`, `Route53Resolver`, `VPCFlow`, `EKSAudit`, and `AWSWAF`.
-* `ocsf_version` - (Optional) Specifies the version of the OCSF schema to use for the transformed log events. The only allowed value is `V1.1`.
+* `ocsf_version` - (Required) Specifies the version of the OCSF schema to use for the transformed log events. The only allowed value is `V1.1`.
 * `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
 
 ### `parse_vpc` Block
