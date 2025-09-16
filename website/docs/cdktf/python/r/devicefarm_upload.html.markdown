@@ -62,6 +62,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_devicefarm_upload.example
+  identity = {
+    "arn" = "arn:aws:devicefarm:us-west-2:123456789012:upload:4e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_devicefarm_upload" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Device Farm upload.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Uploads using their ARN. For example:
 
 ```python
@@ -85,4 +106,4 @@ Using `terraform import`, import DeviceFarm Uploads using their ARN. For example
 % terraform import aws_devicefarm_upload.example arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5d30c96fc95ab8096c68e03a25340e34468c5d81db0c7274234f267ee4731bee -->
+<!-- cache-key: cdktf-0.20.8 input-9ed2d0f64f408199366103f81db393509282757be6e119ce0f5c3c8243467851 -->
