@@ -312,7 +312,7 @@ func testAccCheckPresetDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if !errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return fmt.Errorf("unexpected error: %s", err)
+				return fmt.Errorf("unexpected error: %w", err)
 			}
 		}
 		return nil

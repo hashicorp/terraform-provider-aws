@@ -18,6 +18,9 @@ type ImportByIdentityer interface {
 
 var _ ImportByIdentityer = &WithImportByIdentity{}
 
+// WithImportByIdentity is intended to be embedded in resources which support resource identity.
+//
+// See: https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#importing-by-identity
 type WithImportByIdentity struct {
 	identity   inttypes.Identity
 	importSpec inttypes.FrameworkImport

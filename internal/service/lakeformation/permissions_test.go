@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1137,7 +1136,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var allPermissions []awstypes.PrincipalResourcePermissions
 
-	err := retry.RetryContext(ctx, tflakeformation.IAMPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, tflakeformation.IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		pages := lakeformation.NewListPermissionsPaginator(conn, input)
 
 		for pages.HasMorePages() {
@@ -1152,11 +1151,11 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 			}
 
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(fmt.Errorf("acceptance test: error listing Lake Formation Permissions getting permission count: %w", err))
+				return tfresource.NonRetryableError(fmt.Errorf("acceptance test: error listing Lake Formation Permissions getting permission count: %w", err))
 			}
 
 			for _, permission := range page.PrincipalResourcePermissions {
@@ -1170,10 +1169,6 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.ListPermissions(ctx, input)
-	}
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return 0, nil
