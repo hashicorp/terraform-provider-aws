@@ -170,7 +170,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.DebugLogging = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("default_auth_scheme"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("default_auth_scheme"); ok {
 		input.DefaultAuthScheme = types.DefaultAuthScheme(v.(string))
 	}
 
@@ -253,7 +253,7 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.Auth = []types.UserAuthConfig{}
 		}
 
-		if v, ok := d.GetOk("default_auth_scheme"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("default_auth_scheme"); ok {
 			input.DefaultAuthScheme = types.DefaultAuthScheme(v.(string))
 		}
 
