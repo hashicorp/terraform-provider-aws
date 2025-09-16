@@ -16,9 +16,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestParseRecordID(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Input, FunctionName, Qualifier, ResultHash string
+	}{
+		{"ABCDEF", "", "", ""},
+		{"ABCDEF_42", "", "", ""},
+		{"ABCDEF_", "", "", ""},
+		{"ABCDEF_42_b326b5062b2f0e69046810717534cb09", "ABCDEF", "42", "b326b5062b2f0e69046810717534cb09"},
+		{"ABC_DEF_42_b326b5062b2f0e69046810717534cb09", "ABC_DEF", "42", "b326b5062b2f0e69046810717534cb09"},
+		{"ABCDEF_$LATEST_b326b5062b2f0e69046810717534cb09", "ABCDEF", "$LATEST", "b326b5062b2f0e69046810717534cb09"},
+		{"ABC_DEF_$LATEST_b326b5062b2f0e69046810717534cb09", "ABC_DEF", "$LATEST", "b326b5062b2f0e69046810717534cb09"},
+		{"ABC_DEF_1234_$LATEST_b326b5062b2f0e69046810717534cb09", "ABC_DEF_1234", "$LATEST", "b326b5062b2f0e69046810717534cb09"},
+		{"ABC_DEF_1234_567_b326b5062b2f0e69046810717534cb09", "ABC_DEF_1234", "567", "b326b5062b2f0e69046810717534cb09"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Input, func(t *testing.T) {
+			t.Parallel()
+
+			parts := tflambda.InvocationParseResourceID(tc.Input)
+			if parts[0] != tc.FunctionName {
+				t.Fatalf("input: %s\nfunction_name: %s\nexpected:%s", tc.Input, parts[0], tc.FunctionName)
+			}
+			if parts[1] != tc.Qualifier {
+				t.Fatalf("input: %s\nqualifier: %s\nexpected:%s", tc.Input, parts[1], tc.Qualifier)
+			}
+			if parts[2] != tc.ResultHash {
+				t.Fatalf("input: %s\nresult: %s\nexpected:%s", tc.Input, parts[2], tc.ResultHash)
+			}
+		})
+	}
+}
 
 func TestAccLambdaInvocation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -44,6 +80,12 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 					testAccCheckInvocationResult(resourceName, resultJSON),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+			},
 		},
 	})
 }
@@ -65,6 +107,12 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
 			},
 		},
 	})
@@ -152,6 +200,12 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
 			},
 		},
 	})
