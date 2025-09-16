@@ -1556,9 +1556,9 @@ resource "aws_cloudwatch_log_transformer" "test" {
 			target   = "target1"
 		}
 		entries {
-			source                 = "source2"
-			target                 = "target2"
-			overwrite_if_exists    = true
+			source              = "source2"
+			target              = "target2"
+			overwrite_if_exists = true
 		}
 	}
   }
@@ -1762,9 +1762,9 @@ resource "aws_cloudwatch_log_transformer" "test" {
 			target   = "target1"
 		}
 		entries {
-			source                 = "source2"
-			target                 = "target2"
-			overwrite_if_exists    = true
+			source              = "source2"
+			target              = "target2"
+			overwrite_if_exists = true
 		}
 	}
   }
