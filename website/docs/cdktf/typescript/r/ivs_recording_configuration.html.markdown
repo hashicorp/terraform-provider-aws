@@ -51,6 +51,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Recording Configuration name.
 * `recordingReconnectWindowSeconds` - (Optional) If a broadcast disconnects and then reconnects within the specified interval, the multiple streams will be considered a single broadcast and merged together.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -74,6 +75,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ivs_recording_configuration.example
+  identity = {
+    "arn" = "arn:aws:ivs:us-west-2:123456789012:recording-configuration/abcdABCDefgh"
+  }
+}
+
+resource "aws_ivs_recording_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IVS recording configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Recording Configuration using the ARN. For example:
 
@@ -105,4 +127,4 @@ Using `terraform import`, import IVS (Interactive Video) Recording Configuration
 % terraform import aws_ivs_recording_configuration.example arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-df7c61620a9731f6911320162a0d1f3273caabbf2762a59eb62c9ab821ea994d -->
+<!-- cache-key: cdktf-0.20.8 input-0276527de5437fa5122369910973d1339757a40d17fe1bd6cd7e2f5c8dd42a4a -->

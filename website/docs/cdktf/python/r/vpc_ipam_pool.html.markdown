@@ -33,14 +33,14 @@ class MyConvertedCode(TerraformStack):
         current = DataAwsRegion(self, "current")
         example = VpcIpam(self, "example",
             operating_regions=[VpcIpamOperatingRegions(
-                region_name=Token.as_string(current.name)
+                region_name=Token.as_string(current.region)
             )
             ]
         )
         aws_vpc_ipam_pool_example = VpcIpamPool(self, "example_2",
             address_family="ipv4",
             ipam_scope_id=example.private_default_scope_id,
-            locale=Token.as_string(current.name)
+            locale=Token.as_string(current.region)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_example.override_logical_id("example")
@@ -66,7 +66,7 @@ class MyConvertedCode(TerraformStack):
         current = DataAwsRegion(self, "current")
         example = VpcIpam(self, "example",
             operating_regions=[VpcIpamOperatingRegions(
-                region_name=Token.as_string(current.name)
+                region_name=Token.as_string(current.region)
             )
             ]
         )
@@ -81,7 +81,7 @@ class MyConvertedCode(TerraformStack):
         child = VpcIpamPool(self, "child",
             address_family="ipv4",
             ipam_scope_id=example.private_default_scope_id,
-            locale=Token.as_string(current.name),
+            locale=Token.as_string(current.region),
             source_ipam_pool_id=parent.id
         )
         VpcIpamPoolCidr(self, "child_test",
@@ -94,6 +94,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address_family` - (Required) The IP protocol assigned to this pool. You must choose either IPv4 or IPv6 protocol for a pool.
 * `allocation_default_netmask_length` - (Optional) A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is 10.0.0.0/8 and you enter 16 here, new allocations will default to 10.0.0.0/16 (unless you provide a different netmask value when you create the new allocation).
 * `allocation_max_netmask_length` - (Optional) The maximum netmask length that will be required for CIDR allocations in this pool.
@@ -145,4 +146,4 @@ Using `terraform import`, import IPAMs using the IPAM pool `id`. For example:
 % terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0691c6863d4ed9f80ea5c189984553f9fee2e100bc4e7dbe9dd5b6bb4a149e1f -->
+<!-- cache-key: cdktf-0.20.8 input-5e75736b1363d462eb25f8dfe2ff410a237ca7eea642a77ab07c7c6aa03b5ee4 -->

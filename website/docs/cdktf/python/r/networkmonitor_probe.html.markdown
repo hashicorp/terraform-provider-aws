@@ -49,6 +49,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `destination` - (Required) The destination IP address. This must be either IPV4 or IPV6.
 - `destination_port` - (Optional) The port associated with the destination. This is required only if the protocol is TCP and must be a number between 1 and 65536.
 - `monitor_name` - (Required) The name of the monitor.
@@ -90,4 +91,4 @@ Using `terraform import`, import `aws_networkmonitor_probe` using the monitor na
 % terraform import aws_networkmonitor_probe.example monitor-7786087912324693644,probe-3qm8p693i4fi1h8lqylzkbp42e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d0845b5e6fcfefc38bed533fc09622a5a23cc4e9544d7d976dc219c2ee6e7ca7 -->
+<!-- cache-key: cdktf-0.20.8 input-1852580f482208caea6c0bfa7bd2e56643f8876298a851e86a2b90d2daf45ae9 -->

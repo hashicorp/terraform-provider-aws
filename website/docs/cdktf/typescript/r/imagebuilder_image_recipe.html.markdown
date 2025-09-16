@@ -57,7 +57,7 @@ class MyConvertedCode extends TerraformStack {
         "arn:${" +
         current.partition +
         "}:imagebuilder:${" +
-        dataAwsRegionCurrent.name +
+        dataAwsRegionCurrent.region +
         "}:aws:image/amazon-linux-2-x86/x.x.x",
       version: "1.0.0",
     });
@@ -77,6 +77,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `blockDeviceMapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
 * `systemsManagerAgent` - (Optional) Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.
@@ -128,6 +129,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_image_recipe.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0"
+  }
+}
+
+resource "aws_imagebuilder_image_recipe" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder image recipe.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image_recipe` resources using the Amazon Resource Name (ARN). For example:
 
 ```typescript
@@ -158,4 +180,4 @@ Using `terraform import`, import `aws_imagebuilder_image_recipe` resources using
 % terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fbeeb0e54dce3c6a72427e4393015073ca6d4559006b80d5cd93653c88401301 -->
+<!-- cache-key: cdktf-0.20.8 input-932ec9065cee040b6501563f0f3ef5e9405a97e204d163933ef919c46f258d8e -->

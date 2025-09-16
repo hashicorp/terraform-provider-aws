@@ -796,7 +796,7 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 func validTaskDefinitionContainerDefinitions(v any, k string) (ws []string, errors []error) {
 	_, err := expandContainerDefinitions(v.(string))
 	if err != nil {
-		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %w", err))
 	}
 	return
 }

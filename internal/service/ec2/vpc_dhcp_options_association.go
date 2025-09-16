@@ -80,7 +80,7 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC DHCP Options Set Association (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return nil, findVPCDHCPOptionsAssociation(ctx, conn, vpcID, dhcpOptionsID)
 	}, d.IsNewResource())
 

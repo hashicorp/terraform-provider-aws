@@ -250,9 +250,12 @@ func resourceRuleGroup() *schema.Resource {
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
 																									"address_definition": {
-																										Type:         schema.TypeString,
-																										Required:     true,
-																										ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+																										Type:     schema.TypeString,
+																										Required: true,
+																										ValidateFunc: validation.Any(
+																											verify.ValidIPv4CIDRNetworkAddress,
+																											verify.ValidIPv6CIDRNetworkAddress,
+																										),
 																									},
 																								},
 																							},
@@ -284,9 +287,12 @@ func resourceRuleGroup() *schema.Resource {
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
 																									"address_definition": {
-																										Type:         schema.TypeString,
-																										Required:     true,
-																										ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+																										Type:     schema.TypeString,
+																										Required: true,
+																										ValidateFunc: validation.Any(
+																											verify.ValidIPv4CIDRNetworkAddress,
+																											verify.ValidIPv6CIDRNetworkAddress,
+																										),
 																									},
 																								},
 																							},
@@ -597,7 +603,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidOperationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRuleGroup(ctx, &networkfirewall.DeleteRuleGroupInput{
 			RuleGroupArn: aws.String(d.Id()),
 		})

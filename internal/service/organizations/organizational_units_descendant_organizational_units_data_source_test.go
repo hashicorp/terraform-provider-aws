@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testOrganizationalUnitDescendantOUsDataSource_basic(t *testing.T) {
+func testAccOrganizationalUnitDescendantOUsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	topOUDataSourceName := "data.aws_organizations_organizational_unit_descendant_organizational_units.current"

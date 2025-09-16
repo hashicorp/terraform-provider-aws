@@ -167,6 +167,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start_time` - (Optional) The date and time, in RFC 3339 format, that the rotation goes into effect.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -218,6 +219,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssmcontacts_rotation.example
+  identity = {
+    "arn" = "arn:aws:ssm-contacts:us-east-1:123456789012:rotation/example-rotation"
+  }
+}
+
+resource "aws_ssmcontacts_rotation" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SSM Contacts rotation.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSMContacts Rotation using the `arn`. For example:
 
 ```python
@@ -241,4 +263,4 @@ Using `terraform import`, import CodeGuru Profiler Profiling Group using the `ar
 % terraform import aws_ssmcontacts_rotation.example arn:aws:ssm-contacts:us-east-1:012345678910:rotation/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-11ce2607c2bd70eae69800fa9ab236aa96308ce2f9eed7c7448ec8f86bcb63bb -->
+<!-- cache-key: cdktf-0.20.8 input-1b964f8a5559cf795714322d3ee63647490b3155c39beb6bd8ca8fe9bc7c7b68 -->

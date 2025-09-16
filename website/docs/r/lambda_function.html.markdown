@@ -257,6 +257,101 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Function with logging to S3 or Data Firehose
+
+#### Required Resources
+
+* An S3 bucket or Data Firehose delivery stream to store the logs.
+* A CloudWatch Log Group with:
+
+    * `log_group_class = "DELIVERY"`
+    * A subscription filter whose `destination_arn` points to the S3 bucket or the Data Firehose delivery stream.
+
+* IAM roles:
+
+    * Assumed by the `logs.amazonaws.com` service to deliver logs to the S3 bucket or Data Firehose delivery stream.
+    * Assumed by the `lambda.amazonaws.com` service to send logs to CloudWatch Logs
+
+* A Lambda function:
+
+    * In the `logging_configuration`, specify the name of the Log Group created above using the `log_group` field
+    * No special configuration is required to use S3 or Firehose as the log destination
+
+For more details, see [Sending Lambda function logs to Amazon S3](https://docs.aws.amazon.com/lambda/latest/dg/logging-with-s3.html).
+
+#### Example: Exporting Lambda Logs to S3 Bucket
+
+```terraform
+locals {
+  lambda_function_name = "lambda-log-export-example"
+}
+
+resource "aws_s3_bucket" "lambda_log_export" {
+  bucket = "${local.lambda_function_name}-bucket"
+}
+
+resource "aws_cloudwatch_log_group" "export" {
+  name            = "/aws/lambda/${local.lambda_function_name}"
+  log_group_class = "DELIVERY"
+}
+
+data "aws_iam_policy_document" "logs_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["logs.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "logs_log_export" {
+  name               = "${local.lambda_function_name}-lambda-log-export-role"
+  assume_role_policy = data.aws_iam_policy_document.logs_assume_role.json
+}
+
+data "aws_iam_policy_document" "lambda_log_export" {
+  statement {
+    actions = [
+      "s3:PutObject",
+    ]
+    effect = "Allow"
+    resources = [
+      "${aws_s3_bucket.lambda_log_export.arn}/*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda_log_export" {
+  policy = data.aws_iam_policy_document.lambda_log_export.json
+  role   = aws_iam_role.logs_log_export.name
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "lambda_log_export" {
+  name            = "${local.lambda_function_name}-filter"
+  log_group_name  = aws_cloudwatch_log_group.export.name
+  filter_pattern  = ""
+  destination_arn = aws_s3_bucket.lambda_log_export.arn
+  role_arn        = aws_iam_role.logs_log_export.arn
+}
+
+resource "aws_lambda_function" "log_export" {
+  function_name = local.lambda_function_name
+  handler       = "index.lambda_handler"
+  runtime       = "python3.13"
+  role          = aws_iam_role.example.arn
+  filename      = "function.zip"
+  logging_config {
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.export.name
+  }
+  depends_on = [
+    aws_cloudwatch_log_group.export
+  ]
+}
+```
+
 ### Function with Error Handling
 
 ```terraform
@@ -426,6 +521,7 @@ The following arguments are optional:
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
 * `source_code_hash` - (Optional) Base64-encoded SHA256 hash of the package file. Used to trigger updates when source code changes.
+* `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
@@ -471,6 +567,8 @@ The following arguments are optional:
 
 ### vpc_config Configuration Block
 
+~> **NOTE:** If `subnet_ids`, `security_group_ids` and `ipv6_allowed_for_dual_stack` are empty then `vpc_config` is considered to be empty or unset.
+
 * `ipv6_allowed_for_dual_stack` - (Optional) Whether to allow outbound IPv6 traffic on VPC functions connected to dual-stack subnets. Default: `false`.
 * `security_group_ids` - (Required) List of security group IDs associated with the Lambda function.
 * `subnet_ids` - (Required) List of subnet IDs associated with the Lambda function.
@@ -502,6 +600,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lambda_function.example
+  identity = {
+    function_name = "example"
+  }
+}
+
+resource "aws_lambda_function" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `function_name` (String) Name of the Lambda function.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Functions using the `function_name`. For example:
 

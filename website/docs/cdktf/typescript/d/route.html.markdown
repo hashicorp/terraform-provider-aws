@@ -54,6 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `routeTableId` - (Required) ID of the specific Route Table containing the Route entry.
 * `carrierGatewayId` - (Optional) EC2 Carrier Gateway ID of the Route belonging to the Route Table.
 * `coreNetworkArn` - (Optional) Core network ARN of the Route belonging to the Route Table.
@@ -81,4 +82,4 @@ This data source exports no additional attributes.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-e812588fcb482238c82b0cca8937bec414ba7346e6aa12b7c2d8fcd2405fffab -->
+<!-- cache-key: cdktf-0.20.8 input-c65a518142e8eef6c21df7acb7a273f719ccae6df9b5d10557e18c17699ac8b0 -->

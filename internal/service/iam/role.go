@@ -43,7 +43,7 @@ const (
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="name", resourceType="Role")
 // @IdentityAttribute("name")
-// @WrappedImport(false)
+// @CustomImport
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 // @Testing(idAttrDuplicates="name")
@@ -56,7 +56,9 @@ func resourceRole() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalSingleParameterized(ctx, rd, names.AttrName, meta.(importer.AWSClient)); err != nil {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
@@ -285,7 +287,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	role, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.Role, error) {
 		return findRoleByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -298,8 +300,6 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", d.Id(), err)
 	}
-
-	role := outputRaw.(*awstypes.Role)
 
 	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
 	if role, err = waitRoleARNIsNotUniqueID(ctx, conn, d.Id(), role); err != nil {
@@ -375,7 +375,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateAssumeRolePolicy(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -562,7 +562,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 		RoleName: aws.String(roleName),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.DeleteConflictException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.DeleteConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRole(ctx, input)
 	})
 
@@ -609,7 +609,7 @@ func deleteRoleInstanceProfiles(ctx context.Context, conn *iam.Client, roleName 
 
 func retryCreateRole(ctx context.Context, conn *iam.Client, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateRole(ctx, input)
 		},
 		func(err error) (bool, error) {

@@ -268,34 +268,29 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `command` – (Required) The command of the job. Defined below.
-* `connections` – (Optional) The list of connections used for this job.
-* `default_arguments` – (Optional) The map of default arguments for this job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes. For information about how to specify and consume your own Job arguments, see the [Calling AWS Glue APIs in Python](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html) topic in the developer guide. For information about the key-value pairs that AWS Glue consumes to set up your job, see the [Special Parameters Used by AWS Glue](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html) topic in the developer guide.
-* `non_overridable_arguments` – (Optional) Non-overridable arguments for this job, specified as name-value pairs.
-* `description` – (Optional) Description of the job.
-* `execution_property` – (Optional) Execution property of the job. Defined below.
-* `glue_version` - (Optional) The version of glue to use, for example "1.0". Ray jobs should set this to 4.0 or greater. For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
-* `job_run_queuing_enabled` - (Optional) Specifies whether job run queuing is enabled for the job runs for this job. A value of true means job run queuing is enabled for the job runs. If false or not populated, the job runs will not be considered for queueing.
+* `command` - (Required) The command of the job. Defined below.
+* `connections` - (Optional) The list of connections used for this job.
+* `default_arguments` - (Optional) The map of default arguments for this job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes. For information about how to specify and consume your own Job arguments, see the [Calling AWS Glue APIs in Python](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html) topic in the developer guide. For information about the key-value pairs that AWS Glue consumes to set up your job, see the [Special Parameters Used by AWS Glue](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html) topic in the developer guide.
+* `description` - (Optional) Description of the job.
 * `execution_class` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `FLEX`, `STANDARD`.
-* `maintenance_window` – (Optional) Specifies the day of the week and hour for the maintenance window for streaming jobs.
-* `max_capacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `number_of_workers` and `worker_type` arguments instead with `glue_version` `2.0` and above.
-* `max_retries` – (Optional) The maximum number of times to retry this job if it fails.
-* `name` – (Required) The name you assign to this job. It must be unique in your account.
+* `execution_property` - (Optional) Execution property of the job. Defined below.
+* `glue_version` - (Optional) The version of glue to use, for example "1.0". Ray jobs should set this to 4.0 or greater. For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
+* `job_mode` - (Optional) Describes how a job was created. Valid values are `SCRIPT`, `NOTEBOOK` and `VISUAL`.
+* `job_run_queuing_enabled` - (Optional) Specifies whether job run queuing is enabled for the job runs for this job. A value of true means job run queuing is enabled for the job runs. If false or not populated, the job runs will not be considered for queueing.
+* `maintenance_window` - (Optional) Specifies the day of the week and hour for the maintenance window for streaming jobs.
+* `max_capacity` - (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `number_of_workers` and `worker_type` arguments instead with `glue_version` `2.0` and above.
+* `max_retries` - (Optional) The maximum number of times to retry this job if it fails.
+* `name` - (Required) The name you assign to this job. It must be unique in your account.
+* `non_overridable_arguments` - (Optional) Non-overridable arguments for this job, specified as name-value pairs.
 * `notification_property` - (Optional) Notification property of the job. Defined below.
-* `role_arn` – (Required) The ARN of the IAM role associated with this job.
+* `number_of_workers` - (Optional) The number of workers of a defined workerType that are allocated when a job runs.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `role_arn` - (Required) The ARN of the IAM role associated with this job.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and null (unlimited) for `gluestreaming` jobs.
+* `timeout` - (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and null (unlimited) for `gluestreaming` jobs.
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
 * `source_control_details` - (Optional) The details for a source control configuration for a job, allowing synchronization of job artifacts to or from a remote repository. Defined below.
-* `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Accepts a value of Standard, G.1X, G.2X, or G.025X for Spark jobs. Accepts the value Z.2X for Ray jobs.
-    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of memory and a 50GB disk, and 2 executors per worker.
-    * For the G.1X worker type, each worker maps to 1 DPU (4 vCPU, 16 GB of memory, 64 GB disk), and provides 1 executor per worker. Recommended for memory-intensive jobs.
-    * For the G.2X worker type, each worker maps to 2 DPU (8 vCPU, 32 GB of memory, 128 GB disk), and provides 1 executor per worker. Recommended for memory-intensive jobs.
-    * For the G.4X worker type, each worker maps to 4 DPU (16 vCPUs, 64 GB of memory) with 256GB disk (approximately 235GB free), and provides 1 executor per worker. Recommended for memory-intensive jobs. Only available for Glue version 3.0. Available AWS Regions: US East (Ohio), US East (N. Virginia), US West (Oregon), Asia Pacific (Singapore), Asia Pacific (Sydney), Asia Pacific (Tokyo), Canada (Central), Europe (Frankfurt), Europe (Ireland), and Europe (Stockholm).
-    * For the G.8X worker type, each worker maps to 8 DPU (32 vCPUs, 128 GB of memory) with 512GB disk (approximately 487GB free), and provides 1 executor per worker. Recommended for memory-intensive jobs. Only available for Glue version 3.0. Available AWS Regions: US East (Ohio), US East (N. Virginia), US West (Oregon), Asia Pacific (Singapore), Asia Pacific (Sydney), Asia Pacific (Tokyo), Canada (Central), Europe (Frankfurt), Europe (Ireland), and Europe (Stockholm).
-    * For the G.025X worker type, each worker maps to 0.25 DPU (2 vCPU, 4GB of memory, 64 GB disk), and provides 1 executor per worker. Recommended for low volume streaming jobs. Only available for Glue version 3.0.
-    * For the Z.2X worker type, each worker maps to 2 M-DPU (8vCPU, 64 GB of m emory, 128 GB disk), and provides up to 8 Ray workers based on the autoscaler.
-* `number_of_workers` - (Optional) The number of workers of a defined workerType that are allocated when a job runs.
+* `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Valid values: `Standard`, `G.1X`, `G.2X`, `G.025X`, `G.4X`, `G.8X`, `G.12X`, `G.16X`, `R.1X`, `R.2X`, `R.4X`, `R.8X`, `Z.2X` (Ray jobs). See the [AWS documentation](https://docs.aws.amazon.com/glue/latest/dg/worker-types.html) for details.
 
 ### command Argument Reference
 
@@ -356,4 +351,4 @@ Using `terraform import`, import Glue Jobs using `name`. For example:
 % terraform import aws_glue_job.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3c28d59f2930b6eb65e39b1e1b4c9d81a46938658865d6033fb53df26f0b1945 -->
+<!-- cache-key: cdktf-0.20.8 input-b54715ccb49bae9bbe3f93df9aa3611e29ed6321cb0004f3992d2672cf596a7c -->

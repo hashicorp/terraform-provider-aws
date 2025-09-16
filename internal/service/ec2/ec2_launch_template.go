@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -898,9 +897,15 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"group_id": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"placement.0.group_name"},
+						},
 						names.AttrGroupName: {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"placement.0.group_id"},
 						},
 						"host_id": {
 							Type:     schema.TypeString,
@@ -993,6 +998,15 @@ func resourceLaunchTemplate() *schema.Resource {
 			},
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    launchTemplateSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: launchTemplateStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		// Enable downstream updates for resources referencing schema attributes
 		// to prevent non-empty plans after "terraform apply"
 		CustomizeDiff: customdiff.Sequence(
@@ -1059,7 +1073,8 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	lt, err := findLaunchTemplateByID(ctx, conn, d.Id())
 
@@ -1079,14 +1094,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, launchTemplateARN(ctx, c, d.Id()))
 	d.Set("default_version", lt.DefaultVersionNumber)
 	d.Set(names.AttrDescription, ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)
@@ -2095,6 +2103,10 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.Launch
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
+	if v, ok := tfMap["group_id"].(string); ok && v != "" {
+		apiObject.GroupId = aws.String(v)
+	}
+
 	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
@@ -2999,6 +3011,10 @@ func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement)
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
+	if v := apiObject.GroupId; v != nil {
+		tfMap["group_id"] = aws.ToString(v)
+	}
+
 	if v := apiObject.GroupName; v != nil {
 		tfMap[names.AttrGroupName] = aws.ToString(v)
 	}
@@ -3233,4 +3249,7 @@ func flattenLaunchTemplateEnaSrdUdpSpecification(apiObject *awstypes.LaunchTempl
 	}
 
 	return tfMap
+}
+func launchTemplateARN(ctx context.Context, c *conns.AWSClient, templateID string) string {
+	return c.RegionalARN(ctx, names.EC2, "launch-template/"+templateID)
 }

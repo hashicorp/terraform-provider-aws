@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -354,9 +353,10 @@ func resourceSpotFleetRequest() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"weighted_capacity": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         nullable.TypeNullableFloat,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 						},
 					},
 				},
@@ -998,7 +998,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RequestSpotFleet(ctx, &input)
 		},
 		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
@@ -1268,9 +1268,10 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]any, me
 		opts.KeyName = aws.String(v.(string))
 	}
 
-	if v, ok := d["weighted_capacity"]; ok && v != "" {
-		wc, _ := strconv.ParseFloat(v.(string), 64)
-		opts.WeightedCapacity = aws.Float64(wc)
+	if v, ok := d["weighted_capacity"].(string); ok {
+		if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+			opts.WeightedCapacity = aws.Float64(v)
+		}
 	}
 
 	var securityGroupIds []string
@@ -1928,7 +1929,7 @@ func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecificatio
 	m[names.AttrVPCSecurityGroupIDs] = securityGroupIds
 
 	if l.WeightedCapacity != nil {
-		m["weighted_capacity"] = strconv.FormatFloat(*l.WeightedCapacity, 'f', 0, 64)
+		m["weighted_capacity"] = flex.Float64ToStringValue(l.WeightedCapacity)
 	}
 
 	if l.TagSpecifications != nil {

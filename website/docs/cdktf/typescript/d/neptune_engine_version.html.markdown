@@ -49,6 +49,7 @@ This data source supports the following arguments:
 * `preferredMajorTargets` - (Optional) Ordered list of preferred major engine versions.
 * `preferredUpgradeTargets` - (Optional) Ordered list of preferred upgrade engine versions.
 * `preferredVersions` - (Optional) Ordered list of preferred engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `version` - (Optional) Version of the DB engine. For example, `1.0.1.0`, `1.0.2.2`, and `1.0.3.0`. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
 
 ## Attribute Reference
@@ -69,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `versionActual` - Actual engine version returned by the API.
 * `versionDescription` - Description of the database engine version.
 
-<!-- cache-key: cdktf-0.20.8 input-9567644a3ca7a828cf893592b961551bdaeafee59a25cea9e39da7319ccbcbec -->
+<!-- cache-key: cdktf-0.20.8 input-660a36de9243a0e3928031b136b14a65679e28fbeaccd31c6bfd43923619bd18 -->

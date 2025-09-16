@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description for the AWS Verified Access trust provider.
 * `device_options` - (Optional) A block of options for device identity based trust providers.
 * `device_trust_provider_type` (Optional) The type of device-based trust provider.
@@ -89,4 +90,4 @@ Using `terraform import`, import Transfer Workflows using the  `id`. For example
 % terraform import aws_verifiedaccess_trust_provider.example vatp-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3d78e91d79922e9b71045067e7db379f00bd4858e9705cbf72a67d473de679e8 -->
+<!-- cache-key: cdktf-0.20.8 input-5e8db91fac8de5b8e24e4eb6d199ffed067199fbe846fba732cd10106d70d3ec -->

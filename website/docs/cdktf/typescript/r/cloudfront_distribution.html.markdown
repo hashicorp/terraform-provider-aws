@@ -229,12 +229,8 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { CloudfrontDistribution } from "./.gen/providers/aws/cloudfront-distribution";
-interface MyConfig {
-  cachedMethods: any;
-  viewerProtocolPolicy: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     const s3OriginId = "myS3Origin";
     new CloudfrontDistribution(this, "s3_distribution", {
@@ -242,9 +238,9 @@ class MyConvertedCode extends TerraformStack {
       defaultCacheBehavior: {
         allowedMethods: ["GET", "HEAD", "OPTIONS"],
         cachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+        cachedMethods: ["GET", "HEAD"],
         targetOriginId: s3OriginId,
-        cachedMethods: config.cachedMethods,
-        viewerProtocolPolicy: config.viewerProtocolPolicy,
+        viewerProtocolPolicy: "allow-all",
       },
       defaultRootObject: "index.html",
       enabled: true,
@@ -289,7 +285,6 @@ import { CloudfrontDistribution } from "./.gen/providers/aws/cloudfront-distribu
 import { CloudwatchLogDelivery } from "./.gen/providers/aws/cloudwatch-log-delivery";
 import { CloudwatchLogDeliveryDestination } from "./.gen/providers/aws/cloudwatch-log-delivery-destination";
 import { CloudwatchLogDeliverySource } from "./.gen/providers/aws/cloudwatch-log-delivery-source";
-import { AwsProvider } from "./.gen/providers/aws/provider";
 import { S3Bucket } from "./.gen/providers/aws/s3-bucket";
 interface MyConfig {
   defaultCacheBehavior: any;
@@ -301,15 +296,7 @@ interface MyConfig {
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string, config: MyConfig) {
     super(scope, name);
-    new AwsProvider(this, "aws", {
-      region: region.stringValue,
-    });
-    const usEast1 = new AwsProvider(this, "aws_1", {
-      alias: "us_east_1",
-      region: "us-east-1",
-    });
     const example = new CloudfrontDistribution(this, "example", {
-      provider: usEast1,
       defaultCacheBehavior: config.defaultCacheBehavior,
       enabled: config.enabled,
       origin: config.origin,
@@ -317,22 +304,22 @@ class MyConvertedCode extends TerraformStack {
       viewerCertificate: config.viewerCertificate,
     });
     const awsCloudwatchLogDeliverySourceExample =
-      new CloudwatchLogDeliverySource(this, "example_3", {
+      new CloudwatchLogDeliverySource(this, "example_1", {
         logType: "ACCESS_LOGS",
         name: "example",
-        provider: usEast1,
+        region: "us-east-1",
         resourceArn: example.arn,
       });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsCloudwatchLogDeliverySourceExample.overrideLogicalId("example");
-    const awsS3BucketExample = new S3Bucket(this, "example_4", {
+    const awsS3BucketExample = new S3Bucket(this, "example_2", {
       bucket: "testbucket",
       forceDestroy: true,
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsS3BucketExample.overrideLogicalId("example");
     const awsCloudwatchLogDeliveryDestinationExample =
-      new CloudwatchLogDeliveryDestination(this, "example_5", {
+      new CloudwatchLogDeliveryDestination(this, "example_3", {
         deliveryDestinationConfiguration: [
           {
             destinationResourceArn: "${" + awsS3BucketExample.arn + "}/prefix",
@@ -340,13 +327,13 @@ class MyConvertedCode extends TerraformStack {
         ],
         name: "s3-destination",
         outputFormat: "parquet",
-        provider: usEast1,
+        region: "us-east-1",
       });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsCloudwatchLogDeliveryDestinationExample.overrideLogicalId("example");
     const awsCloudwatchLogDeliveryExample = new CloudwatchLogDelivery(
       this,
-      "example_6",
+      "example_4",
       {
         deliveryDestinationArn: Token.asString(
           awsCloudwatchLogDeliveryDestinationExample.arn
@@ -354,7 +341,7 @@ class MyConvertedCode extends TerraformStack {
         deliverySourceName: Token.asString(
           awsCloudwatchLogDeliverySourceExample.name
         ),
-        provider: usEast1,
+        region: "us-east-1",
         s3DeliveryConfiguration: [
           {
             suffixPath: "/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}",
@@ -369,11 +356,102 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+### With V2 logging to Data Firehose
+
+The example below creates a CloudFront distribution with [standard logging V2 to Data Firehose](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
+
+```typescript
+// DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
+import { Construct } from "constructs";
+import { Token, TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CloudfrontDistribution } from "./.gen/providers/aws/cloudfront-distribution";
+import { CloudwatchLogDelivery } from "./.gen/providers/aws/cloudwatch-log-delivery";
+import { CloudwatchLogDeliveryDestination } from "./.gen/providers/aws/cloudwatch-log-delivery-destination";
+import { CloudwatchLogDeliverySource } from "./.gen/providers/aws/cloudwatch-log-delivery-source";
+import { KinesisFirehoseDeliveryStream } from "./.gen/providers/aws/kinesis-firehose-delivery-stream";
+interface MyConfig {
+  defaultCacheBehavior: any;
+  enabled: any;
+  origin: any;
+  restrictions: any;
+  viewerCertificate: any;
+  destination: any;
+  name: any;
+}
+class MyConvertedCode extends TerraformStack {
+  constructor(scope: Construct, name: string, config: MyConfig) {
+    super(scope, name);
+    const example = new CloudfrontDistribution(this, "example", {
+      defaultCacheBehavior: config.defaultCacheBehavior,
+      enabled: config.enabled,
+      origin: config.origin,
+      restrictions: config.restrictions,
+      viewerCertificate: config.viewerCertificate,
+    });
+    const awsCloudwatchLogDeliverySourceExample =
+      new CloudwatchLogDeliverySource(this, "example_1", {
+        logType: "ACCESS_LOGS",
+        name: "cloudfront-logs-source",
+        region: "us-east-1",
+        resourceArn: example.arn,
+      });
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsCloudwatchLogDeliverySourceExample.overrideLogicalId("example");
+    const cloudfrontLogs = new KinesisFirehoseDeliveryStream(
+      this,
+      "cloudfront_logs",
+      {
+        region: "us-east-1",
+        tags: {
+          LogDeliveryEnabled: "true",
+        },
+        destination: config.destination,
+        name: config.name,
+      }
+    );
+    const awsCloudwatchLogDeliveryDestinationExample =
+      new CloudwatchLogDeliveryDestination(this, "example_3", {
+        deliveryDestinationConfiguration: [
+          {
+            destinationResourceArn: cloudfrontLogs.arn,
+          },
+        ],
+        name: "firehose-destination",
+        outputFormat: "json",
+        region: "us-east-1",
+      });
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsCloudwatchLogDeliveryDestinationExample.overrideLogicalId("example");
+    const awsCloudwatchLogDeliveryExample = new CloudwatchLogDelivery(
+      this,
+      "example_4",
+      {
+        deliveryDestinationArn: Token.asString(
+          awsCloudwatchLogDeliveryDestinationExample.arn
+        ),
+        deliverySourceName: Token.asString(
+          awsCloudwatchLogDeliverySourceExample.name
+        ),
+        region: "us-east-1",
+      }
+    );
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsCloudwatchLogDeliveryExample.overrideLogicalId("example");
+  }
+}
+
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
+* `anycastIpListId` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `continuousDeploymentPolicyId` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `customErrorResponse` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
@@ -565,6 +643,8 @@ class MyConvertedCode extends TerraformStack {
 
 #### Custom Error Response Arguments
 
+~> **NOTE:** When specifying either `responsePagePath` or `responseCode`, **both** must be set.
+
 * `errorCachingMinTtl` (Optional) - Minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
 * `errorCode` (Required) - 4xx or 5xx HTTP status code that you want to customize.
 * `responseCode` (Optional) - HTTP status code that you want CloudFront to return with the custom error page to the viewer.
@@ -593,8 +673,9 @@ argument should not be specified.
 * `originId` (Required) - Unique identifier for the origin.
 * `originPath` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `originShield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
+* `responseCompletionTimeout` - (Optional) Time (in seconds) that a request from CloudFront to the origin can stay open and wait for a response. Must be integer greater than or equal to the value of `originReadTimeout`. If omitted or explicitly set to `0`, no maximum value is enforced.
 * `s3OriginConfig` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `customOriginConfig` instead.
-* `vpcOriginConfig` - (Optional) The VPC origin configuration.
+* `vpcOriginConfig` - (Optional) The [VPC origin configuration](#vpc-origin-config-arguments).
 
 ##### Custom Origin Config Arguments
 
@@ -716,4 +797,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-382c89aac919919632168fe38b864c0325caa30ceb813051bc58d154aba559ef -->
+<!-- cache-key: cdktf-0.20.8 input-ebb065aa7bfd8b4e67d12231b93a40704fca19625e5e7cfe7a04b35ab7b38eac -->

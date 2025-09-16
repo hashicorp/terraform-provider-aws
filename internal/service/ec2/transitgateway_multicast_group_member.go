@@ -85,7 +85,7 @@ func resourceTransitGatewayMulticastGroupMemberRead(ctx context.Context, d *sche
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	multicastGroup, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.TransitGatewayMulticastGroup, error) {
 		return findTransitGatewayMulticastGroupMemberByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	}, d.IsNewResource())
 
@@ -98,8 +98,6 @@ func resourceTransitGatewayMulticastGroupMemberRead(ctx context.Context, d *sche
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Multicast Group Member (%s): %s", d.Id(), err)
 	}
-
-	multicastGroup := outputRaw.(*awstypes.TransitGatewayMulticastGroup)
 
 	d.Set("group_ip_address", multicastGroup.GroupIpAddress)
 	d.Set(names.AttrNetworkInterfaceID, multicastGroup.NetworkInterfaceId)

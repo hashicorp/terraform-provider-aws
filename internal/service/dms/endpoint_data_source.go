@@ -262,6 +262,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"authentication_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"babelfish_database_name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -315,6 +319,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Computed: true,
 						},
 						"plugin_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_access_role_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -757,7 +765,7 @@ func resourceEndpointDataSourceSetState(d *schema.ResourceData, endpoint *awstyp
 		}
 	case engineNameS3:
 		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
-			return fmt.Errorf("setting s3_settings for DMS: %s", err)
+			return fmt.Errorf("setting s3_settings for DMS: %w", err)
 		}
 	default:
 		d.Set(names.AttrDatabaseName, endpoint.DatabaseName)

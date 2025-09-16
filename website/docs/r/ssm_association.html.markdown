@@ -81,7 +81,7 @@ resource "aws_ssm_association" "example" {
 
 ### Create an association with multiple instances with their instance ids
 
-```
+```terraform
 # Removed EC2 provisioning dependencies for brevity
 
 resource "aws_ssm_association" "system_update" {
@@ -164,13 +164,13 @@ resource "aws_instance" "web_server_2" {
 
 ### Create an association with multiple instances with their values matching their tags
 
-```
+```terraform
 # SSM Association for Webbased Servers
 resource "aws_ssm_association" "database_association" {
   name = aws_ssm_document.system_update.name # Use the name of the document as the association name
   targets {
     key    = "tag:Role"
-    values = ["WebServer","Database"]
+    values = ["WebServer", "Database"]
   }
 
   parameters = {
@@ -182,7 +182,7 @@ resource "aws_ssm_association" "database_association" {
 # EC2 Instance 1 - Web Server with "ServerType" tag
 resource "aws_instance" "web_server" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
+  instance_type          = "t3.micro"
   subnet_id              = data.aws_subnet.default.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
@@ -214,7 +214,7 @@ resource "aws_instance" "web_server" {
 # EC2 Instance 2 - Database Server with "Role" tag
 resource "aws_instance" "database_server" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
+  instance_type          = "t3.micro"
   subnet_id              = data.aws_subnet.default.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
@@ -286,11 +286,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_association.example
+  identity = {
+    association_id = "10abcdef-0abc-1234-5678-90abcdef123456"
+  }
+}
+
+resource "aws_ssm_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `association_id` - (String) ID of the SSM association.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM associations using the `association_id`. For example:
 
 ```terraform
 import {
-  to = aws_ssm_association.test-association
+  to = aws_ssm_association.example
   id = "10abcdef-0abc-1234-5678-90abcdef123456"
 }
 ```
@@ -298,5 +324,5 @@ import {
 Using `terraform import`, import SSM associations using the `association_id`. For example:
 
 ```console
-% terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+% terraform import aws_ssm_association.example 10abcdef-0abc-1234-5678-90abcdef123456
 ```

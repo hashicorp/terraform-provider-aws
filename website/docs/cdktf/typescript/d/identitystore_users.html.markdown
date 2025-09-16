@@ -50,6 +50,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identityStoreId` - (Required) Identity Store ID associated with the Single Sign-On Instance.
 
 ## Attribute Reference
@@ -95,4 +96,4 @@ This data source exports the following attributes in addition to the arguments a
     * `userName` - User's user name value.
     * `userType` - User type.
 
-<!-- cache-key: cdktf-0.20.8 input-4194e4956350a0cb28fd4320bba1a4d1eb7550f8f3a7d47e7087f46b2b54b0f7 -->
+<!-- cache-key: cdktf-0.20.8 input-5fc74a16a21d43943b2bc7a493b9109a6d62aa6af4b81999eb5beedb2023101c -->

@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate_id` - (Required) A customer-assigned name for the certificate. Identifiers must begin with a letter and must contain only ASCII letters, digits, and hyphens. They can't end with a hyphen or contain two consecutive hyphens.
 
 ## Attribute Reference
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `valid_from_date` - The beginning date that the certificate is valid.
 * `valid_to_date` - The final date that the certificate is valid.
 
-<!-- cache-key: cdktf-0.20.8 input-8c90e07fbf9734b9fd8c20ee7cebf074bf4b7702ec8ddca26d7eea974d6a74a0 -->
+<!-- cache-key: cdktf-0.20.8 input-2ff302b8148d762f33f539decb6308d6c40d9056f23228dae399ac379a56efa2 -->

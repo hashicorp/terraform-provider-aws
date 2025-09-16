@@ -71,8 +71,8 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		DomainName:     aws.String(domainName),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.UpdateElasticsearchDomainConfig(ctx, input)
 		}, "A change/update is in progress")
 

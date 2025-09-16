@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"gopkg.in/dnaeon/go-vcr.v4/pkg/cassette"
@@ -186,23 +186,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			switch contentType := r.Header.Get("Content-Type"); contentType {
 			case "application/json", "application/x-amz-json-1.0", "application/x-amz-json-1.1":
 				// JSON might be the same, but reordered. Try parsing and comparing.
-				var requestJson, cassetteJson any
-
-				if err := json.Unmarshal([]byte(body), &requestJson); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal request JSON", map[string]any{
-						"error": err,
-					})
-					return false
-				}
-
-				if err := json.Unmarshal([]byte(i.Body), &cassetteJson); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal cassette JSON", map[string]any{
-						"error": err,
-					})
-					return false
-				}
-
-				return reflect.DeepEqual(requestJson, cassetteJson)
+				return tfjson.EqualStrings(body, i.Body)
 
 			case "application/xml":
 				// XML might be the same, but reordered. Try parsing and comparing.

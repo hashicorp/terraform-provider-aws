@@ -201,7 +201,7 @@ from cdktf import TerraformStack
 #
 from imports.aws.cloudfront_distribution import CloudfrontDistribution
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, cachedMethods, viewerProtocolPolicy):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         s3_origin_id = "myS3Origin"
         CloudfrontDistribution(self, "s3_distribution",
@@ -209,9 +209,9 @@ class MyConvertedCode(TerraformStack):
             default_cache_behavior=CloudfrontDistributionDefaultCacheBehavior(
                 allowed_methods=["GET", "HEAD", "OPTIONS"],
                 cache_policy_id="4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+                cached_methods=["GET", "HEAD"],
                 target_origin_id=s3_origin_id,
-                cached_methods=cached_methods,
-                viewer_protocol_policy=viewer_protocol_policy
+                viewer_protocol_policy="allow-all"
             ),
             default_root_object="index.html",
             enabled=True,
@@ -252,20 +252,11 @@ from imports.aws.cloudfront_distribution import CloudfrontDistribution
 from imports.aws.cloudwatch_log_delivery import CloudwatchLogDelivery
 from imports.aws.cloudwatch_log_delivery_destination import CloudwatchLogDeliveryDestination
 from imports.aws.cloudwatch_log_delivery_source import CloudwatchLogDeliverySource
-from imports.aws.provider import AwsProvider
 from imports.aws.s3_bucket import S3Bucket
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name, *, defaultCacheBehavior, enabled, origin, restrictions, viewerCertificate):
         super().__init__(scope, name)
-        AwsProvider(self, "aws",
-            region=region.string_value
-        )
-        us_east1 = AwsProvider(self, "aws_1",
-            alias="us_east_1",
-            region="us-east-1"
-        )
         example = CloudfrontDistribution(self, "example",
-            provider=us_east1,
             default_cache_behavior=default_cache_behavior,
             enabled=enabled,
             origin=origin,
@@ -273,40 +264,105 @@ class MyConvertedCode(TerraformStack):
             viewer_certificate=viewer_certificate
         )
         aws_cloudwatch_log_delivery_source_example =
-        CloudwatchLogDeliverySource(self, "example_3",
+        CloudwatchLogDeliverySource(self, "example_1",
             log_type="ACCESS_LOGS",
             name="example",
-            provider=us_east1,
+            region="us-east-1",
             resource_arn=example.arn
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_cloudwatch_log_delivery_source_example.override_logical_id("example")
-        aws_s3_bucket_example = S3Bucket(self, "example_4",
+        aws_s3_bucket_example = S3Bucket(self, "example_2",
             bucket="testbucket",
             force_destroy=True
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_s3_bucket_example.override_logical_id("example")
         aws_cloudwatch_log_delivery_destination_example =
-        CloudwatchLogDeliveryDestination(self, "example_5",
+        CloudwatchLogDeliveryDestination(self, "example_3",
             delivery_destination_configuration=[CloudwatchLogDeliveryDestinationDeliveryDestinationConfiguration(
                 destination_resource_arn="${" + aws_s3_bucket_example.arn + "}/prefix"
             )
             ],
             name="s3-destination",
             output_format="parquet",
-            provider=us_east1
+            region="us-east-1"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_cloudwatch_log_delivery_destination_example.override_logical_id("example")
-        aws_cloudwatch_log_delivery_example = CloudwatchLogDelivery(self, "example_6",
+        aws_cloudwatch_log_delivery_example = CloudwatchLogDelivery(self, "example_4",
             delivery_destination_arn=Token.as_string(aws_cloudwatch_log_delivery_destination_example.arn),
             delivery_source_name=Token.as_string(aws_cloudwatch_log_delivery_source_example.name),
-            provider=us_east1,
+            region="us-east-1",
             s3_delivery_configuration=[CloudwatchLogDeliveryS3DeliveryConfiguration(
                 suffix_path="/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"
             )
             ]
+        )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_cloudwatch_log_delivery_example.override_logical_id("example")
+```
+
+### With V2 logging to Data Firehose
+
+The example below creates a CloudFront distribution with [standard logging V2 to Data Firehose](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
+
+```python
+# DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
+from constructs import Construct
+from cdktf import Token, TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.cloudfront_distribution import CloudfrontDistribution
+from imports.aws.cloudwatch_log_delivery import CloudwatchLogDelivery
+from imports.aws.cloudwatch_log_delivery_destination import CloudwatchLogDeliveryDestination
+from imports.aws.cloudwatch_log_delivery_source import CloudwatchLogDeliverySource
+from imports.aws.kinesis_firehose_delivery_stream import KinesisFirehoseDeliveryStream
+class MyConvertedCode(TerraformStack):
+    def __init__(self, scope, name, *, defaultCacheBehavior, enabled, origin, restrictions, viewerCertificate, destination, name):
+        super().__init__(scope, name)
+        example = CloudfrontDistribution(self, "example",
+            default_cache_behavior=default_cache_behavior,
+            enabled=enabled,
+            origin=origin,
+            restrictions=restrictions,
+            viewer_certificate=viewer_certificate
+        )
+        aws_cloudwatch_log_delivery_source_example =
+        CloudwatchLogDeliverySource(self, "example_1",
+            log_type="ACCESS_LOGS",
+            name="cloudfront-logs-source",
+            region="us-east-1",
+            resource_arn=example.arn
+        )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_cloudwatch_log_delivery_source_example.override_logical_id("example")
+        cloudfront_logs = KinesisFirehoseDeliveryStream(self, "cloudfront_logs",
+            region="us-east-1",
+            tags={
+                "LogDeliveryEnabled": "true"
+            },
+            destination=destination,
+            name=name
+        )
+        aws_cloudwatch_log_delivery_destination_example =
+        CloudwatchLogDeliveryDestination(self, "example_3",
+            delivery_destination_configuration=[CloudwatchLogDeliveryDestinationDeliveryDestinationConfiguration(
+                destination_resource_arn=cloudfront_logs.arn
+            )
+            ],
+            name="firehose-destination",
+            output_format="json",
+            region="us-east-1"
+        )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_cloudwatch_log_delivery_destination_example.override_logical_id("example")
+        aws_cloudwatch_log_delivery_example = CloudwatchLogDelivery(self, "example_4",
+            delivery_destination_arn=Token.as_string(aws_cloudwatch_log_delivery_destination_example.arn),
+            delivery_source_name=Token.as_string(aws_cloudwatch_log_delivery_source_example.name),
+            region="us-east-1"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_cloudwatch_log_delivery_example.override_logical_id("example")
@@ -317,6 +373,7 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
+* `anycast_ip_list_id` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
@@ -474,6 +531,8 @@ class MyConvertedCode(TerraformStack):
 
 #### Custom Error Response Arguments
 
+~> **NOTE:** When specifying either `response_page_path` or `response_code`, **both** must be set.
+
 * `error_caching_min_ttl` (Optional) - Minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
 * `error_code` (Required) - 4xx or 5xx HTTP status code that you want to customize.
 * `response_code` (Optional) - HTTP status code that you want CloudFront to return with the custom error page to the viewer.
@@ -502,8 +561,9 @@ argument should not be specified.
 * `origin_id` (Required) - Unique identifier for the origin.
 * `origin_path` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
+* `response_completion_timeout` - (Optional) Time (in seconds) that a request from CloudFront to the origin can stay open and wait for a response. Must be integer greater than or equal to the value of `origin_read_timeout`. If omitted or explicitly set to `0`, no maximum value is enforced.
 * `s3_origin_config` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
-* `vpc_origin_config` - (Optional) The VPC origin configuration.
+* `vpc_origin_config` - (Optional) The [VPC origin configuration](#vpc-origin-config-arguments).
 
 ##### Custom Origin Config Arguments
 
@@ -618,4 +678,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-382c89aac919919632168fe38b864c0325caa30ceb813051bc58d154aba559ef -->
+<!-- cache-key: cdktf-0.20.8 input-ebb065aa7bfd8b4e67d12231b93a40704fca19625e5e7cfe7a04b35ab7b38eac -->

@@ -19,7 +19,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -38,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -47,9 +47,13 @@ import (
 
 // @SDKResource("aws_instance", name="Instance")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Instance")
 // @Testing(importIgnore="user_data_replace_on_change")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(plannableImportAction="NoOp")
 func resourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -59,7 +63,15 @@ func resourceInstance() *schema.Resource {
 		DeleteWithoutTimeout: resourceInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
+
+				rd.Set(names.AttrForceDestroy, false)
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		SchemaVersion: 2,
@@ -359,6 +371,11 @@ func resourceInstance() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
+			names.AttrForceDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -379,7 +396,7 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"placement_group"},
+				ConflictsWith: []string{"placement_group", "placement_group_id"},
 			},
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
@@ -477,7 +494,6 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPv6Address,
@@ -585,7 +601,7 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", names.AttrSubnetID, "private_ip", "secondary_private_ips", names.AttrVPCSecurityGroupIDs, names.AttrSecurityGroups, "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "primary_network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -602,6 +618,7 @@ func resourceInstance() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						// Note: Changes to `network_interface.network_card_index` should be mirrored in `aws_spot_instance_request`
 						"network_card_index": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -615,6 +632,7 @@ func resourceInstance() *schema.Resource {
 						},
 					},
 				},
+				Deprecated: "network_interface is deprecated. To specify the primary network interface, use primary_network_interface instead. To attach additional network interfaces, use the aws_network_interface_attachment resource.",
 			},
 			"outpost_arn": {
 				Type:     schema.TypeString,
@@ -629,7 +647,14 @@ func resourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"host_resource_group_arn"},
+				ConflictsWith: []string{"host_resource_group_arn", "placement_group_id"},
+			},
+			"placement_group_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"host_resource_group_arn", "placement_group"},
 			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
@@ -640,6 +665,27 @@ func resourceInstance() *schema.Resource {
 			"primary_network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"primary_network_interface": {
+				// Note: Changes to `primary_network_interface` should be mirrored in `aws_spot_instance_request`
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				Computed:      true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDeleteOnTermination: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrNetworkInterfaceID: {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"private_dns": {
 				Type:     schema.TypeString,
@@ -980,6 +1026,23 @@ func resourceInstance() *schema.Resource {
 
 				return true
 			}),
+			customdiff.ComputedIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("ipv6_address_count")
+			}),
+			customdiff.ForceNewIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if !diff.HasChange("ipv6_addresses") {
+					return false
+				}
+
+				// Don't force new if ipv6_address_count is also changing
+				// This indicates the ipv6_addresses change is computed, not user-driven
+				if diff.HasChange("ipv6_address_count") {
+					return false
+				}
+
+				// Force new only for explicit user changes to ipv6_addresses
+				return true
+			}),
 		),
 	}
 }
@@ -1155,7 +1218,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	instance, err := findInstanceByID(ctx, conn, d.Id())
 
@@ -1180,17 +1244,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v := instance.Placement; v != nil {
 		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
-
-		d.Set("placement_group", v.GroupName)
-
 		d.Set("host_id", v.HostId)
-
 		if v := v.HostResourceGroupArn; v != nil {
 			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 		}
-
+		d.Set("placement_group", v.GroupName)
+		d.Set("placement_group_id", v.GroupId)
 		d.Set("placement_partition_number", v.PartitionNumber)
-
 		d.Set("tenancy", v.Tenancy)
 	}
 
@@ -1286,10 +1346,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			// Otherwise, assume the network device was attached via an outside resource.
 			for _, index := range configuredDeviceIndexes {
 				if index == int(aws.ToInt32(iNi.Attachment.DeviceIndex)) {
+					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 					ni["device_index"] = aws.ToInt32(iNi.Attachment.DeviceIndex)
 					ni["network_card_index"] = aws.ToInt32(iNi.Attachment.NetworkCardIndex)
 					ni[names.AttrNetworkInterfaceID] = aws.ToString(iNi.NetworkInterfaceId)
-					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 				}
 			}
 			// Don't add empty network interfaces to schema
@@ -1306,11 +1366,17 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		// If an instance is shutting down, network interfaces are detached, and attributes may be nil,
 		// need to protect against nil pointer dereferences
 		if primaryNetworkInterface.NetworkInterfaceId != nil {
+			pni := map[string]any{
+				names.AttrNetworkInterfaceID:  aws.ToString(primaryNetworkInterface.NetworkInterfaceId),
+				names.AttrDeleteOnTermination: aws.ToBool(primaryNetworkInterface.Attachment.DeleteOnTermination),
+			}
+			if err := d.Set("primary_network_interface", []any{pni}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting primary_network_interface for AWS Instance (%s): %s", d.Id(), err)
+			}
+
+			d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
 			if primaryNetworkInterface.SubnetId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 				d.Set(names.AttrSubnetID, primaryNetworkInterface.SubnetId)
-			}
-			if primaryNetworkInterface.NetworkInterfaceId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-				d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
 			}
 			d.Set("ipv6_address_count", len(primaryNetworkInterface.Ipv6Addresses))
 			if primaryNetworkInterface.SourceDestCheck != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
@@ -1396,14 +1462,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// ARN
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("instance/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, instanceARN(ctx, c, d.Id()))
 
 	// Instance attributes
 	{
@@ -1613,19 +1672,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 						}
 					} else {
-						err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
+						err := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-									return retry.RetryableError(err)
+									return tfresource.RetryableError(err)
 								}
-								return retry.NonRetryableError(err)
+								return tfresource.NonRetryableError(err)
 							}
 							return nil
 						})
-						if tfresource.TimedOut(err) {
-							_, err = conn.ReplaceIamInstanceProfileAssociation(ctx, &input)
-						}
+
 						if err != nil {
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): replacing instance profile: %s", d.Id(), err)
 						}
@@ -2223,12 +2280,12 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
-		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
-	}
+	if d.Get(names.AttrForceDestroy).(bool) {
+		if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
+			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
+		}
 
-	if v, ok := d.GetOk("disable_api_stop"); ok {
-		if err := disableInstanceAPIStop(ctx, conn, d.Id(), v.(bool)); err != nil {
+		if err := disableInstanceAPIStop(ctx, conn, d.Id(), false); err != nil {
 			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
 		}
 	}
@@ -2268,7 +2325,7 @@ func disableInstanceAPIStop(ctx context.Context, conn *ec2.Client, id string, di
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %s", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %w", id, err)
 	}
 
 	return nil
@@ -2290,7 +2347,7 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id str
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %s", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %w", id, err)
 	}
 
 	return nil
@@ -2501,22 +2558,21 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.AssociateIamInstanceProfile(ctx, &input)
-	}
+
 	if err != nil {
-		return fmt.Errorf("associating instance profile: %s", err)
+		return fmt.Errorf("associating instance profile: %w", err)
 	}
+
 	return nil
 }
 
@@ -2578,8 +2634,9 @@ func findRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*s
 	return rootDeviceName, nil
 }
 
-func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfaces any) []awstypes.InstanceNetworkInterfaceSpecification {
-	networkInterfaces := []awstypes.InstanceNetworkInterfaceSpecification{}
+func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfaces any, primaryNetworkInterface any) []awstypes.InstanceNetworkInterfaceSpecification {
+	var networkInterfaces []awstypes.InstanceNetworkInterfaceSpecification
+
 	// Get necessary items
 	subnet, hasSubnet := d.GetOk(names.AttrSubnetID)
 
@@ -2631,19 +2688,29 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 		}
 
 		networkInterfaces = append(networkInterfaces, ni)
-	} else {
+	} else if nInterfaces != nil && nInterfaces.(*schema.Set).Len() > 0 {
 		// If we have manually specified network interfaces, build and attach those here.
-		vL := nInterfaces.(*schema.Set).List()
-		for _, v := range vL {
-			ini := v.(map[string]any)
-			ni := awstypes.InstanceNetworkInterfaceSpecification{
-				DeviceIndex:         aws.Int32(int32(ini["device_index"].(int))),
-				NetworkCardIndex:    aws.Int32(int32(ini["network_card_index"].(int))),
-				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
-				DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
+		tfList := nInterfaces.(*schema.Set).List()
+		for _, tfMapRaw := range tfList {
+			tfMap := tfMapRaw.(map[string]any)
+			apiObject := awstypes.InstanceNetworkInterfaceSpecification{
+				DeleteOnTermination: aws.Bool(tfMap[names.AttrDeleteOnTermination].(bool)),
+				DeviceIndex:         aws.Int32(int32(tfMap["device_index"].(int))),
+				NetworkInterfaceId:  aws.String(tfMap[names.AttrNetworkInterfaceID].(string)),
 			}
-			networkInterfaces = append(networkInterfaces, ni)
+			if v, ok := tfMap["network_card_index"]; ok && v != 0 {
+				apiObject.NetworkCardIndex = aws.Int32(int32(v.(int)))
+			}
+			networkInterfaces = append(networkInterfaces, apiObject)
 		}
+	} else {
+		v := primaryNetworkInterface.([]any)
+		ini := v[0].(map[string]any)
+		ni := awstypes.InstanceNetworkInterfaceSpecification{
+			DeviceIndex:        aws.Int32(0),
+			NetworkInterfaceId: aws.String(ini[names.AttrNetworkInterfaceID].(string)),
+		}
+		networkInterfaces = append(networkInterfaces, ni)
 	}
 
 	return networkInterfaces
@@ -2821,7 +2888,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([]awstypes.Tag, error) {
 	volIDs, err := getInstanceVolIDs(ctx, conn, instanceId)
 	if err != nil {
-		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
+		return nil, fmt.Errorf("getting tags for volumes (%s): %w", volIDs, err)
 	}
 
 	input := ec2.DescribeTagsInput{
@@ -2831,7 +2898,7 @@ func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([
 	}
 	resp, err := conn.DescribeTags(ctx, &input)
 	if err != nil {
-		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
+		return nil, fmt.Errorf("getting tags for volumes (%s): %w", volIDs, err)
 	}
 
 	return tagsFromTagDescriptions(resp.Tags), nil
@@ -2917,16 +2984,16 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 	input := ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
-	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		resp, err = conn.GetPasswordData(ctx, &input)
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if resp.PasswordData == nil || aws.ToString(resp.PasswordData) == "" {
-			return retry.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
+			return tfresource.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
 		}
 
 		passwordData = strings.TrimSpace(aws.ToString(resp.PasswordData))
@@ -2934,16 +3001,7 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 		log.Printf("[INFO] Password data read for instance %s", instanceID)
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.GetPasswordData(ctx, &input)
-		if err != nil {
-			return "", fmt.Errorf("getting password data: %s", err)
-		}
-		if resp.PasswordData == nil || aws.ToString(resp.PasswordData) == "" {
-			return "", errors.New("password data is blank")
-		}
-		passwordData = strings.TrimSpace(aws.ToString(resp.PasswordData))
-	}
+
 	if err != nil {
 		return "", err
 	}
@@ -3007,7 +3065,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		opts.InstanceType = awstypes.InstanceType(v.(string))
 	}
 
-	var instanceInterruptionBehavior string
+	var instanceInterruptionBehavior awstypes.InstanceInterruptionBehavior
 
 	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any))
@@ -3020,7 +3078,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		opts.LaunchTemplate = launchTemplateSpecification
 
 		if launchTemplateData.InstanceMarketOptions != nil && launchTemplateData.InstanceMarketOptions.SpotOptions != nil {
-			instanceInterruptionBehavior = string(launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior)
+			instanceInterruptionBehavior = launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior
 		}
 	}
 
@@ -3094,9 +3152,15 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 	}
 
-	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == string(awstypes.InstanceInterruptionBehaviorTerminate)) {
+	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == awstypes.InstanceInterruptionBehaviorTerminate) {
 		opts.Placement.GroupName = aws.String(v.(string))
 		opts.SpotPlacement.GroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("placement_group_id"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == awstypes.InstanceInterruptionBehaviorTerminate) {
+		opts.Placement.GroupId = aws.String(v.(string))
+		// AWS SDK missing groupID in type for spotplacement
+		// opts.SpotPlacement.GroupId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tenancy"); ok {
@@ -3139,11 +3203,12 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 	_, privIP := d.GetOk("private_ip")
 	_, secPrivIP := d.GetOk("secondary_private_ips")
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
+	primaryNetworkInterface, primaryNetworkInterfaceOk := d.GetOk("primary_network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if (hasSubnet && (assocPubIPA || privIP || secPrivIP)) || interfacesOk {
+	if (hasSubnet && (assocPubIPA || privIP || secPrivIP)) || interfacesOk || primaryNetworkInterfaceOk {
 		// Otherwise we're attaching (a) network interface(s)
-		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces)
+		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces, primaryNetworkInterface)
 	} else {
 		// If simply specifying a subnetID, privateIP, Security Groups, or VPC Security Groups, build these now
 		if subnetID != "" {
@@ -3227,7 +3292,7 @@ func startInstance(ctx context.Context, conn *ec2.Client, id string, retry bool,
 	if retry {
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
 		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.StartInstances(ctx, &ec2.StartInstancesInput{
 					InstanceIds: []string{id},
 				})
@@ -3447,7 +3512,7 @@ func getInstanceVolIDs(ctx context.Context, conn *ec2.Client, instanceId string)
 	}
 	resp, err := conn.DescribeVolumes(ctx, &input)
 	if err != nil {
-		return nil, fmt.Errorf("getting volumes: %s", err)
+		return nil, fmt.Errorf("getting volumes: %w", err)
 	}
 
 	for _, v := range resp.Volumes {
@@ -4120,4 +4185,7 @@ func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.Arch
 		}
 	}
 	return false
+}
+func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) string {
+	return c.RegionalARN(ctx, names.EC2, "instance/"+instanceID)
 }

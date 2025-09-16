@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessPointArn` - (Optional) Specifies the Amazon Resource Name (ARN) of the access point that DataSync uses to access the Amazon EFS file system.
 * `ec2Config` - (Required) Configuration block containing EC2 configurations for connecting to the EFS File System.
 * `efsFileSystemArn` - (Required) Amazon Resource Name (ARN) of EFS File System.
@@ -68,6 +69,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_location_efs.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567"
+  }
+}
+
+resource "aws_datasync_location_efs" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync EFS location.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_efs` using the DataSync Task Amazon Resource Name (ARN). For example:
 
@@ -99,4 +121,4 @@ Using `terraform import`, import `aws_datasync_location_efs` using the DataSync 
 % terraform import aws_datasync_location_efs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fd6bfd5001bb7a9ddd15cbeb18b63b36796ee1633c2d3e03d32a2391d872d1d1 -->
+<!-- cache-key: cdktf-0.20.8 input-a44dfd57d730f8e58336623b547af33a29617a6a13062a47e897650c5df50125 -->

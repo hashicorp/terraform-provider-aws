@@ -50,6 +50,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
 // @Testing(importIgnore="force_destroy")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="6.0.0")
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,

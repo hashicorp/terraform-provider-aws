@@ -523,32 +523,28 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 
 	var output *bedrockagent.CreateKnowledgeBaseOutput
 	var err error
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		output, err = conn.CreateKnowledgeBase(ctx, input)
 
 		// IAM propagation
 		if tfawserr.ErrMessageContains(err, errCodeValidationException, "cannot assume role") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 		if tfawserr.ErrMessageContains(err, errCodeValidationException, "unable to assume the given role") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		// OpenSearch data access propagation
 		if tfawserr.ErrMessageContains(err, errCodeValidationException, "storage configuration provided is invalid") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateKnowledgeBase(ctx, input)
-	}
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Knowledge Base", err.Error())
@@ -628,7 +624,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateKnowledgeBase(ctx, input)
 		}, errCodeValidationException, "cannot assume role")
 

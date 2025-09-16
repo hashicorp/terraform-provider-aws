@@ -12,6 +12,8 @@ description: |-
 
 Provides an Elastic Transcoder pipeline resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. AWS will [discontinue support for Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/), effective November 13, 2025.
+
 ## Example Usage
 
 ```typescript
@@ -48,6 +50,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsKmsKeyArn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
 * `contentConfig` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)
 * `contentConfigPermissions` - (Optional) The permissions for the `contentConfig` object. (documented below)
@@ -146,4 +149,4 @@ Using `terraform import`, import Elastic Transcoder pipelines using the `id`. Fo
 % terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d8b9ec69cbe365283513cdf6c361c18be89b13dde215b0a2bc7a1caa68d80f7e -->
+<!-- cache-key: cdktf-0.20.8 input-f1a853a6ded849f809671734c847e3908a37c518f0ebeb0b67bf049c0c5828ce -->

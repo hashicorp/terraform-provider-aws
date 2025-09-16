@@ -128,6 +128,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `addColumnName` - (Optional) Whether to add column name information to the .csv output file. Default is `false`.
 * `addTrailingPaddingCharacter` - (Optional) Whether to add padding. Default is `false`. (Ignored for source endpoints.)
 * `bucketFolder` - (Optional) S3 object prefix.
@@ -222,4 +223,4 @@ Using `terraform import`, import endpoints using the `endpointId`. For example:
 % terraform import aws_dms_s3_endpoint.example example-dms-endpoint-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ae1125ac8e3bb431717926e17f9c6b7623fe21a9bc5085d46d27ca0ec2fb7fd9 -->
+<!-- cache-key: cdktf-0.20.8 input-63e4c2941aae4aadc726830e39b7df2ef9413d67184031ea880c32a8251411ee -->

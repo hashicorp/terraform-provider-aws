@@ -16,10 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -246,7 +244,7 @@ func TestAccDataSyncLocationObjectStorage_serverCertificate(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_emptyAgentARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
@@ -254,71 +252,92 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy: testAccCheckLocationObjectStorageDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccLocationObjectStorageConfig_emptyAgentARNs(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.Null()),
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccLocationObjectStorageConfig_basic(rName, domain),
-				Check: resource.ComposeTestCheckFunc(
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDataSyncLocationObjectStorage_noAgentARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationObjectStorageOutput
+	resourceName := "aws_datasync_location_object_storage.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationObjectStorageConfig_noAgentARNs(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`location/loc-.+`)),
-					}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				Config: testAccLocationObjectStorageConfig_noAgentARNs(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.Null()),
 				},
 			},
 		},
@@ -482,4 +501,27 @@ resource "aws_datasync_location_object_storage" "test" {
   server_certificate = "%[3]s"
 }
 `, rName, domain, acctest.TLSPEMEscapeNewlines(certificate)))
+}
+
+func testAccLocationObjectStorageConfig_emptyAgentARNs(rName, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_datasync_location_object_storage" "test" {
+  agent_arns      = []
+  server_hostname = %[2]q
+  bucket_name     = %[1]q
+  server_protocol = "HTTP"
+  server_port     = 8080
+}
+`, rName, domain)
+}
+
+func testAccLocationObjectStorageConfig_noAgentARNs(rName, domain string) string {
+	return acctest.ConfigCompose(testAccLocationObjectStorageConfig_base(rName), fmt.Sprintf(`
+resource "aws_datasync_location_object_storage" "test" {
+  server_hostname = %[2]q
+  bucket_name     = %[1]q
+  server_protocol = "HTTP"
+  server_port     = 8080
+}
+`, rName, domain))
 }

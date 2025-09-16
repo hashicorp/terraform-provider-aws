@@ -96,6 +96,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_mode` - (Optional) Denotes the user's authentication properties. Detailed below.
 * `no_password_required` - (Optional) Indicates a password is not required for this user.
 * `passwords` - (Optional) Passwords used for this user. You can create up to two passwords for each user.
@@ -146,4 +147,4 @@ Using `terraform import`, import ElastiCache users using the `user_id`. For exam
 % terraform import aws_elasticache_user.my_user userId1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-97cef210e7726baf22963048340777bb75439e8a75dd9ee9f6e9c239ca9293b1 -->
+<!-- cache-key: cdktf-0.20.8 input-6c06a82050e24759a7072986f5befc6084861761f3a2f07716ea62a32b75a1c4 -->

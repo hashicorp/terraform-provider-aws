@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instanceTags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
@@ -116,6 +117,7 @@ interpolation.
 * `outpostArn` - ARN of the Outpost.
 * `passwordData` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `getPasswordData` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placementGroup` - Placement group of the Instance.
+* `placementGroupId` - Placement group ID of the Instance.
 * `placementPartitionNumber` - Number of the partition the instance is in.
 * `privateDns` - Private DNS name assigned to the Instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `privateDnsNameOptions` - Options for the instance hostname.
@@ -152,4 +154,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.20.8 input-6be3248cfb27358ddb2d28d43a1f606e00e8edf34845e58f6efbfb9ec9bd828f -->
+<!-- cache-key: cdktf-0.20.8 input-78ec36eb77e46157229fa48eb9ce0bf0c9d80c9c7229d99d9267e4f5ef0906dc -->

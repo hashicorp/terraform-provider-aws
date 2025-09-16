@@ -6,6 +6,7 @@ package opensearch
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -35,6 +36,10 @@ func resourceDomainPolicy() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrDomainName: {
 				Type:     schema.TypeString,
@@ -58,7 +63,8 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	domainName := strings.Replace(d.Id(), "esd-policy-", "", 1)
+	ds, err := findDomainByName(ctx, conn, domainName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain Policy (%s) not found, removing from state", d.Id())
@@ -77,6 +83,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("access_policies", policies)
+	d.Set(names.AttrDomainName, ds.DomainName)
 
 	return diags
 }
@@ -92,8 +99,8 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 				DomainName:     aws.String(domainName),
 				AccessPolicies: aws.String(policy),
