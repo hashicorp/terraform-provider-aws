@@ -74,6 +74,18 @@ func resourceCluster() *schema.Resource {
 				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
 				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
 
+				newComputeConfigEnabled := aws.ToBool(newComputeConfig.Enabled)
+
+				// Do not force new if auto mode is disabled in new config and role ARN is unset
+				if !newComputeConfigEnabled && newRoleARN == "" {
+					return nil
+				}
+
+				// Do not force new if built-in node pools are zeroed in new config and role ARN is unset
+				if len(newComputeConfig.NodePools) == 0 && newRoleARN == "" {
+					return nil
+				}
+
 				// only force new if an existing role has changed, not if a new role is added
 				if oldRoleARN != "" && oldRoleARN != newRoleARN {
 					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
@@ -336,7 +348,6 @@ func resourceCluster() *schema.Resource {
 			"remote_network_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
-				ForceNew:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
@@ -351,7 +362,6 @@ func resourceCluster() *schema.Resource {
 									"cidrs": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -367,14 +377,12 @@ func resourceCluster() *schema.Resource {
 						"remote_pod_networks": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cidrs": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -547,7 +555,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if v, ok := d.GetOk("remote_network_config"); ok {
-		input.RemoteNetworkConfig = expandRemoteNetworkConfigRequest(v.([]any))
+		input.RemoteNetworkConfig = expandCreateRemoteNetworkConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("storage_config"); ok {
@@ -567,7 +575,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateCluster(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -817,6 +825,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	if d.HasChanges("remote_network_config.0.remote_node_networks", "remote_network_config.0.remote_pod_networks") {
+		input := eks.UpdateClusterConfigInput{
+			Name:                aws.String(d.Id()),
+			RemoteNetworkConfig: expandUpdateRemoteNetworkConfigRequest(d.Get("remote_network_config").([]any)),
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) remote network config: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) remote network config update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
 	if d.HasChange("upgrade_policy") {
 		input := eks.UpdateClusterConfigInput{
 			Name:          aws.String(d.Id()),
@@ -908,25 +935,21 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	input := eks.DeleteClusterInput{
 		Name: aws.String(d.Id()),
 	}
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		_, err = conn.DeleteCluster(ctx, &input)
 
 		if errs.IsAErrorMessageContains[*types.ResourceInUseException](err, "in progress") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(30*time.Second))
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCluster(ctx, &input)
-	}
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -1412,7 +1435,7 @@ func expandKubernetesNetworkConfigElasticLoadBalancing(tfList []any) *types.Elas
 	return apiObject
 }
 
-func expandRemoteNetworkConfigRequest(tfList []any) *types.RemoteNetworkConfigRequest {
+func expandCreateRemoteNetworkConfigRequest(tfList []any) *types.RemoteNetworkConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1426,19 +1449,42 @@ func expandRemoteNetworkConfigRequest(tfList []any) *types.RemoteNetworkConfigRe
 		RemoteNodeNetworks: expandRemoteNodeNetworks(tfMap["remote_node_networks"].([]any)),
 	}
 
-	if v, ok := tfMap["remote_pod_networks"].([]any); ok {
+	if v, ok := tfMap["remote_pod_networks"].([]any); ok && len(v) > 0 {
 		apiObject.RemotePodNetworks = expandRemotePodNetworks(v)
 	}
 
 	return apiObject
 }
 
-func expandRemoteNodeNetworks(tfList []any) []types.RemoteNodeNetwork {
-	if len(tfList) == 0 {
-		return nil
+func expandUpdateRemoteNetworkConfigRequest(tfList []any) *types.RemoteNetworkConfigRequest {
+	apiObject := &types.RemoteNetworkConfigRequest{
+		RemoteNodeNetworks: []types.RemoteNodeNetwork{},
+		RemotePodNetworks:  []types.RemotePodNetwork{},
 	}
 
-	var apiObjects []types.RemoteNodeNetwork
+	if len(tfList) == 0 {
+		return apiObject
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return apiObject
+	}
+
+	apiObject.RemoteNodeNetworks = expandRemoteNodeNetworks(tfMap["remote_node_networks"].([]any))
+
+	if v, ok := tfMap["remote_pod_networks"].([]any); ok {
+		apiObject.RemotePodNetworks = expandRemotePodNetworks(v)
+	}
+
+	return apiObject
+}
+func expandRemoteNodeNetworks(tfList []any) []types.RemoteNodeNetwork {
+	var apiObjects = []types.RemoteNodeNetwork{}
+
+	if len(tfList) == 0 {
+		return apiObjects
+	}
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
@@ -1457,11 +1503,11 @@ func expandRemoteNodeNetworks(tfList []any) []types.RemoteNodeNetwork {
 }
 
 func expandRemotePodNetworks(tfList []any) []types.RemotePodNetwork {
-	if len(tfList) == 0 {
-		return nil
-	}
+	var apiObjects = []types.RemotePodNetwork{}
 
-	var apiObjects []types.RemotePodNetwork
+	if len(tfList) == 0 {
+		return apiObjects
+	}
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)

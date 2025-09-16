@@ -344,6 +344,11 @@ func Float64ToStringValue(v *float64) string {
 	return strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64)
 }
 
+// Float64ValueToString converts a Go float64 value to a string pointer.
+func Float64ValueToString(v float64) *string {
+	return aws.String(strconv.FormatFloat(v, 'f', -1, 64))
+}
+
 // IntValueToString converts a Go int value to a string pointer.
 func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
@@ -411,6 +416,11 @@ func StringValueToInt64(v string) *int64 {
 func StringValueToInt64Value(v string) int64 {
 	i, _ := strconv.ParseInt(v, 0, 64)
 	return i
+}
+
+// Int64ToRFC3339StringValue converts an int64 timestamp pointer to an RFC3339 Go string value.
+func Int64ToRFC3339StringValue(v *int64) string {
+	return time.UnixMilli(aws.ToInt64(v)).Format(time.RFC3339)
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant

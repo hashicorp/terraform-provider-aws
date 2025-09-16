@@ -149,15 +149,17 @@ This resource supports the following arguments:
 ### Orphan File Deletion Configuration
 
 * `icebergConfiguration` (Optional) - The configuration for an Iceberg orphan file deletion optimizer.
-    * `orphanFileRetentionPeriodInDays` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
     * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
-  
+    * `orphanFileRetentionPeriodInDays` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
+    * `runRateInHours` (Optional) - interval in hours between orphan file deletion job runs. Defaults to `24`.
+
 ### Retention Configuration
 
 * `icebergConfiguration` (Optional) - The configuration for an Iceberg snapshot retention optimizer.
-    * `snapshotRetentionPeriodInDays` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
-    * `numberOfSnapshotsToRetain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
     * `cleanExpiredFiles` (Optional) - If set to `false`, snapshots are only deleted from table metadata, and the underlying data and metadata files are not deleted. Defaults to `false`.
+    * `numberOfSnapshotsToRetain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
+    * `runRateInHours` (Optional) - Interval in hours between retention job runs. Defaults to `24`.
+    * `snapshotRetentionPeriodInDays` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
 
 ## Attribute Reference
 
@@ -195,4 +197,4 @@ Using `terraform import`, import Glue Catalog Table Optimizer using the `catalog
 % terraform import aws_glue_catalog_table_optimizer.example 123456789012,example_database,example_table,compaction
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5cb17126b69dfd13d7795225555ce6d4a4323885f16e8cbe02161e9d8e8e1455 -->
+<!-- cache-key: cdktf-0.20.8 input-4093538788a13c4436d28b9fd2ec866009dba984014d529e95610d1de54a0568 -->

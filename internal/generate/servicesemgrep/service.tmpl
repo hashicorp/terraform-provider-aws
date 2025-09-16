@@ -6,9 +6,9 @@
     message: Do not use "{{ .ServiceAlias }}" in func name inside {{ .ProviderPackage }} package
     paths:
       include:
-        - internal/service/{{ .ProviderPackage }}
+        - "/internal/service/{{ .ProviderPackage }}"
       exclude:
-        - internal/service/{{ .ProviderPackage }}/list_pages_gen.go
+        - "/internal/service/{{ .ProviderPackage }}/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -49,7 +49,7 @@
     message: Include "{{ .ServiceAlias }}" in test name
     paths:
       include:
-        - internal/service/{{ .ProviderPackage }}/{{ .FilePrefix }}*_test.go
+        - "/internal/service/{{ .ProviderPackage }}/{{ .FilePrefix }}*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -66,7 +66,7 @@
     message: Do not use "{{ .ServiceAlias }}" in const name inside {{ .ProviderPackage }} package
     paths:
       include:
-        - internal/service/{{ .ProviderPackage }}
+        - "/internal/service/{{ .ProviderPackage }}"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -92,7 +92,7 @@
     message: Do not use "{{ .ServiceAlias }}" in var name inside {{ .ProviderPackage }} package
     paths:
       include:
-        - internal/service/{{ .ProviderPackage }}
+        - "/internal/service/{{ .ProviderPackage }}"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
