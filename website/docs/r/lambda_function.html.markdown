@@ -567,6 +567,8 @@ The following arguments are optional:
 
 ### vpc_config Configuration Block
 
+~> **NOTE:** If `subnet_ids`, `security_group_ids` and `ipv6_allowed_for_dual_stack` are empty then `vpc_config` is considered to be empty or unset.
+
 * `ipv6_allowed_for_dual_stack` - (Optional) Whether to allow outbound IPv6 traffic on VPC functions connected to dual-stack subnets. Default: `false`.
 * `security_group_ids` - (Required) List of security group IDs associated with the Lambda function.
 * `subnet_ids` - (Required) List of subnet IDs associated with the Lambda function.
