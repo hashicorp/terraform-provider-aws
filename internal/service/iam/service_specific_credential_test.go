@@ -47,7 +47,7 @@ func TestAccIAMServiceSpecificCredential_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"service_password"},
+				ImportStateVerifyIgnore: []string{"service_password", "service_credential_secret"},
 			},
 		},
 	})
@@ -87,7 +87,7 @@ func TestAccIAMServiceSpecificCredential_multi(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"service_password"},
+				ImportStateVerifyIgnore: []string{"service_password", "service_credential_secret"},
 			},
 		},
 	})
@@ -117,7 +117,7 @@ func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"service_password"},
+				ImportStateVerifyIgnore: []string{"service_password", "service_credential_secret"},
 			},
 			{
 				Config: testAccServiceSpecificCredentialConfig_status(rName, "Active"),
@@ -263,4 +263,55 @@ resource "aws_iam_service_specific_credential" "test" {
   status       = %[2]q
 }
 `, rName, status)
+}
+
+func TestAccIAMServiceSpecificCredential_bedrockWithExpiration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cred awstypes.ServiceSpecificCredentialMetadata
+
+	resourceName := "aws_iam_service_specific_credential.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceSpecificCredentialConfig_bedrockWithExpiration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_iam_user.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "bedrock.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, "credential_age_days", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_credential_alias"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_specific_credential_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "expiration_date"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"service_password", "service_credential_secret", "credential_age_days"},
+			},
+		},
+	})
+}
+
+func testAccServiceSpecificCredentialConfig_bedrockWithExpiration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+}
+
+resource "aws_iam_service_specific_credential" "test" {
+  service_name        = "bedrock.amazonaws.com"
+  user_name           = aws_iam_user.test.name
+  credential_age_days = 30
+}
+`, rName)
 }
