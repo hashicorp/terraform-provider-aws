@@ -82,7 +82,7 @@ resource "aws_organizations_account" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS member account using the `account_id`. For example:
 
