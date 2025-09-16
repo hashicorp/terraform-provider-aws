@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,9 +43,9 @@ func TestAccLogsLogGroup_List_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
-					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
-					tfstatecheck.ExpectRegionalARNFormat(resourceName3, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("logs", "log-group:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("logs", "log-group:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName3, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("logs", "log-group:"+rName+"-2")),
 				},
 			},
 
@@ -57,7 +58,25 @@ func TestAccLogsLogGroup_List_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					// TODO
+					querycheck.ExpectLengthAtLeast("aws_cloudwatch_log_group.test", 3),
+
+					querycheck.ExpectIdentity("aws_cloudwatch_log_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrName:      knownvalue.StringExact(rName + "-0"),
+					}),
+
+					querycheck.ExpectIdentity("aws_cloudwatch_log_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrName:      knownvalue.StringExact(rName + "-1"),
+					}),
+
+					querycheck.ExpectIdentity("aws_cloudwatch_log_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrName:      knownvalue.StringExact(rName + "-2"),
+					}),
 				},
 			},
 		},
@@ -89,9 +108,9 @@ func TestAccLogsLogGroup_List_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName1, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
-					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName2, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
-					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName3, tfjsonpath.New(names.AttrARN), "logs", "log-group:{name}"),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("logs", "log-group:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("logs", "log-group:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName3, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("logs", "log-group:"+rName+"-2")),
 				},
 			},
 
@@ -105,7 +124,25 @@ func TestAccLogsLogGroup_List_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					// TODO
+					querycheck.ExpectLengthAtLeast("aws_cloudwatch_log_group.test", 3),
+
+					querycheck.ExpectIdentity("aws_cloudwatch_log_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						names.AttrName:      knownvalue.StringExact(rName + "-0"),
+					}),
+
+					querycheck.ExpectIdentity("aws_cloudwatch_log_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						names.AttrName:      knownvalue.StringExact(rName + "-1"),
+					}),
+
+					querycheck.ExpectIdentity("aws_cloudwatch_log_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						names.AttrName:      knownvalue.StringExact(rName + "-2"),
+					}),
 				},
 			},
 		},
