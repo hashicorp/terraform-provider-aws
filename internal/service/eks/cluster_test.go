@@ -380,7 +380,7 @@ func TestAccEKSCluster_ComputeConfig_OnCreate(t *testing.T) {
 
 func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster1, cluster2, cluster3 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -411,10 +411,31 @@ func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
-				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
+				Config: testAccClusterConfig_computeConfig_nodePoolsSetup(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster3),
+					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "1"),
