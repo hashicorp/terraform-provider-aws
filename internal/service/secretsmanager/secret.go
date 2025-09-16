@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -174,7 +175,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// Retry for secret recreation after deletion.
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateSecret(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -247,19 +248,19 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	var policy *secretsmanager.GetResourcePolicyOutput
-	err = tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		output, err := findSecretPolicyByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if v := output.ResourcePolicy; v != nil {
 			if valid, err := tfiam.PolicyHasValidAWSPrincipals(aws.ToString(v)); err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			} else if !valid {
 				log.Printf("[DEBUG] Retrying because of invalid principals")
-				return retry.RetryableError(errors.New("contains invalid principals"))
+				return tfresource.RetryableError(errors.New("contains invalid principals"))
 			}
 		}
 
@@ -269,9 +270,15 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
-	} else if v := policy.ResourcePolicy; v != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(v))
+		if strings.Contains(err.Error(), "contains invalid principals") {
+			diags = sdkdiag.AppendWarningf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
+		} else {
+			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
+		}
+	}
+
+	if policy != nil && policy.ResourcePolicy != nil {
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy.ResourcePolicy))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

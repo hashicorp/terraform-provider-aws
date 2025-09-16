@@ -65,6 +65,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Account Subscription using `aws_account_id`. For example:
 
+~> Due to the absence of required arguments in the [`DescribeAccountSettings`](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DescribeAccountSettings.html) API response, importing an existing account subscription will result in a planned replacement on the subsequent `apply` operation. Until the Describe API response in extended to include all configurable arguments, an [`ignore_changes` lifecycle argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) can be used to suppress differences on arguments not read into state.
+
 ```terraform
 import {
   to = aws_quicksight_account_subscription.example

@@ -273,6 +273,10 @@ data "aws_availability_zones" "available" {
 
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
 resource "aws_iam_role" "cluster" {
   name = "%[1]s-cluster"
 
@@ -281,7 +285,7 @@ resource "aws_iam_role" "cluster" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "eks.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.eks.name
       }
     }]
     Version = "2012-10-17"
@@ -293,6 +297,10 @@ resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
   role       = aws_iam_role.cluster.name
 }
 
+data "aws_service_principal" "eks_fargate_pods" {
+  service_name = "eks-fargate-pods"
+}
+
 resource "aws_iam_role" "pod" {
   name = "%[1]s-pod"
 
@@ -301,7 +309,7 @@ resource "aws_iam_role" "pod" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "eks-fargate-pods.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.eks_fargate_pods.name
       }
     }]
     Version = "2012-10-17"

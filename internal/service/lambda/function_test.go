@@ -2356,6 +2356,58 @@ func TestAccLambdaFunction_ipv6AllowedForDualStack(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_sourceKMSKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_sourceKMSKeyARN(rName, "test"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
+					testAccCheckFunctionName(&conf, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "source_kms_key_arn", "aws_kms_key.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccFunctionConfig_sourceKMSKeyARN(rName, "test2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
+					testAccCheckFunctionName(&conf, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "source_kms_key_arn", "aws_kms_key.test2", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetFunctionOutput
@@ -4184,6 +4236,69 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFunctionConfig_sourceKMSKeyARN(rName, kmsIdentifier string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "%[1]s-1"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_kms_key" "test2" {
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-2",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_lambda_function" "test" {
+  filename           = "test-fixtures/lambdatest.zip"
+  function_name      = %[1]q
+  role               = aws_iam_role.iam_for_lambda.arn
+  handler            = "exports.example"
+  runtime            = "nodejs20.x"
+  source_kms_key_arn = aws_kms_key.%[2]s.arn
+}
+`, rName, kmsIdentifier))
 }
 
 func testAccFunctionConfig_skipDestroy(rName string) string {

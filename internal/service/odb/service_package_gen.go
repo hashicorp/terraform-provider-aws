@@ -4,9 +4,9 @@ package odb
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,11 +18,49 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceCloudExadataInfrastructure,
+			TypeName: "aws_odb_cloud_exadata_infrastructure",
+			Name:     "Cloud Exadata Infrastructure",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceNetwork,
+			TypeName: "aws_odb_network",
+			Name:     "Network",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceCloudExadataInfrastructure,
+			TypeName: "aws_odb_cloud_exadata_infrastructure",
+			Name:     "Cloud Exadata Infrastructure",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newResourceNetwork,
+			TypeName: "aws_odb_network",
+			Name:     "Network",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -56,7 +94,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *odb.Options) {
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
-				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
 			}
 		},
 		withExtraOptions(ctx, p, config),
