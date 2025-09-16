@@ -107,7 +107,7 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 
 	// Convert paths list to string slice
 	var paths []string
-	resp.Diagnostics.Append(config.Paths.ListValue.ElementsAs(ctx, &paths, false)...)
+	resp.Diagnostics.Append(config.Paths.ElementsAs(ctx, &paths, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
