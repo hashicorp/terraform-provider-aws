@@ -12,7 +12,7 @@ Invalidates CloudFront distribution cache for specified paths. This action creat
 
 For information about CloudFront cache invalidation, see the [Amazon CloudFront Developer Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html). For specific information about creating invalidation requests, see the [CreateInvalidation](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateInvalidation.html) page in the Amazon CloudFront API Reference.
 
-~> **Note:** Actions are currently in **beta.** The interface and behavior may change as the feature evolves, and breaking changes are possible. While Actions can unlock powerful Day-2 workflows, please use them with care in production environments and be aware that stability is not yet guaranteed.
+~> **Note:** `aws_cloudfront_create_invalidation` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
 
 ~> **Note:** CloudFront invalidation requests can take several minutes to complete. This action will wait for the invalidation to finish before continuing. You can only have a limited number of invalidation requests in progress at any given time.
 
