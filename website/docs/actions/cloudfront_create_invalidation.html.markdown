@@ -56,7 +56,7 @@ action "aws_cloudfront_create_invalidation" "assets" {
       "/js/app.js",
       "/index.html"
     ]
-    timeout = 1200  # 20 minutes
+    timeout = 1200 # 20 minutes
   }
 }
 ```
@@ -66,10 +66,10 @@ action "aws_cloudfront_create_invalidation" "assets" {
 ```terraform
 action "aws_cloudfront_create_invalidation" "deployment" {
   config {
-    distribution_id   = aws_cloudfront_distribution.example.id
-    paths             = ["/*"]
-    caller_reference  = "deployment-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
-    timeout           = 900
+    distribution_id  = aws_cloudfront_distribution.example.id
+    paths            = ["/*"]
+    caller_reference = "deployment-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
+    timeout          = 900
   }
 }
 ```
