@@ -83,7 +83,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.33.4
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.55.5
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.52.4
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.4
@@ -222,7 +222,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.40.4
 	github.com/aws/aws-sdk-go-v2/service/rum v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.1
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.65.6
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.6
@@ -260,7 +260,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.52.4
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.65.4
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.65.5
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.18.3
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.3
