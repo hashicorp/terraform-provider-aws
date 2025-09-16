@@ -143,7 +143,7 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
 			{
-				Config: testAccTransformerConfig_parseCloudfront(rName),
+				Config: testAccTransformerConfig_parseCloudFront(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
@@ -644,7 +644,7 @@ func TestAccLogsTransformer_moveKeys(t *testing.T) {
 	})
 }
 
-func TestAccLogsTransformer_parseCloudfront(t *testing.T) {
+func TestAccLogsTransformer_parseCloudFront(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var transformer cloudwatchlogs.GetTransformerOutput
@@ -662,7 +662,7 @@ func TestAccLogsTransformer_parseCloudfront(t *testing.T) {
 		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransformerConfig_parseCloudfront(rName),
+				Config: testAccTransformerConfig_parseCloudFront(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
@@ -681,7 +681,7 @@ func TestAccLogsTransformer_parseCloudfront(t *testing.T) {
 	})
 }
 
-func TestAccLogsTransformer_parseCloudfrontWithSource(t *testing.T) {
+func TestAccLogsTransformer_parseCloudFrontWithSource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var transformer cloudwatchlogs.GetTransformerOutput
@@ -699,7 +699,7 @@ func TestAccLogsTransformer_parseCloudfrontWithSource(t *testing.T) {
 		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransformerConfig_parseCloudfrontWithSource(rName),
+				Config: testAccTransformerConfig_parseCloudFrontWithSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
@@ -1772,7 +1772,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
 `, rName)
 }
 
-func testAccTransformerConfig_parseCloudfront(rName string) string {
+func testAccTransformerConfig_parseCloudFront(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -1788,7 +1788,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
 `, rName)
 }
 
-func testAccTransformerConfig_parseCloudfrontWithSource(rName string) string {
+func testAccTransformerConfig_parseCloudFrontWithSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
