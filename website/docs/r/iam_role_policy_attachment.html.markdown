@@ -93,7 +93,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM role policy attachments using the role name and policy arn separated by `/`. For example:
 

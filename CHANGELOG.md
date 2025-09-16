@@ -2,7 +2,9 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_odb_cloud_exadata_infrastructure` ([#43650](https://github.com/hashicorp/terraform-provider-aws/issues/43650))
 * **New Resource:** `aws_controltower_baseline` ([#42397](https://github.com/hashicorp/terraform-provider-aws/issues/42397))
+* **New Resource:** `aws_odb_cloud_exadata_infrastructure` ([#43650](https://github.com/hashicorp/terraform-provider-aws/issues/43650))
 
 ENHANCEMENTS:
 

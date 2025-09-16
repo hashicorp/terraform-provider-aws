@@ -123,17 +123,17 @@ resource "aws_route" "example" {
 
 #### Required
 
-- `route_table_id` - (String) ID of the route table.
+* `route_table_id` - (String) ID of the route table.
 
 #### Optional
 
 ~> Exactly one of of `destination_cidr_block`, `destination_ipv6_cidr_block`, or `destination_prefix_list_id` is required.
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `destination_cidr_block` - (String) Destination IPv4 CIDR block.
-- `destination_ipv6_cidr_block` - (String) Destination IPv6 CIDR block.
-- `destination_prefix_list_id` - (String) Destination IPv6 CIDR block.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `destination_cidr_block` - (String) Destination IPv4 CIDR block.
+* `destination_ipv6_cidr_block` - (String) Destination IPv6 CIDR block.
+* `destination_prefix_list_id` - (String) Destination IPv6 CIDR block.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual routes using `ROUTETABLEID_DESTINATION`. Import [local routes](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html#RouteTables) using the VPC's IPv4 or IPv6 CIDR blocks. For example:
 
