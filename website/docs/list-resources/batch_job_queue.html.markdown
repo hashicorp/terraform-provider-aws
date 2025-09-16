@@ -20,7 +20,7 @@ list "aws_batch_job_queue" "test" {
 
 ## Argument Reference
 
-This list resource supports the following attributes:
+This list resource supports the following arguments:
 
 * `region` - (Optional) [Region](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) to query.
   Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
