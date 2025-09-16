@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -207,7 +208,7 @@ func testAccCheckInvokeAction(ctx context.Context, functionName, inputJSON, expe
 
 		output, err := conn.Invoke(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Failed to invoke Lambda function %s: %s", functionName, err)
+			return fmt.Errorf("Failed to invoke Lambda function %s: %w", functionName, err)
 		}
 
 		if output.FunctionError != nil {
@@ -233,7 +234,7 @@ func testAccCheckInvokeActionWithQualifier(ctx context.Context, functionName, in
 			FunctionName: &functionName,
 		})
 		if err != nil {
-			return fmt.Errorf("Failed to get Lambda function %s: %s", functionName, err)
+			return fmt.Errorf("Failed to get Lambda function %s: %w", functionName, err)
 		}
 
 		// Invoke with the specific version
@@ -246,7 +247,7 @@ func testAccCheckInvokeActionWithQualifier(ctx context.Context, functionName, in
 
 		output, err := conn.Invoke(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Failed to invoke Lambda function %s with qualifier: %s", functionName, err)
+			return fmt.Errorf("Failed to invoke Lambda function %s with qualifier: %w", functionName, err)
 		}
 
 		if output.FunctionError != nil {
@@ -280,14 +281,14 @@ func testAccCheckInvokeActionInvocationType(ctx context.Context, functionName, i
 
 		// For async invocations, we just verify the request was accepted
 		if invocationType == awstypes.InvocationTypeEvent {
-			if output.StatusCode != 202 {
+			if output.StatusCode != http.StatusAccepted {
 				return fmt.Errorf("Expected status code 202 for async invocation, got %d", output.StatusCode)
 			}
 		}
 
 		// For dry run, we verify the function would execute successfully
 		if invocationType == awstypes.InvocationTypeDryRun {
-			if output.StatusCode != 204 {
+			if output.StatusCode != http.StatusNoContent {
 				return fmt.Errorf("Expected status code 204 for dry run, got %d", output.StatusCode)
 			}
 		}
