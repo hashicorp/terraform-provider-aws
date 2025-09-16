@@ -73,15 +73,18 @@ func (d *dataSourceViews) Read(ctx context.Context, req datasource.ReadRequest, 
 }
 
 func findViewsByViewTypes(ctx context.Context, conn *billing.Client, billingViewTypes []awstypes.BillingViewType) ([]awstypes.BillingViewListElement, error) {
-	var results []awstypes.BillingViewListElement
-
 	input := billing.ListBillingViewsInput{}
-
 	if len(billingViewTypes) > 0 {
 		input.BillingViewTypes = billingViewTypes
 	}
 
-	paginator := billing.NewListBillingViewsPaginator(conn, &input)
+	return findViews(ctx, conn, &input)
+}
+
+func findViews(ctx context.Context, conn *billing.Client, input *billing.ListBillingViewsInput) ([]awstypes.BillingViewListElement, error) {
+	var results []awstypes.BillingViewListElement
+
+	paginator := billing.NewListBillingViewsPaginator(conn, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
@@ -89,6 +92,7 @@ func findViewsByViewTypes(ctx context.Context, conn *billing.Client, billingView
 		}
 		results = append(results, page.BillingViews...)
 	}
+
 	return results, nil
 }
 
