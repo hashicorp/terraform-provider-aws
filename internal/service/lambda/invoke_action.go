@@ -36,13 +36,13 @@ type invokeAction struct {
 }
 
 type invokeActionModel struct {
+	framework.WithRegionModel
 	FunctionName   types.String                                `tfsdk:"function_name"`
 	Payload        types.String                                `tfsdk:"payload"`
 	Qualifier      types.String                                `tfsdk:"qualifier"`
 	InvocationType fwtypes.StringEnum[awstypes.InvocationType] `tfsdk:"invocation_type"`
 	LogType        fwtypes.StringEnum[awstypes.LogType]        `tfsdk:"log_type"`
 	ClientContext  types.String                                `tfsdk:"client_context"`
-	Region         types.String                                `tfsdk:"region"`
 }
 
 func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
