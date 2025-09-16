@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,9 +43,9 @@ func TestAccIAMRole_List_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectGlobalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "iam", "role/{name}"),
-					tfstatecheck.ExpectGlobalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "iam", "role/{name}"),
-					tfstatecheck.ExpectGlobalARNFormat(resourceName3, tfjsonpath.New(names.AttrARN), "iam", "role/{name}"),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", "role/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", "role/"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName3, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", "role/"+rName+"-2")),
 				},
 			},
 
@@ -57,7 +58,22 @@ func TestAccIAMRole_List_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					// TODO
+					querycheck.ExpectLengthAtLeast("aws_iam_role.test", 3),
+
+					querycheck.ExpectIdentity("aws_iam_role.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrName:      knownvalue.StringExact(rName + "-0"),
+					}),
+
+					querycheck.ExpectIdentity("aws_iam_role.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrName:      knownvalue.StringExact(rName + "-1"),
+					}),
+
+					querycheck.ExpectIdentity("aws_iam_role.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrName:      knownvalue.StringExact(rName + "-2"),
+					}),
 				},
 			},
 		},

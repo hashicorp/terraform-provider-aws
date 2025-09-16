@@ -3,6 +3,4 @@
 
 list "aws_iam_role" "test" {
   provider = aws
-
-  include_resource = true
 }
