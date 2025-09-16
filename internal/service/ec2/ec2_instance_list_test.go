@@ -4,16 +4,19 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,6 +27,8 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 	resourceName1 := "aws_instance.test[0]"
 	resourceName2 := "aws_instance.test[1]"
 	resourceName3 := "aws_instance.test[2]"
+
+	var id1, id2, id3 string
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -37,6 +42,11 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrWith("aws_instance.test.0", names.AttrID, getter(&id1)),
+					resource.TestCheckResourceAttrWith("aws_instance.test.1", names.AttrID, getter(&id2)),
+					resource.TestCheckResourceAttrWith("aws_instance.test.2", names.AttrID, getter(&id3)),
+				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
@@ -49,8 +59,26 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
-				ConfigQueryResultChecks:  []querycheck.QueryResultCheck{
-					// TODO
+				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_instance.test", knownvalue.Int64Exact(3)),
+
+					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+					}),
+
+					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+					}),
+
+					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        knownvalue.StringFunc(checker(&id3)),
+					}),
 				},
 			},
 		},
@@ -63,6 +91,8 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 	resourceName1 := "aws_instance.test[0]"
 	resourceName2 := "aws_instance.test[1]"
 	resourceName3 := "aws_instance.test[2]"
+
+	var id1, id2, id3 string
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -79,6 +109,11 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrWith("aws_instance.test.0", names.AttrID, getter(&id1)),
+					resource.TestCheckResourceAttrWith("aws_instance.test.1", names.AttrID, getter(&id2)),
+					resource.TestCheckResourceAttrWith("aws_instance.test.2", names.AttrID, getter(&id3)),
+				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
@@ -95,7 +130,25 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					// TODO
+					querycheck.ExpectLength("aws_instance.test", knownvalue.Int64Exact(3)),
+
+					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+					}),
+
+					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+					}),
+
+					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						names.AttrID:        knownvalue.StringFunc(checker(&id3)),
+					}),
 				},
 			},
 		},
@@ -110,6 +163,8 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 	resourceNameNotExpected1 := "aws_instance.not_expected[0]"
 	resourceNameNotExpected2 := "aws_instance.not_expected[1]"
 
+	var id1, id2 string
+
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
@@ -122,6 +177,10 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrWith("aws_instance.expected.0", names.AttrID, getter(&id1)),
+					resource.TestCheckResourceAttrWith("aws_instance.expected.1", names.AttrID, getter(&id2)),
+				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameExpected1, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameExpected2, tfjsonpath.New(names.AttrARN), "ec2", "instance/{id}"),
@@ -135,8 +194,20 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
-				ConfigQueryResultChecks:  []querycheck.QueryResultCheck{
-					// TODO
+				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_instance.test", knownvalue.Int64Exact(2)),
+
+					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+					}),
+
+					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+					}),
 				},
 			},
 		},
@@ -175,9 +246,29 @@ func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					// TODO
+					querycheck.ExpectLength("aws_instance.excluded", knownvalue.Int64Exact(0)),
+
+					querycheck.ExpectLength("aws_instance.included", knownvalue.Int64Exact(1)),
 				},
 			},
 		},
 	})
+}
+
+// TODO: Temporary until there is more testing support
+func getter(s *string) resource.CheckResourceAttrWithFunc {
+	return func(v string) error {
+		*s = v
+		return nil
+	}
+}
+
+// TODO: Temporary until there is more testing support
+func checker(s *string) func(string) error {
+	return func(v string) error {
+		if v != *s {
+			return fmt.Errorf("expected %q, got %q", *s, v)
+		}
+		return nil
+	}
 }
