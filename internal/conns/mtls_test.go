@@ -314,8 +314,6 @@ func TestMTLSEndToEnd(t *testing.T) {
 	testServer := newMTLSTestServer(t, ca)
 	defer testServer.Close()
 
-	t.Logf("mTLS test server running at: %s", testServer.url)
-
 	caCertFile, clientCertFile, clientKeyFile := writeCertificateFiles(t, ca, clientCert)
 
 	t.Run("successful_mtls_connection", func(t *testing.T) {
@@ -367,8 +365,6 @@ func TestMTLSEndToEnd(t *testing.T) {
 		if string(body) != "OK" {
 			t.Fatalf("Expected response 'OK', got %q", string(body))
 		}
-
-		t.Logf("mTLS connection successful!")
 	})
 
 	t.Run("mtls_connection_without_client_cert_fails", func(t *testing.T) {
@@ -383,8 +379,6 @@ func TestMTLSEndToEnd(t *testing.T) {
 		if err == nil {
 			t.Fatal("Expected mTLS connection to fail without client certificate, but it succeeded")
 		}
-
-		t.Logf("Connection correctly failed without client certificate: %v", err)
 	})
 
 	t.Run("mtls_with_wrong_client_cert_fails", func(t *testing.T) {
@@ -426,8 +420,6 @@ func TestMTLSEndToEnd(t *testing.T) {
 		if err == nil {
 			t.Fatal("Expected mTLS connection to fail with wrong client certificate, but it succeeded")
 		}
-
-		t.Logf("Connection correctly failed with wrong client certificate: %v", err)
 	})
 }
 
@@ -492,8 +484,6 @@ func TestMTLSEndToEndWithEncryptedKey(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("Expected status 200, got %d", resp.StatusCode)
 		}
-
-		t.Logf("mTLS connection with encrypted private key successful!")
 	})
 
 	t.Run("encrypted_key_with_wrong_passphrase", func(t *testing.T) {
@@ -515,7 +505,5 @@ func TestMTLSEndToEndWithEncryptedKey(t *testing.T) {
 		if err == nil {
 			t.Fatal("Expected error with wrong passphrase, but configuration succeeded")
 		}
-
-		t.Logf("Correctly failed with wrong passphrase: %v", err)
 	})
 }

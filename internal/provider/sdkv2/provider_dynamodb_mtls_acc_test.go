@@ -264,9 +264,6 @@ func newMockDynamoDBMTLSServer(t *testing.T, ca *testCA) *MockDynamoDBMTLSServer
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		t.Logf("Mock DynamoDB Server - Received request: %s %s", r.Method, r.URL.Path)
-		t.Logf("Mock DynamoDB Server - Headers: %v", r.Header)
-
 		target := r.Header.Get("X-Amz-Target")
 		if target == "" {
 			http.Error(w, "Missing X-Amz-Target header", http.StatusBadRequest)
@@ -326,12 +323,10 @@ func handleMockListTablesAcc(t *testing.T, w http.ResponseWriter, r *http.Reques
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		t.Errorf("Mock DynamoDB Server - Failed to encode ListTables response: %v", err)
 	}
-	t.Logf("Mock DynamoDB Server - Sent ListTables response: %+v", response)
 }
 
 func handleMockDescribeTableAcc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 	t.Helper()
-	t.Logf("Mock DynamoDB Server - Handling DescribeTable request")
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -380,7 +375,6 @@ func handleMockDescribeTableAcc(t *testing.T, w http.ResponseWriter, r *http.Req
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		t.Errorf("Mock DynamoDB Server - Failed to encode DescribeTable response: %v", err)
 	}
-	t.Logf("Mock DynamoDB Server - Sent DescribeTable response for table: %s", tableName)
 }
 
 func TestAccAWSProviderDynamoDBMTLS(t *testing.T) {
@@ -393,16 +387,11 @@ func TestAccAWSProviderDynamoDBMTLS(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Logf("Mock DynamoDB mTLS server running at: %s", mockServer.url)
-
 	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
 	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			t.Logf("Using mock DynamoDB server with mTLS for testing")
-		},
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -459,16 +448,11 @@ func TestAccAWSProviderDynamoDBMTLSFailsWithoutCert(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Logf("Mock DynamoDB mTLS server running at: %s", mockServer.url)
-
 	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
 	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			t.Logf("Testing that mTLS connection fails without client certificate")
-		},
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -520,16 +504,11 @@ func TestAccAWSProviderDynamoDBMTLSWithEncryptedKey(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Logf("Mock DynamoDB mTLS server running at: %s", mockServer.url)
-
 	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
 	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			t.Logf("Testing mTLS with encrypted private key and passphrase")
-		},
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
