@@ -3,7 +3,7 @@ subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_instance"
 description: |-
-  Provides an EC2 instance resource. This allows instances to be created, updated, and deleted. Instances also support provisioning.
+  Lists EC2 Instance resources.
 ---
 
 # List Resource: aws_instance
