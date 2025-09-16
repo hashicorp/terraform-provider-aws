@@ -28,7 +28,7 @@ resource "aws_lambda_function" "example" {
 action "aws_lambda_invoke" "example" {
   config {
     function_name = aws_lambda_function.example.function_name
-    payload       = jsonencode({
+    payload = jsonencode({
       key1 = "value1"
       key2 = "value2"
     })
@@ -111,11 +111,11 @@ action "aws_lambda_invoke" "debug" {
 ```terraform
 action "aws_lambda_invoke" "mobile" {
   config {
-    function_name  = aws_lambda_function.mobile_backend.function_name
+    function_name = aws_lambda_function.mobile_backend.function_name
     client_context = base64encode(jsonencode({
       client = {
-        client_id    = "mobile-app"
-        app_version  = "1.2.3"
+        client_id   = "mobile-app"
+        app_version = "1.2.3"
       }
       env = {
         locale = "en_US"
@@ -166,7 +166,7 @@ locals {
   processing_config = var.environment == "production" ? {
     batch_size = 100
     timeout    = 900
-  } : {
+    } : {
     batch_size = 10
     timeout    = 60
   }
