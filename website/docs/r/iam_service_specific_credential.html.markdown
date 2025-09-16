@@ -1,7 +1,7 @@
 ---
-subcategory: 'IAM (Identity & Access Management)'
-layout: 'aws'
-page_title: 'AWS: aws_iam_service_specific_credential'
+subcategory: "IAM (Identity & Access Management)"
+layout: "aws"
+page_title: "AWS: aws_iam_service_specific_credential"
 description: |-
   Provides an IAM Service Specific Credential.
 ---
