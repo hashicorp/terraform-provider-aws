@@ -13,7 +13,7 @@ Lists Batch Job Queue resources.
 ## Example Usage
 
 ```terraform
-list "aws_batch_job_queue" "test" {
+list "aws_batch_job_queue" "example" {
   provider = aws
 }
 ```
