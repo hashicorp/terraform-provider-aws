@@ -114,7 +114,7 @@ func TestAccS3ControlBucket_Identity_RegionOverride(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -235,7 +235,7 @@ func TestAccS3ControlBucket_Identity_ExistingResource(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ControlServiceID),
 		CheckDestroy: testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
