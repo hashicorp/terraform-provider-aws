@@ -276,7 +276,7 @@ func testAccCheckInvokeActionInvocationType(ctx context.Context, functionName, i
 
 		output, err := conn.Invoke(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Failed to invoke Lambda function %s with invocation type %s: %s", functionName, string(invocationType), err)
+			return fmt.Errorf("Failed to invoke Lambda function %s with invocation type %s: %w", functionName, string(invocationType), err)
 		}
 
 		// For async invocations, we just verify the request was accepted
@@ -311,7 +311,7 @@ func testAccCheckInvokeActionLogType(ctx context.Context, functionName, inputJSO
 
 		output, err := conn.Invoke(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Failed to invoke Lambda function %s with log type %s: %s", functionName, string(logType), err)
+			return fmt.Errorf("Failed to invoke Lambda function %s with log type %s: %w", functionName, string(logType), err)
 		}
 
 		if output.FunctionError != nil {
@@ -343,7 +343,7 @@ func testAccCheckInvokeActionClientContext(ctx context.Context, functionName, in
 
 		output, err := conn.Invoke(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Failed to invoke Lambda function %s with client context: %s", functionName, err)
+			return fmt.Errorf("Failed to invoke Lambda function %s with client context: %w", functionName, err)
 		}
 
 		if output.FunctionError != nil {
