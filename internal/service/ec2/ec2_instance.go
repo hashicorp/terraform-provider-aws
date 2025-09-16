@@ -4298,8 +4298,8 @@ type instanceListResource struct {
 
 type instanceListResourceModel struct {
 	framework.WithRegionModel
-	IncludeAutoScaled types.Bool        `tfsdk:"include_auto_scaled"`
 	Filters           customListFilters `tfsdk:"filter"`
+	IncludeAutoScaled types.Bool        `tfsdk:"include_auto_scaled"`
 }
 
 // ListResourceConfigSchema defines the schema for the List configuration
