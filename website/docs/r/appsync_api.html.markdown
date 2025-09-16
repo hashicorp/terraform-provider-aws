@@ -84,7 +84,7 @@ resource "aws_appsync_api" "example" {
     auth_provider {
       auth_type = "AWS_LAMBDA"
       lambda_authorizer_config {
-        authorizer_uri                   = aws_lambda_function.example.invoke_arn
+        authorizer_uri                   = aws_lambda_function.example.arn
         authorizer_result_ttl_in_seconds = 300
       }
     }
@@ -131,7 +131,7 @@ The `event_config` block supports the following:
 
 The `auth_provider` block supports the following:
 
-* `auth_type` - (Required) Type of authentication provider. Valid values: `AMAZON_COGNITO_USER_POOLS`, `AWS_LAMBDA`, `OPENID_CONNECT`, `API_KEY`.
+* `auth_type` - (Required) Type of authentication provider. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`.
 * `cognito_config` - (Optional) Configuration for Cognito user pool authentication. Required when `auth_type` is `AMAZON_COGNITO_USER_POOLS`. See [Cognito Config](#cognito-config) below.
 * `lambda_authorizer_config` - (Optional) Configuration for Lambda authorization. Required when `auth_type` is `AWS_LAMBDA`. See [Lambda Authorizer Config](#lambda-authorizer-config) below.
 * `openid_connect_config` - (Optional) Configuration for OpenID Connect. Required when `auth_type` is `OPENID_CONNECT`. See [OpenID Connect Config](#openid-connect-config) below.
