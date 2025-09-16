@@ -49,7 +49,7 @@ type createInvalidationModel struct {
 }
 
 func (a *createInvalidationAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
-	resp.Schema = schema.UnlinkedSchema{
+	resp.Schema = schema.Schema{
 		Description: "Invalidates CloudFront distribution cache for specified paths. This action creates an invalidation request and waits for it to complete.",
 		Attributes: map[string]schema.Attribute{
 			"distribution_id": schema.StringAttribute{
