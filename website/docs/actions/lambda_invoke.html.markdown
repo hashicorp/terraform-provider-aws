@@ -195,9 +195,9 @@ action "aws_lambda_invoke" "complex" {
         steps = var.workflow_steps
       }
       resources = {
-        s3_bucket   = aws_s3_bucket.data.bucket
-        dynamodb    = aws_dynamodb_table.state.name
-        sns_topic   = aws_sns_topic.notifications.arn
+        s3_bucket = aws_s3_bucket.data.bucket
+        dynamodb  = aws_dynamodb_table.state.name
+        sns_topic = aws_sns_topic.notifications.arn
       }
       metadata = {
         created_by  = "terraform"
