@@ -1272,7 +1272,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 	})
 }
 
-func TestAccKinesisAnalyticsV2Application_FlinkApplication_snapshotToggleRestoreTypeBug(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplication_snapshotToggleWhenSkipRestoreFromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
