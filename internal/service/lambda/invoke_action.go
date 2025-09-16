@@ -46,7 +46,7 @@ type invokeActionModel struct {
 }
 
 func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
-	resp.Schema = schema.UnlinkedSchema{
+	resp.Schema = schema.Schema{
 		Description: "Invokes an AWS Lambda function with the specified payload. This action allows for imperative invocation of Lambda functions with full control over invocation parameters.",
 		Attributes: map[string]schema.Attribute{
 			"function_name": schema.StringAttribute{
