@@ -251,48 +251,6 @@ func (r *resourceNetworkPeeringConnection) Read(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().ODBClient(ctx)
-	var plan, state odbNetworkPeeringConnectionResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	updatedOdbNetPeeringConn, err := waitNetworkPeeringConnectionUpdated(ctx, conn, plan.OdbPeeringConnectionId.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameNetworkPeeringConnection, plan.OdbPeeringConnectionId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	odbNetworkARNParsed, err := arn.Parse(*updatedOdbNetPeeringConn.OdbNetworkArn)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	peerVpcARN, err := arn.Parse(*updatedOdbNetPeeringConn.PeerNetworkArn)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	state.PeerNetworkId = types.StringValue(strings.Split(peerVpcARN.Resource, "/")[1])
-	state.OdbNetworkId = types.StringValue(strings.Split(odbNetworkARNParsed.Resource, "/")[1])
-	resp.Diagnostics.Append(flex.Flatten(ctx, updatedOdbNetPeeringConn, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
 func (r *resourceNetworkPeeringConnection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ODBClient(ctx)
 	var state odbNetworkPeeringConnectionResourceModel
@@ -330,24 +288,6 @@ func (r *resourceNetworkPeeringConnection) Delete(ctx context.Context, req resou
 func waitNetworkPeeringConnectionCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusProvisioning),
-		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh:                   statusNetworkPeeringConnection(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*odbtypes.OdbPeeringConnection); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitNetworkPeeringConnectionUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(odbtypes.ResourceStatusUpdating),
 		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
 		Refresh:                   statusNetworkPeeringConnection(ctx, conn, id),
 		Timeout:                   timeout,
