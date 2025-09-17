@@ -82,13 +82,13 @@ action "aws_sns_publish" "with_attributes" {
   config {
     topic_arn = aws_sns_topic.processing.arn
     message   = "Process this data"
-    
+
     message_attributes {
       map_block_key = "priority"
       data_type     = "String"
       string_value  = "high"
     }
-    
+
     message_attributes {
       map_block_key = "source"
       data_type     = "String"
