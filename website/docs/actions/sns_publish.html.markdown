@@ -1,5 +1,5 @@
 ---
-subcategory: "SNS (Simple Notification Service)"
+subcategory: "SNS (Simple Notification)"
 layout: "aws"
 page_title: "AWS: aws_sns_publish"
 description: |-
