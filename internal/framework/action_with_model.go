@@ -19,7 +19,7 @@ type ActionWithModel[T any] struct {
 }
 
 // ValidateModel validates the action's model against a schema.
-func (a *ActionWithModel[T]) ValidateModel(ctx context.Context, schema *schema.UnlinkedSchema) diag.Diagnostics {
+func (a *ActionWithModel[T]) ValidateModel(ctx context.Context, schema *schema.Schema) diag.Diagnostics {
 	var diags diag.Diagnostics
 	state := tfsdk.State{
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
@@ -32,5 +32,5 @@ func (a *ActionWithModel[T]) ValidateModel(ctx context.Context, schema *schema.U
 }
 
 type ActionValidateModel interface {
-	ValidateModel(ctx context.Context, schema *schema.UnlinkedSchema) diag.Diagnostics
+	ValidateModel(ctx context.Context, schema *schema.Schema) diag.Diagnostics
 }

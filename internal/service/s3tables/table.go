@@ -358,7 +358,7 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 		data.MaintenanceConfiguration = value
 	}
 
-	outputGTE, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
 	case tfresource.NotFound(err):
@@ -368,7 +368,7 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	default:
 		var encryptionConfiguration encryptionConfigurationModel
-		response.Diagnostics.Append(fwflex.Flatten(ctx, outputGTE.EncryptionConfiguration, &encryptionConfiguration)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -431,7 +431,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 		data.MaintenanceConfiguration = value
 	}
 
-	outputGTE, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
 	case tfresource.NotFound(err):
@@ -441,7 +441,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	default:
 		var encryptionConfiguration encryptionConfigurationModel
-		response.Diagnostics.Append(fwflex.Flatten(ctx, outputGTE.EncryptionConfiguration, &encryptionConfiguration)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -622,18 +622,18 @@ func (r *tableResource) Delete(ctx context.Context, request resource.DeleteReque
 	}
 }
 
-func (r *tableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	identifier, err := parseTableIdentifier(req.ID)
+func (r *tableResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	identifier, err := parseTableIdentifier(request.ID)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			"Invalid Import ID",
 			"Import IDs for S3 Tables Tables must use the format <table bucket ARN>"+tableIDSeparator+"<namespace>"+tableIDSeparator+"<table name>.\n"+
-				fmt.Sprintf("Had %q", req.ID),
+				fmt.Sprintf("Had %q", request.ID),
 		)
 		return
 	}
 
-	identifier.PopulateState(ctx, &resp.State, &resp.Diagnostics)
+	identifier.PopulateState(ctx, &response.State, &response.Diagnostics)
 }
 
 func findTableByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableOutput, error) {
@@ -666,7 +666,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	return output, nil
 }
 
-func findTableEncryptionByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableEncryptionOutput, error) {
+func findTableEncryptionByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*awstypes.EncryptionConfiguration, error) {
 	input := s3tables.GetTableEncryptionInput{
 		Name:           aws.String(name),
 		Namespace:      aws.String(namespace),
@@ -676,7 +676,7 @@ func findTableEncryptionByThreePartKey(ctx context.Context, conn *s3tables.Clien
 	return findTableEncryption(ctx, conn, &input)
 }
 
-func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableEncryptionInput) (*s3tables.GetTableEncryptionOutput, error) {
+func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableEncryptionInput) (*awstypes.EncryptionConfiguration, error) {
 	output, err := conn.GetTableEncryption(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
@@ -689,11 +689,11 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.EncryptionConfiguration == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return output.EncryptionConfiguration, nil
 }
 
 func findTableMaintenanceConfigurationByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableMaintenanceConfigurationOutput, error) {

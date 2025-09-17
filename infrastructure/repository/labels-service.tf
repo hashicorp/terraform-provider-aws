@@ -26,6 +26,7 @@ variable "service_labels" {
     "apprunner",
     "appstream",
     "appsync",
+    "arcregionswitch",
     "athena",
     "auditmanager",
     "autoscaling",

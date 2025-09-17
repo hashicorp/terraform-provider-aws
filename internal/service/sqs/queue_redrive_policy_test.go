@@ -147,6 +147,17 @@ func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
 	})
 }
 
+// Satisfy generated identity test function names by aliasing to queue checks
+//
+// This mimics the standard policy acceptance test behavior, but in the
+// future we may consider replacing this approach with custom checks
+// to validate the presence/content of the redrive policy rather than just
+// the parent queue.
+var (
+	testAccCheckQueueRedrivePolicyExists  = testAccCheckQueueExists
+	testAccCheckQueueRedrivePolicyDestroy = testAccCheckQueueDestroy
+)
+
 func testAccQueueRedrivePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {

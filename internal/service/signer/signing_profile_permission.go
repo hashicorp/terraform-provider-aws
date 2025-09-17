@@ -121,7 +121,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 	}
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AddProfilePermission(ctx, input)
 		},
 		func(err error) (bool, error) {

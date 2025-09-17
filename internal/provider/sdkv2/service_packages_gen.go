@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/arcregionswitch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
@@ -258,6 +259,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
@@ -284,6 +286,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		apprunner.ServicePackage(ctx),
 		appstream.ServicePackage(ctx),
 		appsync.ServicePackage(ctx),
+		arcregionswitch.ServicePackage(ctx),
 		athena.ServicePackage(ctx),
 		auditmanager.ServicePackage(ctx),
 		autoscaling.ServicePackage(ctx),
@@ -516,6 +519,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		wafregional.ServicePackage(ctx),
 		wafv2.ServicePackage(ctx),
 		wellarchitected.ServicePackage(ctx),
+		workmail.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
 		workspacesweb.ServicePackage(ctx),
 		xray.ServicePackage(ctx),

@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/action"
-	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -441,14 +440,10 @@ func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest
 
 	// Validate the action's model against the schema.
 	if v, ok := w.inner.(framework.ActionValidateModel); ok {
-		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
-			response.Diagnostics.Append(v.ValidateModel(ctx, &schema)...)
-			if response.Diagnostics.HasError() {
-				response.Diagnostics.AddError("action model validation error", w.spec.TypeName)
-				return
-			}
-		} else {
-			response.Diagnostics.AddError("unsupported action schema type", w.spec.TypeName)
+		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
+		if response.Diagnostics.HasError() {
+			response.Diagnostics.AddError("action model validation error", w.spec.TypeName)
+			return
 		}
 	} else {
 		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.spec.TypeName)
