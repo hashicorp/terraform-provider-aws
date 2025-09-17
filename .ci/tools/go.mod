@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws/tools
 go 1.24.6
 
 require (
-	github.com/YakDriver/tfproviderdocs v0.22.1-0.20250917010138-53a933aef5c1
+	github.com/YakDriver/tfproviderdocs v0.22.1-0.20250917030306-80db8b673343
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint/v2 v2.4.0
 	github.com/hashicorp/copywrite v0.22.0
