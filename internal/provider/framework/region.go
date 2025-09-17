@@ -381,7 +381,7 @@ func (a actionInjectRegionAttributeInterceptor) schema(ctx context.Context, opts
 			}
 			response.Schema.Attributes[names.AttrRegion] = aschema.StringAttribute{
 				Optional:    true,
-				Description: names.TopLevelRegionAttributeDescription,
+				Description: names.ActionTopLevelRegionAttributeDescription,
 			}
 		}
 	}
