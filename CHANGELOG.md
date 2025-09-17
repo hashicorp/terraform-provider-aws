@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_elasticache_user_group: Ignore `InvalidParameterValue: User xxx is not a member of user group xxx` errors during group modification ([#43520](https://github.com/hashicorp/terraform-provider-aws/issues/43520))
 * resource/aws_sagemaker_endpoint_configuration: Fix panic when empty `async_inference_config.output_config.notification_config` block is specified ([#44310](https://github.com/hashicorp/terraform-provider-aws/issues/44310))
 
 ## 6.13.0 (September 11, 2025)
