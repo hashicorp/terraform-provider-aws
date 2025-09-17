@@ -27,7 +27,7 @@ func TestAccLogsLogGroup_List_Basic(t *testing.T) {
 	resourceName3 := "aws_cloudwatch_log_group.test[2]"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -89,7 +89,7 @@ func TestAccLogsLogGroup_List_RegionOverride(t *testing.T) {
 	resourceName3 := "aws_cloudwatch_log_group.test[2]"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
