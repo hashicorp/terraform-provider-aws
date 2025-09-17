@@ -871,7 +871,7 @@ website-terrafmt: ## [CI] Website Checks / terrafmt
 
 website-terrafmt-fix: ## [CI] Fix Website / terrafmt
 	@echo "make: Fix Website / terrafmt..."
-	@echo "make: terrafmt fix website/docs root files..."
+	@echo "make: Fixing website/docs root files with terrafmt..."
 	@find ./website/docs -maxdepth 1 -type f -name '*.markdown' -exec terrafmt fmt {} \;
 	@for dir in $$(find ./website/docs -maxdepth 1 -type d ! -name docs ! -name cdktf | sort); do \
 		echo "make: Fixing $$dir with terrafmt..."; \
