@@ -380,7 +380,7 @@ func TestAccEKSCluster_ComputeConfig_OnCreate(t *testing.T) {
 
 func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 types.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -393,15 +393,19 @@ func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 			{
 				Config: testAccClusterConfig_computeConfig_onUpdateSetup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "0"),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "172.20.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", ""),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -413,13 +417,16 @@ func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 			{
 				Config: testAccClusterConfig_computeConfig_nodePoolsSetup(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "172.20.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtFalse),
@@ -433,9 +440,13 @@ func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster3),
-					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "1"),
@@ -450,6 +461,35 @@ func TestAccEKSCluster_ComputeConfig_OnUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_computeConfig_nodePoolsSetup(rName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "172.20.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtFalse),
 				),
 			},
 			{

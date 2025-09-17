@@ -54,46 +54,11 @@ func resourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			validateAutoModeCustomizeDiff,
+			validateAutoModeComputeConfigCustomizeDiff,
 			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta any) bool {
 				// You cannot disable envelope encryption after enabling it. This action is irreversible.
 				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
-			func(ctx context.Context, rd *schema.ResourceDiff, meta any) error {
-				if rd.Id() == "" {
-					return nil
-				}
-				oldValue, newValue := rd.GetChange("compute_config")
-
-				oldComputeConfig := expandComputeConfigRequest(oldValue.([]any))
-				newComputeConfig := expandComputeConfigRequest(newValue.([]any))
-
-				if newComputeConfig == nil || oldComputeConfig == nil {
-					return nil
-				}
-
-				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
-				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
-
-				newComputeConfigEnabled := aws.ToBool(newComputeConfig.Enabled)
-
-				// Do not force new if auto mode is disabled in new config and role ARN is unset
-				if !newComputeConfigEnabled && newRoleARN == "" {
-					return nil
-				}
-
-				// Do not force new if built-in node pools are zeroed in new config and role ARN is unset
-				if len(newComputeConfig.NodePools) == 0 && newRoleARN == "" {
-					return nil
-				}
-
-				// only force new if an existing role has changed, not if a new role is added
-				if oldRoleARN != "" && oldRoleARN != newRoleARN {
-					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
-						return err
-					}
-				}
-				return nil
-			},
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -153,12 +118,14 @@ func resourceCluster() *schema.Resource {
 			"compute_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"node_pools": {
 							Type:     schema.TypeSet,
@@ -411,6 +378,7 @@ func resourceCluster() *schema.Resource {
 			"storage_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -423,6 +391,7 @@ func resourceCluster() *schema.Resource {
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -526,11 +495,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	name := d.Get(names.AttrName).(string)
 	input := eks.CreateClusterInput{
 		BootstrapSelfManagedAddons: aws.Bool(d.Get("bootstrap_self_managed_addons").(bool)),
+		ComputeConfig:              expandComputeConfigRequest(d.Get("compute_config").([]any)),
 		EncryptionConfig:           expandEncryptionConfig(d.Get("encryption_config").([]any)),
+		KubernetesNetworkConfig:    expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]any)),
 		Logging:                    expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:                       aws.String(name),
 		ResourcesVpcConfig:         expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]any)),
 		RoleArn:                    aws.String(d.Get(names.AttrRoleARN).(string)),
+		StorageConfig:              expandStorageConfigRequest(d.Get("storage_config").([]any)),
 		Tags:                       getTagsIn(ctx),
 	}
 
@@ -538,16 +510,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.AccessConfig = expandCreateAccessConfigRequest(v.([]any))
 	}
 
-	if v, ok := d.GetOk("compute_config"); ok {
-		input.ComputeConfig = expandComputeConfigRequest(v.([]any))
-	}
-
 	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("kubernetes_network_config"); ok {
-		input.KubernetesNetworkConfig = expandKubernetesNetworkConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("outpost_config"); ok {
@@ -556,10 +520,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v, ok := d.GetOk("remote_network_config"); ok {
 		input.RemoteNetworkConfig = expandCreateRemoteNetworkConfigRequest(v.([]any))
-	}
-
-	if v, ok := d.GetOk("storage_config"); ok {
-		input.StorageConfig = expandStorageConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("upgrade_policy"); ok {
@@ -755,10 +715,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	// All three fields are required to enable/disable Auto Mode or else you receive the error:
+	// 		InvalidParameterException: For EKS Auto Mode, please ensure that all required configs,
+	// 		including computeConfig, kubernetesNetworkConfig, and blockStorage are all either fully enabled or fully disabled.
+	// In addition, when updating other Auto Mode arguments (i.e. - computeConfig.nodePools/nodeRoleARN), all 3 fields are required
 	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
 		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]any))
 		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]any))
 		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]any))
+
 		input := eks.UpdateClusterConfigInput{
 			ComputeConfig:           computeConfig,
 			KubernetesNetworkConfig: kubernetesNetworkConfig,
@@ -769,13 +734,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		output, err := conn.UpdateClusterConfig(ctx, &input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) compute config: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) Auto Mode settings: %s", d.Id(), err)
 		}
 
 		updateID := aws.ToString(output.Update.Id)
 
 		if _, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) compute config update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) Auto Mode settings update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -1145,7 +1110,7 @@ func waitClusterDeleted(ctx context.Context, conn *eks.Client, name string, time
 	return nil, err
 }
 
-func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id string, timeout time.Duration) (*types.Update, error) { //nolint:unparam
+func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id string, timeout time.Duration) (*types.Update, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
@@ -1209,16 +1174,20 @@ func expandUpdateAccessConfigRequest(tfList []any) *types.UpdateAccessConfigRequ
 }
 
 func expandComputeConfigRequest(tfList []any) *types.ComputeConfigRequest {
+	apiObject := &types.ComputeConfigRequest{}
+
 	if len(tfList) == 0 {
-		return nil
+		// Ensure this is always present to avoid the error:
+		// 		InvalidParameterException: The type for cluster update was not provided.
+		// when the field is removed (nil)
+		apiObject.Enabled = aws.Bool(false)
+		return apiObject
 	}
 
 	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
-
-	apiObject := &types.ComputeConfigRequest{}
 
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
@@ -1282,16 +1251,22 @@ func expandProvider(tfList []any) *types.Provider {
 }
 
 func expandStorageConfigRequest(tfList []any) *types.StorageConfigRequest {
+	apiObject := &types.StorageConfigRequest{}
+
 	if len(tfList) == 0 {
-		return nil
+		// Ensure this is always present to avoid the error:
+		// 		InvalidParameterException: The type for cluster update was not provided.
+		// when the field is removed (nil)
+		apiObject.BlockStorage = &types.BlockStorage{
+			Enabled: aws.Bool(false),
+		}
+		return apiObject
 	}
 
 	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
-
-	apiObject := &types.StorageConfigRequest{}
 
 	if v, ok := tfMap["block_storage"].([]any); ok {
 		apiObject.BlockStorage = expandBlockStorage(v)
@@ -1365,7 +1340,7 @@ func expandControlPlanePlacementRequest(tfList []any) *types.ControlPlanePlaceme
 	return apiObject
 }
 
-func expandVpcConfigRequest(tfList []any) *types.VpcConfigRequest { // nosemgrep:ci.caps5-in-func-name
+func expandVpcConfigRequest(tfList []any) *types.VpcConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1390,16 +1365,23 @@ func expandVpcConfigRequest(tfList []any) *types.VpcConfigRequest { // nosemgrep
 }
 
 func expandKubernetesNetworkConfigRequest(tfList []any) *types.KubernetesNetworkConfigRequest {
+	apiObject := &types.KubernetesNetworkConfigRequest{}
+
 	if len(tfList) == 0 {
-		return nil
+		// Required to avoid the error:
+		// 		InvalidParameterException: For EKS Auto Mode, please ensure that all required configs,
+		// 		including computeConfig, kubernetesNetworkConfig, and blockStorage are all either fully enabled or fully disabled.
+		// since the other two fields have been injected with `enabled: false` when the field is not present
+		apiObject.ElasticLoadBalancing = &types.ElasticLoadBalancing{
+			Enabled: aws.Bool(false),
+		}
+		return apiObject
 	}
 
 	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
-
-	apiObject := &types.KubernetesNetworkConfigRequest{}
 
 	if v, ok := tfMap["elastic_load_balancing"].([]any); ok {
 		apiObject.ElasticLoadBalancing = expandKubernetesNetworkConfigElasticLoadBalancing(v)
@@ -1479,6 +1461,7 @@ func expandUpdateRemoteNetworkConfigRequest(tfList []any) *types.RemoteNetworkCo
 
 	return apiObject
 }
+
 func expandRemoteNodeNetworks(tfList []any) []types.RemoteNodeNetwork {
 	var apiObjects = []types.RemoteNodeNetwork{}
 
@@ -1681,7 +1664,7 @@ func flattenProvider(apiObject *types.Provider) []any {
 	return []any{tfMap}
 }
 
-func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]any { // nosemgrep:ci.caps5-in-func-name
+func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]any {
 	if vpcConfig == nil {
 		return []map[string]any{}
 	}
@@ -1883,5 +1866,45 @@ func validateAutoModeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ 
 		}
 	}
 
+	return nil
+}
+
+// Allow setting `compute_config.node_role_arn` to `null` when disabling auto mode or
+// built-in node pools without forcing re-creation of the cluster
+func validateAutoModeComputeConfigCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	if diff.Id() == "" {
+		return nil
+	}
+
+	oldValue, newValue := diff.GetChange("compute_config")
+
+	oldComputeConfig := expandComputeConfigRequest(oldValue.([]any))
+	newComputeConfig := expandComputeConfigRequest(newValue.([]any))
+
+	if newComputeConfig == nil || oldComputeConfig == nil {
+		return nil
+	}
+
+	oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
+	newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
+
+	newComputeConfigEnabled := aws.ToBool(newComputeConfig.Enabled)
+
+	// Do not force new if auto mode is disabled in new config and role ARN is unset
+	if !newComputeConfigEnabled && newRoleARN == "" {
+		return nil
+	}
+
+	// Do not force new if built-in node pools are zeroed in new config and role ARN is unset
+	if len(newComputeConfig.NodePools) == 0 && newRoleARN == "" {
+		return nil
+	}
+
+	// only force new if an existing role has changed, not if a new role is added
+	if oldRoleARN != "" && oldRoleARN != newRoleARN {
+		if err := diff.ForceNew("compute_config.0.node_role_arn"); err != nil {
+			return err
+		}
+	}
 	return nil
 }
