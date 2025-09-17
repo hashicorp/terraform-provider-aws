@@ -50,7 +50,7 @@ type messageAttributeModel struct {
 }
 
 func (a *publishAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
-	resp.Schema = schema.UnlinkedSchema{
+	resp.Schema = schema.Schema{
 		Description: "Publishes a message to an Amazon SNS topic. This action allows for imperative message publishing with full control over message attributes and structure.",
 		Attributes: map[string]schema.Attribute{
 			names.AttrMessage: schema.StringAttribute{
