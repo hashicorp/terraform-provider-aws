@@ -450,36 +450,6 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCloudVmCluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state cloudVmClusterResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().ODBClient(ctx)
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	updatedVMC, err := waitCloudVmClusterUpdated(ctx, conn, plan.CloudVmClusterId.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameCloudVmCluster, plan.CloudVmClusterId.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	hostnamePrefix := strings.Split(*updatedVMC.Hostname, "-")[0]
-	plan.HostnamePrefix = types.StringValue(hostnamePrefix)
-	plan.HostnamePrefixComputed = types.StringValue(*updatedVMC.Hostname)
-	plan.ScanListenerPortTcp = types.Int32PointerValue(updatedVMC.ListenerPort)
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, updatedVMC, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
 func (r *resourceCloudVmCluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ODBClient(ctx)
 	var state cloudVmClusterResourceModel
@@ -517,24 +487,6 @@ func (r *resourceCloudVmCluster) Delete(ctx context.Context, req resource.Delete
 func waitCloudVmClusterCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusProvisioning),
-		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh:                   statusCloudVmCluster(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*odbtypes.CloudVmCluster); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitCloudVmClusterUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(odbtypes.ResourceStatusUpdating),
 		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
 		Refresh:                   statusCloudVmCluster(ctx, conn, id),
 		Timeout:                   timeout,
