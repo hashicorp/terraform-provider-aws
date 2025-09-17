@@ -37,15 +37,20 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Attribute 'status' is deprecated and will be removed in a future release. Use 'state' instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,15 +106,20 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Attribute 'status' is deprecated and will be removed in a future release. Use 'state' instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

@@ -76,6 +76,11 @@ func resourceOrganization() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Attribute 'status' is deprecated and will be removed in a future release. Use 'state' instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -143,6 +148,11 @@ func resourceOrganization() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Attribute 'status' is deprecated and will be removed in a future release. Use 'state' instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -587,6 +597,7 @@ func flattenAccounts(apiObjects []awstypes.Account) []any {
 			names.AttrID:     aws.ToString(apiObject.Id),
 			names.AttrName:   aws.ToString(apiObject.Name),
 			names.AttrStatus: apiObject.Status,
+			names.AttrState:  apiObject.State,
 		})
 	}
 

@@ -46,7 +46,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN for this account.
 * `govcloud_id` - ID for a GovCloud account created with the account.
 * `id` - The AWS account id
-* `status` - The status of the account in the organization.
+* `status` - (**Deprecated** use `state` instead) The status of the account in the organization.
+* `state` - The state of the account in the organization.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
