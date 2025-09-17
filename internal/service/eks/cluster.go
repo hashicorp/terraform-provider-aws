@@ -1110,7 +1110,7 @@ func waitClusterDeleted(ctx context.Context, conn *eks.Client, name string, time
 	return nil, err
 }
 
-func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id string, timeout time.Duration) (*types.Update, error) {
+func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id string, timeout time.Duration) (*types.Update, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
@@ -1340,7 +1340,7 @@ func expandControlPlanePlacementRequest(tfList []any) *types.ControlPlanePlaceme
 	return apiObject
 }
 
-func expandVpcConfigRequest(tfList []any) *types.VpcConfigRequest {
+func expandVpcConfigRequest(tfList []any) *types.VpcConfigRequest { // nosemgrep:ci.caps5-in-func-name
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1664,7 +1664,7 @@ func flattenProvider(apiObject *types.Provider) []any {
 	return []any{tfMap}
 }
 
-func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]any {
+func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]any { // nosemgrep:ci.caps5-in-func-name
 	if vpcConfig == nil {
 		return []map[string]any{}
 	}
