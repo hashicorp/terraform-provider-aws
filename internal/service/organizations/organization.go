@@ -78,7 +78,7 @@ func resourceOrganization() *schema.Resource {
 						names.AttrStatus: {
 							Type:       schema.TypeString,
 							Computed:   true,
-							Deprecated: "Attribute 'status' is deprecated and will be removed in a future release. Use 'state' instead.",
+							Deprecated: "status is deprecated and will be removed in a future release. Use state instead.",
 						},
 						names.AttrState: {
 							Type:     schema.TypeString,
@@ -150,7 +150,7 @@ func resourceOrganization() *schema.Resource {
 						names.AttrStatus: {
 							Type:       schema.TypeString,
 							Computed:   true,
-							Deprecated: "Attribute 'status' is deprecated and will be removed in a future release. Use 'state' instead.",
+							Deprecated: "status is deprecated and will be removed in a future release. Use state instead.",
 						},
 						names.AttrState: {
 							Type:     schema.TypeString,
