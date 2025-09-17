@@ -116,10 +116,10 @@ action "aws_ses_send_email" "alert" {
 ```terraform
 action "aws_ses_send_email" "welcome" {
   config {
-    source       = aws_ses_email_identity.noreply.email
-    subject      = "Welcome to ${var.company_name}!"
-    text_body    = "Welcome! Thank you for joining us. Visit our website for more information."
-    html_body    = templatefile("${path.module}/templates/welcome.html", {
+    source    = aws_ses_email_identity.noreply.email
+    subject   = "Welcome to ${var.company_name}!"
+    text_body = "Welcome! Thank you for joining us. Visit our website for more information."
+    html_body = templatefile("${path.module}/templates/welcome.html", {
       user_name    = var.user_name
       company_name = var.company_name
       website_url  = var.website_url
@@ -134,9 +134,9 @@ action "aws_ses_send_email" "welcome" {
 ```terraform
 action "aws_ses_send_email" "conditional" {
   config {
-    source    = "notifications@example.com"
-    subject   = var.environment == "production" ? "Production Alert" : "Test Alert"
-    text_body = "This is a ${var.environment} environment notification."
+    source       = "notifications@example.com"
+    subject      = var.environment == "production" ? "Production Alert" : "Test Alert"
+    text_body    = "This is a ${var.environment} environment notification."
     to_addresses = var.environment == "production" ? var.prod_emails : var.dev_emails
   }
 }
