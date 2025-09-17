@@ -46,7 +46,7 @@ type stopInstanceModel struct {
 }
 
 func (a *stopInstanceAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
-	resp.Schema = schema.UnlinkedSchema{
+	resp.Schema = schema.Schema{
 		Description: "Stops an EC2 instance. This action will gracefully stop the instance and wait for it to reach the stopped state.",
 		Attributes: map[string]schema.Attribute{
 			names.AttrInstanceID: schema.StringAttribute{
