@@ -7,7 +7,7 @@ rules:
     message: Use the constant `names.Attr{{ .Constant }}` for the string literal "{{ .Literal }}"
     paths:
       include:
-        - "internal/service/**/*.go"
+        - "/internal/service/**/*.go"
     patterns:
       - pattern: '"{{ .Literal }}"'
       - pattern-not-regex: '"{{ .Literal }}":\s+test\w+,'

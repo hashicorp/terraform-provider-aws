@@ -7,6 +7,8 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-framework/action"
+	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -363,4 +365,44 @@ func (r resourceImportRegionNoDefaultInterceptor) importState(ctx context.Contex
 // resourceImportRegionNoDefault sets the value of the top-level `region` attribute during import.
 func resourceImportRegionNoDefault() resourceImportStateInterceptor {
 	return &resourceImportRegionNoDefaultInterceptor{}
+}
+
+type actionInjectRegionAttributeInterceptor struct{}
+
+func (a actionInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[action.SchemaRequest, action.SchemaResponse]) {
+	switch response, when := opts.response, opts.when; when {
+	case After:
+		if _, exists := response.Schema.Attributes[names.AttrRegion]; !exists {
+			// Inject a top-level "region" attribute.
+			if response.Schema.Attributes == nil {
+				response.Schema.Attributes = make(map[string]aschema.Attribute)
+			}
+			response.Schema.Attributes[names.AttrRegion] = aschema.StringAttribute{
+				Optional:    true,
+				Description: names.TopLevelRegionAttributeDescription,
+			}
+		}
+	}
+}
+
+// actionInjectRegionAttribute injects a top-level "region" attribute into an action's schema.
+func actionInjectRegionAttribute() actionSchemaInterceptor {
+	return &actionInjectRegionAttributeInterceptor{}
+}
+
+type actionValidateRegionInterceptor struct {
+}
+
+func (a actionValidateRegionInterceptor) invoke(ctx context.Context, opts interceptorOptions[action.InvokeRequest, action.InvokeResponse]) {
+	c := opts.c
+
+	switch when := opts.when; when {
+	case Before:
+		opts.response.Diagnostics.Append(validateInContextRegionInPartition(ctx, c)...)
+	}
+}
+
+// actionValidateRegion validates that the value of the top-level `region` attribute is in the configured AWS partition.
+func actionValidateRegion() actionInvokeInterceptor {
+	return &actionValidateRegionInterceptor{}
 }

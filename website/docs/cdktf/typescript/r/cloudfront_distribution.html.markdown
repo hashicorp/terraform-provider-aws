@@ -673,8 +673,9 @@ argument should not be specified.
 * `originId` (Required) - Unique identifier for the origin.
 * `originPath` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `originShield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
+* `responseCompletionTimeout` - (Optional) Time (in seconds) that a request from CloudFront to the origin can stay open and wait for a response. Must be integer greater than or equal to the value of `originReadTimeout`. If omitted or explicitly set to `0`, no maximum value is enforced.
 * `s3OriginConfig` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `customOriginConfig` instead.
-* `vpcOriginConfig` - (Optional) The VPC origin configuration.
+* `vpcOriginConfig` - (Optional) The [VPC origin configuration](#vpc-origin-config-arguments).
 
 ##### Custom Origin Config Arguments
 
@@ -796,4 +797,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d2ff98f96013d63117f5475c6cdc94f218c94787983824f24b3f840a85875ef4 -->
+<!-- cache-key: cdktf-0.20.8 input-ebb065aa7bfd8b4e67d12231b93a40704fca19625e5e7cfe7a04b35ab7b38eac -->

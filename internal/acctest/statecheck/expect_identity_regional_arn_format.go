@@ -57,7 +57,7 @@ func (e expectIdentityRegionalARNFormatCheck) CheckState(ctx context.Context, re
 
 	knownCheck := e.checkFactory(e.arnService, arnString)
 	if err = knownCheck.CheckValue(value); err != nil {
-		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %s", e.base.ResourceAddress(), attrPath, err)
+		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %w", e.base.ResourceAddress(), attrPath, err)
 		return
 	}
 }
