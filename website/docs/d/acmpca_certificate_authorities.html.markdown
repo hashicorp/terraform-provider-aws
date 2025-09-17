@@ -3,18 +3,9 @@ subcategory: "ACM PCA (Certificate Manager Private Certificate Authority)"
 layout: "aws"
 page_title: "AWS: aws_acmpca_certificate_authorities"
 description: |-
-  Provides details about an AWS ACM PCA (Certificate Manager Private Certificate Authority) Certificate Authorities.
+  Get information about a set of AWS ACM PCA (Certificate Manager Private Certificate Authority) Certificate Authorities.
 ---
-<!---
-Documentation guidelines:
-- Begin data source descriptions with "Provides details about..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
+
 
 # Data Source: aws_acmpca_certificate_authorities
 
@@ -29,19 +20,23 @@ data "aws_acmpca_certificate_authorities" "example" {
 }
 ```
 
+### List ACM PCAs shared via RAM
+
+```terraform
+data "aws_acmpca_certificate_authorities" "example" {
+  resource_owner = "OTHER_ACCOUNTS"
+}
+```
+
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
-* `example_arg` - (Required) Brief description of the required argument.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_owner` (Optional) Use this argument to filter the returned set of certificate authorities based on their owner. Valid values are `SELF` and `OTHER_ACCOUNTS` The default is `SELF`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Certificate Authorities.
-* `example_attribute` - Brief description of the attribute.
+* `arns` - Set of ARNs of the matched ACM PCA

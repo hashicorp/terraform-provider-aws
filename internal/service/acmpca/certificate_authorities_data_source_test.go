@@ -35,6 +35,27 @@ func TestAccACMPCACertificateAuthoritiesDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccACMPCACertificateAuthoritiesDataSource_otherAccounts(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	domain := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateAuthoritiesDataSourceConfig_otherAccounts(rName, domain),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckTypeSetElemAttrPair("data.aws_acmpca_certificate_authorities.test", "arns.*", "aws_acmpca_certificate_authority.test", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccCertificateAuthoritiesDataSourceConfig_arn(domain1 string, domain2 string) string {
 	return fmt.Sprintf(`
 data "aws_acmpca_certificate_authorities" "test" {
@@ -73,4 +94,59 @@ resource "aws_acmpca_certificate_authority" "test2" {
 }
 
 `, domain1, domain2)
+}
+
+func testAccCertificateAuthoritiesDataSourceConfig_otherAccounts(rName string, domain string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  provider = "awsalternate"
+
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[2]q
+    }
+  }
+}
+
+resource "aws_ram_resource_share" "test" {
+  provider = "awsalternate"
+
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_association" "test" {
+  provider = "awsalternate"
+
+  resource_arn       = aws_acmpca_certificate_authority.test.arn
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+
+data "aws_caller_identity" "creator" {}
+
+resource "aws_ram_principal_association" "test" {
+  provider = "awsalternate"
+
+  principal          = data.aws_caller_identity.creator.account_id
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+
+data "aws_acmpca_certificate_authorities" "test" { 
+  resource_owner = "OTHER_ACCOUNTS"
+
+  depends_on = [
+	aws_ram_principal_association.test,
+	aws_ram_resource_association.test,
+  ]
+}
+`, rName, domain))
 }
