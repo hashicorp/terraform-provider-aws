@@ -8,6 +8,7 @@ import (
 	"slices"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -40,6 +41,15 @@ func ResourceRegionDisabled() ServicePackageResourceRegion {
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
 	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
+}
+
+// ServicePackageAction represents a Terraform Plugin Framework action
+// implemented by a service package.
+type ServicePackageAction struct {
+	Factory  func(context.Context) (action.ActionWithConfigure, error)
+	TypeName string
+	Name     string
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageEphemeralResource represents a Terraform Plugin Framework ephemeral resource
