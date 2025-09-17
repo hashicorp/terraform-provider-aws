@@ -13,6 +13,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,7 +32,10 @@ func TestAccSESSendEmailAction_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSendEmailActionConfig_basic(rName, testEmail),
@@ -56,7 +60,10 @@ func TestAccSESSendEmailAction_htmlBody(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSendEmailActionConfig_htmlBody(rName, testEmail),
@@ -81,7 +88,10 @@ func TestAccSESSendEmailAction_multipleRecipients(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSendEmailActionConfig_multipleRecipients(rName, testEmail),
