@@ -6,9 +6,9 @@ description: |-
   Invalidates CloudFront distribution cache for specified paths.
 ---
 
-~> **Note:** `aws_cloudfront_create_invalidation` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 # Action: aws_cloudfront_create_invalidation
+
+~> **Note:** `aws_cloudfront_create_invalidation` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
 
 Invalidates CloudFront distribution cache for specified paths. This action creates an invalidation request and waits for it to complete.
 
