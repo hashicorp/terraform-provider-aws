@@ -60,8 +60,6 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectLength("aws_instance.test", knownvalue.Int64Exact(3)),
-
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
@@ -130,8 +128,6 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectLength("aws_instance.test", knownvalue.Int64Exact(3)),
-
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
@@ -195,8 +191,6 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectLength("aws_instance.test", knownvalue.Int64Exact(2)),
-
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),

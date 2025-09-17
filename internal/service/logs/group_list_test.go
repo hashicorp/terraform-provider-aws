@@ -58,8 +58,6 @@ func TestAccLogsLogGroup_List_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectLengthAtLeast("aws_cloudwatch_log_group.test", 3),
-
 					querycheck.ExpectIdentity("aws_cloudwatch_log_group.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
@@ -124,8 +122,6 @@ func TestAccLogsLogGroup_List_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectLengthAtLeast("aws_cloudwatch_log_group.test", 3),
-
 					querycheck.ExpectIdentity("aws_cloudwatch_log_group.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),

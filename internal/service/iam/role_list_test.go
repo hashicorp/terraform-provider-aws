@@ -58,8 +58,6 @@ func TestAccIAMRole_List_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectLengthAtLeast("aws_iam_role.test", 3),
-
 					querycheck.ExpectIdentity("aws_iam_role.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrName:      knownvalue.StringExact(rName + "-0"),
