@@ -6,10 +6,12 @@ FEATURES:
 * **New Data Source:** `aws_odb_cloud_autonomous_vm_cluster` ([#43809](https://github.com/hashicorp/terraform-provider-aws/issues/43809))
 * **New Data Source:** `aws_odb_cloud_exadata_infrastructure` ([#43650](https://github.com/hashicorp/terraform-provider-aws/issues/43650))
 * **New Data Source:** `aws_odb_network` ([#43715](https://github.com/hashicorp/terraform-provider-aws/issues/43715))
+* **New Data Source:** `aws_odb_network_peering_connection` ([#43757](https://github.com/hashicorp/terraform-provider-aws/issues/43757))
 * **New Resource:** `aws_controltower_baseline` ([#42397](https://github.com/hashicorp/terraform-provider-aws/issues/42397))
 * **New Resource:** `aws_odb_cloud_autonomous_vm_cluster` ([#43809](https://github.com/hashicorp/terraform-provider-aws/issues/43809))
 * **New Resource:** `aws_odb_cloud_exadata_infrastructure` ([#43650](https://github.com/hashicorp/terraform-provider-aws/issues/43650))
 * **New Resource:** `aws_odb_network` ([#43715](https://github.com/hashicorp/terraform-provider-aws/issues/43715))
+* **New Resource:** `aws_odb_network_peering_connection` ([#43757](https://github.com/hashicorp/terraform-provider-aws/issues/43757))
 
 ENHANCEMENTS:
 
