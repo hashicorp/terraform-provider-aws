@@ -6,7 +6,7 @@ description: |-
   Terraform  resource for managing oracle database network peering resource in AWS.
 ---
 
-# Data Source: aws_odb_network_peering_connection
+# Resource: aws_odb_network_peering_connection
 
 Terraform  resource for managing oracle database network peering resource in AWS.
 
