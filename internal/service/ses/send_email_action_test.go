@@ -105,7 +105,7 @@ func testAccCheckSendEmailAction(ctx context.Context, sourceEmail string) resour
 
 		output, err := conn.GetIdentityVerificationAttributes(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Failed to get identity verification attributes: %s", err)
+			return fmt.Errorf("Failed to get identity verification attributes: %w", err)
 		}
 
 		if attrs, ok := output.VerificationAttributes[sourceEmail]; ok {
