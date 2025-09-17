@@ -1,24 +1,16 @@
 ---
 subcategory: "Oracle Database@AWS"
-layout: "aws"
+layout: "AWS: aws_odb_db_nodes_list"
 page_title: "AWS: aws_odb_db_nodes_list"
 description: |-
-  Provides details about an AWS Oracle Database@AWS Db Nodes List.
+  Terraform data source for managing db nodes linked to cloud vm cluster of Oracle Database@AWS.
 ---
-<!---
-Documentation guidelines:
-- Begin data source descriptions with "Provides details about..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Data Source: aws_odb_db_nodes_list
 
-Provides details about an AWS Oracle Database@AWS Db Nodes List.
+Terraform data source for manging db nodes linked to cloud vm cluster of Oracle Database@AWS.
+
+You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
 ## Example Usage
 
@@ -26,22 +18,55 @@ Provides details about an AWS Oracle Database@AWS Db Nodes List.
 
 ```terraform
 data "aws_odb_db_nodes_list" "example" {
+  cloud_vm_cluster_id = "example"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
-
-* `example_arg` - (Required) Brief description of the required argument.
-
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `cloud_vm_cluster_id` - (Required) The unique identifier of the cloud vm cluster.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Db Nodes List.
-* `example_attribute` - Brief description of the attribute.
+* `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `activated_storage_count` - The number of storage servers requested for the Exadata infrastructure.
+* `additional_storage_count` - The number of storage servers requested for the Exadata infrastructure.
+* `availability_zone` - The name of the Availability Zone (AZ) where the Exadata infrastructure is located.
+* `availability_zone_id` - The AZ ID of the AZ where the Exadata infrastructure is located.
+* `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `id` - The unique identifier of the Exadata infrastructure.
+* `compute_count` - The number of database servers for the Exadata infrastructure.
+* `cpu_count` - The total number of CPU cores that are allocated to the Exadata infrastructure.
+* `data_storage_size_in_tbs` - The size of the Exadata infrastructure's data disk group, in terabytes (TB).
+* `db_node_storage_size_in_gbs` - The size of the storage available on each database node, in gigabytes (GB).
+* `db_server_version` - The version of the Exadata infrastructure.
+* `display_name` - The display name of the Exadata infrastructure.
+* `last_maintenance_run_id` - The Oracle Cloud Identifier (OCID) of the last maintenance run for the Exadata infrastructure.
+* `max_cpu_count` - The total number of CPU cores available on the Exadata infrastructure.
+* `max_data_storage_in_tbs` - The total amount of data disk group storage, in terabytes (TB), that's available on the Exadata infrastructure.
+* `max_db_node_storage_size_in_gbs` - The total amount of local node storage, in gigabytes (GB), that's available on the Exadata infrastructure.
+* `max_memory_in_gbs` - The total amount of memory, in gigabytes (GB), that's available on the Exadata infrastructure.
+* `memory_size_in_gbs` - The amount of memory, in gigabytes (GB), that's allocated on the Exadata infrastructure.
+* `monthly_db_server_version` - The monthly software version of the database servers installed on the Exadata infrastructure.
+* `monthly_storage_server_version` - The monthly software version of the storage servers installed on the Exadata infrastructure.
+* `next_maintenance_run_id` - The OCID of the next maintenance run for the Exadata infrastructure.
+* `oci_resource_anchor_name` - The name of the OCI resource anchor for the Exadata infrastructure.
+* `oci_url` - The HTTPS link to the Exadata infrastructure in OCI.
+* `ocid` - The OCID of the Exadata infrastructure in OCI.
+* `percent_progress` - The amount of progress made on the current operation on the Exadata infrastructure expressed as a percentage.
+* `shape` - The model name of the Exadata infrastructure.
+* `status` - The status of the Exadata infrastructure.
+* `status_reason` - Additional information about the status of the Exadata infrastructure.
+* `storage_count` - The number of storage servers that are activated for the Exadata infrastructure.
+* `storage_server_version` - The software version of the storage servers on the Exadata infrastructure.
+* `total_storage_size_in_gbs` - The total amount of storage, in gigabytes (GB), on the Exadata infrastructure.
+* `compute_model` - The OCI compute model used when you create or clone an instance: ECPU or OCPU. An ECPU is an abstracted measure of compute resources. ECPUs are based on the number of cores elastically allocated from a pool of compute and storage servers. An OCPU is a legacy physical measure of compute resources. OCPUs are based on the physical core of a processor with hyper-threading enabled.
+* `created_at` - The time when the Exadata infrastructure was created.
+* `database_server_type` - The database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.
+* `storage_server_type` - The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.
+* `maintenance_window` - The scheduling details of the maintenance window. Patching and system updates take place during the maintenance window.

@@ -4,23 +4,25 @@
 package odb_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"strings"
+	"strconv"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
-	"github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,37 +45,91 @@ func TestAccODBDbNodesListDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbnodeslist odb.DescribeDbNodesListResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var dbNodesList odb.ListDbNodesOutput
 	dataSourceName := "data.aws_odb_db_nodes_list.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ODBEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDbNodesListDestroy(ctx),
+		CheckDestroy:             dbNodesListDataSourceTestEntity.testAccCheckDbNodesDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: dbNodesListDataSourceTestEntity.testAccDbNodesListDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbNodesListDataSourceTestEntity.testAccCheckDbNodesListExists(ctx, dataSourceName, &dbnodeslist),
-					resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "odb", regexache.MustCompile(`dbnodeslist:.+$`)),
+					dbNodesListDataSourceTestEntity.testAccCheckDbNodesListExists(ctx, dataSourceName, &dbNodesList),
+					resource.TestCheckResourceAttr(dataSourceName, "aws_odb_db_nodes_list.db_servers.#", strconv.Itoa(len(dbNodesList.DbNodes))),
 				),
 			},
 		},
 	})
+}
+
+func (dbNodesListDataSourceTest) testAccCheckDbNodesListExists(ctx context.Context, name string, output *odb.ListDbNodesOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbServersList, name, errors.New("not found"))
+		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		var vmClusterId = &rs.Primary.ID
+		input := odb.ListDbNodesInput{
+			CloudVmClusterId: vmClusterId,
+		}
+		lisOfDbNodes := odb.ListDbNodesOutput{}
+		paginator := odb.NewListDbNodesPaginator(conn, &input)
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return err
+			}
+			lisOfDbNodes.DbNodes = append(lisOfDbNodes.DbNodes, page.DbNodes...)
+		}
+		*output = lisOfDbNodes
+		return nil
+	}
+}
+
+func (dbNodesListDataSourceTest) testAccCheckDbNodesDestroyed(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_odb_cloud_vm_cluster" {
+				continue
+			}
+			_, err := dbNodesListDataSourceTestEntity.findVmCluster(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				return nil
+			}
+			if err != nil {
+				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServersList, rs.Primary.ID, err)
+			}
+			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServersList, rs.Primary.ID, errors.New("not destroyed"))
+		}
+		return nil
+	}
+}
+
+func (dbNodesListDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudVmCluster, error) {
+	input := odb.GetCloudVmClusterInput{
+		CloudVmClusterId: aws.String(id),
+	}
+	output, err := conn.GetCloudVmCluster(ctx, &input)
+	if err != nil {
+		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			}
+		}
+		return nil, err
+	}
+	if output == nil || output.CloudVmCluster == nil {
+		return nil, tfresource.NewEmptyResultError(&input)
+	}
+	return output.CloudVmCluster, nil
 }
 
 func (dbNodesListDataSourceTest) testAccDbNodesListDataSourceConfig_basic() string {

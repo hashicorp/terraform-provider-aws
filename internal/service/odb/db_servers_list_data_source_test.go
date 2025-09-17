@@ -88,24 +88,19 @@ func (testDbServersListDataSource) testAccCheckDbServersListExists(ctx context.C
 func (testDbServersListDataSource) testAccCheckDbServersDestroyed(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
 			}
-
 			_, err := dbServersListDataSourceTests.findExaInfra(ctx, conn, rs.Primary.ID)
-
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServersList, rs.Primary.ID, err)
 			}
-
 			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServersList, rs.Primary.ID, errors.New("not destroyed"))
 		}
-
 		return nil
 	}
 }
