@@ -39,10 +39,10 @@ type stopInstanceAction struct {
 }
 
 type stopInstanceModel struct {
+	framework.WithRegionModel
 	InstanceID types.String `tfsdk:"instance_id"`
 	Force      types.Bool   `tfsdk:"force"`
 	Timeout    types.Int64  `tfsdk:"timeout"`
-	Region     types.String `tfsdk:"region"`
 }
 
 func (a *stopInstanceAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
