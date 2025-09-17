@@ -6,9 +6,9 @@ description: |-
   Stops an EC2 instance.
 ---
 
-~> **Note:** `aws_ec2_stop_instance` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 # Action: aws_ec2_stop_instance
+
+~> **Note:** `aws_ec2_stop_instance` is in alpha. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
 
 Stops an EC2 instance. This action will gracefully stop the instance and wait for it to reach the stopped state.
 
