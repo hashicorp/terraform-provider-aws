@@ -653,12 +653,10 @@ func resourceService() *schema.Resource {
 										ValidateFunc: verify.ValidARN,
 									},
 									"hook_details": {
-										Type:     schema.TypeString,
-										Optional: true,
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											return verify.JSONStringsEqual(old, new)
-										},
-										ValidateFunc: verify.ValidStringIsJSONOrYAML,
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+										ValidateFunc:     verify.ValidStringIsJSONOrYAML,
 									},
 								},
 							},
