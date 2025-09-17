@@ -20,6 +20,13 @@ type ServicePackage interface {
 	ServicePackageName() string
 }
 
+// ServicePackageWithActions is an interface that extends ServicePackage with actions.
+// Actions are imperative operations that can be invoked to perform Day-2 operations.
+type ServicePackageWithActions interface {
+	ServicePackage
+	Actions(context.Context) []*types.ServicePackageAction
+}
+
 // ServicePackageWithEphemeralResources is an interface that extends ServicePackage with ephemeral resources.
 // Ephemeral resources are resources that are not part of the Terraform state, but are used to create other resources.
 type ServicePackageWithEphemeralResources interface {
