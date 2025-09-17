@@ -6,7 +6,7 @@ description: |-
   Lists IAM Role resources.
 ---
 
-# Resource: aws_iam_role
+# List Resource: aws_iam_role
 
 Lists IAM Role resources.
 
