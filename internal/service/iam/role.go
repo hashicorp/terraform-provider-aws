@@ -1098,9 +1098,9 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 			// Exclude Service-Linked Roles
 			if strings.HasPrefix(aws.ToString(output.Path), "/aws-service-role/") {
 				tflog.Debug(ctx, "Skipping resource", map[string]any{
-					"skip_reason": "Service-Linked Role",
-					"role_name":   aws.ToString(output.RoleName),
-					"path":        aws.ToString(output.Path),
+					"skip_reason":  "Service-Linked Role",
+					"role_name":    aws.ToString(output.RoleName),
+					names.AttrPath: aws.ToString(output.Path),
 				})
 				continue
 			}
