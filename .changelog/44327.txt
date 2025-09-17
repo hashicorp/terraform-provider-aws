@@ -1,0 +1,31 @@
+```release-note:enhancement
+resource/aws_organizations_account: Add `state` attribute
+```
+
+```release-note:note
+resource/aws_organizations_account: The `status` attribute is being deprecated in favor of the new `state` attribute to support granular account lifecycle management
+```
+
+```release-note:enhancement
+data-source/aws_organizations_organization: Add `state` attribute to `accounts` and `non_master_accounts` blocks.
+```
+
+```release-note:note
+data-source/aws_organizations_organization: The `status` attribute is being deprecated in favor of the new `state` attribute in `accounts` and `non_master_accounts` blocks.
+```
+
+```release-note:enhancement
+data-source/aws_organizations_organizational_unit_child_accounts: Add `state` attribute to `accounts` block.
+```
+
+```release-note:note
+data-source/aws_organizations_organizational_unit_child_accounts: The `status` attribute is being deprecated in favor of the new `state` attribute in `accounts` block.
+```
+
+```release-note:enhancement
+data-source/aws_organizations_organizational_unit_descendant_accounts: Add `state` attribute to `accounts` block.
+```
+
+```release-note:note
+data-source/aws_organizations_organizational_unit_descendant_accounts: The `status` attribute is being deprecated in favor of the new `state` attribute in `accounts` block.
+```

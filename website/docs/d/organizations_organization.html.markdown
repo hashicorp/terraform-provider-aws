@@ -92,7 +92,7 @@ If the account is the master account or a delegated administrator for the organi
     * `email` - Email of the account
     * `id` - Identifier of the account
     * `name` - Name of the account
-    * `status` - Status of the account (**Deprecated** use `state` instead) 
+    * `status` - (**Deprecated** use `state` instead)Status of the account
     * `state` - State of the account
 * `aws_service_access_principals` - A list of AWS service principal names that have integration enabled with your organization. Organization must have `feature_set` set to `ALL`. For additional information, see the [AWS Organizations User Guide](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html).
 * `enabled_policy_types` - A list of Organizations policy types that are enabled in the Organization Root. Organization must have `feature_set` set to `ALL`. For additional information about valid policy types (e.g., `SERVICE_CONTROL_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
@@ -101,7 +101,7 @@ If the account is the master account or a delegated administrator for the organi
     * `email` - Email of the account
     * `id` - Identifier of the account
     * `name` - Name of the account
-    * `status` - Status of the account (**Deprecated** use `state` instead) 
+    * `status` - (**Deprecated** use `state` instead)Status of the account
     * `state` - State of the account
 * `roots` - List of organization roots. All elements have these attributes:
     * `arn` - ARN of the root
