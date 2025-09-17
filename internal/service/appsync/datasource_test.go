@@ -1223,16 +1223,10 @@ resource "aws_secretsmanager_secret_version" "test" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   engine              = %[2]q
-  engine_mode         = "serverless"
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
-
-  scaling_configuration {
-    min_capacity = 1
-    max_capacity = 2
-  }
 }
 
 resource "aws_iam_role" "test" {
