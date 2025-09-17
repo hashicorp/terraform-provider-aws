@@ -15,6 +15,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_batch_job_queue: Adds List support ([#43960](https://github.com/hashicorp/terraform-provider-aws/issues/43960))
 * resource/aws_rds_global_cluster: Remove provider-side conflict between `source_db_cluster_identifier` and `engine` arguments ([#44252](https://github.com/hashicorp/terraform-provider-aws/issues/44252))
 * resource/aws_scheduler_schedule: Add `action_after_completion` argument ([#44264](https://github.com/hashicorp/terraform-provider-aws/issues/44264))
 
