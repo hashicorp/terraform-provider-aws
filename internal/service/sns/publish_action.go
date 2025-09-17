@@ -35,12 +35,12 @@ type publishAction struct {
 }
 
 type publishActionModel struct {
+	framework.WithRegionModel
 	TopicArn          types.String                                           `tfsdk:"topic_arn"`
 	Message           types.String                                           `tfsdk:"message"`
 	Subject           types.String                                           `tfsdk:"subject"`
 	MessageStructure  types.String                                           `tfsdk:"message_structure"`
 	MessageAttributes fwtypes.ListNestedObjectValueOf[messageAttributeModel] `tfsdk:"message_attributes"`
-	Region            types.String                                           `tfsdk:"region"`
 }
 
 type messageAttributeModel struct {
