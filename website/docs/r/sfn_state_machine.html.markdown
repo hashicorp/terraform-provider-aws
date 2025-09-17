@@ -215,7 +215,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_sfn_state_machine.example
   identity = {
-    "arn" = "arn:aws:states:us-east-1:123456789012:stateMachine:MyWorkflow-2024-09-17-a7b3c8f1"
+    "arn" = "arn:aws:states:eu-west-1:123456789098:stateMachine:bar"
   }
 }
 
@@ -228,7 +228,7 @@ resource "aws_sfn_state_machine" "example" {
 
 #### Required
 
-- `arn` (String) ARN of the certificate.
+- `arn` (String) ARN of the state machine.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import State Machines using the `arn`. For example:
 

@@ -73,7 +73,6 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs20.x"
-{{- template "tags" }}
 }
 
 data "aws_region" "current" {
