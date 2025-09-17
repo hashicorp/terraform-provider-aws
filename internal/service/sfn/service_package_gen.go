@@ -51,6 +51,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Name:     "State Machine Versions",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  DataSourceStateMachines,
+			TypeName: "aws_sfn_state_machines",
+		},
 	}
 }
 
