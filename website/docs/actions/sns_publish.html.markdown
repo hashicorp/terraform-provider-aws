@@ -6,13 +6,13 @@ description: |-
   Publishes a message to an Amazon SNS topic.
 ---
 
+~> **Note:** `aws_sns_publish` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
+
 # Action: aws_sns_publish
 
 Publishes a message to an Amazon SNS topic. This action allows for imperative message publishing with full control over message attributes and structure.
 
 For information about Amazon SNS, see the [Amazon SNS Developer Guide](https://docs.aws.amazon.com/sns/latest/dg/). For specific information about publishing messages, see the [Publish](https://docs.aws.amazon.com/sns/latest/api/API_Publish.html) page in the Amazon SNS API Reference.
-
-~> **Note:** `aws_sns_publish` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
 
 ## Example Usage
 
