@@ -34,6 +34,7 @@ type sendEmailAction struct {
 }
 
 type sendEmailActionModel struct {
+	framework.WithRegionModel
 	Source           types.String                      `tfsdk:"source"`
 	ToAddresses      fwtypes.ListValueOf[types.String] `tfsdk:"to_addresses"`
 	CcAddresses      fwtypes.ListValueOf[types.String] `tfsdk:"cc_addresses"`
@@ -43,7 +44,6 @@ type sendEmailActionModel struct {
 	HtmlBody         types.String                      `tfsdk:"html_body"`
 	ReplyToAddresses fwtypes.ListValueOf[types.String] `tfsdk:"reply_to_addresses"`
 	ReturnPath       types.String                      `tfsdk:"return_path"`
-	Region           types.String                      `tfsdk:"region"`
 }
 
 func (a *sendEmailAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
