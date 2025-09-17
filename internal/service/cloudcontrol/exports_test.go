@@ -7,5 +7,5 @@ package cloudcontrol
 var (
 	ResourceResource = resourceResource
 
-	FindResource = findResource
+	FindResourceByFourPartKey = findResourceByFourPartKey
 )

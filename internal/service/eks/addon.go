@@ -168,7 +168,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateAddon(ctx, input)
 		},
 		func(err error) (bool, error) {
