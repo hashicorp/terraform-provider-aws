@@ -6,9 +6,9 @@ description: |-
   Sends an email using Amazon SES.
 ---
 
-~> **Note:** `aws_ses_send_email` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 # Action: aws_ses_send_email
+
+~> **Note:** `aws_ses_send_email` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
 
 Sends an email using Amazon SES. This action allows for imperative email sending with full control over recipients, content, and formatting.
 
