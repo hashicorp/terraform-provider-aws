@@ -41,6 +41,7 @@ func TestAccBudgetsBudgetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "budget_limit.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "billing_view_arn", resourceName, "billing_view_arn"),
 				),
 			},
 		},

@@ -63,7 +63,7 @@ func resourceTableItem() *schema.Resource {
 func validateTableItem(v any, k string) (ws []string, errors []error) {
 	_, err := expandTableItemAttributes(v.(string))
 	if err != nil {
-		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
+		errors = append(errors, fmt.Errorf("Invalid format of %q: %w", k, err))
 	}
 	return
 }

@@ -543,10 +543,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.actions[typeName] = d
 				}
 
-				if d.HasV6_0SDKv2Fix {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Actions: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
 			case "EphemeralResource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

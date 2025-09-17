@@ -563,7 +563,7 @@ func validateSchemaRegionForEphemeralResource(regionSpec unique.Handle[inttypes.
 
 func validateSchemaRegionForAction(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schemaIface any) error {
 	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
-		if schema, ok := schemaIface.(aschema.UnlinkedSchema); ok {
+		if schema, ok := schemaIface.(aschema.Schema); ok {
 			if _, ok := schema.Attributes[names.AttrRegion]; ok {
 				return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
 			}

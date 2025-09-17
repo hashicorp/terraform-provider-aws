@@ -490,7 +490,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
+* `outputColumns` - The final set of columns available for use in analyses and dashboards after all data preparation and transformation steps have been applied within the data set.  See [`outputColumns` Block](#output_columns-block) below.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+### `outputColumns` Block
+
+The `outputColumns` block has the following attributes.
+
+* `name` - The name of the column.
+* `description` - The description of the column.
+* `type` - The data type of the column.
 
 ## Import
 
@@ -524,4 +533,4 @@ Using `terraform import`, import a QuickSight Data Set using the AWS account ID 
 % terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-95551219e5b8f73ab684a2387411ce662f52d58ed0422224a0fa360bfc24e23e -->
+<!-- cache-key: cdktf-0.20.8 input-f035344646486e0f88c6d327cdb93202b27225c1e97186c64ecdd755d557d4ee -->
