@@ -47,7 +47,7 @@ type sendEmailActionModel struct {
 }
 
 func (a *sendEmailAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
-	resp.Schema = schema.UnlinkedSchema{
+	resp.Schema = schema.Schema{
 		Description: "Sends an email using Amazon SES. This action allows for imperative email sending with full control over recipients, content, and formatting.",
 		Attributes: map[string]schema.Attribute{
 			names.AttrSource: schema.StringAttribute{
