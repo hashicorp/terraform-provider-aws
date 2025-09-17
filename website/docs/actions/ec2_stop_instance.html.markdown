@@ -24,7 +24,7 @@ For information about Amazon EC2, see the [Amazon EC2 User Guide](https://docs.a
 resource "aws_instance" "example" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
-  
+
   tags = {
     Name = "example-instance"
   }
@@ -55,7 +55,7 @@ action "aws_ec2_stop_instance" "force_stop" {
 resource "aws_instance" "web_server" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
-  
+
   tags = {
     Name = "web-server"
   }
