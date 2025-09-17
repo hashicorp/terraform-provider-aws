@@ -46,6 +46,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newDataSourceNetworkPeeringConnection,
+			TypeName: "aws_odb_network_peering_connection",
+			Name:     "Network Peering Connection",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
@@ -73,6 +79,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newResourceNetworkPeeringConnection,
+			TypeName: "aws_odb_network_peering_connection",
+			Name:     "Network Peering Connection",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
