@@ -1,5 +1,5 @@
 ---
-subcategory: "SES (Simple Email Service)"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_send_email"
 description: |-
