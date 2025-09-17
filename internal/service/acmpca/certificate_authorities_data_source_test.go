@@ -146,6 +146,7 @@ data "aws_acmpca_certificate_authorities" "test" {
   depends_on = [
 	aws_ram_principal_association.test,
 	aws_ram_resource_association.test,
+	aws_acmpca_certificate_authority.test
   ]
 }
 `, rName, domain))
