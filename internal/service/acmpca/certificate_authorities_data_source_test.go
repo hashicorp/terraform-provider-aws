@@ -60,8 +60,8 @@ func testAccCertificateAuthoritiesDataSourceConfig_arn(domain1 string, domain2 s
 	return fmt.Sprintf(`
 data "aws_acmpca_certificate_authorities" "test" {
   depends_on = [
-	aws_acmpca_certificate_authority.test1,
-	aws_acmpca_certificate_authority.test2,
+    aws_acmpca_certificate_authority.test1,
+    aws_acmpca_certificate_authority.test2,
   ]
 }
 
@@ -140,13 +140,13 @@ resource "aws_ram_principal_association" "test" {
   resource_share_arn = aws_ram_resource_share.test.id
 }
 
-data "aws_acmpca_certificate_authorities" "test" { 
+data "aws_acmpca_certificate_authorities" "test" {
   resource_owner = "OTHER_ACCOUNTS"
 
   depends_on = [
-	aws_ram_principal_association.test,
-	aws_ram_resource_association.test,
-	aws_acmpca_certificate_authority.test
+    aws_ram_principal_association.test,
+    aws_ram_resource_association.test,
+    aws_acmpca_certificate_authority.test
   ]
 }
 `, rName, domain))
