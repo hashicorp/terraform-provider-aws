@@ -50,6 +50,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_saml_provider.example
+  identity = {
+    "arn" = "arn:aws:iam::123456789012:saml-provider/ExampleProvider"
+  }
+}
+
+resource "aws_iam_saml_provider" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IAM SAML provider.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM SAML Providers using the `arn`. For example:
 
 ```python
@@ -73,4 +94,4 @@ Using `terraform import`, import IAM SAML Providers using the `arn`. For example
 % terraform import aws_iam_saml_provider.default arn:aws:iam::123456789012:saml-provider/SAMLADFS
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e9450a2287d5fbbd96a01461a632b203b4d1d9ef618d8b90a0586e0b7762feb9 -->
+<!-- cache-key: cdktf-0.20.8 input-e18dbc958bd57d97d0f4cf1eca31fb41949d938c0193599ef813053682a30a7f -->
