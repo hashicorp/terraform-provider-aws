@@ -58,6 +58,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_inspector_assessment_target.example
+  identity = {
+    "arn" = "arn:aws:inspector:us-west-2:123456789012:target/0-12345678"
+  }
+}
+
+resource "aws_inspector_assessment_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Inspector assessment target.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
 
 ```typescript
@@ -88,4 +109,4 @@ Using `terraform import`, import Inspector Classic Assessment Targets using thei
 % terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c0ce9ee931838d61b9770f7d749286750d0e999701cb989ce47a5d3846f8d7f5 -->
+<!-- cache-key: cdktf-0.20.8 input-d65b2d3611f8967f26ec9e3f11d6ffe19a4f0f7b4c07faa0cb44d6e4dc063bfe -->

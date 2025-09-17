@@ -1,4 +1,5 @@
 resource "aws_ssm_document" "test" {
+{{- template "region" }}
   document_type = "Command"
   name          = var.rName
 

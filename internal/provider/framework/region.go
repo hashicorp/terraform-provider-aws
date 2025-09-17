@@ -372,17 +372,14 @@ type actionInjectRegionAttributeInterceptor struct{}
 func (a actionInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[action.SchemaRequest, action.SchemaResponse]) {
 	switch response, when := opts.response, opts.when; when {
 	case After:
-		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
-			if _, exists := schema.Attributes[names.AttrRegion]; !exists {
-				// Inject a top-level "region" attribute.
-				if schema.Attributes == nil {
-					schema.Attributes = make(map[string]aschema.Attribute)
-				}
-				schema.Attributes[names.AttrRegion] = aschema.StringAttribute{
-					Optional:    true,
-					Description: names.TopLevelRegionAttributeDescription,
-				}
-				response.Schema = schema
+		if _, exists := response.Schema.Attributes[names.AttrRegion]; !exists {
+			// Inject a top-level "region" attribute.
+			if response.Schema.Attributes == nil {
+				response.Schema.Attributes = make(map[string]aschema.Attribute)
+			}
+			response.Schema.Attributes[names.AttrRegion] = aschema.StringAttribute{
+				Optional:    true,
+				Description: names.TopLevelRegionAttributeDescription,
 			}
 		}
 	}

@@ -26,7 +26,7 @@ func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-nam
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.KeyspacesClient(ctx)
 	input := &keyspaces.ListKeyspacesInput{}

@@ -71,7 +71,7 @@ This data source supports the following arguments:
 * `name` - (Optional) Name of the resource share to retrieve.
 * `resourceOwner` (Required) Owner of the resource share. Valid values are `SELF` or `OTHER-ACCOUNTS`.
 * `resourceShareStatus` (Optional) Specifies that you want to retrieve details of only those resource shares that have this status. Valid values are `PENDING`, `ACTIVE`, `FAILED`, `DELETING`, and `DELETED`.
-* `filter` - (Optional) Filter used to scope the list e.g., by tags. See [related docs] (https://docs.aws.amazon.com/ram/latest/APIReference/API_TagFilter.html).
+* `filter` - (Optional) Filter used to scope the list of owned shares e.g., by tags. See [related docs] (https://docs.aws.amazon.com/ram/latest/APIReference/API_TagFilter.html).
     * `name` - (Required) Name of the tag key to filter on.
     * `values` - (Required) Value of the tag key.
 
@@ -86,4 +86,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the resource share.
 * `tags` - Tags attached to the resource share.
 
-<!-- cache-key: cdktf-0.20.8 input-1a54056f53b04009eabb57d01321511da1d7cadbba4a98a1d1030e39f30f5a3c -->
+<!-- cache-key: cdktf-0.20.8 input-757c2579457230ad697ecefffd87a476b6516edcc18cacf9e032cb9b4559e47f -->

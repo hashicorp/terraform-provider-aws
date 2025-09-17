@@ -187,7 +187,7 @@ The `ebs` block supports the following:
 
 The `capacityReservationSpecification` block supports the following:
 
-* `capacityReservationPreference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacityReservationPreference` - Indicates the instance's Capacity Reservation preferences. Can be `capacity-reservations-only`, `open` or `none`. If `capacityReservationId` or `capacityReservationResourceGroupArn` is specified in `capacityReservationTarget` block, either omit `capacityReservationPreference` or set it to `capacity-reservations-only`.
 * `capacityReservationTarget` - Used to target a specific Capacity Reservation:
 
 The `capacityReservationTarget` block supports the following:
@@ -462,7 +462,8 @@ The `placement` block supports the following:
 
 * `affinity` - (Optional) The affinity setting for an instance on a Dedicated Host.
 * `availabilityZone` - (Optional) The Availability Zone for the instance.
-* `groupName` - (Optional) The name of the placement group for the instance.
+* `groupId` - (Optional) The ID of the placement group for the instance. Conflicts with `groupName`.
+* `groupName` - (Optional) The name of the placement group for the instance. Conflicts with `groupId`.
 * `hostId` - (Optional) The ID of the Dedicated Host for the instance.
 * `hostResourceGroupArn` - (Optional) The ARN of the Host Resource Group in which to launch instances.
 * `spreadDomain` - (Optional) Reserved for future use.
@@ -523,4 +524,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4ffa57e8ec5beba3116c94160483bae640a9c25591c571d63feec060a7b15333 -->
+<!-- cache-key: cdktf-0.20.8 input-92d9977f8d1c5bc9b3b0021fb0d5d2f7dce3e91c7a647d9c0095fd0667e0d85b -->

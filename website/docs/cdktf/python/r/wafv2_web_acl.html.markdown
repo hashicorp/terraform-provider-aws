@@ -915,8 +915,8 @@ The `managed_rule_group_configs` block support the following arguments:
 ### `json` Block
 
 * `identifier` (Required) The identifier for the value to match against in the JSON.
-* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
-* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
+* `success_values` (Required) Strings in the response JSON that indicate a successful login attempt.
+* `failure_values` (Required) Strings in the response JSON that indicate a failed login attempt.
 
 ### `status_code` Block
 
@@ -929,7 +929,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `ja3_fingerprint`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, `uri_fragment` or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
+~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `ja3_fingerprint`,`ja4_fingerprint`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, `uri_fragment` or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [`body`](#body-block) below for details.
@@ -1131,9 +1131,9 @@ The `custom_key` block supports the following arguments:
 * `forwarded_ip` - (Optional) Use the first IP address in an HTTP header as an aggregate key. See [`forwarded_ip`](#ratelimit-forwarded_ip-block) below for details.
 * `http_method` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `http_method`](#ratelimit-http_method-block) below for details.
 * `header` - (Optional) Use the value of a header in the request as an aggregate key. See [RateLimit `header`](#ratelimit-header-block) below for details.
-* `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [`RateLimit ip`](#ratelimit-ip-block) below for details.
-* `ja3_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja3_fingerprint-block) below for details.
-* `ja4_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja4_fingerprint-block) below for details.
+* `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [RateLimit `ip`](#ratelimit-ip-block) below for details.
+* `ja3_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [RateLimit ja3_fingerprint`](#ratelimit-ja3_fingerprint-block) below for details.
+* `ja4_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [RateLimit `ja4_fingerprint`](#ratelimit-ja4_fingerprint-block) below for details.
 * `label_namespace` - (Optional) Use the specified label namespace as an aggregate key. See [RateLimit `label_namespace`](#ratelimit-label_namespace-block) below for details.
 * `query_argument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `query_argument`](#ratelimit-query_argument-block) below for details.
 * `query_string` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `query_string`](#ratelimit-query_string-block) below for details.
