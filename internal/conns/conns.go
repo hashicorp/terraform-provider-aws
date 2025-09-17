@@ -5,6 +5,7 @@ package conns
 
 import (
 	"context"
+	"iter"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
@@ -32,6 +33,11 @@ type ServicePackageWithActions interface {
 type ServicePackageWithEphemeralResources interface {
 	ServicePackage
 	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
+}
+
+type ServicePackageWithFrameworkListResources interface {
+	ServicePackage
+	FrameworkListResources(context.Context) iter.Seq[*types.ServicePackageFrameworkListResource]
 }
 
 type (
