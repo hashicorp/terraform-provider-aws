@@ -6,13 +6,13 @@ description: |-
   Invokes an AWS Lambda function with the specified payload.
 ---
 
+~> **Note:** `aws_lambda_invoke` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
+
 # Action: aws_lambda_invoke
 
 Invokes an AWS Lambda function with the specified payload. This action allows for imperative invocation of Lambda functions with full control over invocation parameters.
 
 For information about AWS Lambda functions, see the [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/). For specific information about invoking Lambda functions, see the [Invoke](https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html) page in the AWS Lambda API Reference.
-
-~> **Note:** `aws_lambda_invoke` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
 
 ~> **Note:** Synchronous invocations will wait for the function to complete execution, while asynchronous invocations return immediately after the request is _accepted_.
 
