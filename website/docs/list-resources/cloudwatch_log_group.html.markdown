@@ -8,6 +8,8 @@ description: |-
 
 # List Resource: aws_cloudwatch_log_group
 
+~> **Note:** The `aws_cloudwatch_log_group` List Resource is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
+
 Lists CloudWatch Logs Log Group resources.
 
 ## Example Usage

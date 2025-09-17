@@ -8,6 +8,8 @@ description: |-
 
 # List Resource: aws_instance
 
+~> **Note:** The `aws_instance` List Resource is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
+
 Lists EC2 Instance resources.
 
 By default, EC2 Instances managed by an Auto Scaling Group and EC2 Instances in either the `terminated` or `shutting-down` state are excluded.
