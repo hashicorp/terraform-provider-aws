@@ -128,11 +128,14 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"two_way_channel_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(
 						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
+					),
+					stringvalidator.Any(
+						stringvalidator.RegexMatches(regexache.MustCompile(`^arn`), "must be a valid ARN"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^connect\.[a-z0-9-]+\.amazonaws.com$`), "Must be connect.{region}.amazonaws.com"),
 					),
 				},
 			},
@@ -390,7 +393,7 @@ type phoneNumberResourceModel struct {
 	Tags                      tftags.Map                                         `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                         `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                     `tfsdk:"timeouts"`
-	TwoWayChannelARN          fwtypes.ARN                                        `tfsdk:"two_way_channel_arn"`
+	TwoWayChannelARN          types.String                                       `tfsdk:"two_way_channel_arn"`
 	TwoWayEnabled             types.Bool                                         `tfsdk:"two_way_channel_enabled"`
 	TwoWayChannelRole         fwtypes.ARN                                        `tfsdk:"two_way_channel_role"`
 }
