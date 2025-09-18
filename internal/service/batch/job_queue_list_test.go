@@ -57,7 +57,7 @@ func TestAccBatchJobQueue_List_Basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
+				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_batch_job_queue.test", map[string]knownvalue.Check{
 						names.AttrARN: tfknownvalue.RegionalARNExact("batch", "job-queue/"+rName+"-0"),
 					}),
@@ -113,7 +113,7 @@ func TestAccBatchJobQueue_List_RegionOverride(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
-				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
+				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_batch_job_queue.test", map[string]knownvalue.Check{
 						names.AttrARN: tfknownvalue.RegionalARNAlternateRegionExact("batch", "job-queue/"+rName+"-0"),
 					}),

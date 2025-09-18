@@ -59,7 +59,7 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
-				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
+				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
@@ -127,7 +127,7 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
-				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
+				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
@@ -190,7 +190,7 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
-				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
+				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
@@ -241,10 +241,10 @@ func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ConfigQueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectLength("aws_instance.excluded", knownvalue.Int64Exact(0)),
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_instance.excluded", 0),
 
-					querycheck.ExpectLength("aws_instance.included", knownvalue.Int64Exact(1)),
+					querycheck.ExpectLength("aws_instance.included", 1),
 				},
 			},
 		},
