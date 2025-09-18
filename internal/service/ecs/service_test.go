@@ -3896,7 +3896,7 @@ resource "aws_ecs_service" "test" {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["TEST_TRAFFIC_SHIFT", "POST_PRODUCTION_TRAFFIC_SHIFT"]
-      hook_details     = jsonencode("Test string")
+      hook_details     = "Test string"
     }
   }
 
