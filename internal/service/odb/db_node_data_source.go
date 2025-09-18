@@ -41,12 +41,12 @@ func (d *dataSourceDbNode) Schema(ctx context.Context, req datasource.SchemaRequ
 			"cloud_vm_cluster_id": schema.StringAttribute{
 				Required: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed:    true,
 				CustomType:  fwtypes.StringEnumType[odbtypes.ResourceStatus](),
 				Description: "The current status of the DB node.",
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed:    true,
 				Description: "Additional information about the status of the DB node.",
 			},
@@ -115,7 +115,7 @@ func (d *dataSourceDbNode) Schema(ctx context.Context, req datasource.SchemaRequ
 				Computed:    true,
 				Description: "The size (in GB) of the block storage volume allocation for the DB system.",
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
 				Computed:    true,
 				Description: "The date and time when the DB node was created.",

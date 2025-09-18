@@ -59,12 +59,12 @@ func (d *dataSourceDbServer) Schema(ctx context.Context, req datasource.SchemaRe
 				CustomType:  fwtypes.StringEnumType[odbtypes.ComputeModel](),
 				Description: " The compute model of the database server.",
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[odbtypes.ResourceStatus](),
 				Computed:    true,
 				Description: "The status of the database server.",
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed:    true,
 				Description: "Additional information about the current status of the database server.",
 			},
@@ -82,7 +82,7 @@ func (d *dataSourceDbServer) Schema(ctx context.Context, req datasource.SchemaRe
 				Description: "The scheduling details for the quarterly maintenance window. Patching and\n" +
 					"system updates take place during the maintenance window.",
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Computed:    true,
 				Description: "The display name of the database server.",
 			},
@@ -119,7 +119,7 @@ func (d *dataSourceDbServer) Schema(ctx context.Context, req datasource.SchemaRe
 				Description: "The shape of the database server. The shape determines the amount of CPU, " +
 					"storage, and memory resources available.",
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the database server was created.",
