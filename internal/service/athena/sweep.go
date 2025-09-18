@@ -158,7 +158,8 @@ func sweepDatabases(region string) error {
 				page, err := pages.NextPage(ctx)
 
 				if err != nil {
-					continue
+					log.Printf("[WARN] Skipping Athena Database sweep for Data Catalog %q in %s: %s", catalogName, region, err)
+					break
 				}
 
 				for _, v := range page.DatabaseList {
