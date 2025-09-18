@@ -1,0 +1,15 @@
+```release-note:new-data-source
+aws_odb_cloud_autonomous_vm_clusters_list
+```
+
+```release-note:new-data-source
+aws_odb_cloud_exadata_infrastructures_list
+```
+
+```release-note:new-data-source
+aws_odb_cloud_vm_clusters_list
+```
+
+```release-note:new-data-source
+aws_odb_networks_list
+```
