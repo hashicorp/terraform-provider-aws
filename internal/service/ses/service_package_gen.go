@@ -17,6 +17,17 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newSendEmailAction,
+			TypeName: "aws_ses_send_email",
+			Name:     "Send Email",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{}
 }

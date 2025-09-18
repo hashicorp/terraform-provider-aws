@@ -59,6 +59,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_auditmanager_assessment",
 			"aws_batch_compute_environment",
+			"aws_bedrockagent_agent",
 			"aws_cloudformation_stack_set_instance",
 			"aws_cognito_user_pool",
 			"aws_config_configuration_aggregator",
@@ -661,6 +662,7 @@ func roleNameFilter(name string) bool {
 	// exhaustive list.
 	prefixes := []string{
 		"another_rds",
+		"AmazonBedrockExecutionRoleForAgents", // Required role name prefix
 		"AmazonComprehendServiceRole-",
 		"aws_batch_service_role",
 		"aws_elastictranscoder_pipeline_tf_test",
