@@ -241,6 +241,7 @@ The `lifecycle_hook` configuration block supports the following:
 * `hook_target_arn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
 * `role_arn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
 * `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
+* `hook_details` - (Optional) Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
 
 ### deployment_circuit_breaker
 

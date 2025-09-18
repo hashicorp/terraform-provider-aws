@@ -415,7 +415,7 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 	}
 }
 
-func (p *frameworkProvider) ListResources(ctx context.Context) []func() list.ListResource {
+func (p *frameworkProvider) ListResources(_ context.Context) []func() list.ListResource {
 	return slices.Clone(p.listResources)
 }
 
@@ -444,6 +444,13 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			for listResourceSpec := range v.FrameworkListResources(ctx) {
 				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
 					return newWrappedListResourceFramework(listResourceSpec, servicePackageName)
+				})
+			}
+		}
+		if v, ok := sp.(conns.ServicePackageWithSDKListResources); ok {
+			for listResourceSpec := range v.SDKListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResourceSDK(listResourceSpec, servicePackageName)
 				})
 			}
 		}

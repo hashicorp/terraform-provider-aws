@@ -115,6 +115,20 @@ type ServicePackageSDKResource struct {
 	Import   SDKv2Import
 }
 
+type ListResourceForSDK interface {
+	list.ListResourceWithRawV5Schemas
+	list.ListResourceWithConfigure
+}
+
+type ServicePackageSDKListResource struct {
+	Factory  func() ListResourceForSDK
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
 type Identity struct {
 	IsGlobalResource       bool   // All
 	IsSingleton            bool   // Singleton
@@ -422,4 +436,8 @@ type SDKv2Import struct {
 	WrappedImport bool
 	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
+}
+
+type SDKv2Tagger interface {
+	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
 }
