@@ -120,6 +120,48 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
+### Linear Deployment Strategy
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name    = "example"
+  cluster = aws_ecs_cluster.example.id
+
+  # ... other configurations ...
+
+  deployment_configuration {
+    strategy              = "LINEAR"
+    bake_time_in_minutes = 10
+
+    linear_configuration {
+      step_percent              = 25.0
+      step_bake_time_in_minutes = 5
+    }
+  }
+}
+```
+
+### Canary Deployment Strategy
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name    = "example"
+  cluster = aws_ecs_cluster.example.id
+
+  # ... other configurations ...
+
+  deployment_configuration {
+    strategy              = "CANARY"
+    bake_time_in_minutes = 15
+
+    canary_configuration {
+      canary_percent              = 10.0
+      canary_bake_time_in_minutes = 5
+    }
+  }
+}
+```
+
 ### Redeploy Service On Every Apply
 
 The key used with `triggers` is arbitrary.
@@ -230,8 +272,10 @@ The `capacity_provider_strategy` configuration block supports the following:
 
 The `deployment_configuration` configuration block supports the following:
 
-* `strategy` - (Optional) Type of deployment strategy. Valid values: `ROLLING`, `BLUE_GREEN`. Default: `ROLLING`.
-* `bake_time_in_minutes` - (Optional) Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Only used when `strategy` is set to `BLUE_GREEN`.
+* `strategy` - (Optional) Type of deployment strategy. Valid values: `ROLLING`, `BLUE_GREEN`, `LINEAR`, `CANARY`. Default: `ROLLING`.
+* `bake_time_in_minutes` - (Optional) Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Valid range: 0-1440 minutes. Used with `BLUE_GREEN`, `LINEAR`, and `CANARY` strategies.
+* `linear_configuration` - (Optional) Configuration block for linear deployment strategy. Required when `strategy` is set to `LINEAR`. [See below](#linear_configuration).
+* `canary_configuration` - (Optional) Configuration block for canary deployment strategy. Required when `strategy` is set to `CANARY`. [See below](#canary_configuration).
 * `lifecycle_hook` - (Optional) Configuration block for lifecycle hooks that are invoked during deployments. [See below](#lifecycle_hook).
 
 ### lifecycle_hook
@@ -241,6 +285,20 @@ The `lifecycle_hook` configuration block supports the following:
 * `hook_target_arn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
 * `role_arn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
 * `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
+
+### linear_configuration
+
+The `linear_configuration` configuration block supports the following:
+
+* `step_percent` - (Required) Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
+* `step_bake_time_in_minutes` - (Optional) Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
+
+### canary_configuration
+
+The `canary_configuration` configuration block supports the following:
+
+* `canary_percent` - (Required) Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
+* `canary_bake_time_in_minutes` - (Optional) Number of minutes to wait before shifting all traffic to the new deployment. Valid range: 0-1440 minutes.
 
 ### deployment_circuit_breaker
 
