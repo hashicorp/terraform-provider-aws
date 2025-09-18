@@ -23,13 +23,12 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 				),
 			},
 		},
@@ -37,72 +36,9 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 }
 
 func testAccDeliveryStreamDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "firehose" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "firehose.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "firehose" {
-  name = %[1]q
-  role = aws_iam_role.firehose.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Action": [
-        "s3:AbortMultipartUpload",
-        "s3:GetBucketLocation",
-        "s3:GetObject",
-        "s3:ListBucket",
-        "s3:ListBucketMultipartUploads",
-        "s3:PutObject"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.bucket.arn}",
-        "${aws_s3_bucket.bucket.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "logs:putLogEvents"
-      ],
-      "Resource": [
-        "arn:${data.aws_partition.current.partition}:logs::log-group:/aws/kinesisfirehose/*"
-      ]
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = %[1]q
   destination = "extended_s3"
 
@@ -115,5 +51,5 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 data "aws_kinesis_firehose_delivery_stream" "test" {
   name = aws_kinesis_firehose_delivery_stream.test.name
 }
-`, rName)
+`, rName))
 }
