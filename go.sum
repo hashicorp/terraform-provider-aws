@@ -219,8 +219,8 @@ github.com/aws/aws-sdk-go-v2/service/dsql v1.9.6 h1:hgRu1NFDnCR5V0FkuGiI7WB9xR/x
 github.com/aws/aws-sdk-go-v2/service/dsql v1.9.6/go.mod h1:/ApNiCtQwiyM/KNe14Q9wkQ4zN5HqECXea86ADGRCCQ=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.3 h1:fbhq/XgBDNAVreNMY8E7JWxlqeHH8O3UAunPvV9XY5A=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.3/go.mod h1:lXFSTFpnhgc8Qb/meseIt7+UXPiidZm0DbiDqmPHBTQ=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.251.2 h1:6TssXFfLHcwUS5E3MdYKkCFeOrYVBlDhJjs5kRJp0ic=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.251.2/go.mod h1:MXJiLJZtMqb2dVXgEIn35d5+7MqLd4r8noLen881kpk=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.252.0 h1:4C/MhyZWR0Bk+7QLVvNxa4xhwEnqm1KclA5MCMepjF0=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.252.0/go.mod h1:MXJiLJZtMqb2dVXgEIn35d5+7MqLd4r8noLen881kpk=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.50.3 h1:phfqjO8ebHGoC/GrjHcuTrVkDCeM9A6atOYTCY1XsXo=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.50.3/go.mod h1:TbUfC2wbI144ak0zMJoQ2zjPwGaw1/Kt3SXI138wcoY=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.4 h1:/HxbCJjqyO4eJ1FCVnvUJtXbWOnG217jMpkYaTUP6V8=
@@ -379,8 +379,8 @@ github.com/aws/aws-sdk-go-v2/service/neptune v1.42.2 h1:CM7nhsuvZf0mCv6TMqG5tzKU
 github.com/aws/aws-sdk-go-v2/service/neptune v1.42.2/go.mod h1:88XuulV9AwKNmG/7hAyByJoWghbrch+qltar7syXoG4=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.3 h1:jrJGbbokc3KIB6IzSB/JJuQOwWHqdWmZpkEEl/Zmyf0=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.3/go.mod h1:wmNqMkTjyx6wPaHH0SiSCCg812AzFJ9QFnfHCMvraxs=
-github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.55.3 h1:OkuKInB52h0/mW5Z1OkIkQ+umda8vxpcMkUkF+/AoPI=
-github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.55.3/go.mod h1:6x2e0M/7Z9XzPqgOvTZcwCNbjN761VJbIui3Zx0pEXs=
+github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.56.0 h1:ddZd2siH+HpBu1T9QKFXVX/mL9qe13xWeRrkPz5Ddwk=
+github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.56.0/go.mod h1:6x2e0M/7Z9XzPqgOvTZcwCNbjN761VJbIui3Zx0pEXs=
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.39.5 h1:e/d9+n5bKYXCR6A6xuqWoFVsDEm5FNJh526rS1sXyC4=
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.39.5/go.mod h1:tt09THrgGMdWj38DuEy5rakTOgHaA/G4V3o6f/ChiTo=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.12.4 h1:idjLJX03bHXAly/JajH7FDi1LnTjm+vz1Bm74l3+5jo=
@@ -407,8 +407,8 @@ github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.25.0 h1:Xa+1EAhqSQXN
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.25.0/go.mod h1:oTU8PgBAPmgXqcGNysGtsvHSVaB1t70POQWzrvvzekM=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.4 h1:fSfw+4bF7B23fCjB63HZOVsJmAYMz3SIcCK28B6kvPk=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.4/go.mod h1:niQNNLiBhOtmIZdsx+ysgpmltLaENic1qZC0l+eMDyY=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.12.4 h1:3btzBHLKRPz9ecnk0EIE+EAGbMtl99x2VWdTflAml2k=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.12.4/go.mod h1:cSG0ngVM0DDPX0ETny4wHuT8pNvmYNd4pGEAS7DpMfc=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.13.0 h1:SPpe4DXZI8Vvqzt+uDS/FwesOLlj2t0Ht4s+5ZteWaM=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.13.0/go.mod h1:cSG0ngVM0DDPX0ETny4wHuT8pNvmYNd4pGEAS7DpMfc=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.4 h1:qMVA3qezunrP0ZIvF75T8ktwA20HBXlBsHwR1U0A0H8=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.4/go.mod h1:+JWai1T8zNQiXaPy5fVSKClFUnVMU6YbWxl9yaNkuJs=
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.25.3 h1:yQLjzkSYNfTFg0W03zmAvhykcAVCIoupphhKb9LKbWY=
