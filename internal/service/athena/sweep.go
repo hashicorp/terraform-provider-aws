@@ -103,7 +103,7 @@ func sweepDataCatalogs(region string) error {
 			name := aws.ToString(v.CatalogName)
 
 			if name == "AwsDataCatalog" {
-				log.Printf("[INFO] Skipping Athena Data Catalog %s", name)
+				log.Printf("[INFO] Skipping Athena Data Catalog %q", name)
 				continue
 			}
 
