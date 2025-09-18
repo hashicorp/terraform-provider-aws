@@ -322,7 +322,7 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if instanceID := d.Get("spot_instance_id").(string); instanceID != "" {
-		if err := terminateInstance(ctx, conn, instanceID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		if err := terminateInstance(ctx, conn, instanceID, false, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
