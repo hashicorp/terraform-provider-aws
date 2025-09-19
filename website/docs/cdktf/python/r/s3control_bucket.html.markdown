@@ -61,7 +61,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_s3control_bucket.example
   identity = {
-    "arn" = "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-01234567890abcdef/bucket/my-outpost-bucket"
+    "arn" = "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example"
   }
 }
 
@@ -74,7 +74,7 @@ resource "aws_s3control_bucket" "example" {
 
 #### Required
 
-- `arn` (String) ARN of the certificate.
+- `arn` (String) ARN of the bucket.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Buckets using Amazon Resource Name (ARN). For example:
 
