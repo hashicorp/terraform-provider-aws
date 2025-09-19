@@ -7,6 +7,8 @@
 * **New Ephemeral Resource:** `{{.Body}}` ([#{{- .Issue -}}](https://github.com/hashicorp/terraform-provider-aws/issues/{{- .Issue -}}))
 {{- else if eq "new-function" .Type -}}
 * **New Function:** `{{.Body}}` ([#{{- .Issue -}}](https://github.com/hashicorp/terraform-provider-aws/issues/{{- .Issue -}}))
+{{- else if eq "new-action" .Type -}}
+* **New Action:** `{{.Body}}` ([#{{- .Issue -}}](https://github.com/hashicorp/terraform-provider-aws/issues/{{- .Issue -}}))
 {{- else if eq "new-guide" .Type -}}
 * **New Guide:** `{{.Body}}` ([#{{- .Issue -}}](https://github.com/hashicorp/terraform-provider-aws/issues/{{- .Issue -}}))
 {{- else -}}
