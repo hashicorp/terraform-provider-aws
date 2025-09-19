@@ -48,11 +48,12 @@ This resource supports the following arguments:
 - `source_arn` (Required) ARN of the source resource (for zero‑ETL, typically a DynamoDB table ARN).
 - `target_arn` (Required) ARN of the target resource (for zero‑ETL, e.g., SageMaker Lakehouse target).
 - `description` (Optional) Description of the integration.
-- `region` (Optional) Region to target for resource operations. Defaults to provider region.
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be managed (https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the provider configuration (https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` – ARN of the integration.
 
@@ -66,8 +67,15 @@ The `timeouts` block supports the following:
 
 ## Import
 
-Glue inbound integrations can be imported by `arn`:
+Import Glue inbound integrations using the `arn`. For example:
 
-```sh
-terraform import aws_glue_inbound_integration.example arn:aws:glue:region:account:integration/ID
+```terraform
+import {
+  to = aws_glue_inbound_integration.example
+  id = "arn:aws:glue:region:account:integration/ID"
+}
+```
+
+```console
+% terraform import aws_glue_inbound_integration.example arn:aws:glue:region:account:integration/ID
 ```
