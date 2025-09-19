@@ -163,27 +163,27 @@ func (d *dataSourceDbServer) Read(ctx context.Context, req datasource.ReadReques
 
 type dbServerDataSourceModel struct {
 	framework.WithRegionModel
-	DbServerID                   types.String                                                        `tfsdk:"id"`
-	CloudExadataInfrastructureID types.String                                                        `tfsdk:"cloud_exadata_infrastructure_id"`
-	Status                       fwtypes.StringEnum[odbtypes.ResourceStatus]                         `tfsdk:"status"`
-	StatusReason                 types.String                                                        `tfsdk:"status_reason"`
-	CpuCoreCount                 types.Int32                                                         `tfsdk:"cpu_core_count"`
-	DbNodeStorageSizeInGBs       types.Int32                                                         `tfsdk:"db_node_storage_size_in_gbs"`
-	DbServerPatchingDetails      fwtypes.ObjectValueOf[dbNodePatchingDetailsDbServerDataSourceModel] `tfsdk:"db_server_patching_details"`
-	DisplayName                  types.String                                                        `tfsdk:"display_name"`
-	ExadataInfrastructureId      types.String                                                        `tfsdk:"exadata_infrastructure_id"`
-	OCID                         types.String                                                        `tfsdk:"ocid"`
-	OciResourceAnchorName        types.String                                                        `tfsdk:"oci_resource_anchor_name"`
-	MaxCpuCount                  types.Int32                                                         `tfsdk:"max_cpu_count"`
-	MaxDbNodeStorageInGBs        types.Int32                                                         `tfsdk:"max_db_node_storage_in_gbs"`
-	MaxMemoryInGBs               types.Int32                                                         `tfsdk:"max_memory_in_gbs"`
-	MemorySizeInGBs              types.Int32                                                         `tfsdk:"memory_size_in_gbs"`
-	Shape                        types.String                                                        `tfsdk:"shape"`
-	CreatedAt                    timetypes.RFC3339                                                   `tfsdk:"created_at" `
-	VmClusterIds                 fwtypes.ListOfString                                                `tfsdk:"vm_cluster_ids"`
-	ComputeModel                 fwtypes.StringEnum[odbtypes.ComputeModel]                           `tfsdk:"compute_model"`
-	AutonomousVmClusterIds       fwtypes.ListOfString                                                `tfsdk:"autonomous_vm_cluster_ids"`
-	AutonomousVirtualMachineIds  fwtypes.ListOfString                                                `tfsdk:"autonomous_virtual_machine_ids"`
+	DbServerID                   types.String                                                                  `tfsdk:"id"`
+	CloudExadataInfrastructureID types.String                                                                  `tfsdk:"cloud_exadata_infrastructure_id"`
+	Status                       fwtypes.StringEnum[odbtypes.ResourceStatus]                                   `tfsdk:"status"`
+	StatusReason                 types.String                                                                  `tfsdk:"status_reason"`
+	CpuCoreCount                 types.Int32                                                                   `tfsdk:"cpu_core_count"`
+	DbNodeStorageSizeInGBs       types.Int32                                                                   `tfsdk:"db_node_storage_size_in_gbs"`
+	DbServerPatchingDetails      fwtypes.ListNestedObjectValueOf[dbNodePatchingDetailsDbServerDataSourceModel] `tfsdk:"db_server_patching_details"`
+	DisplayName                  types.String                                                                  `tfsdk:"display_name"`
+	ExadataInfrastructureId      types.String                                                                  `tfsdk:"exadata_infrastructure_id"`
+	OCID                         types.String                                                                  `tfsdk:"ocid"`
+	OciResourceAnchorName        types.String                                                                  `tfsdk:"oci_resource_anchor_name"`
+	MaxCpuCount                  types.Int32                                                                   `tfsdk:"max_cpu_count"`
+	MaxDbNodeStorageInGBs        types.Int32                                                                   `tfsdk:"max_db_node_storage_in_gbs"`
+	MaxMemoryInGBs               types.Int32                                                                   `tfsdk:"max_memory_in_gbs"`
+	MemorySizeInGBs              types.Int32                                                                   `tfsdk:"memory_size_in_gbs"`
+	Shape                        types.String                                                                  `tfsdk:"shape"`
+	CreatedAt                    timetypes.RFC3339                                                             `tfsdk:"created_at" `
+	VmClusterIds                 fwtypes.ListOfString                                                          `tfsdk:"vm_cluster_ids"`
+	ComputeModel                 fwtypes.StringEnum[odbtypes.ComputeModel]                                     `tfsdk:"compute_model"`
+	AutonomousVmClusterIds       fwtypes.ListOfString                                                          `tfsdk:"autonomous_vm_cluster_ids"`
+	AutonomousVirtualMachineIds  fwtypes.ListOfString                                                          `tfsdk:"autonomous_virtual_machine_ids"`
 }
 
 type dbNodePatchingDetailsDbServerDataSourceModel struct {
