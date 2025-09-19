@@ -144,20 +144,10 @@ func (r *integrationTablePropertiesResource) Create(ctx context.Context, req res
 		TableName:   data.TableName.ValueStringPointer(),
 	}
 	if data.Source != nil {
-		var stc awstypes.SourceTableConfig
-		resp.Diagnostics.Append(flex.Expand(ctx, data.Source, &stc)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.SourceTableConfig = &stc
+		input.SourceTableConfig = expandSourceTableConfig(ctx, data.Source)
 	}
 	if data.Target != nil {
-		var ttc awstypes.TargetTableConfig
-		resp.Diagnostics.Append(flex.Expand(ctx, data.Target, &ttc)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.TargetTableConfig = &ttc
+		input.TargetTableConfig = expandTargetTableConfig(ctx, data.Target)
 	}
 
 	_, err := conn.CreateIntegrationTableProperties(ctx, &input)
@@ -189,20 +179,12 @@ func (r *integrationTablePropertiesResource) Read(ctx context.Context, req resou
 
 	// Flatten
 	if out.SourceTableConfig != nil {
-		var m sourceTableConfigModel
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.SourceTableConfig, &m)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Source = &m
+		d := flattenSourceTableConfig(ctx, out.SourceTableConfig)
+		data.Source = &d
 	}
 	if out.TargetTableConfig != nil {
-		var m targetTableConfigModel
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.TargetTableConfig, &m)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Target = &m
+		d := flattenTargetTableConfig(ctx, out.TargetTableConfig)
+		data.Target = &d
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -231,20 +213,10 @@ func (r *integrationTablePropertiesResource) Update(ctx context.Context, req res
 		TableName:   new.TableName.ValueStringPointer(),
 	}
 	if new.Source != nil {
-		var stc awstypes.SourceTableConfig
-		resp.Diagnostics.Append(flex.Expand(ctx, new.Source, &stc)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.SourceTableConfig = &stc
+		input.SourceTableConfig = expandSourceTableConfig(ctx, new.Source)
 	}
 	if new.Target != nil {
-		var ttc awstypes.TargetTableConfig
-		resp.Diagnostics.Append(flex.Expand(ctx, new.Target, &ttc)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.TargetTableConfig = &ttc
+		input.TargetTableConfig = expandTargetTableConfig(ctx, new.Target)
 	}
 
 	_, err := conn.UpdateIntegrationTableProperties(ctx, &input)
@@ -286,4 +258,68 @@ func (r *integrationTablePropertiesResource) ImportState(ctx context.Context, re
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrTableName), types.StringValue(parts[1]))...)
 }
 
-// NOTE: manual expand/flatten removed in favor of flex.Expand/flex.Flatten
+// Manual expand/flatten helpers for nested configs
+func expandSourceTableConfig(ctx context.Context, m *sourceTableConfigModel) *awstypes.SourceTableConfig { // nosemgrep:ci.semgrep.framework.manual-expander-functions
+	cfg := &awstypes.SourceTableConfig{}
+	if !m.Fields.IsNull() && !m.Fields.IsUnknown() {
+		cfg.Fields = flex.ExpandFrameworkStringValueList(ctx, m.Fields)
+	}
+	if !m.FilterPredicate.IsNull() && !m.FilterPredicate.IsUnknown() {
+		cfg.FilterPredicate = m.FilterPredicate.ValueStringPointer()
+	}
+	if !m.PrimaryKey.IsNull() && !m.PrimaryKey.IsUnknown() {
+		cfg.PrimaryKey = flex.ExpandFrameworkStringValueList(ctx, m.PrimaryKey)
+	}
+	if !m.RecordUpdateField.IsNull() && !m.RecordUpdateField.IsUnknown() {
+		cfg.RecordUpdateField = m.RecordUpdateField.ValueStringPointer()
+	}
+	return cfg
+}
+
+func expandTargetTableConfig(ctx context.Context, m *targetTableConfigModel) *awstypes.TargetTableConfig { // nosemgrep:ci.semgrep.framework.manual-expander-functions
+	cfg := &awstypes.TargetTableConfig{}
+	if len(m.PartitionSpec) > 0 {
+		ps := make([]awstypes.IntegrationPartition, 0, len(m.PartitionSpec))
+		for _, p := range m.PartitionSpec {
+			ps = append(ps, awstypes.IntegrationPartition{
+				ConversionSpec: p.ConversionSpec.ValueStringPointer(),
+				FieldName:      p.FieldName.ValueStringPointer(),
+				FunctionSpec:   p.FunctionSpec.ValueStringPointer(),
+			})
+		}
+		cfg.PartitionSpec = ps
+	}
+	if !m.TargetTableName.IsNull() && !m.TargetTableName.IsUnknown() {
+		cfg.TargetTableName = m.TargetTableName.ValueStringPointer()
+	}
+	if !m.UnnestSpec.IsNull() && !m.UnnestSpec.IsUnknown() {
+		cfg.UnnestSpec = awstypes.UnnestSpec(m.UnnestSpec.ValueString())
+	}
+	return cfg
+}
+
+func flattenSourceTableConfig(ctx context.Context, in *awstypes.SourceTableConfig) sourceTableConfigModel { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+	var m sourceTableConfigModel
+	m.Fields = flex.FlattenFrameworkStringValueListOfString(ctx, in.Fields)
+	m.FilterPredicate = types.StringPointerValue(in.FilterPredicate)
+	m.PrimaryKey = flex.FlattenFrameworkStringValueListOfString(ctx, in.PrimaryKey)
+	m.RecordUpdateField = types.StringPointerValue(in.RecordUpdateField)
+	return m
+}
+
+func flattenTargetTableConfig(ctx context.Context, in *awstypes.TargetTableConfig) targetTableConfigModel { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+	var m targetTableConfigModel
+	if len(in.PartitionSpec) > 0 {
+		m.PartitionSpec = make([]partitionSpecModel, 0, len(in.PartitionSpec))
+		for _, p := range in.PartitionSpec {
+			m.PartitionSpec = append(m.PartitionSpec, partitionSpecModel{
+				ConversionSpec: types.StringPointerValue(p.ConversionSpec),
+				FieldName:      types.StringPointerValue(p.FieldName),
+				FunctionSpec:   types.StringPointerValue(p.FunctionSpec),
+			})
+		}
+	}
+	m.TargetTableName = types.StringPointerValue(in.TargetTableName)
+	m.UnnestSpec = types.StringValue(string(in.UnnestSpec))
+	return m
+}
