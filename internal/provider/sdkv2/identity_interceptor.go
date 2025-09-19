@@ -29,13 +29,8 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	case After:
 		switch why {
 		case Create, Read, Update:
-			// For Update operations on resources with immutable identity,
-			// still set identity if it has null values (e.g., after provider upgrade from pre-identity version)
-			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) {
-				// Skip setting identity unless it has null values
-				if !identityHasNullValues(d, r.identitySpec) {
-					break
-				}
+			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(d, r.identitySpec) {
+				break
 			}
 			if d.Id() == "" {
 				break
@@ -73,36 +68,21 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	return diags
 }
 
-// identityHasNullValues checks if ALL identity attributes are fully null,
-// which indicates the specific bug scenario from failed non-refresh applies.
-// See https://github.com/hashicorp/terraform-provider-aws/issues/44330
-//
-// The reported error occurs when all identity attributes are fully null due to
-// failed non-refresh applies (terraform apply -refresh=false) where the read op
-// does not have a chance to set identity before the failure.
-//
-// Returns true ONLY when ALL identity attributes are null/empty.
-// If any attribute has a value, we assume it was set by a previous Create/Read
-// and should not proceed with setting identity on Update.
-func identityHasNullValues(d schemaResourceData, identitySpec *inttypes.Identity) bool {
+// identityIsFullyNull returns true if a resource supports identity and
+// all attributes are set to null values
+func identityIsFullyNull(d schemaResourceData, identitySpec *inttypes.Identity) bool {
 	identity, err := d.Identity()
 	if err != nil {
-		// If we can't get identity at all, this is not the bug scenario
 		return false
 	}
 
-	// Check if ALL identity attributes are null/empty
-	// This matches the exact scenario described in the reproduction
 	for _, attr := range identitySpec.Attributes {
 		value := identity.Get(attr.Name())
 		if value != "" {
-			// Found a non-null value, so this is not the bug scenario
-			// The identity was set by a previous Create/Read op
 			return false
 		}
 	}
 
-	// All attributes are null - this is the bug scenario
 	return true
 }
 
@@ -120,14 +100,10 @@ func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 func newIdentityInterceptor(identitySpec *inttypes.Identity) interceptorInvocation {
 	interceptor := interceptorInvocation{
 		when: After,
-		why:  Create | Read,
+		why:  Create | Read | Update,
 		interceptor: identityInterceptor{
 			identitySpec: identitySpec,
 		},
-	}
-
-	if identitySpec.IsMutable && identitySpec.IsSetOnUpdate {
-		interceptor.why |= Update
 	}
 
 	return interceptor
