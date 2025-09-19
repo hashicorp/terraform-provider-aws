@@ -1006,8 +1006,8 @@ func TestAccIAMRole_Identity_ExistingResource_NoRefresh(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-				// We DON'T want this error. A fix should cause this test to begin failing.
-				ExpectError: regexache.MustCompile(`Missing Resource Identity After Update`),
+				// No error indicates the identity interceptor properly identified
+				// a fully null identity on update and set values appropriately.
 			},
 		},
 	})
@@ -1047,7 +1047,9 @@ func TestAccIAMRole_Identity_ExistingResource_NoRefreshFailure(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-				// We DON'T want this error. A fix should cause this test to begin failing.
+				// On an update failure, the identity interceptor is not executed and both
+				// the MalformedPolicyDocument error and a missing resource identity
+				// error will be present.
 				ExpectError: regexache.MustCompile(`Missing Resource Identity After Update`),
 			},
 		},
