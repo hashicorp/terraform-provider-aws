@@ -29,8 +29,13 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	case After:
 		switch why {
 		case Create, Read, Update:
+			// For Update operations on resources with immutable identity,
+			// still set identity if it has null values (e.g., after provider upgrade from pre-identity version)
 			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) {
-				break
+				// Skip setting identity unless it has null values
+				if !identityHasNullValues(d, r.identitySpec) {
+					break
+				}
 			}
 			if d.Id() == "" {
 				break
@@ -66,6 +71,41 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	}
 
 	return diags
+}
+
+// identityHasNullValues checks if the resource's identity contains any null values.
+// This typically occurs when a resource was created with a pre-identity version of the provider
+// and then upgraded to a version that supports identity, but a failed update operation
+// resulted in null identity values being written to state.
+//
+// Returns true only if identity data exists but contains null/empty values.
+// Returns false if no identity data exists at all (which is expected for some resources).
+func identityHasNullValues(d schemaResourceData, identitySpec *inttypes.Identity) bool {
+	identity, err := d.Identity()
+	if err != nil {
+		// If we can't get identity at all, this is not the null values bug
+		return false
+	}
+
+	// Check if identity data exists and has been initialized
+	hasAnyIdentityData := false
+	hasNullValues := false
+
+	// Check each identity attribute
+	for _, attr := range identitySpec.Attributes {
+		value := identity.Get(attr.Name())
+		if value != "" {
+			// Found non-empty value, so identity data exists
+			hasAnyIdentityData = true
+		} else {
+			// Found empty/null value
+			hasNullValues = true
+		}
+	}
+
+	// Only return true if identity data exists but some values are null
+	// This indicates the specific bug scenario we're trying to fix
+	return hasAnyIdentityData && hasNullValues
 }
 
 func getAttributeOk(d schemaResourceData, name string) (string, bool) {
