@@ -469,23 +469,23 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 		lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
 	)
 	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
-	err := retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, lifecycleConfigurationRulesSteadyTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if lastOutput == nil || !lifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
 			lastOutput = output
-			return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
+			return tfresource.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	if err != nil {
+		return
 	}
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -588,7 +588,7 @@ func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, reque
 	}
 
 	_, err := conn.DeleteBucketLifecycle(ctx, &input)
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeMethodNotAllowed) {
 		return
 	}
 	if err != nil {

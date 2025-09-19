@@ -4,7 +4,7 @@ rules:
     message: Do not call `UpdateTags` inside a resource create function, use `createTags` instead
     paths:
       include:
-        - internal/service/
+        - "/internal/service/"
     patterns:
       - pattern: |
           func $FUNC(...) {

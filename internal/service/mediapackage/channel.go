@@ -172,20 +172,18 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any
 	dcinput := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
 	}
-	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DescribeChannel(ctx, dcinput)
 		if err != nil {
 			var nfe *types.NotFoundException
 			if errors.As(err, &nfe) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
-		return retry.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
+		return tfresource.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeChannel(ctx, dcinput)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MediaPackage Channel (%s) deletion: %s", d.Id(), err)
 	}

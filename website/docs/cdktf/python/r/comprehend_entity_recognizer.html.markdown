@@ -166,6 +166,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_comprehend_entity_recognizer.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+  }
+}
+
+resource "aws_comprehend_entity_recognizer" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Comprehend entity recognizer.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Entity Recognizer using the ARN. For example:
 
 ```python
@@ -189,4 +210,4 @@ Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For
 % terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a322b23d77ddec60dd96293537854094550b4b3142e94fd0a14ebac19e3ef22e -->
+<!-- cache-key: cdktf-0.20.8 input-f7dc5b90fd174ae8fbfbb034157ad471936108443ed08f84d54701bfc1793c28 -->

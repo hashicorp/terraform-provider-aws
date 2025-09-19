@@ -41,7 +41,7 @@ func sweepCompositeAlarms(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.DescribeAlarmsInput{
@@ -84,7 +84,7 @@ func sweepDashboards(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.ListDashboardsInput{}
@@ -125,7 +125,7 @@ func sweepMetricAlarms(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.DescribeAlarmsInput{
@@ -168,7 +168,7 @@ func sweepMetricStreams(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.ListMetricStreamsInput{}
