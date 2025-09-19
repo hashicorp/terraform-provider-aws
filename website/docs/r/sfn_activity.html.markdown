@@ -62,6 +62,21 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sfn_activity.example
+  identity = {
+    "arn" = "arn:aws:states:eu-west-1:123456789098:activity:bar"
+  }
+}
+
+resource "aws_sfn_activity" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import activities using the `arn`. For example:
 
 ```terraform
