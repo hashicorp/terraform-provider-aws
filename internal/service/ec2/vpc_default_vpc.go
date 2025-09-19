@@ -222,7 +222,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var associationID, oldIPv6PoolID, oldIPv6CIDRBlock, oldIPv6CIDRBlockNetworkBorderGroup string
 	var oldAssignGeneratedIPv6CIDRBlock bool
 
-	if v := defaultIPv6CIDRBlockAssociation(vpcInfo.vpc, ""); v != nil {
+	if v := DefaultIPv6CIDRBlockAssociation(vpcInfo.vpc, ""); v != nil {
 		associationID = aws.ToString(v.AssociationId)
 		oldIPv6CIDRBlock = aws.ToString(v.Ipv6CidrBlock)
 		oldIPv6CIDRBlockNetworkBorderGroup = aws.ToString(v.NetworkBorderGroup)

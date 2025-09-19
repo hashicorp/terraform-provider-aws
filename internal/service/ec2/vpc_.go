@@ -333,7 +333,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		d.Set("default_security_group_id", v.GroupId)
 	}
 
-	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
+	if ipv6CIDRBlockAssociation := DefaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
 		d.Set("assign_generated_ipv6_cidr_block", nil)
 		d.Set("ipv6_association_id", nil)
 		d.Set("ipv6_cidr_block", nil)
@@ -529,10 +529,10 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v an
 	return nil
 }
 
-// defaultIPv6CIDRBlockAssociation returns the "default" IPv6 CIDR block.
+// DefaultIPv6CIDRBlockAssociation returns the "default" IPv6 CIDR block.
 // Try and find IPv6 CIDR block information, first by any stored association ID.
 // Then if no IPv6 CIDR block information is available, use the first associated IPv6 CIDR block.
-func defaultIPv6CIDRBlockAssociation(vpc *awstypes.Vpc, associationID string) *awstypes.VpcIpv6CidrBlockAssociation {
+func DefaultIPv6CIDRBlockAssociation(vpc *awstypes.Vpc, associationID string) *awstypes.VpcIpv6CidrBlockAssociation {
 	var ipv6CIDRBlockAssociation awstypes.VpcIpv6CidrBlockAssociation
 
 	if associationID != "" {

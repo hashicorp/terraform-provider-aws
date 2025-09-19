@@ -990,6 +990,22 @@ func TestAccVPC_upgradeFromV5WithNewRegionRefreshFalse(t *testing.T) {
 	})
 }
 
+func TestVPC_ReadDefaultIPv6Cidr(t *testing.T) {
+	vpc := awstypes.Vpc{
+		Ipv6CidrBlockAssociationSet: []awstypes.VpcIpv6CidrBlockAssociation{
+			{AssociationId: aws.String("default_cidr"), Ipv6CidrBlock: aws.String("fd00:1::/64"), Ipv6CidrBlockState: &awstypes.VpcCidrBlockState{State: awstypes.VpcCidrBlockStateCodeAssociated}},
+			{AssociationId: aws.String("some_other_cidr"), Ipv6CidrBlock: aws.String("fd00:2::/64"), Ipv6CidrBlockState: &awstypes.VpcCidrBlockState{State: awstypes.VpcCidrBlockStateCodeAssociated}},
+		},
+	}
+	v := tfec2.DefaultIPv6CIDRBlockAssociation(&vpc, "")
+	if v == nil {
+		t.Errorf("DefaultIPv6CIDRBlockAssociation() got nil")
+	}
+	if *v.AssociationId != "default_cidr" {
+		t.Errorf("DefaultIPv6CIDRBlockAssociation() got = %v, wanted =  %v", *v.AssociationId, "default_cidr")
+	}
+}
+
 func TestAccVPC_regionCreateNull(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
