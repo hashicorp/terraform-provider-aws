@@ -336,6 +336,7 @@ This resource supports the following arguments:
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `anycast_ip_list_id` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
+* `connection_mode` (Optional) - Whether this distribution is a direct or multi-tenant distribution. One of `direct` or `tenant-only`
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
 * `default_cache_behavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
@@ -351,6 +352,7 @@ This resource supports the following arguments:
 * `restrictions` (Required) - The [restriction configuration](#restrictions-arguments) for this distribution (maximum one).
 * `staging` (Optional) - A Boolean that indicates whether this is a staging distribution. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tenant_config`(Optional) - A set of distribution [tenant configurations](#tenant-config-arguments).
 * `viewer_certificate` (Required) - The [SSL configuration](#viewer-certificate-arguments) for this distribution (maximum one).
 * `web_acl_id` (Optional) - Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution. To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN, for example `aws_wafv2_web_acl.example.arn`. To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`. The WAF Web ACL must exist in the WAF Global (CloudFront) region and the credentials configuring this argument must have `waf:GetWebACL` permissions assigned.
 * `retain_on_delete` (Optional) - Disables the distribution instead of deleting it when destroying the resource through Terraform. If this is set, the distribution needs to be deleted manually afterwards. Default: `false`.
@@ -543,6 +545,42 @@ The arguments of `geo_restriction` are:
 * `iam_certificate_id` - IAM certificate identifier of the custom viewer certificate for this distribution if you are using a custom domain. Specify this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 * `minimum_protocol_version` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `TLSv1.2_2019` and `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**: If you are using a custom certificate (specified with `acm_certificate_arn` or `iam_certificate_id`), and have specified `sni-only` in `ssl_support_method`, `TLSv1` or later must be specified. If you have specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be specified. If you have specified `cloudfront_default_certificate`, `TLSv1` must be specified.
 * `ssl_support_method` - How you want CloudFront to serve HTTPS requests. One of `vip`, `sni-only`, or `static-ip`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
+
+#### Tenant Config Arguments
+
+Example Configuration:
+
+```terraform
+tenant_config {
+  parameter_definitions {
+    name = "tenantName"
+    definition {
+      string_schema {
+        required      = false
+        comment       = "tenantName"
+        default_value = "root"
+      }
+    }
+  }
+}
+```
+
+* `parameter_definitions` (Optional) - A list of [parameter definitions](#parameter-definition-arguments) you specify for a distribution tenant. A parameter is a key-value pair. A valid parameter value must exist for any parameter that is marked as required in the multi-tenant distribution.
+
+#### Parameter Definition Arguments
+
+* `definition` (Required) - The [value](#definition-arguments) assigned to the parameter.
+* `name` (Required) - The name of the parameter.
+
+#### Definition Arguments
+
+* `string_schema` (Optional) - A [string schema block](#string-schema-arguments).
+
+#### String Schema Arguments
+
+* `comment` (Optional) - Comment for the definition
+* `default_value` (Optional) - Default value for the definition
+* `required` (Required) - Whether tenants are required to define the parameter (default: `false`)
 
 ## Attribute Reference
 
