@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -57,6 +58,13 @@ func resourceCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"network_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -72,6 +80,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	input := &r53rcc.CreateClusterInput{
 		ClientToken: aws.String(id.UniqueId()),
 		ClusterName: aws.String(d.Get(names.AttrName).(string)),
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = awstypes.NetworkType(v.(string))
 	}
 
 	output, err := conn.CreateCluster(ctx, input)
@@ -112,6 +124,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set(names.AttrARN, output.ClusterArn)
 	d.Set(names.AttrName, output.Name)
+	d.Set("network_type", output.NetworkType)
 	d.Set(names.AttrStatus, output.Status)
 
 	if err := d.Set("cluster_endpoints", flattenClusterEndpoints(output.ClusterEndpoints)); err != nil {
