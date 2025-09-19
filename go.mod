@@ -43,11 +43,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/batch v1.57.7
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.11.6
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.50.4
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/billing v1.7.5
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/chime v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.4
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.251.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.253.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.3
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.64.0
@@ -179,7 +179,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.3
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.55.3
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.2
@@ -193,7 +193,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.56.5
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.4
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.12.4
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.3
