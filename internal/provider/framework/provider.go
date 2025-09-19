@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	empemeralschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/function"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -47,12 +48,14 @@ var (
 	_ provider.ProviderWithActions            = &frameworkProvider{}
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
+	_ provider.ProviderWithListResources      = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
 	actions            []func() action.Action
 	dataSources        []func() datasource.DataSource
 	ephemeralResources []func() ephemeral.EphemeralResource
+	listResources      []func() list.ListResource
 	primary            interface{ Meta() any }
 	resources          []func() resource.Resource
 	servicePackages    iter.Seq[conns.ServicePackage]
@@ -350,6 +353,7 @@ func (p *frameworkProvider) Configure(ctx context.Context, request provider.Conf
 	response.ResourceData = v
 	response.EphemeralResourceData = v
 	response.ActionData = v
+	response.ListResourceData = v
 }
 
 // DataSources returns a slice of functions to instantiate each DataSource
@@ -397,6 +401,10 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 	}
 }
 
+func (p *frameworkProvider) ListResources(_ context.Context) []func() list.ListResource {
+	return slices.Clone(p.listResources)
+}
+
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
 func (p *frameworkProvider) initialize(ctx context.Context) {
 	log.Printf("Initializing Terraform AWS Provider (Framework-style)...")
@@ -414,6 +422,21 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			for _, ephemeralResourceSpec := range v.EphemeralResources(ctx) {
 				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource { //nolint:contextcheck // must be a func()
 					return newWrappedEphemeralResource(ephemeralResourceSpec, servicePackageName)
+				})
+			}
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithFrameworkListResources); ok {
+			for listResourceSpec := range v.FrameworkListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResourceFramework(listResourceSpec, servicePackageName)
+				})
+			}
+		}
+		if v, ok := sp.(conns.ServicePackageWithSDKListResources); ok {
+			for listResourceSpec := range v.SDKListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResourceSDK(listResourceSpec, servicePackageName)
 				})
 			}
 		}

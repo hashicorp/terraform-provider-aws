@@ -6,7 +6,6 @@ description: |-
   Terraform ephemeral resource for managing an AWS Cognito Identity Open ID Token for Developer Identity.
 ---
 
-
 # Ephemeral: aws_cognito_identity_openid_token_for_developer_identity
 
 Terraform ephemeral resource for managing an AWS Cognito Identity Open ID Token for Developer Identity.

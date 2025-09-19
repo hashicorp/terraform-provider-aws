@@ -17,6 +17,16 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newInvokeAction,
+			TypeName: "aws_lambda_invoke",
+			Name:     "Invoke",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
+}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource{
 		{

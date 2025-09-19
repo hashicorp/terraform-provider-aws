@@ -14,9 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,7 +43,7 @@ func (r dataSourceInjectRegionAttributeInterceptor) schema(ctx context.Context, 
 			response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: names.TopLevelRegionAttributeDescription,
+				Description: names.ResourceTopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -110,7 +112,7 @@ func (r ephemeralResourceInjectRegionAttributeInterceptor) schema(ctx context.Co
 			response.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: names.TopLevelRegionAttributeDescription,
+				Description: names.ResourceTopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -379,7 +381,7 @@ func (a actionInjectRegionAttributeInterceptor) schema(ctx context.Context, opts
 			}
 			response.Schema.Attributes[names.AttrRegion] = aschema.StringAttribute{
 				Optional:    true,
-				Description: names.TopLevelRegionAttributeDescription,
+				Description: names.ActionTopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -405,4 +407,21 @@ func (a actionValidateRegionInterceptor) invoke(ctx context.Context, opts interc
 // actionValidateRegion validates that the value of the top-level `region` attribute is in the configured AWS partition.
 func actionValidateRegion() actionInvokeInterceptor {
 	return &actionValidateRegionInterceptor{}
+}
+
+type listResourceInjectRegionAttributeInterceptor struct{}
+
+func (r listResourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[list.ListResourceSchemaRequest, list.ListResourceSchemaResponse]) {
+	switch response, when := opts.response, opts.when; when {
+	case After:
+		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+			// Inject a top-level "region" attribute.
+			response.Schema.Attributes[names.AttrRegion] = listresourceattribute.Region()
+		}
+	}
+}
+
+// listResourceInjectRegionAttribute injects a "region" attribute into a resource's List schema.
+func listResourceInjectRegionAttribute() listResourceSchemaInterceptor {
+	return &listResourceInjectRegionAttributeInterceptor{}
 }
