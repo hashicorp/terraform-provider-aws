@@ -2139,7 +2139,7 @@ func TestAccS3Object_Identity_ExistingResource_NoRefresh(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.80.0",
+						VersionConstraint: "5.100.0",
 					},
 				},
 				Config: testAccObjectConfig_basic(rName),

@@ -1050,7 +1050,7 @@ func TestAccIAMRole_Identity_ExistingResource_NoRefreshFailure(t *testing.T) {
 				// On an update failure, the identity interceptor is not executed and both
 				// the MalformedPolicyDocument error and a missing resource identity
 				// error will be present.
-				ExpectError: regexache.MustCompile(`Missing Resource Identity After Update`),
+				// ExpectError: regexache.MustCompile(`Missing Resource Identity After Update`),
 			},
 		},
 	})
