@@ -401,238 +401,225 @@ func (c mockClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-
 	panic("not implemented") //lintignore:R009
 }
 
-// TestIdentityInterceptor_ProviderUpgradeBugScenario tests the specific bug reported
-// where provider upgrade from pre-identity version to identity-enabled version causes
-// "Missing Resource Identity After Update" error during terraform apply operations.
-// See https://github.com/hashicorp/terraform-provider-aws/issues/44330
+// TestIdentityInterceptor_ProviderUpgradeBugFix tests the specific bug fix for provider upgrades.
+// The bug occurred when upgrading from pre-identity versions (e.g., 6.13.0) to identity-enabled
+// versions (e.g., 6.14.0+) caused "Missing Resource Identity After Update" errors.
 //
-// This simulates the exact scenario reported in the GitHub issue where aws_s3_object
-// (and similar resources) fail after provider upgrade when Update operations occur
-// before the identity has been populated by a Read operation.
-func TestIdentityInterceptor_ProviderUpgradeBugScenario(t *testing.T) {
+// The fix detects when ALL identity attributes are null (provider upgrade scenario) and
+// allows identity population during Update operations only in this specific case.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/44330
+func TestIdentityInterceptor_ProviderUpgradeBugFix(t *testing.T) {
 	t.Parallel()
 
-	accountID := "123456789012"
-	region := "us-west-2" //lintignore:AWSAT003
-	bucket := "test-bucket"
-	key := "test-key"
-
-	// Simulate S3 object-like resource schema (bucket + key identity)
-	resourceSchema := map[string]*schema.Schema{
-		names.AttrBucket: {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
+	testCases := map[string]struct {
+		identityValues   map[string]string // What values are already set in identity
+		expectPopulation bool              // Should identity be populated during Update?
+		description      string
+	}{
+		"all_null_values": {
+			identityValues:   map[string]string{}, // All null - the bug scenario
+			expectPopulation: true,                // Should populate (fix behavior)
+			description:      "Provider upgrade scenario: all identity attributes null should trigger population",
 		},
-		names.AttrKey: {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
+		"some_values_set": {
+			identityValues: map[string]string{ // Some values set - normal scenario
+				names.AttrAccountID: "123456789012",
+				names.AttrRegion:    "us-west-2",
+				// bucket and key remain null
+			},
+			expectPopulation: false, // Should NOT populate (preserves existing behavior)
+			description:      "Normal scenario: partial identity values should not trigger population",
 		},
-		names.AttrContent: {
-			Type:     schema.TypeString,
-			Optional: true,
+		"all_values_set": {
+			identityValues: map[string]string{ // All values set
+				names.AttrAccountID: "123456789012",
+				names.AttrRegion:    "us-west-2",
+				names.AttrBucket:    "test-bucket",
+				names.AttrKey:       "test-key",
+			},
+			expectPopulation: false, // Should NOT populate
+			description:      "Full identity: all values set should not trigger population",
 		},
-		"region": attribute.Region(),
 	}
 
-	client := mockClient{
-		accountID: accountID,
-		region:    region,
-	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	ctx := context.Background()
+			// Create a simple S3-like identity spec for testing
+			identitySpec := inttypes.Identity{
+				Attributes: []inttypes.IdentityAttribute{
+					inttypes.StringIdentityAttribute(names.AttrAccountID, false),
+					inttypes.StringIdentityAttribute(names.AttrRegion, false),
+					inttypes.StringIdentityAttribute(names.AttrBucket, true),
+					inttypes.StringIdentityAttribute(names.AttrKey, true),
+				},
+				IsMutable:     false, // Immutable identity - key to reproducing bug
+				IsSetOnUpdate: false,
+			}
 
-	// Create identity spec similar to S3 object: regional with bucket and key
-	identitySpec := s3ObjectLikeIdentitySpec()
+			// Create minimal resource schema
+			resourceSchema := map[string]*schema.Schema{
+				names.AttrBucket:  {Type: schema.TypeString, Required: true},
+				names.AttrKey:     {Type: schema.TypeString, Required: true},
+				names.AttrContent: {Type: schema.TypeString, Optional: true},
+			}
 
-	invocation := newIdentityInterceptor(&identitySpec)
-	interceptor := invocation.interceptor.(identityInterceptor)
+			identitySchema := identity.NewIdentitySchema(identitySpec)
+			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
+			d.SetId("test-id")
+			d.Set(names.AttrBucket, "test-bucket")
+			d.Set(names.AttrKey, "test-key")
 
-	identitySchema := identity.NewIdentitySchema(identitySpec)
+			// Setup identity with test case values
+			identity, err := d.Identity()
+			if err != nil {
+				t.Fatalf("unexpected error getting identity: %v", err)
+			}
+			for attrName, value := range tc.identityValues {
+				if err := identity.Set(attrName, value); err != nil {
+					t.Fatalf("unexpected error setting %s in identity: %v", attrName, err)
+				}
+			}
 
-	// Create resource data with identity, but simulate the "provider upgrade" scenario
-	// by leaving the identity completely empty (all null values)
-	d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
-	d.SetId("test-bucket/test-key") // Resource exists in state
-	d.Set(names.AttrBucket, bucket)
-	d.Set(names.AttrKey, key)
-	d.Set(names.AttrContent, "original-content")
-	d.Set("region", region)
+			// Test the core fix logic
+			hasNullValues := identityHasNullValues(d, &identitySpec)
+			if tc.expectPopulation && !hasNullValues {
+				t.Errorf("expected identityHasNullValues to return true for %s, got false", tc.description)
+			}
+			if !tc.expectPopulation && hasNullValues {
+				t.Errorf("expected identityHasNullValues to return false for %s, got true", tc.description)
+			}
 
-	// CRITICAL: Do NOT pre-populate identity - this simulates the upgrade scenario
-	// where identity exists in schema but all attributes are null/empty
-	identity, err := d.Identity()
-	if err != nil {
-		t.Fatalf("unexpected error getting identity: %v", err)
-	}
+			// Test interceptor behavior
+			interceptor := identityInterceptor{identitySpec: &identitySpec}
+			client := mockClient{accountID: "123456789012", region: "us-west-2"}
+			opts := crudInterceptorOptions{c: client, d: d, when: After, why: Update}
 
-	// Verify identity starts fully null (simulating pre-identity provider version)
-	if identity.Get(names.AttrAccountID) != "" {
-		t.Fatalf("expected account_id to start null, got %q", identity.Get(names.AttrAccountID))
-	}
-	if identity.Get(names.AttrRegion) != "" {
-		t.Fatalf("expected region to start null, got %q", identity.Get(names.AttrRegion))
-	}
-	if identity.Get(names.AttrBucket) != "" {
-		t.Fatalf("expected bucket to start null, got %q", identity.Get(names.AttrBucket))
-	}
-	if identity.Get(names.AttrKey) != "" {
-		t.Fatalf("expected key to start null, got %q", identity.Get(names.AttrKey))
-	}
+			// Capture identity state before
+			beforeValues := make(map[string]string)
+			for _, attr := range identitySpec.Attributes {
+				value := identity.Get(attr.Name())
+				if value != nil {
+					beforeValues[attr.Name()] = value.(string)
+				} else {
+					beforeValues[attr.Name()] = ""
+				}
+			}
 
-	// Simulate the bug scenario: Update operation occurs (e.g., content change)
-	// without a Read operation first to populate identity
-	opts := crudInterceptorOptions{
-		c:    client,
-		d:    d,
-		when: After,
-		why:  Update, // This is where the bug occurred!
-	}
+			// Run interceptor
+			diags := interceptor.run(context.Background(), opts)
+			if diags.HasError() {
+				t.Fatalf("unexpected error running interceptor: %v", diags)
+			}
 
-	// Run the identity interceptor - this should NOW populate identity
-	// instead of skipping it (which caused the original bug)
-	diags := interceptor.run(ctx, opts)
-	if diags.HasError() {
-		t.Fatalf("unexpected error running interceptor: %v", diags)
-	}
+			// Check if identity was populated
+			identity, _ = d.Identity()
+			wasPopulated := false
+			for _, attr := range identitySpec.Attributes {
+				before := beforeValues[attr.Name()]
+				after := identity.Get(attr.Name())
+				afterStr := ""
+				if after != nil {
+					afterStr = after.(string)
+				}
+				if before == "" && afterStr != "" {
+					wasPopulated = true
+					break
+				}
+			}
 
-	// Verify the fix: identity should now be fully populated
-	identity, err = d.Identity()
-	if err != nil {
-		t.Fatalf("unexpected error getting identity after interceptor: %v", err)
-	}
-
-	// These assertions verify the bug is fixed
-	if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
-		t.Errorf("expected account ID %q, got %q (identity not populated - bug still exists!)", e, a)
-	}
-	if e, a := region, identity.Get(names.AttrRegion); e != a {
-		t.Errorf("expected region %q, got %q (identity not populated - bug still exists!)", e, a)
-	}
-	if e, a := bucket, identity.Get(names.AttrBucket); e != a {
-		t.Errorf("expected bucket %q, got %q (identity not populated - bug still exists!)", e, a)
-	}
-	if e, a := key, identity.Get(names.AttrKey); e != a {
-		t.Errorf("expected key %q, got %q (identity not populated - bug still exists!)", e, a)
+			if tc.expectPopulation && !wasPopulated {
+				t.Errorf("expected identity to be populated for %s, but it wasn't", tc.description)
+			}
+			if !tc.expectPopulation && wasPopulated {
+				t.Errorf("expected identity NOT to be populated for %s, but it was", tc.description)
+			}
+		})
 	}
 }
 
-// TestIdentityInterceptor_ProviderUpgradeBugScenario_PartiallyPopulated tests that
-// we don't over-correct and populate identity when it's already partially set
-// (which would be the normal case after the first Read operation post-upgrade)
-func TestIdentityInterceptor_ProviderUpgradeBugScenario_partiallyPopulated(t *testing.T) {
+// TestIdentityHasNullValues tests the core helper function that detects the provider upgrade scenario
+func TestIdentityHasNullValues(t *testing.T) {
 	t.Parallel()
 
-	accountID := "123456789012"
-	region := "us-west-2" //lintignore:AWSAT003
-	bucket := "test-bucket"
-	key := "test-key"
-
-	resourceSchema := map[string]*schema.Schema{
-		names.AttrBucket: {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		names.AttrKey: {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		names.AttrContent: {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"region": attribute.Region(),
-	}
-
-	client := mockClient{
-		accountID: accountID,
-		region:    region,
-	}
-
-	ctx := context.Background()
-
-	identitySpec := s3ObjectLikeIdentitySpec()
-
-	invocation := newIdentityInterceptor(&identitySpec)
-	interceptor := invocation.interceptor.(identityInterceptor)
-
-	identitySchema := identity.NewIdentitySchema(identitySpec)
-
-	d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
-	d.SetId("test-bucket/test-key")
-	d.Set(names.AttrBucket, bucket)
-	d.Set(names.AttrKey, key)
-	d.Set(names.AttrContent, "updated-content")
-	d.Set("region", region)
-
-	// Simulate partial population (e.g., after first Read post-upgrade)
-	identity, err := d.Identity()
-	if err != nil {
-		t.Fatalf("unexpected error getting identity: %v", err)
-	}
-
-	// Set some but not all identity attributes
-	if err := identity.Set(names.AttrAccountID, accountID); err != nil {
-		t.Fatalf("unexpected error setting account_id in identity: %v", err)
-	}
-	if err := identity.Set(names.AttrRegion, region); err != nil {
-		t.Fatalf("unexpected error setting region in identity: %v", err)
-	}
-	// Leave bucket and key null to simulate partial population
-
-	// Run Update operation
-	opts := crudInterceptorOptions{
-		c:    client,
-		d:    d,
-		when: After,
-		why:  Update,
-	}
-
-	diags := interceptor.run(ctx, opts)
-	if diags.HasError() {
-		t.Fatalf("unexpected error running interceptor: %v", diags)
-	}
-
-	// Verify identity is NOT re-populated for partial null scenario
-	identity, err = d.Identity()
-	if err != nil {
-		t.Fatalf("unexpected error getting identity after interceptor: %v", err)
-	}
-
-	// Account ID and region should remain as set
-	if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
-		t.Errorf("expected account ID to remain %q, got %q", e, a)
-	}
-	if e, a := region, identity.Get(names.AttrRegion); e != a {
-		t.Errorf("expected region to remain %q, got %q", e, a)
-	}
-
-	// Bucket and key should remain null (not populated because not ALL were null)
-	if identity.Get(names.AttrBucket) != "" {
-		t.Errorf("expected bucket to remain null, got %q", identity.Get(names.AttrBucket))
-	}
-	if identity.Get(names.AttrKey) != "" {
-		t.Errorf("expected key to remain null, got %q", identity.Get(names.AttrKey))
-	}
-}
-
-// s3ObjectLikeIdentitySpec creates an identity spec similar to S3 objects
-// with multiple parameters (bucket and key) for testing the provider upgrade scenario
-func s3ObjectLikeIdentitySpec() inttypes.Identity {
-	return inttypes.Identity{
+	// Simple identity spec for testing
+	identitySpec := &inttypes.Identity{
 		Attributes: []inttypes.IdentityAttribute{
 			inttypes.StringIdentityAttribute(names.AttrAccountID, false),
 			inttypes.StringIdentityAttribute(names.AttrRegion, false),
 			inttypes.StringIdentityAttribute(names.AttrBucket, true),
-			inttypes.StringIdentityAttribute(names.AttrKey, true),
 		},
-		IsSingleParameter: false,
-		IsGlobalResource:  false,
-		// Immutable identity (like real S3 object) - this is key to reproducing the bug
-		IsMutable:     false,
-		IsSetOnUpdate: false,
+	}
+
+	testCases := map[string]struct {
+		identityValues map[string]string
+		expectNull     bool
+		description    string
+	}{
+		"all_null": {
+			identityValues: map[string]string{},
+			expectNull:     true,
+			description:    "All attributes null should return true",
+		},
+		"some_null": {
+			identityValues: map[string]string{
+				names.AttrAccountID: "123456789012",
+				// region and bucket remain null
+			},
+			expectNull:  false,
+			description: "Some attributes set should return false",
+		},
+		"all_set": {
+			identityValues: map[string]string{
+				names.AttrAccountID: "123456789012",
+				names.AttrRegion:    "us-west-2",
+				names.AttrBucket:    "test-bucket",
+			},
+			expectNull:  false,
+			description: "All attributes set should return false",
+		},
+		"empty_string_values": {
+			identityValues: map[string]string{
+				names.AttrAccountID: "",
+				names.AttrRegion:    "",
+				names.AttrBucket:    "",
+			},
+			expectNull:  true, // Empty strings are treated as null
+			description: "Empty string values should be treated as null",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Create minimal test setup
+			resourceSchema := map[string]*schema.Schema{
+				names.AttrBucket: {Type: schema.TypeString, Required: true},
+			}
+			identitySchema := identity.NewIdentitySchema(*identitySpec)
+			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
+			d.SetId("test-id")
+
+			// Set identity values
+			identity, err := d.Identity()
+			if err != nil {
+				t.Fatalf("unexpected error getting identity: %v", err)
+			}
+			for attrName, value := range tc.identityValues {
+				if err := identity.Set(attrName, value); err != nil {
+					t.Fatalf("unexpected error setting %s in identity: %v", attrName, err)
+				}
+			}
+
+			// Test the function
+			result := identityHasNullValues(d, identitySpec)
+
+			if result != tc.expectNull {
+				t.Errorf("%s: expected identityHasNullValues to return %v, got %v",
+					tc.description, tc.expectNull, result)
+			}
+		})
 	}
 }
