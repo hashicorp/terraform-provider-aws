@@ -73,13 +73,14 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	return diags
 }
 
-// identityHasNullValues checks if the resource's identity contains any null values.
+// identityHasNullValues checks if the resource's identity contains any null values
+// that indicate the upgrade bug scenario.
 // This typically occurs when a resource was created with a pre-identity version of the provider
 // and then upgraded to a version that supports identity, but a failed update operation
 // resulted in null identity values being written to state.
 //
-// Returns true only if identity data exists but contains null/empty values.
-// Returns false if no identity data exists at all (which is expected for some resources).
+// Returns true only if identity data exists but ALL REQUIRED attributes are null/empty.
+// Returns false if no identity data exists at all, or if only optional attributes are empty.
 func identityHasNullValues(d schemaResourceData, identitySpec *inttypes.Identity) bool {
 	identity, err := d.Identity()
 	if err != nil {
@@ -87,25 +88,31 @@ func identityHasNullValues(d schemaResourceData, identitySpec *inttypes.Identity
 		return false
 	}
 
-	// Check if identity data exists and has been initialized
-	hasAnyIdentityData := false
-	hasNullValues := false
-
-	// Check each identity attribute
+	// Check if any identity attribute has a value
+	hasAnyIdentityValue := false
 	for _, attr := range identitySpec.Attributes {
-		value := identity.Get(attr.Name())
-		if value != "" {
-			// Found non-empty value, so identity data exists
-			hasAnyIdentityData = true
-		} else {
-			// Found empty/null value
-			hasNullValues = true
+		if identity.Get(attr.Name()) != "" {
+			hasAnyIdentityValue = true
+			break
 		}
 	}
 
-	// Only return true if identity data exists but some values are null
-	// This indicates the specific bug scenario we're trying to fix
-	return hasAnyIdentityData && hasNullValues
+	if !hasAnyIdentityValue {
+		// No identity data at all - not the bug scenario
+		return false
+	}
+
+	// Check if all required attributes are null (the bug scenario)
+	// Optional attributes (like Route53 set_identifier) can legitimately be empty
+	for _, attr := range identitySpec.Attributes {
+		if attr.Required() && identity.Get(attr.Name()) == "" {
+			// Found a required attribute that's null - this indicates the bug
+			return true
+		}
+	}
+
+	// Has identity data and all required attributes have values - not the bug
+	return false
 }
 
 func getAttributeOk(d schemaResourceData, name string) (string, bool) {
