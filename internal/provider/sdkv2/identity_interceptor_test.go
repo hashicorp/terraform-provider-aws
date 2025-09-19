@@ -424,7 +424,7 @@ func TestIdentityInterceptor_ProviderUpgradeBugFix(t *testing.T) {
 		"some_values_set": {
 			identityValues: map[string]string{ // Some values set - normal scenario
 				names.AttrAccountID: "123456789012",
-				names.AttrRegion:    "us-west-2",
+				names.AttrRegion:    "us-west-2", // lintignore:AWSAT003
 				// bucket and key remain null
 			},
 			expectPopulation: false, // Should NOT populate (preserves existing behavior)
@@ -433,7 +433,7 @@ func TestIdentityInterceptor_ProviderUpgradeBugFix(t *testing.T) {
 		"all_values_set": {
 			identityValues: map[string]string{ // All values set
 				names.AttrAccountID: "123456789012",
-				names.AttrRegion:    "us-west-2",
+				names.AttrRegion:    "us-west-2", // lintignore:AWSAT003
 				names.AttrBucket:    "test-bucket",
 				names.AttrKey:       "test-key",
 			},
@@ -493,7 +493,7 @@ func TestIdentityInterceptor_ProviderUpgradeBugFix(t *testing.T) {
 
 			// Test interceptor behavior
 			interceptor := identityInterceptor{identitySpec: &identitySpec}
-			client := mockClient{accountID: "123456789012", region: "us-west-2"}
+			client := mockClient{accountID: "123456789012", region: "us-west-2"} // lintignore:AWSAT003
 			opts := crudInterceptorOptions{c: client, d: d, when: After, why: Update}
 
 			// Capture identity state before
@@ -573,7 +573,7 @@ func TestIdentityIsFullyNull(t *testing.T) {
 		"all_set": {
 			identityValues: map[string]string{
 				names.AttrAccountID: "123456789012",
-				names.AttrRegion:    "us-west-2",
+				names.AttrRegion:    "us-west-2", // lintignore:AWSAT003
 				names.AttrBucket:    "test-bucket",
 			},
 			expectNull:  false,
