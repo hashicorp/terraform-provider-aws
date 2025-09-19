@@ -349,7 +349,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 									"definition": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.LengthBetween(1, 200),
+											stringvalidator.LengthBetween(1, 1000),
 										},
 									},
 									"examples": schema.ListAttribute{

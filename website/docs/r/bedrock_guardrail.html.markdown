@@ -145,7 +145,7 @@ The `filters_config` configuration block supports the following arguments:
 
 #### Topics Config
 
-* `definition` (Required) Definition of topic in topic policy.
+* `definition` (Required) Definition of topic in topic policy. Maximum length of 1000.
 * `name` (Required) Name of topic in topic policy.
 * `type` (Required) Type of topic in a policy.
 * `examples` (Optional) List of text examples.
