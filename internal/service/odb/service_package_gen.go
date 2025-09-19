@@ -47,6 +47,30 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceDbNode,
+			TypeName: "aws_odb_db_node",
+			Name:     "Db Node",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDbNodesList,
+			TypeName: "aws_odb_db_nodes_list",
+			Name:     "Db Nodes List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDbServer,
+			TypeName: "aws_odb_db_server",
+			Name:     "Db Server",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDbServersList,
+			TypeName: "aws_odb_db_servers_list",
+			Name:     "Db Servers List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
