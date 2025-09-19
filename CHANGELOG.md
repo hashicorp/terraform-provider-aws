@@ -4,6 +4,11 @@
 
 FEATURES:
 
+* **New Action:** `aws_cloudfront_create_invalidation` ([#43955](https://github.com/hashicorp/terraform-provider-aws/issues/43955))
+* **New Action:** `aws_ec2_stop_instance` ([#43700](https://github.com/hashicorp/terraform-provider-aws/issues/43700))
+* **New Action:** `aws_lambda_invoke` ([#43972](https://github.com/hashicorp/terraform-provider-aws/issues/43972))
+* **New Action:** `aws_ses_send_email` ([#44214](https://github.com/hashicorp/terraform-provider-aws/issues/44214))
+* **New Action:** `aws_sns_publish` ([#44232](https://github.com/hashicorp/terraform-provider-aws/issues/44232))
 * **New Data Source:** `aws_billing_views` ([#44272](https://github.com/hashicorp/terraform-provider-aws/issues/44272))
 * **New Data Source:** `aws_odb_cloud_autonomous_vm_cluster` ([#43809](https://github.com/hashicorp/terraform-provider-aws/issues/43809))
 * **New Data Source:** `aws_odb_cloud_exadata_infrastructure` ([#43650](https://github.com/hashicorp/terraform-provider-aws/issues/43650))
