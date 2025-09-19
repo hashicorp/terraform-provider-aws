@@ -1,9 +1,11 @@
-// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package odb
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
