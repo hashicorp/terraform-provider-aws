@@ -972,6 +972,47 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_Identity_ExistingResource_NoRefresh(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccRoleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRoleConfig_description(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+				// We DON'T want this error. A fix should cause this test to begin failing.
+				ExpectError: regexache.MustCompile(`Missing Resource Identity After Update`),
+			},
+		},
+	})
+}
+
 func TestAccIAMRole_Identity_ExistingResource_NoRefreshFailure(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Role
