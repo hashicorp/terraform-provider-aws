@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -52,6 +53,12 @@ func resourceServiceSpecificCredential() *schema.Resource {
 				Default:          awstypes.StatusTypeActive,
 				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
 			},
+			"credential_age_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1, 36600),
+			},
 			"service_password": {
 				Type:      schema.TypeString,
 				Sensitive: true,
@@ -62,6 +69,23 @@ func resourceServiceSpecificCredential() *schema.Resource {
 				Computed: true,
 			},
 			"service_specific_credential_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"service_credential_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"service_credential_secret": {
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
+			},
+			"create_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"expiration_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,6 +102,10 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 		UserName:    aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
+	if v, ok := d.GetOk("credential_age_days"); ok {
+		input.CredentialAgeDays = aws.Int32(int32(v.(int)))
+	}
+
 	out, err := conn.CreateServiceSpecificCredential(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Service Specific Credential: %s", err)
@@ -87,6 +115,12 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", aws.ToString(cred.ServiceName), aws.ToString(cred.UserName), aws.ToString(cred.ServiceSpecificCredentialId)))
 	d.Set("service_password", cred.ServicePassword)
+	d.Set("service_credential_secret", cred.ServiceCredentialSecret)
+	d.Set("service_credential_alias", cred.ServiceCredentialAlias)
+	d.Set("create_date", cred.CreateDate.Format(time.RFC3339))
+	if cred.ExpirationDate != nil {
+		d.Set("expiration_date", cred.ExpirationDate.Format(time.RFC3339))
+	}
 
 	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != string(awstypes.StatusTypeActive) {
 		updateInput := &iam.UpdateServiceSpecificCredentialInput{
@@ -132,6 +166,11 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 	d.Set(names.AttrServiceName, cred.ServiceName)
 	d.Set(names.AttrUserName, cred.UserName)
 	d.Set(names.AttrStatus, cred.Status)
+	d.Set("service_credential_alias", cred.ServiceCredentialAlias)
+	d.Set("create_date", cred.CreateDate.Format(time.RFC3339))
+	if cred.ExpirationDate != nil {
+		d.Set("expiration_date", cred.ExpirationDate.Format(time.RFC3339))
+	}
 
 	return diags
 }
