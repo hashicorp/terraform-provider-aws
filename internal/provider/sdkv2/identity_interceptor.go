@@ -73,14 +73,13 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	return diags
 }
 
-// identityHasNullValues checks if the resource's identity contains any null values
+// identityHasNullValues checks if the resource's identity contains null values
 // that indicate the upgrade bug scenario.
-// This typically occurs when a resource was created with a pre-identity version of the provider
-// and then upgraded to a version that supports identity, but a failed update operation
-// resulted in null identity values being written to state.
+// This matches the Plugin SDK logic from https://github.com/hashicorp/terraform-plugin-sdk/pull/1513
+// which checks if ALL identity values are null.
 //
-// Returns true only if identity data exists but ALL REQUIRED attributes are null/empty.
-// Returns false if no identity data exists at all, or if only optional attributes are empty.
+// Returns true only if identity data exists but ALL attributes are null/empty.
+// Returns false if no identity data exists at all, or if any attribute has a value.
 func identityHasNullValues(d schemaResourceData, identitySpec *inttypes.Identity) bool {
 	identity, err := d.Identity()
 	if err != nil {
@@ -102,17 +101,17 @@ func identityHasNullValues(d schemaResourceData, identitySpec *inttypes.Identity
 		return false
 	}
 
-	// Check if all required attributes are null (the bug scenario)
-	// Optional attributes (like Route53 set_identifier) can legitimately be empty
+	// Match Plugin SDK logic: check if ALL identity values are null
+	// This is the exact scenario that indicates the upgrade bug
+	isFullyNull := true
 	for _, attr := range identitySpec.Attributes {
-		if attr.Required() && identity.Get(attr.Name()) == "" {
-			// Found a required attribute that's null - this indicates the bug
-			return true
+		if identity.Get(attr.Name()) != "" {
+			isFullyNull = false
+			break
 		}
 	}
 
-	// Has identity data and all required attributes have values - not the bug
-	return false
+	return isFullyNull
 }
 
 func getAttributeOk(d schemaResourceData, name string) (string, bool) {
