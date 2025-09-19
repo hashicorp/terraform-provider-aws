@@ -23,7 +23,7 @@ import (
 // @ArnIdentity
 // Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
 // @Testing(identityRegionOverrideTest=false)
-// @Testing(preIdentityVersion="v6.13.0")
+// @Testing(preIdentityVersion="v6.14.0")
 func ResourceContactChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactChannelCreate,

@@ -22,8 +22,6 @@ resource "aws_ssmcontacts_contact_channel" "test" {
 # testAccContactChannelConfig_base
 
 data "aws_ssmincidents_replication_set" "test" {}
-
-data "aws_region" "current" {}
 variable "rName" {
   description = "Name for resource"
   type        = string
@@ -33,7 +31,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.13.0"
+      version = "6.14.0"
     }
   }
 }

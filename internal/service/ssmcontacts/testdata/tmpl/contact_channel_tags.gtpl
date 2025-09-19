@@ -21,5 +21,3 @@ resource "aws_ssmcontacts_contact_channel" "test" {
 # testAccContactChannelConfig_base
 
 data "aws_ssmincidents_replication_set" "test" {}
-
-data "aws_region" "current" {}
