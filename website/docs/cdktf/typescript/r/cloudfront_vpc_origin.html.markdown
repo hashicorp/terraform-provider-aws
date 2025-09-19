@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
           originProtocolPolicy: "https-only",
           originSslProtocols: [
             {
-              items: ["TLSv1.2"],
+              items: ["TLSv1.2_2021"],
               quantity: 1,
             },
           ],

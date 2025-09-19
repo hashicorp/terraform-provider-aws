@@ -293,7 +293,7 @@ resource "aws_cloudfront_vpc_origin" "test" {
     origin_protocol_policy = "http-only"
 
     origin_ssl_protocols {
-      items    = ["TLSv1.2"]
+      items    = ["TLSv1.2_2021"]
       quantity = 1
     }
   }
@@ -312,7 +312,7 @@ resource "aws_cloudfront_vpc_origin" "test" {
     origin_protocol_policy = "https-only"
 
     origin_ssl_protocols {
-      items    = ["TLSv1.2", "TLSv1.1"]
+      items    = ["TLSv1.2_2021", "TLSv1.1"]
       quantity = 2
     }
   }
@@ -331,7 +331,7 @@ resource "aws_cloudfront_vpc_origin" "test" {
     origin_protocol_policy = "http-only"
 
     origin_ssl_protocols {
-      items    = ["TLSv1.2"]
+      items    = ["TLSv1.2_2021"]
       quantity = 1
     }
   }
@@ -354,7 +354,7 @@ resource "aws_cloudfront_vpc_origin" "test" {
     origin_protocol_policy = "http-only"
 
     origin_ssl_protocols {
-      items    = ["TLSv1.2"]
+      items    = ["TLSv1.2_2021"]
       quantity = 1
     }
   }

@@ -359,7 +359,7 @@ resource "aws_cloudfront_distribution" "staging" {
       http_port              = 80
       https_port             = 443
       origin_protocol_policy = "https-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+      origin_ssl_protocols   = ["TLSv1.2_2021"]
     }
   }
 
@@ -409,7 +409,7 @@ resource "aws_cloudfront_distribution" "test" {
       http_port              = 80
       https_port             = 443
       origin_protocol_policy = "https-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+      origin_ssl_protocols   = ["TLSv1.2_2021"]
     }
   }
 
@@ -457,7 +457,7 @@ resource "aws_cloudfront_distribution" "test" {
       http_port              = 80
       https_port             = 443
       origin_protocol_policy = "https-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+      origin_ssl_protocols   = ["TLSv1.2_2021"]
     }
   }
 

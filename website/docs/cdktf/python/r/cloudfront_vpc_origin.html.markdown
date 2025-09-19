@@ -41,7 +41,7 @@ class MyConvertedCode(TerraformStack):
                 name="example-vpc-origin",
                 origin_protocol_policy="https-only",
                 origin_ssl_protocols=[CloudfrontVpcOriginVpcOriginEndpointConfigOriginSslProtocols(
-                    items=["TLSv1.2"],
+                    items=["TLSv1.2_2021"],
                     quantity=1
                 )
                 ]

@@ -544,7 +544,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols = [
         "TLSv1",
         "TLSv1.1",
-        "TLSv1.2",
+        "TLSv1.2_2021",
       ]
     }
 
@@ -614,7 +614,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols = [
         "TLSv1",
         "TLSv1.1",
-        "TLSv1.2",
+        "TLSv1.2_2021",
       ]
     }
 
@@ -687,7 +687,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols = [
         "TLSv1",
         "TLSv1.1",
-        "TLSv1.2",
+        "TLSv1.2_2021",
       ]
     }
 
