@@ -73,30 +73,36 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	return diags
 }
 
-// identityHasNullValues checks if the current identity in state indicates the upgrade bug scenario.
-// The bug occurs when a resource was created pre-identity, upgraded to identity-supporting version,
-// and a failed update operation resulted in null identity values being written to state.
+// identityHasNullValues checks if ALL identity attributes are fully null,
+// which indicates the specific bug scenario from failed non-refresh applies.
 //
-// We need to be conservative here - only trigger when we're certain it's the bug scenario,
-// not for normal fresh resources that haven't had identity set yet.
+// The reported error occurs when all identity attributes are fully null due to
+// failed non-refresh applies (terraform apply -refresh=false) where the read op
+// does not have a chance to set identity before the failure.
 //
-// Returns true only if identity appears to have been explicitly set to all null values.
+// Returns true ONLY when ALL identity attributes are null/empty.
+// If any attribute has a value, we assume it was set by a previous Create/Read
+// and should not proceed with setting identity on Update.
 func identityHasNullValues(d schemaResourceData, identitySpec *inttypes.Identity) bool {
-	_, err := d.Identity()
+	identity, err := d.Identity()
 	if err != nil {
-		// If we can't get identity at all, this is not the bug
+		// If we can't get identity at all, this is not the bug scenario
 		return false
 	}
 
-	// For now, be very conservative and don't trigger the fix for test scenarios
-	// In a real upgrade scenario, there would be more context about the previous state
-	// The Plugin SDK changes should prevent the bug from occurring in the first place
+	// Check if ALL identity attributes are null/empty
+	// This matches the exact scenario described in the reproduction
+	for _, attr := range identitySpec.Attributes {
+		value := identity.Get(attr.Name())
+		if value != "" {
+			// Found a non-null value, so this is not the bug scenario
+			// The identity was set by a previous Create/Read op
+			return false
+		}
+	}
 
-	// TODO: This could be enhanced to detect the specific bug scenario more precisely
-	// by checking if the resource has other indicators that it went through the upgrade bug
-	// (e.g., checking resource age, state history, etc.)
-
-	return false
+	// All attributes are null - this is the bug scenario
+	return true
 }
 
 func getAttributeOk(d schemaResourceData, name string) (string, bool) {

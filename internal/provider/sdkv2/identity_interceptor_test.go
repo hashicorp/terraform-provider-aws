@@ -189,25 +189,29 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 		attrName       string
 		identitySpec   inttypes.Identity
 		ExpectIdentity bool
+		Description    string
 	}{
-		"not mutable": {
+		"not mutable - fresh resource": {
 			attrName:       "name",
 			identitySpec:   regionalSingleParameterizedIdentitySpec("name"),
-			ExpectIdentity: false,
+			ExpectIdentity: true, // NOW EXPECTS IDENTITY because all attributes are null (bug scenario)
+			Description:    "Immutable identity with all null attributes should get populated (bug fix scenario)",
 		},
 		"v6.0 SDK fix": {
 			attrName: "name",
 			identitySpec: regionalSingleParameterizedIdentitySpec("name",
 				inttypes.WithV6_0SDKv2Fix(),
 			),
-			ExpectIdentity: false,
+			ExpectIdentity: true, // This makes identity mutable, so always expect it
+			Description:    "Mutable identity (v6.0 SDK fix) should always get populated on Update",
 		},
 		"identity fix": {
 			attrName: "name",
 			identitySpec: regionalSingleParameterizedIdentitySpec("name",
 				inttypes.WithIdentityFix(),
 			),
-			ExpectIdentity: false,
+			ExpectIdentity: true, // This makes identity mutable, so always expect it
+			Description:    "Mutable identity (identity fix) should always get populated on Update",
 		},
 		"mutable": {
 			attrName: "name",
@@ -215,6 +219,7 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 				inttypes.WithMutableIdentity(),
 			),
 			ExpectIdentity: true,
+			Description:    "Explicitly mutable identity should always get populated on Update",
 		},
 	}
 
@@ -270,6 +275,82 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestIdentityInterceptor_Update_PartialNullValues(t *testing.T) {
+	t.Parallel()
+
+	accountID := "123456789012"
+	region := "us-west-2" //lintignore:AWSAT003
+	name := "a_name"
+
+	resourceSchema := map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"type": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"region": attribute.Region(),
+	}
+
+	client := mockClient{
+		accountID: accountID,
+		region:    region,
+	}
+
+	ctx := t.Context()
+
+	// Test immutable identity with some values already set (partial null scenario)
+	identitySpec := regionalSingleParameterizedIdentitySpec("name")
+	invocation := newIdentityInterceptor(&identitySpec)
+	interceptor := invocation.interceptor.(identityInterceptor)
+
+	identitySchema := identity.NewIdentitySchema(identitySpec)
+
+	d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
+	d.SetId("some_id")
+	d.Set("name", name)
+	d.Set("region", region)
+	d.Set("type", "some_type")
+
+	// Simulate partial identity values (some set, some null) by setting some identity attributes
+	identity, err := d.Identity()
+	if err != nil {
+		t.Fatalf("unexpected error getting identity: %v", err)
+	}
+
+	// Set only account_id, leaving region and name null
+	// This simulates a scenario where identity was partially set (not the full null bug scenario)
+	identity.Set(names.AttrAccountID, accountID)
+
+	opts := crudInterceptorOptions{
+		c:    client,
+		d:    d,
+		when: After,
+		why:  Update,
+	}
+
+	interceptor.run(ctx, opts)
+
+	identity, err = d.Identity()
+	if err != nil {
+		t.Fatalf("unexpected error getting identity: %v", err)
+	}
+
+	// For partial null scenario, identity should NOT be updated on immutable identity
+	// because not ALL values are null
+	if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
+		t.Errorf("expected account ID to remain %q, got %q", e, a)
+	}
+	if identity.Get(names.AttrRegion) != "" {
+		t.Errorf("expected region to remain empty, got %q", identity.Get(names.AttrRegion))
+	}
+	if identity.Get("name") != "" {
+		t.Errorf("expected name to remain empty, got %q", identity.Get("name"))
 	}
 }
 
