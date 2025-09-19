@@ -17,7 +17,7 @@ Refer to AWS documentation for prerequisites, IAM and resource policies:
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dynamodb_table" "example" {
   name           = "example"
   hash_key       = "pk"
@@ -33,6 +33,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_glue_inbound_integration" "example" {
+  description      = "example integration"
   integration_name = "example"
   source_arn       = aws_dynamodb_table.example.arn
   target_arn       = var.target_arn
@@ -41,9 +42,13 @@ resource "aws_glue_inbound_integration" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 - `integration_name` (Required) Name of the integration.
 - `source_arn` (Required) ARN of the source resource (for zero‑ETL, typically a DynamoDB table ARN).
 - `target_arn` (Required) ARN of the target resource (for zero‑ETL, e.g., SageMaker Lakehouse target).
+- `description` (Optional) Description of the integration.
+- `region` (Optional) Region to target for resource operations. Defaults to provider region.
 
 ## Attributes Reference
 

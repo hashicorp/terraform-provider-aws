@@ -33,7 +33,7 @@ func TestAccGlueInboundIntegration_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var v awstypes.InboundIntegration
+	var v awstypes.Integration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_inbound_integration.test"
 
@@ -57,6 +57,7 @@ func TestAccGlueInboundIntegration_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccInboundIntegrationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
@@ -73,7 +74,7 @@ func TestAccGlueInboundIntegration_disappears(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var v awstypes.InboundIntegration
+	var v awstypes.Integration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_inbound_integration.test"
 
@@ -124,7 +125,7 @@ func testAccCheckInboundIntegrationDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckInboundIntegrationExists(ctx context.Context, n string, v *awstypes.InboundIntegration) resource.TestCheckFunc {
+func testAccCheckInboundIntegrationExists(ctx context.Context, n string, v *awstypes.Integration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -139,6 +140,16 @@ func testAccCheckInboundIntegrationExists(ctx context.Context, n string, v *awst
 		}
 		*v = *out
 		return nil
+	}
+}
+
+func testAccInboundIntegrationImportStateIDFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }
 

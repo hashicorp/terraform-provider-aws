@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitInboundIntegrationCreated(ctx context.Context, conn *glue.Client, arn string, timeout time.Duration) (*awstypes.InboundIntegration, error) {
+func waitInboundIntegrationCreated(ctx context.Context, conn *glue.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"CREATING", "MODIFYING"},
 		Target:     []string{"ACTIVE"},
@@ -25,7 +25,7 @@ func waitInboundIntegrationCreated(ctx context.Context, conn *glue.Client, arn s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.InboundIntegration); ok {
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
 		// surface terminal state text if present
 		tfresource.SetLastError(err, errors.New(string(output.Status)))
 		return output, err
@@ -34,7 +34,7 @@ func waitInboundIntegrationCreated(ctx context.Context, conn *glue.Client, arn s
 	return nil, err
 }
 
-func waitInboundIntegrationDeleted(ctx context.Context, conn *glue.Client, arn string, timeout time.Duration) (*awstypes.InboundIntegration, error) {
+func waitInboundIntegrationDeleted(ctx context.Context, conn *glue.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING", "ACTIVE"},
 		Target:  []string{},
@@ -44,7 +44,7 @@ func waitInboundIntegrationDeleted(ctx context.Context, conn *glue.Client, arn s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.InboundIntegration); ok {
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
 		return output, err
 	}
 

@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findInboundIntegrationByARN(ctx context.Context, conn *glue.Client, arn string) (*awstypes.InboundIntegration, error) {
-	input := glue.DescribeInboundIntegrationsInput{
-		IntegrationArn: aws.String(arn),
+func findInboundIntegrationByARN(ctx context.Context, conn *glue.Client, arn string) (*awstypes.Integration, error) {
+	input := glue.DescribeIntegrationsInput{
+		IntegrationIdentifier: aws.String(arn),
 	}
 
-	output, err := conn.DescribeInboundIntegrations(ctx, &input)
+	output, err := conn.DescribeIntegrations(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -32,10 +32,10 @@ func findInboundIntegrationByARN(ctx context.Context, conn *glue.Client, arn str
 		return nil, err
 	}
 
-	if output == nil || len(output.InboundIntegrations) == 0 {
+	if output == nil || len(output.Integrations) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	v := output.InboundIntegrations[0]
+	v := output.Integrations[0]
 	return &v, nil
 }

@@ -47,6 +47,9 @@ func (r *inboundIntegrationResource) Schema(ctx context.Context, req resource.Sc
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+			},
 			"integration_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -89,6 +92,7 @@ func (r *inboundIntegrationResource) Create(ctx context.Context, request resourc
 
 	input := glue.CreateIntegrationInput{
 		IntegrationName: data.IntegrationName.ValueStringPointer(),
+		Description:     data.Description.ValueStringPointer(),
 		SourceArn:       flex.StringFromFramework(ctx, data.SourceARN),
 		TargetArn:       flex.StringFromFramework(ctx, data.TargetARN),
 	}
@@ -155,7 +159,26 @@ func (r *inboundIntegrationResource) Update(ctx context.Context, request resourc
 		return
 	}
 
-	// No updatable fields supported currently. Persist state as-is.
+	conn := r.Meta().GlueClient(ctx)
+
+	// Update description if changed
+	if !new.Description.Equal(old.Description) {
+		input := glue.ModifyIntegrationInput{
+			IntegrationIdentifier: flex.StringFromFramework(ctx, old.IntegrationARN),
+			Description:           new.Description.ValueStringPointer(),
+		}
+
+		if _, err := conn.ModifyIntegration(ctx, &input); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Glue Inbound Integration (%s)", old.IntegrationARN.ValueString()), err.Error())
+			return
+		}
+
+		if _, err := waitInboundIntegrationCreated(ctx, conn, old.IntegrationARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Glue Inbound Integration (%s) update", old.IntegrationARN.ValueString()), err.Error())
+			return
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
@@ -197,6 +220,7 @@ func (r *inboundIntegrationResource) ImportState(ctx context.Context, request re
 type inboundIntegrationResourceModel struct {
 	framework.WithRegionModel
 	IntegrationARN  types.String   `tfsdk:"arn"`
+	Description     types.String   `tfsdk:"description"`
 	IntegrationName types.String   `tfsdk:"integration_name"`
 	SourceARN       fwtypes.ARN    `tfsdk:"source_arn"`
 	TargetARN       fwtypes.ARN    `tfsdk:"target_arn"`

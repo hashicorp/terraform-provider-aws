@@ -15,8 +15,8 @@ import (
 
 func statusInboundIntegration(ctx context.Context, conn *glue.Client, arn string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		input := glue.DescribeInboundIntegrationsInput{IntegrationArn: aws.String(arn)}
-		output, err := conn.DescribeInboundIntegrations(ctx, &input)
+		input := glue.DescribeIntegrationsInput{IntegrationIdentifier: aws.String(arn)}
+		output, err := conn.DescribeIntegrations(ctx, &input)
 
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return nil, "NotFound", nil
@@ -26,11 +26,11 @@ func statusInboundIntegration(ctx context.Context, conn *glue.Client, arn string
 			return nil, "", err
 		}
 
-		if output == nil || len(output.InboundIntegrations) == 0 {
+		if output == nil || len(output.Integrations) == 0 {
 			return nil, "NotFound", nil
 		}
 
-		v := output.InboundIntegrations[0]
+		v := output.Integrations[0]
 		status := string(v.Status)
 		return &v, status, nil
 	}
