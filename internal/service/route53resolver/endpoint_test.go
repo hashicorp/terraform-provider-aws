@@ -650,3 +650,77 @@ resource "aws_route53_resolver_endpoint" "test" {
 }
 `, rName, resolverEndpointType))
 }
+
+func TestAccRoute53ResolverEndpoint_multipleIPsPerSubnet_auto(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ep awstypes.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_multipleIPsPerSubnetAuto(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "6"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_multipleIPsPerSubnetAuto5(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "5"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEndpointConfig_multipleIPsPerSubnetAuto(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), `
+resource "aws_route53_resolver_endpoint" "test" {
+  direction              = "OUTBOUND"
+  resolver_endpoint_type = "IPV4"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address { subnet_id = aws_subnet.test[0].id }
+  ip_address { subnet_id = aws_subnet.test[0].id }
+  ip_address { subnet_id = aws_subnet.test[0].id }
+
+  ip_address { subnet_id = aws_subnet.test[1].id }
+  ip_address { subnet_id = aws_subnet.test[1].id }
+  ip_address { subnet_id = aws_subnet.test[1].id }
+}
+`)
+}
+
+func testAccEndpointConfig_multipleIPsPerSubnetAuto5(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), `
+resource "aws_route53_resolver_endpoint" "test" {
+  direction              = "OUTBOUND"
+  resolver_endpoint_type = "IPV4"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address { subnet_id = aws_subnet.test[0].id }
+  ip_address { subnet_id = aws_subnet.test[0].id }
+  ip_address { subnet_id = aws_subnet.test[0].id }
+
+  ip_address { subnet_id = aws_subnet.test[1].id }
+  ip_address { subnet_id = aws_subnet.test[1].id }
+}
+`)
+}
