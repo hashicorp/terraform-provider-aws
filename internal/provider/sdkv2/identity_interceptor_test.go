@@ -325,7 +325,9 @@ func TestIdentityInterceptor_Update_PartialNullValues(t *testing.T) {
 
 	// Set only account_id, leaving region and name null
 	// This simulates a scenario where identity was partially set (not the full null bug scenario)
-	identity.Set(names.AttrAccountID, accountID)
+	if err := identity.Set(names.AttrAccountID, accountID); err != nil {
+		t.Fatalf("unexpected error setting account_id in identity: %v", err)
+	}
 
 	opts := crudInterceptorOptions{
 		c:    client,
@@ -574,8 +576,12 @@ func TestIdentityInterceptor_ProviderUpgradeBugScenario_partiallyPopulated(t *te
 	}
 
 	// Set some but not all identity attributes
-	identity.Set(names.AttrAccountID, accountID)
-	identity.Set(names.AttrRegion, region)
+	if err := identity.Set(names.AttrAccountID, accountID); err != nil {
+		t.Fatalf("unexpected error setting account_id in identity: %v", err)
+	}
+	if err := identity.Set(names.AttrRegion, region); err != nil {
+		t.Fatalf("unexpected error setting region in identity: %v", err)
+	}
 	// Leave bucket and key null to simulate partial population
 
 	// Run Update operation
