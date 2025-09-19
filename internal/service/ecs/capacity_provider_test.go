@@ -329,7 +329,6 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInstanceRequi
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "SPOT"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.0.vcpu_count.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.0.vcpu_count.0.min", "2"),
@@ -793,7 +792,6 @@ resource "aws_ecs_capacity_provider" "test" {
 
     instance_launch_template {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
-      capacity_option_type     = "SPOT"
 
       network_configuration {
         subnets = aws_subnet.test[*].id
