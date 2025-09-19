@@ -18,6 +18,7 @@ func TestAccRoute53RecoveryControlConfig_serial(t *testing.T) {
 		"Cluster": {
 			acctest.CtBasic:      testAccCluster_basic,
 			acctest.CtDisappears: testAccCluster_disappears,
+			"networkType":        testAccCluster_networkType,
 		},
 		"ControlPanel": {
 			acctest.CtBasic:      testAccControlPanel_basic,

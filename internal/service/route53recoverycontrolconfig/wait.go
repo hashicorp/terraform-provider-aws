@@ -14,11 +14,29 @@ import (
 )
 
 const (
-	timeout    = 60 * time.Second
+	timeout    = 1800 * time.Second
 	minTimeout = 5 * time.Second
 )
 
 func waitClusterCreated(ctx context.Context, conn *r53rcc.Client, clusterArn string) (*awstypes.Cluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.StatusPending),
+		Target:     enum.Slice(awstypes.StatusDeployed),
+		Refresh:    statusCluster(ctx, conn, clusterArn),
+		Timeout:    timeout,
+		MinTimeout: minTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Cluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterUpdated(ctx context.Context, conn *r53rcc.Client, clusterArn string) (*awstypes.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
