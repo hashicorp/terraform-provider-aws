@@ -75,6 +75,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 
 // identityHasNullValues checks if ALL identity attributes are fully null,
 // which indicates the specific bug scenario from failed non-refresh applies.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/44330
 //
 // The reported error occurs when all identity attributes are fully null due to
 // failed non-refresh applies (terraform apply -refresh=false) where the read op
