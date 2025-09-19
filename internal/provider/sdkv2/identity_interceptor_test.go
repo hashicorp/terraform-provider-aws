@@ -404,6 +404,7 @@ func (c mockClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-
 // TestIdentityInterceptor_ProviderUpgradeBugScenario tests the specific bug reported
 // where provider upgrade from pre-identity version to identity-enabled version causes
 // "Missing Resource Identity After Update" error during terraform apply operations.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/44330
 //
 // This simulates the exact scenario reported in the GitHub issue where aws_s3_object
 // (and similar resources) fail after provider upgrade when Update operations occur
@@ -515,8 +516,6 @@ func TestIdentityInterceptor_ProviderUpgradeBugScenario(t *testing.T) {
 	if e, a := key, identity.Get(names.AttrKey); e != a {
 		t.Errorf("expected key %q, got %q (identity not populated - bug still exists!)", e, a)
 	}
-
-	t.Logf("SUCCESS: Provider upgrade bug scenario handled correctly - identity populated on Update when all attributes were null")
 }
 
 // TestIdentityInterceptor_ProviderUpgradeBugScenario_PartiallyPopulated tests that
@@ -618,8 +617,6 @@ func TestIdentityInterceptor_ProviderUpgradeBugScenario_partiallyPopulated(t *te
 	if identity.Get(names.AttrKey) != "" {
 		t.Errorf("expected key to remain null, got %q", identity.Get(names.AttrKey))
 	}
-
-	t.Logf("SUCCESS: Partial null scenario handled correctly - identity NOT re-populated when some attributes already set")
 }
 
 // s3ObjectLikeIdentitySpec creates an identity spec similar to S3 objects
