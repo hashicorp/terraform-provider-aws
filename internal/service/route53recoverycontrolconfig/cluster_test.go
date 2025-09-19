@@ -69,7 +69,7 @@ func testAccCluster_networkType(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_networkType(rName, string(awstypes.NetworkTypeIpv4)),
+				Config: testAccClusterConfig_networkType(rName, string(awstypes.NetworkTypeDualstack)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -80,7 +80,7 @@ func testAccCluster_networkType(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
-					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDualstack)),
 				),
 			},
 			{
@@ -90,10 +90,10 @@ func testAccCluster_networkType(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"cluster_endpoints"},
 			},
 			{
-				Config: testAccClusterConfig_networkType(rName, string(awstypes.NetworkTypeDualstack)),
+				Config: testAccClusterConfig_networkType(rName, string(awstypes.NetworkTypeIpv4)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -101,7 +101,7 @@ func testAccCluster_networkType(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
-					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDualstack)),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
 				),
 			},
 			{
