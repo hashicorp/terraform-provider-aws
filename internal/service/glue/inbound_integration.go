@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -89,7 +88,7 @@ func (r *inboundIntegrationResource) Create(ctx context.Context, request resourc
 	conn := r.Meta().GlueClient(ctx)
 
 	input := glue.CreateIntegrationInput{
-		IntegrationName: aws.String(data.IntegrationName.ValueString()),
+		IntegrationName: data.IntegrationName.ValueStringPointer(),
 		SourceArn:       flex.StringFromFramework(ctx, data.SourceARN),
 		TargetArn:       flex.StringFromFramework(ctx, data.TargetARN),
 	}

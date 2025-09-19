@@ -66,5 +66,3 @@ Glue inbound integrations can be imported by `arn`:
 ```sh
 terraform import aws_glue_inbound_integration.example arn:aws:glue:region:account:integration/ID
 ```
-
-
