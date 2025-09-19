@@ -1006,6 +1006,7 @@ func TestAccIAMRole_Identity_ExistingResource_NoRefreshFailure(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
+				// We DON'T want this error. A fix should cause this test to begin failing.
 				ExpectError: regexache.MustCompile(`Missing Resource Identity After Update`),
 			},
 		},
