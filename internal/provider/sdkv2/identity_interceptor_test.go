@@ -483,12 +483,12 @@ func TestIdentityInterceptor_ProviderUpgradeBugFix(t *testing.T) {
 			}
 
 			// Test the core fix logic
-			hasNullValues := identityHasNullValues(d, &identitySpec)
+			hasNullValues := identityIsFullyNull(d, &identitySpec)
 			if tc.expectPopulation && !hasNullValues {
-				t.Errorf("expected identityHasNullValues to return true for %s, got false", tc.description)
+				t.Errorf("expected identityIsFullyNull to return true for %s, got false", tc.description)
 			}
 			if !tc.expectPopulation && hasNullValues {
-				t.Errorf("expected identityHasNullValues to return false for %s, got true", tc.description)
+				t.Errorf("expected identityIsFullyNull to return false for %s, got true", tc.description)
 			}
 
 			// Test interceptor behavior
@@ -539,8 +539,8 @@ func TestIdentityInterceptor_ProviderUpgradeBugFix(t *testing.T) {
 	}
 }
 
-// TestIdentityHasNullValues tests the core helper function that detects the provider upgrade scenario
-func TestIdentityHasNullValues(t *testing.T) {
+// TestIdentityIsFullyNull tests the core helper function that detects the provider upgrade scenario
+func TestIdentityIsFullyNull(t *testing.T) {
 	t.Parallel()
 
 	// Simple identity spec for testing
@@ -614,10 +614,10 @@ func TestIdentityHasNullValues(t *testing.T) {
 			}
 
 			// Test the function
-			result := identityHasNullValues(d, identitySpec)
+			result := identityIsFullyNull(d, identitySpec)
 
 			if result != tc.expectNull {
-				t.Errorf("%s: expected identityHasNullValues to return %v, got %v",
+				t.Errorf("%s: expected identityIsFullyNull to return %v, got %v",
 					tc.description, tc.expectNull, result)
 			}
 		})
