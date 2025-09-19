@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	timeout    = 60 * time.Second
+	timeout    = 1800 * time.Second
 	minTimeout = 5 * time.Second
 )
 
