@@ -20,16 +20,16 @@ import (
 )
 
 // @SDKResource("aws_ssmcontacts_contact_channel", name="Contact Channel")
+// @ArnIdentity
+// Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
+// @Testing(identityRegionOverrideTest=false)
+// @Testing(preIdentityVersion="v6.14.0")
 func ResourceContactChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactChannelCreate,
 		ReadWithoutTimeout:   resourceContactChannelRead,
 		UpdateWithoutTimeout: resourceContactChannelUpdate,
 		DeleteWithoutTimeout: resourceContactChannelDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"activation_status": {
