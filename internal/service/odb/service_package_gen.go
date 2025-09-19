@@ -38,6 +38,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceCloudVmCluster,
+			TypeName: "aws_odb_cloud_vm_cluster",
+			Name:     "Cloud Vm Cluster",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
@@ -45,6 +54,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceNetworkPeeringConnection,
+			TypeName: "aws_odb_network_peering_connection",
+			Name:     "Network Peering Connection",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -70,9 +85,27 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceCloudVmCluster,
+			TypeName: "aws_odb_cloud_vm_cluster",
+			Name:     "Cloud Vm Cluster",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newResourceNetworkPeeringConnection,
+			TypeName: "aws_odb_network_peering_connection",
+			Name:     "Network Peering Connection",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
