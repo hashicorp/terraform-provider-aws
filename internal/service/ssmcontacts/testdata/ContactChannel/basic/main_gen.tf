@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_ssmcontacts_contact" "test" {
   alias = "test-contact-for-${var.rName}"
   type  = "PERSONAL"
@@ -14,8 +17,6 @@ resource "aws_ssmcontacts_contact_channel" "test" {
 
   name = var.rName
   type = "EMAIL"
-
-{{- template "tags" . }}
 }
 
 # testAccContactChannelConfig_base
@@ -23,3 +24,8 @@ resource "aws_ssmcontacts_contact_channel" "test" {
 data "aws_ssmincidents_replication_set" "test" {}
 
 data "aws_region" "current" {}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
