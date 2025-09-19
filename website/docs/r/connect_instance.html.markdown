@@ -95,7 +95,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_connect_instance.example
   identity = {
-    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+    id = "f1288a1f-6193-445a-b47e-af739b2"
   }
 }
 
