@@ -27,6 +27,7 @@ func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
 		DeleteWithoutTimeout: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -62,7 +63,6 @@ func resourceCluster() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 			},
 			names.AttrStatus: {
@@ -132,6 +132,35 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
+
+	input := &r53rcc.UpdateClusterInput{
+		ClusterArn: aws.String(d.Id()),
+	}
+
+	if d.HasChanges("network_type") {
+		input.NetworkType = awstypes.NetworkType(d.Get("network_type").(string))
+	}
+
+	output, err := conn.UpdateCluster(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Cluster: %s", err)
+	}
+
+	if output == nil || output.Cluster == nil {
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Cluster: empty response")
+	}
+
+	if _, err := waitClusterUpdated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Cluster (%s) to be Updated: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
