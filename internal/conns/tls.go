@@ -77,6 +77,14 @@ func (c *Config) configureHTTPClientMTLS(awsConfig *aws.Config, ctx context.Cont
 		return err
 	}
 
+	var caCertPool *x509.CertPool
+	if c.CustomCABundle != "" {
+		caCertPool, err = c.loadCustomCABundle()
+		if err != nil {
+			return err
+		}
+	}
+
 	sdkHTTPClient := awsConfig.HTTPClient
 	if sdkHTTPClient == nil {
 		return fmt.Errorf("SDK HTTP client is unexpectedly nil")
@@ -84,12 +92,12 @@ func (c *Config) configureHTTPClientMTLS(awsConfig *aws.Config, ctx context.Cont
 
 	switch client := sdkHTTPClient.(type) {
 	case *http.Client:
-		err := c.configureStandardHTTPClient(client, cert, ctx)
+		err := c.configureStandardHTTPClient(client, cert, caCertPool)
 		if err != nil {
 			return err
 		}
 	case *awshttp.BuildableClient:
-		err := c.configureBuildableHTTPClient(awsConfig, client, cert, ctx)
+		err := c.configureBuildableHTTPClient(awsConfig, client, cert, caCertPool)
 		if err != nil {
 			return err
 		}
@@ -100,7 +108,7 @@ func (c *Config) configureHTTPClientMTLS(awsConfig *aws.Config, ctx context.Cont
 	return nil
 }
 
-func (c *Config) configureStandardHTTPClient(httpClient *http.Client, cert tls.Certificate, ctx context.Context) error {
+func (c *Config) configureStandardHTTPClient(httpClient *http.Client, cert tls.Certificate, caCertPool *x509.CertPool) error {
 	var transport *http.Transport
 	if httpClient.Transport != nil {
 		if t, ok := httpClient.Transport.(*http.Transport); ok {
@@ -122,59 +130,45 @@ func (c *Config) configureStandardHTTPClient(httpClient *http.Client, cert tls.C
 		transport.TLSClientConfig.Certificates = append(transport.TLSClientConfig.Certificates, cert)
 	}
 
-	if c.CustomCABundle != "" {
-		err := c.configureCustomCABundle(transport.TLSClientConfig)
-		if err != nil {
-			return fmt.Errorf("failed to configure custom CA bundle: %w", err)
-		}
+	if caCertPool != nil {
+		transport.TLSClientConfig.RootCAs = caCertPool
 	}
 
 	httpClient.Transport = transport
 	return nil
 }
 
-func (c *Config) configureBuildableHTTPClient(awsConfig *aws.Config, buildableClient *awshttp.BuildableClient, cert tls.Certificate, ctx context.Context) error {
-	baseTransport := buildableClient.GetTransport()
+func (c *Config) configureBuildableHTTPClient(awsConfig *aws.Config, buildableClient *awshttp.BuildableClient, cert tls.Certificate, caCertPool *x509.CertPool) error {
+	transportOption := func(transport *http.Transport) {
+		if transport.TLSClientConfig == nil {
+			transport.TLSClientConfig = &tls.Config{}
+		}
 
-	if baseTransport.TLSClientConfig == nil {
-		baseTransport.TLSClientConfig = &tls.Config{}
-	}
+		if transport.TLSClientConfig.Certificates == nil {
+			transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
+		} else {
+			transport.TLSClientConfig.Certificates = append(transport.TLSClientConfig.Certificates, cert)
+		}
 
-	if baseTransport.TLSClientConfig.Certificates == nil {
-		baseTransport.TLSClientConfig.Certificates = []tls.Certificate{cert}
-	} else {
-		baseTransport.TLSClientConfig.Certificates = append(baseTransport.TLSClientConfig.Certificates, cert)
-	}
-
-	if c.CustomCABundle != "" {
-		err := c.configureCustomCABundle(baseTransport.TLSClientConfig)
-		if err != nil {
-			return fmt.Errorf("failed to configure custom CA bundle: %w", err)
+		if caCertPool != nil {
+			transport.TLSClientConfig.RootCAs = caCertPool
 		}
 	}
 
-	// Create a new standard http.Client with the configured transport
-	// This ensures the mTLS configuration is applied directly to the HTTP client
-	httpClient := &http.Client{
-		Transport: baseTransport,
-		Timeout:   buildableClient.GetTimeout(),
-	}
-
-	awsConfig.HTTPClient = httpClient
+	awsConfig.HTTPClient = buildableClient.WithTransportOptions(transportOption)
 	return nil
 }
 
-func (c *Config) configureCustomCABundle(tlsConfig *tls.Config) error {
+func (c *Config) loadCustomCABundle() (*x509.CertPool, error) {
 	caBundleData, err := os.ReadFile(c.CustomCABundle)
 	if err != nil {
-		return fmt.Errorf("failed to read custom CA bundle file %q: %w", c.CustomCABundle, err)
+		return nil, fmt.Errorf("failed to read custom CA bundle file %q: %w", c.CustomCABundle, err)
 	}
 
 	caCertPool := x509.NewCertPool()
 	if !caCertPool.AppendCertsFromPEM(caBundleData) {
-		return fmt.Errorf("failed to parse certificates from custom CA bundle file %q", c.CustomCABundle)
+		return nil, fmt.Errorf("failed to parse certificates from custom CA bundle file %q", c.CustomCABundle)
 	}
 
-	tlsConfig.RootCAs = caCertPool
-	return nil
+	return caCertPool, nil
 }
