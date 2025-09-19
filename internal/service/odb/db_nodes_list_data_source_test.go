@@ -57,7 +57,7 @@ func TestAccODBDbNodesListDataSource_basic(t *testing.T) {
 		CheckDestroy:             dbNodesListDataSourceTestEntity.testAccCheckDbNodesDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dbNodesListDataSourceTestEntity.testAccDbNodesListDataSourceConfig_basic(),
+				Config: dbNodesListDataSourceTestEntity.basicDbNodesListDataSource(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					dbNodesListDataSourceTestEntity.testAccCheckDbNodesListExists(ctx, dataSourceName, &dbNodesList),
 					resource.TestCheckResourceAttr(dataSourceName, "aws_odb_db_nodes_list.db_servers.#", strconv.Itoa(len(dbNodesList.DbNodes))),
@@ -132,8 +132,8 @@ func (dbNodesListDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cl
 	return output.CloudVmCluster, nil
 }
 
-func (dbNodesListDataSourceTest) testAccDbNodesListDataSourceConfig_basic() string {
-	vmCluster := dbNodeDataSourceTestEntity.vmClusterBasicConfig()
+func (dbNodesListDataSourceTest) basicDbNodesListDataSource() string {
+	vmCluster := dbNodesListDataSourceTestEntity.vmClusterBasic()
 	return fmt.Sprintf(`
 
 	%s
@@ -145,11 +145,13 @@ data "aws_odb_db_nodes_list" "test" {
 }
 
 func (dbNodesListDataSourceTest) vmClusterBasic() string {
-
 	odbNetRName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
 	exaInfraRName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.exaDisplayNamePrefix)
 	vmcDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.vmClusterDisplayNamePrefix)
-
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		panic(err)
+	}
 	return fmt.Sprintf(`
 
 resource "aws_odb_network" "test" {
@@ -204,5 +206,5 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   }
 
 }
-`, odbNetRName, exaInfraRName, vmcDisplayName)
+`, odbNetRName, exaInfraRName, vmcDisplayName, publicKey)
 }

@@ -30,38 +30,32 @@ type testDbServersListDataSource struct {
 	displayNamePrefix string
 }
 
-var dbServersListDataSourceTests = testDbServersListDataSource{
+var dbServersListDataSourceTestEntity = testDbServersListDataSource{
 	displayNamePrefix: "Ofake-exa",
 }
 
 // Acceptance test access AWS and cost money to run.
 func TestAccODBDbServersListDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
-	var dbserverslist odb.ListDbServersOutput
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTests.displayNamePrefix)
-
+	var dbServersList odb.ListDbServersOutput
 	dataSourceName := "data.aws_odb_db_servers_list.test"
 	exaInfraResourceName := "aws_odb_cloud_exadata_infrastructure.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbServersListDataSourceTests.testAccCheckDbServersDestroyed(ctx),
+		CheckDestroy:             dbServersListDataSourceTestEntity.testAccCheckDbServersDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dbServersListDataSourceTests.testAccDbServersListDataSourceConfigBasic(dbServersListDataSourceTests.exaInfra(exaInfraDisplayName)),
+				Config: dbServersListDataSourceTestEntity.testAccDbServersListDataSourceConfigBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbServersListDataSourceTests.testAccCheckDbServersListExists(ctx, exaInfraResourceName, &dbserverslist),
-					resource.TestCheckResourceAttr(dataSourceName, "aws_odb_db_servers_list.db_servers.#", strconv.Itoa(len(dbserverslist.DbServers))),
+					dbServersListDataSourceTestEntity.testAccCheckDbServersListExists(ctx, exaInfraResourceName, &dbServersList),
+					resource.TestCheckResourceAttr(dataSourceName, "aws_odb_db_servers_list.db_servers.#", strconv.Itoa(len(dbServersList.DbServers))),
 				),
 			},
 		},
@@ -77,7 +71,7 @@ func (testDbServersListDataSource) testAccCheckDbServersListExists(ctx context.C
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		var exaInfraId = &rs.Primary.ID
 
-		resp, err := dbServersListDataSourceTests.findDbServersList(ctx, conn, exaInfraId)
+		resp, err := dbServersListDataSourceTestEntity.findDbServersList(ctx, conn, exaInfraId)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbServersList, rs.Primary.ID, err)
 		}
@@ -93,7 +87,7 @@ func (testDbServersListDataSource) testAccCheckDbServersDestroyed(ctx context.Co
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
 			}
-			_, err := dbServersListDataSourceTests.findExaInfra(ctx, conn, rs.Primary.ID)
+			_, err := dbServersListDataSourceTestEntity.findExaInfra(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -110,7 +104,6 @@ func (testDbServersListDataSource) findExaInfra(ctx context.Context, conn *odb.C
 	input := odb.GetCloudExadataInfrastructureInput{
 		CloudExadataInfrastructureId: aws.String(id),
 	}
-
 	out, err := conn.GetCloudExadataInfrastructure(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
@@ -119,14 +112,11 @@ func (testDbServersListDataSource) findExaInfra(ctx context.Context, conn *odb.C
 				LastRequest: &input,
 			}
 		}
-
 		return nil, err
 	}
-
 	if out == nil || out.CloudExadataInfrastructure == nil {
 		return nil, tfresource.NewEmptyResultError(&input)
 	}
-
 	return out.CloudExadataInfrastructure, nil
 }
 
@@ -141,7 +131,9 @@ func (testDbServersListDataSource) findDbServersList(ctx context.Context, conn *
 	return output, nil
 }
 
-func (testDbServersListDataSource) testAccDbServersListDataSourceConfigBasic(exaInfra string) string {
+func (testDbServersListDataSource) testAccDbServersListDataSourceConfigBasic() string {
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTestEntity.displayNamePrefix)
+	exaInfra := dbServersListDataSourceTestEntity.exaInfra(exaInfraDisplayName)
 	return fmt.Sprintf(`
 %s
 
@@ -154,22 +146,16 @@ data "aws_odb_db_servers_list" "test" {
 func (testDbServersListDataSource) exaInfra(rName string) string {
 	exaRes := fmt.Sprintf(`
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name          = "%[1]s"
-  shape             	= "Exadata.X9M"
-  storage_count      	= 3
-  compute_count         = 2
-  availability_zone_id 	= "use1-az6"
-  customer_contacts_to_send_to_oci = ["abc@example.com"]
-  maintenance_window = {
-  		custom_action_timeout_in_mins = 16
-		days_of_week =	[]
-        hours_of_day =	[]
-        is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 0
-        months = []
-        patching_mode = "ROLLING"
-        preference = "NO_PREFERENCE"
-		weeks_of_month =[]
+  display_name         = %[1]q
+  shape                = "Exadata.X9M"
+  storage_count        = 3
+  compute_count        = 2
+  availability_zone_id = "use1-az6"
+  maintenance_window {
+    custom_action_timeout_in_mins    = 16
+    is_custom_action_timeout_enabled = true
+    patching_mode                    = "ROLLING"
+    preference                       = "NO_PREFERENCE"
   }
 }
 `, rName)

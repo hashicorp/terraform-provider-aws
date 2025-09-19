@@ -40,7 +40,7 @@ func TestAccODBDbServerDataSource(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var dbServer odb.GetDbServerOutput
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTests.displayNamePrefix)
+
 	dataSourceName := "data.aws_odb_db_server.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -51,7 +51,7 @@ func TestAccODBDbServerDataSource(t *testing.T) {
 		CheckDestroy:             dbServerDataSourceTestEntity.testAccCheckDbServersDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dbServerDataSourceTestEntity.basic(dbServerDataSourceTestEntity.exaInfra(exaInfraDisplayName)),
+				Config: dbServerDataSourceTestEntity.basicDbServerDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					dbServerDataSourceTestEntity.testAccCheckDbServerExists(ctx, dataSourceName, &dbServer),
 				),
@@ -86,7 +86,7 @@ func (testDbServerDataSourceTest) testAccCheckDbServersDestroyed(ctx context.Con
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
 			}
-			_, err := dbServerDataSourceTestEntity.findExaInfra(ctx, conn, rs.Primary.ID)
+			err := dbServerDataSourceTestEntity.findExaInfra(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -99,25 +99,24 @@ func (testDbServerDataSourceTest) testAccCheckDbServersDestroyed(ctx context.Con
 	}
 }
 
-func (testDbServerDataSourceTest) findExaInfra(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudExadataInfrastructure, error) {
+func (testDbServerDataSourceTest) findExaInfra(ctx context.Context, conn *odb.Client, id string) error {
 	input := odb.GetCloudExadataInfrastructureInput{
 		CloudExadataInfrastructureId: aws.String(id),
 	}
 	out, err := conn.GetCloudExadataInfrastructure(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
 		}
-		return nil, err
+		return err
 	}
-
 	if out == nil || out.CloudExadataInfrastructure == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return tfresource.NewEmptyResultError(&input)
 	}
-	return out.CloudExadataInfrastructure, nil
+	return nil
 }
 
 func (testDbServerDataSourceTest) findDbServer(ctx context.Context, conn *odb.Client, dbServerId *string, exaInfraId *string) (*odb.GetDbServerOutput, error) {
@@ -132,7 +131,10 @@ func (testDbServerDataSourceTest) findDbServer(ctx context.Context, conn *odb.Cl
 	return output, nil
 }
 
-func (testDbServerDataSourceTest) basic(exaInfra string) string {
+func (testDbServerDataSourceTest) basicDbServerDataSourceConfig() string {
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTestEntity.displayNamePrefix)
+	exaInfra := dbServerDataSourceTestEntity.exaInfra(exaInfraDisplayName)
+
 	return fmt.Sprintf(`
 %s
 
@@ -141,7 +143,7 @@ data "aws_odb_db_servers_list" "test" {
 }
 
 data "aws_odb_db_server" "test" {
-  id = data.aws_odb_db_servers_list.test.db_servers[0].id
+  id                              = data.aws_odb_db_servers_list.test.db_servers[0].id
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 `, exaInfra)
@@ -150,22 +152,16 @@ data "aws_odb_db_server" "test" {
 func (testDbServerDataSourceTest) exaInfra(rName string) string {
 	exaRes := fmt.Sprintf(`
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name          = "%[1]s"
-  shape             	= "Exadata.X9M"
-  storage_count      	= 3
-  compute_count         = 2
-  availability_zone_id 	= "use1-az6"
-  customer_contacts_to_send_to_oci = ["abc@example.com"]
-  maintenance_window = {
-  		custom_action_timeout_in_mins = 16
-		days_of_week =	[]
-        hours_of_day =	[]
-        is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 0
-        months = []
-        patching_mode = "ROLLING"
-        preference = "NO_PREFERENCE"
-		weeks_of_month =[]
+  display_name         = "%[1]s"
+  shape                = "Exadata.X9M"
+  storage_count        = 3
+  compute_count        = 2
+  availability_zone_id = "use1-az6"
+  maintenance_window {
+    custom_action_timeout_in_mins    = 16
+    is_custom_action_timeout_enabled = true
+    patching_mode                    = "ROLLING"
+    preference                       = "NO_PREFERENCE"
   }
 }
 `, rName)

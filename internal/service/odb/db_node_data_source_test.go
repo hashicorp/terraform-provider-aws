@@ -39,40 +39,43 @@ func TestAccODBDbNodeDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var dbServer odb.GetDbServerOutput
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTests.displayNamePrefix)
-	dataSourceName := "data.aws_odb_db_server.test"
+	var dbNode odb.GetDbNodeOutput
+	dataSourceName := "data.aws_odb_db_node.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbServerDataSourceTestEntity.testAccCheckDbServersDestroyed(ctx),
+		CheckDestroy:             dbNodeDataSourceTestEntity.testAccCheckDbNodeDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dbServerDataSourceTestEntity.basic(dbServerDataSourceTestEntity.exaInfra(exaInfraDisplayName)),
+				Config: dbNodeDataSourceTestEntity.dbNodeDataSourceBasicConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbServerDataSourceTestEntity.testAccCheckDbServerExists(ctx, dataSourceName, &dbServer),
+					dbNodeDataSourceTestEntity.testAccCheckDbNodeExists(ctx, dataSourceName, &dbNode),
 				),
 			},
 		},
 	})
 }
 
-func (testDbNodeDataSourceTest) testAccCheckDbNodeExists(ctx context.Context, name string, output *odb.GetDbServerOutput) resource.TestCheckFunc {
+func (testDbNodeDataSourceTest) testAccCheckDbNodeExists(ctx context.Context, name string, output *odb.GetDbNodeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbServer, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-		var dbServerId = rs.Primary.ID
+		var dbNodeId = rs.Primary.ID
 		var attributes = rs.Primary.Attributes
-		exaId := attributes["exadata_infrastructure_id"]
-		resp, err := dbServerDataSourceTestEntity.findDbServer(ctx, conn, &dbServerId, &exaId)
+		cloudVmClusterId := attributes["cloud_vm_cluster_id"]
+		input := odb.GetDbNodeInput{
+			CloudVmClusterId: &cloudVmClusterId,
+			DbNodeId:         &dbNodeId,
+		}
+		resp, err := conn.GetDbNode(ctx, &input)
 		if err != nil {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbServer, rs.Primary.ID, err)
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbNode, rs.Primary.ID, err)
 		}
 		*output = *resp
 		return nil
@@ -83,10 +86,10 @@ func (testDbNodeDataSourceTest) testAccCheckDbNodeDestroyed(ctx context.Context)
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
+			if rs.Type != "aws_odb_cloud_vm_cluster" {
 				continue
 			}
-			_, err := dbServerDataSourceTestEntity.findExaInfra(ctx, conn, rs.Primary.ID)
+			err := dbServerDataSourceTestEntity.findExaInfra(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -99,20 +102,7 @@ func (testDbNodeDataSourceTest) testAccCheckDbNodeDestroyed(ctx context.Context)
 	}
 }
 
-func (testDbNodeDataSourceTest) findDbNode(ctx context.Context, conn *odb.Client, dbServerId *string, exaInfraId *string) (*odb.GetDbServerOutput, error) {
-	inputWithExaId := &odb.GetDbServerInput{
-		DbServerId:                   dbServerId,
-		CloudExadataInfrastructureId: exaInfraId,
-	}
-	output, err := conn.GetDbServer(ctx, inputWithExaId)
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
-}
-
-func (testDbNodeDataSourceTest) basic() string {
-
+func (testDbNodeDataSourceTest) dbNodeDataSourceBasicConfig() string {
 	vmClusterConfig := dbNodeDataSourceTestEntity.vmClusterBasicConfig()
 
 	return fmt.Sprintf(`
@@ -123,20 +113,17 @@ data "aws_odb_db_nodes_list" "test" {
 }
 
 data "aws_odb_db_node" "test" {
-  id = data.aws_odb_db_nodes_list.test.db_nodes[0].id
+  id                  = data.aws_odb_db_nodes_list.test.db_nodes[0].id
   cloud_vm_cluster_id = cloud_vm_cluster_id.test.id
 }
-
-
 
 `, vmClusterConfig)
 }
 
 func (testDbNodeDataSourceTest) vmClusterBasicConfig() string {
-
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.exaDisplayNamePrefix)
 	oracleDBNetDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
-	vmcDsplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.vmClusterDisplayNamePrefix)
+	vmcDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.vmClusterDisplayNamePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		panic(err)
@@ -154,7 +141,7 @@ resource "aws_odb_network" "test" {
 }
 
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name         = %[1]q
+  display_name         = %[2]q
   shape                = "Exadata.X9M"
   storage_count        = 3
   compute_count        = 2
@@ -200,6 +187,6 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 data "aws_odb_cloud_vm_cluster" "test" {
   id = aws_odb_cloud_vm_cluster.test.id
 }
-`, oracleDBNetDisplayName, exaInfraDisplayName, vmcDsplayName, publicKey)
+`, oracleDBNetDisplayName, exaInfraDisplayName, vmcDisplayName, publicKey)
 	return dsTfCodeVmCluster
 }
