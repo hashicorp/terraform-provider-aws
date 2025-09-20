@@ -1034,7 +1034,7 @@ func TestAccIAMRole_Identity_ExistingResource_NoRefresh_WithChange(t *testing.T)
 	})
 }
 
-func TestAccIAMRole_Identity_ExistingResource_NoRefreshFailure(t *testing.T) {
+func TestAccIAMRole_Identity_ExistingResource_NoRefresh_OnError(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
