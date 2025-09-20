@@ -404,7 +404,7 @@ func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
 
 func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	kendraIndexArn := skipIfKendraIndexArnEnvVarNotSet(t)
+	kendraIndexArn := skipIfKendraIndexARNEnvVarNotSet(t)
 
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -515,7 +515,7 @@ func skipIfOSSCollectionNameEnvVarNotSet(t *testing.T) string {
 	return v
 }
 
-// skipIfKendraIndexArnEnvVarNotSet handles skipping tests when an environment
+// skipIfKendraIndexARNEnvVarNotSet handles skipping tests when an environment
 // variable providing a valid Kendra index ARN is unset
 //
 // This should be called in all acceptance tests currently dependent on a Kendra index.
@@ -525,7 +525,7 @@ func skipIfOSSCollectionNameEnvVarNotSet(t *testing.T) string {
 // 2. Create a new index with "GEN_AI_ENTERPRISE_EDITION" edition
 // 3. Wait for the index to be in "ACTIVE" status (this can take 20+ minutes)
 // 4. Copy the index ARN and set it as the TF_AWS_KENDRA_INDEX_ARN environment variable
-func skipIfKendraIndexArnEnvVarNotSet(t *testing.T) string {
+func skipIfKendraIndexARNEnvVarNotSet(t *testing.T) string {
 	t.Helper()
 	v := os.Getenv("TF_AWS_KENDRA_INDEX_ARN")
 	if v == "" {
