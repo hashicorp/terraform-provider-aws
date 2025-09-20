@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrock_guardrail: Increase upper limit of `topic_policy_config.topicsConfig.definition` from 200 to 1000
+```
