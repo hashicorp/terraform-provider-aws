@@ -942,28 +942,46 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					}
 				}
 			case engineNameAuroraPostgresql, engineNamePostgres:
+				// Build up a single PostgreSQLSettings object so we can merge:
+				// 1) nested postgres_settings block changes and
+				// 2) connection/secrets changes (username/password/server/port/db OR secrets_manager_*)
+				var pgSettings *awstypes.PostgreSQLSettings
+
+				// If the nested postgres_settings block changed, expand it into pgSettings
+				if d.HasChange("postgres_settings") {
+					raw := d.Get("postgres_settings").([]any)
+					if len(raw) > 0 && raw[0] != nil {
+						pgSettings = expandPostgreSQLSettings(raw[0].(map[string]any))
+					}
+				}
+
+				// If connection or secrets changed, overlay those onto the same settings object
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName, "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName,
+					"secrets_manager_access_role_arn", "secrets_manager_arn") {
+					if pgSettings == nil {
+						pgSettings = &awstypes.PostgreSQLSettings{}
+					}
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
-						input.PostgreSQLSettings = &awstypes.PostgreSQLSettings{
-							DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
-							SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-							SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-						}
+						pgSettings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+						pgSettings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
+						pgSettings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
 					} else {
-						input.PostgreSQLSettings = &awstypes.PostgreSQLSettings{
-							Username:     aws.String(d.Get(names.AttrUsername).(string)),
-							Password:     aws.String(d.Get(names.AttrPassword).(string)),
-							ServerName:   aws.String(d.Get("server_name").(string)),
-							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
-							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
-						}
-						input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
+						pgSettings.Username = aws.String(d.Get(names.AttrUsername).(string))
+						pgSettings.Password = aws.String(d.Get(names.AttrPassword).(string))
+						pgSettings.ServerName = aws.String(d.Get("server_name").(string))
+						pgSettings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
+						pgSettings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
 					}
+				}
+
+				// Attach PostgreSQLSettings and ensure EngineName is set
+				if pgSettings != nil {
+					input.PostgreSQLSettings = pgSettings
+					input.EngineName = aws.String(engineName) // should be "postgres" or "aurora-postgresql"
 				}
 			case engineNameDynamoDB:
 				if d.HasChange("service_access_role") {
