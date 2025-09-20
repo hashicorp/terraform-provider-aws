@@ -1039,8 +1039,8 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_bedrockagent_knowledge_base" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
   depends_on = [aws_iam_role_policy.test]
 
   knowledge_base_configuration {
