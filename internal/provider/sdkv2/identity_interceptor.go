@@ -29,7 +29,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	case After:
 		switch why {
 		case Create, Read, Update:
-			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) {
+			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(d, r.identitySpec) {
 				break
 			}
 			if d.Id() == "" {
@@ -68,6 +68,24 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	return diags
 }
 
+// identityIsFullyNull returns true if a resource supports identity and
+// all attributes are set to null values
+func identityIsFullyNull(d schemaResourceData, identitySpec *inttypes.Identity) bool {
+	identity, err := d.Identity()
+	if err != nil {
+		return false
+	}
+
+	for _, attr := range identitySpec.Attributes {
+		value := identity.Get(attr.Name())
+		if value != "" {
+			return false
+		}
+	}
+
+	return true
+}
+
 func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 	if name == "id" {
 		return d.Id(), true
@@ -82,14 +100,10 @@ func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 func newIdentityInterceptor(identitySpec *inttypes.Identity) interceptorInvocation {
 	interceptor := interceptorInvocation{
 		when: After,
-		why:  Create | Read,
+		why:  Create | Read | Update,
 		interceptor: identityInterceptor{
 			identitySpec: identitySpec,
 		},
-	}
-
-	if identitySpec.IsMutable && identitySpec.IsSetOnUpdate {
-		interceptor.why |= Update
 	}
 
 	return interceptor
