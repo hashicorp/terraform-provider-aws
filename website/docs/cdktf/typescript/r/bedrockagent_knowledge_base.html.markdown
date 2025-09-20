@@ -158,6 +158,7 @@ resource "aws_bedrockagent_knowledge_base" "kendra_example" {
     }
   }
 }
+```
 
 ## Argument Reference
 
