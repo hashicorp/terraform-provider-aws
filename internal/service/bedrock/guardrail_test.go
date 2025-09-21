@@ -334,7 +334,7 @@ func TestAccBedrockGuardrail_crossRegion(t *testing.T) {
 	})
 }
 
-func TestAccBedrockGuardrail_topicModality(t *testing.T) {
+func TestAccBedrockGuardrail_contentModality(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var guardrail bedrock.GetGuardrailOutput
@@ -839,7 +839,7 @@ resource "aws_bedrock_guardrail" "test" {
 `, rName)
 }
 
-func testAccGuardrailConfig_topicModality(rName string) string {
+func testAccGuardrailConfig_contentModality(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
