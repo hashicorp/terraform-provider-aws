@@ -20,12 +20,12 @@ import (
 )
 
 // @FrameworkDataSource("aws_odb_db_server", name="Db Server")
-func newDataSourceDbServer(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceDBServer(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDbServer{}, nil
 }
 
 const (
-	DSNameDbServer = "Db Server Data Source"
+	DSNameDBServer = "DB Server Data Source"
 )
 
 type dataSourceDbServer struct {
@@ -149,7 +149,7 @@ func (d *dataSourceDbServer) Read(ctx context.Context, req datasource.ReadReques
 	out, err := conn.GetDbServer(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDbServer, data.DbServerID.ValueString(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDBServer, data.DbServerID.ValueString(), err),
 			err.Error(),
 		)
 		return

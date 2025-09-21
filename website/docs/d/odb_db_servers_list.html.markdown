@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `shape` - The hardware system model of the Exadata infrastructure that the database server is hosted on. The shape determines the amount of CPU, storage, and memory resources available.
 * `status` - The current status of the database server.
 * `status_reason` - Additional information about the status of the database server.
-* `vm_cluster_ids` - The IDs of the VM clusters that are associated with the database server.  
+* `vm_cluster_ids` - The IDs of the VM clusters that are associated with the database server.

@@ -34,7 +34,7 @@ var dbServerDataSourceTestEntity = testDbServerDataSourceTest{
 }
 
 // Acceptance test access AWS and cost money to run.
-func TestAccODBDbServerDataSource(t *testing.T) {
+func TestAccODBDBServerDataSource(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -48,38 +48,38 @@ func TestAccODBDbServerDataSource(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbServerDataSourceTestEntity.testAccCheckDbServersDestroyed(ctx),
+		CheckDestroy:             dbServerDataSourceTestEntity.testAccCheckDBServersDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dbServerDataSourceTestEntity.basicDbServerDataSourceConfig(),
+				Config: dbServerDataSourceTestEntity.basicDBServerDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbServerDataSourceTestEntity.testAccCheckDbServerExists(ctx, dataSourceName, &dbServer),
+					dbServerDataSourceTestEntity.testAccCheckDBServerExists(ctx, dataSourceName, &dbServer),
 				),
 			},
 		},
 	})
 }
 
-func (testDbServerDataSourceTest) testAccCheckDbServerExists(ctx context.Context, name string, output *odb.GetDbServerOutput) resource.TestCheckFunc {
+func (testDbServerDataSourceTest) testAccCheckDBServerExists(ctx context.Context, name string, output *odb.GetDbServerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbServer, name, errors.New("not found"))
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBServer, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		var dbServerId = rs.Primary.ID
 		var attributes = rs.Primary.Attributes
 		exaId := attributes["exadata_infrastructure_id"]
-		resp, err := dbServerDataSourceTestEntity.findDbServer(ctx, conn, &dbServerId, &exaId)
+		resp, err := dbServerDataSourceTestEntity.findDBServer(ctx, conn, &dbServerId, &exaId)
 		if err != nil {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbServer, rs.Primary.ID, err)
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBServer, rs.Primary.ID, err)
 		}
 		*output = *resp
 		return nil
 	}
 }
 
-func (testDbServerDataSourceTest) testAccCheckDbServersDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (testDbServerDataSourceTest) testAccCheckDBServersDestroyed(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
@@ -91,9 +91,9 @@ func (testDbServerDataSourceTest) testAccCheckDbServersDestroyed(ctx context.Con
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServer, rs.Primary.ID, err)
+				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDBServer, rs.Primary.ID, err)
 			}
-			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServer, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDBServer, rs.Primary.ID, errors.New("not destroyed"))
 		}
 		return nil
 	}
@@ -119,7 +119,7 @@ func (testDbServerDataSourceTest) findExaInfra(ctx context.Context, conn *odb.Cl
 	return nil
 }
 
-func (testDbServerDataSourceTest) findDbServer(ctx context.Context, conn *odb.Client, dbServerId *string, exaInfraId *string) (*odb.GetDbServerOutput, error) {
+func (testDbServerDataSourceTest) findDBServer(ctx context.Context, conn *odb.Client, dbServerId *string, exaInfraId *string) (*odb.GetDbServerOutput, error) {
 	inputWithExaId := odb.GetDbServerInput{
 		DbServerId:                   dbServerId,
 		CloudExadataInfrastructureId: exaInfraId,
@@ -131,7 +131,7 @@ func (testDbServerDataSourceTest) findDbServer(ctx context.Context, conn *odb.Cl
 	return output, nil
 }
 
-func (testDbServerDataSourceTest) basicDbServerDataSourceConfig() string {
+func (testDbServerDataSourceTest) basicDBServerDataSourceConfig() string {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbServersListDataSourceTestEntity.displayNamePrefix)
 	exaInfra := dbServerDataSourceTestEntity.exaInfra(exaInfraDisplayName)
 

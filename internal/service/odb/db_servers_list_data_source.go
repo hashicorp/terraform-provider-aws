@@ -20,12 +20,12 @@ import (
 )
 
 // @FrameworkDataSource("aws_odb_db_servers_list", name="Db Servers List")
-func newDataSourceDbServersList(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceDBServersList(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDbServersList{}, nil
 }
 
 const (
-	DSNameDbServersList = "Db Servers List Data Source"
+	DSNameDBServersList = "DB Servers List Data Source"
 )
 
 type dataSourceDbServersList struct {
@@ -66,7 +66,7 @@ func (d *dataSourceDbServersList) Read(ctx context.Context, req datasource.ReadR
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDbServersList, "", err),
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDBServersList, "", err),
 				err.Error(),
 			)
 		}

@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `memory_size_in_gbs` - The allocated memory in GBs on the database server.
 * `shape` - The shape of the database server. The shape determines the amount of CPU, storage, and memory resources available.
 * `created_at` - The date and time when the database server was created.
-* `vm_cluster_ids` - The OCID of the VM clusters that are associated with the database server.  
+* `vm_cluster_ids` - The OCID of the VM clusters that are associated with the database server.

@@ -38,7 +38,7 @@ var dbNodeDataSourceTestEntity = testDbNodeDataSourceTest{
 }
 
 // Acceptance test access AWS and cost money to run.
-func TestAccODBDbNodeDataSource_basic(t *testing.T) {
+func TestAccODBDBNodeDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -51,23 +51,23 @@ func TestAccODBDbNodeDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbNodeDataSourceTestEntity.testAccCheckDbNodeDestroyed(ctx),
+		CheckDestroy:             dbNodeDataSourceTestEntity.testAccCheckDBNodeDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: dbNodeDataSourceTestEntity.dbNodeDataSourceBasicConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbNodeDataSourceTestEntity.testAccCheckDbNodeExists(ctx, dataSourceName, &dbNode),
+					dbNodeDataSourceTestEntity.testAccCheckDBNodeExists(ctx, dataSourceName, &dbNode),
 				),
 			},
 		},
 	})
 }
 
-func (testDbNodeDataSourceTest) testAccCheckDbNodeExists(ctx context.Context, name string, output *odb.GetDbNodeOutput) resource.TestCheckFunc {
+func (testDbNodeDataSourceTest) testAccCheckDBNodeExists(ctx context.Context, name string, output *odb.GetDbNodeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbServer, name, errors.New("not found"))
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBServer, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		var dbNodeId = rs.Primary.ID
@@ -79,14 +79,14 @@ func (testDbNodeDataSourceTest) testAccCheckDbNodeExists(ctx context.Context, na
 		}
 		resp, err := conn.GetDbNode(ctx, &input)
 		if err != nil {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbNode, rs.Primary.ID, err)
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBNode, rs.Primary.ID, err)
 		}
 		*output = *resp
 		return nil
 	}
 }
 
-func (testDbNodeDataSourceTest) testAccCheckDbNodeDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (testDbNodeDataSourceTest) testAccCheckDBNodeDestroyed(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
@@ -98,9 +98,9 @@ func (testDbNodeDataSourceTest) testAccCheckDbNodeDestroyed(ctx context.Context)
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServer, rs.Primary.ID, err)
+				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDBServer, rs.Primary.ID, err)
 			}
-			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServer, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDBServer, rs.Primary.ID, errors.New("not destroyed"))
 		}
 		return nil
 	}

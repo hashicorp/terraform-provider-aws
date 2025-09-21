@@ -20,12 +20,12 @@ import (
 )
 
 // @FrameworkDataSource("aws_odb_db_nodes_list", name="Db Nodes List")
-func newDataSourceDbNodesList(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceDBNodesList(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDbNodesList{}, nil
 }
 
 const (
-	DSNameDbNodesList = "Db Nodes List Data Source"
+	DSNameDBNodesList = "DB Nodes List Data Source"
 )
 
 type dataSourceDbNodesList struct {
@@ -64,7 +64,7 @@ func (d *dataSourceDbNodesList) Read(ctx context.Context, req datasource.ReadReq
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDbNodesList, data.CloudVmClusterId.ValueString(), err),
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDBNodesList, data.CloudVmClusterId.ValueString(), err),
 				err.Error(),
 			)
 			return

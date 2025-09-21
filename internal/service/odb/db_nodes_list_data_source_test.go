@@ -39,7 +39,7 @@ var dbNodesListDataSourceTestEntity = dbNodesListDataSourceTest{
 }
 
 // Acceptance test access AWS and cost money to run.
-func TestAccODBDbNodesListDataSource_basic(t *testing.T) {
+func TestAccODBDBNodesListDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -55,12 +55,12 @@ func TestAccODBDbNodesListDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             dbNodesListDataSourceTestEntity.testAccCheckDbNodesDestroyed(ctx),
+		CheckDestroy:             dbNodesListDataSourceTestEntity.testAccCheckDBNodesDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dbNodesListDataSourceTestEntity.basicDbNodesListDataSource(),
+				Config: dbNodesListDataSourceTestEntity.basicDBNodesListDataSource(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbNodesListDataSourceTestEntity.testAccCheckDbNodesListExists(ctx, vmClusterListsResourceName, &dbNodesList),
+					dbNodesListDataSourceTestEntity.testAccCheckDBNodesListExists(ctx, vmClusterListsResourceName, &dbNodesList),
 					resource.TestCheckResourceAttr(dbNodesListsDataSourceName, "aws_odb_db_nodes_list.db_nodes.#", strconv.Itoa(len(dbNodesList.DbNodes))),
 				),
 			},
@@ -68,11 +68,11 @@ func TestAccODBDbNodesListDataSource_basic(t *testing.T) {
 	})
 }
 
-func (dbNodesListDataSourceTest) testAccCheckDbNodesListExists(ctx context.Context, name string, output *odb.ListDbNodesOutput) resource.TestCheckFunc {
+func (dbNodesListDataSourceTest) testAccCheckDBNodesListExists(ctx context.Context, name string, output *odb.ListDbNodesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbNodesList, name, errors.New("not found"))
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDBNodesList, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		var vmClusterId = &rs.Primary.ID
@@ -93,7 +93,7 @@ func (dbNodesListDataSourceTest) testAccCheckDbNodesListExists(ctx context.Conte
 	}
 }
 
-func (dbNodesListDataSourceTest) testAccCheckDbNodesDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (dbNodesListDataSourceTest) testAccCheckDBNodesDestroyed(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
@@ -105,9 +105,9 @@ func (dbNodesListDataSourceTest) testAccCheckDbNodesDestroyed(ctx context.Contex
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServersList, rs.Primary.ID, err)
+				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDBServersList, rs.Primary.ID, err)
 			}
-			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDbServersList, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameDBServersList, rs.Primary.ID, errors.New("not destroyed"))
 		}
 		return nil
 	}
@@ -133,7 +133,7 @@ func (dbNodesListDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cl
 	return output.CloudVmCluster, nil
 }
 
-func (dbNodesListDataSourceTest) basicDbNodesListDataSource() string {
+func (dbNodesListDataSourceTest) basicDBNodesListDataSource() string {
 	vmCluster := dbNodesListDataSourceTestEntity.vmClusterBasic()
 	return fmt.Sprintf(`
 
