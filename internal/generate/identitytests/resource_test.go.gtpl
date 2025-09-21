@@ -951,6 +951,60 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				},
 			})
 		}
+
+		// Resource Identity was added after v{{ .PreIdentityVersion }}
+		func {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+			{{- template "Init" . }}
+
+			{{ template "Test" . }}(ctx, t, resource.TestCase{
+				{{ template "TestCaseSetupNoProviders" . }}
+				AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+					Plan: resource.PlanOptions{
+						NoRefresh: true,
+					},
+				},
+				Steps: []resource.TestStep{
+					{{ $step := 1 -}}
+					// Step {{ $step }}: Create pre-Identity
+					{
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ .PreIdentityVersion }}/"),
+						ConfigVariables: config.Variables{ {{ if .Generator }}
+							acctest.CtRName: config.StringVariable(rName),{{ end }}
+							{{ template "AdditionalTfVars" . }}
+						},
+						{{ if .HasExistsFunc -}}
+						Check:  resource.ComposeAggregateTestCheckFunc(
+							{{- template "ExistsCheck" . -}}
+						),
+						{{ end -}}
+						ConfigStateChecks: []statecheck.StateCheck{
+							tfstatecheck.ExpectNoIdentity(resourceName),
+						},
+					},
+
+					// Step {{ ($step = inc $step) | print }}: Current version
+					{
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+						ConfigVariables: config.Variables{ {{ if .Generator }}
+							acctest.CtRName: config.StringVariable(rName),{{ end }}
+							{{ template "AdditionalTfVars" . }}
+						},
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+							},
+							PostApplyPostRefresh: []plancheck.PlanCheck{
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+							},
+						},
+						ConfigStateChecks: []statecheck.StateCheck{
+							tfstatecheck.ExpectNoIdentity(resourceName),
+						},
+					},
+				},
+			})
+		}
 	{{ else }}
 		func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 			{{- template "Init" . }}
