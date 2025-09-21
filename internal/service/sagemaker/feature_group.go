@@ -344,23 +344,20 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] SageMaker AI Feature Group create config: %#v", *input)
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.CreateFeatureGroup(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid S3Uri provided") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateFeatureGroup(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Feature Group: %s", err)

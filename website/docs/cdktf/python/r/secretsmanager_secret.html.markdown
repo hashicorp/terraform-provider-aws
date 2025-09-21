@@ -70,6 +70,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_secretsmanager_secret.example
+  identity = {
+    "arn" = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+  }
+}
+
+resource "aws_secretsmanager_secret" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Secrets Manager secret.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret` using the secret Amazon Resource Name (ARN). For example:
 
 ```python
@@ -93,4 +114,4 @@ Using `terraform import`, import `aws_secretsmanager_secret` using the secret Am
 % terraform import aws_secretsmanager_secret.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b527a5154656013084e9ac97b7c8b901af55b41fbc93749e5f8059223c4d9d24 -->
+<!-- cache-key: cdktf-0.20.8 input-7e47d281c69ec40f5e837422d86b81ead1b5f2e26b31d84e9c6a772cefddbcd8 -->

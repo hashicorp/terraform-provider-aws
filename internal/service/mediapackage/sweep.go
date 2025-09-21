@@ -25,7 +25,7 @@ func sweepChannels(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.MediaPackageClient(ctx)

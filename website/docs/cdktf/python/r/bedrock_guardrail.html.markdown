@@ -191,10 +191,18 @@ The `tier_config` configuration block supports the following arguments:
 #### Managed Word Lists Config
 
 * `type` (Required) Options for managed words.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 
 #### Words Config
 
 * `text` (Required) The custom word text.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 
 ## Attribute Reference
 
@@ -239,4 +247,4 @@ Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-de
 % terraform import aws_bedrock_guardrail.example guardrail-id-12345678,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b4dfe998c380eaf21dac559c0ea1efe19394fa5e41979c505c46fe22b78d0ffb -->
+<!-- cache-key: cdktf-0.20.8 input-062be71fb459b2f31e02302a778df0e0e7f39a17e1a253c860432ead2119fcc9 -->

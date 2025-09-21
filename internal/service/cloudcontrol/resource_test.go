@@ -528,7 +528,7 @@ func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcloudcontrol.FindResource(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
+			_, err := tfcloudcontrol.FindResourceByFourPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
 
 			if tfresource.NotFound(err) {
 				continue

@@ -155,7 +155,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		response.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).ResolveDuplicatesFramework(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), response, &opts.response.Diagnostics).Map(); len(v) > 0 {
+		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).ResolveDuplicatesFramework(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), stateTags, &opts.response.Diagnostics).Map(); len(v) > 0 {
 			stateTags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
 		opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)

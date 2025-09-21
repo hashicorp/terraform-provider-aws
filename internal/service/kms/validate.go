@@ -87,7 +87,7 @@ func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := arn.Parse(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 		return
 	}
 
@@ -113,7 +113,7 @@ func validateKeyAliasARN(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := arn.Parse(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 		return
 	}
 

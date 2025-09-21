@@ -129,6 +129,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_image_recipe.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0"
+  }
+}
+
+resource "aws_imagebuilder_image_recipe" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder image recipe.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image_recipe` resources using the Amazon Resource Name (ARN). For example:
 
 ```typescript
@@ -159,4 +180,4 @@ Using `terraform import`, import `aws_imagebuilder_image_recipe` resources using
 % terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-056d82fa1ce2dd7d66bb008b51e390ee76fb86493be49a0cb41b5bb37b827bdb -->
+<!-- cache-key: cdktf-0.20.8 input-932ec9065cee040b6501563f0f3ef5e9405a97e204d163933ef919c46f258d8e -->

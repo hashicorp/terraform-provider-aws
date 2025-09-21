@@ -138,7 +138,7 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDomainName(ctx, &appsync.DeleteDomainNameInput{
 			DomainName: aws.String(d.Id()),
 		})

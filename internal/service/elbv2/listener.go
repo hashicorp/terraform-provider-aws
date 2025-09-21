@@ -765,7 +765,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.SslPolicy = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.ModifyListener(ctx, input)
 		})
 
@@ -1036,7 +1036,7 @@ func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awsty
 }
 
 func retryListenerCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.CreateListenerInput, timeout time.Duration) (*elasticloadbalancingv2.CreateListenerOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateListener(ctx, input)
 	})
 

@@ -67,7 +67,7 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 		ListenerArn: aws.String(listenerARN),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, iamPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AddListenerCertificates(ctx, input)
 	})
 
