@@ -121,10 +121,10 @@ func (testDbServersListDataSource) findExaInfra(ctx context.Context, conn *odb.C
 }
 
 func (testDbServersListDataSource) findDbServersList(ctx context.Context, conn *odb.Client, exaInfraId *string) (*odb.ListDbServersOutput, error) {
-	inputWithExaId := &odb.ListDbServersInput{
+	inputWithExaId := odb.ListDbServersInput{
 		CloudExadataInfrastructureId: exaInfraId,
 	}
-	output, err := conn.ListDbServers(ctx, inputWithExaId)
+	output, err := conn.ListDbServers(ctx, &inputWithExaId)
 	if err != nil {
 		return nil, err
 	}

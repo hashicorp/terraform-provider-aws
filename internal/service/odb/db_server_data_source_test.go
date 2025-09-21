@@ -120,11 +120,11 @@ func (testDbServerDataSourceTest) findExaInfra(ctx context.Context, conn *odb.Cl
 }
 
 func (testDbServerDataSourceTest) findDbServer(ctx context.Context, conn *odb.Client, dbServerId *string, exaInfraId *string) (*odb.GetDbServerOutput, error) {
-	inputWithExaId := &odb.GetDbServerInput{
+	inputWithExaId := odb.GetDbServerInput{
 		DbServerId:                   dbServerId,
 		CloudExadataInfrastructureId: exaInfraId,
 	}
-	output, err := conn.GetDbServer(ctx, inputWithExaId)
+	output, err := conn.GetDbServer(ctx, &inputWithExaId)
 	if err != nil {
 		return nil, err
 	}
