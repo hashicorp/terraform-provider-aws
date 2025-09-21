@@ -334,6 +334,70 @@ func TestAccBedrockGuardrail_crossRegion(t *testing.T) {
 	})
 }
 
+func TestAccBedrockGuardrail_topicModality(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var guardrail bedrock.GetGuardrailOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_topicModality(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+
+					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.#", "2"),
+
+					// Check input_modalities and output_modalities for first filter (index 0)
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_modalities.0", "TEXT"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_modalities.1", "IMAGE"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.output_modalities.0", "TEXT"),
+
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.0.filters_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.tier_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "guardrail_id",
+			},
+		},
+	})
+}
+
 func testAccGuardrailImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -769,6 +833,78 @@ resource "aws_bedrock_guardrail" "test" {
       description    = "enhanced regex example"
       name           = "enhanced_regex"
       pattern        = "^\\d{3}-\\d{2}-\\d{4}$"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccGuardrailConfig_topicModality(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+
+  content_policy_config {
+    filters_config {
+	  input_modalities = ["TEXT", "IMAGE"]
+	  output_modalities = ["TEXT"]
+      input_strength  = "MEDIUM"
+      output_strength = "MEDIUM"
+      type            = "HATE"
+    }
+    filters_config {
+      input_strength  = "HIGH"
+      output_strength = "HIGH"
+      type            = "VIOLENCE"
+    }
+  }
+
+  contextual_grounding_policy_config {
+    filters_config {
+      threshold = 0.4
+      type      = "GROUNDING"
+    }
+  }
+
+  sensitive_information_policy_config {
+    pii_entities_config {
+      action = "BLOCK"
+      type   = "NAME"
+    }
+    pii_entities_config {
+      action = "BLOCK"
+      type   = "DRIVER_ID"
+    }
+    pii_entities_config {
+      action = "ANONYMIZE"
+      type   = "USERNAME"
+    }
+    regexes_config {
+      action      = "BLOCK"
+      description = "example regex"
+      name        = "regex_example"
+      pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
+    }
+  }
+
+  topic_policy_config {
+    topics_config {
+      name       = "investment_topic"
+      examples   = ["Where should I invest my money ?"]
+      type       = "DENY"
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+    }
+  }
+
+  word_policy_config {
+    managed_word_lists_config {
+      type = "PROFANITY"
+    }
+    words_config {
+      text = "HATE"
     }
   }
 }
