@@ -29,7 +29,7 @@ const (
 )
 
 type dataSourceDbNode struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[dbNodeDataSourceModel]
 }
 
 func (d *dataSourceDbNode) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -180,6 +180,7 @@ func (d *dataSourceDbNode) Read(ctx context.Context, req datasource.ReadRequest,
 }
 
 type dbNodeDataSourceModel struct {
+	framework.WithRegionModel
 	CloudVmClusterId           types.String                                       `tfsdk:"cloud_vm_cluster_id"`
 	DbNodeId                   types.String                                       `tfsdk:"id"`
 	DbNodeArn                  types.String                                       `tfsdk:"arn"`

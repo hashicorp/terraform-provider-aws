@@ -5,10 +5,10 @@ package odb
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -59,9 +59,9 @@ func (d *dataSourceDbNodesList) Read(ctx context.Context, req datasource.ReadReq
 		CloudVmClusterId: data.CloudVmClusterId.ValueStringPointer(),
 	}
 	var out odb.ListDbNodesOutput
-	pagginator := odb.NewListDbNodesPaginator(conn, &input)
-	for pagginator.HasMorePages() {
-		page, err := pagginator.NextPage(ctx)
+	paginator := odb.NewListDbNodesPaginator(conn, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDbNodesList, data.CloudVmClusterId.ValueString(), err),
@@ -90,7 +90,7 @@ type dbNodeForDbNodesListDataSourceModel struct {
 	BackupVnic2Id              types.String                                       `tfsdk:"backup_vnic2_id"`
 	BackupVnicId               types.String                                       `tfsdk:"backup_vnic_id"`
 	CpuCoreCount               types.Int32                                        `tfsdk:"cpu_core_count"`
-	CreatedAt                  *time.Time                                         `tfsdk:"created_at"`
+	CreatedAt                  timetypes.RFC3339                                  `tfsdk:"created_at"`
 	DbNodeArn                  types.String                                       `tfsdk:"arn"`
 	DbNodeId                   types.String                                       `tfsdk:"id"`
 	DbNodeStorageSizeInGBs     types.Int32                                        `tfsdk:"db_node_storage_size"`
@@ -103,7 +103,7 @@ type dbNodeForDbNodesListDataSourceModel struct {
 	MemorySizeInGBs            types.Int32                                        `tfsdk:"memory_size"`
 	OciResourceAnchorName      types.String                                       `tfsdk:"oci_resource_anchor_name"`
 	Ocid                       types.String                                       `tfsdk:"ocid"`
-	SoftwareStorageSizeInGB    types.String                                       `tfsdk:"software_storage_size"`
+	SoftwareStorageSizeInGB    types.Int32                                        `tfsdk:"software_storage_size"`
 	Status                     fwtypes.StringEnum[odbtypes.DbNodeResourceStatus]  `tfsdk:"status"`
 	StatusReason               types.String                                       `tfsdk:"status_reason"`
 	TimeMaintenanceWindowEnd   types.String                                       `tfsdk:"time_maintenance_window_end"`

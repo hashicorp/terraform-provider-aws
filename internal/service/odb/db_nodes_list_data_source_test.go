@@ -33,9 +33,9 @@ type dbNodesListDataSourceTest struct {
 }
 
 var dbNodesListDataSourceTestEntity = dbNodesListDataSourceTest{
-	exadataInfraDisplayNamePrefix:    "Ofake",
+	exadataInfraDisplayNamePrefix:    "Ofake-exa",
 	oracleDBNetworkDisplayNamePrefix: "odbn",
-	vmClusterDisplayNamePrefix:       "Ofake",
+	vmClusterDisplayNamePrefix:       "Ofake-vmc",
 }
 
 // Acceptance test access AWS and cost money to run.
@@ -46,7 +46,8 @@ func TestAccODBDbNodesListDataSource_basic(t *testing.T) {
 	}
 
 	var dbNodesList odb.ListDbNodesOutput
-	dataSourceName := "data.aws_odb_db_nodes_list.test"
+	dbNodesListsDataSourceName := "data.aws_odb_db_nodes_list.test"
+	vmClusterListsResourceName := "aws_odb_cloud_vm_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -59,8 +60,8 @@ func TestAccODBDbNodesListDataSource_basic(t *testing.T) {
 			{
 				Config: dbNodesListDataSourceTestEntity.basicDbNodesListDataSource(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					dbNodesListDataSourceTestEntity.testAccCheckDbNodesListExists(ctx, dataSourceName, &dbNodesList),
-					resource.TestCheckResourceAttr(dataSourceName, "aws_odb_db_nodes_list.db_servers.#", strconv.Itoa(len(dbNodesList.DbNodes))),
+					dbNodesListDataSourceTestEntity.testAccCheckDbNodesListExists(ctx, vmClusterListsResourceName, &dbNodesList),
+					resource.TestCheckResourceAttr(dbNodesListsDataSourceName, "aws_odb_db_nodes_list.db_nodes.#", strconv.Itoa(len(dbNodesList.DbNodes))),
 				),
 			},
 		},
@@ -71,7 +72,7 @@ func (dbNodesListDataSourceTest) testAccCheckDbNodesListExists(ctx context.Conte
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbServersList, name, errors.New("not found"))
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameDbNodesList, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		var vmClusterId = &rs.Primary.ID
@@ -145,9 +146,9 @@ data "aws_odb_db_nodes_list" "test" {
 }
 
 func (dbNodesListDataSourceTest) vmClusterBasic() string {
-	odbNetRName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
-	exaInfraRName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.exaDisplayNamePrefix)
-	vmcDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.vmClusterDisplayNamePrefix)
+	odbNetRName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
+	exaInfraRName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.exadataInfraDisplayNamePrefix)
+	vmcDisplayName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.vmClusterDisplayNamePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		panic(err)
@@ -164,7 +165,7 @@ resource "aws_odb_network" "test" {
 }
 
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name         = %[1]q
+  display_name         = %[2]q
   shape                = "Exadata.X9M"
   storage_count        = 3
   compute_count        = 2

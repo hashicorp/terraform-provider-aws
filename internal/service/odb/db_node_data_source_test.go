@@ -9,13 +9,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
+	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -89,7 +93,7 @@ func (testDbNodeDataSourceTest) testAccCheckDbNodeDestroyed(ctx context.Context)
 			if rs.Type != "aws_odb_cloud_vm_cluster" {
 				continue
 			}
-			err := dbServerDataSourceTestEntity.findExaInfra(ctx, conn, rs.Primary.ID)
+			err := dbNodeDataSourceTestEntity.findVmCluster(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -102,6 +106,26 @@ func (testDbNodeDataSourceTest) testAccCheckDbNodeDestroyed(ctx context.Context)
 	}
 }
 
+func (testDbNodeDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Client, id string) error {
+	input := odb.GetCloudVmClusterInput{
+		CloudVmClusterId: aws.String(id),
+	}
+	output, err := conn.GetCloudVmCluster(ctx, &input)
+	if err != nil {
+		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
+			return &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			}
+		}
+		return err
+	}
+	if output == nil || output.CloudVmCluster == nil {
+		return tfresource.NewEmptyResultError(&input)
+	}
+	return nil
+}
+
 func (testDbNodeDataSourceTest) dbNodeDataSourceBasicConfig() string {
 	vmClusterConfig := dbNodeDataSourceTestEntity.vmClusterBasicConfig()
 
@@ -109,12 +133,12 @@ func (testDbNodeDataSourceTest) dbNodeDataSourceBasicConfig() string {
 %s
 
 data "aws_odb_db_nodes_list" "test" {
-  cloud_vm_cluster_id = aws_odb_cloud_vm_cluster_id.test.id
+  cloud_vm_cluster_id = aws_odb_cloud_vm_cluster.test.id
 }
 
 data "aws_odb_db_node" "test" {
   id                  = data.aws_odb_db_nodes_list.test.db_nodes[0].id
-  cloud_vm_cluster_id = cloud_vm_cluster_id.test.id
+  cloud_vm_cluster_id = aws_odb_cloud_vm_cluster.test.id
 }
 
 `, vmClusterConfig)
@@ -184,9 +208,6 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 
 }
 
-data "aws_odb_cloud_vm_cluster" "test" {
-  id = aws_odb_cloud_vm_cluster.test.id
-}
 `, oracleDBNetDisplayName, exaInfraDisplayName, vmcDisplayName, publicKey)
 	return dsTfCodeVmCluster
 }
