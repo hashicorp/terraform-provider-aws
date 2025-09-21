@@ -43,6 +43,11 @@ func TestAccODBDBNodeDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
 	var dbNode odb.GetDbNodeOutput
 	dataSourceName := "data.aws_odb_db_node.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -54,7 +59,7 @@ func TestAccODBDBNodeDataSource_basic(t *testing.T) {
 		CheckDestroy:             dbNodeDataSourceTestEntity.testAccCheckDBNodeDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dbNodeDataSourceTestEntity.dbNodeDataSourceBasicConfig(),
+				Config: dbNodeDataSourceTestEntity.dbNodeDataSourceBasicConfig(publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					dbNodeDataSourceTestEntity.testAccCheckDBNodeExists(ctx, dataSourceName, &dbNode),
 				),
@@ -126,8 +131,8 @@ func (testDbNodeDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cli
 	return nil
 }
 
-func (testDbNodeDataSourceTest) dbNodeDataSourceBasicConfig() string {
-	vmClusterConfig := dbNodeDataSourceTestEntity.vmClusterBasicConfig()
+func (testDbNodeDataSourceTest) dbNodeDataSourceBasicConfig(publicKey string) string {
+	vmClusterConfig := dbNodeDataSourceTestEntity.vmClusterBasicConfig(publicKey)
 
 	return fmt.Sprintf(`
 %s
@@ -144,14 +149,10 @@ data "aws_odb_db_node" "test" {
 `, vmClusterConfig)
 }
 
-func (testDbNodeDataSourceTest) vmClusterBasicConfig() string {
+func (testDbNodeDataSourceTest) vmClusterBasicConfig(publicKey string) string {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.exaDisplayNamePrefix)
 	oracleDBNetDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
 	vmcDisplayName := sdkacctest.RandomWithPrefix(dbNodeDataSourceTestEntity.vmClusterDisplayNamePrefix)
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
-	if err != nil {
-		panic(err)
-	}
 	dsTfCodeVmCluster := fmt.Sprintf(`
 
 

@@ -44,7 +44,11 @@ func TestAccODBDBNodesListDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
 	var dbNodesList odb.ListDbNodesOutput
 	dbNodesListsDataSourceName := "data.aws_odb_db_nodes_list.test"
 	vmClusterListsResourceName := "aws_odb_cloud_vm_cluster.test"
@@ -58,7 +62,7 @@ func TestAccODBDBNodesListDataSource_basic(t *testing.T) {
 		CheckDestroy:             dbNodesListDataSourceTestEntity.testAccCheckDBNodesDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dbNodesListDataSourceTestEntity.basicDBNodesListDataSource(),
+				Config: dbNodesListDataSourceTestEntity.basicDBNodesListDataSource(publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					dbNodesListDataSourceTestEntity.testAccCheckDBNodesListExists(ctx, vmClusterListsResourceName, &dbNodesList),
 					resource.TestCheckResourceAttr(dbNodesListsDataSourceName, "aws_odb_db_nodes_list.db_nodes.#", strconv.Itoa(len(dbNodesList.DbNodes))),
@@ -133,8 +137,8 @@ func (dbNodesListDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cl
 	return output.CloudVmCluster, nil
 }
 
-func (dbNodesListDataSourceTest) basicDBNodesListDataSource() string {
-	vmCluster := dbNodesListDataSourceTestEntity.vmClusterBasic()
+func (dbNodesListDataSourceTest) basicDBNodesListDataSource(publicKey string) string {
+	vmCluster := dbNodesListDataSourceTestEntity.vmClusterBasic(publicKey)
 	return fmt.Sprintf(`
 
 	%s
@@ -145,14 +149,10 @@ data "aws_odb_db_nodes_list" "test" {
 `, vmCluster)
 }
 
-func (dbNodesListDataSourceTest) vmClusterBasic() string {
+func (dbNodesListDataSourceTest) vmClusterBasic(publicKey string) string {
 	odbNetRName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.oracleDBNetworkDisplayNamePrefix)
 	exaInfraRName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.exadataInfraDisplayNamePrefix)
 	vmcDisplayName := sdkacctest.RandomWithPrefix(dbNodesListDataSourceTestEntity.vmClusterDisplayNamePrefix)
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
-	if err != nil {
-		panic(err)
-	}
 	return fmt.Sprintf(`
 
 resource "aws_odb_network" "test" {

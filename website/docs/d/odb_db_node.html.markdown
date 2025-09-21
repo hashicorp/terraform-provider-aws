@@ -19,7 +19,7 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 ```terraform
 data "aws_odb_db_node" "example" {
   cloud_vm_cluster_id = "cloud_vm_cluster_id"
-  id = "db_node_id"
+  id                  = "db_node_id"
 }
 ```
 
@@ -28,7 +28,7 @@ data "aws_odb_db_node" "example" {
 The following arguments are required:
 
 * `cloud_vm_cluster_id` - (Required) The unique identifier of the cloud vm cluster.
-* `id` - (Required) The unique identifier of db node associated with vm cluster. 
+* `id` - (Required) The unique identifier of db node associated with vm cluster.
 
 The following arguments are optional:
 

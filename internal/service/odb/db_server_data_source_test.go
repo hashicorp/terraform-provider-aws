@@ -34,7 +34,7 @@ var dbServerDataSourceTestEntity = testDbServerDataSourceTest{
 }
 
 // Acceptance test access AWS and cost money to run.
-func TestAccODBDBServerDataSource(t *testing.T) {
+func TestAccODBDBServerDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

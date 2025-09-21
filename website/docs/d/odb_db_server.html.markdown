@@ -19,7 +19,7 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 ```terraform
 data "aws_odb_db_server" "example" {
   cloud_exadata_infrastructure_id = "exadata_infra_id"
-  id = "db_server_id"
+  id                              = "db_server_id"
 }
 ```
 
