@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_example_thing: Add `input_modalities` and `output_modalities` attributes for content filters
+```
