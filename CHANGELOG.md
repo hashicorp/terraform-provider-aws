@@ -1,4 +1,13 @@
-## 6.15.0 (Unreleased)
+## 6.14.1 (September 22, 2025)
+
+NOTES:
+
+* provider: This release contains both internal provider fixes and a Terraform Plugin SDK V2 update related to a [regression](https://github.com/hashicorp/terraform-provider-aws/issues/44366) which may impact resources that support resource identity ([#44375](https://github.com/hashicorp/terraform-provider-aws/issues/44375))
+
+BUG FIXES:
+
+* provider: Fix `Missing Resource Identity After Update` errors for non-refreshed and failed updates ([#44375](https://github.com/hashicorp/terraform-provider-aws/issues/44375))
+* provider: Fix `Unexpected Identity Change` errors when fully-null identity values in state are updated to valid values ([#44375](https://github.com/hashicorp/terraform-provider-aws/issues/44375))
 
 ## 6.14.0 (September 18, 2025)
 
