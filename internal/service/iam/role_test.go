@@ -1003,10 +1003,7 @@ func TestAccIAMRole_Identity_ExistingResource_NoRefresh_OnError(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccRoleConfig_invalidAssumeRolePolicy(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-				ExpectError: regexache.MustCompile(`MalformedPolicyDocument: Unknown field invalid`),
+				ExpectError:              regexache.MustCompile(`MalformedPolicyDocument: Unknown field invalid`),
 			},
 		},
 	})
@@ -1038,10 +1035,7 @@ func TestAccIAMRole_Identity_ExistingResource_OnError(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccRoleConfig_invalidAssumeRolePolicy(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-				ExpectError: regexache.MustCompile(`MalformedPolicyDocument: Unknown field invalid`),
+				ExpectError:              regexache.MustCompile(`MalformedPolicyDocument: Unknown field invalid`),
 			},
 		},
 	})
