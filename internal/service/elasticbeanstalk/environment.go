@@ -95,7 +95,7 @@ func resourceEnvironment() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  EnvironmentMigrateState,
+		MigrateState:  environmentMigrateState,
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
