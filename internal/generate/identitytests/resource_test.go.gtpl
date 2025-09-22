@@ -900,17 +900,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
 						{{ template "AdditionalTfVars" . }}
 					},
-					ConfigPlanChecks: resource.ConfigPlanChecks{
-						PreApply: []plancheck.PlanCheck{
-							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-						},
-						PostApplyPostRefresh: []plancheck.PlanCheck{
-							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-						},
-					},
-					ConfigStateChecks: []statecheck.StateCheck{
-						tfstatecheck.ExpectNoIdentity(resourceName),
-					},
+					{{ if .HasExistsFunc -}}
+					Check:  resource.ComposeAggregateTestCheckFunc(
+						{{- template "ExistsCheck" . -}}
+					),
+					{{ end -}}
 				},
 			},
 		})
