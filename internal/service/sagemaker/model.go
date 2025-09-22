@@ -167,6 +167,61 @@ func resourceModel() *schema.Resource {
 								},
 							},
 						},
+						"additional_model_data_source": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"channel_name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"s3_data_source": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
+												},
+												"s3_data_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+												},
+												"compression_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+												},
+												"model_access_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accept_eula": {
+																Type:     schema.TypeBool,
+																Required: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"inference_specification_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -307,6 +362,61 @@ func resourceModel() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"s3_data_source": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
+												},
+												"s3_data_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+												},
+												"compression_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+												},
+												"model_access_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accept_eula": {
+																Type:     schema.TypeBool,
+																Required: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"additional_model_data_source": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"channel_name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
 									"s3_data_source": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -612,6 +722,10 @@ func expandContainer(m map[string]any) *awstypes.ContainerDefinition {
 	if v, ok := m["model_data_source"]; ok {
 		container.ModelDataSource = expandModelDataSource(v.([]any))
 	}
+
+	if v, ok := m["additional_model_data_source"]; ok {
+		container.AdditionalModelDataSources = expandAdditionalModelDataSources(v.([]any))
+	}
 	if v, ok := m[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringValueMap(v)
 	}
@@ -645,6 +759,34 @@ func expandModelDataSource(l []any) *awstypes.ModelDataSource {
 	}
 
 	return &modelDataSource
+}
+
+func expandAdditionalModelDataSource(l []any) *awstypes.AdditionalModelDataSource {
+	if len(l) == 0 {
+		return nil
+	}
+	additionalModelDataSource := awstypes.AdditionalModelDataSource{}
+
+	m := l[0].(map[string]any)
+
+	if v, ok := m["channel_name"]; ok && v.(string) != "" {
+		additionalModelDataSource.ChannelName = aws.String(v.(string))
+	}
+	if v, ok := m["s3_data_source"]; ok {
+		additionalModelDataSource.S3DataSource = expandS3ModelDataSource(v.([]any))
+	}
+
+	return &additionalModelDataSource
+}
+
+func expandAdditionalModelDataSources(a []any) []awstypes.AdditionalModelDataSource {
+	additionalModelDataSources := make([]awstypes.AdditionalModelDataSource, 0, len(a))
+
+	for _, m := range a {
+		additionalModelDataSources = append(additionalModelDataSources, *expandAdditionalModelDataSource(m.(map[string]any)))
+	}
+
+	return additionalModelDataSources
 }
 
 func expandS3ModelDataSource(l []any) *awstypes.S3ModelDataSource {
