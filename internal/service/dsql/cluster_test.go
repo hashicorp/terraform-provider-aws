@@ -41,7 +41,7 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(false),
+				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 				),
@@ -90,7 +90,7 @@ func TestAccDSQLCluster_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(false),
+				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdsql.ResourceCluster, resourceName),
@@ -116,7 +116,7 @@ func TestAccDSQLCluster_deletionProtection(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(true),
+				Config: testAccClusterConfig_deletionProtection(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 				),
@@ -137,7 +137,7 @@ func TestAccDSQLCluster_deletionProtection(t *testing.T) {
 				ImportStateVerify:                    true,
 			},
 			{
-				Config: testAccClusterConfig_basic(false),
+				Config: testAccClusterConfig_deletionProtection(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 				),
@@ -281,7 +281,14 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccClusterConfig_basic(deletionProtection bool) string {
+func testAccClusterConfig_basic() string {
+	return `
+resource "aws_dsql_cluster" "test" {
+}
+`
+}
+
+func testAccClusterConfig_deletionProtection(deletionProtection bool) string {
 	return fmt.Sprintf(`
 resource "aws_dsql_cluster" "test" {
   deletion_protection_enabled = %[1]t
