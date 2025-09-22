@@ -445,10 +445,10 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 	var app awstypes.EnvironmentDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	platformNameWithVersion1 := "Python 3.9 running on 64bit Amazon Linux 2023/4.0.9"
+	platformNameWithVersion1 := "Python 3.12 running on 64bit Amazon Linux 2023/4.7.2"
 	rValue1 := sdkacctest.RandIntRange(1000, 2000)
 	rValue1Str := strconv.Itoa(rValue1)
-	platformNameWithVersion2 := "Python 3.11 running on 64bit Amazon Linux 2023/4.1.3"
+	platformNameWithVersion2 := "Python 3.13 running on 64bit Amazon Linux 2023/4.7.2"
 	rValue2 := sdkacctest.RandIntRange(3000, 4000)
 	rValue2Str := strconv.Itoa(rValue2)
 
