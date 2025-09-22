@@ -1179,7 +1179,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if v := d.Get("database_insights_mode"); v.(string) != "" {
-			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+			// If the cluster is part of a global cluster, defer Database Insights settings
+			// to the modifyDbClusterInput to prevent them from being reset.
+			if _, ok := d.GetOk("global_cluster_identifier"); ok {
+				modifyDbClusterInput.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+				requiresModifyDbCluster = true
+			} else {
+				input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+			}
+
 		}
 
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
