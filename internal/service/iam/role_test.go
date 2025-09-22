@@ -972,6 +972,82 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_Identity_ExistingResource_NoRefresh(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccRoleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRoleConfig_description(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMRole_Identity_ExistingResource_NoRefreshFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccRoleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRoleConfig_invalidAssumeRolePolicy(rName),
+				ExpectError:              regexache.MustCompile(`MalformedPolicyDocument: Unknown field invalid`),
+			},
+		},
+	})
+}
+
 func testAccCheckRoleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
@@ -1256,6 +1332,21 @@ resource "aws_iam_role" "test" {
       Sid    = ""
     }]
   })
+}
+`, rName)
+}
+
+func testAccRoleConfig_invalidAssumeRolePolicy(rName string) string {
+	return fmt.Sprintf(`
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = "{\"invalid\":true}"
 }
 `, rName)
 }
