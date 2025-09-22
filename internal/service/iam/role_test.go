@@ -1006,8 +1006,6 @@ func TestAccIAMRole_Identity_ExistingResource_NoRefresh(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-				// No error indicates the identity interceptor properly identified
-				// a fully null identity on update and set values appropriately.
 			},
 		},
 	})
@@ -1044,9 +1042,7 @@ func TestAccIAMRole_Identity_ExistingResource_NoRefreshFailure(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccRoleConfig_invalidAssumeRolePolicy(rName),
-				// Caution: Finding this error, which should be found, hides MRIAU
-				// (Missing Resource Identity After Update) errors.
-				ExpectError: regexache.MustCompile(`MalformedPolicyDocument: Unknown field invalid`),
+				ExpectError:              regexache.MustCompile(`MalformedPolicyDocument: Unknown field invalid`),
 			},
 		},
 	})

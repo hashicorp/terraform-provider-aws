@@ -2153,8 +2153,6 @@ func TestAccS3Object_Identity_ExistingResource_NoRefresh(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 				),
-				// We DON'T want this error.
-				// ExpectError: regexache.MustCompile(`Missing Resource Identity After Update`),
 			},
 		},
 	})
