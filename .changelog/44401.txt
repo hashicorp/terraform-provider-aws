@@ -1,0 +1,5 @@
+```release-note:bug
+resource/aws_odb_cloud_vm_cluster : Fixed planmodifier for computed attribute. Fixed planmodifier from display_name attribute.
+resource/aws_odb_cloud_autonomous_vm_cluster : Fixed planmodifier for computed attribute.
+resource/aws_odb_network_peering_connection : Fixed planmodifier for computed attribute.
+```
