@@ -4,7 +4,6 @@
 provider "null" {}
 
 resource "aws_dsql_cluster" "test" {
-  deletion_protection_enabled = false
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id

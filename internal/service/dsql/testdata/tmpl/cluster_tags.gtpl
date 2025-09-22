@@ -1,6 +1,4 @@
 resource "aws_dsql_cluster" "test" {
-  deletion_protection_enabled = false
-
 {{- template "tags" . }}
 }
 
