@@ -28,7 +28,7 @@ data "aws_odb_db_server" "example" {
 The following arguments are required:
 
 * `cloud_exadata_infrastructure_id` - (Required) The unique identifier of the cloud vm cluster.
-* `id` - (Required) The unique identifier of db node associated with vm cluster. 
+* `id` - (Required) The unique identifier of db node associated with vm cluster.
 
 The following arguments are optional:
 
