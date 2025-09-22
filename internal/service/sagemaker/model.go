@@ -167,7 +167,7 @@ func resourceModel() *schema.Resource {
 								},
 							},
 						},
-						"additional_model_data_source": {
+						"additional_model_data_sources": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -406,7 +406,7 @@ func resourceModel() *schema.Resource {
 								},
 							},
 						},
-						"additional_model_data_source": {
+						"additional_model_data_sources": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -723,7 +723,7 @@ func expandContainer(m map[string]any) *awstypes.ContainerDefinition {
 		container.ModelDataSource = expandModelDataSource(v.([]any))
 	}
 
-	if v, ok := m["additional_model_data_source"]; ok {
+	if v, ok := m["additional_model_data_sources"]; ok {
 		container.AdditionalModelDataSources = expandAdditionalModelDataSources(v.([]any))
 	}
 	if v, ok := m[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
@@ -761,13 +761,9 @@ func expandModelDataSource(l []any) *awstypes.ModelDataSource {
 	return &modelDataSource
 }
 
-func expandAdditionalModelDataSource(l []any) *awstypes.AdditionalModelDataSource {
-	if len(l) == 0 {
-		return nil
-	}
-	additionalModelDataSource := awstypes.AdditionalModelDataSource{}
+func expandAdditionalModelDataSource(m map[string]any) *awstypes.AdditionalModelDataSource {
 
-	m := l[0].(map[string]any)
+	additionalModelDataSource := awstypes.AdditionalModelDataSource{}
 
 	if v, ok := m["channel_name"]; ok && v.(string) != "" {
 		additionalModelDataSource.ChannelName = aws.String(v.(string))
