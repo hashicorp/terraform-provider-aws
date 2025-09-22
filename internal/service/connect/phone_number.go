@@ -31,6 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
 // @Testing(preIdentityVersion="v6.14.0")
+// @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.ClaimedPhoneNumberSummary")
 func resourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{

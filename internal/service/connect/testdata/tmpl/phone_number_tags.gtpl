@@ -1,6 +1,3 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
 resource "aws_connect_phone_number" "test" {
 {{- template "region" }}
   target_arn   = aws_connect_instance.test.arn

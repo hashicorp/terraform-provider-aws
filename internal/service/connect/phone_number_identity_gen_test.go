@@ -20,14 +20,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConnectPhoneNumber_Identity_Basic(t *testing.T) {
+func testAccConnectPhoneNumber_IdentitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:    testAccConnectPhoneNumber_Identity_Basic,
+		"ExistingResource": testAccConnectPhoneNumber_Identity_ExistingResource,
+		"RegionOverride":   testAccConnectPhoneNumber_Identity_RegionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccConnectPhoneNumber_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ClaimedPhoneNumberSummary
 	resourceName := "aws_connect_phone_number.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -105,13 +117,13 @@ func TestAccConnectPhoneNumber_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccConnectPhoneNumber_Identity_RegionOverride(t *testing.T) {
+func testAccConnectPhoneNumber_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_connect_phone_number.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -193,14 +205,14 @@ func TestAccConnectPhoneNumber_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.0
-func TestAccConnectPhoneNumber_Identity_ExistingResource(t *testing.T) {
+func testAccConnectPhoneNumber_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ClaimedPhoneNumberSummary
 	resourceName := "aws_connect_phone_number.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
