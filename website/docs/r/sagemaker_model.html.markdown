@@ -65,6 +65,7 @@ The `primary_container` and `container` block both support:
 * `model_data_url` - (Optional) The URL for the S3 location where model artifacts are stored.
 * `model_package_name` - (Optional) The Amazon Resource Name (ARN) of the model package to use to create the model.
 * `model_data_source` - (Optional) The location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker AI Developer Guide_.
+* `additional_model_data_sources` - (Optional) Data sources that are available to your model in addition to the one that you specify for `model_data_source`.
 * `container_hostname` - (Optional) The DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.
@@ -83,6 +84,11 @@ The `primary_container` and `container` block both support:
 
 ### Model Data Source
 
+* `s3_data_source` - (Required) The S3 location of model data to deploy.
+
+### Additional Model Data Sources 
+
+* `channel_name` - (required) A custom name where the aditional object will be stored. it will be stored in `/opt/ml/additional-model-data-sources/<channel_name>/`.
 * `s3_data_source` - (Required) The S3 location of model data to deploy.
 
 #### S3 Data Source
