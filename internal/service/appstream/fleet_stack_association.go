@@ -63,7 +63,7 @@ func resourceFleetStackAssociationCreate(ctx context.Context, d *schema.Resource
 	const (
 		timeout = 15 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceNotFoundException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceNotFoundException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.AssociateFleet(ctx, &input)
 	})
 

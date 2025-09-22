@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,9 +36,10 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @MutableIdentity
-// @WrappedImport(false)
+// @CustomImport
 // @ArnFormat("job-definition/{name}:{revision}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
+// @Testing(preIdentityVersion="6.4.0")
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -47,14 +47,9 @@ func resourceJobDefinition() *schema.Resource {
 		UpdateWithoutTimeout: resourceJobDefinitionUpdate,
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
-		// TODO: handle default values on Import
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				// The identitySpec can be retrieved from the context when Mutable Identity is supported
-				// identitySpec := importer.IdentitySpec(ctx)
-				identity := inttypes.RegionalARNIdentity(
-					inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-				)
+				identity := importer.IdentitySpec(ctx)
 
 				if err := importer.RegionalARN(ctx, rd, identity); err != nil {
 					return nil, err
@@ -1115,7 +1110,7 @@ func validJobContainerProperties(v any, k string) (ws []string, errors []error) 
 	value := v.(string)
 	_, err := expandContainerProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1124,7 +1119,7 @@ func validJobECSProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandECSProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1133,7 +1128,7 @@ func validJobNodeProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandJobNodeProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %w", err))
 	}
 	return
 }

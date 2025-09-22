@@ -8,8 +8,10 @@ import (
 	"slices"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,6 +42,15 @@ func ResourceRegionDisabled() ServicePackageResourceRegion {
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
 	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
+}
+
+// ServicePackageAction represents a Terraform Plugin Framework action
+// implemented by a service package.
+type ServicePackageAction struct {
+	Factory  func(context.Context) (action.ActionWithConfigure, error)
+	TypeName string
+	Name     string
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageEphemeralResource represents a Terraform Plugin Framework ephemeral resource
@@ -73,6 +84,15 @@ type ServicePackageFrameworkResource struct {
 	Import   FrameworkImport
 }
 
+type ServicePackageFrameworkListResource struct {
+	Factory  func() list.ListResourceWithConfigure
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
 // implemented by a service package.
 type ServicePackageSDKDataSource struct {
@@ -95,6 +115,20 @@ type ServicePackageSDKResource struct {
 	Import   SDKv2Import
 }
 
+type ListResourceForSDK interface {
+	list.ListResourceWithRawV5Schemas
+	list.ListResourceWithConfigure
+}
+
+type ServicePackageSDKListResource struct {
+	Factory  func() ListResourceForSDK
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
 type Identity struct {
 	IsGlobalResource       bool   // All
 	IsSingleton            bool   // Singleton
@@ -106,6 +140,7 @@ type Identity struct {
 	IdentityDuplicateAttrs []string
 	IsSingleParameter      bool
 	IsMutable              bool
+	IsSetOnUpdate          bool
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -355,15 +390,24 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	}
 }
 
-// WithV6_0SDKv2Fix is for use ONLY for resource types affected by the v6.0 SDKv2 existing resource issue
-func WithV6_0SDKv2Fix() IdentityOptsFunc {
+// WithMutableIdentity is for use for resource types that normally have a mutable identity
+// If Identity must be mutable to fix potential errors, use WithIdentityFix()
+func WithMutableIdentity() IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IsMutable = true
+		opts.IsSetOnUpdate = true
 	}
 }
 
 // WithIdentityFix is for use ONLY for resource types that must be able to modify Resource Identity due to an error
 func WithIdentityFix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
+	}
+}
+
+// WithV6_0SDKv2Fix is for use ONLY for resource types affected by the v6.0 SDKv2 existing resource issue
+func WithV6_0SDKv2Fix() IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IsMutable = true
 	}
@@ -392,4 +436,8 @@ type SDKv2Import struct {
 	WrappedImport bool
 	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
+}
+
+type SDKv2Tagger interface {
+	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
 }

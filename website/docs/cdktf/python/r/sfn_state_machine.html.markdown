@@ -189,6 +189,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sfn_state_machine.example
+  identity = {
+    "arn" = "arn:aws:states:eu-west-1:123456789098:stateMachine:bar"
+  }
+}
+
+resource "aws_sfn_state_machine" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the state machine.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import State Machines using the `arn`. For example:
 
 ```python
@@ -212,4 +233,4 @@ Using `terraform import`, import State Machines using the `arn`. For example:
 % terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c667d18b38678eaca4b8dfe3c743f16fd2da8f76e3c6c8d2e69ba96f3224e138 -->
+<!-- cache-key: cdktf-0.20.8 input-27af823c67ebd59193281f26eda6feaa37ecf1e26daf0ce73b0f3c7d4c1db48f -->

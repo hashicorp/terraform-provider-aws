@@ -41,7 +41,7 @@ class MyConvertedCode(TerraformStack):
             data_access_role_arn=Token.as_string(aws_iam_role_example.arn),
             depends_on=[aws_iam_role_policy_example],
             input_data_config=ComprehendDocumentClassifierInputDataConfig(
-                s3_uri="s3://${" + test.bucket + "}/${" + documents.id + "}"
+                s3_uri="s3://${" + test.bucket + "}/${" + documents.key + "}"
             ),
             language_code="en",
             name="example"
@@ -143,6 +143,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_comprehend_document_classifier.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:document-classifier/example"
+  }
+}
+
+resource "aws_comprehend_document_classifier" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Comprehend document classifier.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Document Classifier using the ARN. For example:
 
 ```python
@@ -166,4 +187,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4af629e294b01ca1442c39138ff55ca609ec54b70a3b1088c1d2663747e60231 -->
+<!-- cache-key: cdktf-0.20.8 input-317ec230d3232bb1b1affc53203bb287102dc692e0069be2b2d526135393945d -->

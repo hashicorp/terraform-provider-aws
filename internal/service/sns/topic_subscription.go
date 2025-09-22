@@ -157,16 +157,16 @@ var (
 )
 
 // @SDKResource("aws_sns_topic_subscription", name="Topic Subscription")
+// @ArnIdentity
+// @Testing(existsType="map[string]string")
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(importIgnore="confirmation_timeout_in_minutes;endpoint_auto_confirms")
 func resourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
 		ReadWithoutTimeout:   resourceTopicSubscriptionRead,
 		UpdateWithoutTimeout: resourceTopicSubscriptionUpdate,
 		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
 
@@ -591,18 +591,18 @@ func normalizeTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 	var deliveryPolicy TopicSubscriptionDeliveryPolicy
 
 	if err := json.Unmarshal([]byte(policy), &deliveryPolicy); err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %w", err)
 	}
 
 	normalizedDeliveryPolicy, err := json.Marshal(deliveryPolicy)
 
 	if err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %w", err)
 	}
 
 	b := bytes.NewBufferString("")
 	if err := json.Compact(b, normalizedDeliveryPolicy); err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %w", err)
 	}
 
 	return b.Bytes(), nil

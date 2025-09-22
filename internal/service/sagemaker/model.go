@@ -445,7 +445,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	log.Printf("[DEBUG] SageMaker AI model create config: %#v", *createOpts)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.CreateModel(ctx, createOpts)
 	}, ErrCodeValidationException)
 
@@ -514,7 +514,7 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	log.Printf("[INFO] Deleting SageMaker AI model: %s", d.Id())
 
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteModel(ctx, deleteOpts)
 
 		if err != nil {
@@ -523,17 +523,15 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 
 			if errs.IsA[*awstypes.ResourceNotFound](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteModel(ctx, deleteOpts)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting sagemaker model: %s", err)
 	}

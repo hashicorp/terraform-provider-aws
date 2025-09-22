@@ -33,9 +33,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `identifier` - DB Instance Identifier
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -46,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS (Relational Database) RDS Instance State using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS (Relational Database) RDS Instance State using the `identifier`. For example:
 
 ```terraform
 import {
@@ -55,7 +53,7 @@ import {
 }
 ```
 
-Using `terraform import`, import RDS (Relational Database) RDS Instance State using the `example_id_arg`. For example:
+Using `terraform import`, import RDS (Relational Database) RDS Instance State using the `identifier`. For example:
 
 ```console
 % terraform import aws_rds_instance_state.example rds_instance_state-id-12345678

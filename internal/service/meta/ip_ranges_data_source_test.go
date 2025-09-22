@@ -186,7 +186,7 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 
 			_, _, err := net.ParseCIDR(cidrBlock)
 			if err != nil {
-				return fmt.Errorf("malformed CIDR block %s in %s: %s", cidrBlock, attribute, err)
+				return fmt.Errorf("malformed CIDR block %s in %s: %w", cidrBlock, attribute, err)
 			}
 
 			cidrBlocks[i] = cidrBlock

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -37,7 +36,7 @@ func sweepTables(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DynamoDBClient(ctx)
 	input := &dynamodb.ListTablesInput{}
@@ -96,7 +95,7 @@ func sweepBackups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DynamoDBClient(ctx)
 	input := &dynamodb.ListBackupsInput{
@@ -157,24 +156,21 @@ func (bs backupSweeper) Delete(ctx context.Context, optFns ...tfresource.Options
 	const (
 		timeout = 10 * time.Minute
 	)
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		log.Printf("[DEBUG] Deleting DynamoDB Backup: %s", bs.arn)
 		_, err := bs.conn.DeleteBackup(ctx, input)
 		if errs.IsA[*awstypes.BackupNotFoundException](err) {
 			return nil
 		}
 		if errs.IsA[*awstypes.BackupInUseException](err) || errs.IsA[*awstypes.LimitExceededException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	}, optFns...)
-	if tfresource.TimedOut(err) {
-		_, err = bs.conn.DeleteBackup(ctx, input)
-	}
 
 	return err
 }
