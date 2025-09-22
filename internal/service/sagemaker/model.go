@@ -907,6 +907,9 @@ func flattenContainer(container *awstypes.ContainerDefinition) []any {
 	if container.ModelDataSource != nil {
 		cfg["model_data_source"] = flattenModelDataSource(container.ModelDataSource)
 	}
+	if len(container.AdditionalModelDataSources) > 0 {
+		cfg["additional_model_data_sources"] = flattenAdditionalModelDataSources(container.AdditionalModelDataSources)
+	}
 	if container.ModelPackageName != nil {
 		cfg["model_package_name"] = aws.ToString(container.ModelPackageName)
 	}
@@ -943,6 +946,31 @@ func flattenModelDataSource(modelDataSource *awstypes.ModelDataSource) []any {
 	return []any{cfg}
 }
 
+func flattenAdditionalModelDataSource(ds *awstypes.AdditionalModelDataSource) []any {
+	if ds == nil {
+		return []any{}
+	}
+
+	m := make(map[string]any)
+	if ds.ChannelName != nil {
+		m["channel_name"] = aws.ToString(ds.ChannelName)
+	}
+	if ds.S3DataSource != nil {
+		m["s3_data_source"] = flattenS3ModelDataSource(ds.S3DataSource)
+	}
+	return []any{m}
+}
+
+func flattenAdditionalModelDataSources(additionalModelDataSources []awstypes.AdditionalModelDataSource) []any {
+	fSources := make([]any, 0, len(additionalModelDataSources))
+	for _, ds := range additionalModelDataSources {
+		flattened := flattenAdditionalModelDataSource(&ds)
+		if len(flattened) > 0 {
+			fSources = append(fSources, flattened[0].(map[string]any))
+		}
+	}
+	return fSources
+}
 func flattenS3ModelDataSource(s3ModelDataSource *awstypes.S3ModelDataSource) []any {
 	if s3ModelDataSource == nil {
 		return []any{}
