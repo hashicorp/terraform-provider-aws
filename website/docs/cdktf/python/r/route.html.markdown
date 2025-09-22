@@ -147,17 +147,17 @@ resource "aws_route" "example" {
 
 #### Required
 
-- `route_table_id` - (String) ID of the route table.
+* `route_table_id` - (String) ID of the route table.
 
 #### Optional
 
 ~> Exactly one of of `destination_cidr_block`, `destination_ipv6_cidr_block`, or `destination_prefix_list_id` is required.
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `destination_cidr_block` - (String) Destination IPv4 CIDR block.
-- `destination_ipv6_cidr_block` - (String) Destination IPv6 CIDR block.
-- `destination_prefix_list_id` - (String) Destination IPv6 CIDR block.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `destination_cidr_block` - (String) Destination IPv4 CIDR block.
+* `destination_ipv6_cidr_block` - (String) Destination IPv6 CIDR block.
+* `destination_prefix_list_id` - (String) Destination IPv6 CIDR block.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual routes using `ROUTETABLEID_DESTINATION`. Import [local routes](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html#RouteTables) using the VPC's IPv4 or IPv6 CIDR blocks. For example:
 
@@ -232,4 +232,4 @@ Import a route in route table `rtb-656C65616E6F72` with a managed prefix list de
 % terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-776ccba300b5550d287be271fef71d2ca0d5250bc69dbcb0dbe42bff90aada8c -->
+<!-- cache-key: cdktf-0.20.8 input-6e597064f8322377831f0a1c1582ccc078a91a1c6cc4dba5afc38b14c68420ce -->
