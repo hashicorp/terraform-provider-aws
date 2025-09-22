@@ -7275,12 +7275,12 @@ resource "aws_rds_cluster" "test" {
 
   engine         = aws_rds_global_cluster.test.engine
   engine_version = aws_rds_global_cluster.test.engine_version
- 
-  master_username           = "tfacctest"
-  master_password           = "avoid-plaintext-passwords"
-  skip_final_snapshot       = true
-  apply_immediately         = true
-  db_subnet_group_name      = aws_db_subnet_group.test.name
+
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
+  apply_immediately    = true
+  db_subnet_group_name = aws_db_subnet_group.test.name
 
   database_insights_mode                = %[3]s
   performance_insights_enabled          = %[4]t
