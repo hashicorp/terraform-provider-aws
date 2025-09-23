@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -50,6 +50,7 @@ func (r *lfTagExpressionResource) Schema(ctx context.Context, _ resource.SchemaR
 				Description: "The ID of the Data Catalog.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -65,10 +66,10 @@ func (r *lfTagExpressionResource) Schema(ctx context.Context, _ resource.SchemaR
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrExpression: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[expressionLfTag](ctx),
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
+			names.AttrExpression: schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[expressionLfTag](ctx),
+				Validators: []validator.Set{
+					setvalidator.IsRequired(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -93,6 +94,10 @@ func (r *lfTagExpressionResource) Create(ctx context.Context, request resource.C
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if data.CatalogId.IsNull() || data.CatalogId.IsUnknown() {
+		data.CatalogId = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 
 	input := lakeformation.CreateLFTagExpressionInput{}
@@ -237,10 +242,10 @@ func (r *lfTagExpressionResource) ImportState(ctx context.Context, request resou
 
 type lfTagExpressionResourceModel struct {
 	framework.WithRegionModel
-	CatalogId   types.String                                     `tfsdk:"catalog_id"`
-	Description types.String                                     `tfsdk:"description"`
-	Name        types.String                                     `tfsdk:"name"`
-	Expression  fwtypes.ListNestedObjectValueOf[expressionLfTag] `tfsdk:"expression"`
+	CatalogId   types.String                                    `tfsdk:"catalog_id"`
+	Description types.String                                    `tfsdk:"description"`
+	Name        types.String                                    `tfsdk:"name"`
+	Expression  fwtypes.SetNestedObjectValueOf[expressionLfTag] `tfsdk:"expression"`
 }
 
 type expressionLfTag struct {

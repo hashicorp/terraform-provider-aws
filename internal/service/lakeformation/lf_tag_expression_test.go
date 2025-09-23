@@ -10,121 +10,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"strings"
 )
 
 const (
 	ResNameLFTagExpression = "LF Tag Expression"
 )
-
-//// FindLFTagExpressionByID retrieves an LF Tag Expression by parsing the ID (catalog_id:name)
-//func FindLFTagExpressionByID(ctx context.Context, conn *lakeformation.Client, id string) (*lakeformation.GetLFTagExpressionOutput, error) {
-//	input := &lakeformation.GetLFTagExpressionInput{}
-//
-//	// Check if ID contains catalog_id:name format or just name
-//	if parts := strings.SplitN(id, ":", 2); len(parts) == 2 {
-//		catalogId := parts[0]
-//		name := parts[1]
-//		input.CatalogId = &catalogId
-//		input.Name = &name
-//	} else {
-//		// Treat entire ID as name, no catalog specified
-//		input.Name = &id
-//	}
-//
-//	output, err := conn.GetLFTagExpression(ctx, input)
-//
-//	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-//		return nil, &retry.NotFoundError{
-//			LastError:   err,
-//			LastRequest: input,
-//		}
-//	}
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return output, nil
-//}
-
-func testAccLFTagExpressionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
-
-	input := &lakeformation.ListLFTagExpressionsInput{}
-	_, err := conn.ListLFTagExpressions(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccLFTagExpressionConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
-resource "aws_lakeformation_lf_tag" "domain" {
-  key    = "domain"
-  values = ["prisons"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag_expression" "test" {
-  name = %[1]q
-  
-  tag_expression = {
-    domain = ["prisons"]
-  }
-
-  depends_on = [
-    aws_lakeformation_lf_tag.domain,
-    aws_lakeformation_data_lake_settings.test
-  ]
-}
-`, rName)
-}
-
-func testAccLFTagExpressionConfig_onlyDataLakeSettings(rName string) string {
-	return `
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
-resource "aws_lakeformation_lf_tag" "domain" {
-  key    = "domain"
-  values = ["prisons"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-`
-}
 
 func testAccLFTagExpression_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -286,10 +185,10 @@ func testAccCheckLFTagExpressionDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := FindLFTagExpressionByID(ctx, conn, rs.Primary.ID)
+			_, err := tflakeformation.FindLFTagExpression(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrCatalogID])
 
-			if tfresource.NotFound(err) {
-				return nil
+			if retry.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
@@ -315,7 +214,7 @@ func testAccCheckLFTagExpressionExists(ctx context.Context, name string, lftagex
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
-		resp, err := FindLFTagExpressionByID(ctx, conn, rs.Primary.ID)
+		resp, err := tflakeformation.FindLFTagExpression(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrCatalogID])
 
 		if err != nil {
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, ResNameLFTagExpression, rs.Primary.ID, err)
@@ -325,6 +224,73 @@ func testAccCheckLFTagExpressionExists(ctx context.Context, name string, lftagex
 
 		return nil
 	}
+}
+
+func testAccLFTagExpressionPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+
+	input := lakeformation.ListLFTagExpressionsInput{}
+	_, err := conn.ListLFTagExpressions(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccLFTagExpressionConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_lakeformation_lf_tag" "domain" {
+  key    = "domain"
+  values = ["prisons"]
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_lf_tag_expression" "test" {
+  name = %[1]q
+  
+  tag_expression = {
+    domain = ["prisons"]
+  }
+
+  depends_on = [
+    aws_lakeformation_lf_tag.domain,
+    aws_lakeformation_data_lake_settings.test
+  ]
+}
+`, rName)
+}
+
+func testAccLFTagExpressionConfig_onlyDataLakeSettings(rName string) string {
+	return `
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_lakeformation_lf_tag" "domain" {
+  key    = "domain"
+  values = ["prisons"]
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`
 }
 
 func testAccLFTagExpressionConfig_update1(rName string) string {
