@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_acm_certificate: Added write-only support for the `private_key` argument, via the `private_key_wo` and `private_key_wo_version` arguments.
+```
