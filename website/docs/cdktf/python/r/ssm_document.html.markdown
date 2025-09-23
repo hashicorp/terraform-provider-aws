@@ -149,8 +149,8 @@ resource "aws_ssm_document" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Documents using the name. For example:
 
@@ -205,4 +205,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1887e402de4374d36ea1aac245e2a22fc5eba07417122f73c328c84286836c59 -->
+<!-- cache-key: cdktf-0.20.8 input-e0a2f8c9d60533427c6a38164043028aebb48217ebcb1bd5aed1192cbb922307 -->
