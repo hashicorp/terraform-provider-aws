@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_sfn_activity", name="Activity")
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
-// @Testing(preIdentityVersion="v6.14.0")
+// @Testing(preIdentityVersion="v6.14.1")
 func resourceActivity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivityCreate,
