@@ -30,6 +30,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -2119,15 +2121,15 @@ func TestAccS3Object_basicUpgrade(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_Identity_ExistingResource_NoRefresh(t *testing.T) {
+func TestAccS3Object_Identity_ExistingResource_NoRefresh_WithChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var obj s3.GetObjectOutput
+	var conf s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object.object"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
 		CheckDestroy: testAccCheckObjectDestroy(ctx),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
@@ -2139,20 +2141,41 @@ func TestAccS3Object_Identity_ExistingResource_NoRefresh(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
+						VersionConstraint: "6.0.0",
 					},
 				},
-				Config: testAccObjectConfig_basic(rName),
+				Config: testAccObjectConfig_content(rName, "initial"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectExists(ctx, resourceName, &conf),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccObjectConfig_content(rName, "updated content"),
+				Config:                   testAccObjectConfig_content(rName, "updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectExists(ctx, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:    knownvalue.NotNull(),
+						names.AttrKey:       knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrKey)),
+				},
 			},
 		},
 	})
