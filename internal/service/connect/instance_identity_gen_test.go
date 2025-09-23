@@ -204,7 +204,7 @@ func testAccConnectInstance_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.14.0
+// Resource Identity was added after v6.14.1
 func testAccConnectInstance_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -222,7 +222,7 @@ func testAccConnectInstance_Identity_ExistingResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Instance/basic_v6.14.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/basic_v6.14.1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

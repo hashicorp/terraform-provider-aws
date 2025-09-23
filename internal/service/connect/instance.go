@@ -46,7 +46,7 @@ var (
 // @SDKResource("aws_connect_instance", name="Instance")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
-// @Testing(preIdentityVersion="6.14.0")
+// @Testing(preIdentityVersion="6.14.1")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.Instance")
 func resourceInstance() *schema.Resource {
