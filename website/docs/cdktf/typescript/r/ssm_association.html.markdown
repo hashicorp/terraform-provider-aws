@@ -348,8 +348,8 @@ resource "aws_ssm_association" "example" {
 
 #### Optional
 
-- `accountId` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM associations using the `associationId`. For example:
 
@@ -381,4 +381,4 @@ Using `terraform import`, import SSM associations using the `associationId`. For
 % terraform import aws_ssm_association.example 10abcdef-0abc-1234-5678-90abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-34f94ba6372e5453a1ea507cb123d62cf09fd2e8e822ec71adafeaebbbb7e9c7 -->
+<!-- cache-key: cdktf-0.20.8 input-bdcd8c40c95f9504d338b3f797b45803fb20c12c657ed24dae56df644d189711 -->

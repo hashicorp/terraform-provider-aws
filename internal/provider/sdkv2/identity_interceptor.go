@@ -63,6 +63,42 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 				}
 			}
 		}
+	case OnError:
+		switch why {
+		case Update:
+			if identityIsFullyNull(d, r.identitySpec) {
+				if d.Id() == "" {
+					break
+				}
+				identity, err := d.Identity()
+				if err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+
+				for _, attr := range r.identitySpec.Attributes {
+					switch attr.Name() {
+					case names.AttrAccountID:
+						if err := identity.Set(attr.Name(), awsClient.AccountID(ctx)); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
+
+					case names.AttrRegion:
+						if err := identity.Set(attr.Name(), awsClient.Region(ctx)); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
+
+					default:
+						val, ok := getAttributeOk(d, attr.ResourceAttributeName())
+						if !ok {
+							continue
+						}
+						if err := identity.Set(attr.Name(), val); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
+					}
+				}
+			}
+		}
 	}
 
 	return diags
@@ -99,7 +135,7 @@ func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 
 func newIdentityInterceptor(identitySpec *inttypes.Identity) interceptorInvocation {
 	interceptor := interceptorInvocation{
-		when: After,
+		when: After | OnError,
 		why:  Create | Read | Update,
 		interceptor: identityInterceptor{
 			identitySpec: identitySpec,
