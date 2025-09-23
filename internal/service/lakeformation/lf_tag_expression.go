@@ -2,149 +2,129 @@ package lakeformation
 
 import (
 	"context"
-	"fmt"
-	"strings"
-	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
-
-	lfTypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lakeformation_lf_tag_expression", name="LF Tag Expression")
 func newLFTagExpressionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &lfTagExpressionResource{
-		ResourceWithModel: framework.ResourceWithModel[lfTagExpressionResourceModel]{},
-	}, nil
+	l := lfTagExpressionResource{}
+	return &l, nil
 }
 
+const (
+	ResNameLFTagExpression = "LF Tag Expression"
+)
+
 type lfTagExpressionResource struct {
-	framework.ResourceWithConfigure
 	framework.ResourceWithModel[lfTagExpressionResourceModel]
 }
 
-func (r *lfTagExpressionResource) Schema(
-	ctx context.Context,
-	req resource.SchemaRequest,
-	resp *resource.SchemaResponse,
-) {
-	resp.Schema = schema.Schema{
+func (r *lfTagExpressionResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Description: "Manages an AWS Lake Formation Tag Expression.",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "Primary identifier (catalog_id:name)",
-			},
-			"catalog_id": schema.StringAttribute{
+			names.AttrCatalogID: schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "The ID of the Data Catalog.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The name of the LF-Tag Expression.",
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional:    true,
 				Description: "A description of the LF-Tag Expression.",
 			},
-			"tag_expression": schema.MapAttribute{
-				Required:    true,
-				ElementType: types.SetType{ElemType: types.StringType},
-				Description: "Mapping of tag keys to lists of allowed values.",
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrExpression: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[expressionLfTag](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"tag_key": schema.StringAttribute{
+							Required: true,
+						},
+						"tag_values": schema.SetAttribute{
+							ElementType: types.StringType,
+							Required:    true,
+						},
+					},
+				},
 			},
 		},
 	}
 }
 
-type lfTagExpressionResourceModel struct {
-	framework.WithRegionModel
-	ID            types.String         `tfsdk:"id"`
-	CatalogId     types.String         `tfsdk:"catalog_id"`
-	Name          types.String         `tfsdk:"name"`
-	Description   types.String         `tfsdk:"description"`
-	TagExpression map[string]types.Set `tfsdk:"tag_expression"`
-}
-
 func (r *lfTagExpressionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	conn := r.Meta().LakeFormationClient(ctx)
+
 	var data lfTagExpressionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := r.Meta().LakeFormationClient(ctx)
-
-	expr, expandDiags := expandLFTagExpression(ctx, data.TagExpression)
-	response.Diagnostics.Append(expandDiags...)
+	input := lakeformation.CreateLFTagExpressionInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Get catalog ID, defaulting to account ID if not set
-	catalogId := data.CatalogId.ValueString()
-	if catalogId == "" {
-		catalogId = r.Meta().AccountID(ctx)
-		data.CatalogId = types.StringValue(catalogId)
-	}
-
-	input := &lakeformation.CreateLFTagExpressionInput{
-		CatalogId: aws.String(catalogId),
-		Name:      aws.String(data.Name.ValueString()),
-		Description: func() *string {
-			if data.Description.IsNull() {
-				return nil
-			}
-			return aws.String(data.Description.ValueString())
-		}(),
-		Expression: expr,
-	}
-
-	_, err := conn.CreateLFTagExpression(ctx, input)
-
+	_, err := conn.CreateLFTagExpression(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(
-			"Error Creating LF-Tag Expression",
-			fmt.Sprintf("Could not create LF-Tag Expression: %s", err),
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameLFTagExpression, data.Name.String(), err),
+			err.Error(),
 		)
 		return
 	}
 
-	data.ID = types.StringValue(fmt.Sprintf("%s:%s", data.CatalogId.ValueString(), data.Name.ValueString()))
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
 func (r *lfTagExpressionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	conn := r.Meta().LakeFormationClient(ctx)
+
 	var data lfTagExpressionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := r.Meta().LakeFormationClient(ctx)
-	name := data.Name.ValueString()
+	output, err := findLFTagExpression(ctx, conn, data.Name.ValueString(), data.CatalogId.ValueString())
 
-	output, err := conn.GetLFTagExpression(ctx, &lakeformation.GetLFTagExpressionInput{
-		CatalogId: aws.String(data.CatalogId.ValueString()),
-		Name:      aws.String(name),
-	})
-
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -152,159 +132,143 @@ func (r *lfTagExpressionResource) Read(ctx context.Context, request resource.Rea
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			"Error Reading LF-Tag Expression",
-			fmt.Sprintf("Could not read LF-Tag Expression %s: %s", name, err),
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionReading, ResNameLFTagExpression, data.Name.String(), err),
+			err.Error(),
 		)
 		return
 	}
 
-	// Manually populate the model fields from the API response
-	if output.CatalogId != nil {
-		data.CatalogId = types.StringValue(*output.CatalogId)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
-	if output.Name != nil {
-		data.Name = types.StringValue(*output.Name)
-	}
-	if output.Description != nil {
-		data.Description = types.StringValue(*output.Description)
-	}
-
-	// Convert the Expression from AWS API format to types.Set map
-	tagExprMap := make(map[string]types.Set)
-	for _, tag := range output.Expression {
-		if tag.TagKey != nil {
-			setValue, diags := types.SetValueFrom(ctx, types.StringType, tag.TagValues)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			tagExprMap[*tag.TagKey] = setValue
-		}
-	}
-	data.TagExpression = tagExprMap
-
-	// Ensure ID is properly set (consistent with Create/Update)
-	data.ID = types.StringValue(fmt.Sprintf("%s:%s", data.CatalogId.ValueString(), data.Name.ValueString()))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *lfTagExpressionResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan lfTagExpressionResourceModel
+	conn := r.Meta().LakeFormationClient(ctx)
+
+	var plan, state lfTagExpressionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	expr, expandDiags := expandLFTagExpression(ctx, plan.TagExpression)
-	response.Diagnostics.Append(expandDiags...)
+	diff, d := fwflex.Diff(ctx, plan, state)
+	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Get catalog ID, defaulting to account ID if not set
-	catalogId := plan.CatalogId.ValueString()
-	if catalogId == "" {
-		catalogId = r.Meta().AccountID(ctx)
-		plan.CatalogId = types.StringValue(catalogId)
+	if diff.HasChanges() {
+		var input lakeformation.UpdateLFTagExpressionInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateLFTagExpression(ctx, &input)
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.LakeFormation, create.ErrActionUpdating, ResNameLFTagExpression, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
 	}
 
-	input := &lakeformation.UpdateLFTagExpressionInput{
-		CatalogId: aws.String(catalogId),
-		Name:      aws.String(plan.Name.ValueString()),
-		Description: func() *string {
-			if plan.Description.IsNull() {
-				return nil
-			}
-			return aws.String(plan.Description.ValueString())
-		}(),
-		Expression: expr,
-	}
-
-	if _, err := r.Meta().LakeFormationClient(ctx).UpdateLFTagExpression(ctx, input); err != nil {
-		response.Diagnostics.AddError(
-			"Error Updating LF-Tag Expression",
-			fmt.Sprintf("Could not update LF-Tag Expression: %s", err),
-		)
-		return
-	}
-
-	plan.ID = types.StringValue(fmt.Sprintf("%s:%s", plan.CatalogId.ValueString(), plan.Name.ValueString()))
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *lfTagExpressionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	conn := r.Meta().LakeFormationClient(ctx)
+
 	var state lfTagExpressionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := &lakeformation.DeleteLFTagExpressionInput{
-		CatalogId: aws.String(state.CatalogId.ValueString()),
-		Name:      aws.String(state.Name.ValueString()),
+	input := lakeformation.DeleteLFTagExpressionInput{
+		CatalogId: state.CatalogId.ValueStringPointer(),
+		Name:      state.Name.ValueStringPointer(),
 	}
-	if _, err := r.Meta().LakeFormationClient(ctx).DeleteLFTagExpression(ctx, input); err != nil {
-		if !tfresource.NotFound(err) {
-			response.Diagnostics.AddError(
-				"Error Deleting LF-Tag Expression",
-				fmt.Sprintf("Could not delete LF-Tag Expression: %s", err),
-			)
-		}
+
+	_, err := conn.DeleteLFTagExpression(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionDeleting, ResNameLFTagExpression, state.Name.String(), err),
+			err.Error(),
+		)
+		return
 	}
 }
 
-func (r *lfTagExpressionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Parse the import ID which should be in format "catalog_id:name"
-	parts := strings.SplitN(req.ID, ":", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			"Import ID must be in format 'catalog_id:name'",
+const (
+	lfTagExpressionIDPartCount = 2
+)
+
+func (r *lfTagExpressionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	parts, err := intflex.ExpandResourceId(request.ID, lfTagExpressionIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionImporting, ResNameLFTagExpression, request.ID, err),
+			err.Error(),
 		)
 		return
 	}
 
-	catalogId := parts[0]
-	name := parts[1]
-
+	name := parts[0]
+	catalogId := parts[1]
 	// Set the parsed values in state
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("catalog_id"), catalogId)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
-
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), name)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrCatalogID), catalogId)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 }
 
-// expandLFTagExpression converts the native Go map into the AWS LFTag slice.
-func expandLFTagExpression(ctx context.Context, m map[string]types.Set) ([]lfTypes.LFTag, diag.Diagnostics) {
-	var expr []lfTypes.LFTag
-	var diags diag.Diagnostics
+type lfTagExpressionResourceModel struct {
+	framework.WithRegionModel
+	CatalogId   types.String                                     `tfsdk:"catalog_id"`
+	Description types.String                                     `tfsdk:"description"`
+	Name        types.String                                     `tfsdk:"name"`
+	Expression  fwtypes.ListNestedObjectValueOf[expressionLfTag] `tfsdk:"expression"`
+}
 
-	// Sort the keys for deterministic ordering
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
+type expressionLfTag struct {
+	TagKey    types.String        `tfsdk:"tag_key"`
+	TagValues fwtypes.SetOfString `tfsdk:"tag_values"`
+}
+
+func findLFTagExpression(ctx context.Context, conn *lakeformation.Client, name, catalogId string) (*lakeformation.GetLFTagExpressionOutput, error) {
+	input := lakeformation.GetLFTagExpressionInput{
+		CatalogId: aws.String(catalogId),
+		Name:      aws.String(name),
 	}
-	sort.Strings(keys)
 
-	// For each key, sort its values and append to the LFTag list
-	for _, k := range keys {
-		set := m[k]
-		var vals []string
-		diags.Append(set.ElementsAs(ctx, &vals, false)...)
-		if diags.HasError() {
-			return nil, diags
+	output, err := conn.GetLFTagExpression(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
-
-		sort.Strings(vals)
-		expr = append(expr, lfTypes.LFTag{
-			TagKey:    aws.String(k),
-			TagValues: vals,
-		})
 	}
 
-	return expr, diags
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Expression == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

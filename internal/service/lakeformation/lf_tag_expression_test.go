@@ -28,36 +28,36 @@ const (
 	ResNameLFTagExpression = "LF Tag Expression"
 )
 
-// FindLFTagExpressionByID retrieves an LF Tag Expression by parsing the ID (catalog_id:name)
-func FindLFTagExpressionByID(ctx context.Context, conn *lakeformation.Client, id string) (*lakeformation.GetLFTagExpressionOutput, error) {
-	input := &lakeformation.GetLFTagExpressionInput{}
-	
-	// Check if ID contains catalog_id:name format or just name
-	if parts := strings.SplitN(id, ":", 2); len(parts) == 2 {
-		catalogId := parts[0]
-		name := parts[1]
-		input.CatalogId = &catalogId
-		input.Name = &name
-	} else {
-		// Treat entire ID as name, no catalog specified
-		input.Name = &id
-	}
-
-	output, err := conn.GetLFTagExpression(ctx, input)
-
-	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
+//// FindLFTagExpressionByID retrieves an LF Tag Expression by parsing the ID (catalog_id:name)
+//func FindLFTagExpressionByID(ctx context.Context, conn *lakeformation.Client, id string) (*lakeformation.GetLFTagExpressionOutput, error) {
+//	input := &lakeformation.GetLFTagExpressionInput{}
+//
+//	// Check if ID contains catalog_id:name format or just name
+//	if parts := strings.SplitN(id, ":", 2); len(parts) == 2 {
+//		catalogId := parts[0]
+//		name := parts[1]
+//		input.CatalogId = &catalogId
+//		input.Name = &name
+//	} else {
+//		// Treat entire ID as name, no catalog specified
+//		input.Name = &id
+//	}
+//
+//	output, err := conn.GetLFTagExpression(ctx, input)
+//
+//	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+//		return nil, &retry.NotFoundError{
+//			LastError:   err,
+//			LastRequest: input,
+//		}
+//	}
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return output, nil
+//}
 
 func testAccLFTagExpressionPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
@@ -147,9 +147,9 @@ func testAccLFTagExpression_basic(t *testing.T) {
 				Config: testAccLFTagExpressionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tag_expression.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tag_expression.domain.#", "1"),
 				),
@@ -187,10 +187,10 @@ func testAccLFTagExpression_update(t *testing.T) {
 				Config: testAccLFTagExpressionConfig_update1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Initial description"),
-					resource.TestCheckResourceAttrSet(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tag_expression.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tag_expression.domain.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.domain.*", "finance"),
@@ -207,10 +207,10 @@ func testAccLFTagExpression_update(t *testing.T) {
 				Config: testAccLFTagExpressionConfig_update2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated description"),
-					resource.TestCheckResourceAttrSet(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					// Verify tag_expression changes: removed 'team', added 'project', modified 'domain' and 'environment'
 					resource.TestCheckResourceAttr(resourceName, "tag_expression.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tag_expression.domain.#", "3"),
