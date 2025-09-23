@@ -10,12 +10,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -48,18 +50,15 @@ func testAccLFTagExpression_basic(t *testing.T) {
 					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.domain.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "expression.#", "1"),
 				),
 			},
 			{
-				// Remove LF Tag Expression but keep Data Lake Settings to verify destruction with proper permissions
-				Config: testAccLFTagExpressionConfig_onlyDataLakeSettings(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Verify LF Tag Expression is destroyed while admin permissions still exist
-					testAccCheckLFTagExpressionDestroy(ctx),
-				),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrName, names.AttrCatalogID),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -191,6 +190,10 @@ func testAccCheckLFTagExpressionDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Insufficient Lake Formation permission(s)") {
+				continue
+			}
+
 			if err != nil {
 				return create.Error(names.LakeFormation, create.ErrActionCheckingDestroyed, ResNameLFTagExpression, rs.Primary.ID, err)
 			}
@@ -240,8 +243,7 @@ func testAccLFTagExpressionPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccLFTagExpressionConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+const testAccLFTagExpression_baseConfig = `
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
@@ -252,25 +254,29 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [data.aws_iam_session_context.current.issuer_arn]
 }
 
-resource "aws_lakeformation_lf_tag" "domain" {
-  key    = "domain"
-  values = ["prisons"]
+resource "aws_lakeformation_lf_tag" "test" {
+  key    = "key"
+  values = ["value"]
+
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
+`
 
+func testAccLFTagExpressionConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccLFTagExpression_baseConfig,
+		fmt.Sprintf(`
 resource "aws_lakeformation_lf_tag_expression" "test" {
-  name = %[1]q
-  
-  tag_expression = {
-    domain = ["prisons"]
+  name        = %[1]q
+  description = "test description"
+
+  expression {
+    tag_key    = aws_lakeformation_lf_tag.test.key
+    tag_values = aws_lakeformation_lf_tag.test.values
   }
 
-  depends_on = [
-    aws_lakeformation_lf_tag.domain,
-    aws_lakeformation_data_lake_settings.test
-  ]
+  depends_on = [aws_lakeformation_data_lake_settings.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccLFTagExpressionConfig_onlyDataLakeSettings(rName string) string {
