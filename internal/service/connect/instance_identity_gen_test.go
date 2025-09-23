@@ -20,14 +20,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConnectInstance_Identity_Basic(t *testing.T) {
+func testAccConnectInstance_IdentitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:    testAccConnectInstance_Identity_Basic,
+		"ExistingResource": testAccConnectInstance_Identity_ExistingResource,
+		"RegionOverride":   testAccConnectInstance_Identity_RegionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccConnectInstance_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Instance
 	resourceName := "aws_connect_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -105,13 +117,13 @@ func TestAccConnectInstance_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccConnectInstance_Identity_RegionOverride(t *testing.T) {
+func testAccConnectInstance_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_connect_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -193,14 +205,14 @@ func TestAccConnectInstance_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.0
-func TestAccConnectInstance_Identity_ExistingResource(t *testing.T) {
+func testAccConnectInstance_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Instance
 	resourceName := "aws_connect_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
