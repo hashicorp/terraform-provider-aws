@@ -23,17 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_server_side_encryption_configuration", name="Bucket Server-side Encryption Configuration")
+// @SDKResource("aws_s3_bucket_server_side_encryption_configuration", name="Bucket Server Side Encryption Configuration")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("expected_bucket_owner", optional="true")
+// @ImportIDHandler("resourceImportID")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(checkDestroyNoop=true)
+// @Testing(importIgnore="rule.0.bucket_key_enabled")
+// @Testing(plannableImportAction="NoOp")
 func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketServerSideEncryptionConfigurationRead,
 		UpdateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationUpdate,
 		DeleteWithoutTimeout: resourceBucketServerSideEncryptionConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {

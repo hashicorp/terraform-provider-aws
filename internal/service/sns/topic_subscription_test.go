@@ -866,7 +866,7 @@ func testAccCheckTopicSubscriptionDeliveryPolicyAttribute(attributes *map[string
 
 		var apiDeliveryPolicy tfsns.TopicSubscriptionDeliveryPolicy
 		if err := json.Unmarshal([]byte(apiDeliveryPolicyJSONString), &apiDeliveryPolicy); err != nil {
-			return fmt.Errorf("unable to unmarshal SNS Topic Subscription delivery policy JSON (%s): %s", apiDeliveryPolicyJSONString, err)
+			return fmt.Errorf("unable to unmarshal SNS Topic Subscription delivery policy JSON (%s): %w", apiDeliveryPolicyJSONString, err)
 		}
 
 		if reflect.DeepEqual(apiDeliveryPolicy, *expectedDeliveryPolicy) {
@@ -887,7 +887,7 @@ func testAccCheckTopicSubscriptionRedrivePolicyAttribute(ctx context.Context, at
 
 		var apiRedrivePolicy tfsns.TopicSubscriptionRedrivePolicy
 		if err := json.Unmarshal([]byte(apiRedrivePolicyJSONString), &apiRedrivePolicy); err != nil {
-			return fmt.Errorf("unable to unmarshal SNS Topic Subscription redrive policy JSON (%s): %s", apiRedrivePolicyJSONString, err)
+			return fmt.Errorf("unable to unmarshal SNS Topic Subscription redrive policy JSON (%s): %w", apiRedrivePolicyJSONString, err)
 		}
 
 		expectedRedrivePolicy := tfsns.TopicSubscriptionRedrivePolicy{
@@ -1165,7 +1165,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
   principal     = "apigateway.${data.aws_partition.current.dns_suffix}"
-  source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
+  source_arn    = "${aws_api_gateway_stage.test.execution_arn}/*"
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -1180,14 +1180,19 @@ resource "aws_lambda_function" "lambda" {
 resource "aws_api_gateway_deployment" "test" {
   depends_on  = [aws_api_gateway_integration_response.test]
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "acctest"
+}
+
+resource "aws_api_gateway_stage" "test" {
+  stage_name    = "acctest"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  deployment_id = aws_api_gateway_deployment.test.id
 }
 
 resource "aws_sns_topic_subscription" "test" {
   depends_on             = [aws_lambda_permission.apigw_lambda]
   topic_arn              = aws_sns_topic.test.arn
   protocol               = "https"
-  endpoint               = aws_api_gateway_deployment.test.invoke_url
+  endpoint               = aws_api_gateway_stage.test.invoke_url
   endpoint_auto_confirms = true
 }
 `, rName)
@@ -1291,7 +1296,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
   principal     = "apigateway.${data.aws_partition.current.dns_suffix}"
-  source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
+  source_arn    = "${aws_api_gateway_stage.test.execution_arn}/*"
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -1306,7 +1311,12 @@ resource "aws_lambda_function" "lambda" {
 resource "aws_api_gateway_deployment" "test" {
   depends_on  = [aws_api_gateway_integration_response.test]
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "acctest"
+}
+
+resource "aws_api_gateway_stage" "test" {
+  stage_name    = "acctest"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  deployment_id = aws_api_gateway_deployment.test.id
 }
 
 resource "aws_iam_role" "invocation_role" {
@@ -1389,7 +1399,7 @@ resource "aws_sns_topic_subscription" "test" {
   depends_on             = [aws_lambda_permission.apigw_lambda]
   topic_arn              = aws_sns_topic.test.arn
   protocol               = "https"
-  endpoint               = replace(aws_api_gateway_deployment.test.invoke_url, "https://", "https://davematthews:granny@")
+  endpoint               = replace(aws_api_gateway_stage.test.invoke_url, "https://", "https://davematthews:granny@")
   endpoint_auto_confirms = true
 
   confirmation_timeout_in_minutes = 3

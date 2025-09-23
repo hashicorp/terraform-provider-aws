@@ -42,6 +42,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/docdbelastic/types;awstypes;awstypes.Cluster")
 // @Testing(importIgnore="admin_user_password")
+// @Testing(preIdentityVersion="v5.100.0")
 func newClusterResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 

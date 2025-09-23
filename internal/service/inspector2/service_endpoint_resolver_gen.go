@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params inspector2.Endpo
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up inspector2 endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up inspector2 endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

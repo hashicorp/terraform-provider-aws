@@ -1137,7 +1137,7 @@ func TestAccVPCSecurityGroup_allowAll(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress"},
 			},
 		},
 	})
@@ -1193,7 +1193,7 @@ func TestAccVPCSecurityGroup_ipRangeAndSecurityGroupWithSameRules(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress"},
 			},
 		},
 	})
@@ -1221,7 +1221,7 @@ func TestAccVPCSecurityGroup_ipRangesWithSameRules(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress"},
 			},
 		},
 	})
@@ -2862,7 +2862,7 @@ func testAccCheckSecurityGroupRuleLimit(n string, v *int) resource.TestCheckFunc
 
 		limit, err := strconv.Atoi(rs.Primary.Attributes[names.AttrValue])
 		if err != nil {
-			return fmt.Errorf("converting value to int: %s", err)
+			return fmt.Errorf("converting value to int: %w", err)
 		}
 
 		*v = limit

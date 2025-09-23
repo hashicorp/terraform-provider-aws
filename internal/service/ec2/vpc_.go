@@ -221,7 +221,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateVpc(ctx, input)
 	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
 
@@ -503,10 +503,10 @@ func resourceVPCImport(ctx context.Context, d *schema.ResourceData, meta any) ([
 func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if diff.HasChange("assign_generated_ipv6_cidr_block") {
 		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
-			return fmt.Errorf("setting ipv6_association_id to computed: %s", err)
+			return fmt.Errorf("setting ipv6_association_id to computed: %w", err)
 		}
 		if err := diff.SetNewComputed("ipv6_cidr_block"); err != nil {
-			return fmt.Errorf("setting ipv6_cidr_block to computed: %s", err)
+			return fmt.Errorf("setting ipv6_cidr_block to computed: %w", err)
 		}
 	}
 

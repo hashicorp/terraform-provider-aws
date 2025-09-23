@@ -49,6 +49,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route53_resolver_rule_association.example
+  identity = {
+    id = "rslvr-rrassoc-97242eaf88example"
+  }
+}
+
+resource "aws_route53_resolver_rule_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the Route53 Resolver rule association.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rule associations using the `id`. For example:
 
 ```python
@@ -72,4 +98,4 @@ Using `terraform import`, import Route53 Resolver rule associations using the `i
 % terraform import aws_route53_resolver_rule_association.example rslvr-rrassoc-97242eaf88example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1fdddb058d713be4a68b944c640dfa5fba7c608661fee8a08004715544e615f3 -->
+<!-- cache-key: cdktf-0.20.8 input-80e3c0005e561fa5a0b2f5b934b4ea521983c2557b037cba4e6dff06ff21d50f -->

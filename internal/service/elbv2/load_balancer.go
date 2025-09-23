@@ -287,6 +287,13 @@ func resourceLoadBalancer() *schema.Resource {
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
 			},
+			"secondary_ips_auto_assigned_per_subnet": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
+				ValidateFunc:     validation.IntBetween(0, 7),
+			},
 			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -899,6 +906,11 @@ var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAtt
 		tfType:                     schema.TypeBool,
 		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
+	"secondary_ips_auto_assigned_per_subnet": {
+		apiAttributeKey:            loadBalancerAttributeSecondaryIPsAutoAssignedPerSubnet,
+		tfType:                     schema.TypeInt,
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumNetwork},
+	},
 	"xff_header_processing_mode": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPXFFHeaderProcessingMode,
 		tfType:                     schema.TypeString,
@@ -1280,6 +1292,7 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	// - there are subnet removals
 	//   OR security groups are being added where none currently exist
 	//   OR all security groups are being removed
+	//   OR secondary IPv4 addresses are being decreased
 	//
 	// Any other combination should be treated as normal. At this time, subnet
 	// handling is the only known difference between Network Load Balancers and
@@ -1354,6 +1367,21 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 
 			if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
 				if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// Get diff for secondary IPv4 addresses
+	if diff.HasChange("secondary_ips_auto_assigned_per_subnet") {
+		if v := config.GetAttr("secondary_ips_auto_assigned_per_subnet"); v.IsWhollyKnown() {
+			o, n := diff.GetChange("secondary_ips_auto_assigned_per_subnet")
+			oldCount, newCount := o.(int), n.(int)
+
+			// Force new if secondary IPv4 address count is decreased
+			if newCount < oldCount {
+				if err := diff.ForceNew("secondary_ips_auto_assigned_per_subnet"); err != nil {
 					return err
 				}
 			}

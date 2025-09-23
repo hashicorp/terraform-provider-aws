@@ -12,7 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -108,29 +107,29 @@ func resourceConstraintCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	var output *servicecatalog.CreateConstraintOutput
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = conn.CreateConstraint(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
+		}
+
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "Access denied while assuming the role") {
+			return tfresource.RetryableError(err)
 		}
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateConstraint(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Constraint: %s", err)
@@ -207,23 +206,19 @@ func resourceConstraintUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Parameters = aws.String(d.Get(names.AttrParameters).(string))
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.UpdateConstraint(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateConstraint(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Constraint (%s): %s", d.Id(), err)

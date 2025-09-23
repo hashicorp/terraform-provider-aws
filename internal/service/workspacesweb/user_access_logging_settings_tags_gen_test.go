@@ -18,6 +18,7 @@ import (
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -208,6 +209,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags(t *testing.T) {
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -272,6 +274,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_null(t *testing.T) {
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -324,6 +327,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_EmptyMap(t *testing.T) {
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -406,6 +410,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_AddOnUpdate(t *testing.T
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -500,6 +505,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_EmptyTag_OnCreate(t *tes
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -643,6 +649,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_EmptyTag_OnUpdate_Add(t 
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -735,6 +742,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_EmptyTag_OnUpdate_Replac
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -924,6 +932,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_providerOnly
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1090,6 +1099,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_nonOverlappi
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1272,6 +1282,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_overlapping(
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1364,6 +1375,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_updateToProv
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1455,6 +1467,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_updateToReso
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1523,6 +1536,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_emptyResourc
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1583,6 +1597,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_emptyProvide
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1654,6 +1669,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_nullOverlapp
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1727,6 +1743,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_DefaultTags_nullNonOverl
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1784,6 +1801,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_ComputedTag_OnCreate(t *
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1883,6 +1901,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_ComputedTag_OnUpdate_Add
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1972,6 +1991,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_ComputedTag_OnUpdate_Rep
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2134,6 +2154,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_IgnoreTags_Overlap_Defau
 
 func TestAccWorkSpacesWebUserAccessLoggingSettings_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

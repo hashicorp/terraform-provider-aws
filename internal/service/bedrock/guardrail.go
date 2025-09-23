@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -225,6 +226,36 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
 									},
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										Computed:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										Computed:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
 									names.AttrType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailPiiEntityType](),
@@ -250,10 +281,40 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										Computed:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
 									names.AttrName: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 100),
+										},
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										Computed:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
 										},
 									},
 									"pattern": schema.StringAttribute{
@@ -334,6 +395,20 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							CustomType: fwtypes.NewListNestedObjectTypeOf[managedWordListsConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
 									names.AttrType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailManagedWordsType](),
@@ -343,8 +418,26 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 						},
 						"words_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[wordsConfig](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(10000),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
 									"text": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
@@ -734,15 +827,23 @@ type sensitiveInformationPolicyConfig struct {
 }
 
 type piiEntitiesConfig struct {
-	Action fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"action"`
-	Type   fwtypes.StringEnum[awstypes.GuardrailPiiEntityType]              `tfsdk:"type"`
+	Action        fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"action"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                                       `tfsdk:"input_enabled"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                                       `tfsdk:"output_enabled"`
+	Type          fwtypes.StringEnum[awstypes.GuardrailPiiEntityType]              `tfsdk:"type"`
 }
 
 type regexesConfig struct {
-	Action      fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"action"`
-	Description types.String                                                     `tfsdk:"description"`
-	Name        types.String                                                     `tfsdk:"name"`
-	Pattern     types.String                                                     `tfsdk:"pattern"`
+	Action        fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"action"`
+	Description   types.String                                                     `tfsdk:"description"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                                       `tfsdk:"input_enabled"`
+	Name          types.String                                                     `tfsdk:"name"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailSensitiveInformationAction] `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                                       `tfsdk:"output_enabled"`
+	Pattern       types.String                                                     `tfsdk:"pattern"`
 }
 
 type guardrailTopicPolicyConfigModel struct {
@@ -767,9 +868,17 @@ type wordPolicyConfig struct {
 }
 
 type managedWordListsConfig struct {
-	Type fwtypes.StringEnum[awstypes.GuardrailManagedWordsType] `tfsdk:"type"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailWordAction]       `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                             `tfsdk:"input_enabled"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailWordAction]       `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                             `tfsdk:"output_enabled"`
+	Type          fwtypes.StringEnum[awstypes.GuardrailManagedWordsType] `tfsdk:"type"`
 }
 
 type wordsConfig struct {
-	Text types.String `tfsdk:"text"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailWordAction] `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                       `tfsdk:"input_enabled"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailWordAction] `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                       `tfsdk:"output_enabled"`
+	Text          types.String                                     `tfsdk:"text"`
 }

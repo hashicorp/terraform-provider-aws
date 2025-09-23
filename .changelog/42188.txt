@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_network_interface: Add `attachment.network_card_index` argument
+```
+
+```release-note:enhancement
+resource/aws_network_interface_attachment: Add `network_card_index` argument
+```
+
+```release-note:enhancement
+data-source/aws_network_interface: Add `attachment.network_card_index` attribute
+```

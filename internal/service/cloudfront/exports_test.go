@@ -23,7 +23,6 @@ var (
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
-	FindDistributionByID                       = findDistributionByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey

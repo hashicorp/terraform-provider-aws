@@ -224,9 +224,9 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	// created concurrently. Retry creation in that case.
 	// When it fails, it will typically be within the first few minutes of creation, so there is no need
 	// to wait for deletion.
-	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		if err := creator.Create(ctx, conn, name, d); err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -248,11 +248,11 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 						))
 					}
 
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
