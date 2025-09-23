@@ -37,16 +37,16 @@ The following arguments are required:
 * `name` - (Required) Name of the LF-Tag Expression.
 * `expression` - (Required) A list of LF-Tag conditions (key-value pairs). See [expression](#expression) for more details.
 
-### expression
-
-* `tag_key` - (Required) The key-name for the LF-Tag.
-* `tag_values` - (Required) A list of possible values for the LF-Tag
-
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) ID of the Data Catalog. Defaults to the account ID if not specified.
 * `description` - (Optional) Description of the LF-Tag Expression.
+
+### expression
+
+* `tag_key` - (Required) The key-name for the LF-Tag.
+* `tag_values` - (Required) A list of possible values for the LF-Tag
 
 ## Attribute Reference
 
