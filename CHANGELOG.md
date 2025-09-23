@@ -1,5 +1,13 @@
 ## 6.15.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_datazone_associate_environment_role` ([#44413](https://github.com/hashicorp/terraform-provider-aws/issues/44413))
+
+BUG FIXES:
+
+* resource/aws_datazone_environment: Allows you to create the environment without assigning a `blueprint_identifier` and set the status to `DISABLED`. ([#44413](https://github.com/hashicorp/terraform-provider-aws/issues/44413))
+
 ## 6.14.1 (September 22, 2025)
 
 NOTES:
