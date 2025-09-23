@@ -1507,6 +1507,46 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificate_PrivateKeyWo(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	commonName := "example.com"
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
+	newCaKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, newCaKey)
+	newKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, newCaKey, newCaCertificate, newKey, commonName)
+	var v1, v2 types.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateKeyWo(certificate, key),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &v1),
+					resource.TestCheckNoResourceAttr(resourceName, tfacm.AttrPrivateKeyWo),
+					resource.TestCheckResourceAttr(resourceName, tfacm.AttrPrivateKeyWoVersion, "1"),
+				),
+			},
+			{
+				Config: testAccCertificateConfig_privateKeyWoUpdate(newCertificate, newKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &v2),
+					resource.TestCheckNoResourceAttr(resourceName, tfacm.AttrPrivateKeyWo),
+					resource.TestCheckResourceAttr(resourceName, tfacm.AttrPrivateKeyWoVersion, "2"),
+				),
+			},
+		},
+	})
+}
+
 // lintignore:AT002
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1785,7 +1825,6 @@ func testAccCheckCertificateExists(ctx context.Context, t *testing.T, n string, 
 		conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
 		output, err := tfacm.FindCertificateByARN(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -1999,6 +2038,26 @@ resource "aws_acm_certificate" "test" {
   certificate_chain = "%[3]s"
 }
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey), acctest.TLSPEMEscapeNewlines(chain))
+}
+
+func testAccCertificateConfig_privateKeyWo(certificate, privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body       = "%[1]s"
+  private_key_wo         = "%[2]s"
+  private_key_wo_version = 1
+}
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey))
+}
+
+func testAccCertificateConfig_privateKeyWoUpdate(certificate, privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body       = "%[1]s"
+  private_key_wo         = "%[2]s"
+  private_key_wo_version = 2
+}
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey))
 }
 
 func testAccCertificateConfig_disableCTLogging(domainName string, validationMethod types.ValidationMethod) string {

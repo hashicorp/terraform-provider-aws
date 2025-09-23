@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -90,7 +91,6 @@ func resourceCertificate() *schema.Resource {
 			"certificate_body": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				RequiredWith:  []string{names.AttrPrivateKey},
 				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
 			},
 			names.AttrCertificateChain: {
@@ -104,7 +104,7 @@ func resourceCertificate() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey},
+				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey, AttrPrivateKeyWo},
 				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 			"domain_validation_options": {
@@ -406,12 +406,10 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		d.SetId(aws.ToString(output.CertificateArn))
 	} else {
-		var privateKey string
-		_, ok := d.GetOk(AttrPrivateKeyWo)
-		if ok {
-			privateKey = d.Get(AttrPrivateKeyWo).(string)
-		} else {
-			privateKey = d.Get(names.AttrPrivateKey).(string)
+		privateKey := d.Get(names.AttrPrivateKey).(string)
+		privateKeyWo, _ := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+		if privateKeyWo != "" {
+			privateKey = privateKeyWo
 		}
 		input := acm.ImportCertificateInput{
 			Certificate: []byte(d.Get("certificate_body").(string)),
@@ -520,12 +518,10 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		oPKRaw, nPKRaw := d.GetChange(names.AttrPrivateKey)
 
 		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
-			var privateKey string
-			_, ok := d.GetOk(AttrPrivateKeyWo)
-			if ok {
-				privateKey = d.Get(AttrPrivateKeyWo).(string)
-			} else {
-				privateKey = d.Get(names.AttrPrivateKey).(string)
+			privateKey := d.Get(names.AttrPrivateKey).(string)
+			privateKeyWo, _ := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+			if privateKeyWo != "" {
+				privateKey = privateKeyWo
 			}
 			input := acm.ImportCertificateInput{
 				Certificate:    []byte(d.Get("certificate_body").(string)),
