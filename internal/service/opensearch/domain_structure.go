@@ -54,6 +54,41 @@ func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInp
 	return &config
 }
 
+func expandAIMLOptions(a []any) *awstypes.AIMLOptionsInput {
+	config := awstypes.AIMLOptionsInput{}
+	group := a[0].(map[string]any)
+
+	if v, ok := group["natural_language_query_generation_options"].([]any); ok {
+		if len(v) > 0 && v[0] != nil {
+			nlqgo := awstypes.NaturalLanguageQueryGenerationOptionsInput{}
+			nlqgoGroup := v[0].(map[string]any)
+
+			if v, ok := nlqgoGroup["desired_state"].(string); ok && v != "" {
+				if v == "DISABLED" {
+					nlqgo.DesiredState = awstypes.NaturalLanguageQueryGenerationDesiredStateDisabled
+				} else if v == "ENABLED" {
+					nlqgo.DesiredState = awstypes.NaturalLanguageQueryGenerationDesiredStateEnabled
+				}
+			}
+		}
+	}
+
+	if v, ok := group["s3_vectors_engine"].([]any); ok {
+		if len(v) > 0 && v[0] != nil {
+			ve := awstypes.S3VectorsEngine{}
+			veGroup := v[0].(map[string]any)
+
+			if veEnabled, ok := veGroup[names.AttrEnabled]; ok {
+				ve.Enabled = aws.Bool(veEnabled.(bool))
+			}
+
+			config.S3VectorsEngine = &ve
+		}
+	}
+
+	return &config
+}
+
 func expandAutoTuneOptions(tfMap map[string]any) *awstypes.AutoTuneOptions {
 	if tfMap == nil {
 		return nil
