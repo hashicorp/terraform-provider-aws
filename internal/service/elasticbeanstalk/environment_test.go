@@ -47,7 +47,7 @@ func TestAccElasticBeanstalkEnvironment_basic(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticbeanstalk", "environment/{application}/{name}"),
 					resource.TestMatchResourceAttr(resourceName, "autoscaling_groups.0", beanstalkAsgNameRegexp),
 					resource.TestMatchResourceAttr(resourceName, "endpoint_url", beanstalkEndpointURL),
 					resource.TestMatchResourceAttr(resourceName, "instances.0", beanstalkInstancesNameRegexp),
