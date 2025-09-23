@@ -21,8 +21,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
@@ -2408,6 +2410,52 @@ func TestAccLambdaFunction_sourceKMSKeyARN(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest.zip"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_key", "lambdatest.zip"),
+				),
+			},
+			{
+				// Update with a non-existent S3 key to force an error
+				Config:      testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest_not_exist.zip"),
+				ExpectError: regexache.MustCompile(`The specified key does not exist`),
+			},
+			{
+				// Revert to previous configuration to ensure non-refreshable attributes were reset
+				// This step would fail if s3_key was not reset to "lambdatest.zip"
+				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest.zip"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_key"), knownvalue.StringExact("lambdatest.zip")),
+					},
+				},
+			},
+			{
+				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest_modified.zip", "lambdatest_modified.zip"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "s3_key", "lambdatest_modified.zip"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetFunctionOutput
@@ -4316,13 +4364,6 @@ resource "aws_lambda_function" "test" {
 
 func testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, zipFileS3, zipFileLambda string) string {
 	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
-resource "terraform_data" "lambdatest_zip_sha256" {
-  input = filebase64sha256("test-fixtures/lambdatest.zip")
-}
-resource "terraform_data" "lambdatest_modified_zip_sha256" {
-  input = filebase64sha256("test-fixtures/lambdatest_modified.zip")
-}
-
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
