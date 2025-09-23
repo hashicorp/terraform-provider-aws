@@ -86,8 +86,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 		"LFTagExpression": {
 			acctest.CtBasic: testAccLFTagExpression_basic,
-			"values":        testAccLFTagExpression_update,
-			"import":        testAccLFTagExpression_import,
+			"update":        testAccLFTagExpression_update,
 		},
 		"ResourceLFTag": {
 			acctest.CtBasic:      testAccResourceLFTag_basic,

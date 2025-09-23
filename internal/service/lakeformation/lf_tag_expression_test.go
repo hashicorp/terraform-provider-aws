@@ -50,6 +50,7 @@ func testAccLFTagExpression_basic(t *testing.T) {
 					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "expression.#", "1"),
 				),
 			},
@@ -82,93 +83,30 @@ func testAccLFTagExpression_update(t *testing.T) {
 		CheckDestroy:             testAccCheckLFTagExpressionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLFTagExpressionConfig_update1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.domain.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.domain.*", "finance"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.domain.*", "hr"),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.environment.#", "3"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.environment.*", "dev"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.environment.*", "staging"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.environment.*", "prod"),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.team.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.team.*", "data-eng"),
-				),
-			},
-			{
-				Config: testAccLFTagExpressionConfig_update2(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					// Verify tag_expression changes: removed 'team', added 'project', modified 'domain' and 'environment'
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.domain.#", "3"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.domain.*", "finance"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.domain.*", "marketing"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.domain.*", "operations"),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.environment.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.environment.*", "prod"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.environment.*", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tag_expression.project.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.project.*", "alpha"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "tag_expression.project.*", "beta"),
-				),
-			},
-			{
-				// Remove LF Tag Expression but keep Data Lake Settings to verify destruction with proper permissions
-				Config: testAccLFTagExpressionConfig_updateOnlyDataLakeSettings(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Verify LF Tag Expression is destroyed while admin permissions still exist
-					testAccCheckLFTagExpressionDestroy(ctx),
-				),
-			},
-		},
-	})
-}
-
-func testAccLFTagExpression_import(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var lftagexpression lakeformation.GetLFTagExpressionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lakeformation_lf_tag_expression.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
-			testAccLFTagExpressionPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLFTagExpressionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
 				Config: testAccLFTagExpressionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
+					resource.TestCheckResourceAttr(resourceName, "expression.#", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrName, names.AttrCatalogID),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				// Remove LF Tag Expression but keep Data Lake Settings to verify destruction with proper permissions
-				Config: testAccLFTagExpressionConfig_onlyDataLakeSettings(rName),
+				Config: testAccLFTagExpressionConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					// Verify LF Tag Expression is destroyed while admin permissions still exist
-					testAccCheckLFTagExpressionDestroy(ctx),
+					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description two"),
+					resource.TestCheckResourceAttr(resourceName, "expression.#", "2"),
 				),
 			},
 		},
@@ -279,6 +217,35 @@ resource "aws_lakeformation_lf_tag_expression" "test" {
 `, rName))
 }
 
+func testAccLFTagExpressionConfig_update(rName string) string {
+	return acctest.ConfigCompose(testAccLFTagExpression_baseConfig,
+		fmt.Sprintf(`
+resource "aws_lakeformation_lf_tag" "test2" {
+  key    = "key2"
+  values = ["value2"]
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_lf_tag_expression" "test" {
+  name        = %[1]q
+  description = "test description two"
+
+  expression {
+    tag_key    = aws_lakeformation_lf_tag.test.key
+    tag_values = aws_lakeformation_lf_tag.test.values
+  }
+
+  expression {
+    tag_key    = aws_lakeformation_lf_tag.test2.key
+    tag_values = aws_lakeformation_lf_tag.test2.values
+  }
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName))
+}
+
 func testAccLFTagExpressionConfig_onlyDataLakeSettings(rName string) string {
 	return `
 data "aws_caller_identity" "current" {}
@@ -294,158 +261,6 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 resource "aws_lakeformation_lf_tag" "domain" {
   key    = "domain"
   values = ["prisons"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-`
-}
-
-func testAccLFTagExpressionConfig_update1(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
-resource "aws_lakeformation_lf_tag" "domain" {
-  key    = "domain"
-  values = ["finance", "hr", "marketing", "operations"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "environment" {
-  key    = "environment"
-  values = ["dev", "staging", "prod", "test"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "team" {
-  key    = "team"
-  values = ["data-eng"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "project" {
-  key    = "project"
-  values = ["alpha", "beta"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag_expression" "test" {
-  name        = %[1]q
-  description = "Initial description"
-  
-  tag_expression = {
-    domain      = ["finance", "hr"]
-    environment = ["dev", "staging", "prod"]
-    team        = ["data-eng"]
-  }
-
-  depends_on = [
-    aws_lakeformation_lf_tag.domain,
-    aws_lakeformation_lf_tag.environment,
-    aws_lakeformation_lf_tag.team,
-    aws_lakeformation_lf_tag.project,
-    aws_lakeformation_data_lake_settings.test,
-  ]
-}
-`, rName)
-}
-
-func testAccLFTagExpressionConfig_update2(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
-resource "aws_lakeformation_lf_tag" "domain" {
-  key    = "domain"
-  values = ["finance", "hr", "marketing", "operations"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "environment" {
-  key    = "environment"
-  values = ["dev", "staging", "prod", "test"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "team" {
-  key    = "team"
-  values = ["data-eng"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "project" {
-  key    = "project"
-  values = ["alpha", "beta"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag_expression" "test" {
-  name        = %[1]q
-  description = "Updated description"
-  
-  tag_expression = {
-    domain      = ["finance", "marketing", "operations"]
-    environment = ["prod", "test"]
-    project     = ["alpha", "beta"]
-  }
-
-  depends_on = [
-    aws_lakeformation_lf_tag.domain,
-    aws_lakeformation_lf_tag.environment,
-    aws_lakeformation_lf_tag.team,
-    aws_lakeformation_lf_tag.project,
-    aws_lakeformation_data_lake_settings.test,
-  ]
-}
-`, rName)
-}
-
-func testAccLFTagExpressionConfig_updateOnlyDataLakeSettings(rName string) string {
-	return `
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
-resource "aws_lakeformation_lf_tag" "domain" {
-  key    = "domain"
-  values = ["finance", "hr", "marketing", "operations"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "environment" {
-  key    = "environment"
-  values = ["dev", "staging", "prod", "test"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "team" {
-  key    = "team"
-  values = ["data-eng"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "project" {
-  key    = "project"
-  values = ["alpha", "beta"]
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `
