@@ -99,6 +99,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "User Profile",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newAssociateEnvironmentRoleResource,
+			TypeName: "aws_datazone_associate_environment_role",
+			Name:     "Associate Environment Role",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
