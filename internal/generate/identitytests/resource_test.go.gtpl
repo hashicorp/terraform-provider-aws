@@ -862,6 +862,53 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 			},
 		})
 	}
+
+	func {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+		{{- template "Init" . }}
+
+		{{ template "Test" . }}(ctx, t, resource.TestCase{
+			{{ template "TestCaseSetupNoProviders" . }}
+			AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+				Plan: resource.PlanOptions{
+					NoRefresh: true,
+				},
+			},
+			Steps: []resource.TestStep{
+				{{ $step := 1 -}}
+				// Step {{ $step }}: Create pre-Identity
+				{
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v5.100.0/"),
+					ConfigVariables: config.Variables{ {{ if .Generator }}
+						acctest.CtRName: config.StringVariable(rName),{{ end }}
+						{{ template "AdditionalTfVars" . }}
+					},
+					{{ if .HasExistsFunc -}}
+					Check:  resource.ComposeAggregateTestCheckFunc(
+						{{- template "ExistsCheck" . -}}
+					),
+					{{ end -}}
+					ConfigStateChecks: []statecheck.StateCheck{
+						tfstatecheck.ExpectNoIdentity(resourceName),
+					},
+				},
+
+				// Step {{ ($step = inc $step) | print }}: Current version
+				{
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigVariables: config.Variables{ {{ if .Generator }}
+						acctest.CtRName: config.StringVariable(rName),{{ end }}
+						{{ template "AdditionalTfVars" . }}
+					},
+					{{ if .HasExistsFunc -}}
+					Check:  resource.ComposeAggregateTestCheckFunc(
+						{{- template "ExistsCheck" . -}}
+					),
+					{{ end -}}
+				},
+			},
+		})
+	}
 {{ else if .PreIdentityVersion }}
 	{{ if .PreIdentityVersion.GreaterThanOrEqual (NewVersion "6.0.0") }}
 		// Resource Identity was added after v{{ .PreIdentityVersion }}
