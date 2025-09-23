@@ -163,7 +163,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			return nil, sdkdiag.AppendErrorf(diags, "mTLS configuration error: %s", err)
 		}
 
-		if err := c.configureHTTPClientMTLS(&cfg, ctx); err != nil {
+		if err := c.configureHTTPClientMTLS(&cfg); err != nil {
 			return nil, sdkdiag.AppendErrorf(diags, "failed to configure mTLS: %s", err)
 		}
 	}

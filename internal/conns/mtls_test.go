@@ -1,7 +1,6 @@
 package conns
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -330,8 +329,7 @@ func TestMTLSEndToEnd(t *testing.T) {
 			},
 		}
 
-		ctx := context.Background()
-		err := config.configureHTTPClientMTLS(awsConfig, ctx)
+		err := config.configureHTTPClientMTLS(awsConfig)
 		if err != nil {
 			t.Fatalf("Failed to configure mTLS: %v", err)
 		}
@@ -400,8 +398,7 @@ func TestMTLSEndToEnd(t *testing.T) {
 			},
 		}
 
-		ctx := context.Background()
-		err := config.configureHTTPClientMTLS(awsConfig, ctx)
+		err := config.configureHTTPClientMTLS(awsConfig)
 		if err != nil {
 			t.Fatalf("Failed to configure mTLS: %v", err)
 		}
@@ -459,8 +456,7 @@ func TestMTLSEndToEndWithEncryptedKey(t *testing.T) {
 			},
 		}
 
-		ctx := context.Background()
-		err := config.configureHTTPClientMTLS(awsConfig, ctx)
+		err := config.configureHTTPClientMTLS(awsConfig)
 		if err != nil {
 			t.Fatalf("Failed to configure mTLS with encrypted key: %v", err)
 		}
@@ -500,8 +496,7 @@ func TestMTLSEndToEndWithEncryptedKey(t *testing.T) {
 			},
 		}
 
-		ctx := context.Background()
-		err := config.configureHTTPClientMTLS(awsConfig, ctx)
+		err := config.configureHTTPClientMTLS(awsConfig)
 		if err == nil {
 			t.Fatal("Expected error with wrong passphrase, but configuration succeeded")
 		}

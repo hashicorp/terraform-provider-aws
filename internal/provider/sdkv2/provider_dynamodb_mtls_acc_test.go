@@ -4,6 +4,7 @@
 package sdkv2_test
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/youmark/pkcs8"
 )
 
 type testCA struct {
@@ -159,6 +161,69 @@ func (ca *testCA) createClientCert(t *testing.T, encrypted bool, passphrase stri
 		certPEM: clientCertPEM,
 		keyPEM:  clientKeyPEM,
 		tlsCert: tlsCert,
+	}
+}
+
+func (ca *testCA) createClientCertPKCS8(t *testing.T, passphrase string) *testClientCert {
+	t.Helper()
+
+	clientKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("Failed to generate client private key: %v", err)
+	}
+
+	clientTemplate := &x509.Certificate{
+		SerialNumber: big.NewInt(2),
+		Subject: pkix.Name{
+			Organization:  []string{"Test Client PKCS8"},
+			Country:       []string{"US"},
+			Province:      []string{"CA"},
+			Locality:      []string{"San Francisco"},
+			CommonName:    "test-client-pkcs8",
+			StreetAddress: []string{""},
+			PostalCode:    []string{""},
+		},
+		NotBefore:   time.Now(),
+		NotAfter:    time.Now().Add(365 * 24 * time.Hour),
+		KeyUsage:    x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1)},
+		DNSNames:    []string{"localhost"},
+	}
+
+	clientCertDER, err := x509.CreateCertificate(rand.Reader, clientTemplate, ca.cert, &clientKey.PublicKey, ca.key)
+	if err != nil {
+		t.Fatalf("Failed to create client certificate: %v", err)
+	}
+
+	clientCertPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: clientCertDER,
+	})
+
+	opts := &pkcs8.Opts{
+		Cipher: pkcs8.AES256CBC,
+		KDFOpts: pkcs8.PBKDF2Opts{
+			SaltSize:       16,
+			IterationCount: 10000,
+			HMACHash:       crypto.SHA256,
+		},
+	}
+
+	clientKeyDER, err := pkcs8.MarshalPrivateKey(clientKey, []byte(passphrase), opts)
+	if err != nil {
+		t.Fatalf("Failed to encrypt private key with PKCS#8: %v", err)
+	}
+
+	clientKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "ENCRYPTED PRIVATE KEY",
+		Bytes: clientKeyDER,
+	})
+
+	return &testClientCert{
+		certPEM: clientCertPEM,
+		keyPEM:  clientKeyPEM,
+		tlsCert: tls.Certificate{},
 	}
 }
 
@@ -498,6 +563,37 @@ func TestAccAWSProviderDynamoDBMTLSWithEncryptedKey(t *testing.T) {
 	ca := createTestCA(t)
 	passphrase := "test-passphrase-123"
 	clientCert := ca.createClientCert(t, true, passphrase)
+
+	caCertFile, clientCertFile, clientKeyFile := writeTestCertFiles(t, ca, clientCert)
+
+	mockServer := newMockDynamoDBMTLSServer(t, ca)
+	defer mockServer.Close()
+
+	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
+	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+
+	resource.Test(t, resource.TestCase{
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderDynamoDBMTLSConfigWithPassphrase(mockServer.url, clientCertFile, clientKeyFile, passphrase, caCertFile),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.0", "terraform-mtls-test-table-1"),
+					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.1", "terraform-mtls-test-table-2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSProviderDynamoDBMTLSWithPKCS8EncryptedKey(t *testing.T) {
+	ca := createTestCA(t)
+	passphrase := "pkcs8-test-passphrase-456"
+	clientCert := ca.createClientCertPKCS8(t, passphrase)
 
 	caCertFile, clientCertFile, clientKeyFile := writeTestCertFiles(t, ca, clientCert)
 

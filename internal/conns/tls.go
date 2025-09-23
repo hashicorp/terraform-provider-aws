@@ -4,7 +4,6 @@
 package conns
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
+	"github.com/youmark/pkcs8"
 )
 
 func loadClientCertificate(certFile, keyFile, passphrase string) (tls.Certificate, error) {
@@ -35,13 +35,28 @@ func loadClientCertificate(certFile, keyFile, passphrase string) (tls.Certificat
 			if keyBlock == nil || len(rest) > 0 {
 				return tls.Certificate{}, fmt.Errorf("failed to decode PEM block: %w", err)
 			}
+			var decryptedDER []byte
+			var decryptErr error
 
-			decryptedDER, decryptErr := x509.DecryptPEMBlock(keyBlock, []byte(passphrase))
-			if decryptErr != nil {
-				return tls.Certificate{}, fmt.Errorf("failed to decrypt private key with provided passphrase: %w", decryptErr)
+			// PKCS#8 encrypted keys
+			privateKey, pkcs8Err := pkcs8.ParsePKCS8PrivateKey(keyBlock.Bytes, []byte(passphrase))
+			if pkcs8Err == nil {
+				decryptedDER, decryptErr = pkcs8.ConvertPrivateKeyToPKCS8(privateKey)
+				if decryptErr != nil {
+					return tls.Certificate{}, fmt.Errorf("failed to convert private key to PKCS#8 format: %w", decryptErr)
+				}
+			} else {
+				// PKCS#5 v1.0 encrypted keys
+				if x509.IsEncryptedPEMBlock(keyBlock) {
+					decryptedDER, decryptErr = x509.DecryptPEMBlock(keyBlock, []byte(passphrase))
+					if decryptErr != nil {
+						return tls.Certificate{}, fmt.Errorf("failed to decrypt private key with provided passphrase: PKCS#8 error: %v, PKCS#5 error: %w", pkcs8Err, decryptErr)
+					}
+				} else {
+					return tls.Certificate{}, fmt.Errorf("error with decryption: %w", pkcs8Err)
+				}
 			}
-
-			decryptedPEM := pem.EncodeToMemory(&pem.Block{Type: keyBlock.Type, Bytes: decryptedDER})
+			decryptedPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: decryptedDER})
 			cert, err = tls.X509KeyPair(certPEM, decryptedPEM)
 		}
 	} else {
@@ -71,7 +86,7 @@ func (c *Config) validateMTLSConfig() error {
 	return nil
 }
 
-func (c *Config) configureHTTPClientMTLS(awsConfig *aws.Config, ctx context.Context) error {
+func (c *Config) configureHTTPClientMTLS(awsConfig *aws.Config) error {
 	cert, err := loadClientCertificate(c.ClientCertificate, c.ClientPrivateKey, c.ClientPrivateKeyPassphrase)
 	if err != nil {
 		return err
