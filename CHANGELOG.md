@@ -1,5 +1,9 @@
 ## 6.15.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_ecs_service: Fix behavior when updating `capacity_provider_strategy` to avoid ECS service recreation after recent AWS changes ([#43533](https://github.com/hashicorp/terraform-provider-aws/issues/43533))
+
 ## 6.14.1 (September 22, 2025)
 
 NOTES:
