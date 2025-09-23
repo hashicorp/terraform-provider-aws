@@ -113,6 +113,34 @@ func testAccLFTagExpression_update(t *testing.T) {
 	})
 }
 
+func testAccLFTagExpression_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var lftagexpression lakeformation.GetLFTagExpressionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_lf_tag_expression.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			testAccLFTagExpressionPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLFTagExpressionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLFTagExpressionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceLFTagExpression, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 func testAccCheckLFTagExpressionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
@@ -244,24 +272,4 @@ resource "aws_lakeformation_lf_tag_expression" "test" {
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName))
-}
-
-func testAccLFTagExpressionConfig_onlyDataLakeSettings(rName string) string {
-	return `
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
-}
-
-resource "aws_lakeformation_lf_tag" "domain" {
-  key    = "domain"
-  values = ["prisons"]
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-`
 }
