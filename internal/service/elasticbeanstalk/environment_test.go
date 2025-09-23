@@ -18,7 +18,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
@@ -54,6 +58,10 @@ func TestAccElasticBeanstalkEnvironment_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "launch_configurations.0", beanstalkLcNameRegexp),
 					resource.TestMatchResourceAttr(resourceName, "load_balancers.0", beanstalkElbNameRegexp),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact(settingsChecks_basic())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("all_settings"), knownvalue.SetPartial(settingsChecks_basic())),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -798,6 +806,52 @@ resource "aws_elastic_beanstalk_environment" "test" {
   }
 }
 `, rName))
+}
+
+func settingsChecks_basic() []knownvalue.Check {
+	return []knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+			names.AttrName:      knownvalue.StringExact("VPCId"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_vpc.test.id
+		}),
+
+		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+			names.AttrName:      knownvalue.StringExact("Subnets"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_subnet.test[0].id
+		}),
+
+		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+			names.AttrName:      knownvalue.StringExact("AssociatePublicIpAddress"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.StringExact("true"),
+		}),
+
+		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+			names.AttrName:      knownvalue.StringExact("SecurityGroups"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_security_group.test.id
+		}),
+
+		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+			names.AttrName:      knownvalue.StringExact("IamInstanceProfile"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
+		}),
+
+		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:elasticbeanstalk:environment"),
+			names.AttrName:      knownvalue.StringExact("ServiceRole"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_iam_role.service_role.name
+		}),
+	}
 }
 
 func testAccEnvironmentConfig_platformARN(rName, platformNameWithVersion string, rValue int) string {
