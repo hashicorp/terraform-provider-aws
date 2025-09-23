@@ -30,6 +30,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newLFTagExpressionResource,
+			TypeName: "aws_lakeformation_lf_tag_expression",
+			Name:     "LF Tag Expression",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newOptInResource,
 			TypeName: "aws_lakeformation_opt_in",
 			Name:     "Opt In",
@@ -39,12 +45,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceLFTagResource,
 			TypeName: "aws_lakeformation_resource_lf_tag",
 			Name:     "Resource LF Tag",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
-			Factory:  newLFTagExpressionResource,
-			TypeName: "aws_lakeformation_lf_tag_expression",
-			Name:     "LF Tag Expression",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}

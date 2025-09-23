@@ -31,8 +31,7 @@ import (
 
 // @FrameworkResource("aws_lakeformation_lf_tag_expression", name="LF Tag Expression")
 func newLFTagExpressionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	l := lfTagExpressionResource{}
-	return &l, nil
+	return &lfTagExpressionResource{}, nil
 }
 
 const (
