@@ -1187,7 +1187,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			} else {
 				input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 			}
-
 		}
 
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
