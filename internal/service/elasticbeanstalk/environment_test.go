@@ -72,6 +72,17 @@ func TestAccElasticBeanstalkEnvironment_basic(t *testing.T) {
 					"wait_for_ready_timeout",
 				},
 			},
+			{
+				Config: testAccEnvironmentConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &app),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
 		},
 	})
 }
