@@ -100,7 +100,7 @@ func (r *environmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Required: true,
 			},
 			"profile_identifier": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 			"glossary_terms": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
@@ -199,6 +199,7 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 
 	state := plan
 	state.Id = fwflex.StringToFramework(ctx, out.Id)
+	state.BlueprintId = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
 
 	// set partial state
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id)...)
@@ -376,7 +377,7 @@ func (r *environmentResource) ImportState(ctx context.Context, req resource.Impo
 func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusCreating),
-		Target:                    enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusActive),
+		Target:                    enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusActive, awstypes.EnvironmentStatusDisabled),
 		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,

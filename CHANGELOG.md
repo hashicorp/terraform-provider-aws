@@ -1,5 +1,9 @@
 ## 6.15.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_datazone_associate_environment_role` ([#44413](https://github.com/hashicorp/terraform-provider-aws/issues/44413))
+
 BREAKING CHANGES:
 
 * resource/aws_ecs_service: Fix behavior when updating `capacity_provider_strategy` to avoid ECS service recreation after recent AWS changes ([#43533](https://github.com/hashicorp/terraform-provider-aws/issues/43533))
@@ -15,6 +19,7 @@ BUG FIXES:
 * resource/aws_odb_cloud_vm_cluster : Fixed planmodifier for computed attribute. Fixed planmodifier from display_name attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
 * resource/aws_odb_network_peering_connection : Fixed planmodifier for computed attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
 * resource/aws_rds_cluster: Fixes error when setting `database_insights_mode` with `global_cluster_identifier`. ([#44404](https://github.com/hashicorp/terraform-provider-aws/issues/44404))
+* resource/aws_datazone_environment: Allows you to create the environment without assigning a `blueprint_identifier` and set the status to `DISABLED`. ([#44413](https://github.com/hashicorp/terraform-provider-aws/issues/44413))
 
 ## 6.14.1 (September 22, 2025)
 

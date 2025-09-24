@@ -15,6 +15,7 @@ var (
 	ResourceGlossaryTerm                      = newGlossaryTermResource
 	ResourceProject                           = newProjectResource
 	ResourceUserProfile                       = newUserProfileResource
+	ResourceAssociateEnvironmentRole          = newAssociateEnvironmentRoleResource
 
 	FindAssetTypeByID                                 = findAssetTypeByID
 	FindDomainByID                                    = findDomainByID
