@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -83,7 +84,10 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "Exadata infrastructure id. Changing this will force terraform to create new resource.",
 			},
 			"autonomous_data_storage_percentage": schema.Float32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The progress of the current operation on the Autonomous VM cluster, as a percentage.",
 			},
 			"autonomous_data_storage_size_in_tbs": schema.Float64Attribute{
@@ -94,24 +98,39 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The data storage size allocated for Autonomous Databases in the Autonomous VM cluster, in TB. Changing this will force terraform to create new resource.",
 			},
 			"available_autonomous_data_storage_size_in_tbs": schema.Float64Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float64{
+					float64planmodifier.UseStateForUnknown(),
+				},
 				Description: "The available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.",
 			},
 			"available_container_databases": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of Autonomous CDBs that you can create with the currently available storage.",
 			},
 			"available_cpus": schema.Float32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of CPU cores available for allocation to Autonomous Databases",
 			},
 			"compute_model": schema.StringAttribute{
-				CustomType:  computeModel,
-				Computed:    true,
+				CustomType: computeModel,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The compute model of the Autonomous VM cluster: ECPU or OCPU.",
 			},
 			"cpu_core_count": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The total number of CPU cores in the Autonomous VM cluster.",
 			},
 			"cpu_core_count_per_node": schema.Int32Attribute{
@@ -122,24 +141,39 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The number of CPU cores enabled per node in the Autonomous VM cluster.",
 			},
 			"cpu_percentage": schema.Float32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The percentage of total CPU cores currently in use in the Autonomous VM cluster.",
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the Autonomous VM cluster was created.",
 			},
 			"data_storage_size_in_gbs": schema.Float64Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float64{
+					float64planmodifier.UseStateForUnknown(),
+				},
 				Description: "The total data storage allocated to the Autonomous VM cluster, in GB.",
 			},
 			"data_storage_size_in_tbs": schema.Float64Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float64{
+					float64planmodifier.UseStateForUnknown(),
+				},
 				Description: "The total data storage allocated to the Autonomous VM cluster, in TB.",
 			},
 			"odb_node_storage_size_in_gbs": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: " The local node storage allocated to the Autonomous VM cluster, in gigabytes (GB)",
 			},
 			"db_servers": schema.SetAttribute{
@@ -167,11 +201,17 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The display name of the Autonomous VM cluster. Changing this will force terraform to create new resource.",
 			},
 			names.AttrDomain: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The domain name of the Autonomous VM cluster.",
 			},
 			"exadata_storage_in_tbs_lowest_scaled_value": schema.Float64Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float64{
+					float64planmodifier.UseStateForUnknown(),
+				},
 				Description: "The minimum value to which you can scale down the Exadata storage, in TB.",
 			},
 			"hostname": schema.StringAttribute{
@@ -201,7 +241,10 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The license model for the Autonomous VM cluster. Valid values are LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE . Changing this will force terraform to create new resource.",
 			},
 			"max_acds_lowest_scaled_value": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The minimum value to which you can scale down the maximum number of Autonomous CDBs.",
 			},
 			"memory_per_oracle_compute_unit_in_gbs": schema.Int32Attribute{
@@ -212,27 +255,45 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The amount of memory allocated per Oracle Compute Unit, in GB. Changing this will force terraform to create new resource.",
 			},
 			"memory_size_in_gbs": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The total amount of memory allocated to the Autonomous VM cluster, in gigabytes(GB).",
 			},
 			"node_count": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of database server nodes in the Autonomous VM cluster.",
 			},
 			"non_provisionable_autonomous_container_databases": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of Autonomous CDBs that can't be provisioned because of resource constraints.",
 			},
 			"oci_resource_anchor_name": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The name of the OCI resource anchor associated with this Autonomous VM cluster.",
 			},
 			"oci_url": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The URL for accessing the OCI console page for this Autonomous VM cluster.",
 			},
 			"ocid": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The Oracle Cloud Identifier (OCID) of the Autonomous VM cluster.",
 			},
 			"odb_network_id": schema.StringAttribute{
@@ -243,27 +304,45 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The unique identifier of the ODB network associated with this Autonomous VM Cluster. Changing this will force terraform to create new resource.",
 			},
 			"percent_progress": schema.Float32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 				Description: `The progress of the current operation on the Autonomous VM cluster, as a percentage.`,
 			},
 			"provisionable_autonomous_container_databases": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of Autonomous CDBs that can be provisioned in the Autonomous VM cluster.",
 			},
 			"provisioned_autonomous_container_databases": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of Autonomous CDBs currently provisioned in the Autonomous VM cluster.",
 			},
 			"provisioned_cpus": schema.Float32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of CPUs provisioned in the Autonomous VM cluster.",
 			},
 			"reclaimable_cpus": schema.Float32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of CPU cores that can be reclaimed from terminated or scaled-down Autonomous Databases.",
 			},
 			"reserved_cpus": schema.Float32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The number of CPU cores reserved for system operations and redundancy.",
 			},
 			"scan_listener_port_non_tls": schema.Int32Attribute{
@@ -281,16 +360,25 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The SCAN listener port for TLS (TCP) protocol. The default is 2484. Changing this will force terraform to create new resource.",
 			},
 			"shape": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The shape of the Exadata infrastructure for the Autonomous VM cluster.",
 			},
 			names.AttrStatus: schema.StringAttribute{
-				CustomType:  status,
-				Computed:    true,
+				CustomType: status,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The status of the Autonomous VM cluster. Possible values include CREATING, AVAILABLE , UPDATING , DELETING , DELETED , FAILED ",
 			},
 			names.AttrStatusReason: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Additional information about the current status of the Autonomous VM cluster.",
 			},
 			"time_zone": schema.StringAttribute{
@@ -310,11 +398,17 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The total number of Autonomous Container Databases that can be created with the allocated local storage. Changing this will force terraform to create new resource.",
 			},
 			"time_ords_certificate_expires": schema.StringAttribute{
-				Computed:   true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				CustomType: timetypes.RFC3339Type{},
 			},
 			"time_database_ssl_certificate_expires": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The expiration date and time of the database SSL certificate.",
 			},
