@@ -23,7 +23,7 @@ import (
 // @ArnIdentity
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
-// @Testing(preIdentityVersion="v6.14.0")
+// @Testing(preIdentityVersion="v6.14.1")
 func ResourceContactChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactChannelCreate,
