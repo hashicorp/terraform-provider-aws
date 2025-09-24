@@ -657,7 +657,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupCon
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
 					// Check top-level attributes
 					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesACFPRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
 
@@ -682,7 +682,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupCon
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
 					// Check top-level attributes
 					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesACFPRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
 
@@ -729,7 +729,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupCon
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
 					// Check top-level attributes
 					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesAntiDDoSRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
 
@@ -750,7 +750,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupCon
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
 					// Check top-level attributes
 					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesAntiDDoSRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
 
@@ -793,7 +793,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupCon
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
 					// Check top-level attributes
 					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesATPRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
 
@@ -816,7 +816,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupCon
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
 					// Check top-level attributes
 					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesATPRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
 
@@ -863,7 +863,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupCon
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
 					// Check top-level attributes
 					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesBotControlRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
 
@@ -1224,7 +1224,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
   rule_group_reference {
     arn = aws_wafv2_rule_group.test.arn
   }
-  
+
   visibility_config {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
@@ -1929,10 +1929,10 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
     vendor_name = "AWS"
 
     managed_rule_group_configs {
-	  aws_managed_rules_bot_control_rule_set {
-	  	inspection_level = "COMMON"
-	  }
-	}
+      aws_managed_rules_bot_control_rule_set {
+        inspection_level = "COMMON"
+      }
+    }
   }
 
   override_action = "none"
@@ -1972,10 +1972,10 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
     vendor_name = "AWS"
 
     managed_rule_group_configs {
-	  aws_managed_rules_bot_control_rule_set {
-	  	inspection_level = "TARGETED"
-	  }
-	}
+      aws_managed_rules_bot_control_rule_set {
+        inspection_level = "TARGETED"
+      }
+    }
   }
 
   override_action = "none"
@@ -2073,39 +2073,38 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 
   managed_rule_group {
     name        = "AWSManagedRulesACFPRuleSet"
-	vendor_name = "AWS"
+    vendor_name = "AWS"
 
-	managed_rule_group_configs {
-	  aws_managed_rules_acfp_rule_set {
-		enable_regex_in_path   = true
-		creation_path          = "/creation"
-		registration_page_path = "/registration"
+    managed_rule_group_configs {
+      aws_managed_rules_acfp_rule_set {
+        enable_regex_in_path   = true
+        creation_path          = "/creation"
+        registration_page_path = "/registration"
 
-		request_inspection {
-			email_field {
-				identifier = "/email"
-			}
-			password_field {
-				identifier = "/pass"
-			}
-			phone_number_fields {
-				identifiers = ["/phone3"]
-			}
-			address_fields {
-				identifiers = ["mobile"]
-			}
-			payload_type = "JSON"
-			username_field {
-				identifier = "/user"
-			}
-		}
-	  }
-	}
+        request_inspection {
+          email_field {
+            identifier = "/email"
+          }
+          password_field {
+            identifier = "/pass"
+          }
+          phone_number_fields {
+            identifiers = ["/phone3"]
+          }
+          address_fields {
+            identifiers = ["mobile"]
+          }
+          payload_type = "JSON"
+          username_field {
+            identifier = "/user"
+          }
+        }
+      }
+    }
   }
 
   override_action = "none"
 }
-
 `, rName)
 }
 
@@ -2242,18 +2241,18 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 
   managed_rule_group {
     name        = "AWSManagedRulesATPRuleSet"
-	vendor_name = "AWS"
+    vendor_name = "AWS"
 
-	managed_rule_group_configs {
+    managed_rule_group_configs {
       aws_managed_rules_atp_rule_set {
         login_path = "/api/1/signin"
-          
-		request_inspection {
+
+        request_inspection {
           password_field {
             identifier = "/password"
           }
-            
-		  payload_type = "JSON"
+
+          payload_type = "JSON"
 
           username_field {
             identifier = "/username"
@@ -2296,24 +2295,24 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 
   managed_rule_group {
     name        = "AWSManagedRulesATPRuleSet"
-	vendor_name = "AWS"
+    vendor_name = "AWS"
 
-	managed_rule_group_configs {
-	  aws_managed_rules_atp_rule_set {
-		enable_regex_in_path = true
-		login_path           = "/api/2/signin"
+    managed_rule_group_configs {
+      aws_managed_rules_atp_rule_set {
+        enable_regex_in_path = true
+        login_path           = "/api/2/signin"
 
-		request_inspection {
-			password_field {
-			identifier = "/pass"
-			}
-			payload_type = "JSON"
-			username_field {
-			identifier = "/user"
-			}
-		}
-	  }
-	}
+        request_inspection {
+          password_field {
+            identifier = "/pass"
+          }
+          payload_type = "JSON"
+          username_field {
+            identifier = "/user"
+          }
+        }
+      }
+    }
   }
 
   override_action = "none"
@@ -2350,14 +2349,14 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 
   managed_rule_group {
     name        = "AWSManagedRulesBotControlRuleSet"
-	vendor_name = "AWS"
+    vendor_name = "AWS"
 
-	managed_rule_group_configs {
-		aws_managed_rules_bot_control_rule_set {
-		  inspection_level        = "TARGETED"
-		  enable_machine_learning = true
-		}
-	}
+    managed_rule_group_configs {
+      aws_managed_rules_bot_control_rule_set {
+        inspection_level        = "TARGETED"
+        enable_machine_learning = true
+      }
+    }
   }
 
   override_action = "none"
