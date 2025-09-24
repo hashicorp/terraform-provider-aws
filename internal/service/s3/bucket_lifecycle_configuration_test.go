@@ -4743,7 +4743,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     }
 
     noncurrent_version_expiration {
-      noncurrent_days           = %[2]d
+      noncurrent_days = %[2]d
     }
 
     status = "Enabled"
