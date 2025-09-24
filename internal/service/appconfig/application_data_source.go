@@ -42,9 +42,6 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(0, 1024),
-				},
 			},
 			names.AttrID: schema.StringAttribute{
 				Optional: true,
