@@ -267,7 +267,7 @@ func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(vmClusterDisp
 
 %s
 
-data "aws_odb_db_servers_list" "test" {
+data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
@@ -283,7 +283,7 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers                      = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   data_collection_options {
@@ -309,7 +309,7 @@ func (cloudVmClusterResourceTest) cloudVmClusterWithAllParameters(vmClusterDispl
 %s
 
 
-data "aws_odb_db_servers_list" "test" {
+data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
@@ -325,7 +325,7 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers                      = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   cluster_name                    = "julia-13"
@@ -354,7 +354,7 @@ func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigUpdatedTags(vmClust
 
 %s
 
-data "aws_odb_db_servers_list" "test" {
+data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
@@ -370,7 +370,7 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers                      = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   data_collection_options {
