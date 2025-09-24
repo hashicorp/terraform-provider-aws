@@ -337,14 +337,16 @@ func newMockDynamoDBMTLSServer(t *testing.T, ca *testCA) *MockDynamoDBMTLSServer
 
 		switch target {
 		case "DynamoDB_20120810.ListTables":
-			handleMockListTablesAcc(t, w, r)
+			handleMockListTablesAcc(t, w)
 		case "DynamoDB_20120810.DescribeTable":
 			handleMockDescribeTableAcc(t, w, r)
 		default:
 			t.Errorf("Mock DynamoDB Server - Unsupported operation: %s", target)
 			w.Header().Set("Content-Type", "application/x-amz-json-1.0")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("{}"))
+			if _, err := w.Write([]byte("{}")); err != nil {
+				t.Fatalf("failed to write empty JSON: %v", err)
+			}
 		}
 	})
 
@@ -373,10 +375,10 @@ func (s *MockDynamoDBMTLSServer) Close() {
 	}
 }
 
-func handleMockListTablesAcc(t *testing.T, w http.ResponseWriter, r *http.Request) {
+func handleMockListTablesAcc(t *testing.T, w http.ResponseWriter) {
 	t.Helper()
 
-	response := map[string]interface{}{
+	response := map[string]any{
 		"TableNames": []string{
 			"terraform-mtls-test-table-1",
 			"terraform-mtls-test-table-2",
@@ -400,7 +402,7 @@ func handleMockDescribeTableAcc(t *testing.T, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	var request map[string]interface{}
+	var request map[string]any
 	if err := json.Unmarshal(body, &request); err != nil {
 		t.Errorf("Mock DynamoDB Server - Failed to parse DescribeTable JSON: %v", err)
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -412,23 +414,23 @@ func handleMockDescribeTableAcc(t *testing.T, w http.ResponseWriter, r *http.Req
 		tableName = "terraform-mtls-test-table"
 	}
 
-	response := map[string]interface{}{
-		"Table": map[string]interface{}{
+	response := map[string]any{
+		"Table": map[string]any{
 			"TableName":   tableName,
 			"TableStatus": "ACTIVE",
-			"AttributeDefinitions": []map[string]interface{}{
+			"AttributeDefinitions": []map[string]any{
 				{
 					"AttributeName": "id",
 					"AttributeType": "S",
 				},
 			},
-			"KeySchema": []map[string]interface{}{
+			"KeySchema": []map[string]any{
 				{
 					"AttributeName": "id",
 					"KeyType":       "HASH",
 				},
 			},
-			"ProvisionedThroughput": map[string]interface{}{
+			"ProvisionedThroughput": map[string]any{
 				"ReadCapacityUnits":  int64(5),
 				"WriteCapacityUnits": int64(5),
 			},
@@ -442,7 +444,7 @@ func handleMockDescribeTableAcc(t *testing.T, w http.ResponseWriter, r *http.Req
 	}
 }
 
-func TestAccAWSProviderDynamoDBMTLS(t *testing.T) {
+func TestAccProvider_DynamoDBMTLS(t *testing.T) {
 
 	ca := createTestCA(t)
 	clientCert := ca.createClientCert(t, false, "")
@@ -452,17 +454,13 @@ func TestAccAWSProviderDynamoDBMTLS(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
-	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
-	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderDynamoDBMTLSConfig(mockServer.url, clientCertFile, clientKeyFile, caCertFile),
+				Config: testAccProviderDynamoDBMTLSConfig(mockServer.url, clientCertFile, clientKeyFile, caCertFile),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.0", "terraform-mtls-test-table-1"),
@@ -473,7 +471,7 @@ func TestAccAWSProviderDynamoDBMTLS(t *testing.T) {
 	})
 }
 
-func testAccAWSProviderDynamoDBMTLSConfig(dynamodbEndpoint, clientCert, clientKey, caCert string) string {
+func testAccProviderDynamoDBMTLSConfig(dynamodbEndpoint, clientCert, clientKey, caCert string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -504,7 +502,7 @@ output "table_names" {
 `, dynamodbEndpoint, clientCert, clientKey, caCert)
 }
 
-func TestAccAWSProviderDynamoDBMTLSFailsWithoutCert(t *testing.T) {
+func TestAccProvider_DynamoDBMTLSFailsWithoutCert(t *testing.T) {
 	ca := createTestCA(t)
 	clientCert := ca.createClientCert(t, false, "")
 
@@ -513,24 +511,20 @@ func TestAccAWSProviderDynamoDBMTLSFailsWithoutCert(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
-	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
-	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSProviderDynamoDBMTLSConfigNoCert(mockServer.url, caCertFile),
+				Config:      testAccProviderDynamoDBMTLSConfigNoCert(mockServer.url, caCertFile),
 				ExpectError: regexp.MustCompile("tls|certificate"),
 			},
 		},
 	})
 }
 
-func testAccAWSProviderDynamoDBMTLSConfigNoCert(dynamodbEndpoint, caCert string) string {
+func testAccProviderDynamoDBMTLSConfigNoCert(dynamodbEndpoint, caCert string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -558,7 +552,7 @@ output "table_names" {
 `, dynamodbEndpoint, caCert)
 }
 
-func TestAccAWSProviderDynamoDBMTLSWithEncryptedKey(t *testing.T) {
+func TestAccProvider_DynamoDBMTLSWithEncryptedKey(t *testing.T) {
 
 	ca := createTestCA(t)
 	passphrase := "test-passphrase-123"
@@ -569,17 +563,13 @@ func TestAccAWSProviderDynamoDBMTLSWithEncryptedKey(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
-	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
-	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderDynamoDBMTLSConfigWithPassphrase(mockServer.url, clientCertFile, clientKeyFile, passphrase, caCertFile),
+				Config: testAccProviderDynamoDBMTLSConfigWithPassphrase(mockServer.url, clientCertFile, clientKeyFile, passphrase, caCertFile),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.0", "terraform-mtls-test-table-1"),
@@ -590,7 +580,7 @@ func TestAccAWSProviderDynamoDBMTLSWithEncryptedKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSProviderDynamoDBMTLSWithPKCS8EncryptedKey(t *testing.T) {
+func TestAccProvider_DynamoDBMTLSWithPKCS8EncryptedKey(t *testing.T) {
 	ca := createTestCA(t)
 	passphrase := "pkcs8-test-passphrase-456"
 	clientCert := ca.createClientCertPKCS8(t, passphrase)
@@ -600,17 +590,13 @@ func TestAccAWSProviderDynamoDBMTLSWithPKCS8EncryptedKey(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
-	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
-	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderDynamoDBMTLSConfigWithPassphrase(mockServer.url, clientCertFile, clientKeyFile, passphrase, caCertFile),
+				Config: testAccProviderDynamoDBMTLSConfigWithPassphrase(mockServer.url, clientCertFile, clientKeyFile, passphrase, caCertFile),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.0", "terraform-mtls-test-table-1"),
@@ -621,7 +607,7 @@ func TestAccAWSProviderDynamoDBMTLSWithPKCS8EncryptedKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSProviderDynamoDBMTLSFailsWithoutCABundle(t *testing.T) {
+func TestAccProvider_DynamoDBMTLSFailsWithoutCABundle(t *testing.T) {
 	ca := createTestCA(t)
 	clientCert := ca.createClientCert(t, false, "")
 
@@ -636,14 +622,14 @@ func TestAccAWSProviderDynamoDBMTLSFailsWithoutCABundle(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSProviderDynamoDBMTLSConfigNoCA(mockServer.url, clientCertFile, clientKeyFile),
+				Config:      testAccProviderDynamoDBMTLSConfigNoCA(mockServer.url, clientCertFile, clientKeyFile),
 				ExpectError: regexp.MustCompile("tls|certificate|x509"),
 			},
 		},
 	})
 }
 
-func testAccAWSProviderDynamoDBMTLSConfigWithPassphrase(dynamodbEndpoint, clientCert, clientKey, passphrase, caCert string) string {
+func testAccProviderDynamoDBMTLSConfigWithPassphrase(dynamodbEndpoint, clientCert, clientKey, passphrase, caCert string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -674,7 +660,7 @@ output "table_names" {
 `, dynamodbEndpoint, clientCert, clientKey, passphrase, caCert)
 }
 
-func TestAccAWSProviderDynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
+func TestAccProvider_DynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
 
 	ca := createTestCA(t)
 	passphrase := "test_120jvb!9_-passphrase#@"
@@ -685,8 +671,6 @@ func TestAccAWSProviderDynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
-	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
 	t.Setenv("AWS_CLIENT_CERTIFICATE", clientCertFile)
 	t.Setenv("AWS_CLIENT_PRIVATE_KEY", clientKeyFile)
 	t.Setenv("AWS_CLIENT_PRIVATE_KEY_PASSPHRASE", passphrase)
@@ -698,7 +682,7 @@ func TestAccAWSProviderDynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderDynamoDBMTLSConfigEnvVars(mockServer.url),
+				Config: testAccProviderDynamoDBMTLSConfigEnvVars(mockServer.url),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_tables.test", "names.0", "terraform-mtls-test-table-1"),
@@ -709,7 +693,7 @@ func TestAccAWSProviderDynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
 	})
 }
 
-func testAccAWSProviderDynamoDBMTLSConfigNoCA(dynamodbEndpoint, clientCert, clientKey string) string {
+func testAccProviderDynamoDBMTLSConfigNoCA(dynamodbEndpoint, clientCert, clientKey string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -733,7 +717,7 @@ data "aws_dynamodb_tables" "test" {
 `, dynamodbEndpoint, clientCert, clientKey)
 }
 
-func testAccAWSProviderDynamoDBMTLSConfigEnvVars(dynamodbEndpoint string) string {
+func testAccProviderDynamoDBMTLSConfigEnvVars(dynamodbEndpoint string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"

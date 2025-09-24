@@ -50,10 +50,12 @@ func loadClientCertificate(certFile, keyFile, passphrase string) (tls.Certificat
 				if x509.IsEncryptedPEMBlock(keyBlock) {
 					decryptedDER, decryptErr = x509.DecryptPEMBlock(keyBlock, []byte(passphrase))
 					if decryptErr != nil {
-						return tls.Certificate{}, fmt.Errorf("failed to decrypt private key with provided passphrase: PKCS#8 error: %v, PKCS#5 error: %w", pkcs8Err, decryptErr)
+						return tls.Certificate{}, fmt.Errorf(
+							"failed to decrypt private key with provided passphrase: PKCS#8 error: %w, PKCS#5 error: %w", pkcs8Err, decryptErr,
+						)
 					}
 				} else {
-					return tls.Certificate{}, fmt.Errorf("error with decryption: %w", pkcs8Err)
+					return tls.Certificate{}, fmt.Errorf("failed with decryption: %w", pkcs8Err)
 				}
 			}
 			decryptedPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: decryptedDER})

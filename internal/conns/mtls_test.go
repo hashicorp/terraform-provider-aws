@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conns
 
 import (
@@ -239,9 +242,9 @@ func newMTLSTestServer(t *testing.T, ca *TestCertificateAuthority) *MTLSTestServ
 
 		switch r.URL.Path {
 		case "/":
-			response := map[string]interface{}{
-				"GetCallerIdentityResponse": map[string]interface{}{
-					"GetCallerIdentityResult": map[string]interface{}{
+			response := map[string]any{
+				"GetCallerIdentityResponse": map[string]any{
+					"GetCallerIdentityResult": map[string]any{
 						"Account": "123456789012",
 						"Arn":     "arn:aws:iam::123456789012:user/test-user",
 						"UserId":  "AIDACKCEVSQ6C2EXAMPLE",
@@ -249,11 +252,15 @@ func newMTLSTestServer(t *testing.T, ca *TestCertificateAuthority) *MTLSTestServ
 				},
 			}
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
+			if err := json.NewEncoder(w).Encode(response); err != nil {
+				t.Fatalf("failed to encode response: %v", err)
+			}
 
 		case "/health":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
+			if _, err := w.Write([]byte("OK")); err != nil {
+				t.Fatalf("failed to write OK: %v", err)
+			}
 
 		default:
 			http.NotFound(w, r)
@@ -282,7 +289,11 @@ func writeCertificateFiles(t *testing.T, ca *TestCertificateAuthority, clientCer
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	t.Cleanup(func() { os.RemoveAll(tempDir) })
+	t.Cleanup(func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Logf("failed to cleanup temp dir: %v", err)
+		}
+	})
 
 	caCertFile = filepath.Join(tempDir, "ca-cert.pem")
 	err = os.WriteFile(caCertFile, ca.certPEM, 0600)
