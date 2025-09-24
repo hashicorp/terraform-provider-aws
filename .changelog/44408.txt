@@ -2,5 +2,8 @@
 resource/aws_sfn_activity: Add resource identity support
 ```
 ```release-note:enhancement
+resource/aws_sfn_activity: Add `arn` argument
+```
+```release-note:enhancement
 resource/aws_sfn_alias: Add resource identity support
 ```
