@@ -7,11 +7,16 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,8 +40,10 @@ func dataSourceConnectionGroup() *schema.Resource {
 				Computed: true,
 			},
 			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"routing_endpoint", names.AttrID},
 			},
 			names.AttrID: {
 				Type:     schema.TypeString,
@@ -59,8 +66,10 @@ func dataSourceConnectionGroup() *schema.Resource {
 				Computed: true,
 			},
 			"routing_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"routing_endpoint", names.AttrID},
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -75,19 +84,33 @@ func dataSourceConnectionGroupRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	id := d.Get(names.AttrID).(string)
-	output, err := findConnectionGroupByID(ctx, conn, id)
+	var identifier string
+	var connectionGroup *awstypes.ConnectionGroup
+	var etag *string
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFront Connection Group (%s): %s", id, err)
+	if id, ok := d.GetOk(names.AttrID); ok {
+		identifier = id.(string)
+		output, err := findConnectionGroupByID(ctx, conn, identifier)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudFront Connection Group by ID (%s): %s", identifier, err)
+		}
+		connectionGroup = output.ConnectionGroup
+		etag = output.ETag
+	} else {
+		identifier = d.Get("routing_endpoint").(string)
+		output, err := findConnectionGroupByEndpoint(ctx, conn, identifier)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudFront Connection Group by endpoint (%s): %s", identifier, err)
+		}
+		connectionGroup = output.ConnectionGroup
+		etag = output.ETag
 	}
 
-	d.SetId(aws.ToString(output.ConnectionGroup.Id))
-	connectionGroup := output.ConnectionGroup
+	d.SetId(aws.ToString(connectionGroup.Id))
 	d.Set("anycast_ip_list_id", connectionGroup.AnycastIpListId)
 	d.Set(names.AttrARN, connectionGroup.Arn)
 	d.Set(names.AttrEnabled, connectionGroup.Enabled)
-	d.Set("etag", output.ETag)
+	d.Set("etag", etag)
 	d.Set("ipv6_enabled", connectionGroup.Ipv6Enabled)
 	d.Set("is_default", connectionGroup.IsDefault)
 	d.Set("last_modified_time", connectionGroup.LastModifiedTime.String())
@@ -96,4 +119,29 @@ func dataSourceConnectionGroupRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrStatus, connectionGroup.Status)
 
 	return diags
+}
+
+func findConnectionGroupByEndpoint(ctx context.Context, conn *cloudfront.Client, endpoint string) (*cloudfront.GetConnectionGroupByRoutingEndpointOutput, error) {
+	input := cloudfront.GetConnectionGroupByRoutingEndpointInput{
+		RoutingEndpoint: aws.String(endpoint),
+	}
+
+	output, err := conn.GetConnectionGroupByRoutingEndpoint(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ConnectionGroup == nil || output.ConnectionGroup.Name == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
