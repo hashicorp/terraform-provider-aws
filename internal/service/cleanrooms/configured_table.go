@@ -29,16 +29,15 @@ import (
 // @SDKResource("aws_cleanrooms_configured_table", name="Configured Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.14.1")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetConfiguredTableOutput")
 func ResourceConfiguredTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfiguredTableCreate,
 		ReadWithoutTimeout:   resourceConfiguredTableRead,
 		UpdateWithoutTimeout: resourceConfiguredTableUpdate,
 		DeleteWithoutTimeout: resourceConfiguredTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
