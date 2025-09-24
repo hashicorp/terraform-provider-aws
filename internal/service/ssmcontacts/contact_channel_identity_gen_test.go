@@ -19,13 +19,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMContactsContactChannel_Identity_Basic(t *testing.T) {
+func testAccSSMContactsContactChannel_IdentitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:    testAccSSMContactsContactChannel_Identity_Basic,
+		"ExistingResource": testAccSSMContactsContactChannel_Identity_ExistingResource,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSSMContactsContactChannel_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact_channel.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -105,13 +116,13 @@ func TestAccSSMContactsContactChannel_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.0
-func TestAccSSMContactsContactChannel_Identity_ExistingResource(t *testing.T) {
+func testAccSSMContactsContactChannel_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact_channel.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
