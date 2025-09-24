@@ -125,7 +125,7 @@ func resourceCluster() *schema.Resource {
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 						"node_pools": {
 							Type:     schema.TypeSet,
@@ -237,6 +237,7 @@ func resourceCluster() *schema.Resource {
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -391,7 +392,7 @@ func resourceCluster() *schema.Resource {
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Default:  false,
+										Computed: true,
 									},
 								},
 							},
