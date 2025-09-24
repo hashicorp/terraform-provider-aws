@@ -516,6 +516,226 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 	})
 }
 
+func TestAccElasticBeanstalkEnvironment_taint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var app awstypes.EnvironmentDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	value1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	value2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elastic_beanstalk_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_setting_ComputedValue(rName, value1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &app),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact(settingsChecks_ValueChanged(value1))),
+				},
+			},
+			{
+				Taint:  []string{"terraform_data.test"},
+				Config: testAccEnvironmentConfig_setting_ComputedValue(rName, value2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &app),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction("terraform_data.test", plancheck.ResourceActionReplace),
+
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
+								"name":      knownvalue.StringExact("Subnets"),
+								"resource":  knownvalue.StringExact(""),
+								// "value":    Unknown value,
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
+								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
+								"resource":  knownvalue.Null(),
+								"value":     knownvalue.StringExact("true"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+								"name":      knownvalue.StringExact("IamInstanceProfile"),
+								"resource":  knownvalue.Null(),
+								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
+								"name":      knownvalue.StringExact("ENV_TEST"),
+								"resource":  knownvalue.StringExact(""),
+								// "value":    Unknown value,
+							}),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact(settingsChecks_ValueChanged(value2))),
+				},
+			},
+		},
+	})
+}
+
+func TestAccElasticBeanstalkEnvironment_setting_ComputedValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var app awstypes.EnvironmentDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	value1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	value2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elastic_beanstalk_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_setting_ComputedValue(rName, value1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &app),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact(settingsChecks_ValueChanged(value1))),
+				},
+			},
+			{
+				Config: testAccEnvironmentConfig_setting_ComputedValue(rName, value2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &app),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction("terraform_data.test", plancheck.ResourceActionUpdate),
+
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
+								"name":      knownvalue.StringExact("Subnets"),
+								"resource":  knownvalue.StringExact(""),
+								// "value":    Unknown value,
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
+								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
+								"resource":  knownvalue.Null(),
+								"value":     knownvalue.StringExact("true"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+								"name":      knownvalue.StringExact("IamInstanceProfile"),
+								"resource":  knownvalue.Null(),
+								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
+								"name":      knownvalue.StringExact("ENV_TEST"),
+								"resource":  knownvalue.StringExact(""),
+								// "value":    Unknown value,
+							}),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact(settingsChecks_ValueChanged(value2))),
+				},
+			},
+		},
+	})
+}
+
+func TestAccElasticBeanstalkEnvironment_setting_ForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	var app awstypes.EnvironmentDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	value1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	value2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elastic_beanstalk_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_setting_ForceNew(rName, value1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &app),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact(settingsChecks_ValueChanged(value1))),
+				},
+			},
+			{
+				Config: testAccEnvironmentConfig_setting_ForceNew(rName, value2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &app),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction("terraform_data.test", plancheck.ResourceActionReplace),
+
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
+								"name":      knownvalue.StringExact("Subnets"),
+								"resource":  knownvalue.StringExact(""),
+								// "value":    Unknown value,
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
+								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
+								"resource":  knownvalue.Null(),
+								"value":     knownvalue.StringExact("true"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+								"name":      knownvalue.StringExact("IamInstanceProfile"),
+								"resource":  knownvalue.Null(),
+								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
+								"name":      knownvalue.StringExact("ENV_TEST"),
+								"resource":  knownvalue.StringExact(""),
+								// "value":    Unknown value,
+							}),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact(settingsChecks_ValueChanged(value2))),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
@@ -828,35 +1048,35 @@ func settingsChecks_basic() []knownvalue.Check {
 			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_vpc.test.id
 		}),
 
-		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
 			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
 			names.AttrName:      knownvalue.StringExact("Subnets"),
 			"resource":          knownvalue.StringExact(""),
 			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_subnet.test[0].id
 		}),
 
-		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
 			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
 			names.AttrName:      knownvalue.StringExact("AssociatePublicIpAddress"),
 			"resource":          knownvalue.StringExact(""),
 			names.AttrValue:     knownvalue.StringExact("true"),
 		}),
 
-		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
 			names.AttrNamespace: knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
 			names.AttrName:      knownvalue.StringExact("SecurityGroups"),
 			"resource":          knownvalue.StringExact(""),
 			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_security_group.test.id
 		}),
 
-		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
 			names.AttrNamespace: knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
 			names.AttrName:      knownvalue.StringExact("IamInstanceProfile"),
 			"resource":          knownvalue.StringExact(""),
 			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
 		}),
 
-		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
 			names.AttrNamespace: knownvalue.StringExact("aws:elasticbeanstalk:environment"),
 			names.AttrName:      knownvalue.StringExact("ServiceRole"),
 			"resource":          knownvalue.StringExact(""),
@@ -1739,4 +1959,93 @@ EOF
   }
 }
 `, rName, publicKey, email))
+}
+
+func testAccEnvironmentConfig_setting_ComputedValue(rName, value string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_setting_ValueChange(rName),
+		fmt.Sprintf(`
+resource "terraform_data" "test" {
+  input = %[1]q
+}
+`, value))
+}
+
+func testAccEnvironmentConfig_setting_ForceNew(rName, value string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_setting_ValueChange(rName),
+		fmt.Sprintf(`
+resource "terraform_data" "test" {
+  input = %[2]q
+  triggers_replace = [%[2]q]
+}
+`, rName, value))
+}
+
+func testAccEnvironmentConfig_setting_ValueChange(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_elastic_beanstalk_environment" "test" {
+  application         = aws_elastic_beanstalk_application.test.name
+  name                = %[1]q
+  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
+
+  setting {
+    namespace = "aws:ec2:vpc"
+    name      = "Subnets"
+    value     = replace("${aws_subnet.test[0].id}${terraform_data.test.output}", terraform_data.test.output,"")
+  }
+
+  setting {
+    namespace = "aws:ec2:vpc"
+    name      = "AssociatePublicIpAddress"
+    value     = "true"
+  }
+
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "IamInstanceProfile"
+    value     = aws_iam_instance_profile.test.name
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "ENV_TEST"
+    value     = terraform_data.test.output
+  }
+}
+`, rName))
+}
+
+func settingsChecks_ValueChanged(envVal string) []knownvalue.Check {
+	return []knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+			names.AttrName:      knownvalue.StringExact("Subnets"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_subnet.test[0].id
+		}),
+
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+			names.AttrName:      knownvalue.StringExact("AssociatePublicIpAddress"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.StringExact("true"),
+		}),
+
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+			names.AttrName:      knownvalue.StringExact("IamInstanceProfile"),
+			"resource":          knownvalue.StringExact(""),
+			names.AttrValue:     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
+		}),
+
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			names.AttrNamespace: knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
+			names.AttrName:      knownvalue.StringExact("ENV_TEST"),
+			"resource":          knownvalue.StringExact(""),
+			"value":             knownvalue.StringExact(envVal),
+		}),
+	}
 }
