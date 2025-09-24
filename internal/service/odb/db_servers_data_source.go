@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_odb_db_servers_list", name="Db Servers List")
-func newDataSourceDBServersList(context.Context) (datasource.DataSourceWithConfigure, error) {
+// @FrameworkDataSource("aws_odb_db_servers", name="Db Servers")
+func newDataSourceDBServers(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDbServersList{}, nil
 }
 

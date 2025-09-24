@@ -53,9 +53,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newDataSourceDBNodesList,
-			TypeName: "aws_odb_db_nodes_list",
-			Name:     "Db Nodes List",
+			Factory:  newDataSourceDBNodes,
+			TypeName: "aws_odb_db_nodes",
+			Name:     "Db Nodes",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
@@ -65,9 +65,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newDataSourceDBServersList,
-			TypeName: "aws_odb_db_servers_list",
-			Name:     "Db Servers List",
+			Factory:  newDataSourceDBServers,
+			TypeName: "aws_odb_db_servers",
+			Name:     "Db Servers",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{

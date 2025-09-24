@@ -1,12 +1,12 @@
 ---
 subcategory: "Oracle Database@AWS"
-layout: "AWS: aws_odb_db_servers_list"
-page_title: "AWS: aws_odb_db_servers_list"
+layout: "AWS: aws_odb_db_servers"
+page_title: "AWS: aws_odb_db_servers"
 description: |-
   Terraform data source for managing db servers linked to exadata infrastructure of Oracle Database@AWS.
 ---
 
-# Data Source: aws_odb_db_servers_list
+# Data Source: aws_odb_db_servers
 
 Terraform data source for manging db servers linked to exadata infrastructure of Oracle Database@AWS.
 
@@ -17,7 +17,7 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 ### Basic Usage
 
 ```terraform
-data "aws_odb_db_servers_list" "example" {
+data "aws_odb_db_servers" "example" {
   cloud_exadata_infrastructure_id = "exadata_infra_id"
 }
 ```

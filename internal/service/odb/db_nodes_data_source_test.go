@@ -50,7 +50,7 @@ func TestAccODBDBNodesListDataSource_basic(t *testing.T) {
 		return
 	}
 	var dbNodesList odb.ListDbNodesOutput
-	dbNodesListsDataSourceName := "data.aws_odb_db_nodes_list.test"
+	dbNodesListsDataSourceName := "data.aws_odb_db_nodes.test"
 	vmClusterListsResourceName := "aws_odb_cloud_vm_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -65,7 +65,7 @@ func TestAccODBDBNodesListDataSource_basic(t *testing.T) {
 				Config: dbNodesListDataSourceTestEntity.basicDBNodesListDataSource(publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					dbNodesListDataSourceTestEntity.testAccCheckDBNodesListExists(ctx, vmClusterListsResourceName, &dbNodesList),
-					resource.TestCheckResourceAttr(dbNodesListsDataSourceName, "aws_odb_db_nodes_list.db_nodes.#", strconv.Itoa(len(dbNodesList.DbNodes))),
+					resource.TestCheckResourceAttr(dbNodesListsDataSourceName, "aws_odb_db_nodes.db_nodes.#", strconv.Itoa(len(dbNodesList.DbNodes))),
 				),
 			},
 		},
@@ -143,7 +143,7 @@ func (dbNodesListDataSourceTest) basicDBNodesListDataSource(publicKey string) st
 
 	%s
 
-data "aws_odb_db_nodes_list" "test" {
+data "aws_odb_db_nodes" "test" {
   cloud_vm_cluster_id = aws_odb_cloud_vm_cluster.test.id
 }
 `, vmCluster)
@@ -178,7 +178,7 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   }
 }
 
-data "aws_odb_db_servers_list" "test" {
+data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
@@ -194,7 +194,7 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers                      = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   data_collection_options {

@@ -41,7 +41,7 @@ func TestAccODBDBServersListDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var dbServersList odb.ListDbServersOutput
-	dataSourceName := "data.aws_odb_db_servers_list.test"
+	dataSourceName := "data.aws_odb_db_servers.test"
 	exaInfraResourceName := "aws_odb_cloud_exadata_infrastructure.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -55,7 +55,7 @@ func TestAccODBDBServersListDataSource_basic(t *testing.T) {
 				Config: dbServersListDataSourceTestEntity.testAccDBServersListDataSourceConfigBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					dbServersListDataSourceTestEntity.testAccCheckDBServersListExists(ctx, exaInfraResourceName, &dbServersList),
-					resource.TestCheckResourceAttr(dataSourceName, "aws_odb_db_servers_list.db_servers.#", strconv.Itoa(len(dbServersList.DbServers))),
+					resource.TestCheckResourceAttr(dataSourceName, "aws_odb_db_servers.db_servers.#", strconv.Itoa(len(dbServersList.DbServers))),
 				),
 			},
 		},
@@ -137,7 +137,7 @@ func (testDbServersListDataSource) testAccDBServersListDataSourceConfigBasic() s
 	return fmt.Sprintf(`
 %s
 
-data "aws_odb_db_servers_list" "test" {
+data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 `, exaInfra)

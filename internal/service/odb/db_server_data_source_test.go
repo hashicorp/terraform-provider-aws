@@ -138,12 +138,12 @@ func (testDbServerDataSourceTest) basicDBServerDataSourceConfig() string {
 	return fmt.Sprintf(`
 %s
 
-data "aws_odb_db_servers_list" "test" {
+data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
 data "aws_odb_db_server" "test" {
-  id                              = data.aws_odb_db_servers_list.test.db_servers[0].id
+  id                              = data.aws_odb_db_servers.test.db_servers[0].id
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 `, exaInfra)

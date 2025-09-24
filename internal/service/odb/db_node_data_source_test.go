@@ -137,12 +137,12 @@ func (testDbNodeDataSourceTest) dbNodeDataSourceBasicConfig(publicKey string) st
 	return fmt.Sprintf(`
 %s
 
-data "aws_odb_db_nodes_list" "test" {
+data "aws_odb_db_nodes" "test" {
   cloud_vm_cluster_id = aws_odb_cloud_vm_cluster.test.id
 }
 
 data "aws_odb_db_node" "test" {
-  id                  = data.aws_odb_db_nodes_list.test.db_nodes[0].id
+  id                  = data.aws_odb_db_nodes.test.db_nodes[0].id
   cloud_vm_cluster_id = aws_odb_cloud_vm_cluster.test.id
 }
 
@@ -179,7 +179,7 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   }
 }
 
-data "aws_odb_db_servers_list" "test" {
+data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
@@ -195,7 +195,7 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers                      = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   data_collection_options {
