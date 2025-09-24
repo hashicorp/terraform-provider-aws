@@ -1041,7 +1041,6 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 					managedRuleGroupConfigs = append(managedRuleGroupConfigs, awstypes.ManagedRuleGroupConfig{
 						AWSManagedRulesACFPRuleSet: &acfpConfig,
 					})
-
 				} else {
 					// let auto flex handle expand
 					resp.Diagnostics.Append(fwflex.Expand(ctx, managedRuleGroupRef.ManagedRuleGroupConfig, &managedRuleGroupConfigs)...)
@@ -1085,7 +1084,7 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 			return
 		}
 	} else {
-		// Use defaults when not provided in plan, for backward compability of this provider
+		// Use defaults when not provided in plan, for backward compatibility of this provider
 		visibilityConfig = awstypes.VisibilityConfig{
 			SampledRequestsEnabled:   true,
 			CloudWatchMetricsEnabled: true,
@@ -1274,8 +1273,7 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 							}
 
 							var managedRuleGroupConfigs fwtypes.ListNestedObjectValueOf[managedRuleGroupConfigModel]
-							if managedStmt.ManagedRuleGroupConfigs != nil && len(managedStmt.ManagedRuleGroupConfigs) > 0 {
-
+							if len(managedStmt.ManagedRuleGroupConfigs) > 0 {
 								sdkManagedRuleGroupConfigs := managedStmt.ManagedRuleGroupConfigs[0]
 
 								if acfp := sdkManagedRuleGroupConfigs.AWSManagedRulesACFPRuleSet; acfp != nil {
@@ -1285,7 +1283,6 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 									if resp.Diagnostics.HasError() {
 										return
 									}
-
 								} else {
 									resp.Diagnostics.Append(fwflex.Flatten(ctx, managedStmt.ManagedRuleGroupConfigs, &managedRuleGroupConfigs)...)
 									if resp.Diagnostics.HasError() {
@@ -1302,11 +1299,9 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 										managedRuleGroupConfigs = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*managedRuleGroupConfigModel{&tfManagedRuleGroupConfigModel})
 									}
 								}
-
 							} else {
 								managedRuleGroupConfigs = fwtypes.NewListNestedObjectValueOfNull[managedRuleGroupConfigModel](ctx)
 							}
-
 							// Update the managed rule group nested structure
 							managedRuleGroupRef.RuleActionOverride = ruleActionOverrides
 							managedRuleGroupRef.ManagedRuleGroupConfig = managedRuleGroupConfigs
@@ -1327,7 +1322,7 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 				state.Priority = types.Int32Value(rule.Priority)
 
 				var visibilityConfig fwtypes.ListNestedObjectValueOf[visibilityConfigModel]
-				// for backward compability, visibility_config to be read only if it's not set to default
+				// for backward compatibility, visibility_config to be read only if it's not set to default
 				if rule.VisibilityConfig != nil {
 					isDefault := rule.VisibilityConfig.SampledRequestsEnabled &&
 						rule.VisibilityConfig.CloudWatchMetricsEnabled &&
@@ -1431,7 +1426,6 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 			// update visibility config if changed
 			var visibilityConfig awstypes.VisibilityConfig
 			if !plan.VisibilityConfig.IsNull() && !plan.VisibilityConfig.IsUnknown() {
-
 				resp.Diagnostics.Append(fwflex.Expand(ctx, plan.VisibilityConfig, &visibilityConfig)...)
 				if resp.Diagnostics.HasError() {
 					return
@@ -1884,7 +1878,6 @@ func patchBotControlFlatten(
 	botControl *awstypes.AWSManagedRulesBotControlRuleSet,
 	tfManagedRuleGroupConfigModel managedRuleGroupConfigModel,
 ) managedRuleGroupConfigModel {
-
 	if botControl.InspectionLevel == awstypes.InspectionLevelCommon {
 		tfBotControlModelConfig := awsManagedRulesBotControlRuleSetModel{
 			InspectionLevel:       types.StringValue(string(awstypes.InspectionLevelCommon)),
@@ -1931,7 +1924,7 @@ func expandACFPManagedRuleConfig(
 		}
 		for _, id := range tfAddressField.Identifiers.Elements() {
 			addressFields = append(addressFields, awstypes.AddressField{
-				Identifier: aws.String(id.(types.String).ValueString()),
+				Identifier: id.(types.String).ValueStringPointer(),
 			})
 		}
 	}
@@ -1945,7 +1938,7 @@ func expandACFPManagedRuleConfig(
 		}
 		for _, id := range tfPhoneNumberField.Identifiers.Elements() {
 			phoneNumberFields = append(phoneNumberFields, awstypes.PhoneNumberField{
-				Identifier: aws.String(id.(types.String).ValueString()),
+				Identifier: id.(types.String).ValueStringPointer(),
 			})
 		}
 	}
