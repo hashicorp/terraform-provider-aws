@@ -13,7 +13,7 @@ resource "aws_sfn_state_machine" "test" {
 {{- template "region" }}
   name     = var.rName
   role_arn = aws_iam_role.for_sfn.arn
-  publish = true
+  publish  = true
 
   definition = <<EOF
 {
