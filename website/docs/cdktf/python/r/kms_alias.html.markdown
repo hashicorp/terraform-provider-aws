@@ -80,8 +80,8 @@ resource "aws_kms_alias" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS aliases using the `name`. For example:
 
@@ -106,4 +106,4 @@ Using `terraform import`, import KMS aliases using the `name`. For example:
 % terraform import aws_kms_alias.a alias/my-key-alias
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c017bf9b3d49f24e56bb7e869062e118494d13ef36e5ba52b752f6ec12e4c776 -->
+<!-- cache-key: cdktf-0.20.8 input-8ca91687b2989e8a3c2e78ba558dc1778ac40aecda46ac489fb0615e1b75a9a6 -->

@@ -380,13 +380,33 @@ func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, false),
+				Config:      testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, false),
+				ExpectError: regexache.MustCompile(`force_new_deployment should be true when capacity_provider_strategy is being updated`),
+			},
+			{
+				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "10"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -408,6 +428,9 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -419,6 +442,9 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "10"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -457,10 +483,13 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.capacity_provider", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -468,6 +497,9 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE_SPOT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.capacity_provider", "FARGATE_SPOT"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -479,10 +511,11 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategyRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -1013,6 +1046,14 @@ func TestAccECSService_BlueGreenDeployment_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "deployment_configuration.0.lifecycle_hook.*.role_arn", "aws_iam_role.global", names.AttrARN),
 					resource.TestCheckTypeSetElemAttr(resourceName, "deployment_configuration.0.lifecycle_hook.*.lifecycle_stages.*", "POST_SCALE_UP"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "deployment_configuration.0.lifecycle_hook.*.lifecycle_stages.*", "POST_TEST_TRAFFIC_SHIFT"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       "[1,\"2\",true]",
+						"lifecycle_stages.0": "POST_SCALE_UP",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       "3.14",
+						"lifecycle_stages.0": "TEST_TRAFFIC_SHIFT",
+					}),
 					// Load balancer advanced configuration checks
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.0.advanced_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.alternate_target_group_arn"),
@@ -1036,6 +1077,10 @@ func TestAccECSService_BlueGreenDeployment_basic(t *testing.T) {
 					// Lifecycle hooks configuration checks
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.lifecycle_hook.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "deployment_configuration.0.lifecycle_hook.*.lifecycle_stages.*", "PRE_SCALE_UP"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       "{\"bool_key\":true,\"int_key\":10,\"list_key\":[1,\"2\",true],\"object_key\":{\"bool_key\":true,\"int_key\":10,\"list_key\":[1,\"2\",true],\"string_key\":\"string_val\"},\"string_key\":\"string_val\"}",
+						"lifecycle_stages.0": "PRE_SCALE_UP",
+					}),
 					// Service Connect test traffic rules checks
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.test_traffic_rules.0.header.0.name", "x-test-header-2"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.test_traffic_rules.0.header.0.value.0.exact", "test-value-2"),
@@ -1188,6 +1233,14 @@ func TestAccECSService_BlueGreenDeployment_changeStrategy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       acctest.CtTrue,
+						"lifecycle_stages.0": "POST_SCALE_UP",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       "\"Test string\"",
+						"lifecycle_stages.0": "TEST_TRAFFIC_SHIFT",
+					}),
 				),
 			},
 			{
@@ -1281,7 +1334,7 @@ func TestAccECSService_BlueGreenDeployment_waitServiceActive(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, true),
+				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
@@ -2782,7 +2835,6 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 
 			return nil
 		})
-
 		if err != nil {
 			return err
 		}
@@ -3482,12 +3534,14 @@ resource "aws_ecs_service" "test" {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["POST_SCALE_UP", "POST_TEST_TRAFFIC_SHIFT"]
+      hook_details     = jsonencode([1, "2", true])
     }
 
     lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["TEST_TRAFFIC_SHIFT", "POST_PRODUCTION_TRAFFIC_SHIFT"]
+      hook_details     = "3.14"
     }
   }
 
@@ -3723,6 +3777,12 @@ resource "aws_ecs_service" "test" {
       hook_target_arn  = %[2]s
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["PRE_SCALE_UP"]
+      hook_details = jsonencode({ "bool_key" : true, "string_key" : "string_val", "int_key" : 10, "list_key" : [1, "2", true], "object_key" : {
+        "bool_key" : true,
+        "string_key" : "string_val",
+        "int_key" : 10,
+        "list_key" : [1, "2", true]
+      } })
     }
   }
 
@@ -3862,12 +3922,14 @@ resource "aws_ecs_service" "test" {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["POST_SCALE_UP", "POST_TEST_TRAFFIC_SHIFT"]
+      hook_details     = "true"
     }
 
     lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["TEST_TRAFFIC_SHIFT", "POST_PRODUCTION_TRAFFIC_SHIFT"]
+      hook_details     = jsonencode("Test string")
     }
   }
 

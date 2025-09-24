@@ -60,7 +60,7 @@ The following arguments are required:
 
 * `component` - (Required) Ordered configuration block(s) with components for the image recipe. Detailed below.
 * `name` - (Required) Name of the image recipe.
-* `parent_image` - (Required) The image recipe uses this image as a base from which to build your customized image. The value can be the base image ARN or an AMI ID.
+* `parent_image` - (Required) The image recipe uses this image as a base from which to build your customized image. The value can be the base image ARN, an AMI ID, or an SSM Parameter referencing the AMI. For an SSM Parameter, enter the prefix `ssm:`, followed by the parameter name or ARN.
 * `version` - (Required) The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. For example: 1.0.0.
 
 The following arguments are optional:
@@ -161,4 +161,4 @@ Using `terraform import`, import `aws_imagebuilder_image_recipe` resources using
 % terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-932ec9065cee040b6501563f0f3ef5e9405a97e204d163933ef919c46f258d8e -->
+<!-- cache-key: cdktf-0.20.8 input-0bbfe1c90f16836ca0dc253825e2595b8228004ed4442cee8428c39af7ee86cc -->

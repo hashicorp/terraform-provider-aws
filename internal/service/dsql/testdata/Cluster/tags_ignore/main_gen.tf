@@ -11,20 +11,8 @@ provider "aws" {
 }
 
 resource "aws_dsql_cluster" "test" {
-  deletion_protection_enabled = false
 
   tags = var.resource_tags
-}
-
-output "rName" {
-  value       = var.rName
-  description = "To prevent tflint issues"
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
 }
 
 variable "resource_tags" {
