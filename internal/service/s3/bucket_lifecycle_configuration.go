@@ -484,9 +484,6 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 
 		return nil
 	})
-	if err != nil {
-		return
-	}
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
