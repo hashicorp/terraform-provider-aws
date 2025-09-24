@@ -6,7 +6,6 @@ resource "aws_sfn_alias" "test" {
     state_machine_version_arn = aws_sfn_state_machine.test.state_machine_version_arn
     weight                    = 100
   }
-{{- template "tags" }}
 }
 
 resource "aws_sfn_state_machine" "test" {
@@ -38,7 +37,6 @@ resource "aws_sfn_state_machine" "test" {
   }
 }
 EOF
-{{- template "tags" }}
 }
 
 resource "aws_iam_role_policy" "for_lambda" {
