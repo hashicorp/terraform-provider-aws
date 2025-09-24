@@ -22,8 +22,6 @@ resource "aws_ssmcontacts_contact" "test" {
 # testAccContactChannelConfig_base
 
 data "aws_ssmincidents_replication_set" "test" {}
-
-data "aws_region" "current" {}
 variable "rName" {
   description = "Name for resource"
   type        = string
