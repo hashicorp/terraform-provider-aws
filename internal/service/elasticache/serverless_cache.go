@@ -200,14 +200,19 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
-											int64validator.Any(
-												int64validator.OneOf(0),
-												int64validator.Between(1, 5000),
-											),
+											int64validator.Between(1, 5000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									names.AttrUnit: schema.StringAttribute{
@@ -226,17 +231,23 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
-											int64validator.Any(
-												int64validator.OneOf(0),
-												int64validator.Between(1000, 15000000),
-											)},
+											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 								},
 							},
