@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -1500,7 +1499,6 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 							managedRuleGroupConfigs = append(managedRuleGroupConfigs, awstypes.ManagedRuleGroupConfig{
 								AWSManagedRulesACFPRuleSet: &acfpConfig,
 							})
-
 						} else {
 							// let auto flex handle expand
 							resp.Diagnostics.Append(fwflex.Expand(ctx, managedRuleGroupRef.ManagedRuleGroupConfig, &managedRuleGroupConfigs)...)
@@ -1803,76 +1801,6 @@ func parseWebACLARN(arn string) (id, name, scope string, err error) {
 	return resourceParts[idIndex], resourceParts[nameIndex], scopeValue, nil
 }
 
-func flattenACFPRuleConfig(
-	ctx context.Context,
-	acfp *awstypes.AWSManagedRulesACFPRuleSet,
-	managedRuleGroupConfigs []awstypes.ManagedRuleGroupConfig,
-) (fwtypes.ListNestedObjectValueOf[managedRuleGroupConfigModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if acfp.RequestInspection == nil {
-		// autoflex is possible
-		var tfManagedRuleGroupConfigModel managedRuleGroupConfigModel
-		diags.Append(fwflex.Flatten(ctx, managedRuleGroupConfigs, &tfManagedRuleGroupConfigModel)...)
-		return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*managedRuleGroupConfigModel{&tfManagedRuleGroupConfigModel}), diags
-	}
-
-	requestInspection := acfp.RequestInspection
-	var emailField emailFieldModel
-	var usernameField usernameFieldModel
-	var passwordField passwordFieldModel
-
-	fwflex.Flatten(ctx, requestInspection.EmailField, &emailField)
-	fwflex.Flatten(ctx, requestInspection.UsernameField, &usernameField)
-	fwflex.Flatten(ctx, requestInspection.PasswordField, &passwordField)
-
-	var addrList []attr.Value
-	for _, af := range requestInspection.AddressFields {
-		addrList = append(addrList, types.StringValue(aws.ToString(af.Identifier)))
-	}
-	ids := fwtypes.NewListValueOfMust[types.String](ctx, addrList)
-	afModel := &addressFieldModel{
-		Identifiers: ids,
-	}
-
-	var phoneList []attr.Value
-	for _, pf := range requestInspection.PhoneNumberFields {
-		phoneList = append(phoneList, types.StringValue(aws.ToString(pf.Identifier)))
-	}
-	pfModel := &phoneNumberFieldModel{
-		Identifiers: fwtypes.NewListValueOfMust[types.String](ctx, phoneList),
-	}
-
-	tfRequestInspection := &requestInspectionACFPModel{
-		PayloadType:       types.StringValue(string(requestInspection.PayloadType)),
-		EmailField:        fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*emailFieldModel{&emailField}),
-		UsernameField:     fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*usernameFieldModel{&usernameField}),
-		PasswordField:     fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*passwordFieldModel{&passwordField}),
-		AddressFields:     fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*addressFieldModel{afModel}),
-		PhoneNumberFields: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*phoneNumberFieldModel{pfModel}),
-	}
-
-	tfACFPModel := &awsManagedRulesACFPRuleSetModel{
-		CreationPath:         types.StringValue(aws.ToString(acfp.CreationPath)),
-		RegistrationPagePath: types.StringValue(aws.ToString(acfp.RegistrationPagePath)),
-		EnableRegexInPath:    types.BoolValue(acfp.EnableRegexInPath),
-		ResponseInspection:   fwtypes.NewListNestedObjectValueOfNull[responseInspectionModel](ctx),
-		RequestInspection:    fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*requestInspectionACFPModel{tfRequestInspection}),
-	}
-
-	patchedRuleGroupConfig := make([]*managedRuleGroupConfigModel, 0, 1)
-
-	tfManagedRuleGroupConfigModel := &managedRuleGroupConfigModel{
-		AWSManagedRulesACFPRuleSet:       fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*awsManagedRulesACFPRuleSetModel{tfACFPModel}),
-		AWSManagedRulesATPRuleSet:        fwtypes.NewListNestedObjectValueOfNull[awsManagedRulesATPRuleSetModel](ctx),
-		AWSManagedRulesBotControlRuleSet: fwtypes.NewListNestedObjectValueOfNull[awsManagedRulesBotControlRuleSetModel](ctx),
-		AWSManagedRulesAntiDDoSRuleSet:   fwtypes.NewListNestedObjectValueOfNull[awsManagedRulesAntiDDoSRuleSetModel](ctx),
-	}
-	patchedRuleGroupConfig = append(patchedRuleGroupConfig, tfManagedRuleGroupConfigModel)
-
-	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, patchedRuleGroupConfig), diags
-}
-
 func patchBotControlFlatten(
 	ctx context.Context,
 	botControl *awstypes.AWSManagedRulesBotControlRuleSet,
@@ -1887,85 +1815,6 @@ func patchBotControlFlatten(
 	}
 
 	return tfManagedRuleGroupConfigModel
-}
-
-func expandACFPManagedRuleConfig(
-	ctx context.Context,
-	tfACFPRuleConfigModel awsManagedRulesACFPRuleSetModel,
-) (awstypes.AWSManagedRulesACFPRuleSet, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var acfpRuleSetConfig awstypes.AWSManagedRulesACFPRuleSet
-
-	if tfACFPRuleConfigModel.RequestInspection.IsNull() && tfACFPRuleConfigModel.RequestInspection.IsUnknown() {
-		// auto flex works, no need to manually expand
-		diags.Append(fwflex.Expand(ctx, tfACFPRuleConfigModel, &acfpRuleSetConfig)...)
-		return acfpRuleSetConfig, diags
-	}
-
-	acfpRuleSetConfig = awstypes.AWSManagedRulesACFPRuleSet{
-		CreationPath:         tfACFPRuleConfigModel.CreationPath.ValueStringPointer(),
-		RegistrationPagePath: tfACFPRuleConfigModel.RegistrationPagePath.ValueStringPointer(),
-		EnableRegexInPath:    tfACFPRuleConfigModel.EnableRegexInPath.ValueBool(),
-	}
-
-	var tfReqInspection requestInspectionACFPModel
-	diags.Append(tfACFPRuleConfigModel.RequestInspection.Elements()[0].(fwtypes.ObjectValueOf[requestInspectionACFPModel]).As(ctx, &tfReqInspection, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return acfpRuleSetConfig, diags
-	}
-
-	addressFields := make([]awstypes.AddressField, 0)
-
-	for _, af := range tfReqInspection.AddressFields.Elements() {
-		var tfAddressField addressFieldModel
-		diags.Append(af.(fwtypes.ObjectValueOf[addressFieldModel]).As(ctx, &tfAddressField, basetypes.ObjectAsOptions{})...)
-		if diags.HasError() {
-			return acfpRuleSetConfig, diags
-		}
-		for _, id := range tfAddressField.Identifiers.Elements() {
-			addressFields = append(addressFields, awstypes.AddressField{
-				Identifier: id.(types.String).ValueStringPointer(),
-			})
-		}
-	}
-
-	phoneNumberFields := make([]awstypes.PhoneNumberField, 0)
-	for _, pf := range tfReqInspection.PhoneNumberFields.Elements() {
-		var tfPhoneNumberField phoneNumberFieldModel
-		diags.Append(pf.(fwtypes.ObjectValueOf[phoneNumberFieldModel]).As(ctx, &tfPhoneNumberField, basetypes.ObjectAsOptions{})...)
-		if diags.HasError() {
-			return acfpRuleSetConfig, diags
-		}
-		for _, id := range tfPhoneNumberField.Identifiers.Elements() {
-			phoneNumberFields = append(phoneNumberFields, awstypes.PhoneNumberField{
-				Identifier: id.(types.String).ValueStringPointer(),
-			})
-		}
-	}
-
-	acfpRuleSetConfig.RequestInspection = &awstypes.RequestInspectionACFP{
-		AddressFields:     addressFields,
-		PhoneNumberFields: phoneNumberFields,
-		PayloadType:       awstypes.PayloadType(tfReqInspection.PayloadType.ValueString()),
-	}
-
-	diags.Append(fwflex.Expand(ctx, tfReqInspection.EmailField, &acfpRuleSetConfig.RequestInspection.EmailField)...)
-	if diags.HasError() {
-		return acfpRuleSetConfig, diags
-	}
-
-	diags.Append(fwflex.Expand(ctx, tfReqInspection.UsernameField, &acfpRuleSetConfig.RequestInspection.UsernameField)...)
-	if diags.HasError() {
-		return acfpRuleSetConfig, diags
-	}
-
-	diags.Append(fwflex.Expand(ctx, tfReqInspection.PasswordField, &acfpRuleSetConfig.RequestInspection.PasswordField)...)
-	if diags.HasError() {
-		return acfpRuleSetConfig, diags
-	}
-
-	return acfpRuleSetConfig, diags
-
 }
 
 type resourceWebACLRuleGroupAssociationModel struct {

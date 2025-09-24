@@ -1938,7 +1938,6 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
   override_action = "none"
 }
 `, rName)
-
 }
 
 func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfigUpdate(rName string) string {
@@ -1981,7 +1980,6 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
   override_action = "none"
 }
 `, rName)
-
 }
 
 func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_acfpRuleSet(rName string) string {
@@ -2317,7 +2315,6 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 
   override_action = "none"
 }
-
 `, rName)
 }
 
