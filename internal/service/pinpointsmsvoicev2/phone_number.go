@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -134,7 +135,7 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
 					),
 					stringvalidator.Any(
-						stringvalidator.RegexMatches(regexache.MustCompile(`^arn`), "must be a valid ARN"),
+						fwvalidators.ARN(),
 						stringvalidator.RegexMatches(regexache.MustCompile(`^connect\.[a-z0-9-]+\.amazonaws.com$`), "Must be connect.{region}.amazonaws.com"),
 					),
 				},
