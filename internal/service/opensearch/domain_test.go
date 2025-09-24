@@ -541,7 +541,8 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 					testAccCheckSnapshotHour(23, &input),
 				),
 			},
-		}})
+		},
+	})
 }
 
 func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
@@ -2088,7 +2089,8 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 					testAccCheckEBSVolumeIops(3000, &input),
 				),
 			},
-		}})
+		},
+	})
 }
 
 // Verifies that EBS volume_type can be changed from gp3 to a type which does not
@@ -2137,7 +2139,8 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp2"),
 				),
 			},
-		}})
+		},
+	})
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
@@ -2221,7 +2224,8 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.3"),
 				),
 			},
-		}})
+		},
+	})
 }
 
 func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
@@ -2257,6 +2261,7 @@ func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
 		},
 	})
 }
+
 func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2278,6 +2283,44 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_AIMLOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+	enabledState := "ENABLED"
+	disabledState := "DISABLED"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", enabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", disabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtTrue),
+				),
 			},
 		},
 	})
@@ -2469,7 +2512,6 @@ func testAccCheckDomainExists(ctx context.Context, n string, v *awstypes.DomainS
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 		output, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
-
 		if err != nil {
 			return err
 		}
@@ -4199,4 +4241,27 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, option)
+}
+
+func testAccDomainConfig_AIMLOptions(rName, desiredState string, S3VecotrsEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+	aiml_options {
+		natural_language_query_generation_options {
+		  desired_state = %[2]q
+		}
+
+		s3_vectors_engine {
+		  enabled = %[3]t
+		}
+	}
+}
+`, rName, desiredState, S3VecotrsEnabled)
 }
