@@ -298,11 +298,6 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, // Because of schema change
-										PlanModifiers: []planmodifier.Int32{
-											tfint32planmodifier.NullValue(),
-											int32planmodifier.UseStateForUnknown(),
-										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
@@ -325,11 +320,6 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, // Because of schema change
-										PlanModifiers: []planmodifier.Int32{
-											tfint32planmodifier.NullValue(),
-											int32planmodifier.UseStateForUnknown(),
-										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
