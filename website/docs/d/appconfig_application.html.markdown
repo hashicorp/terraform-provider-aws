@@ -16,20 +16,21 @@ Provides details about an AWS AppConfig Application.
 
 ```terraform
 data "aws_appconfig_application" "example" {
-  name = "my-appconfig-application
+  name = "my-appconfig-application"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
-* `name` - (Required) AWS AppConfig Application name.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `id` - (Optional) ID of the Application. Either `id` or `name` must be specified.
+* `name` - (Optional) AWS AppConfig Application name. Either `name` or `id` must be specified.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the Application.
 * `description` - Description of the Application.
-* `id` - ID of the Application.
-* `name` - Name of the Application
