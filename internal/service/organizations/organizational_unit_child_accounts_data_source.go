@@ -44,6 +44,11 @@ func dataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
