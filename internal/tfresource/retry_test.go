@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -479,7 +478,7 @@ func TestOptionsApply(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			conf := sdkretry.StateChangeConf{}
+			conf := retry.StateChangeConf{}
 
 			testCase.options.Apply(&conf)
 
