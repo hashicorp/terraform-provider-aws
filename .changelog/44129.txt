@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_instance: Adds List support
+```
+
+```release-note:enhancement
+resource/aws_iam_role: Adds List support
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_group: Adds List support
+```

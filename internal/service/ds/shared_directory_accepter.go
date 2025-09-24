@@ -118,7 +118,7 @@ func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Shared Directory Accepter: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ClientException](ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ClientException](ctx, directoryApplicationDeauthorizedPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDirectory(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})

@@ -413,7 +413,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 		FinalSnapshotName:   nil,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteServerlessCache(ctx, input)
 	}, errCodeDependencyViolation)
 

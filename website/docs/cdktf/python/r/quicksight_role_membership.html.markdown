@@ -44,9 +44,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_account_id` - (Optional) AWS account ID. Defaults to the account of the caller identity if not configured.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `namespace` - (Optional) Name of the namespace. Defaults to `default`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -77,4 +77,4 @@ Using `terraform import`, import QuickSight Role Membership using a comma-delimi
 % terraform import aws_quicksight_role_membership.example 012345678901,default,READER,example-group
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-24138784973a68b700cfb537083586a52e465b2f2d828b938b2d336cbe93c33d -->
+<!-- cache-key: cdktf-0.20.8 input-939ad0e3986019f906e9fbcce4ccbfb1f0ce3c92f6033bfccb485b165b757eef -->

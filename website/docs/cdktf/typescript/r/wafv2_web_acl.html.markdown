@@ -14,6 +14,8 @@ Creates a WAFv2 Web ACL resource.
 
 ~> **Note** In `fieldToMatch` blocks, _e.g._, in `byteMatchStatement`, the `body` block includes an optional argument `oversizeHandling`. AWS indicates this argument will be required starting February 2023. To avoid configurations breaking when that change happens, treat the `oversizeHandling` argument as **required** as soon as possible.
 
+!> **Warning:** If you use the `aws_wafv2_web_acl_rule_group_association` resource to associate rule groups with this Web ACL, you must add `lifecycle { ignore_changes = [rule] }` to this resource to prevent configuration drift. The association resource modifies the Web ACL's rules outside of this resource's direct management.
+
 ## Example Usage
 
 This resource is based on `aws_wafv2_rule_group`, check the documentation of the `aws_wafv2_rule_group` resource to see examples of the various available statements.
@@ -873,8 +875,17 @@ The `managedRuleGroupConfigs` block support the following arguments:
 * `creationPath` - (Required) The path of the account creation endpoint for your application. This is the page on your website that accepts the completed registration form for a new user. This page must accept POST requests.
 * `enableRegexInPath` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
 * `registrationPagePath` - (Required) The path of the account registration endpoint for your application. This is the page on your website that presents the registration form to new users. This page must accept GET text/html requests.
-* `requestInspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`requestInspection`](#request_inspection-block) for more details.
+* `requestInspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`requestInspection`](#request_inspection-block-acfp) for more details.
 * `responseInspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`responseInspection`](#response_inspection-block) for more details.
+
+### `requestInspection` Block (ACFP)
+
+* `addressFields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`addressFields`](#address_fields-block) for more details.
+* `emailField` (Optional) The name of the field in the request payload that contains your customer's email. See [`emailField`](#email_field-block) for more details.
+* `passwordField` (Optional) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
+* `payloadType` (Required) The payload type for your login endpoint, either JSON or form encoded.
+* `phoneNumberFields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phoneNumberFields`](#phone_number_fields-block) for more details.
+* `usernameField` (Optional) Details about your login page username field. See [`usernameField`](#username_field-block) for more details.
 
 ### `awsManagedRulesAntiDdosRuleSet` Block
 
@@ -898,11 +909,8 @@ The `managedRuleGroupConfigs` block support the following arguments:
 
 ### `requestInspection` Block
 
-* `addressFields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`addressFields`](#address_fields-block) for more details.
-* `emailField` (Optional) The name of the field in the request payload that contains your customer's email. See [`emailField`](#email_field-block) for more details.
 * `passwordField` (Optional) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
 * `payloadType` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `phoneNumberFields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phoneNumberFields`](#phone_number_fields-block) for more details.
 * `usernameField` (Optional) Details about your login page username field. See [`usernameField`](#username_field-block) for more details.
 
 ### `addressFields` Block
@@ -1157,6 +1165,7 @@ Aggregate the request counts using one or more web request components as the agg
 
 The `customKey` block supports the following arguments:
 
+* `asn` - (Optional) Use an Autonomous System Number (ASN) derived from the request's originating or forwarded IP address as an aggregate key. See [RateLimit `asn`](#ratelimit-asn-block) below for details.
 * `cookie` - (Optional) Use the value of a cookie in the request as an aggregate key. See [RateLimit `cookie`](#ratelimit-cookie-block) below for details.
 * `forwardedIp` - (Optional) Use the first IP address in an HTTP header as an aggregate key. See [`forwardedIp`](#ratelimit-forwarded_ip-block) below for details.
 * `httpMethod` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `httpMethod`](#ratelimit-http_method-block) below for details.
@@ -1168,6 +1177,12 @@ The `customKey` block supports the following arguments:
 * `queryArgument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `queryArgument`](#ratelimit-query_argument-block) below for details.
 * `queryString` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `queryString`](#ratelimit-query_string-block) below for details.
 * `uriPath` - (Optional) Use the request's URI path as an aggregate key. See [RateLimit `uriPath`](#ratelimit-uri_path-block) below for details.
+
+### RateLimit `asn` Block
+
+Use an Autonomous System Number (ASN) derived from the request's originating or forwarded IP address as an aggregate key. Each distinct ASN contributes to the aggregation instance.
+
+The `asn` block is configured as an empty block `{}`.
 
 ### RateLimit `cookie` Block
 
@@ -1296,4 +1311,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9bb3813b6e70cbf794d0edb7fa099e74cd4d1c389a273431955edf915caaff91 -->
+<!-- cache-key: cdktf-0.20.8 input-c6b569a06a37fb68c1bbce8db1bdc0486f16e179cf0730f80afe2e2b52bb2e67 -->

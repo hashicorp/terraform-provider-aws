@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB Cluster.
 ---
 
-# Resource: aws_memorydb_cluster
+# Data Source: aws_memorydb_cluster
 
 Provides information about a MemoryDB Cluster.
 

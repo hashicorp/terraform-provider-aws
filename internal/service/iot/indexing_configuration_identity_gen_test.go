@@ -33,9 +33,10 @@ func testAccIoTIndexingConfiguration_IdentitySerial(t *testing.T) {
 
 func testAccIoTIndexingConfiguration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iot_indexing_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -106,7 +107,7 @@ func testAccIoTIndexingConfiguration_Identity_RegionOverride(t *testing.T) {
 
 	resourceName := "aws_iot_indexing_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -213,9 +214,10 @@ func testAccIoTIndexingConfiguration_Identity_RegionOverride(t *testing.T) {
 
 func testAccIoTIndexingConfiguration_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iot_indexing_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -271,6 +273,43 @@ func testAccIoTIndexingConfiguration_Identity_ExistingResource(t *testing.T) {
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),
 				},
+			},
+		},
+	})
+}
+
+func testAccIoTIndexingConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_iot_indexing_configuration.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IoTServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/IndexingConfiguration/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/IndexingConfiguration/basic/"),
+				ConfigVariables:          config.Variables{},
 			},
 		},
 	})

@@ -232,7 +232,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.SyncConfig = expandSyncConfig(v.([]any))
 	}
 
-	_, err := retryResolverOp(ctx, apiID, func() (any, error) {
+	_, err := retryResolverOp(ctx, apiID, func(ctx context.Context) (any, error) {
 		return conn.CreateResolver(ctx, input)
 	})
 
@@ -347,7 +347,7 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		input.SyncConfig = expandSyncConfig(v.([]any))
 	}
 
-	_, err = retryResolverOp(ctx, apiID, func() (any, error) {
+	_, err = retryResolverOp(ctx, apiID, func(ctx context.Context) (any, error) {
 		return conn.UpdateResolver(ctx, input)
 	})
 
@@ -368,12 +368,13 @@ func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	log.Printf("[INFO] Deleting Appsync Resolver: %s", d.Id())
-	_, err = retryResolverOp(ctx, apiID, func() (any, error) {
-		return conn.DeleteResolver(ctx, &appsync.DeleteResolverInput{
-			ApiId:     aws.String(apiID),
-			FieldName: aws.String(fieldName),
-			TypeName:  aws.String(typeName),
-		})
+	input := appsync.DeleteResolverInput{
+		ApiId:     aws.String(apiID),
+		FieldName: aws.String(fieldName),
+		TypeName:  aws.String(typeName),
+	}
+	_, err = retryResolverOp(ctx, apiID, func(ctx context.Context) (any, error) {
+		return conn.DeleteResolver(ctx, &input)
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
@@ -406,7 +407,7 @@ func resolverParseResourceID(id string) (string, string, string, error) {
 	return parts[0], parts[1], parts[2], nil
 }
 
-func retryResolverOp(ctx context.Context, apiID string, f func() (any, error)) (any, error) { //nolint:unparam
+func retryResolverOp(ctx context.Context, apiID string, f func(context.Context) (any, error)) (any, error) { //nolint:unparam
 	mutexKey := "appsync-schema-" + apiID
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
@@ -414,7 +415,7 @@ func retryResolverOp(ctx context.Context, apiID string, f func() (any, error)) (
 	const (
 		timeout = 2 * time.Minute
 	)
-	return tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, f)
+	return tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, timeout, f)
 }
 
 func findResolverByThreePartKey(ctx context.Context, conn *appsync.Client, apiID, typeName, fieldName string) (*awstypes.Resolver, error) {

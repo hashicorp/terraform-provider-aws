@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 )
 
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
@@ -38,6 +39,13 @@ func DiagnosticString(d diag.Diagnostic) string {
 	return buf.String()
 }
 
+func NewCreatingResourceIDErrorDiagnostic(err error) diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		"Creating Resource ID",
+		err.Error(),
+	)
+}
+
 func NewParsingResourceIDErrorDiagnostic(err error) diag.Diagnostic {
 	return diag.NewErrorDiagnostic(
 		"Parsing Resource ID",
@@ -50,6 +58,17 @@ func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 		"AWS resource not found during refresh",
 		"Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: "+err.Error(),
 	)
+}
+
+func NewListResultErrorDiagnostic(err error) list.ListResult {
+	return list.ListResult{
+		Diagnostics: diag.Diagnostics{
+			diag.NewErrorDiagnostic(
+				"Error Listing Remote Resources",
+				err.Error(),
+			),
+		},
+	}
 }
 
 func AsError[T any](x T, diags diag.Diagnostics) (T, error) {

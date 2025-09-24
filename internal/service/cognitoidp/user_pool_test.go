@@ -14,8 +14,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
@@ -474,6 +477,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -487,6 +491,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -497,6 +502,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -526,6 +532,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -542,6 +549,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -550,6 +558,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -578,6 +587,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -592,6 +602,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -618,6 +629,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -631,6 +643,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -640,6 +653,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -666,10 +680,24 @@ func TestAccCognitoIDPUserPool_MFA_emailConfigurationMFA(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccUserPoolConfig_mfaEmailConfigurationEmptyConfiguration(rName, replyTo, sourceARN, emailTo, "DEVELOPER"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "email_mfa_configuration.0.message"),
+					resource.TestCheckNoResourceAttr(resourceName, "email_mfa_configuration.0.subject"),
+				),
+			},
+			{
 				Config: testAccUserPoolConfig_mfaEmailConfigurationConfigurationEnabled(rName, true, message, subject, replyTo, sourceARN, emailTo, "DEVELOPER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.message", message),
 					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.subject", subject),
 				),
@@ -679,6 +707,8 @@ func TestAccCognitoIDPUserPool_MFA_emailConfigurationMFA(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.message", updatedMessage),
 					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.subject", updatedSubject),
 				),
@@ -2036,6 +2066,50 @@ func TestAccCognitoIDPUserPool_userPoolTier(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_nameUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool1, pool2 awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_name(rName + "-test1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-test1")),
+				},
+			},
+			{
+				Config: testAccUserPoolConfig_name(rName + "-test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-test2")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckUserPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
@@ -2425,6 +2499,44 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, rName, enabled, message, subject, email, arn, from, account)
+}
+
+func testAccUserPoolConfig_mfaEmailConfigurationEmptyConfiguration(rName string, email, arn, from, account string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_configuration_set" "test" {
+  name = %[1]q
+
+  delivery_options {
+    tls_policy = "Optional"
+  }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  mfa_configuration = "ON"
+  name              = %[1]q
+
+  email_configuration {
+    reply_to_email_address = %[2]q
+    source_arn             = %[3]q
+    from_email_address     = %[4]q
+    email_sending_account  = %[5]q
+    configuration_set      = aws_ses_configuration_set.test.name
+  }
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+    recovery_mechanism {
+      name     = "verified_phone_number"
+      priority = 2
+    }
+  }
+
+  email_mfa_configuration {}
+}
+`, rName, email, arn, from, account)
 }
 
 func testAccUserPoolConfig_passwordHistorySize(rName string, passwordHistorySize int) string {

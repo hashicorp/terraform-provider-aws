@@ -26,6 +26,8 @@ import (
 
 // @SDKResource("aws_networkmanager_global_network", name="Global Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
 func resourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalNetworkCreate,
@@ -158,7 +160,7 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, globalNetworkValidationExceptionTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteGlobalNetwork(ctx, &networkmanager.DeleteGlobalNetworkInput{
 				GlobalNetworkId: aws.String(d.Id()),
 			})
