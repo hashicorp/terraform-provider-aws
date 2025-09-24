@@ -314,3 +314,62 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource(t *testing.T) {
 		},
 	})
 }
+
+// Resource Identity was added after v6.7.0
+func testAccIVSPlaybackKeyPair_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.PlaybackKeyPair
+	resourceName := "aws_ivs_playback_key_pair.test"
+	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
+	rTlsEcdsaPublicKeyPem, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IVSServiceID),
+		CheckDestroy: testAccCheckPlaybackKeyPairDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/PlaybackKeyPair/basic_v6.7.0/"),
+				ConfigVariables: config.Variables{
+					"rTlsEcdsaPublicKeyPem": config.StringVariable(rTlsEcdsaPublicKeyPem),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/PlaybackKeyPair/basic/"),
+				ConfigVariables: config.Variables{
+					"rTlsEcdsaPublicKeyPem": config.StringVariable(rTlsEcdsaPublicKeyPem),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+		},
+	})
+}

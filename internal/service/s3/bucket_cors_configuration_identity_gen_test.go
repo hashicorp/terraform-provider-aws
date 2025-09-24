@@ -259,3 +259,60 @@ func TestAccS3BucketCORSConfiguration_Identity_ExistingResource(t *testing.T) {
 		},
 	})
 }
+
+// Resource Identity was added after v6.9.0
+func TestAccS3BucketCORSConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_s3_bucket_cors_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketCORSConfigurationDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/BucketCORSConfiguration/basic_v6.9.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/BucketCORSConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+		},
+	})
+}

@@ -87,6 +87,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_rule.example
+  identity = {
+    name           = "capture-console-sign-in"
+    event_bus_name = "example-event-bus"
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the EventBridge rule.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `eventBusName` (String) Name of the event bus.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `eventBusName`, the `default` event bus will be used). For example:
 
 ```typescript
@@ -103,7 +131,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     CloudwatchEventRule.generateConfigForImport(
       this,
-      "console",
+      "example",
       "example-event-bus/capture-console-sign-in"
     );
   }
@@ -114,7 +142,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `eventBusName`, the `default` event bus will be used). For example:
 
 ```console
-% terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
+% terraform import aws_cloudwatch_event_rule.example example-event-bus/capture-console-sign-in
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b982e04792aaad2ca7a94af9645eb4bde3c7f703558055015218cce446d3f455 -->
+<!-- cache-key: cdktf-0.20.8 input-182d4defbb2adb53d28b5de017c57ceb2322d0f3eef60c595ca406b455d5de40 -->

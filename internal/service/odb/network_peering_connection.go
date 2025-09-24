@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -93,33 +94,54 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Description: "Status of the odb network peering connection.",
 				CustomType:  fwtypes.StringEnumType[odbtypes.ResourceStatus](),
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrStatusReason: schema.StringAttribute{
 				Description: "The reason for the current status of the ODB peering connection..",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 
 			"odb_network_arn": schema.StringAttribute{
 				Description: "ARN of the odb network peering connection.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 
 			"peer_network_arn": schema.StringAttribute{
 				Description: "ARN of the peer network peering connection.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"odb_peering_connection_type": schema.StringAttribute{
 				Description: "Type of the odb peering connection.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				Description: "Created time of the odb network peering connection.",
 				Computed:    true,
 				CustomType:  timetypes.RFC3339Type{},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"percent_progress": schema.Float32Attribute{
 				Description: "Progress of the odb network peering connection.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),

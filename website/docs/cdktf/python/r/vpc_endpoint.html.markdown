@@ -327,8 +327,8 @@ resource "aws_vpc_endpoint" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
@@ -353,4 +353,4 @@ Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For 
 % terraform import aws_vpc_endpoint.example vpce-3ecf2a57
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-43e409c75b75b01e41a2026969c9e57a846ac203cc0b13f745ec2c9a7048b240 -->
+<!-- cache-key: cdktf-0.20.8 input-b2080feb1ba5667458339103250a81d997f91454594d07a5fcf996681359c3a5 -->
