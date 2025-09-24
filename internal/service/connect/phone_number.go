@@ -29,16 +29,16 @@ import (
 
 // @SDKResource("aws_connect_phone_number", name="Phone Number")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.14.1")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.ClaimedPhoneNumberSummary")
 func resourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePhoneNumberCreate,
 		ReadWithoutTimeout:   resourcePhoneNumberRead,
 		UpdateWithoutTimeout: resourcePhoneNumberUpdate,
 		DeleteWithoutTimeout: resourcePhoneNumberDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
