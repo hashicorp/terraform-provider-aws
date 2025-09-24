@@ -544,7 +544,7 @@ func startReplication(ctx context.Context, conn *dms.Client, arn string, timeout
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %w", arn, err)
 	}
 
 	replicationStatus := aws.ToString(replication.Status)
@@ -582,7 +582,7 @@ func stopReplication(ctx context.Context, conn *dms.Client, arn string, timeout 
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %w", arn, err)
 	}
 
 	if replicationStatus := aws.ToString(replication.Status); replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {

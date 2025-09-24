@@ -138,8 +138,8 @@ resource "aws_ssm_parameter" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Parameters using the parameter store `name`. For example:
 
@@ -164,4 +164,4 @@ Using `terraform import`, import SSM Parameters using the parameter store `name`
 % terraform import aws_ssm_parameter.example /my_path/my_paramname
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b5072e20b235bb88b83330212bfa02be4276ab1fd39ba3a74f9458d5ffcad222 -->
+<!-- cache-key: cdktf-0.20.8 input-8600438d57457239f3f4174b57f4c616d64edd0c78e9d50de39cf38ab0932838 -->

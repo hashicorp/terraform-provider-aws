@@ -1272,7 +1272,7 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	} else {
 		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2Conn, "default", vpcID)
 		if err != nil || defaultSG == nil {
-			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
+			return fmt.Errorf("finding VPC (%s) default security group: %w", vpcID, err)
 		}
 		replacementSGIDs = []string{aws.ToString(defaultSG.GroupId)}
 	}
@@ -1287,11 +1287,11 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	if _, err := retryFunctionOp(ctx, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
 		return conn.UpdateFunctionConfiguration(ctx, input)
 	}); err != nil {
-		return fmt.Errorf("updating Lambda Function (%s) configuration: %s", d.Id(), err)
+		return fmt.Errorf("updating Lambda Function (%s) configuration: %w", d.Id(), err)
 	}
 
 	if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
+		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 	}
 
 	return nil

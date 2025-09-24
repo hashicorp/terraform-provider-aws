@@ -304,6 +304,32 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_endpoint.example
+  identity = {
+    id = "vpce-3ecf2a57"
+  }
+}
+
+resource "aws_vpc_endpoint" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the VPC endpoint.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```python
@@ -318,13 +344,13 @@ from imports.aws.vpc_endpoint import VpcEndpoint
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        VpcEndpoint.generate_config_for_import(self, "endpoint1", "vpce-3ecf2a57")
+        VpcEndpoint.generate_config_for_import(self, "example", "vpce-3ecf2a57")
 ```
 
 Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```console
-% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+% terraform import aws_vpc_endpoint.example vpce-3ecf2a57
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1e84ab9698aeadfe7a107a4819bb5ee38e42da7d0593dac8f091709c33f57289 -->
+<!-- cache-key: cdktf-0.20.8 input-b2080feb1ba5667458339103250a81d997f91454594d07a5fcf996681359c3a5 -->

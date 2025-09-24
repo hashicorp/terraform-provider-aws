@@ -976,7 +976,7 @@ func expandTemplateConfiguration(tfList []any) (*types.TemplateConfiguration, er
 	var body any
 	err := json.Unmarshal([]byte(tfMap["template"].(string)), &body)
 	if err != nil {
-		return nil, fmt.Errorf("decoding JSON: %s", err)
+		return nil, fmt.Errorf("decoding JSON: %w", err)
 	}
 
 	return &types.TemplateConfiguration{

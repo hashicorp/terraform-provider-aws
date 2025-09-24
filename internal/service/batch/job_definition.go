@@ -1110,7 +1110,7 @@ func validJobContainerProperties(v any, k string) (ws []string, errors []error) 
 	value := v.(string)
 	_, err := expandContainerProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1119,7 +1119,7 @@ func validJobECSProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandECSProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1128,7 +1128,7 @@ func validJobNodeProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandJobNodeProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %w", err))
 	}
 	return
 }
