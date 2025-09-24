@@ -281,6 +281,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `auto_retry_limit` - (Optional) Specify a maximum number of additional automatic retries after a failed build.
+  The default is 0.
 * `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as
   `badge_url` attribute when enabled.
 * `build_batch_config` - (Optional) Defines the batch build options for the project.
