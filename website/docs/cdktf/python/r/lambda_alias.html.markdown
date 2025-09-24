@@ -59,8 +59,7 @@ class MyConvertedCode(TerraformStack):
             name="staging",
             routing_config=LambdaAliasRoutingConfig(
                 additional_version_weights={
-                    "1": 0.1,
-                    "3": 0.2
+                    "1": 0.1
                 }
             )
         )
