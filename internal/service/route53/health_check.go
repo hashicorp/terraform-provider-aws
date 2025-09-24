@@ -217,6 +217,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		healthCheckConfig.IPAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk(names.AttrPort); ok {
 		healthCheckConfig.Port = aws.Int32(int32(v.(int)))
 	}
@@ -235,8 +236,9 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	switch healthCheckType {
 	case awstypes.HealthCheckTypeCalculated:
-		if v, ok := d.GetOk("child_health_threshold"); ok {
-			healthCheckConfig.HealthThreshold = aws.Int32(int32(v.(int)))
+		if v := d.GetRawPlan().GetAttr("child_health_threshold"); !v.IsNull() {
+			v, _ := v.AsBigFloat().Int64()
+			healthCheckConfig.HealthThreshold = aws.Int32(int32(v))
 		}
 
 		if v, ok := d.GetOk("child_healthchecks"); ok {
