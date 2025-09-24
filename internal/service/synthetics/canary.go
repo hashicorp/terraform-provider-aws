@@ -133,6 +133,12 @@ func ResourceCanary() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"ephemeral_storage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1024, 5120),
+						},
 						"memory_in_mb": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -187,6 +193,21 @@ func ResourceCanary() *schema.Resource {
 							Required: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return (new == "rate(0 minute)" || new == "rate(0 minutes)") && old == "rate(0 hour)"
+							},
+						},
+						"retry_config": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_retries": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(0, 2),
+									},
+								},
 							},
 						},
 					},
@@ -336,7 +357,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	iamwaiterStopTime := time.Now().Add(propagationTimeout)
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout+canaryCreatedTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return retryCreateCanary(ctx, conn, d, input)
 		},
 		func(err error) (bool, error) {
@@ -388,7 +409,11 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}.String()
 	d.Set(names.AttrARN, canaryArn)
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
-	d.Set("engine_arn", canary.EngineArn)
+	if len(canary.EngineConfigs) > 0 {
+		d.Set("engine_arn", canary.EngineConfigs[0].EngineArn)
+	} else {
+		d.Set("engine_arn", canary.EngineArn)
+	}
 	d.Set(names.AttrExecutionRoleARN, canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
@@ -677,7 +702,24 @@ func expandCanarySchedule(l []any) *awstypes.CanaryScheduleInput {
 		codeConfig.DurationInSeconds = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := m["retry_config"]; ok {
+		codeConfig.RetryConfig = expandCanaryScheduleRetryConfig(v.([]any))
+	}
+
 	return codeConfig
+}
+
+func expandCanaryScheduleRetryConfig(l []any) *awstypes.RetryConfigInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]any)
+
+	config := &awstypes.RetryConfigInput{
+		MaxRetries: aws.Int32(int32(m["max_retries"].(int))),
+	}
+
+	return config
 }
 
 func flattenCanarySchedule(canarySchedule *awstypes.CanaryScheduleOutput) []any {
@@ -688,6 +730,21 @@ func flattenCanarySchedule(canarySchedule *awstypes.CanaryScheduleOutput) []any 
 	m := map[string]any{
 		names.AttrExpression:  aws.ToString(canarySchedule.Expression),
 		"duration_in_seconds": aws.ToInt64(canarySchedule.DurationInSeconds),
+	}
+
+	if canarySchedule.RetryConfig != nil {
+		m["retry_config"] = flattenCanaryScheduleRetryConfig(canarySchedule.RetryConfig)
+	}
+
+	return []any{m}
+}
+
+func flattenCanaryScheduleRetryConfig(retryConfig *awstypes.RetryConfigOutput) []any {
+	if retryConfig == nil {
+		return []any{}
+	}
+	m := map[string]any{
+		"max_retries": aws.ToInt32(retryConfig.MaxRetries),
 	}
 
 	return []any{m}
@@ -718,6 +775,10 @@ func expandCanaryRunConfig(l []any) *awstypes.CanaryRunConfigInput {
 		codeConfig.EnvironmentVariables = flex.ExpandStringValueMap(vars)
 	}
 
+	if v, ok := m["ephemeral_storage"].(int); ok && v > 0 {
+		codeConfig.EphemeralStorage = aws.Int32(int32(v))
+	}
+
 	return codeConfig
 }
 
@@ -734,6 +795,10 @@ func flattenCanaryRunConfig(canaryCodeOut *awstypes.CanaryRunConfigOutput, envVa
 
 	if envVars != nil {
 		m["environment_variables"] = envVars
+	}
+
+	if canaryCodeOut.EphemeralStorage != nil {
+		m["ephemeral_storage"] = aws.ToInt32(canaryCodeOut.EphemeralStorage)
 	}
 
 	return []any{m}

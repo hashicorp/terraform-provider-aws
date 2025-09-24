@@ -1284,7 +1284,7 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	})
 }
 
-func TestAccEKSCluster_RemoteNetwork_Node(t *testing.T) {
+func TestAccEKSCluster_RemoteNetwork_Node_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1318,7 +1318,69 @@ func TestAccEKSCluster_RemoteNetwork_Node(t *testing.T) {
 	})
 }
 
-func TestAccEKSCluster_RemoteNetwork_Pod(t *testing.T) {
+func TestAccEKSCluster_RemoteNetwork_Node_OnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2, cluster3 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	remoteNodeCIDR := "10.90.0.0/22"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_accessConfig(rName, types.AuthenticationModeApi),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_remoteNodeNetwork(rName, remoteNodeCIDR),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeCIDR),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_accessConfig(rName, types.AuthenticationModeApi),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster3),
+					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_RemoteNetwork_Pod_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1343,6 +1405,75 @@ func TestAccEKSCluster_RemoteNetwork_Pod(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.0", remotePodCIDR),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_RemoteNetwork_Pod_OnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2, cluster3 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	remoteNodeCIDR := "10.90.0.0/22"
+	remotePodCIDR := "10.80.0.0/22"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_accessConfig(rName, types.AuthenticationModeApi),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_remotePodNetwork(rName, remoteNodeCIDR, remotePodCIDR),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeCIDR),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.0", remotePodCIDR),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_remoteNodeNetwork(rName, remoteNodeCIDR),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster3),
+					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeCIDR),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "0"),
 				),
 			},
 			{

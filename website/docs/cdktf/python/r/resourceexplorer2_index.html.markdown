@@ -56,6 +56,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_resourceexplorer2_index.example
+  identity = {
+    "arn" = "arn:aws:resource-explorer-2:us-east-1:123456789012:index/example-index-id"
+  }
+}
+
+resource "aws_resourceexplorer2_index" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Resource Explorer index.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resource Explorer indexes using the `arn`. For example:
 
 ```python
@@ -79,4 +100,4 @@ Using `terraform import`, import Resource Explorer indexes using the `arn`. For 
 % terraform import aws_resourceexplorer2_index.example arn:aws:resource-explorer-2:us-east-1:123456789012:index/6047ac4e-207e-4487-9bcf-cb53bb0ff5cc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7a70f8f8e5f35e509d6e5f01fc8d305f11079db655c056286645728f0a76d4f6 -->
+<!-- cache-key: cdktf-0.20.8 input-1f870d481f0b013c2eb16ad3aa2073ff0b1afac4cc5faeefae3e35d3450e72eb -->

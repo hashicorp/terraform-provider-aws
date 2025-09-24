@@ -51,22 +51,3 @@ This data source exports the following attributes in addition to the arguments a
 * `upload_date` is the date when the server certificate was uploaded
 * `certificate_body` is the public key certificate (PEM-encoded). This is useful when [configuring back-end instance authentication](http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-create-https-ssl-load-balancer.html) policy for load balancer
 * `certificate_chain` is the public key certificate chain (PEM-encoded) if exists, empty otherwise
-
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an IAM server certificate using `name`. For example:
-
-```terraform
-import {
-  to = aws_iam_server_certificate.example
-  id = "example"
-}
-```
-
-Using `terraform import`, import an IAM server certificate using `name`. For example:
-
-```console
-% terraform import aws_iam_server_certificate.example example
-```
-
-Import will read in the certificate body, certificate chain (if it exists), ID, name, path, and ARN. It will not retrieve the private key which is not available through the AWS API.

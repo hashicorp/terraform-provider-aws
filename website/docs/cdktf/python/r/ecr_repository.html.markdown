@@ -105,6 +105,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ecr_repository.service
+  identity = {
+    name = "test-service"
+  }
+}
+
+resource "aws_ecr_repository" "service" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the ECR repository.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Repositories using the `name`. For example:
 
 ```python
@@ -128,4 +154,4 @@ Using `terraform import`, import ECR Repositories using the `name`. For example:
 % terraform import aws_ecr_repository.service test-service
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-814a1b0fb98c6f185436754a76fea69a1fdd15f4d64310e26f69266edda9b954 -->
+<!-- cache-key: cdktf-0.20.8 input-946ecdf7481bbb0a6e38a438bbef63e3dee7b374c268af4bfadabd5b69e74f42 -->

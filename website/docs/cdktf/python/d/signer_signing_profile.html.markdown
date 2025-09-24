@@ -47,9 +47,12 @@ This data source exports the following attributes in addition to the arguments a
 * `platform_id` - ID of the platform that is used by the target signing profile.
 * `revocation_record` - Revocation information for a signing profile.
 * `signature_validity_period` - The validity period for a signing job.
+* `signing_material` - AWS Certificate Manager certificate that will be used to sign code with the new signing profile.
+    * `certificate_arn` - ARN of the certificate used for signing.
+* `signing_parameters` - Map of key-value pairs for signing.
 * `status` - Status of the target signing profile.
 * `tags` - List of tags associated with the signing profile.
 * `version` - Current version of the signing profile.
 * `version_arn` - Signing profile ARN, including the profile version.
 
-<!-- cache-key: cdktf-0.20.8 input-413da44d1025fe6b2cd743c9d2b675b979c7053cdacb8f590ada5ef6ad4e0000 -->
+<!-- cache-key: cdktf-0.20.8 input-7f5943d068b592768463e51d85d1d27624411592e0f36c03fe1cf1417aea23e1 -->

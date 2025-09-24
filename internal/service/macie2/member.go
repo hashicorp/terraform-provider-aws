@@ -265,7 +265,7 @@ func inviteMember(ctx context.Context, conn *macie2.Client, d *schema.ResourceDa
 	}
 
 	if _, err := waitMemberInvited(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Macie Member (%s) invite: %s", d.Id(), err)
+		return fmt.Errorf("waiting for Macie Member (%s) invite: %w", d.Id(), err)
 	}
 
 	return nil
