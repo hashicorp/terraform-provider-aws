@@ -16,21 +16,27 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ec2_instance_type_offering: Add `location` attribute ([#44328](https://github.com/hashicorp/terraform-provider-aws/issues/44328))
+* data-source/aws_rds_proxy: Add `default_auth_scheme` attribute ([#44309](https://github.com/hashicorp/terraform-provider-aws/issues/44309))
 * resource/aws_cleanrooms_configured_table: Add resource identity support ([#44435](https://github.com/hashicorp/terraform-provider-aws/issues/44435))
 * resource/aws_connect_instance: Add resource identity support ([#44346](https://github.com/hashicorp/terraform-provider-aws/issues/44346))
 * resource/aws_connect_phone_number: Add resource identity support ([#44365](https://github.com/hashicorp/terraform-provider-aws/issues/44365))
 * resource/aws_dsql_cluster: Adds attribute `force_destroy`. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
 * resource/aws_pinpointsmsvoicev2_phone_number: Update `two_way_channel_arn` argument to accept `connect.[region].amazonaws.com` in addition to ARNs ([#44372](https://github.com/hashicorp/terraform-provider-aws/issues/44372))
+* resource/aws_rds_proxy: Add `default_auth_scheme` argument ([#44309](https://github.com/hashicorp/terraform-provider-aws/issues/44309))
+* resource/aws_rds_proxy: Make `auth` configuration block optional ([#44309](https://github.com/hashicorp/terraform-provider-aws/issues/44309))
 * resource/aws_route53recoverycontrolconfig_cluster: Add `network_type` argument ([#44377](https://github.com/hashicorp/terraform-provider-aws/issues/44377))
 * resource/aws_s3control_bucket: Add resource identity support ([#44379](https://github.com/hashicorp/terraform-provider-aws/issues/44379))
 * resource/aws_sfn_activity: Add `arn` argument ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
 * resource/aws_sfn_activity: Add resource identity support ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
 * resource/aws_sfn_alias: Add resource identity support ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
+* resource/aws_ssmcontacts_contact_channel: Add resource identity support ([#44369](https://github.com/hashicorp/terraform-provider-aws/issues/44369))
 
 BUG FIXES:
 
 * data-source/aws_servicequotas_service_quota: Fixed a panic that occurred when a non-existing `quota_name` was provided ([#44449](https://github.com/hashicorp/terraform-provider-aws/issues/44449))
 * resource/aws_bedrock_provisioned_model_throughput: Fix `AttributeName("arn") still remains in the path: could not find attribute or block "arn" in schema` errors when upgrading from a pre-v6.0.0 provider version ([#44434](https://github.com/hashicorp/terraform-provider-aws/issues/44434))
+* resource/aws_default_vpc: Correctly set `ipv6_cidr_block` when the VPC has multiple associated IPv6 CIDRs ([#44362](https://github.com/hashicorp/terraform-provider-aws/issues/44362))
 * resource/aws_dsql_cluster: Prevents error when optional attribute `deletion_protection_enabled` not set. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
 * resource/aws_eks_cluster: Change `compute_config`, `kubernetes_network_config.elastic_load_balancing`, and `storage_config.` to Optional and Computed, allowing EKS Auto Mode settings to be enabled, disabled, and removed from configuration ([#44334](https://github.com/hashicorp/terraform-provider-aws/issues/44334))
 * resource/aws_elasticache_cluster: Fix `provider produced unexpected value` for `cache_usage_limits` argument. ([#43841](https://github.com/hashicorp/terraform-provider-aws/issues/43841))
@@ -39,6 +45,7 @@ BUG FIXES:
 * resource/aws_odb_network_peering_connection : Fixed planmodifier for computed attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
 * resource/aws_rds_cluster: Fixes error when setting `database_insights_mode` with `global_cluster_identifier`. ([#44404](https://github.com/hashicorp/terraform-provider-aws/issues/44404))
 * resource/aws_route53_health_check: Fix `child_health_threshold` to properly accept explicitly specified zero value ([#44006](https://github.com/hashicorp/terraform-provider-aws/issues/44006))
+* resource/aws_vpc: Correctly set `ipv6_cidr_block` when the VPC has multiple associated IPv6 CIDRs ([#44362](https://github.com/hashicorp/terraform-provider-aws/issues/44362))
 
 ## 6.14.1 (September 22, 2025)
 
