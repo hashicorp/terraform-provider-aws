@@ -4055,6 +4055,28 @@ func findIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx context.Context, conn 
 	}), nil
 }
 
+func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID, vpcID string) ([]awstypes.IpamPoolAllocation, error) {
+	input := &ec2.GetIpamPoolAllocationsInput{
+		IpamPoolId: aws.String(poolID),
+	}
+
+	output, err := findIPAMPoolAllocations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output = tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
+		return v.ResourceType == awstypes.IpamPoolAllocationResourceTypeVpc && aws.ToString(v.ResourceId) == vpcID
+	})
+
+	if len(output) == 0 {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
 func findIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) (*awstypes.IpamPoolCidr, error) {
 	output, err := findIPAMPoolCIDRs(ctx, conn, input)
 

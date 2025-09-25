@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -714,28 +713,6 @@ func modifyVPCTenancy(ctx context.Context, conn *ec2.Client, vpcID string, v str
 	}
 
 	return nil
-}
-
-func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID, vpcID string) ([]awstypes.IpamPoolAllocation, error) {
-	input := &ec2.GetIpamPoolAllocationsInput{
-		IpamPoolId: aws.String(poolID),
-	}
-
-	output, err := findIPAMPoolAllocations(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	output = tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
-		return v.ResourceType == awstypes.IpamPoolAllocationResourceTypeVpc && aws.ToString(v.ResourceId) == vpcID
-	})
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
 }
 
 func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) string {
