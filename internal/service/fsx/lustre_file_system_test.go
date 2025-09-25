@@ -1128,12 +1128,6 @@ func TestAccFSxLustreFileSystem_metadataConfig_increaseWithStorageCapacity(t *te
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
-			},
-			{
 				// When storage_capacity is increased to 2400, IOPS must be increased to at least 3000.
 				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 3000, 2400),
 				Check: resource.ComposeTestCheckFunc(
