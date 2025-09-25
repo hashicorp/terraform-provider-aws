@@ -37,7 +37,7 @@ func TestAccDataZoneGlossaryTerm_basic(t *testing.T) {
 	glossaryName := "aws_datazone_glossary.test"
 	glossarySecond := "aws_datazone_glossary_term.second"
 
-	domianName := "aws_datazone_domain.test"
+	domainName := "aws_datazone_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -54,12 +54,13 @@ func TestAccDataZoneGlossaryTerm_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlossaryTermExists(ctx, resourceName, &glossaryterm),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domianName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "glossary_identifier", glossaryName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "long_description", "long_description"),
 					resource.TestCheckResourceAttr(resourceName, "short_description", "short_desc"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "term_relations.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.classifies.0", glossarySecond, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.is_a.0", glossarySecond, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -88,6 +89,8 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 	resourceName := "aws_datazone_glossary_term.test"
 	domainName := "aws_datazone_domain.test"
 	glossaryName := "aws_datazone_glossary.test"
+	glossarySecond := "aws_datazone_glossary_term.second"
+	glossaryThird := "aws_datazone_glossary_term.third"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -112,6 +115,9 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttr(resourceName, "term_relations.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.classifies.0", glossarySecond, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.is_a.0", glossarySecond, names.AttrID),
 				),
 			},
 			{
@@ -134,6 +140,9 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttr(resourceName, "term_relations.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.classifies.0", glossaryThird, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.is_a.0", glossaryThird, names.AttrID),
 				),
 			},
 			{
@@ -257,7 +266,7 @@ resource "aws_datazone_glossary_term" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
   long_description    = "long_description"
-  name                = "%[1]s-1"
+  name                = %[1]q
   short_description   = "short_desc"
   status              = "ENABLED"
   term_relations {
@@ -279,11 +288,11 @@ resource "aws_datazone_glossary_term" "second" {
 
 func testAccGlossaryTermConfig_update(rName string) string {
 	return acctest.ConfigCompose(testAccGlossaryConfig_basic(rName), fmt.Sprintf(`
-rresource "aws_datazone_glossary_term" "test" {
+resource "aws_datazone_glossary_term" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
   long_description    = "long"
-  name                = "%[1]s-1"
+  name                = %[1]q
   short_description   = "short"
   status              = "ENABLED"
   term_relations {
@@ -291,7 +300,8 @@ rresource "aws_datazone_glossary_term" "test" {
     is_a       = [aws_datazone_glossary_term.third.id]
   }
 }
-esource "aws_datazone_glossary_term" "second" {
+
+resource "aws_datazone_glossary_term" "second" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
   long_description    = "long_description"
