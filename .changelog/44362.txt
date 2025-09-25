@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc: Correctly set `ipv6_cidr_block` when the VPC has multiple associated IPv6 CIDRs
+```
+
+```release-note:bug
+resource/aws_default_vpc: Correctly set `ipv6_cidr_block` when the VPC has multiple associated IPv6 CIDRs
+```
