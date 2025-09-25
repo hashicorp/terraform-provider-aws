@@ -46,9 +46,9 @@ off of. Example stacks can be found in the [Amazon API documentation][1]
 
 The `setting` field supports the following format:
 
-* `namespace` - unique namespace identifying the option's associated AWS resource
-* `name` - name of the configuration option
-* `value` - value for the configuration option
+* `namespace` - (Required) Unique namespace identifying the option's associated AWS resource
+* `name` - (Required) Name of the configuration option
+* `value` - (Required) Value for the configuration option
 * `resource` - (Optional) resource name for [scheduled action](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html#command-options-general-autoscalingscheduledaction)
 
 ## Attribute Reference
