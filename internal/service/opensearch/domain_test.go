@@ -4253,15 +4253,15 @@ resource "aws_opensearch_domain" "test" {
     volume_size = 10
   }
 
-	aiml_options {
-		natural_language_query_generation_options {
-		  desired_state = %[2]q
-		}
+  aiml_options {
+    natural_language_query_generation_options {
+      desired_state = %[2]q
+    }
 
-		s3_vectors_engine {
-		  enabled = %[3]t
-		}
-	}
+    s3_vectors_engine {
+      enabled = %[3]t
+    }
+  }
 }
 `, rName, desiredState, S3VecotrsEnabled)
 }
