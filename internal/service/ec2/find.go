@@ -4189,11 +4189,11 @@ func findIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx context.Context, conn 
 }
 
 func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID, vpcID string) ([]awstypes.IpamPoolAllocation, error) {
-	input := &ec2.GetIpamPoolAllocationsInput{
+	input := ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(poolID),
 	}
 
-	output, err := findIPAMPoolAllocations(ctx, conn, input)
+	output, err := findIPAMPoolAllocations(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
