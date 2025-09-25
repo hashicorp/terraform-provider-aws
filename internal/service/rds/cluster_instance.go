@@ -15,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -593,7 +593,7 @@ func waitDBClusterInstanceAvailable(ctx context.Context, conn *rds.Client, id st
 			instanceStatusUpgrading,
 		},
 		Target:     []string{instanceStatusAvailable, instanceStatusStorageOptimization},
-		Refresh:    statusDBInstance(ctx, conn, id),
+		Refresh:    statusDBInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -617,7 +617,7 @@ func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.Client, id stri
 			instanceStatusModifying,
 		},
 		Target:     []string{},
-		Refresh:    statusDBInstance(ctx, conn, id),
+		Refresh:    statusDBInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
