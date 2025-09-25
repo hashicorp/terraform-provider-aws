@@ -64,7 +64,7 @@ func testAccGiVersionsListConfigBasic(shape string) string {
 	return fmt.Sprintf(`
 
 
-data "aws_odb_gi_versions_list" "test" {
+data "aws_odb_gi_versions" "test" {
   shape = %[1]q
 }
 `, shape)

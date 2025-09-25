@@ -18,8 +18,8 @@ import (
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_odb_gi_versions_list", name="Gi Versions List")
-func newDataSourceGiVersionsList(context.Context) (datasource.DataSourceWithConfigure, error) {
+// @FrameworkDataSource("aws_odb_gi_versions", name="Gi Versions")
+func newDataSourceGiVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceGiVersionsList{}, nil
 }
 

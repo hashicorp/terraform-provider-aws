@@ -37,7 +37,7 @@ func TestAccODBDBSystemShapesListDataSource_basic(t *testing.T) {
 
 func basicConfigDBSystemShapeDataSource(availabilityZoneId string) string {
 	return fmt.Sprintf(`
-data "aws_odb_db_system_shapes_list" "test"{
+data "aws_odb_db_system_shapes" "test"{
   availability_zone_id = %[1]q
 }
 `, availabilityZoneId)

@@ -18,8 +18,8 @@ import (
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_odb_db_system_shapes_list", name="Db System Shapes List")
-func newDataSourceDBSystemShapesList(context.Context) (datasource.DataSourceWithConfigure, error) {
+// @FrameworkDataSource("aws_odb_db_system_shapes", name="Db System Shapes")
+func newDataSourceDBSystemShapes(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDBSystemShapesList{}, nil
 }
 
