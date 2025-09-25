@@ -98,12 +98,13 @@ resource "aws_transfer_web_app" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following argument is required:
 
 * `identity_provider_details` - (Required) Block for details of the identity provider to use with the web app. See [Identity provider details](#identity-provider-details) below.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_endpoint` - (Optional) URL provided to interact with the Transfer Family web app.
 * `tags` - (Optional) Key-value pairs that can be used to group and search for web apps.
 * `web_app_endpoint_policy` - (Optional) Type of endpoint policy for the web app. Valid values are: `STANDARD`(default) or `FIPS`.
