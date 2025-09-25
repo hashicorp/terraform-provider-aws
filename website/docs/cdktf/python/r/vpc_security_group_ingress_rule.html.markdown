@@ -104,8 +104,8 @@ resource "aws_vpc_security_group_ingress_rule" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import security group ingress rules using the `security_group_rule_id`. For example:
 
@@ -130,4 +130,4 @@ Using `terraform import`, import security group ingress rules using the `securit
 % terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3eaddec91da4edd963c4505903df76d8e82abdd02e812df05fb79dabb54c12e6 -->
+<!-- cache-key: cdktf-0.20.8 input-8fdb20a6da8b38f3c128d51f7801600d9dc9cad37534e3335cd7d21f2e21b404 -->

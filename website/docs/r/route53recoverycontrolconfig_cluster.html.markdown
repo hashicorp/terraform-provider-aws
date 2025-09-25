@@ -20,9 +20,10 @@ resource "aws_route53recoverycontrolconfig_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Unique name describing the cluster.
+* `network_type` - (Optional) Network type of cluster. Valid values are `IPV4` and `DUALSTACK`. Defaults to `IPV4`.
 
 ## Attribute Reference
 

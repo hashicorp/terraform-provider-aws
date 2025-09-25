@@ -1,9 +1,65 @@
 ## 6.15.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_ecs_service: Fix behavior when updating `capacity_provider_strategy` to avoid ECS service recreation after recent AWS changes ([#43533](https://github.com/hashicorp/terraform-provider-aws/issues/43533))
+
+FEATURES:
+
+* **New Action:** `aws_codebuild_start_build` ([#44444](https://github.com/hashicorp/terraform-provider-aws/issues/44444))
+* **New Data Source:** `aws_appconfig_application` ([#44168](https://github.com/hashicorp/terraform-provider-aws/issues/44168))
+* **New Data Source:** `aws_odb_db_node` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
+* **New Data Source:** `aws_odb_db_nodes` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
+* **New Data Source:** `aws_odb_db_server` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
+* **New Data Source:** `aws_odb_db_servers` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
+* **New Resource:** `aws_lakeformation_lf_tag_expression` ([#43883](https://github.com/hashicorp/terraform-provider-aws/issues/43883))
+
+ENHANCEMENTS:
+
+* resource/aws_cleanrooms_configured_table: Add resource identity support ([#44435](https://github.com/hashicorp/terraform-provider-aws/issues/44435))
+* resource/aws_connect_instance: Add resource identity support ([#44346](https://github.com/hashicorp/terraform-provider-aws/issues/44346))
+* resource/aws_connect_phone_number: Add resource identity support ([#44365](https://github.com/hashicorp/terraform-provider-aws/issues/44365))
+* resource/aws_dsql_cluster: Adds attribute `force_destroy`. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
+* resource/aws_pinpointsmsvoicev2_phone_number: Update `two_way_channel_arn` argument to accept `connect.[region].amazonaws.com` in addition to ARNs ([#44372](https://github.com/hashicorp/terraform-provider-aws/issues/44372))
+* resource/aws_route53recoverycontrolconfig_cluster: Add `network_type` argument ([#44377](https://github.com/hashicorp/terraform-provider-aws/issues/44377))
+* resource/aws_s3control_bucket: Add resource identity support ([#44379](https://github.com/hashicorp/terraform-provider-aws/issues/44379))
+* resource/aws_sfn_activity: Add `arn` argument ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
+* resource/aws_sfn_activity: Add resource identity support ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
+* resource/aws_sfn_alias: Add resource identity support ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
+
+BUG FIXES:
+
+* data-source/aws_servicequotas_service_quota: Fixed a panic that occurred when a non-existing `quota_name` was provided ([#44449](https://github.com/hashicorp/terraform-provider-aws/issues/44449))
+* resource/aws_bedrock_provisioned_model_throughput: Fix `AttributeName("arn") still remains in the path: could not find attribute or block "arn" in schema` errors when upgrading from a pre-v6.0.0 provider version ([#44434](https://github.com/hashicorp/terraform-provider-aws/issues/44434))
+* resource/aws_dsql_cluster: Prevents error when optional attribute `deletion_protection_enabled` not set. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
+* resource/aws_eks_cluster: Change `compute_config`, `kubernetes_network_config.elastic_load_balancing`, and `storage_config.` to Optional and Computed, allowing EKS Auto Mode settings to be enabled, disabled, and removed from configuration ([#44334](https://github.com/hashicorp/terraform-provider-aws/issues/44334))
+* resource/aws_elasticache_cluster: Fix `provider produced unexpected value` for `cache_usage_limits` argument. ([#43841](https://github.com/hashicorp/terraform-provider-aws/issues/43841))
+* resource/aws_odb_cloud_autonomous_vm_cluster : Fixed planmodifier for computed attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
+* resource/aws_odb_cloud_vm_cluster : Fixed planmodifier for computed attribute. Fixed planmodifier from display_name attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
+* resource/aws_odb_network_peering_connection : Fixed planmodifier for computed attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
+* resource/aws_rds_cluster: Fixes error when setting `database_insights_mode` with `global_cluster_identifier`. ([#44404](https://github.com/hashicorp/terraform-provider-aws/issues/44404))
+* resource/aws_route53_health_check: Fix `child_health_threshold` to properly accept explicitly specified zero value ([#44006](https://github.com/hashicorp/terraform-provider-aws/issues/44006))
+
+## 6.14.1 (September 22, 2025)
+
+NOTES:
+
+* provider: This release contains both internal provider fixes and a Terraform Plugin SDK V2 update related to a [regression](https://github.com/hashicorp/terraform-provider-aws/issues/44366) which may impact resources that support resource identity ([#44375](https://github.com/hashicorp/terraform-provider-aws/issues/44375))
+
+BUG FIXES:
+
+* provider: Fix `Missing Resource Identity After Update` errors for non-refreshed and failed updates ([#44375](https://github.com/hashicorp/terraform-provider-aws/issues/44375))
+* provider: Fix `Unexpected Identity Change` errors when fully-null identity values in state are updated to valid values ([#44375](https://github.com/hashicorp/terraform-provider-aws/issues/44375))
+
 ## 6.14.0 (September 18, 2025)
 
 FEATURES:
 
+* **New Action:** `aws_cloudfront_create_invalidation` ([#43955](https://github.com/hashicorp/terraform-provider-aws/issues/43955))
+* **New Action:** `aws_ec2_stop_instance` ([#43700](https://github.com/hashicorp/terraform-provider-aws/issues/43700))
+* **New Action:** `aws_lambda_invoke` ([#43972](https://github.com/hashicorp/terraform-provider-aws/issues/43972))
+* **New Action:** `aws_ses_send_email` ([#44214](https://github.com/hashicorp/terraform-provider-aws/issues/44214))
+* **New Action:** `aws_sns_publish` ([#44232](https://github.com/hashicorp/terraform-provider-aws/issues/44232))
 * **New Data Source:** `aws_billing_views` ([#44272](https://github.com/hashicorp/terraform-provider-aws/issues/44272))
 * **New Data Source:** `aws_odb_cloud_autonomous_vm_cluster` ([#43809](https://github.com/hashicorp/terraform-provider-aws/issues/43809))
 * **New Data Source:** `aws_odb_cloud_exadata_infrastructure` ([#43650](https://github.com/hashicorp/terraform-provider-aws/issues/43650))

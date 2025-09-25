@@ -337,6 +337,7 @@ The `lifecycleHook` configuration block supports the following:
 * `hookTargetArn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
 * `roleArn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
 * `lifecycleStages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
+* `hookDetails` - (Optional) Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
 
 ### deployment_circuit_breaker
 
@@ -548,4 +549,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ee22acce3552dc099212eacab2a7cbeea60aad15bc2203bc5b2ed8c576b2b687 -->
+<!-- cache-key: cdktf-0.20.8 input-13ee79b1bb0c230e75b1525bbf94ffff03035001feab327d39bed57c70568ae2 -->
