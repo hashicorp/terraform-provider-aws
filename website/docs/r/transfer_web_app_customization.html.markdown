@@ -40,7 +40,7 @@ resource "aws_transfer_web_app_customization" "test" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `web_app_id` - (Required) The identifier of the web app to be customized.
 

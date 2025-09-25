@@ -98,7 +98,7 @@ resource "aws_transfer_web_app" "example" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `identity_provider_details` - (Required) Block for details of the identity provider to use with the web app. See [Identity provider details](#identity-provider-details) below.
 
