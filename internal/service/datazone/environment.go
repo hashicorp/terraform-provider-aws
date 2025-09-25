@@ -375,8 +375,8 @@ func (r *environmentResource) ImportState(ctx context.Context, req resource.Impo
 
 func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusCreating),
-		Target:                    enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusActive),
+		Pending:                   enum.Slice(awstypes.EnvironmentStatusCreating),
+		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
 		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -396,8 +396,8 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 
 func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusUpdating),
-		Target:                    enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusActive),
+		Pending:                   enum.Slice(awstypes.EnvironmentStatusUpdating),
+		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
 		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
