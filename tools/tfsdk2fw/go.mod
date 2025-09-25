@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.15.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.34.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.38.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.49.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.49.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.51.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.55.5 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.31.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.53.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.50.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.51.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.58.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.67.4 // indirect
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.54.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.41.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dax v1.28.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dax v1.29.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/detective v1.37.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.35.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.39.5 // indirect
@@ -171,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.32.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kms v1.45.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kms v1.45.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.45.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.77.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.5 // indirect
@@ -194,7 +194,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.37.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.56.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.39.6 // indirect
