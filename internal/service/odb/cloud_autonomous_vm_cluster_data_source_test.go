@@ -109,7 +109,7 @@ func (autonomousVMClusterDSTest) avmcBasic() string {
 
 %s
 
-data "aws_odb_db_servers_list" "test" {
+data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
@@ -122,7 +122,7 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   total_container_databases             = 1
   cpu_core_count_per_node               = 40
   license_model                         = "LICENSE_INCLUDED"
-  db_servers                            = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+  db_servers                            = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
   maintenance_window {

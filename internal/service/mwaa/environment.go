@@ -15,7 +15,6 @@ import (
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -445,7 +445,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	environment, err := findEnvironmentByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MWAA Environment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -683,8 +683,7 @@ func findEnvironment(ctx context.Context, conn *mwaa.Client, input *mwaa.GetEnvi
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -699,8 +698,8 @@ func findEnvironment(ctx context.Context, conn *mwaa.Client, input *mwaa.GetEnvi
 	return output.Environment, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *mwaa.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironment(conn *mwaa.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		environment, err := findEnvironmentByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -719,7 +718,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *mwaa.Client, name string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentStatusCreating),
 		Target:  enum.Slice(awstypes.EnvironmentStatusAvailable, awstypes.EnvironmentStatusPending),
-		Refresh: statusEnvironment(ctx, conn, name),
+		Refresh: statusEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
@@ -727,7 +726,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *mwaa.Client, name string,
 
 	if v, ok := outputRaw.(*awstypes.Environment); ok {
 		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
 		}
 
 		return v, err
@@ -740,7 +739,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.Client, name string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentStatusUpdating, awstypes.EnvironmentStatusCreatingSnapshot),
 		Target:  enum.Slice(awstypes.EnvironmentStatusAvailable),
-		Refresh: statusEnvironment(ctx, conn, name),
+		Refresh: statusEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
@@ -748,7 +747,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.Client, name string,
 
 	if v, ok := outputRaw.(*awstypes.Environment); ok {
 		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
 		}
 
 		return v, err
@@ -761,7 +760,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.Client, name string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentStatusDeleting),
 		Target:  []string{},
-		Refresh: statusEnvironment(ctx, conn, name),
+		Refresh: statusEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
@@ -769,7 +768,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.Client, name string,
 
 	if v, ok := outputRaw.(*awstypes.Environment); ok {
 		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
 		}
 
 		return v, err
