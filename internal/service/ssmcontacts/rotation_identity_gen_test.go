@@ -19,14 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSSMContactsRotation_identitySerial(t *testing.T) {
+func testAccSSMContactsRotation_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSMContactsRotation_Identity_Basic,
-		"existingResource":          testAccSSMContactsRotation_Identity_ExistingResource,
-		"existingResourceNoRefresh": testAccSSMContactsRotation_Identity_ExistingResource_NoRefresh_NoChange,
-		"regionOverride":            testAccSSMContactsRotation_Identity_RegionOverride,
+		acctest.CtBasic:    testAccSSMContactsRotation_Identity_Basic,
+		"ExistingResource": testAccSSMContactsRotation_Identity_ExistingResource,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

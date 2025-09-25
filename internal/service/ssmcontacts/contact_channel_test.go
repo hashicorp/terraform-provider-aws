@@ -23,18 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSSMContactsContactChannel_identitySerial(t *testing.T) {
-	t.Helper()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSMContactsContactChannel_Identity_Basic,
-		"existingResource":          testAccSSMContactsContactChannel_Identity_ExistingResource,
-		"existingResourceNoRefresh": testAccSSMContactsContactChannel_Identity_ExistingResource_NoRefresh_NoChange,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
 func testAccContactChannel_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

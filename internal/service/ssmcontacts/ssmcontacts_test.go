@@ -34,7 +34,9 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			acctest.CtDisappears: testAccContactChannel_disappears,
 			acctest.CtName:       testAccContactChannel_name,
 			"type":               testAccContactChannel_type,
-			"identity":           testAccSSMContactsContactChannel_identitySerial,
+			"identity":           testAccSSMContactsContactChannel_IdentitySerial,
+			// TODO: this should be included in the generated _IdentitySerial
+			"identityExistingResourceNoRefresh": testAccSSMContactsContactChannel_Identity_ExistingResource_NoRefresh_NoChange,
 		},
 		"ContactChannelDataSource": {
 			acctest.CtBasic: testAccContactChannelDataSource_basic,
@@ -61,7 +63,10 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"contactIds":         testAccRotation_contactIds,
 			"recurrence":         testAccRotation_recurrence,
 			"tags":               testAccSSMContactsRotation_tagsSerial,
-			"identity":           testAccSSMContactsRotation_identitySerial,
+			"identity":           testAccSSMContactsRotation_IdentitySerial,
+			// TODO: these should be included in the generated _IdentitySerial
+			"identityExistingResourceNoRefresh": testAccSSMContactsRotation_Identity_ExistingResource_NoRefresh_NoChange,
+			"identityRegionOverride":            testAccSSMContactsRotation_Identity_RegionOverride,
 		},
 		"RotationDataSource": {
 			acctest.CtBasic:   testAccRotationDataSource_basic,
