@@ -38,8 +38,7 @@ func TestDefaultIPv6CIDRBlockAssociation(t *testing.T) {
 			{AssociationId: aws.String("some_other_cidr"), Ipv6CidrBlock: aws.String("fd00:2::/64"), Ipv6CidrBlockState: &awstypes.VpcCidrBlockState{State: awstypes.VpcCidrBlockStateCodeAssociated}},
 		},
 	}
-	v := tfec2.DefaultIPv6CIDRBlockAssociation(&vpc, "")
-	if v == nil {
+	if v := tfec2.DefaultIPv6CIDRBlockAssociation(&vpc, ""); v == nil {
 		t.Errorf("defaultIPv6CIDRBlockAssociation() got nil")
 	} else if got, want := aws.ToString(v.AssociationId), "default_cidr"; got != want {
 		t.Errorf("defaultIPv6CIDRBlockAssociation() = %v, want = %v", got, want)
