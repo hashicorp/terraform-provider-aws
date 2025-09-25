@@ -50,6 +50,7 @@ func settingSchema() *schema.Resource {
 			"resource": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "", // This default is required to work around an error seen is some situations with Unknown values
 			},
 			names.AttrValue: {
 				Type:     schema.TypeString,

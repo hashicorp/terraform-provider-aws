@@ -560,13 +560,13 @@ func TestAccElasticBeanstalkEnvironment_taint(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
 								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
-								"resource":  knownvalue.Null(),
+								"resource":  knownvalue.StringExact(""),
 								"value":     knownvalue.StringExact("true"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
 								"name":      knownvalue.StringExact("IamInstanceProfile"),
-								"resource":  knownvalue.Null(),
+								"resource":  knownvalue.StringExact(""),
 								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -629,13 +629,13 @@ func TestAccElasticBeanstalkEnvironment_setting_ComputedValue(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
 								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
-								"resource":  knownvalue.Null(),
+								"resource":  knownvalue.StringExact(""),
 								"value":     knownvalue.StringExact("true"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
 								"name":      knownvalue.StringExact("IamInstanceProfile"),
-								"resource":  knownvalue.Null(),
+								"resource":  knownvalue.StringExact(""),
 								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -704,13 +704,13 @@ func TestAccElasticBeanstalkEnvironment_setting_ForceNew(t *testing.T) {
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
 								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
-								"resource":  knownvalue.Null(),
+								"resource":  knownvalue.StringExact(""),
 								"value":     knownvalue.StringExact("true"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
 								"name":      knownvalue.StringExact("IamInstanceProfile"),
-								"resource":  knownvalue.Null(),
+								"resource":  knownvalue.StringExact(""),
 								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -1994,6 +1994,8 @@ resource "aws_elastic_beanstalk_environment" "test" {
   setting {
     namespace = "aws:ec2:vpc"
     name      = "Subnets"
+    # This contrived example is a simple way to trigger the error with computed values.
+    # It should not be used in production configurations.
     value     = replace("${aws_subnet.test[0].id}${terraform_data.test.output}", terraform_data.test.output,"")
   }
 
