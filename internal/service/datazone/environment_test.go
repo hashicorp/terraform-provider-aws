@@ -282,7 +282,6 @@ resource "aws_security_group" "test" {
 
 resource "aws_datazone_project" "test" {
   domain_identifier   = aws_datazone_domain.test.id
-  glossary_terms      = ["2N8w6XJCwZf"]
   name                = %[1]q
   description         = %[1]q
   skip_deletion_check = true
