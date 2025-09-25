@@ -17,10 +17,17 @@ resource "aws_ssmcontacts_contact" "test" {
   alias = "test-contact-for-${var.rName}"
   type  = "PERSONAL"
 
-  depends_on = [data.aws_ssmincidents_replication_set.test]
-{{- template "tags" . }}
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 # testAccContactChannelConfig_base
 
-data "aws_ssmincidents_replication_set" "test" {}
+resource "aws_ssmincidents_replication_set" "test" {
+  region {
+    name = data.aws_region.current.region
+  }
+}
+
+data "aws_region" "current" {
+{{- template "region" -}}
+}

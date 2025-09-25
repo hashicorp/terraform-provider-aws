@@ -34,8 +34,8 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			acctest.CtDisappears:        testAccContactChannel_disappears,
 			acctest.CtName:              testAccContactChannel_name,
 			"type":                      testAccContactChannel_type,
-			"identity_Basic":            testAccSSMContactsContactChannel_Identity_Basic,
-			"identity_ExistingResource": testAccSSMContactsContactChannel_Identity_ExistingResource,
+			"identityBasic":            testAccSSMContactsContactChannel_Identity_Basic,
+			"identityExistingResource": testAccSSMContactsContactChannel_Identity_ExistingResource,
 		},
 		"ContactChannelDataSource": {
 			acctest.CtBasic: testAccContactChannelDataSource_basic,
