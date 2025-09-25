@@ -15,6 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const (
+	launchTemplateFoundStatus = "Found"
+)
+
 func statusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAvailabilityZoneGroupByName(ctx, conn, name)
@@ -218,6 +222,28 @@ func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn 
 		}
 
 		return nil, "", nil
+	}
+}
+
+func statusLaunchTemplate(ctx context.Context, conn *ec2.Client, id string, idIsName bool) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		var output *awstypes.LaunchTemplate
+		var err error
+		if idIsName {
+			output, err = findLaunchTemplateByName(ctx, conn, id)
+		} else {
+			output, err = findLaunchTemplateByID(ctx, conn, id)
+		}
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, launchTemplateFoundStatus, nil
 	}
 }
 

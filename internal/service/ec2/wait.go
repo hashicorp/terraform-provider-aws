@@ -1125,6 +1125,22 @@ func waitIPAMUpdated(ctx context.Context, conn *ec2.Client, id string, timeout t
 	return nil, err
 }
 
+func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{""},
+		Target:                    enum.Slice(launchTemplateFoundStatus),
+		Refresh:                   statusLaunchTemplate(ctx, conn, id, idIsName),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		NotFoundChecks:            5,
+		ContinuousTargetOccurence: 3,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
 func waitLocalGatewayRouteDeleted(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) (*awstypes.LocalGatewayRoute, error) {
 	const (
 		timeout = 5 * time.Minute
