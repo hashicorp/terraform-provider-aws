@@ -339,6 +339,27 @@ The `certificates` block exports the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_networkfirewall_tls_inspection_configuration.example
+  identity = {
+    "arn" = "arn:aws:network-firewall:us-west-2:123456789012:tls-configuration/example"
+  }
+}
+
+resource "aws_networkfirewall_tls_inspection_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Network Firewall TLS inspection configuration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall TLS Inspection Configuration using the `arn`. For example:
 
 ```terraform

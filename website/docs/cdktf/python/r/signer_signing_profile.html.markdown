@@ -53,6 +53,7 @@ This resource supports the following arguments:
 * `name_prefix` - (Optional, Forces new resource) A signing profile name prefix. Terraform will generate a unique suffix. Conflicts with `name`.
 * `signature_validity_period` - (Optional, Forces new resource) The validity period for a signing job. See [`signature_validity_period` Block](#signature_validity_period-block) below for details.
 * `signing_material` - (Optional, Forces new resource) The AWS Certificate Manager certificate that will be used to sign code with the new signing profile. See [`signing_material` Block](#signing_material-block) below for details.
+* `signing_parameters` - (Optional, Forces new resource) Map of key-value pairs for signing. These can include any information that you want to use during signing.
 * `tags` - (Optional) A list of tags associated with the signing profile. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `signature_validity_period` Block
@@ -114,4 +115,4 @@ Using `terraform import`, import Signer signing profiles using the `name`. For e
 % terraform import aws_signer_signing_profile.test_signer_signing_profile test_sp_DdW3Mk1foYL88fajut4mTVFGpuwfd4ACO6ANL0D1uIj7lrn8adK
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b2cae6165618c2285f79147945ba39654b550254367f20119517ac831f9e4191 -->
+<!-- cache-key: cdktf-0.20.8 input-f72126cf16aca0a1f59467779decc8f215df7dd7697aefa7adb58d83bbcb1e9a -->

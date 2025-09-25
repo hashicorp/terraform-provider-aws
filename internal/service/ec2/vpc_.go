@@ -503,10 +503,10 @@ func resourceVPCImport(ctx context.Context, d *schema.ResourceData, meta any) ([
 func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if diff.HasChange("assign_generated_ipv6_cidr_block") {
 		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
-			return fmt.Errorf("setting ipv6_association_id to computed: %s", err)
+			return fmt.Errorf("setting ipv6_association_id to computed: %w", err)
 		}
 		if err := diff.SetNewComputed("ipv6_cidr_block"); err != nil {
-			return fmt.Errorf("setting ipv6_cidr_block to computed: %s", err)
+			return fmt.Errorf("setting ipv6_cidr_block to computed: %w", err)
 		}
 	}
 

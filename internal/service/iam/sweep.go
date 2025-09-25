@@ -59,6 +59,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_auditmanager_assessment",
 			"aws_batch_compute_environment",
+			"aws_bedrockagent_agent",
 			"aws_cloudformation_stack_set_instance",
 			"aws_cognito_user_pool",
 			"aws_config_configuration_aggregator",
@@ -117,7 +118,7 @@ func sweepGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.IAMClient(ctx)
@@ -350,7 +351,7 @@ func sweepPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.IAMClient(ctx)
@@ -424,7 +425,7 @@ func sweepRoles(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IAMClient(ctx)
 
@@ -505,7 +506,7 @@ func sweepServerCertificates(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IAMClient(ctx)
 
@@ -518,7 +519,7 @@ func sweepServerCertificates(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving IAM Server Certificates: %s", err)
+			return err
 		}
 
 		for _, sc := range page.ServerCertificateMetadataList {
@@ -584,7 +585,7 @@ func sweepUsers(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IAMClient(ctx)
 	prefixes := []string{
@@ -605,7 +606,7 @@ func sweepUsers(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("retrieving IAM Users: %s", err)
+			return err
 		}
 
 		for _, user := range page.Users {
@@ -661,6 +662,7 @@ func roleNameFilter(name string) bool {
 	// exhaustive list.
 	prefixes := []string{
 		"another_rds",
+		"AmazonBedrockExecutionRoleForAgents", // Required role name prefix
 		"AmazonComprehendServiceRole-",
 		"aws_batch_service_role",
 		"aws_elastictranscoder_pipeline_tf_test",

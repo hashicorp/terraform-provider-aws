@@ -7,9 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"net/url"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -17,6 +19,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/go-cty/cty"
+	frameworkdiag "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -26,11 +34,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -200,6 +212,14 @@ func resourceRole() *schema.Resource {
 	}
 }
 
+// @SDKListResource("aws_iam_role")
+func instanceResourceAsListResource() itypes.ListResourceForSDK {
+	l := roleListResource{}
+	l.SetResourceSchema(resourceRole())
+
+	return &l
+}
+
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -306,32 +326,12 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, role.Arn)
-	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, role.Description)
-	d.Set("max_session_duration", role.MaxSessionDuration)
-	d.Set(names.AttrName, role.RoleName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(role.RoleName)))
-	d.Set(names.AttrPath, role.Path)
-	if role.PermissionsBoundary != nil {
-		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
-	} else {
-		d.Set("permissions_boundary", nil)
-	}
-	d.Set("unique_id", role.RoleId)
-
-	assumeRolePolicy, err := url.QueryUnescape(aws.ToString(role.AssumeRolePolicyDocument))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	diags = append(diags, resourceRoleFlatten(ctx, role, d)...)
+	if diags.HasError() {
+		return diags
 	}
 
-	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set("assume_role_policy", policyToSet)
-
+	// `inline_policy` is deprecated, so it's not included in resourceRoleFlatten.
 	inlinePolicies, err := readRoleInlinePolicies(ctx, conn, aws.ToString(role.RoleName))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
@@ -348,13 +348,12 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		}
 	}
 
+	// `managed_policy_arns` is deprecated, so it's not included in resourceRoleFlatten.
 	policyARNs, err := findRoleAttachedPolicies(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
 	}
 	d.Set("managed_policy_arns", policyARNs)
-
-	setTagsOut(ctx, role.Tags)
 
 	return diags
 }
@@ -375,7 +374,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateAssumeRolePolicy(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -609,7 +608,7 @@ func deleteRoleInstanceProfiles(ctx context.Context, conn *iam.Client, roleName 
 
 func retryCreateRole(ctx context.Context, conn *iam.Client, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateRole(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -663,6 +662,59 @@ func findRole(ctx context.Context, conn *iam.Client, input *iam.GetRoleInput) (*
 	}
 
 	return output.Role, nil
+}
+
+func listRoles(ctx context.Context, conn *iam.Client, input *iam.ListRolesInput) iter.Seq2[awstypes.Role, error] {
+	return func(yield func(awstypes.Role, error) bool) {
+		pages := iam.NewListRolesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(awstypes.Role{}, err)
+				return
+			}
+
+			for _, role := range page.Roles {
+				if !yield(role, nil) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func resourceRoleFlatten(ctx context.Context, role *awstypes.Role, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.Set(names.AttrARN, role.Arn)
+	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, role.Description)
+	d.Set("max_session_duration", role.MaxSessionDuration)
+	d.Set(names.AttrName, role.RoleName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(role.RoleName)))
+	d.Set(names.AttrPath, role.Path)
+	if role.PermissionsBoundary != nil {
+		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		d.Set("permissions_boundary", nil)
+	}
+	d.Set("unique_id", role.RoleId)
+
+	assumeRolePolicy, err := url.QueryUnescape(aws.ToString(role.AssumeRolePolicyDocument))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set("assume_role_policy", policyToSet)
+
+	setTagsOut(ctx, role.Tags)
+
+	return diags
 }
 
 func findRoleAttachedPolicies(ctx context.Context, conn *iam.Client, roleName string) ([]string, error) {
@@ -998,4 +1050,143 @@ func roleTags(ctx context.Context, conn *iam.Client, identifier string, optFns .
 	}
 
 	return output, nil
+}
+
+type roleListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type roleListResourceModel struct {
+}
+
+func (l *roleListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+	}
+}
+
+func (l *roleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.IAMClient(ctx)
+
+	var query roleListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input iam.ListRolesInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		result := request.NewListResult(ctx)
+
+		for output, err := range listRoles(ctx, conn, &input) {
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			// Exclude Service-Linked Roles
+			if strings.HasPrefix(aws.ToString(output.Path), "/aws-service-role/") {
+				tflog.Debug(ctx, "Skipping resource", map[string]any{
+					"skip_reason":  "Service-Linked Role",
+					"role_name":    aws.ToString(output.RoleName),
+					names.AttrPath: aws.ToString(output.Path),
+				})
+				continue
+			}
+
+			rd := l.ResourceData()
+			rd.SetId(aws.ToString(output.RoleName))
+			result.Diagnostics.Append(translateDiags(resourceRoleFlatten(ctx, &output, rd))...)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			// set tags
+			err = l.SetTags(ctx, awsClient, rd)
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			result.DisplayName = aws.ToString(output.RoleName)
+
+			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+func translateDiags(in diag.Diagnostics) frameworkdiag.Diagnostics {
+	out := make(frameworkdiag.Diagnostics, len(in))
+	for i, diagIn := range in {
+		var diagOut frameworkdiag.Diagnostic
+		if diagIn.Severity == diag.Error {
+			if len(diagIn.AttributePath) == 0 {
+				diagOut = frameworkdiag.NewErrorDiagnostic(diagIn.Summary, diagIn.Detail)
+			} else {
+				diagOut = frameworkdiag.NewAttributeErrorDiagnostic(translatePath(diagIn.AttributePath), diagIn.Summary, diagIn.Detail)
+			}
+		} else {
+			if len(diagIn.AttributePath) == 0 {
+				diagOut = frameworkdiag.NewWarningDiagnostic(diagIn.Summary, diagIn.Detail)
+			} else {
+				diagOut = frameworkdiag.NewAttributeWarningDiagnostic(translatePath(diagIn.AttributePath), diagIn.Summary, diagIn.Detail)
+			}
+		}
+		out[i] = diagOut
+	}
+	return out
+}
+
+func translatePath(in cty.Path) path.Path {
+	var out path.Path
+
+	if len(in) == 0 {
+		return out
+	}
+
+	step := in[0]
+	switch v := step.(type) {
+	case cty.GetAttrStep:
+		out = path.Root(v.Name)
+	}
+
+	for i := 1; i < len(in); i++ {
+		step := in[i]
+		switch v := step.(type) {
+		case cty.GetAttrStep:
+			out = out.AtName(v.Name)
+
+		case cty.IndexStep:
+			switch v.Key.Type() {
+			case cty.Number:
+				v, _ := v.Key.AsBigFloat().Int64()
+				out = out.AtListIndex(int(v))
+			case cty.String:
+				out = out.AtMapKey(v.Key.AsString())
+			}
+		}
+	}
+
+	return out
 }

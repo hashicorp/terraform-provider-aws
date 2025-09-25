@@ -181,6 +181,16 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_repository_project_name.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_repository_project_name.*", map[string]string{
+						"comparison":    comparison_1,
+						names.AttrValue: value_1,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_repository_provider_type.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_repository_provider_type.*", map[string]string{
+						"comparison":    comparison_1,
+						names.AttrValue: value_1,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_vulnerability_detector_name.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_vulnerability_detector_name.*", map[string]string{
 						"comparison":    comparison_1,
@@ -205,6 +215,16 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_vulnerability_detector_name.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_repository_project_name.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_repository_project_name.*", map[string]string{
+						"comparison":    comparison_2,
+						names.AttrValue: value_2,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_repository_provider_type.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_repository_provider_type.*", map[string]string{
+						"comparison":    comparison_2,
+						names.AttrValue: value_2,
+					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_vulnerability_detector_name.*", map[string]string{
 						"comparison":    comparison_2,
 						names.AttrValue: value_2,
@@ -257,6 +277,11 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.ecr_image_in_use_count.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.ecr_image_in_use_count.*", map[string]string{
+						"lower_inclusive": lower_inclusive_value_1,
+						"upper_inclusive": upper_inclusive_value_1,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.epss_score.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.epss_score.*", map[string]string{
 						"lower_inclusive": lower_inclusive_value_1,
@@ -280,6 +305,11 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.ecr_image_in_use_count.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.ecr_image_in_use_count.*", map[string]string{
+						"lower_inclusive": lower_inclusive_value_2,
+						"upper_inclusive": upper_inclusive_value_2,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.epss_score.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.epss_score.*", map[string]string{
 						"lower_inclusive": lower_inclusive_value_2,
@@ -333,6 +363,11 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.ecr_image_last_in_use_at.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.ecr_image_last_in_use_at.*", map[string]string{
+						"start_inclusive": start_inclusive_value_1,
+						"end_inclusive":   end_inclusive_value_1,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.ecr_image_pushed_at.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.ecr_image_pushed_at.*", map[string]string{
 						"start_inclusive": start_inclusive_value_1,
@@ -356,6 +391,11 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.ecr_image_last_in_use_at.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.ecr_image_last_in_use_at.*", map[string]string{
+						"start_inclusive": start_inclusive_value_2,
+						"end_inclusive":   end_inclusive_value_2,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.ecr_image_pushed_at.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.ecr_image_pushed_at.*", map[string]string{
 						"start_inclusive": start_inclusive_value_2,
@@ -819,6 +859,14 @@ resource "aws_inspector2_filter" "test" {
   description = %[3]q
   reason      = %[4]q
   filter_criteria {
+    code_repository_project_name {
+      comparison = %[5]q
+      value      = %[6]q
+    }
+    code_repository_provider_type {
+      comparison = %[5]q
+      value      = %[6]q
+    }
     code_vulnerability_detector_name {
       comparison = %[5]q
       value      = %[6]q
@@ -836,6 +884,10 @@ resource "aws_inspector2_filter" "test" {
   description = %[3]q
   reason      = %[4]q
   filter_criteria {
+    ecr_image_in_use_count {
+      lower_inclusive = %[5]q
+      upper_inclusive = %[6]q
+    }
     epss_score {
       lower_inclusive = %[5]q
       upper_inclusive = %[6]q
@@ -853,6 +905,10 @@ resource "aws_inspector2_filter" "test" {
   description = %[3]q
   reason      = %[4]q
   filter_criteria {
+    ecr_image_last_in_use_at {
+      start_inclusive = %[5]q
+      end_inclusive   = %[6]q
+    }
     ecr_image_pushed_at {
       start_inclusive = %[5]q
       end_inclusive   = %[6]q

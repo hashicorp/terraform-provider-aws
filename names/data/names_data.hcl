@@ -648,6 +648,38 @@ service "appsync" {
   brand                    = "AWS"
 }
 
+service "arcregionswitch" {
+  cli_v2_command {
+    aws_cli_v2_command           = "arc-region-switch"
+    aws_cli_v2_command_no_dashes = "arcregionswitch"
+  }
+
+  sdk {
+    id             = "ARC Region Switch"
+    arn_namespace  = "arcregionswitch"
+  }
+
+  names {
+    provider_name_upper = "ARCRegionSwitch"
+    human_friendly      = "Application Resilience Controller Region Switch"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListPlans"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_arcregionswitch_"
+  }
+
+  provider_package_correct = "arcregionswitch"
+  doc_prefix               = ["arcregionswitch_"]
+  brand                    = "AWS"
+}
+
 service "athena" {
   sdk {
     id            = "Athena"
@@ -2101,13 +2133,21 @@ service "cognitoidp" {
   }
 
   resource_prefix {
-    actual  = "aws_cognito_(identity_provider|resource|user|risk|log)"
+    actual  = "aws_cognito_(identity_provider|log|managed_login_branding|managed_user|resource|risk|user)"
     correct = "aws_cognitoidp_"
   }
 
   provider_package_correct = "cognitoidp"
-  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk", "cognito_log"]
-  brand                    = "AWS"
+  doc_prefix = [
+    "cognito_identity_provider",
+    "cognito_log",
+    "cognito_managed_login_branding",
+    "cognito_managed_user",
+    "cognito_resource_",
+    "cognito_risk",
+    "cognito_user"
+  ]
+  brand = "AWS"
 }
 
 service "cognitosync" {
@@ -8934,6 +8974,11 @@ service "workmail" {
     human_friendly      = "WorkMail"
   }
 
+  endpoint_info {
+    endpoint_api_call   = "ListResources"
+    endpoint_api_params = "OrganizationId: aws.String(\"m-12345678901234567890123456789012\")"
+  }
+
   resource_prefix {
     correct = "aws_workmail_"
   }
@@ -8941,7 +8986,6 @@ service "workmail" {
   provider_package_correct = "workmail"
   doc_prefix               = ["workmail_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "workmailmessageflow" {

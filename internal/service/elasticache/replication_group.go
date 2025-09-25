@@ -126,7 +126,7 @@ func resourceReplicationGroup() *schema.Resource {
 			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  engineRedis,
+				Computed: true,
 				ValidateDiagFunc: validation.AllDiag(
 					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
 					// While the existing validator makes it technically possible to provide an
@@ -136,6 +136,7 @@ func resourceReplicationGroup() *schema.Resource {
 					// practitioners that stricter validation will be enforced in v7.0.0.
 					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
 				),
+				DiffSuppressFunc: suppressDiffIfBelongsToGlobalReplicationGroup,
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -145,6 +146,7 @@ func resourceReplicationGroup() *schema.Resource {
 					validRedisVersionString,
 					validValkeyVersionString,
 				),
+				DiffSuppressFunc: suppressDiffIfBelongsToGlobalReplicationGroup,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -266,7 +268,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.HasPrefix(old, "global-datastore-")
+					return suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new, d)
 				},
 			},
 			names.AttrPort: {
@@ -415,15 +417,7 @@ func resourceReplicationGroup() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
-			customdiff.ForceNewIf(names.AttrEngine, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				if !diff.HasChange(names.AttrEngine) {
-					return false
-				}
-				if old, new := diff.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
-					return false
-				}
-				return true
-			}),
+			customizeDiffEngineForceNewOnDowngrade(),
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
@@ -492,8 +486,14 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
 		input.CacheNodeType = aws.String(nodeType)
-		input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+
+		// backwards-compatibility; imply redis engine if empty and not part of global replication group
+		if e, ok := d.GetOk(names.AttrEngine); ok {
+			input.Engine = aws.String(e.(string))
+		} else {
+			input.Engine = aws.String(engineRedis)
+		}
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -682,8 +682,6 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("global_replication_group_id", rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
 	}
 
-	d.Set(names.AttrEngine, rgp.Engine)
-
 	switch rgp.AutomaticFailover {
 	case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
 		d.Set("automatic_failover_enabled", false)
@@ -862,7 +860,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if old, new := d.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+		if old, new := d.GetChange(names.AttrEngine); old.(string) != new.(string) && new.(string) == engineValkey {
 			if !d.HasChange(names.AttrEngineVersion) {
 				return sdkdiag.AppendErrorf(diags, "must explicitly set '%s' attribute for Replication Group (%s) when updating engine to 'valkey'", names.AttrEngineVersion, d.Id())
 			}
@@ -872,6 +870,14 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
+			if input.Engine == nil {
+				// backwards-compatibility; imply redis engine if just given engine version
+				if e, ok := d.GetOk(names.AttrEngine); ok {
+					input.Engine = aws.String(e.(string))
+				} else {
+					input.Engine = aws.String(engineRedis)
+				}
+			}
 			requestUpdate = true
 		}
 
@@ -1000,7 +1006,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				if err != nil {
-					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
+					return fmt.Errorf("modifying ElastiCache Replication Group (%s): %w", d.Id(), err)
 				}
 				return nil
 			})
@@ -1022,7 +1028,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				if err != nil {
-					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %s", d.Id(), err)
+					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %w", d.Id(), err)
 				}
 				return nil
 			})
@@ -1498,4 +1504,9 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 		return nil
 	}
 	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
+}
+
+func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
+	_, has_global_replication_group := d.GetOk("global_replication_group_id")
+	return has_global_replication_group && !d.IsNewResource()
 }

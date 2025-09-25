@@ -228,12 +228,60 @@ func TestAccNetworkFirewallRuleGroup_Basic_statelessRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
-						names.AttrPriority:                                   "1",
-						"rule_definition.#":                                  "1",
-						"rule_definition.0.actions.#":                        "1",
-						"rule_definition.0.match_attributes.#":               "1",
-						"rule_definition.0.match_attributes.0.destination.#": "1",
-						"rule_definition.0.match_attributes.0.source.#":      "1",
+						names.AttrPriority:                                                      "1",
+						"rule_definition.#":                                                     "1",
+						"rule_definition.0.actions.#":                                           "1",
+						"rule_definition.0.match_attributes.#":                                  "1",
+						"rule_definition.0.match_attributes.0.destination.#":                    "1",
+						"rule_definition.0.match_attributes.0.destination.0.address_definition": "1.2.3.4/32",
+						"rule_definition.0.match_attributes.0.source.#":                         "1",
+						"rule_definition.0.match_attributes.0.source.0.address_definition":      "124.1.1.5/32",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:drop"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallRuleGroup_Basic_statelessRuleIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ruleGroup networkfirewall.DescribeRuleGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_basicStatelessIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateless)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
+						names.AttrPriority:                                                      "1",
+						"rule_definition.#":                                                     "1",
+						"rule_definition.0.actions.#":                                           "1",
+						"rule_definition.0.match_attributes.#":                                  "1",
+						"rule_definition.0.match_attributes.0.destination.#":                    "1",
+						"rule_definition.0.match_attributes.0.destination.0.address_definition": "1111:0000:0000:0000:0000:0000:0000:0111/128",
+						"rule_definition.0.match_attributes.0.source.#":                         "1",
+						"rule_definition.0.match_attributes.0.source.0.address_definition":      "1111:0000:0000:0000:0000:0000:0000:0000/64",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:drop"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -1577,6 +1625,40 @@ resource "aws_networkfirewall_rule_group" "test" {
               tcp_flag {
                 flags = ["SYN"]
                 masks = ["SYN", "ACK"]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_basicStatelessIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  type     = "STATELESS"
+
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        stateless_rule {
+          priority = 1
+
+          rule_definition {
+            actions = ["aws:drop"]
+
+            match_attributes {
+              destination {
+                address_definition = "1111:0000:0000:0000:0000:0000:0000:0111/128"
+              }
+
+              source {
+                address_definition = "1111:0000:0000:0000:0000:0000:0000:0000/64"
               }
             }
           }

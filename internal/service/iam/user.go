@@ -431,7 +431,7 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, username stri
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
 	}
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err = conn.DeleteLoginProfile(ctx, input)
 		if err != nil {
 			var errNoSuchEntityException *awstypes.NoSuchEntityException
@@ -441,15 +441,13 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, username stri
 			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
 			var etu *awstypes.EntityTemporarilyUnmodifiableException
 			if tfawserr.ErrCodeEquals(err, etu.ErrorCode()) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteLoginProfile(ctx, input)
-	}
+
 	if err != nil {
 		return fmt.Errorf("deleting Account Login Profile: %w", err)
 	}
@@ -545,7 +543,7 @@ func deleteUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing/deleting IAM User (%s) inline policies: %s", username, err)
+		return fmt.Errorf("listing/deleting IAM User (%s) inline policies: %w", username, err)
 	}
 
 	for _, name := range output.PolicyNames {
@@ -560,7 +558,7 @@ func deleteUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 			if errs.IsA[*awstypes.NoSuchEntityException](err) {
 				continue
 			}
-			return fmt.Errorf("deleting IAM User (%s) inline policies: %s", username, err)
+			return fmt.Errorf("deleting IAM User (%s) inline policies: %w", username, err)
 		}
 	}
 
@@ -579,7 +577,7 @@ func detachUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing/detaching IAM User (%s) attached policy: %s", username, err)
+		return fmt.Errorf("listing/detaching IAM User (%s) attached policy: %w", username, err)
 	}
 
 	for _, policy := range output.AttachedPolicies {
@@ -588,7 +586,7 @@ func detachUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 		log.Printf("[DEBUG] Detaching IAM User (%s) attached policy: %s", username, policyARN)
 
 		if err := detachPolicyFromUser(ctx, conn, username, policyARN); err != nil {
-			return fmt.Errorf("detaching IAM User (%s) attached policy: %s", username, err)
+			return fmt.Errorf("detaching IAM User (%s) attached policy: %w", username, err)
 		}
 	}
 
@@ -617,7 +615,7 @@ func userTags(ctx context.Context, conn *iam.Client, identifier string, optFns .
 
 func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUserInput) (*iam.CreateUserOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateUser(ctx, input)
 		},
 		func(err error) (bool, error) {

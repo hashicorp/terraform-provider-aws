@@ -564,13 +564,15 @@ func updateDescription(ctx context.Context, conn *ec2.Client, id string, descrip
 	}
 
 	_, err := conn.ModifyImageAttribute(ctx, &input)
+
 	if err != nil {
-		return fmt.Errorf("updating description: %s", err)
+		return fmt.Errorf("updating description: %w", err)
 	}
 
 	err = waitImageDescriptionUpdated(ctx, conn, id, description)
+
 	if err != nil {
-		return fmt.Errorf("updating description: waiting for completion: %s", err)
+		return fmt.Errorf("updating description: waiting for completion: %w", err)
 	}
 
 	return nil

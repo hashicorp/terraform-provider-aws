@@ -3140,6 +3140,13 @@ resource "aws_iam_role_policy" "test" {
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeVpcs"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": [
+         "codeconnections:GetConnectionToken"
+      ]
     }
   ]
 }

@@ -269,17 +269,21 @@ func resourceComputeEnvironment() *schema.Resource {
 			"update_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
+					// https://docs.aws.amazon.com/batch/latest/APIReference/API_UpdatePolicy.html
 					Schema: map[string]*schema.Schema{
 						"job_execution_timeout_minutes": {
 							Type:         schema.TypeInt,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 360),
 						},
 						"terminate_jobs_on_update": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -889,7 +893,11 @@ func isUpdatableAllocationStrategyDiff(diff *schema.ResourceDiff) bool {
 }
 
 func isUpdatableAllocationStrategy(allocationStrategy awstypes.CRAllocationStrategy) bool {
-	return allocationStrategy == awstypes.CRAllocationStrategyBestFitProgressive || allocationStrategy == awstypes.CRAllocationStrategySpotCapacityOptimized
+	switch allocationStrategy {
+	case awstypes.CRAllocationStrategyBestFitProgressive, awstypes.CRAllocationStrategySpotCapacityOptimized, awstypes.CRAllocationStrategySpotPriceCapacityOptimized:
+		return true
+	}
+	return false
 }
 
 func expandComputeResource(ctx context.Context, tfMap map[string]any) *awstypes.ComputeResource {

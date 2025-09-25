@@ -63,6 +63,7 @@ The following arguments are optional:
 * `security_group_ids` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
 * `skip_final_backup` - (Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `storage_type` - (Optional) The filesystem storage type. Only `SSD` is supported.
+* `user_and_group_quotas` - (Optional) - Specify how much storage users or groups can use on the filesystem. Maximum number of items defined by [FSx for OpenZFS Resource quota](https://docs.aws.amazon.com/fsx/latest/OpenZFSGuide/limits.html#limits-openzfs-resources-file-system). See [`user_and_group_quotas` Block](#user_and_group_quotas-block) Below.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
@@ -178,4 +179,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d0f3f2a4d81f90025831b0d35e5c5cb45f0f8fc9587bd32b8dfed4bb55fc24b9 -->
+<!-- cache-key: cdktf-0.20.8 input-33c08015f404a38d34e23b06b5b3b0c918ba898efbb4a5539061b50cdb2bf651 -->

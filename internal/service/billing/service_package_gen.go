@@ -7,7 +7,6 @@ import (
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -25,6 +24,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newServiceAccountDataSource,
 			TypeName: "aws_billing_service_account",
 			Name:     "Service Account",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newDataSourceViews,
+			TypeName: "aws_billing_views",
+			Name:     "Views",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
@@ -65,7 +70,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *billing.Options) {
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
-				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
 			}
 		},
 		func(o *billing.Options) {

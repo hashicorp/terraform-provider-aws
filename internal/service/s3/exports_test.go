@@ -74,8 +74,10 @@ var (
 	NewObjectARN   = newObjectARN
 	ParseObjectARN = parseObjectARN
 
-	CreateResourceID = createResourceID
-	ParseResourceID  = parseResourceID
+	CreateResourceID          = createResourceID
+	ParseResourceID           = parseResourceID
+	CreateBucketACLResourceID = createBucketACLResourceID
+	ParseBucketACLResourceID  = parseBucketACLResourceID
 
 	DirectoryBucketNameRegex = directoryBucketNameRegex
 
