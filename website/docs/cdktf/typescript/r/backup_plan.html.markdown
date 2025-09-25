@@ -34,6 +34,13 @@ class MyConvertedCode extends TerraformStack {
           },
           resourceType: "EC2",
         },
+        {
+          backupOptions: {
+            BackupACLs: "enabled",
+            BackupObjectTags: "enabled",
+          },
+          resourceType: "S3",
+        },
       ],
       name: "tf_example_backup_plan",
       rule: [
@@ -96,8 +103,8 @@ This resource supports the following arguments:
 
 `advancedBackupSetting` supports the following arguments:
 
-* `backupOptions` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
-* `resourceType` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.
+* `backupOptions` - (Required) Specifies service-specific backup options for the selected resource. For Windows VSS backups, set to `{ WindowsVSS = "enabled" }` (or `"disabled"`). For Amazon S3 backups, configure `{ BackupACLs = "enabled"|"disabled", BackupObjectTags = "enabled"|"disabled" }` to control inclusion of ACLs and object tags.
+* `resourceType` - (Required) The type of AWS resource to be backed up. Valid values: `EC2`, `S3`.
 
 ## Attribute Reference
 
