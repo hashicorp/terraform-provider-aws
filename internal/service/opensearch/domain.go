@@ -1092,6 +1092,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
 		}
 
+		if d.HasChange("aiml_options") {
+			if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
+			}
+		}
+
 		if d.HasChange("auto_tune_options") {
 			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]any)[0].(map[string]any))
 		}
