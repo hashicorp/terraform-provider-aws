@@ -2263,33 +2263,7 @@ func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := testAccRandomDomainName()
-	resourceName := "aws_opensearch_domain.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccOpenSearchDomain_AIMLOptions(t *testing.T) {
+func TestAccOpenSearchDomain_AIMLOptions_createEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2311,17 +2285,157 @@ func TestAccOpenSearchDomain_AIMLOptions(t *testing.T) {
 				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", enabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", disabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", enabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+	enabledState := "ENABLED"
+	disabledState := "DISABLED"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", disabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", enabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", disabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
