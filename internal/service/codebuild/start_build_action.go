@@ -152,7 +152,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		input := codebuild.BatchGetBuildsInput{
 			Ids: []string{buildID},
 		}
-batchGetBuildsOutput, err := conn.BatchGetBuilds(ctx, &input)
+		batchGetBuildsOutput, err := conn.BatchGetBuilds(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError("Getting build status", err.Error())
 			return

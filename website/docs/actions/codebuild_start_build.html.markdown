@@ -34,7 +34,7 @@ resource "aws_codebuild_project" "example" {
   }
 
   source {
-    type = "NO_SOURCE"
+    type      = "NO_SOURCE"
     buildspec = "version: 0.2\nphases:\n  build:\n    commands:\n      - echo 'Hello World'"
   }
 }
@@ -62,9 +62,9 @@ resource "terraform_data" "build_trigger" {
 ```terraform
 action "aws_codebuild_start_build" "deploy" {
   config {
-    project_name = aws_codebuild_project.deploy.name
+    project_name   = aws_codebuild_project.deploy.name
     source_version = "main"
-    timeout = 1800
+    timeout        = 1800
 
     environment_variables_override {
       name  = "ENVIRONMENT"
