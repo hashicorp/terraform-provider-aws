@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Add `sqs_wait_times` configuration block to customize SQS queue operation wait times for local development environments
-```
