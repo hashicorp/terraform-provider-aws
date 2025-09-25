@@ -244,8 +244,8 @@ resource "aws_ssm_patch_baseline" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Patch Baselines using their baseline ID. For example:
 
@@ -270,4 +270,4 @@ Using `terraform import`, import SSM Patch Baselines using their baseline ID. Fo
 % terraform import aws_ssm_patch_baseline.example pb-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0be02c3c9715c01cd0d7d9f51a33e6578aecafb8189ccf285b1b32bfc3e9438c -->
+<!-- cache-key: cdktf-0.20.8 input-94387a30bc11dfbdb19ce1ccfaa3d6957e74ca8bcd4b01b6d6296789b1187934 -->

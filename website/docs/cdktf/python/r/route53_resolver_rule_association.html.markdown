@@ -72,8 +72,8 @@ resource "aws_route53_resolver_rule_association" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rule associations using the `id`. For example:
 
@@ -98,4 +98,4 @@ Using `terraform import`, import Route53 Resolver rule associations using the `i
 % terraform import aws_route53_resolver_rule_association.example rslvr-rrassoc-97242eaf88example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-03cd4083b3fc57cf53a475cfe9cb9086c6c0bd97ffca113d79beb41e9981675a -->
+<!-- cache-key: cdktf-0.20.8 input-80e3c0005e561fa5a0b2f5b934b4ea521983c2557b037cba4e6dff06ff21d50f -->
