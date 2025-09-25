@@ -174,18 +174,21 @@ func resourceDomain() *schema.Resource {
 			"aiml_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"natural_language_query_generation_options": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"desired_state": {
 										Type:             schema.TypeString,
 										Optional:         true,
+										Computed:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.NaturalLanguageQueryGenerationDesiredState](),
 									},
 								},
@@ -194,11 +197,13 @@ func resourceDomain() *schema.Resource {
 						"s3_vectors_engine": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
+										Computed: true,
 										Optional: true,
 									},
 								},
