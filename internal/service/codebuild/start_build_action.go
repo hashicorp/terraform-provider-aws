@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-framework/action"
@@ -29,11 +30,11 @@ type startBuildAction struct {
 }
 
 type startBuildActionModel struct {
-	ProjectName                    types.String                                                `tfsdk:"project_name"`
-	SourceVersion                  types.String                                                `tfsdk:"source_version"`
-	Timeout                        types.Int64                                                 `tfsdk:"timeout"`
-	EnvironmentVariablesOverride   fwtypes.ListNestedObjectValueOf[environmentVariableModel]   `tfsdk:"environment_variables_override"`
-	BuildID                        types.String                                                `tfsdk:"build_id"`
+	ProjectName                  types.String                                              `tfsdk:"project_name"`
+	SourceVersion                types.String                                              `tfsdk:"source_version"`
+	Timeout                      types.Int64                                               `tfsdk:"timeout"`
+	EnvironmentVariablesOverride fwtypes.ListNestedObjectValueOf[environmentVariableModel] `tfsdk:"environment_variables_override"`
+	BuildID                      types.String                                              `tfsdk:"build_id"`
 }
 
 type environmentVariableModel struct {
@@ -102,7 +103,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		timeout = time.Duration(model.Timeout.ValueInt64()) * time.Second
 	}
 
-	tflog.Info(ctx, "Starting CodeBuild project build", map[string]interface{}{
+	tflog.Info(ctx, "Starting CodeBuild project build", map[string]any{
 		"project_name": model.ProjectName.ValueString(),
 	})
 
@@ -122,7 +123,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		return
 	}
 
-	buildID := *output.Build.Id
+	buildID := aws.ToString(output.Build.Id)
 	model.BuildID = types.StringValue(buildID)
 
 	resp.SendProgress(action.InvokeProgressEvent{
@@ -148,9 +149,10 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 			return
 		}
 
-		batchGetBuildsOutput, err := conn.BatchGetBuilds(ctx, &codebuild.BatchGetBuildsInput{
+		input := codebuild.BatchGetBuildsInput{
 			Ids: []string{buildID},
-		})
+		}
+batchGetBuildsOutput, err := conn.BatchGetBuilds(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError("Getting build status", err.Error())
 			return

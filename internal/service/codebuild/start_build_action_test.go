@@ -165,7 +165,7 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    type = "NO_SOURCE"
+    type      = "NO_SOURCE"
     buildspec = "version: 0.2\nphases:\n  build:\n    commands:\n      - echo 'Hello World'"
   }
 }
@@ -242,7 +242,7 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    type = "NO_SOURCE"
+    type      = "NO_SOURCE"
     buildspec = "version: 0.2\nphases:\n  build:\n    commands:\n      - echo \"TEST_VAR is $TEST_VAR\""
   }
 }
@@ -250,7 +250,7 @@ resource "aws_codebuild_project" "test" {
 action "aws_codebuild_start_build" "test" {
   config {
     project_name = aws_codebuild_project.test.name
-    
+
     environment_variables_override {
       name  = "TEST_VAR"
       value = "test_value"
