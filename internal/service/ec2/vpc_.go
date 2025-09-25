@@ -548,7 +548,6 @@ func DefaultIPv6CIDRBlockAssociation(vpc *awstypes.Vpc, associationID string) *a
 		for _, v := range vpc.Ipv6CidrBlockAssociationSet {
 			if v.Ipv6CidrBlockState.State == awstypes.VpcCidrBlockStateCodeAssociated {
 				ipv6CIDRBlockAssociation = v
-				break
 			}
 		}
 	}
