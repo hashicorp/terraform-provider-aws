@@ -184,9 +184,9 @@ func resourceDomain() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"desired_state": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice([]string{"DISABLED", "ENABLED"}, false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.NaturalLanguageQueryGenerationDesiredState](),
 									},
 								},
 							},
@@ -751,8 +751,8 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]any))
 	}
 
-	if v, ok := d.GetOk("aiml_options"); ok {
-		input.AIMLOptions = expandAIMLOptions(v.([]any))
+	if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
@@ -951,6 +951,13 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
+	}
+	if ds.AIMLOptions != nil {
+		if err := d.Set("aiml_options", []interface{}{flattenAIMLOptionsOutput(ds.AIMLOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting aiml_options: %s", err)
+		}
+	} else {
+		d.Set("aiml_options", nil)
 	}
 	d.Set(names.AttrARN, ds.ARN)
 	if v := dc.AutoTuneOptions; v != nil {

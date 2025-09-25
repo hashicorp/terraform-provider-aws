@@ -54,39 +54,50 @@ func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInp
 	return &config
 }
 
-func expandAIMLOptions(a []any) *awstypes.AIMLOptionsInput {
-	config := awstypes.AIMLOptionsInput{}
-	group := a[0].(map[string]any)
-
-	if v, ok := group["natural_language_query_generation_options"].([]any); ok {
-		if len(v) > 0 && v[0] != nil {
-			nlqgo := awstypes.NaturalLanguageQueryGenerationOptionsInput{}
-			nlqgoGroup := v[0].(map[string]any)
-
-			if v, ok := nlqgoGroup["desired_state"].(string); ok && v != "" {
-				if v == "DISABLED" {
-					nlqgo.DesiredState = awstypes.NaturalLanguageQueryGenerationDesiredStateDisabled
-				} else if v == "ENABLED" {
-					nlqgo.DesiredState = awstypes.NaturalLanguageQueryGenerationDesiredStateEnabled
-				}
-			}
-		}
+func expandAIMLOptionsInput(tfMap map[string]any) *awstypes.AIMLOptionsInput {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := group["s3_vectors_engine"].([]any); ok {
-		if len(v) > 0 && v[0] != nil {
-			ve := awstypes.S3VectorsEngine{}
-			veGroup := v[0].(map[string]any)
+	apiObject := &awstypes.AIMLOptionsInput{}
 
-			if veEnabled, ok := veGroup[names.AttrEnabled]; ok {
-				ve.Enabled = aws.Bool(veEnabled.(bool))
-			}
-
-			config.S3VectorsEngine = &ve
-		}
+	if v, ok := tfMap["natural_language_query_generation_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NaturalLanguageQueryGenerationOptions = expandNaturalLanguageQueryGenerationOptionsInput(v[0].(map[string]any))
 	}
 
-	return &config
+	if v, ok := tfMap["s3_vectors_engine"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3VectorsEngine = expandS3VectorsEngine(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandNaturalLanguageQueryGenerationOptionsInput(tfMap map[string]any) *awstypes.NaturalLanguageQueryGenerationOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NaturalLanguageQueryGenerationOptionsInput{}
+
+	if v, ok := tfMap["desired_state"].(string); ok && v != "" {
+		apiObject.DesiredState = awstypes.NaturalLanguageQueryGenerationDesiredState(v)
+	}
+
+	return apiObject
+}
+
+func expandS3VectorsEngine(tfMap map[string]any) *awstypes.S3VectorsEngine {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.S3VectorsEngine{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
 }
 
 func expandAutoTuneOptions(tfMap map[string]any) *awstypes.AutoTuneOptions {
@@ -281,6 +292,48 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSe
 	}
 
 	return []map[string]any{m}
+}
+
+func flattenAIMLOptionsOutput(apiObject *awstypes.AIMLOptionsOutput) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.NaturalLanguageQueryGenerationOptions; v != nil {
+		tfMap["natural_language_query_generation_options"] = []interface{}{flattenNaturalLanguageQueryGenerationOptionsOutput(v)}
+	}
+
+	if v := apiObject.S3VectorsEngine; v != nil {
+		tfMap["s3_vectors_engine"] = []interface{}{flattenS3VectorsEngine(v)}
+	}
+
+	return tfMap
+}
+
+func flattenNaturalLanguageQueryGenerationOptionsOutput(apiObject *awstypes.NaturalLanguageQueryGenerationOptionsOutput) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"desired_state": apiObject.DesiredState,
+	}
+
+	return tfMap
+}
+
+func flattenS3VectorsEngine(apiObject *awstypes.S3VectorsEngine) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	return tfMap
 }
 
 func flattenAutoTuneOptions(autoTuneOptions *awstypes.AutoTuneOptions) map[string]any {
