@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_connect_instance: Add resource identity support ([#44346](https://github.com/hashicorp/terraform-provider-aws/issues/44346))
 * resource/aws_connect_phone_number: Add resource identity support ([#44365](https://github.com/hashicorp/terraform-provider-aws/issues/44365))
 * resource/aws_dsql_cluster: Adds attribute `force_destroy`. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
+* resource/aws_pinpointsmsvoicev2_phone_number: Update `two_way_channel_arn` argument to accept `connect.[region].amazonaws.com` in addition to ARNs ([#44372](https://github.com/hashicorp/terraform-provider-aws/issues/44372))
 * resource/aws_route53recoverycontrolconfig_cluster: Add `network_type` argument ([#44377](https://github.com/hashicorp/terraform-provider-aws/issues/44377))
 * resource/aws_s3control_bucket: Add resource identity support ([#44379](https://github.com/hashicorp/terraform-provider-aws/issues/44379))
 * resource/aws_sfn_activity: Add `arn` argument ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
@@ -28,6 +29,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_servicequotas_service_quota: Fixed a panic that occurred when a non-existing `quota_name` was provided ([#44449](https://github.com/hashicorp/terraform-provider-aws/issues/44449))
 * resource/aws_bedrock_provisioned_model_throughput: Fix `AttributeName("arn") still remains in the path: could not find attribute or block "arn" in schema` errors when upgrading from a pre-v6.0.0 provider version ([#44434](https://github.com/hashicorp/terraform-provider-aws/issues/44434))
 * resource/aws_dsql_cluster: Prevents error when optional attribute `deletion_protection_enabled` not set. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
 * resource/aws_eks_cluster: Change `compute_config`, `kubernetes_network_config.elastic_load_balancing`, and `storage_config.` to Optional and Computed, allowing EKS Auto Mode settings to be enabled, disabled, and removed from configuration ([#44334](https://github.com/hashicorp/terraform-provider-aws/issues/44334))
