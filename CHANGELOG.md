@@ -15,6 +15,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Add `sqs_wait_times` configuration block to customize SQS queue operation wait times for local development environments ([#34787](https://github.com/hashicorp/terraform-provider-aws/issues/34787))
 * resource/aws_connect_instance: Add resource identity support ([#44346](https://github.com/hashicorp/terraform-provider-aws/issues/44346))
 * resource/aws_connect_phone_number: Add resource identity support ([#44365](https://github.com/hashicorp/terraform-provider-aws/issues/44365))
 * resource/aws_dsql_cluster: Adds attribute `force_destroy`. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
