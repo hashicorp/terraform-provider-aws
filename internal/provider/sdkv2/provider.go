@@ -509,7 +509,6 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		}
 	}
 
-	// Parse SQS wait times configuration
 	if v, ok := d.GetOk("sqs_wait_times"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		sqsWaitTimes := v.([]any)[0].(map[string]any)
 		config.SQSWaitTimes = &conns.SQSWaitTimesConfig{

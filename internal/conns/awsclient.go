@@ -41,7 +41,7 @@ type AWSClient struct {
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool                // From provider configuration.
 	s3USEast1RegionalEndpoint string              // From provider configuration.
-	sqsWaitTimes              *SQSWaitTimesConfig // From provider configuration.
+	SQSWaitTimes              *SQSWaitTimesConfig // From provider configuration.
 	stsRegion                 string              // From provider configuration.
 	terraformVersion          string              // From provider configuration.
 }
