@@ -114,6 +114,8 @@ func testAccCheckBuildStarted(ctx context.Context, projectName string) resource.
 
 func testAccStartBuildActionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -144,7 +146,7 @@ resource "aws_iam_role_policy" "test" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:*:*:*"
+        Resource = "arn:${data.aws_partition.current.partition}:logs:*:*:*"
       }
     ]
   })
@@ -191,6 +193,8 @@ resource "terraform_data" "trigger" {
 
 func testAccStartBuildActionConfig_withEnvironmentVariables(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -221,7 +225,7 @@ resource "aws_iam_role_policy" "test" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:*:*:*"
+        Resource = "arn:${data.aws_partition.current.partition}:logs:*:*:*"
       }
     ]
   })
