@@ -53,13 +53,6 @@ The `setting` field supports the following format:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `name`
-* `application`
-* `description`
-* `environment_id`
-* `option_settings`
-* `solution_stack_name`
+This resource exports no additional attributes.
 
 [1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
