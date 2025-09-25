@@ -602,8 +602,8 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration, meta any) error {
 	continuousTargetOccurrence := 6
-	if awsClient, ok := meta.(*conns.AWSClient); ok && awsClient.SQSWaitTimes != nil {
-		continuousTargetOccurrence = awsClient.SQSWaitTimes.CreateContinuousTargetOccurrence
+	if awsClient, ok := meta.(*conns.AWSClient); ok && awsClient.SQSWaitTimes() != nil {
+		continuousTargetOccurrence = awsClient.SQSWaitTimes().CreateContinuousTargetOccurrence
 	}
 
 	stateConf := &retry.StateChangeConf{
@@ -623,8 +623,8 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 
 func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration, meta any) error {
 	continuousTargetOccurrence := 15
-	if awsClient, ok := meta.(*conns.AWSClient); ok && awsClient.SQSWaitTimes != nil {
-		continuousTargetOccurrence = awsClient.SQSWaitTimes.DeleteContinuousTargetOccurrence
+	if awsClient, ok := meta.(*conns.AWSClient); ok && awsClient.SQSWaitTimes() != nil {
+		continuousTargetOccurrence = awsClient.SQSWaitTimes().DeleteContinuousTargetOccurrence
 	}
 
 	stateConf := &retry.StateChangeConf{
