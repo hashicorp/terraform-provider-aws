@@ -285,18 +285,10 @@ func (s *MTLSTestServer) Close() {
 func writeCertificateFiles(t *testing.T, ca *TestCertificateAuthority, clientCert *TestClientCertificate) (caCertFile, clientCertFile, clientKeyFile string) {
 	t.Helper()
 
-	tempDir, err := os.MkdirTemp("", "terraform-aws-provider-e2e-mtls-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp directory: %v", err)
-	}
-	t.Cleanup(func() {
-		if err := os.RemoveAll(tempDir); err != nil {
-			t.Logf("failed to cleanup temp dir: %v", err)
-		}
-	})
+	tempDir := t.TempDir()
 
 	caCertFile = filepath.Join(tempDir, "ca-cert.pem")
-	err = os.WriteFile(caCertFile, ca.certPEM, 0600)
+	err := os.WriteFile(caCertFile, ca.certPEM, 0600)
 	if err != nil {
 		t.Fatalf("Failed to write CA certificate file: %v", err)
 	}
@@ -317,16 +309,17 @@ func writeCertificateFiles(t *testing.T, ca *TestCertificateAuthority, clientCer
 }
 
 func TestMTLSEndToEnd(t *testing.T) {
+	t.Parallel()
 	ca := generateTestCA(t)
 
 	clientCert := ca.generateClientCertificate(t, "terraform-aws-provider-test")
 
-	testServer := newMTLSTestServer(t, ca)
-	defer testServer.Close()
-
 	caCertFile, clientCertFile, clientKeyFile := writeCertificateFiles(t, ca, clientCert)
 
 	t.Run("successful_mtls_connection", func(t *testing.T) {
+		t.Parallel()
+		testServer := newMTLSTestServer(t, ca)
+		defer testServer.Close()
 		config := &Config{
 			ClientCertificate:          clientCertFile,
 			ClientPrivateKey:           clientKeyFile,
@@ -345,7 +338,7 @@ func TestMTLSEndToEnd(t *testing.T) {
 			t.Fatalf("Failed to configure mTLS: %v", err)
 		}
 
-		req, err := http.NewRequest("GET", testServer.url+"/health", nil)
+		req, err := http.NewRequest(http.MethodGet, testServer.url+"/health", nil)
 		if err != nil {
 			t.Fatalf("Failed to create request: %v", err)
 		}
@@ -377,9 +370,12 @@ func TestMTLSEndToEnd(t *testing.T) {
 	})
 
 	t.Run("mtls_connection_without_client_cert_fails", func(t *testing.T) {
+		t.Parallel()
+		testServer := newMTLSTestServer(t, ca)
+		defer testServer.Close()
 		client := &http.Client{}
 
-		req, err := http.NewRequest("GET", testServer.url+"/health", nil)
+		req, err := http.NewRequest(http.MethodGet, testServer.url+"/health", nil)
 		if err != nil {
 			t.Fatalf("Failed to create request: %v", err)
 		}
@@ -391,6 +387,9 @@ func TestMTLSEndToEnd(t *testing.T) {
 	})
 
 	t.Run("mtls_with_wrong_client_cert_fails", func(t *testing.T) {
+		t.Parallel()
+		testServer := newMTLSTestServer(t, ca)
+		defer testServer.Close()
 		wrongCA := generateTestCA(t)
 		wrongClientCert := wrongCA.generateClientCertificate(t, "wrong-client")
 
@@ -414,7 +413,7 @@ func TestMTLSEndToEnd(t *testing.T) {
 			t.Fatalf("Failed to configure mTLS: %v", err)
 		}
 
-		req, err := http.NewRequest("GET", testServer.url+"/health", nil)
+		req, err := http.NewRequest(http.MethodGet, testServer.url+"/health", nil)
 		if err != nil {
 			t.Fatalf("Failed to create request: %v", err)
 		}
@@ -432,6 +431,7 @@ func TestMTLSEndToEnd(t *testing.T) {
 }
 
 func TestMTLSEndToEndWithEncryptedKey(t *testing.T) {
+	t.Parallel()
 	ca := generateTestCA(t)
 
 	clientCert := ca.generateClientCertificate(t, "terraform-aws-provider-encrypted-test")
@@ -442,18 +442,19 @@ func TestMTLSEndToEndWithEncryptedKey(t *testing.T) {
 		t.Fatal("Failed to decode private key PEM")
 	}
 
+	//nolint:staticcheck // SA1019: Using deprecated x509.EncryptPEMBlock for testing backward compatibility
 	encryptedKeyBlock, err := x509.EncryptPEMBlock(rand.Reader, keyBlock.Type, keyBlock.Bytes, []byte(passphrase), x509.PEMCipherAES256)
 	if err != nil {
 		t.Fatalf("Failed to encrypt private key: %v", err)
 	}
 	clientCert.keyPEM = pem.EncodeToMemory(encryptedKeyBlock)
 
-	testServer := newMTLSTestServer(t, ca)
-	defer testServer.Close()
-
 	caCertFile, clientCertFile, clientKeyFile := writeCertificateFiles(t, ca, clientCert)
 
 	t.Run("encrypted_key_with_correct_passphrase", func(t *testing.T) {
+		t.Parallel()
+		testServer := newMTLSTestServer(t, ca)
+		defer testServer.Close()
 		config := &Config{
 			ClientCertificate:          clientCertFile,
 			ClientPrivateKey:           clientKeyFile,
@@ -472,7 +473,7 @@ func TestMTLSEndToEndWithEncryptedKey(t *testing.T) {
 			t.Fatalf("Failed to configure mTLS with encrypted key: %v", err)
 		}
 
-		req, err := http.NewRequest("GET", testServer.url+"/health", nil)
+		req, err := http.NewRequest(http.MethodGet, testServer.url+"/health", nil)
 		if err != nil {
 			t.Fatalf("Failed to create request: %v", err)
 		}
@@ -494,6 +495,9 @@ func TestMTLSEndToEndWithEncryptedKey(t *testing.T) {
 	})
 
 	t.Run("encrypted_key_with_wrong_passphrase", func(t *testing.T) {
+		t.Parallel()
+		testServer := newMTLSTestServer(t, ca)
+		defer testServer.Close()
 		config := &Config{
 			ClientCertificate:          clientCertFile,
 			ClientPrivateKey:           clientKeyFile,

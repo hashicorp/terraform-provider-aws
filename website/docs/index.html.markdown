@@ -62,11 +62,11 @@ For environments requiring mutual TLS authentication:
 ```terraform
 # Configure the AWS Provider with mTLS
 provider "aws" {
-  region                          = "us-east-1"
-  client_certificate              = "/path/to/client-cert.pem"
-  client_private_key              = "/path/to/client-key.pem"
-  client_private_key_passphrase   = "optional-passphrase"
-  custom_ca_bundle                = "/path/to/ca-bundle.pem"
+  region                        = "us-east-1"
+  client_certificate            = "/path/to/client-cert.pem"
+  client_private_key            = "/path/to/client-key.pem"
+  client_private_key_passphrase = "optional-passphrase"
+  custom_ca_bundle              = "/path/to/ca-bundle.pem"
 }
 
 # Create a VPC

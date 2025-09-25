@@ -20,10 +20,10 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/youmark/pkcs8"
@@ -137,6 +137,7 @@ func (ca *testCA) createClientCert(t *testing.T, encrypted bool, passphrase stri
 
 	var clientKeyPEM []byte
 	if encrypted && passphrase != "" {
+		//nolint:staticcheck // SA1019: Using deprecated x509.EncryptPEMBlock for testing backward compatibility
 		encryptedBlock, err := x509.EncryptPEMBlock(rand.Reader, "PRIVATE KEY", clientKeyDER, []byte(passphrase), x509.PEMCipherAES256)
 		if err != nil {
 			t.Fatalf("Failed to encrypt private key: %v", err)
@@ -445,7 +446,6 @@ func handleMockDescribeTableAcc(t *testing.T, w http.ResponseWriter, r *http.Req
 }
 
 func TestAccProvider_DynamoDBMTLS(t *testing.T) {
-
 	ca := createTestCA(t)
 	clientCert := ca.createClientCert(t, false, "")
 
@@ -472,6 +472,7 @@ func TestAccProvider_DynamoDBMTLS(t *testing.T) {
 }
 
 func testAccProviderDynamoDBMTLSConfig(dynamodbEndpoint, clientCert, clientKey, caCert string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -518,13 +519,14 @@ func TestAccProvider_DynamoDBMTLSFailsWithoutCert(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccProviderDynamoDBMTLSConfigNoCert(mockServer.url, caCertFile),
-				ExpectError: regexp.MustCompile("tls|certificate"),
+				ExpectError: regexache.MustCompile("tls|certificate"),
 			},
 		},
 	})
 }
 
 func testAccProviderDynamoDBMTLSConfigNoCert(dynamodbEndpoint, caCert string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -553,7 +555,6 @@ output "table_names" {
 }
 
 func TestAccProvider_DynamoDBMTLSWithEncryptedKey(t *testing.T) {
-
 	ca := createTestCA(t)
 	passphrase := "test-passphrase-123"
 	clientCert := ca.createClientCert(t, true, passphrase)
@@ -623,13 +624,14 @@ func TestAccProvider_DynamoDBMTLSFailsWithoutCABundle(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccProviderDynamoDBMTLSConfigNoCA(mockServer.url, clientCertFile, clientKeyFile),
-				ExpectError: regexp.MustCompile("tls|certificate|x509"),
+				ExpectError: regexache.MustCompile("tls|certificate|x509"),
 			},
 		},
 	})
 }
 
 func testAccProviderDynamoDBMTLSConfigWithPassphrase(dynamodbEndpoint, clientCert, clientKey, passphrase, caCert string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -661,7 +663,6 @@ output "table_names" {
 }
 
 func TestAccProvider_DynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
-
 	ca := createTestCA(t)
 	passphrase := "test_120jvb!9_-passphrase#@"
 	clientCert := ca.createClientCert(t, true, passphrase)
@@ -694,6 +695,7 @@ func TestAccProvider_DynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
 }
 
 func testAccProviderDynamoDBMTLSConfigNoCA(dynamodbEndpoint, clientCert, clientKey string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -718,6 +720,7 @@ data "aws_dynamodb_tables" "test" {
 }
 
 func testAccProviderDynamoDBMTLSConfigEnvVars(dynamodbEndpoint string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"

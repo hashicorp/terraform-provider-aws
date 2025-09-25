@@ -46,8 +46,10 @@ func loadClientCertificate(certFile, keyFile, passphrase string) (tls.Certificat
 					return tls.Certificate{}, fmt.Errorf("failed to convert private key to PKCS#8 format: %w", decryptErr)
 				}
 			} else {
-				// PKCS#5 v1.0 encrypted keys
+				// PKCS#5 v1.0 encrypted keys - using deprecated functions for backward compatibility
+				//nolint:staticcheck // SA1019: Using deprecated x509.IsEncryptedPEMBlock for backward compatibility
 				if x509.IsEncryptedPEMBlock(keyBlock) {
+					//nolint:staticcheck // SA1019: Using deprecated x509.DecryptPEMBlock for backward compatibility
 					decryptedDER, decryptErr = x509.DecryptPEMBlock(keyBlock, []byte(passphrase))
 					if decryptErr != nil {
 						return tls.Certificate{}, fmt.Errorf(
@@ -55,7 +57,7 @@ func loadClientCertificate(certFile, keyFile, passphrase string) (tls.Certificat
 						)
 					}
 				} else {
-					return tls.Certificate{}, fmt.Errorf("failed with decryption: %w", pkcs8Err)
+					return tls.Certificate{}, fmt.Errorf("decryption failed: %w", pkcs8Err)
 				}
 			}
 			decryptedPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: decryptedDER})
