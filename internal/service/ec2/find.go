@@ -1116,6 +1116,48 @@ func findPublicIPv4PoolByID(ctx context.Context, conn *ec2.Client, id string) (*
 	return output, nil
 }
 
+func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) (*awstypes.VolumeAttachment, error) {
+	input := ec2.DescribeVolumesInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"attachment.device":      deviceName,
+			"attachment.instance-id": instanceID,
+		}),
+		VolumeIds: []string{volumeID},
+	}
+
+	output, err := findEBSVolume(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VolumeStateAvailable || state == awstypes.VolumeStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VolumeId) != volumeID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	for _, v := range output.Attachments {
+		if v.State == awstypes.VolumeAttachmentStateDetached {
+			continue
+		}
+
+		if aws.ToString(v.Device) == deviceName && aws.ToString(v.InstanceId) == instanceID {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
 func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
 	input := ec2.DescribeInstancesInput{
 		InstanceIds: []string{id},

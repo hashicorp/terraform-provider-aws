@@ -13,11 +13,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -204,48 +202,6 @@ func volumeAttachmentID(name, volumeID, instanceID string) string {
 	fmt.Fprintf(&buf, "%s-", volumeID)
 
 	return fmt.Sprintf("vai-%d", create.StringHashcode(buf.String()))
-}
-
-func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) (*awstypes.VolumeAttachment, error) {
-	input := ec2.DescribeVolumesInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"attachment.device":      deviceName,
-			"attachment.instance-id": instanceID,
-		}),
-		VolumeIds: []string{volumeID},
-	}
-
-	output, err := findEBSVolume(ctx, conn, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := output.State; state == awstypes.VolumeStateAvailable || state == awstypes.VolumeStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.VolumeId) != volumeID {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	for _, v := range output.Attachments {
-		if v.State == awstypes.VolumeAttachmentStateDetached {
-			continue
-		}
-
-		if aws.ToString(v.Device) == deviceName && aws.ToString(v.InstanceId) == instanceID {
-			return &v, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
 }
 
 func stopVolumeAttachmentInstance(ctx context.Context, conn *ec2.Client, id string, force bool, timeout time.Duration) error {
