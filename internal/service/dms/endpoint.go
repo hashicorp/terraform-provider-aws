@@ -638,21 +638,26 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			expandTopLevelConnectionInfo(d, &input)
 		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
-		settings := &awstypes.PostgreSQLSettings{}
-		if _, ok := d.GetOk("postgres_settings"); ok {
-			settings = expandPostgreSQLSettings(d.Get("postgres_settings").([]any)[0].(map[string]any))
+		var settings *awstypes.PostgreSQLSettings
+
+		if v, ok := d.GetOk("postgres_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			settings = expandPostgreSQLSettings(v.([]any)[0].(map[string]any))
+		} else {
+			settings = &awstypes.PostgreSQLSettings{}
 		}
+		settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
 
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
-			settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
 		} else {
+			if v, ok := d.GetOk(names.AttrPassword); ok {
+				settings.Password = aws.String(v.(string))
+			}
+
 			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
-			settings.Password = aws.String(d.Get(names.AttrPassword).(string))
 			settings.ServerName = aws.String(d.Get("server_name").(string))
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
-			settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, &input)
@@ -705,6 +710,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		var settings = &awstypes.OracleSettings{
 			DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
 		}
+
 		if v, ok := d.GetOk("oracle_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			settings.AuthenticationMethod = expandOracleSettings(v.([]any)).AuthenticationMethod
 		}
@@ -719,11 +725,11 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
 			settings.ServerName = aws.String(d.Get("server_name").(string))
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
-			settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, &input)
 		}
+
 		input.OracleSettings = settings
 	case engineNameRedis:
 		input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]any)[0].(map[string]any))
@@ -736,8 +742,11 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 		} else {
+			if v, ok := d.GetOk(names.AttrPassword); ok {
+				settings.Password = aws.String(v.(string))
+			}
+
 			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
-			settings.Password = aws.String(d.Get(names.AttrPassword).(string))
 			settings.ServerName = aws.String(d.Get("server_name").(string))
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
