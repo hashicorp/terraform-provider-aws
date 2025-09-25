@@ -30,6 +30,7 @@ type startBuildAction struct {
 }
 
 type startBuildActionModel struct {
+	framework.WithRegionModel
 	ProjectName                  types.String                                              `tfsdk:"project_name"`
 	SourceVersion                types.String                                              `tfsdk:"source_version"`
 	Timeout                      types.Int64                                               `tfsdk:"timeout"`
