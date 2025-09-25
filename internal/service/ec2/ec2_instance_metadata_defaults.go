@@ -216,21 +216,6 @@ func (r *instanceMetadataDefaultsResource) Delete(ctx context.Context, request r
 	}
 }
 
-func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awstypes.InstanceMetadataDefaultsResponse, error) {
-	input := ec2.GetInstanceMetadataDefaultsInput{}
-	output, err := conn.GetInstanceMetadataDefaults(ctx, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AccountLevel == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.AccountLevel, nil
-}
-
 type instanceMetadataDefaultsResourceModel struct {
 	framework.WithRegionModel
 	HttpEndpoint            fwtypes.StringEnum[awstypes.DefaultInstanceMetadataEndpointState] `tfsdk:"http_endpoint"`

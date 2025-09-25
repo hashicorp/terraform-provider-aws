@@ -434,6 +434,21 @@ func findInstanceCreditSpecificationByID(ctx context.Context, conn *ec2.Client, 
 	return output, nil
 }
 
+func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awstypes.InstanceMetadataDefaultsResponse, error) {
+	input := ec2.GetInstanceMetadataDefaultsInput{}
+	output, err := conn.GetInstanceMetadataDefaults(ctx, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AccountLevel == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AccountLevel, nil
+}
+
 func findInstanceStatus(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceStatusInput) (*awstypes.InstanceStatus, error) {
 	output, err := findInstanceStatuses(ctx, conn, input)
 
