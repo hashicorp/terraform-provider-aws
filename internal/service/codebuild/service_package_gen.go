@@ -23,6 +23,7 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 			Factory:  newStartBuildAction,
 			TypeName: "aws_codebuild_start_build",
 			Name:     "CodeBuild Start Build",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
