@@ -8,8 +8,6 @@ resource "aws_ssmcontacts_contact_channel" "test" {
 
   name = var.rName
   type = "EMAIL"
-
-{{- template "tags" . }}
 }
 
 resource "aws_ssmcontacts_contact" "test" {
