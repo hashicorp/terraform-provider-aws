@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appstream_stack: Add `domains_require_admin_consent` argument for `storage_connectors`
+```
