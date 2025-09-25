@@ -22,14 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccEnvironment_basic(t *testing.T) {
+func TestAccDataZoneEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -68,14 +68,14 @@ func testAccEnvironment_basic(t *testing.T) {
 	})
 }
 
-func testAccEnvironment_disappears(t *testing.T) {
+func TestAccDataZoneEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -96,7 +96,7 @@ func testAccEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func testAccEnvironment_update(t *testing.T) {
+func TestAccDataZoneEnvironment_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
@@ -104,7 +104,7 @@ func testAccEnvironment_update(t *testing.T) {
 	rNameUpdate := fmt.Sprintf("%s-update", rName)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
