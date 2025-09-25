@@ -48,8 +48,9 @@ const (
 )
 
 type resourceWebAppCustomization struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceWebAppCustomizationModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -357,6 +358,7 @@ func findWebAppCustomizationByID(ctx context.Context, conn *transfer.Client, id 
 }
 
 type resourceWebAppCustomizationModel struct {
+	framework.WithRegionModel
 	ARN         types.String   `tfsdk:"arn"`
 	FaviconFile types.String   `tfsdk:"favicon_file"`
 	ID          types.String   `tfsdk:"id"`

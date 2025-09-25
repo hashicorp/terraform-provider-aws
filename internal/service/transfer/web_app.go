@@ -57,8 +57,9 @@ const (
 )
 
 type resourceWebApp struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceWebAppModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceWebApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -440,6 +441,7 @@ func findWebAppByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 }
 
 type resourceWebAppModel struct {
+	framework.WithRegionModel
 	AccessEndpoint          types.String                                                  `tfsdk:"access_endpoint"`
 	ARN                     types.String                                                  `tfsdk:"arn"`
 	IdentityProviderDetails fwtypes.ListNestedObjectValueOf[identityProviderDetailsModel] `tfsdk:"identity_provider_details"`
