@@ -41,7 +41,7 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(false),
+				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 				),
@@ -59,6 +59,7 @@ func TestAccDSQLCluster_basic(t *testing.T) {
 							"encryption_type":   tfknownvalue.StringExact(awstypes.EncryptionTypeAwsOwnedKmsKey),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_encryption_key"), knownvalue.StringExact("AWS_OWNED_KMS_KEY")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_service_name"), knownvalue.NotNull()),
@@ -90,7 +91,7 @@ func TestAccDSQLCluster_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(false),
+				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdsql.ResourceCluster, resourceName),
@@ -116,7 +117,7 @@ func TestAccDSQLCluster_deletionProtection(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(true),
+				Config: testAccClusterConfig_deletionProtection(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 				),
@@ -137,7 +138,7 @@ func TestAccDSQLCluster_deletionProtection(t *testing.T) {
 				ImportStateVerify:                    true,
 			},
 			{
-				Config: testAccClusterConfig_basic(false),
+				Config: testAccClusterConfig_deletionProtection(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 				),
@@ -148,6 +149,39 @@ func TestAccDSQLCluster_deletionProtection(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccDSQLCluster_forceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster dsql.GetClusterOutput
+	resourceName := "aws_dsql_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_forceDestroy(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(true)),
 				},
 			},
 		},
@@ -281,10 +315,26 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccClusterConfig_basic(deletionProtection bool) string {
+func testAccClusterConfig_basic() string {
+	return `
+resource "aws_dsql_cluster" "test" {
+}
+`
+}
+
+func testAccClusterConfig_deletionProtection(deletionProtection bool) string {
 	return fmt.Sprintf(`
 resource "aws_dsql_cluster" "test" {
   deletion_protection_enabled = %[1]t
+}
+`, deletionProtection)
+}
+
+func testAccClusterConfig_forceDestroy(deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_dsql_cluster" "test" {
+  deletion_protection_enabled = %[1]t
+  force_destroy               = true
 }
 `, deletionProtection)
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -124,19 +125,25 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The list of database servers for the VM cluster. Changing this will create a new resource.",
 			},
 			"disk_redundancy": schema.StringAttribute{
-				CustomType:  diskRedundancyType,
-				Computed:    true,
+				CustomType: diskRedundancyType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The type of redundancy for the VM cluster: NORMAL (2-way) or HIGH (3-way).",
 			},
 			names.AttrDisplayName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "A user-friendly name for the VM cluster. This member is required. Changing this will create a new resource.",
 			},
 			names.AttrDomain: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The domain name associated with the VM cluster.",
 			},
 			"gi_version": schema.StringAttribute{
@@ -150,6 +157,9 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 			//prefix. Therefore, we have hostname_prefix and hostname_prefix_computed
 			"hostname_prefix_computed": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The host name for the VM cluster. Constraints: - Can't be \"localhost\" or \"hostname\". - Can't contain \"-version\". - The maximum length of the combined hostname and domain is 63 characters. - The hostname must be unique within the subnet. " +
 					"This member is required. Changing this will create a new resource.",
 			},
@@ -162,7 +172,10 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 					"This member is required. Changing this will create a new resource.",
 			},
 			"iorm_config_cache": schema.ListAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudVMCExadataIormConfigResourceModel](ctx),
 				Description: "The Exadata IORM (I/O Resource Manager) configuration cache details for the VM cluster.",
 			},
@@ -183,7 +196,10 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "Specifies whether to create a sparse disk group for the VM cluster. Changing this will create a new resource.",
 			},
 			"last_update_history_entry_id": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The OCID of the most recent maintenance update history entry.",
 			},
 			"license_model": schema.StringAttribute{
@@ -196,7 +212,10 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The Oracle license model to apply to the VM cluster. Default: LICENSE_INCLUDED. Changing this will create a new resource.",
 			},
 			"listener_port": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The listener port number configured on the VM cluster.",
 			},
 			"memory_size_in_gbs": schema.Int32Attribute{
@@ -209,19 +228,31 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The amount of memory, in gigabytes (GBs), to allocate for the VM cluster. Changing this will create a new resource.",
 			},
 			"node_count": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The total number of nodes in the VM cluster.",
 			},
 			"ocid": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The OCID (Oracle Cloud Identifier) of the VM cluster.",
 			},
 			"oci_resource_anchor_name": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The name of the OCI resource anchor associated with the VM cluster.",
 			},
 			"oci_url": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The HTTPS link to the VM cluster resource in OCI.",
 			},
 			"odb_network_id": schema.StringAttribute{
@@ -232,25 +263,40 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The unique identifier of the ODB network for the VM cluster. This member is required. Changing this will create a new resource.",
 			},
 			"percent_progress": schema.Float32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Float32{
+					float32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The percentage of progress made on the current operation for the VM cluster.",
 			},
 			"scan_dns_name": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The fully qualified domain name (FQDN) for the SCAN IP addresses associated with the VM cluster.",
 			},
 			"scan_dns_record_id": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The OCID of the DNS record for the SCAN IPs linked to the VM cluster.",
 			},
 			"scan_ip_ids": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The list of OCIDs for SCAN IP addresses associated with the VM cluster.",
 			},
 			"shape": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The hardware model name of the Exadata infrastructure running the VM cluster.",
 			},
 			"ssh_public_keys": schema.SetAttribute{
@@ -263,20 +309,32 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The public key portion of one or more key pairs used for SSH access to the VM cluster. This member is required. Changing this will create a new resource.",
 			},
 			names.AttrStatus: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				CustomType:  statusType,
 				Description: "The current lifecycle status of the VM cluster.",
 			},
 			names.AttrStatusReason: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Additional information regarding the current status of the VM cluster.",
 			},
 			"storage_size_in_gbs": schema.Int32Attribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Description: "The local node storage allocated to the VM cluster, in gigabytes (GB).",
 			},
 			"system_version": schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The operating system version of the image chosen for the VM cluster.",
 			},
 			"scan_listener_port_tcp": schema.Int32Attribute{
@@ -300,19 +358,28 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The configured time zone of the VM cluster. Changing this will create a new resource.",
 			},
 			"vip_ids": schema.ListAttribute{
-				Computed:    true,
-				CustomType:  fwtypes.ListOfStringType,
+				Computed:   true,
+				CustomType: fwtypes.ListOfStringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				ElementType: types.StringType,
 				Description: "The virtual IP (VIP) addresses assigned to the VM cluster. CRS assigns one VIP per node for failover support.",
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
-				Computed:    true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The timestamp when the VM cluster was created.",
 			},
 			"compute_model": schema.StringAttribute{
-				CustomType:  computeModelType,
-				Computed:    true,
+				CustomType: computeModelType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The compute model used when the instance is created or cloned — either ECPU or OCPU. ECPU is a virtualized compute unit; OCPU is a physical processor core with hyper-threading.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
