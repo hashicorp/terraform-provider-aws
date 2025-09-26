@@ -68,6 +68,8 @@ func RegisterSweepers() {
 		Name: "aws_cloudwatch_log_resource_policy",
 		F:    sweepResourcePolicies,
 	})
+
+	awsv2.Register("aws_logs_transformer", sweepTransformers)
 }
 
 func sweepAccountPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
