@@ -76,7 +76,6 @@ mTLS can be configured using provider arguments or environment variables:
 
 ```terraform
 provider "aws" {
-  region                        = "us-east-1"
   client_certificate            = "/path/to/client-cert.pem"
   client_private_key            = "/path/to/client-key.pem"
   client_private_key_passphrase = "optional-passphrase"

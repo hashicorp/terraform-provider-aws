@@ -475,8 +475,6 @@ func testAccProviderDynamoDBMTLSConfig(dynamodbEndpoint, clientCert, clientKey, 
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  region = "us-east-1"
-  
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
@@ -529,8 +527,6 @@ func testAccProviderDynamoDBMTLSConfigNoCert(dynamodbEndpoint, caCert string) st
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  region = "us-east-1"
-  
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
@@ -634,8 +630,6 @@ func testAccProviderDynamoDBMTLSConfigWithPassphrase(dynamodbEndpoint, clientCer
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  region = "us-east-1"
-  
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
@@ -698,8 +692,6 @@ func testAccProviderDynamoDBMTLSConfigNoCA(dynamodbEndpoint, clientCert, clientK
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  region = "us-east-1"
-  
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
@@ -723,8 +715,6 @@ func testAccProviderDynamoDBMTLSConfigEnvVars(dynamodbEndpoint string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  region = "us-east-1"
-  
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
