@@ -17,9 +17,7 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 ### Basic Usage
 
 ```terraform
-data "aws_odb_gi_versions" "example" {
-
-}
+data "aws_odb_gi_versions" "example" {}
 
 data "aws_odb_gi_versions" "example" {
   shape = "Exadata.X11M"

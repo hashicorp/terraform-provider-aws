@@ -17,9 +17,7 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 ### Basic Usage
 
 ```terraform
-data "aws_odb_db_system_shapes" "example" {
-
-}
+data "aws_odb_db_system_shapes" "example" {}
 ```
 
 ## Argument Reference
