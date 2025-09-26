@@ -45,7 +45,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbClusterIdentifier` - (Required) DB Cluster Identifier to associate with the IAM Role.
-* `featureName` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `SupportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
+* `featureName` - (Optional) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `SupportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
 * `roleArn` - (Required) Amazon Resource Name (ARN) of the IAM Role to associate with the DB Cluster.
 
 ## Attribute Reference
@@ -93,4 +93,4 @@ Using `terraform import`, import `aws_rds_cluster_role_association` using the DB
 % terraform import aws_rds_cluster_role_association.example my-db-cluster,arn:aws:iam::123456789012:role/my-role
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-688d17e4a5eaa0877f26c544287305bb4fd0ec6358d28e6c4ebce5ae28a5a75c -->
+<!-- cache-key: cdktf-0.20.8 input-4f6212009019242b584780e03bdd2395b630a4e437aa3aba0f86de0ae1979cc0 -->

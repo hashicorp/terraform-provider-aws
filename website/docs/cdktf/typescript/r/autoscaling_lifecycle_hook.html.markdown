@@ -94,7 +94,7 @@ This resource supports the following arguments:
 * `heartbeatTimeout` - (Optional) Defines the amount of time, in seconds, that can elapse before the lifecycle hook times out. When the lifecycle hook times out, Auto Scaling performs the action defined in the DefaultResult parameter
 * `lifecycleTransition` - (Required) Instance state to which you want to attach the lifecycle hook. For a list of lifecycle hook types, see [describe-lifecycle-hook-types](https://docs.aws.amazon.com/cli/latest/reference/autoscaling/describe-lifecycle-hook-types.html#examples)
 * `notificationMetadata` - (Optional) Contains additional information that you want to include any time Auto Scaling sends a message to the notification target.
-* `notificationTargetArn` - (Optional) ARN of the notification target that Auto Scaling will use to notify you when an instance is in the transition state for the lifecycle hook. This ARN target can be either an SQS queue or an SNS topic.
+* `notificationTargetArn` - (Optional) ARN of the notification target that Auto Scaling will use to notify you when an instance is in the transition state for the lifecycle hook. This ARN target can be either an SQS queue, an SNS topic, or a Lambda function.
 * `roleArn` - (Optional) ARN of the IAM role that allows the Auto Scaling group to publish to the specified notification target.
 
 ## Attribute Reference
@@ -133,4 +133,4 @@ Using `terraform import`, import AutoScaling Lifecycle Hooks using the role auto
 % terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-40775c4a767da232cbe705af20b3056b3ebf2be2bbaefe07ebcba6a2fc43f90f -->
+<!-- cache-key: cdktf-0.20.8 input-3e71820d7bb3d0e712a01c9b7fa3ccc3d5cc16d957d06edf5377f72fe9c92eed -->

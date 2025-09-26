@@ -98,41 +98,37 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalytics.Client, 
 func waitIAMPropagation(ctx context.Context, f func() (any, error)) (any, error) {
 	var output any
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = f()
 
 		// Kinesis Stream: https://github.com/hashicorp/terraform-provider-aws/issues/7032
 		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Kinesis Analytics service doesn't have sufficient privileges") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		// Kinesis Firehose: https://github.com/hashicorp/terraform-provider-aws/issues/7394
 		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Kinesis Analytics doesn't have sufficient privileges") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
 		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "does not provide Invoke permissions on the Lambda resource") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		// S3: https://github.com/hashicorp/terraform-provider-aws/issues/16104
 		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Please check the role provided or validity of S3 location you provided") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = f()
-	}
 
 	if err != nil {
 		return nil, err

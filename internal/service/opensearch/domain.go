@@ -826,7 +826,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDomain(ctx, &input)
 		},
 		domainErrorRetryable,
@@ -849,7 +849,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateDomainConfig(ctx, &input)
 			},
 			domainErrorRetryable,
@@ -1167,7 +1167,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateDomainConfig(ctx, &input)
 			},
 			domainErrorRetryable,

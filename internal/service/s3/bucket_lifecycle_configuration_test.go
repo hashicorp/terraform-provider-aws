@@ -12,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -3978,27 +3977,24 @@ func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n strin
 			lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
 		)
 		var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
-		err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
+		err = tfresource.Retry(ctx, lifecycleConfigurationRulesSteadyTimeout, func(ctx context.Context) *tfresource.RetryError {
 			var err error
 
 			output, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 			if tfresource.NotFound(err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 
 			if lastOutput == nil || !tfs3.LifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
 				lastOutput = output
-				return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
+				return tfresource.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
 			}
 
 			return nil
 		})
-		if tfresource.TimedOut(err) {
-			output, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-		}
 
 		return err
 	}

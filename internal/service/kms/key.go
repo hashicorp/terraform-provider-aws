@@ -33,18 +33,16 @@ import (
 
 // @SDKResource("aws_kms_key", name="Key")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,
 		ReadWithoutTimeout:   resourceKeyRead,
 		UpdateWithoutTimeout: resourceKeyUpdate,
 		DeleteWithoutTimeout: resourceKeyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(iamPropagationTimeout),
@@ -446,7 +444,7 @@ func findDefaultKeyARNForService(ctx context.Context, conn *kms.Client, service,
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("reading KMS Key (%s): %s", keyID, err)
+		return "", fmt.Errorf("reading KMS Key (%s): %w", keyID, err)
 	}
 
 	return aws.ToString(key.Arn), nil

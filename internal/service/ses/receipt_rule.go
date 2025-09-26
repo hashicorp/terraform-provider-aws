@@ -296,7 +296,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateReceiptRule(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -498,7 +498,7 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.UpdateReceiptRule(ctx, input)
 		},
 		func(err error) (bool, error) {

@@ -2862,7 +2862,7 @@ func testAccCheckSecurityGroupRuleLimit(n string, v *int) resource.TestCheckFunc
 
 		limit, err := strconv.Atoi(rs.Primary.Attributes[names.AttrValue])
 		if err != nil {
-			return fmt.Errorf("converting value to int: %s", err)
+			return fmt.Errorf("converting value to int: %w", err)
 		}
 
 		*v = limit

@@ -22,16 +22,15 @@ import (
 )
 
 // @SDKResource("aws_kms_alias", name="Alias")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.AliasListEntry")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
 		ReadWithoutTimeout:   resourceAliasRead,
 		UpdateWithoutTimeout: resourceAliasUpdate,
 		DeleteWithoutTimeout: resourceAliasDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

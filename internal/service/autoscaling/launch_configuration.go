@@ -404,7 +404,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return autoscalingconn.CreateLaunchConfiguration(ctx, &input)
 		},
 		func(err error) (bool, error) {

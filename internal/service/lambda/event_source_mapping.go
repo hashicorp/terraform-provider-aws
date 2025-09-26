@@ -848,7 +848,7 @@ type eventSourceMappingCU interface {
 
 func retryEventSourceMapping[T eventSourceMappingCU](ctx context.Context, f func() (*T, error)) (*T, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {

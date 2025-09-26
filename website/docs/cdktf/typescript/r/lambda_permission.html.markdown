@@ -330,6 +330,35 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lambda_permission.example
+  identity = {
+    function_name = "my_test_lambda_function"
+    statement_id  = "AllowExecutionFromCloudWatch"
+  }
+}
+
+resource "aws_lambda_permission" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `functionName` (String) Lambda function name.
+* `statementId` (String) Statement ID for the permission.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `qualifier` (String) Qualifier for the function version or alias.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda permission statements using function_name/statement_id with an optional qualifier. For example:
 
 ```typescript
@@ -346,7 +375,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     LambdaPermission.generateConfigForImport(
       this,
-      "testLambdaPermission",
+      "example",
       "my_test_lambda_function/AllowExecutionFromCloudWatch"
     );
   }
@@ -370,7 +399,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     LambdaPermission.generateConfigForImport(
       this,
-      "testLambdaPermission",
+      "example",
       "my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch"
     );
   }
@@ -382,7 +411,7 @@ For backwards compatibility, the following legacy `terraform import` commands ar
 
 ```console
 % terraform import aws_lambda_permission.example my_test_lambda_function/AllowExecutionFromCloudWatch
-% terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
+% terraform import aws_lambda_permission.example my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9e6dfb44d75ae3db05e77504e7e74d74631a3263cb7151673a23aff18efb82c2 -->
+<!-- cache-key: cdktf-0.20.8 input-732728be324117ad18b6795e1a8f120ce6cb3eb6537cd6f40d5b183c970d97aa -->
