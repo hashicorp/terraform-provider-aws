@@ -7,6 +7,7 @@ BREAKING CHANGES:
 FEATURES:
 
 * **New Action:** `aws_codebuild_start_build` ([#44444](https://github.com/hashicorp/terraform-provider-aws/issues/44444))
+* **New Action:** `aws_sfn_start_execution` ([#44464](https://github.com/hashicorp/terraform-provider-aws/issues/44464))
 * **New Data Source:** `aws_appconfig_application` ([#44168](https://github.com/hashicorp/terraform-provider-aws/issues/44168))
 * **New Data Source:** `aws_odb_db_node` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
 * **New Data Source:** `aws_odb_db_nodes` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
@@ -36,6 +37,7 @@ BUG FIXES:
 
 * data-source/aws_servicequotas_service_quota: Fixed a panic that occurred when a non-existing `quota_name` was provided ([#44449](https://github.com/hashicorp/terraform-provider-aws/issues/44449))
 * resource/aws_bedrock_provisioned_model_throughput: Fix `AttributeName("arn") still remains in the path: could not find attribute or block "arn" in schema` errors when upgrading from a pre-v6.0.0 provider version ([#44434](https://github.com/hashicorp/terraform-provider-aws/issues/44434))
+* resource/aws_chatbot_slack_channel_configuration: Force resource replacement when `configuration_name` is modified ([#43996](https://github.com/hashicorp/terraform-provider-aws/issues/43996))
 * resource/aws_default_vpc: Correctly set `ipv6_cidr_block` when the VPC has multiple associated IPv6 CIDRs ([#44362](https://github.com/hashicorp/terraform-provider-aws/issues/44362))
 * resource/aws_dsql_cluster: Prevents error when optional attribute `deletion_protection_enabled` not set. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
 * resource/aws_eks_cluster: Change `compute_config`, `kubernetes_network_config.elastic_load_balancing`, and `storage_config.` to Optional and Computed, allowing EKS Auto Mode settings to be enabled, disabled, and removed from configuration ([#44334](https://github.com/hashicorp/terraform-provider-aws/issues/44334))
