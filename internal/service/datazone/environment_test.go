@@ -33,6 +33,7 @@ func TestAccDataZoneEnvironment_serial(t *testing.T) {
 		acctest.CtBasic:            testAccDataZoneEnvironment_basic,
 		acctest.CtDisappears:       testAccDataZoneEnvironment_disappears,
 		"updateNameAndDescription": testAccDataZoneEnvironment_updateNameAndDescription,
+		"accountIDAndRegion":       testAccDataZoneEnvironment_accountIDAndRegion,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -146,6 +147,40 @@ func testAccDataZoneEnvironment_updateNameAndDescription(t *testing.T) {
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate+"-description"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_accountIDAndRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_accountIDAndRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "account_region", acctest.Region()),
 				),
 			},
 			{
@@ -377,4 +412,32 @@ resource "aws_datazone_environment_profile" "test" {
   domain_identifier                = aws_datazone_domain.test.id
 }
 `, rName, rNameUpdated))
+}
+
+func testAccEnvironmentConfig_accountIDAndRegion(rName string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[1]q
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  account_identifier   = data.aws_caller_identity.test.account_id
+  account_region       = data.aws_region.test.region
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+
+resource "aws_datazone_environment_profile" "test" {
+  name                             = %[1]q
+  aws_account_id                   = data.aws_caller_identity.test.account_id
+  aws_account_region               = data.aws_region.test.region
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
+  project_identifier               = aws_datazone_project.test.id
+  domain_identifier                = aws_datazone_domain.test.id
+}
+`, rName))
 }
