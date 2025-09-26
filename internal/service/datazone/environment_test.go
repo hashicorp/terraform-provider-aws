@@ -13,7 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -42,20 +45,24 @@ func TestAccDataZoneEnvironment_basic(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "account_region"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "account_region", acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, "blueprint_identifier", "aws_datazone_environment_blueprint_configuration.test", "environment_blueprint_id"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "blueprint_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "profile_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "user_parameters.#", "3"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", "aws_datazone_domain.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_identifier", "aws_datazone_environment_profile.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "project_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "provider_environment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", "aws_datazone_project.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "provider_environment", "Amazon DataZone"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glossary_terms"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_resources"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -311,20 +318,6 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
     }
   }
 }
-
-resource "aws_datazone_environment_profile" "test" {
-  aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.region
-  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
-  description                      = %[1]q
-  name                             = %[1]q
-  project_identifier               = aws_datazone_project.test.id
-  domain_identifier                = aws_datazone_domain.test.id
-  user_parameters {
-    name  = "consumerGlueDbName"
-    value = "value"
-  }
-}
 `, rName)
 }
 
@@ -332,32 +325,23 @@ func testAccEnvironmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datazone_environment" "test" {
   name                 = %[1]q
-  description          = %[1]q
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.region
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
   domain_identifier    = aws_datazone_domain.test.id
 
-  user_parameters {
-    name  = "consumerGlueDbName"
-    value = "%[1]s-consumer"
-  }
-
-  user_parameters {
-    name  = "producerGlueDbName"
-    value = "%[1]s-producer"
-  }
-
-  user_parameters {
-    name  = "workgroupName"
-    value = "%[1]s-workgroup"
-  }
-
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
   ]
+}
+
+resource "aws_datazone_environment_profile" "test" {
+  name                             = %[1]q
+  aws_account_id                   = data.aws_caller_identity.test.account_id
+  aws_account_region               = data.aws_region.test.region
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
+  project_identifier               = aws_datazone_project.test.id
+  domain_identifier                = aws_datazone_domain.test.id
 }
 `, rName))
 }
@@ -392,6 +376,15 @@ resource "aws_datazone_environment" "test" {
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
   ]
+}
+
+resource "aws_datazone_environment_profile" "test" {
+  name                             = %[1]q
+  aws_account_id                   = data.aws_caller_identity.test.account_id
+  aws_account_region               = data.aws_region.test.region
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
+  project_identifier               = aws_datazone_project.test.id
+  domain_identifier                = aws_datazone_domain.test.id
 }
 `, rName, rNameUpdated))
 }
