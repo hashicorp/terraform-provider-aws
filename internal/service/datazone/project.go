@@ -342,10 +342,12 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 
 func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
-		Target:  []string{},
-		Refresh: statusProject(ctx, conn, domain, identifier),
-		Timeout: timeout,
+		Pending:      enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
+		Target:       []string{},
+		Refresh:      statusProject(ctx, conn, domain, identifier),
+		Delay:        5 * time.Second,
+		PollInterval: 10 * time.Second,
+		Timeout:      timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
