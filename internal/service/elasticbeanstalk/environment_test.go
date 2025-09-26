@@ -2024,7 +2024,7 @@ func testAccEnvironmentConfig_setting_ForceNew(rName, value string) string {
 		testAccEnvironmentConfig_setting_ValueChange(rName),
 		fmt.Sprintf(`
 resource "terraform_data" "test" {
-  input = %[2]q
+  input            = %[2]q
   triggers_replace = [%[2]q]
 }
 `, rName, value))
@@ -2044,7 +2044,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
     name      = "Subnets"
     # This contrived example is a simple way to trigger the error with computed values.
     # It should not be used in production configurations.
-    value     = replace("${aws_subnet.test[0].id}${terraform_data.test.output}", terraform_data.test.output,"")
+    value = replace("${aws_subnet.test[0].id}${terraform_data.test.output}", terraform_data.test.output, "")
   }
 
   setting {
