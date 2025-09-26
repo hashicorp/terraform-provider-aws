@@ -600,28 +600,28 @@ func TestAccElasticBeanstalkEnvironment_taint(t *testing.T) {
 
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
-								"name":      knownvalue.StringExact("Subnets"),
-								"resource":  knownvalue.StringExact(""),
-								// "value":    Unknown value,
+								names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+								names.AttrName:      knownvalue.StringExact("Subnets"),
+								"resource":          knownvalue.StringExact(""),
+								// "value":          Unknown value,
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
-								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
-								"resource":  knownvalue.StringExact(""),
-								"value":     knownvalue.StringExact("true"),
+								names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+								names.AttrName:      knownvalue.StringExact("AssociatePublicIpAddress"),
+								"resource":          knownvalue.StringExact(""),
+								names.AttrValue:     knownvalue.StringExact(acctest.CtTrue),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
-								"name":      knownvalue.StringExact("IamInstanceProfile"),
-								"resource":  knownvalue.StringExact(""),
-								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
+								names.AttrNamespace: knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+								names.AttrName:      knownvalue.StringExact("IamInstanceProfile"),
+								"resource":          knownvalue.StringExact(""),
+								names.AttrValue:     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
-								"name":      knownvalue.StringExact("ENV_TEST"),
-								"resource":  knownvalue.StringExact(""),
-								// "value":    Unknown value,
+								names.AttrNamespace: knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
+								names.AttrName:      knownvalue.StringExact("ENV_TEST"),
+								"resource":          knownvalue.StringExact(""),
+								// "value":          Unknown value,
 							}),
 						})),
 					},
@@ -669,28 +669,28 @@ func TestAccElasticBeanstalkEnvironment_setting_ComputedValue(t *testing.T) {
 
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
-								"name":      knownvalue.StringExact("Subnets"),
-								"resource":  knownvalue.StringExact(""),
-								// "value":    Unknown value,
+								names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+								names.AttrName:      knownvalue.StringExact("Subnets"),
+								"resource":          knownvalue.StringExact(""),
+								// "value":          Unknown value,
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
-								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
-								"resource":  knownvalue.StringExact(""),
-								"value":     knownvalue.StringExact("true"),
+								names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+								names.AttrName:      knownvalue.StringExact("AssociatePublicIpAddress"),
+								"resource":          knownvalue.StringExact(""),
+								names.AttrValue:     knownvalue.StringExact(acctest.CtTrue),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
-								"name":      knownvalue.StringExact("IamInstanceProfile"),
-								"resource":  knownvalue.StringExact(""),
-								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
+								names.AttrNamespace: knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+								names.AttrName:      knownvalue.StringExact("IamInstanceProfile"),
+								"resource":          knownvalue.StringExact(""),
+								names.AttrValue:     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
-								"name":      knownvalue.StringExact("ENV_TEST"),
-								"resource":  knownvalue.StringExact(""),
-								// "value":    Unknown value,
+								names.AttrNamespace: knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
+								names.AttrName:      knownvalue.StringExact("ENV_TEST"),
+								"resource":          knownvalue.StringExact(""),
+								// "value":          Unknown value,
 							}),
 						})),
 					},
@@ -744,28 +744,28 @@ func TestAccElasticBeanstalkEnvironment_setting_ForceNew(t *testing.T) {
 
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("setting"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
-								"name":      knownvalue.StringExact("Subnets"),
-								"resource":  knownvalue.StringExact(""),
-								// "value":    Unknown value,
+								names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+								names.AttrName:      knownvalue.StringExact("Subnets"),
+								"resource":          knownvalue.StringExact(""),
+								// "value":          Unknown value,
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:ec2:vpc"),
-								"name":      knownvalue.StringExact("AssociatePublicIpAddress"),
-								"resource":  knownvalue.StringExact(""),
-								"value":     knownvalue.StringExact("true"),
+								names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
+								names.AttrName:      knownvalue.StringExact("AssociatePublicIpAddress"),
+								"resource":          knownvalue.StringExact(""),
+								names.AttrValue:     knownvalue.StringExact(acctest.CtTrue),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
-								"name":      knownvalue.StringExact("IamInstanceProfile"),
-								"resource":  knownvalue.StringExact(""),
-								"value":     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
+								names.AttrNamespace: knownvalue.StringExact("aws:autoscaling:launchconfiguration"),
+								names.AttrName:      knownvalue.StringExact("IamInstanceProfile"),
+								"resource":          knownvalue.StringExact(""),
+								names.AttrValue:     knownvalue.NotNull(), // Pair: aws_iam_instance_profile.test.name
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
-								"name":      knownvalue.StringExact("ENV_TEST"),
-								"resource":  knownvalue.StringExact(""),
-								// "value":    Unknown value,
+								names.AttrNamespace: knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
+								names.AttrName:      knownvalue.StringExact("ENV_TEST"),
+								"resource":          knownvalue.StringExact(""),
+								// "value":          Unknown value,
 							}),
 						})),
 					},
@@ -1107,7 +1107,7 @@ func settingsChecks_basic() []knownvalue.Check {
 			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
 			names.AttrName:      knownvalue.StringExact("AssociatePublicIpAddress"),
 			"resource":          knownvalue.StringExact(""),
-			names.AttrValue:     knownvalue.StringExact("true"),
+			names.AttrValue:     knownvalue.StringExact(acctest.CtTrue),
 		}),
 
 		knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2081,7 +2081,7 @@ func settingsChecks_ValueChanged(envVal string) []knownvalue.Check {
 			names.AttrNamespace: knownvalue.StringExact("aws:ec2:vpc"),
 			names.AttrName:      knownvalue.StringExact("AssociatePublicIpAddress"),
 			"resource":          knownvalue.StringExact(""),
-			names.AttrValue:     knownvalue.StringExact("true"),
+			names.AttrValue:     knownvalue.StringExact(acctest.CtTrue),
 		}),
 
 		knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2095,7 +2095,7 @@ func settingsChecks_ValueChanged(envVal string) []knownvalue.Check {
 			names.AttrNamespace: knownvalue.StringExact("aws:elasticbeanstalk:application:environment"),
 			names.AttrName:      knownvalue.StringExact("ENV_TEST"),
 			"resource":          knownvalue.StringExact(""),
-			"value":             knownvalue.StringExact(envVal),
+			names.AttrValue:     knownvalue.StringExact(envVal),
 		}),
 	}
 }
