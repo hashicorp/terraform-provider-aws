@@ -53,6 +53,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_appfabric_app_bundle.example
+  identity = {
+    "arn" = "arn:aws:appfabric:us-east-1:123456789012:appbundle/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_appfabric_app_bundle" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the AppFabric app bundle.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFabric AppBundle using the `arn`. For example:
 
 ```python
@@ -76,4 +97,4 @@ Using `terraform import`, import AppFabric AppBundle using the `arn`. For exampl
 % terraform import aws_appfabric_app_bundle.example arn:aws:appfabric:[region]:[account]:appbundle/ee5587b4-5765-4288-a202-xxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-52d5d75f58a7d7cd9c69185369acf2ef23361c0f1ffebf684a6cc6d285c2d6e0 -->
+<!-- cache-key: cdktf-0.20.8 input-adfd9b72bcaa3a5fecb0cf1d6744e4648ec940c31bee27706940c0fbc133ce6a -->

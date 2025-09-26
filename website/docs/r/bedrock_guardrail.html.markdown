@@ -189,10 +189,18 @@ The `tier_config` configuration block supports the following arguments:
 #### Managed Word Lists Config
 
 * `type` (Required) Options for managed words.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 
 #### Words Config
 
 * `text` (Required) The custom word text.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 
 ## Attribute Reference
 

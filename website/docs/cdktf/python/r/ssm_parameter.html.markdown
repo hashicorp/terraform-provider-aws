@@ -115,6 +115,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_parameter.example
+  identity = {
+    name = "/my_path/my_paramname"
+  }
+}
+
+resource "aws_ssm_parameter" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the parameter.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Parameters using the parameter store `name`. For example:
 
 ```python
@@ -129,13 +155,13 @@ from imports.aws.ssm_parameter import SsmParameter
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SsmParameter.generate_config_for_import(self, "myParam", "/my_path/my_paramname")
+        SsmParameter.generate_config_for_import(self, "example", "/my_path/my_paramname")
 ```
 
 Using `terraform import`, import SSM Parameters using the parameter store `name`. For example:
 
 ```console
-% terraform import aws_ssm_parameter.my_param /my_path/my_paramname
+% terraform import aws_ssm_parameter.example /my_path/my_paramname
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a232bcf8a0c2cf54365938efe48323f887180b91090ca98841d9a0e0edcf7470 -->
+<!-- cache-key: cdktf-0.20.8 input-8600438d57457239f3f4174b57f4c616d64edd0c78e9d50de39cf38ab0932838 -->

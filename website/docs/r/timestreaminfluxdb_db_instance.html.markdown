@@ -253,7 +253,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `availability_zone` - Availability Zone in which the DB instance resides.
 * `endpoint` - Endpoint used to connect to InfluxDB. The default InfluxDB port is 8086.
 * `id` - ID of the Timestream for InfluxDB instance.
-* `influx_auth_parameters_secret_arn` - ARN of the AWS Secrets Manager secret containing the initial InfluxDB authorization parameters. The secret value is a JSON formatted key-value pair holding InfluxDB authorization values: organization, bucket, username, and password. This secret will be read by the `aws_timestreaminfluxdb_db_instance` resource in order to support importing: deleting the secret or secret values can cause errors.
+* `influx_auth_parameters_secret_arn` - ARN of the AWS Secrets Manager secret containing the initial InfluxDB authorization parameters. The secret value is a JSON formatted key-value pair holding InfluxDB authorization values: organization, bucket, username, and password.
 * `secondary_availability_zone` - Availability Zone in which the standby instance is located when deploying with a MultiAZ standby instance.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

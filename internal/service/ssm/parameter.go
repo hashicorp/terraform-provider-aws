@@ -268,7 +268,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		timeout = 2 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return findParameterByName(ctx, conn, d.Id(), true)
 		},
 		func(err error) (bool, error) {

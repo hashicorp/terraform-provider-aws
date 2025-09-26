@@ -25,15 +25,22 @@ from cdktf import Token, TerraformStack
 # See https://cdk.tf/provider-generation for more details.
 #
 from imports.aws.bcmdataexports_export import BcmdataexportsExport
+from imports.aws.data_aws_caller_identity import DataAwsCallerIdentity
+from imports.aws.data_aws_partition import DataAwsPartition
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        current = DataAwsCallerIdentity(self, "current")
+        data_aws_partition_current = DataAwsPartition(self, "current_1")
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        data_aws_partition_current.override_logical_id("current")
         BcmdataexportsExport(self, "test",
             export=[BcmdataexportsExportExport(
                 data_query=[BcmdataexportsExportExportDataQuery(
                     query_statement="SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT",
                     table_configurations={
                         "COST_AND_USAGE_REPORT": {
+                            "BILLING_VIEW_ARN": "arn:${" + data_aws_partition_current.partition + "}:billing::${" + current.account_id + "}:billingview/primary",
                             "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY": "FALSE",
                             "INCLUDE_RESOURCES": "FALSE",
                             "INCLUDE_SPLIT_COST_ALLOCATION_DATA": "FALSE",
@@ -84,8 +91,8 @@ The following arguments are required:
 
 ### `data_query` Argument Reference
 
-* `query_statement` - (Required) Query statement.
-* `table_configurations` - (Optional) Table configuration.
+* `query_statement` - (Required) Query statement. The SQL table name for CUR 2.0 is `COST_AND_USAGE_REPORT`. See the [AWS documentation](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-cur2.html) for a list of available columns.
+* `table_configurations` - (Optional) Table configuration. See the [AWS documentation](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-cur2.html#cur2-table-configurations) for the available configurations. In addition to those listed in the documentation, `BILLING_VIEW_ARN` must also be included, as shown in the example above.
 
 ### `destination_configurations` Argument Reference
 
@@ -125,6 +132,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bcmdataexports_export.example
+  identity = {
+    "arn" = "arn:aws:bcm-data-exports:us-east-1:123456789012:export/example-export"
+  }
+}
+
+resource "aws_bcmdataexports_export" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the BCM Data Exports export.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import BCM Data Exports Export using the export ARN. For example:
 
 ```python
@@ -148,4 +176,4 @@ Using `terraform import`, import BCM Data Exports Export using the export ARN. F
 % terraform import aws_bcmdataexports_export.example arn:aws:bcm-data-exports:us-east-1:123456789012:export/CostUsageReport-9f1c75f3-f982-4d9a-b936-1e7ecab814b7
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1b62df35ac173a6bb8bc0c92effbdaf999c6237450a085fe2929aa33fe8e656d -->
+<!-- cache-key: cdktf-0.20.8 input-038fd0ca0bfd8a2b65e6caad433b1dbf6d39d770bb2ec2ce5fef6a1727ea1041 -->

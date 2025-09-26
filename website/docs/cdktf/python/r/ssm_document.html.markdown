@@ -126,6 +126,32 @@ The `parameter` configuration block provides the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_document.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_ssm_document" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the SSM document.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Documents using the name. For example:
 
 ```python
@@ -179,4 +205,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4a40ecc1d407bee46a85e5f430ea8bccf89db626de14736f98057cb5b5e6beb0 -->
+<!-- cache-key: cdktf-0.20.8 input-e0a2f8c9d60533427c6a38164043028aebb48217ebcb1bd5aed1192cbb922307 -->

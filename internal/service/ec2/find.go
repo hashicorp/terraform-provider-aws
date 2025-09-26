@@ -434,70 +434,6 @@ func findInstanceCreditSpecificationByID(ctx context.Context, conn *ec2.Client, 
 	return output, nil
 }
 
-func findInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) ([]awstypes.Instance, error) {
-	var output []awstypes.Instance
-
-	pages := ec2.NewDescribeInstancesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Reservations {
-			output = append(output, v.Instances...)
-		}
-	}
-
-	return output, nil
-}
-
-func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
-	output, err := findInstances(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
-}
-
-func findInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
-	input := ec2.DescribeInstancesInput{
-		InstanceIds: []string{id},
-	}
-
-	output, err := findInstance(ctx, conn, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := output.State.Name; state == awstypes.InstanceStateNameTerminated {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: &input,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.InstanceId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: &input,
-		}
-	}
-
-	return output, nil
-}
-
 func findInstanceStatus(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceStatusInput) (*awstypes.InstanceStatus, error) {
 	output, err := findInstanceStatuses(ctx, conn, input)
 
@@ -2294,7 +2230,17 @@ func findNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.Client, i
 		}),
 	}
 
-	return findNetworkInterface(ctx, conn, &input)
+	output, err := findNetworkInterface(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.Attachment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func findNetworkInterfaceSecurityGroup(ctx context.Context, conn *ec2.Client, networkInterfaceID string, securityGroupID string) (*awstypes.GroupIdentifier, error) {

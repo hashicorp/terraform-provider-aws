@@ -66,6 +66,8 @@ func resourceBucketLogging() *schema.Resource {
 									names.AttrDisplayName: {
 										Type:     schema.TypeString,
 										Computed: true,
+										Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
+											"AWS and will be removed in a future major version.",
 									},
 									"email_address": {
 										Type:     schema.TypeString,

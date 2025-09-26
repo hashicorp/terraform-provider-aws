@@ -207,7 +207,7 @@ func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	// Retry for IAM eventual consistency.
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateBackupSelection(ctx, input)
 		},
 		func(err error) (bool, error) {

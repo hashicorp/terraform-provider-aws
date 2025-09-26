@@ -15,6 +15,6 @@ var Region = sync.OnceValue(func() *schema.Schema {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Description: names.TopLevelRegionAttributeDescription,
+		Description: names.ResourceTopLevelRegionAttributeDescription,
 	}
 })

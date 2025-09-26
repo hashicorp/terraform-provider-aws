@@ -31,16 +31,16 @@ import (
 
 // @SDKResource("aws_ecr_repository", name="Repository")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecr/types;types.Repository")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(idAttrDuplicates="name")
 func resourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
 		ReadWithoutTimeout:   resourceRepositoryRead,
 		UpdateWithoutTimeout: resourceRepositoryUpdate,
 		DeleteWithoutTimeout: resourceRepositoryDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),
