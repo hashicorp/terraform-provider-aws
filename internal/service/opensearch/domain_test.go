@@ -2302,6 +2302,9 @@ func TestAccOpenSearchDomain_AIMLOptions_createEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     rName,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options",
+				},
 			},
 			{
 				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
@@ -2378,6 +2381,9 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     rName,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options",
+				},
 			},
 			{
 				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
@@ -4363,9 +4369,36 @@ func testAccDomainConfig_AIMLOptions(rName, desiredState string, S3VecotrsEnable
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
+  cluster_config {
+    instance_type  = "or1.medium.search"
+    instance_count = 1
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
   ebs_options {
     ebs_enabled = true
-    volume_size = 10
+    volume_size = 20
+  }
+
+  encrypt_at_rest {
+    enabled = true
   }
 
   aiml_options {
