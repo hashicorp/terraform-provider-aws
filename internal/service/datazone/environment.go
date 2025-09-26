@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -228,6 +229,13 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 	state.AccountRegion = fwflex.StringToFramework(ctx, out.AwsAccountRegion)
 	state.BlueprintIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
 
+	userParametersList, d := flattenEnvironmentUserParameters(ctx, out.UserParameters)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.UserParameters = userParametersList
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -269,6 +277,13 @@ func (r *environmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.BlueprintIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
 	state.ProjectIdentifier = fwflex.StringToFramework(ctx, out.ProjectId)
 	state.ProfileIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentProfileId)
+
+	userParametersList, d := flattenEnvironmentUserParameters(ctx, out.UserParameters)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.UserParameters = userParametersList
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -534,4 +549,18 @@ type resourceProvisionedResourcesData struct {
 type resourceUserParametersData struct {
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
+}
+
+func flattenEnvironmentUserParameters(ctx context.Context, userParameters []awstypes.CustomParameter) (fwtypes.ListNestedObjectValueOf[resourceUserParametersData], diag.Diagnostics) {
+	params := make([]resourceUserParametersData, 0, len(userParameters))
+	for _, param := range userParameters {
+		// If `DefaultValue` is nil, no value has been set
+		if param.DefaultValue != nil {
+			params = append(params, resourceUserParametersData{
+				Name:  fwflex.StringToFramework(ctx, param.KeyName),
+				Value: fwflex.StringToFramework(ctx, param.DefaultValue),
+			})
+		}
+	}
+	return fwtypes.NewListNestedObjectValueOfValueSlice(ctx, params)
 }

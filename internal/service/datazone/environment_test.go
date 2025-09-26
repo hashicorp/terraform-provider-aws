@@ -30,10 +30,11 @@ func TestAccDataZoneEnvironment_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:            testAccDataZoneEnvironment_basic,
-		acctest.CtDisappears:       testAccDataZoneEnvironment_disappears,
-		"updateNameAndDescription": testAccDataZoneEnvironment_updateNameAndDescription,
-		"accountIDAndRegion":       testAccDataZoneEnvironment_accountIDAndRegion,
+		acctest.CtBasic:              testAccDataZoneEnvironment_basic,
+		acctest.CtDisappears:         testAccDataZoneEnvironment_disappears,
+		"updateNameAndDescription":   testAccDataZoneEnvironment_updateNameAndDescription,
+		"accountIDAndRegion":         testAccDataZoneEnvironment_accountIDAndRegion,
+		"userParameters_Environment": testAccDataZoneEnvironment_userParameters_Environment,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -182,6 +183,54 @@ func testAccDataZoneEnvironment_accountIDAndRegion(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "account_region", acctest.Region()),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_userParameters(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":  knownvalue.StringExact("consumerGlueDbName"),
+							"value": knownvalue.StringExact(rName + "-consumer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":  knownvalue.StringExact("producerGlueDbName"),
+							"value": knownvalue.StringExact(rName + "-producer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":  knownvalue.StringExact("workgroupName"),
+							"value": knownvalue.StringExact(rName + "-workgroup"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -425,6 +474,46 @@ resource "aws_datazone_environment" "test" {
 
   account_identifier   = data.aws_caller_identity.test.account_id
   account_region       = data.aws_region.test.region
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+
+resource "aws_datazone_environment_profile" "test" {
+  name                             = %[1]q
+  aws_account_id                   = data.aws_caller_identity.test.account_id
+  aws_account_region               = data.aws_region.test.region
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
+  project_identifier               = aws_datazone_project.test.id
+  domain_identifier                = aws_datazone_domain.test.id
+}
+`, rName))
+}
+
+func testAccEnvironmentConfig_userParameters(rName string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[1]q
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  user_parameters {
+    name  = "consumerGlueDbName"
+    value = "%[1]s-consumer"
+  }
+
+  user_parameters {
+    name  = "producerGlueDbName"
+    value = "%[1]s-producer"
+  }
+
+  user_parameters {
+    name  = "workgroupName"
+    value = "%[1]s-workgroup"
+  }
 
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
