@@ -288,7 +288,7 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	_, err := conn.DeleteProject(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
