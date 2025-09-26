@@ -483,7 +483,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
-			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
+			return findIPAMPoolAllocationForResource(ctx, conn, ipamPoolID, d.Id())
 		})
 
 		if err != nil {

@@ -162,7 +162,7 @@ var (
 	FindHostByID                                                = findHostByID
 	FindIPAMByID                                                = findIPAMByID
 	FindIPAMPoolAllocationByTwoPartKey                          = findIPAMPoolAllocationByTwoPartKey
-	FindIPAMPoolAllocationsForVPC                               = findIPAMPoolAllocationsForVPC
+	FindIPAMPoolAllocationForResource                           = findIPAMPoolAllocationForResource
 	FindIPAMPoolByID                                            = findIPAMPoolByID
 	FindIPAMPoolCIDRByTwoPartKey                                = findIPAMPoolCIDRByTwoPartKey
 	FindIPAMResourceDiscoveryAssociationByID                    = findIPAMResourceDiscoveryAssociationByID
