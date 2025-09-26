@@ -40,7 +40,7 @@ func TestAccDataZoneEnvironment_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -86,7 +86,7 @@ func TestAccDataZoneEnvironment_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironment, resourceName),
 				),
@@ -115,7 +115,7 @@ func TestAccDataZoneEnvironment_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_update(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -134,7 +134,7 @@ func TestAccDataZoneEnvironment_update(t *testing.T) {
 			},
 			{
 				Config: testAccEnvironmentConfig_update(rName, rNameUpdate),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate),
