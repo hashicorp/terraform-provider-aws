@@ -3616,7 +3616,7 @@ func expandCapacityReservationSpecification(tfMap map[string]any) *awstypes.Capa
 		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
-	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]any))
 	}
 
