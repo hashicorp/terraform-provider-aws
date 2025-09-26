@@ -449,6 +449,51 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 	}
 }
 
+func TestAccBedrockAgentKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	domain := skipIfOSDomainEnvVarNotSet(t)
+	bedrockIAMRoleName := skipIfIAMRoleVarNotSet(t)
+
+	var knowledgebase types.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+	foundationModel := "amazon.titan-embed-text-v2:0"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, domain, bedrockIAMRoleName, foundationModel),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_MANAGED_CLUSTER"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.vector_index_name", "knowledge-index"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.vector_field", "vector_embedding"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.text_field", "text"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.metadata_field", "metadata"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // skipIfOSSCollectionNameEnvVarNotSet handles skipping tests when an environment
 // variable providing a valid OSS collection name is unset
 //
@@ -482,6 +527,34 @@ func skipIfOSSCollectionNameEnvVarNotSet(t *testing.T) string {
 		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
 			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
 			"where the vector index is configured.")
+	}
+	return v
+}
+
+// skipIfOSDomainEnvVarNotSet handles skipping tests when an environment
+// variable providing a valid OpenSearch domain name is unset
+//
+// This should be called in all acceptance tests currently dependent on an OpenSearch
+// Managed Cluster domain.
+func skipIfOSDomainEnvVarNotSet(t *testing.T) string {
+	t.Helper()
+
+	v := os.Getenv("TF_AWS_BEDROCK_OS_DOMAIN_NAME")
+	if v == "" {
+		acctest.Skip(t, "This test requires external configuration of an OpenSearch domain. "+
+			"Set the TF_AWS_BEDROCK_OS_DOMAIN_NAME environment variable to the OpenSearch domain name.")
+	}
+	return v
+}
+
+func skipIfIAMRoleVarNotSet(t *testing.T) string {
+	t.Helper()
+
+	v := os.Getenv("TF_AWS_BEDROCK_IAM_ROLE_ARN")
+	if v == "" {
+		acctest.Skip(t, "This test requires external configuration of an IAM Role with permissions on the OpenSearch Cluster."+
+			"It must be able to be assumed by the Amazon Bedrock service"+
+			"Set the TF_AWS_BEDROCK_IAM_ROLE_ARN environment variable to the IAM Role's ARN.")
 	}
 	return v
 }
@@ -939,4 +1012,43 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   }
 }
 `, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, domainName, bedrockRole, model string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+data "aws_opensearch_domain" "test" {
+  domain_name = %[4]q
+}
+
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = %[3]q
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "OPENSEARCH_MANAGED_CLUSTER"
+    opensearch_managed_cluster_configuration {
+      domain_arn        = data.aws_opensearch_domain.test.arn
+      domain_endpoint   = "https://${data.aws_opensearch_domain.test.endpoint}"
+      vector_index_name = "knowledge-index"
+      field_mapping {
+        vector_field   = "vector_embedding"
+        text_field     = "text"
+        metadata_field = "metadata"
+      }
+    }
+  }
+}
+`, rName, model, bedrockRole, domainName))
 }
