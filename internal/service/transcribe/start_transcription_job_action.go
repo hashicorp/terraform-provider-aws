@@ -240,17 +240,17 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 	})
 	if err != nil {
 		switch e := err.(type) {
-		case *actionwait.ErrTimeout:
+		case *actionwait.TimeoutError:
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Transcription Job",
 				fmt.Sprintf("Transcription job %s did not reach a running state within %v", transcriptionJobName, timeout),
 			)
-		case *actionwait.ErrFailureState:
+		case *actionwait.FailureStateError:
 			resp.Diagnostics.AddError(
 				"Transcription Job Failed",
 				fmt.Sprintf("Transcription job %s failed: %s", transcriptionJobName, e.Status),
 			)
-		case *actionwait.ErrUnexpectedState:
+		case *actionwait.UnexpectedStateError:
 			resp.Diagnostics.AddError(
 				"Unexpected Transcription Job Status",
 				fmt.Sprintf("Transcription job %s entered unexpected status: %s", transcriptionJobName, e.Status),
