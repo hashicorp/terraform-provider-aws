@@ -25,14 +25,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataZoneEnvironment_basic(t *testing.T) {
+// Tests need to be serialized due to `aws_lakeformation_data_lake_settings` dependency
+func TestAccDataZoneEnvironment_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccDataZoneEnvironment_basic,
+		acctest.CtDisappears: testAccDataZoneEnvironment_disappears,
+		"update":             testAccDataZoneEnvironment_update,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccDataZoneEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -75,14 +88,14 @@ func TestAccDataZoneEnvironment_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataZoneEnvironment_disappears(t *testing.T) {
+func testAccDataZoneEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -103,7 +116,7 @@ func TestAccDataZoneEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDataZoneEnvironment_update(t *testing.T) {
+func testAccDataZoneEnvironment_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
@@ -111,7 +124,7 @@ func TestAccDataZoneEnvironment_update(t *testing.T) {
 	rNameUpdate := fmt.Sprintf("%s-update", rName)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
