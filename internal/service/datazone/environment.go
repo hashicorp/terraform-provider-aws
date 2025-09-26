@@ -283,18 +283,26 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.GlossaryTerms.Equal(state.GlossaryTerms) {
-		in := &datazone.UpdateEnvironmentInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	var (
+		needsUpdate bool
+	)
+	input := datazone.UpdateEnvironmentInput{
+		DomainIdentifier: plan.DomainIdentifier.ValueStringPointer(),
+		Identifier:       plan.Id.ValueStringPointer(),
+	}
 
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		in.Identifier = state.Id.ValueStringPointer()
+	if !plan.Name.Equal(state.Name) {
+		needsUpdate = true
+		input.Name = plan.Name.ValueStringPointer()
+	}
 
-		out, err := conn.UpdateEnvironment(ctx, in)
+	if !plan.Description.Equal(state.Description) {
+		needsUpdate = true
+		input.Description = plan.Description.ValueStringPointer()
+	}
+
+	if needsUpdate {
+		output, err := conn.UpdateEnvironment(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEnvironment, plan.Id.String(), err),
@@ -303,7 +311,7 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		if out == nil {
+		if output == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEnvironment, plan.Id.String(), nil),
 				errors.New("empty output").Error(),

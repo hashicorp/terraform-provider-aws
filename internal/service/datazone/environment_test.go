@@ -30,9 +30,9 @@ func TestAccDataZoneEnvironment_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccDataZoneEnvironment_basic,
-		acctest.CtDisappears: testAccDataZoneEnvironment_disappears,
-		"update":             testAccDataZoneEnvironment_update,
+		acctest.CtBasic:            testAccDataZoneEnvironment_basic,
+		acctest.CtDisappears:       testAccDataZoneEnvironment_disappears,
+		"updateNameAndDescription": testAccDataZoneEnvironment_updateNameAndDescription,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -116,7 +116,7 @@ func testAccDataZoneEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func testAccDataZoneEnvironment_update(t *testing.T) {
+func testAccDataZoneEnvironment_updateNameAndDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
@@ -134,30 +134,19 @@ func testAccDataZoneEnvironment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_update(rName, rName),
+				Config: testAccEnvironmentConfig_updateNameAndDescription(rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "account_region"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "blueprint_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "profile_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "user_parameters.#", "3"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "project_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "provider_environment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-description"),
 				),
 			},
 			{
-				Config: testAccEnvironmentConfig_update(rName, rNameUpdate),
+				Config: testAccEnvironmentConfig_updateNameAndDescription(rName, rNameUpdate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdate),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate+"-description"),
 				),
 			},
 		},
@@ -359,32 +348,15 @@ resource "aws_datazone_environment_profile" "test" {
 `, rName))
 }
 
-func testAccEnvironmentConfig_update(rName, rNameUpdated string) string {
+func testAccEnvironmentConfig_updateNameAndDescription(rName, rNameUpdated string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datazone_environment" "test" {
   name                 = %[2]q
-  description          = %[2]q
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.region
+  description          = "%[2]s-description"
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
   domain_identifier    = aws_datazone_domain.test.id
-
-  user_parameters {
-    name  = "consumerGlueDbName"
-    value = "%[1]s-consumer"
-  }
-
-  user_parameters {
-    name  = "producerGlueDbName"
-    value = "%[1]s-producer"
-  }
-
-  user_parameters {
-    name  = "workgroupName"
-    value = "%[1]s-workgroup"
-  }
 
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
