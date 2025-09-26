@@ -210,7 +210,8 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 
 	// Wait for job to move beyond QUEUED: treat IN_PROGRESS or COMPLETED as success, FAILED as failure, QUEUED transitional.
 	fr, err := actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[*awstypes.TranscriptionJob], error) {
-		getOutput, gerr := conn.GetTranscriptionJob(ctx, &transcribe.GetTranscriptionJobInput{TranscriptionJobName: aws.String(transcriptionJobName)})
+		input := transcribe.GetTranscriptionJobInput{TranscriptionJobName: aws.String(transcriptionJobName)}
+		getOutput, gerr := conn.GetTranscriptionJob(ctx, &input)
 		if gerr != nil {
 			return actionwait.FetchResult[*awstypes.TranscriptionJob]{}, fmt.Errorf("get transcription job: %w", gerr)
 		}
