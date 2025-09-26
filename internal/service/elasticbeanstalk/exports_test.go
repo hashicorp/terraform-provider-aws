@@ -15,4 +15,6 @@ var (
 	FindConfigurationSettingsByTwoPartKey = findConfigurationSettingsByTwoPartKey
 	FindEnvironmentByID                   = findEnvironmentByID
 	HostedZoneIDs                         = hostedZoneIDs
+
+	EnvironmentMigrateState = environmentMigrateState
 )

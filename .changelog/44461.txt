@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_elastic_beanstalk_environment: Fix `inconsistent final plan` error in some cases with `setting` elements.
+```
+
+```release-note:bug
+resource/aws_elastic_beanstalk_configuration_template: Fix `inconsistent final plan` error in some cases with `setting` elements.
+```

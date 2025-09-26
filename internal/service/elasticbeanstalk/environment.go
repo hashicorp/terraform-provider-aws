@@ -50,6 +50,7 @@ func settingSchema() *schema.Resource {
 			"resource": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "", // This default is required to work around an error seen is some situations with Unknown values
 			},
 			names.AttrValue: {
 				Type:     schema.TypeString,
@@ -95,7 +96,7 @@ func resourceEnvironment() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  EnvironmentMigrateState,
+		MigrateState:  environmentMigrateState,
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -334,19 +335,17 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) resources: %s", d.Id(), err)
 	}
 
-	applicationName := aws.ToString(env.ApplicationName)
-	environmentName := aws.ToString(env.EnvironmentName)
-	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
-		ApplicationName: aws.String(applicationName),
-		EnvironmentName: aws.String(environmentName),
+	input := elasticbeanstalk.DescribeConfigurationSettingsInput{
+		ApplicationName: env.ApplicationName,
+		EnvironmentName: env.EnvironmentName,
 	}
-	configurationSettings, err := findConfigurationSettings(ctx, conn, input)
+	configurationSettings, err := findConfigurationSettings(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) configuration settings: %s", d.Id(), err)
 	}
 
-	d.Set("application", applicationName)
+	d.Set("application", env.ApplicationName)
 	d.Set(names.AttrARN, env.EnvironmentArn)
 	if err := d.Set("autoscaling_groups", flattenAutoScalingGroups(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
@@ -375,7 +374,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("load_balancers", flattenLoadBalancers(resources.EnvironmentResources.LoadBalancers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancers: %s", err)
 	}
-	d.Set(names.AttrName, environmentName)
+	d.Set(names.AttrName, env.EnvironmentName)
 	d.Set("platform_arn", env.PlatformArn)
 	if err := d.Set("queues", flattenQueues(resources.EnvironmentResources.Queues)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting queues: %s", err)
