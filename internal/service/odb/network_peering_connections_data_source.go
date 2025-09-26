@@ -18,7 +18,7 @@ import (
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_odb_network_peering_connections_list", name="Network Peering Connections List")
+// @FrameworkDataSource("aws_odb_network_peering_connections", name="Network Peering Connections")
 func newDataSourceNetworkPeeringConnectionsList(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceNetworkPeeringConnectionsList{}, nil
 }

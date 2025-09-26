@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
@@ -21,36 +20,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type odbNetworksListTestDS struct {
+type listExaInfraTest struct {
 }
 
-func TestAccListOdbNetworksDataSource(t *testing.T) {
+func TestAccODBCloudExadataInfrastructuresListDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var networkListTest = odbNetworksListTestDS{}
-	var output odb.ListOdbNetworksOutput
-
-	dataSourceName := "data.aws_odb_networks_list.test"
+	var listExaInfraDSTest = listExaInfraTest{}
+	var infraList odb.ListCloudExadataInfrastructuresOutput
+	dataSourceName := "data.aws_odb_cloud_exadata_infrastructures.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			networkListTest.testAccPreCheck(ctx, t)
+			listExaInfraDSTest.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: networkListTest.basic(),
+				Config: listExaInfraDSTest.basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-
 					resource.ComposeTestCheckFunc(func(s *terraform.State) error {
-						pattern := `^odbnet_`
-						networkListTest.count(ctx, dataSourceName, &output)
-						resource.TestCheckResourceAttr(dataSourceName, "aws_odb_networks_list.#", strconv.Itoa(len(output.OdbNetworks)))
-						i := 0
-						for i < len(output.OdbNetworks) {
-							key := fmt.Sprintf("aws_odb_networks_list.%q.id", i)
-							resource.TestMatchResourceAttr(dataSourceName, key, regexp.MustCompile(pattern))
-						}
+						listExaInfraDSTest.countExaInfrastructures(ctx, dataSourceName, &infraList)
+						resource.TestCheckResourceAttr(dataSourceName, "cloud_exadata_infrastructures.#", strconv.Itoa(len(infraList.CloudExadataInfrastructures)))
 						return nil
 					},
 					),
@@ -60,40 +51,35 @@ func TestAccListOdbNetworksDataSource(t *testing.T) {
 	})
 }
 
-func (odbNetworksListTestDS) basic() string {
+func (listExaInfraTest) basic() string {
 	config := fmt.Sprintf(`
 
-
-data "aws_odb_cloud_autonomous_vm_clusters_list" "test" {
+data "aws_odb_cloud_exadata_infrastructures" "test" {
 
 }
 `)
 	return config
 }
 
-func (odbNetworksListTestDS) count(ctx context.Context, name string, list *odb.ListOdbNetworksOutput) resource.TestCheckFunc {
+func (listExaInfraTest) countExaInfrastructures(ctx context.Context, name string, listOfInfra *odb.ListCloudExadataInfrastructuresOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworksList, name, errors.New("not found"))
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudExadataInfrastructuresList, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-		resp, err := conn.ListOdbNetworks(ctx, &odb.ListOdbNetworksInput{})
+		resp, err := tfodb.ListCloudExadataInfrastructures(ctx, conn)
 		if err != nil {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworksList, rs.Primary.ID, err)
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudExadataInfrastructuresList, rs.Primary.ID, err)
 		}
-		list.OdbNetworks = resp.OdbNetworks
-
+		listOfInfra.CloudExadataInfrastructures = resp.CloudExadataInfrastructures
 		return nil
 	}
 }
-func (odbNetworksListTestDS) testAccPreCheck(ctx context.Context, t *testing.T) {
+func (listExaInfraTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
-	input := &odb.ListOdbNetworksInput{}
-
-	_, err := conn.ListOdbNetworks(ctx, input)
-
+	input := odb.ListCloudExadataInfrastructuresInput{}
+	_, err := conn.ListCloudExadataInfrastructures(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

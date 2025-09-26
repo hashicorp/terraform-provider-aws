@@ -26,7 +26,7 @@ func TestAccListVmClusterDataSource(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vmcListTest = listVMCListDSTest{}
 	var output odb.ListCloudVmClustersOutput
-	dataSourceName := "data.aws_odb_cloud_vm_clusters_list.test"
+	dataSourceName := "data.aws_odb_cloud_vm_clusters.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -55,7 +55,7 @@ func (listVMCListDSTest) basic() string {
 	config := fmt.Sprintf(`
 
 
-data "aws_odb_cloud_vm_clusters_list" "test" {
+data "aws_odb_cloud_vm_clusters" "test" {
 
 }
 `)

@@ -28,7 +28,7 @@ func TestAccODBNetworkPeeringBasic(t *testing.T) {
 	var listOfPeeredNwks = listOdbNetworkPeering{}
 	var output odb.ListOdbPeeringConnectionsOutput
 
-	dataSourceName := "data.aws_odb_network_peering_connections_list.test"
+	dataSourceName := "data.aws_odb_network_peering_connections.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -56,7 +56,7 @@ func TestAccODBNetworkPeeringBasic(t *testing.T) {
 func (listOdbNetworkPeering) basic() string {
 	config := fmt.Sprintf(`
 
-data "aws_odb_network_peering_connections_list" "test" {
+data "aws_odb_network_peering_connections" "test" {
 
 }
 `)

@@ -18,7 +18,7 @@ import (
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_odb_networks_list", name="Networks List")
+// @FrameworkDataSource("aws_odb_networks", name="Networks")
 func newDataSourceNetworksList(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceNetworksList{}, nil
 }

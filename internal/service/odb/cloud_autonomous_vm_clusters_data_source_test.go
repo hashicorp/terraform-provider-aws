@@ -20,28 +20,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type listExaInfraTest struct {
+type listAVMCListDSTest struct {
 }
 
-func TestAccODBCloudExadataInfrastructuresListDataSource_basic(t *testing.T) {
+func TestAccListAutonomousVmClusterDataSource(t *testing.T) {
 	ctx := acctest.Context(t)
-	var listExaInfraDSTest = listExaInfraTest{}
-	var infraList odb.ListCloudExadataInfrastructuresOutput
-	dataSourceName := "data.aws_odb_cloud_exadata_infrastructures_list.test"
+	var avmcListTest = listAVMCListDSTest{}
+	var output odb.ListCloudAutonomousVmClustersOutput
+
+	dataSourceName := "data.aws_odb_cloud_autonomous_vm_clusters.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			listExaInfraDSTest.testAccPreCheck(ctx, t)
+			avmcListTest.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: listExaInfraDSTest.basic(),
+				Config: avmcListTest.basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.ComposeTestCheckFunc(func(s *terraform.State) error {
-						listExaInfraDSTest.countExaInfrastructures(ctx, dataSourceName, &infraList)
-						resource.TestCheckResourceAttr(dataSourceName, "cloud_exadata_infrastructures.#", strconv.Itoa(len(infraList.CloudExadataInfrastructures)))
+						avmcListTest.count(ctx, dataSourceName, &output)
+						resource.TestCheckResourceAttr(dataSourceName, "cloud_autonomous_vm_clusters.#", strconv.Itoa(len(output.CloudAutonomousVmClusters)))
 						return nil
 					},
 					),
@@ -51,35 +52,36 @@ func TestAccODBCloudExadataInfrastructuresListDataSource_basic(t *testing.T) {
 	})
 }
 
-func (listExaInfraTest) basic() string {
+func (listAVMCListDSTest) basic() string {
 	config := fmt.Sprintf(`
 
-data "aws_odb_cloud_exadata_infrastructures_list" "test" {
+
+data "aws_odb_cloud_autonomous_vm_clusters" "test" {
 
 }
 `)
 	return config
 }
 
-func (listExaInfraTest) countExaInfrastructures(ctx context.Context, name string, listOfInfra *odb.ListCloudExadataInfrastructuresOutput) resource.TestCheckFunc {
+func (listAVMCListDSTest) count(ctx context.Context, name string, list *odb.ListCloudAutonomousVmClustersOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudExadataInfrastructuresList, name, errors.New("not found"))
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudAutonomousVmClustersList, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-		resp, err := tfodb.ListCloudExadataInfrastructures(ctx, conn)
+		resp, err := tfodb.ListCloudAutonomousVmClusters(ctx, conn)
 		if err != nil {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudExadataInfrastructuresList, rs.Primary.ID, err)
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudAutonomousVmClustersList, rs.Primary.ID, err)
 		}
-		listOfInfra.CloudExadataInfrastructures = resp.CloudExadataInfrastructures
+		list.CloudAutonomousVmClusters = resp.CloudAutonomousVmClusters
 		return nil
 	}
 }
-func (listExaInfraTest) testAccPreCheck(ctx context.Context, t *testing.T) {
+func (listAVMCListDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-	input := odb.ListCloudExadataInfrastructuresInput{}
-	_, err := conn.ListCloudExadataInfrastructures(ctx, &input)
+	input := &odb.ListCloudAutonomousVmClustersInput{}
+	_, err := conn.ListCloudAutonomousVmClusters(ctx, input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

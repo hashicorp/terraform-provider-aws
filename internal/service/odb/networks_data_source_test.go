@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -20,29 +21,36 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type listAVMCListDSTest struct {
+type odbNetworksListTestDS struct {
 }
 
-func TestAccListAutonomousVmClusterDataSource(t *testing.T) {
+func TestAccListOdbNetworksDataSource(t *testing.T) {
 	ctx := acctest.Context(t)
-	var avmcListTest = listAVMCListDSTest{}
-	var output odb.ListCloudAutonomousVmClustersOutput
+	var networkListTest = odbNetworksListTestDS{}
+	var output odb.ListOdbNetworksOutput
 
-	dataSourceName := "data.aws_odb_cloud_autonomous_vm_clusters_list.test"
+	dataSourceName := "data.aws_odb_networks.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			avmcListTest.testAccPreCheck(ctx, t)
+			networkListTest.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: avmcListTest.basic(),
+				Config: networkListTest.basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
+
 					resource.ComposeTestCheckFunc(func(s *terraform.State) error {
-						avmcListTest.count(ctx, dataSourceName, &output)
-						resource.TestCheckResourceAttr(dataSourceName, "cloud_autonomous_vm_clusters.#", strconv.Itoa(len(output.CloudAutonomousVmClusters)))
+						pattern := `^odbnet_`
+						networkListTest.count(ctx, dataSourceName, &output)
+						resource.TestCheckResourceAttr(dataSourceName, "aws_odb_networks.#", strconv.Itoa(len(output.OdbNetworks)))
+						i := 0
+						for i < len(output.OdbNetworks) {
+							key := fmt.Sprintf("aws_odb_networks.%q.id", i)
+							resource.TestMatchResourceAttr(dataSourceName, key, regexp.MustCompile(pattern))
+						}
 						return nil
 					},
 					),
@@ -52,36 +60,40 @@ func TestAccListAutonomousVmClusterDataSource(t *testing.T) {
 	})
 }
 
-func (listAVMCListDSTest) basic() string {
+func (odbNetworksListTestDS) basic() string {
 	config := fmt.Sprintf(`
 
 
-data "aws_odb_cloud_autonomous_vm_clusters_list" "test" {
+data "aws_odb_networks" "test" {
 
 }
 `)
 	return config
 }
 
-func (listAVMCListDSTest) count(ctx context.Context, name string, list *odb.ListCloudAutonomousVmClustersOutput) resource.TestCheckFunc {
+func (odbNetworksListTestDS) count(ctx context.Context, name string, list *odb.ListOdbNetworksOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudAutonomousVmClustersList, name, errors.New("not found"))
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworksList, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-		resp, err := tfodb.ListCloudAutonomousVmClusters(ctx, conn)
+		resp, err := conn.ListOdbNetworks(ctx, &odb.ListOdbNetworksInput{})
 		if err != nil {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudAutonomousVmClustersList, rs.Primary.ID, err)
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworksList, rs.Primary.ID, err)
 		}
-		list.CloudAutonomousVmClusters = resp.CloudAutonomousVmClusters
+		list.OdbNetworks = resp.OdbNetworks
+
 		return nil
 	}
 }
-func (listAVMCListDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
+func (odbNetworksListTestDS) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-	input := &odb.ListCloudAutonomousVmClustersInput{}
-	_, err := conn.ListCloudAutonomousVmClusters(ctx, input)
+
+	input := &odb.ListOdbNetworksInput{}
+
+	_, err := conn.ListOdbNetworks(ctx, input)
+
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

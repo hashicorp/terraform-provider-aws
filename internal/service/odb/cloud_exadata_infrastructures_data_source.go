@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_odb_cloud_exadata_infrastructures_list", name="Cloud Exadata Infrastructures List")
+// @FrameworkDataSource("aws_odb_cloud_exadata_infrastructures", name="Cloud Exadata Infrastructures")
 func newDataSourceCloudExadataInfrastructuresList(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCloudExadataInfrastructuresList{}, nil
 }
