@@ -5,6 +5,7 @@ package transcribe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -19,6 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	transcriptionJobPollInterval     = 5 * time.Second
+	transcriptionJobProgressInterval = 30 * time.Second
 )
 
 // @Action(aws_transcribe_start_transcription_job, name="Start Transcription Job")
@@ -138,31 +144,30 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 		},
 	}
 
-	// Validate language configuration
-	hasLanguageCode := !config.LanguageCode.IsNull() && !config.LanguageCode.IsUnknown()
-	hasIdentifyLanguage := !config.IdentifyLanguage.IsNull() && config.IdentifyLanguage.ValueBool()
-	hasIdentifyMultipleLanguages := !config.IdentifyMultipleLanguages.IsNull() && config.IdentifyMultipleLanguages.ValueBool()
-
-	languageConfigCount := 0
-	if hasLanguageCode {
-		languageConfigCount++
-	}
-	if hasIdentifyLanguage {
-		languageConfigCount++
-	}
-	if hasIdentifyMultipleLanguages {
-		languageConfigCount++
+	// Validate language configuration - exactly one must be specified
+	languageOptions := []bool{
+		!config.LanguageCode.IsNull() && !config.LanguageCode.IsUnknown(),
+		!config.IdentifyLanguage.IsNull() && config.IdentifyLanguage.ValueBool(),
+		!config.IdentifyMultipleLanguages.IsNull() && config.IdentifyMultipleLanguages.ValueBool(),
 	}
 
-	if languageConfigCount == 0 {
+	activeCount := 0
+	for _, active := range languageOptions {
+		if active {
+			activeCount++
+		}
+	}
+
+	switch activeCount {
+	case 0:
 		resp.Diagnostics.AddError(
 			"Missing Language Configuration",
 			"You must specify exactly one of: language_code, identify_language, or identify_multiple_languages",
 		)
 		return
-	}
-
-	if languageConfigCount > 1 {
+	case 1:
+		// Valid - continue
+	default:
 		resp.Diagnostics.AddError(
 			"Conflicting Language Configuration",
 			"You can only specify one of: language_code, identify_language, or identify_multiple_languages",
@@ -171,13 +176,13 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 	}
 
 	// Set language configuration
-	if hasLanguageCode {
+	if languageOptions[0] {
 		input.LanguageCode = config.LanguageCode.ValueEnum()
 	}
-	if hasIdentifyLanguage {
+	if languageOptions[1] {
 		input.IdentifyLanguage = aws.Bool(true)
 	}
-	if hasIdentifyMultipleLanguages {
+	if languageOptions[2] {
 		input.IdentifyMultipleLanguages = aws.Bool(true)
 	}
 
@@ -222,8 +227,8 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 		return actionwait.FetchResult[*awstypes.TranscriptionJob]{Status: actionwait.Status(status), Value: getOutput.TranscriptionJob}, nil
 	}, actionwait.Options[*awstypes.TranscriptionJob]{
 		Timeout:          timeout,
-		Interval:         actionwait.FixedInterval(5 * time.Second),
-		ProgressInterval: 30 * time.Second,
+		Interval:         actionwait.FixedInterval(transcriptionJobPollInterval),
+		ProgressInterval: transcriptionJobProgressInterval,
 		SuccessStates: []actionwait.Status{
 			actionwait.Status(awstypes.TranscriptionJobStatusInProgress),
 			actionwait.Status(awstypes.TranscriptionJobStatusCompleted),
@@ -239,23 +244,26 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 		},
 	})
 	if err != nil {
-		switch e := err.(type) {
-		case *actionwait.TimeoutError:
+		var timeoutErr *actionwait.TimeoutError
+		var failureErr *actionwait.FailureStateError
+		var unexpectedErr *actionwait.UnexpectedStateError
+
+		if errors.As(err, &timeoutErr) {
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Transcription Job",
 				fmt.Sprintf("Transcription job %s did not reach a running state within %v", transcriptionJobName, timeout),
 			)
-		case *actionwait.FailureStateError:
+		} else if errors.As(err, &failureErr) {
 			resp.Diagnostics.AddError(
 				"Transcription Job Failed",
-				fmt.Sprintf("Transcription job %s failed: %s", transcriptionJobName, e.Status),
+				fmt.Sprintf("Transcription job %s failed: %s", transcriptionJobName, failureErr.Status),
 			)
-		case *actionwait.UnexpectedStateError:
+		} else if errors.As(err, &unexpectedErr) {
 			resp.Diagnostics.AddError(
 				"Unexpected Transcription Job Status",
-				fmt.Sprintf("Transcription job %s entered unexpected status: %s", transcriptionJobName, e.Status),
+				fmt.Sprintf("Transcription job %s entered unexpected status: %s", transcriptionJobName, unexpectedErr.Status),
 			)
-		default:
+		} else {
 			resp.Diagnostics.AddError(
 				"Error Waiting for Transcription Job",
 				fmt.Sprintf("Error while waiting for transcription job %s: %s", transcriptionJobName, err),
