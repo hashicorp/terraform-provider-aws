@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -180,13 +180,46 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 		})
 	}
 
-	// Wait for instance to stop with periodic progress updates
-	err = a.waitForInstanceStopped(ctx, conn, instanceID, timeout, resp)
+	// Wait for instance to stop with periodic progress updates using actionwait
+	_, err = actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[struct{}], error) {
+		instance, derr := findInstanceByID(ctx, conn, instanceID)
+		if derr != nil {
+			return actionwait.FetchResult[struct{}]{}, fmt.Errorf("describing instance: %w", derr)
+		}
+		state := string(instance.State.Name)
+		return actionwait.FetchResult[struct{}]{Status: actionwait.Status(state)}, nil
+	}, actionwait.Options[struct{}]{
+		Timeout:          timeout,
+		Interval:         actionwait.FixedInterval(10 * time.Second),
+		ProgressInterval: 30 * time.Second,
+		SuccessStates:    []actionwait.Status{actionwait.Status(awstypes.InstanceStateNameStopped)},
+		TransitionalStates: []actionwait.Status{
+			actionwait.Status(awstypes.InstanceStateNameRunning),
+			actionwait.Status(awstypes.InstanceStateNameStopping),
+			actionwait.Status(awstypes.InstanceStateNameShuttingDown),
+		},
+		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
+			resp.SendProgress(action.InvokeProgressEvent{Message: fmt.Sprintf("EC2 instance %s is currently in state '%s', continuing to wait for 'stopped'...", instanceID, fr.Status)})
+		},
+	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Timeout Waiting for Instance to Stop",
-			fmt.Sprintf("EC2 instance %s did not stop within %s: %s", instanceID, timeout, err),
-		)
+		switch err.(type) {
+		case *actionwait.ErrTimeout:
+			resp.Diagnostics.AddError(
+				"Timeout Waiting for Instance to Stop",
+				fmt.Sprintf("EC2 instance %s did not stop within %s: %s", instanceID, timeout, err),
+			)
+		case *actionwait.ErrUnexpectedState:
+			resp.Diagnostics.AddError(
+				"Unexpected Instance State",
+				fmt.Sprintf("EC2 instance %s entered unexpected state while stopping: %s", instanceID, err),
+			)
+		default:
+			resp.Diagnostics.AddError(
+				"Error Waiting for Instance to Stop",
+				fmt.Sprintf("Error while waiting for EC2 instance %s to stop: %s", instanceID, err),
+			)
+		}
 		return
 	}
 
@@ -210,60 +243,4 @@ func canStopInstance(state awstypes.InstanceStateName) bool {
 	}
 }
 
-// waitForInstanceStopped waits for an instance to reach the stopped state with progress updates
-func (a *stopInstanceAction) waitForInstanceStopped(ctx context.Context, conn *ec2.Client, instanceID string, timeout time.Duration, resp *action.InvokeResponse) error {
-	const (
-		pollInterval     = 10 * time.Second
-		progressInterval = 30 * time.Second
-	)
-
-	deadline := time.Now().Add(timeout)
-	lastProgressUpdate := time.Now()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		// Check if we've exceeded the timeout
-		if time.Now().After(deadline) {
-			return fmt.Errorf("timeout after %s", timeout)
-		}
-
-		// Get current instance state
-		instance, err := findInstanceByID(ctx, conn, instanceID)
-		if err != nil {
-			return fmt.Errorf("describing instance: %w", err)
-		}
-
-		currentState := string(instance.State.Name)
-
-		// Send progress update every 30 seconds
-		if time.Since(lastProgressUpdate) >= progressInterval {
-			resp.SendProgress(action.InvokeProgressEvent{
-				Message: fmt.Sprintf("EC2 instance %s is currently in state '%s', continuing to wait for 'stopped'...", instanceID, currentState),
-			})
-			lastProgressUpdate = time.Now()
-		}
-
-		// Check if we've reached the target state
-		if instance.State.Name == awstypes.InstanceStateNameStopped {
-			return nil
-		}
-
-		// Check if we're in an unexpected state
-		validStates := []awstypes.InstanceStateName{
-			awstypes.InstanceStateNameRunning,
-			awstypes.InstanceStateNameStopping,
-			awstypes.InstanceStateNameShuttingDown,
-		}
-		if !slices.Contains(validStates, instance.State.Name) {
-			return fmt.Errorf("instance entered unexpected state: %s", currentState)
-		}
-
-		// Wait before next poll
-		time.Sleep(pollInterval)
-	}
-}
+// Legacy polling helper removed; replaced with actionwait.
