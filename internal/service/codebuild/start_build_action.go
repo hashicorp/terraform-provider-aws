@@ -136,7 +136,8 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 
 	// Poll for build completion using actionwait
 	_, err = actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[*awstypes.Build], error) {
-		batch, berr := conn.BatchGetBuilds(ctx, &codebuild.BatchGetBuildsInput{Ids: []string{buildID}})
+		input := codebuild.BatchGetBuildsInput{Ids: []string{buildID}}
+		batch, berr := conn.BatchGetBuilds(ctx, &input)
 		if berr != nil {
 			return actionwait.FetchResult[*awstypes.Build]{}, berr
 		}

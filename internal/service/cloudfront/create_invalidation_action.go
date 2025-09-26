@@ -219,10 +219,11 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 
 	// Wait for invalidation to complete with periodic progress updates using actionwait
 	_, err = actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[struct{}], error) {
-		output, gerr := conn.GetInvalidation(ctx, &cloudfront.GetInvalidationInput{
+		input := cloudfront.GetInvalidationInput{
 			DistributionId: aws.String(distributionID),
 			Id:             aws.String(invalidationID),
-		})
+		}
+		output, gerr := conn.GetInvalidation(ctx, &input)
 		if gerr != nil {
 			return actionwait.FetchResult[struct{}]{}, fmt.Errorf("getting invalidation status: %w", gerr)
 		}
