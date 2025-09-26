@@ -78,11 +78,10 @@ func testAccDataZoneEnvironment_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccEnvironmentImportStateFunc(resourceName),
-				ImportStateVerifyIgnore: []string{"user_parameters"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
 			},
 		},
 	})
@@ -148,6 +147,12 @@ func testAccDataZoneEnvironment_updateNameAndDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate+"-description"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
 			},
 		},
 	})
