@@ -224,6 +224,10 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	state.AccountIdentifier = fwflex.StringToFramework(ctx, out.AwsAccountId)
+	state.AccountRegion = fwflex.StringToFramework(ctx, out.AwsAccountRegion)
+	state.BlueprintIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -262,11 +266,13 @@ func (r *environmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 	state.AccountIdentifier = fwflex.StringToFramework(ctx, out.AwsAccountId)
 	state.AccountRegion = fwflex.StringToFramework(ctx, out.AwsAccountRegion)
+	state.BlueprintIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
 	state.ProjectIdentifier = fwflex.StringToFramework(ctx, out.ProjectId)
 	state.ProfileIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentProfileId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
+
 func (r *environmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
@@ -479,7 +485,7 @@ type environmentResourceModel struct {
 	framework.WithRegionModel
 	AccountIdentifier    types.String                                                      `tfsdk:"account_identifier"`
 	AccountRegion        types.String                                                      `tfsdk:"account_region"`
-	BlueprintId          types.String                                                      `tfsdk:"blueprint_identifier"`
+	BlueprintIdentifier  types.String                                                      `tfsdk:"blueprint_identifier"`
 	CreatedAt            timetypes.RFC3339                                                 `tfsdk:"created_at"`
 	CreatedBy            types.String                                                      `tfsdk:"created_by"`
 	Description          types.String                                                      `tfsdk:"description"`
