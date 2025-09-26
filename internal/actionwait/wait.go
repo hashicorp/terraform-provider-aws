@@ -13,6 +13,9 @@ import (
 	"time"
 )
 
+// DefaultPollInterval is the default fixed polling interval used when no custom IntervalStrategy is provided.
+const DefaultPollInterval = 30 * time.Second
+
 // Status represents a string status value returned from a polled API.
 type Status string
 
@@ -28,7 +31,7 @@ type FetchResult[T any] struct {
 type FetchFunc[T any] func(context.Context) (FetchResult[T], error)
 
 // IntervalStrategy allows pluggable poll interval behavior (fixed, backoff, etc.).
-type IntervalStrategy interface { // nolint:interfacebloat // single method interface
+type IntervalStrategy interface { //nolint:interfacebloat // single method interface (tiny intentional interface)
 	NextPoll(attempt uint) time.Duration
 }
 
@@ -59,46 +62,46 @@ type ProgressMeta struct {
 	NextPollIn time.Duration
 }
 
-// ErrTimeout is returned when the operation does not reach a success state within Timeout.
-type ErrTimeout struct {
+// TimeoutError is returned when the operation does not reach a success state within Timeout.
+type TimeoutError struct {
 	LastStatus Status
 	Timeout    time.Duration
 }
 
-func (e *ErrTimeout) Error() string {
+func (e *TimeoutError) Error() string {
 	return "timeout waiting for target status after " + e.Timeout.String()
 }
 
-// ErrFailureState indicates the operation entered a declared failure state.
-type ErrFailureState struct {
+// FailureStateError indicates the operation entered a declared failure state.
+type FailureStateError struct {
 	Status Status
 }
 
-func (e *ErrFailureState) Error() string {
+func (e *FailureStateError) Error() string {
 	return "operation entered failure state: " + string(e.Status)
 }
 
-// ErrUnexpectedState indicates the operation entered a state outside success/transitional/failure sets.
-type ErrUnexpectedState struct {
+// UnexpectedStateError indicates the operation entered a state outside success/transitional/failure sets.
+type UnexpectedStateError struct {
 	Status  Status
 	Allowed []Status
 }
 
-func (e *ErrUnexpectedState) Error() string {
+func (e *UnexpectedStateError) Error() string {
 	return "operation entered unexpected state: " + string(e.Status)
 }
 
 // sentinel errors helpers
 var (
-	_ error = (*ErrTimeout)(nil)
-	_ error = (*ErrFailureState)(nil)
-	_ error = (*ErrUnexpectedState)(nil)
+	_ error = (*TimeoutError)(nil)
+	_ error = (*FailureStateError)(nil)
+	_ error = (*UnexpectedStateError)(nil)
 )
 
 // WaitForStatus polls using fetch until a success state, failure state, timeout, unexpected state,
 // context cancellation, or fetch error occurs.
 // On success, the final FetchResult is returned with nil error.
-func WaitForStatus[T any](ctx context.Context, fetch FetchFunc[T], opts Options[T]) (FetchResult[T], error) { // nolint:cyclop
+func WaitForStatus[T any](ctx context.Context, fetch FetchFunc[T], opts Options[T]) (FetchResult[T], error) { //nolint:cyclop // complexity driven by classification/state machine; readability preferred
 	var zero FetchResult[T]
 
 	if opts.Timeout <= 0 {
@@ -111,7 +114,7 @@ func WaitForStatus[T any](ctx context.Context, fetch FetchFunc[T], opts Options[
 		opts.ConsecutiveSuccess = 1
 	}
 	if opts.Interval == nil {
-		opts.Interval = FixedInterval(30 * time.Second)
+		opts.Interval = FixedInterval(DefaultPollInterval)
 	}
 
 	start := time.Now()
@@ -132,7 +135,7 @@ func WaitForStatus[T any](ctx context.Context, fetch FetchFunc[T], opts Options[
 		}
 		now := time.Now()
 		if now.After(deadline) {
-			return last, &ErrTimeout{LastStatus: last.Status, Timeout: opts.Timeout}
+			return last, &TimeoutError{LastStatus: last.Status, Timeout: opts.Timeout}
 		}
 
 		fr, err := fetch(ctx)
@@ -143,7 +146,7 @@ func WaitForStatus[T any](ctx context.Context, fetch FetchFunc[T], opts Options[
 
 		// Classification precedence: failure -> success -> transitional -> unexpected
 		if contains(opts.FailureStates, fr.Status) {
-			return fr, &ErrFailureState{Status: fr.Status}
+			return fr, &FailureStateError{Status: fr.Status}
 		}
 		if contains(opts.SuccessStates, fr.Status) {
 			successStreak++
@@ -154,7 +157,7 @@ func WaitForStatus[T any](ctx context.Context, fetch FetchFunc[T], opts Options[
 			successStreak = 0
 			if len(opts.TransitionalStates) > 0 {
 				if !contains(opts.TransitionalStates, fr.Status) {
-					return fr, &ErrUnexpectedState{Status: fr.Status, Allowed: allowedTransient}
+					return fr, &UnexpectedStateError{Status: fr.Status, Allowed: allowedTransient}
 				}
 			}
 		}

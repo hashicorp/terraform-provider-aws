@@ -15,23 +15,24 @@ import (
 const fastFixedInterval = 5 * time.Millisecond
 
 // makeCtx creates a context with generous overall test timeout safeguard.
-func makeCtx(t *testing.T) context.Context { //nolint:revive // test helper
+func makeCtx(t *testing.T) context.Context { // test helper
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
 	return ctx
 }
 
 func TestWaitForStatus_ValidationErrors(t *testing.T) {
-	// No t.Parallel here since we rely on wall clock; subtests parallelized individually.
+	t.Parallel()
+	// Subtests parallelized; each uses its own context with timeout.
 	cases := map[string]Options[struct{}]{
 		"missing timeout": {SuccessStates: []Status{"ok"}},
 		"missing success": {Timeout: time.Second},
 	}
 
-	for name, opts := range cases {
+	for name, opts := range cases { // Go 1.22+ copyloopvar: explicit copy not needed
 		opts := opts
-		//nolint:paralleltest // simple and quick
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := makeCtx(t)
 			_, err := WaitForStatus(ctx, func(context.Context) (FetchResult[struct{}], error) {
 				return FetchResult[struct{}]{Status: "irrelevant"}, nil
@@ -101,8 +102,8 @@ func TestWaitForStatus_FailureState(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected failure error")
 	}
-	if _, ok := err.(*ErrFailureState); !ok { //nolint:errorlint
-		t.Fatalf("expected ErrFailureState, got %T", err)
+	if _, ok := err.(*FailureStateError); !ok { //nolint:errorlint // direct type assertion adequate in tests
+		t.Fatalf("expected FailureStateError, got %T", err)
 	}
 	if fr.Status != "FAILED" {
 		t.Fatalf("unexpected status: %v", fr.Status)
@@ -123,8 +124,8 @@ func TestWaitForStatus_UnexpectedState_WithTransitional(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected unexpected state error")
 	}
-	if _, ok := err.(*ErrUnexpectedState); !ok { //nolint:errorlint
-		t.Fatalf("expected ErrUnexpectedState, got %T", err)
+	if _, ok := err.(*UnexpectedStateError); !ok { //nolint:errorlint // direct type assertion adequate in tests
+		t.Fatalf("expected UnexpectedStateError, got %T", err)
 	}
 }
 
@@ -142,8 +143,8 @@ func TestWaitForStatus_NoTransitionalListAllowsAnyUntilTimeout(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected timeout error")
 	}
-	if _, ok := err.(*ErrTimeout); !ok { //nolint:errorlint
-		t.Fatalf("expected ErrTimeout, got %T", err)
+	if _, ok := err.(*TimeoutError); !ok { //nolint:errorlint // direct type assertion adequate in tests
+		t.Fatalf("expected TimeoutError, got %T", err)
 	}
 	if time.Since(start) < 40*time.Millisecond { // sanity that we actually waited
 		t.Fatalf("timeout returned too early")

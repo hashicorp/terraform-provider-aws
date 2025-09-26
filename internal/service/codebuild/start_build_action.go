@@ -5,6 +5,7 @@ package codebuild
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -146,7 +147,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		return actionwait.FetchResult[*awstypes.Build]{Status: actionwait.Status(b.BuildStatus), Value: &b}, nil
 	}, actionwait.Options[*awstypes.Build]{
 		Timeout:          timeout,
-		Interval:         actionwait.FixedInterval(30 * time.Second),
+		Interval:         actionwait.FixedInterval(actionwait.DefaultPollInterval),
 		ProgressInterval: 2 * time.Minute,
 		SuccessStates:    []actionwait.Status{actionwait.Status(awstypes.StatusTypeSucceeded)},
 		TransitionalStates: []actionwait.Status{
@@ -163,14 +164,16 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		},
 	})
 	if err != nil {
-		switch err.(type) {
-		case *actionwait.ErrTimeout:
+		var timeoutErr *actionwait.TimeoutError
+		var failureErr *actionwait.FailureStateError
+		var unexpectedErr *actionwait.UnexpectedStateError
+		if errors.As(err, &timeoutErr) {
 			resp.Diagnostics.AddError("Build timeout", "Build did not complete within the specified timeout")
-		case *actionwait.ErrFailureState:
+		} else if errors.As(err, &failureErr) {
 			resp.Diagnostics.AddError("Build failed", "Build completed with status: "+err.Error())
-		case *actionwait.ErrUnexpectedState:
+		} else if errors.As(err, &unexpectedErr) {
 			resp.Diagnostics.AddError("Unexpected build status", err.Error())
-		default:
+		} else {
 			resp.Diagnostics.AddError("Error waiting for build", err.Error())
 		}
 		return

@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -24,6 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// ec2StopInstancePollInterval defines polling cadence for EC2 stop instance action.
+const ec2StopInstancePollInterval = 10 * time.Second
 
 // @Action(aws_ec2_stop_instance, name="Stop Instance")
 func newStopInstanceAction(_ context.Context) (action.ActionWithConfigure, error) {
@@ -190,7 +194,7 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 		return actionwait.FetchResult[struct{}]{Status: actionwait.Status(state)}, nil
 	}, actionwait.Options[struct{}]{
 		Timeout:          timeout,
-		Interval:         actionwait.FixedInterval(10 * time.Second),
+		Interval:         actionwait.FixedInterval(ec2StopInstancePollInterval),
 		ProgressInterval: 30 * time.Second,
 		SuccessStates:    []actionwait.Status{actionwait.Status(awstypes.InstanceStateNameStopped)},
 		TransitionalStates: []actionwait.Status{
@@ -203,18 +207,19 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 		},
 	})
 	if err != nil {
-		switch err.(type) {
-		case *actionwait.ErrTimeout:
+		var timeoutErr *actionwait.TimeoutError
+		var unexpectedErr *actionwait.UnexpectedStateError
+		if errors.As(err, &timeoutErr) {
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Instance to Stop",
 				fmt.Sprintf("EC2 instance %s did not stop within %s: %s", instanceID, timeout, err),
 			)
-		case *actionwait.ErrUnexpectedState:
+		} else if errors.As(err, &unexpectedErr) {
 			resp.Diagnostics.AddError(
 				"Unexpected Instance State",
 				fmt.Sprintf("EC2 instance %s entered unexpected state while stopping: %s", instanceID, err),
 			)
-		default:
+		} else {
 			resp.Diagnostics.AddError(
 				"Error Waiting for Instance to Stop",
 				fmt.Sprintf("Error while waiting for EC2 instance %s to stop: %s", instanceID, err),
