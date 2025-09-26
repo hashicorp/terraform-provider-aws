@@ -34,6 +34,7 @@ fi
 
 TF_ACC=1 go test \
     ./internal/acctest/... \
+    ./internal/actionwait/... \
     ./internal/attrmap/... \
     ./internal/backoff/... \
     ./internal/conns/... \
