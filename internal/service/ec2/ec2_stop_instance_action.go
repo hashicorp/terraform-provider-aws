@@ -242,5 +242,3 @@ func canStopInstance(state awstypes.InstanceStateName) bool {
 		return false
 	}
 }
-
-// Legacy polling helper removed; replaced with actionwait.

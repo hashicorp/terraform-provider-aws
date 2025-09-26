@@ -271,5 +271,3 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 		"paths":           paths,
 	})
 }
-
-// Legacy helper removed; polling now centralized in actionwait.
