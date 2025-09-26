@@ -6,6 +6,7 @@ set -euo pipefail
 
 go test \
     ./internal/acctest/... \
+    ./internal/actionwait/... \
     ./internal/attrmap/... \
     ./internal/backoff/... \
     ./internal/conns/... \
