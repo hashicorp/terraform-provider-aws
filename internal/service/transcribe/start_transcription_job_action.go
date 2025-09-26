@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -207,102 +208,68 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 		return
 	}
 
-	// Wait for job to be in progress or completed
-	deadline := time.Now().Add(timeout)
-	pollInterval := 5 * time.Second
-	progressInterval := 30 * time.Second
-	lastProgressUpdate := time.Now()
-
-	for {
-		// Check context cancellation
-		select {
-		case <-ctx.Done():
-			resp.Diagnostics.AddError(
-				"Context Cancelled",
-				"Transcription job start operation was cancelled",
-			)
-			return
-		default:
+	// Wait for job to move beyond QUEUED: treat IN_PROGRESS or COMPLETED as success, FAILED as failure, QUEUED transitional.
+	fr, err := actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[*awstypes.TranscriptionJob], error) {
+		getOutput, gerr := conn.GetTranscriptionJob(ctx, &transcribe.GetTranscriptionJobInput{TranscriptionJobName: aws.String(transcriptionJobName)})
+		if gerr != nil {
+			return actionwait.FetchResult[*awstypes.TranscriptionJob]{}, fmt.Errorf("get transcription job: %w", gerr)
 		}
-
-		// Check timeout
-		if time.Now().After(deadline) {
+		if getOutput.TranscriptionJob == nil {
+			return actionwait.FetchResult[*awstypes.TranscriptionJob]{}, fmt.Errorf("transcription job %s not found", transcriptionJobName)
+		}
+		status := getOutput.TranscriptionJob.TranscriptionJobStatus
+		return actionwait.FetchResult[*awstypes.TranscriptionJob]{Status: actionwait.Status(status), Value: getOutput.TranscriptionJob}, nil
+	}, actionwait.Options[*awstypes.TranscriptionJob]{
+		Timeout:          timeout,
+		Interval:         actionwait.FixedInterval(5 * time.Second),
+		ProgressInterval: 30 * time.Second,
+		SuccessStates: []actionwait.Status{
+			actionwait.Status(awstypes.TranscriptionJobStatusInProgress),
+			actionwait.Status(awstypes.TranscriptionJobStatusCompleted),
+		},
+		TransitionalStates: []actionwait.Status{
+			actionwait.Status(awstypes.TranscriptionJobStatusQueued),
+		},
+		FailureStates: []actionwait.Status{
+			actionwait.Status(awstypes.TranscriptionJobStatusFailed),
+		},
+		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
+			resp.SendProgress(action.InvokeProgressEvent{Message: fmt.Sprintf("Transcription job %s is currently %s", transcriptionJobName, fr.Status)})
+		},
+	})
+	if err != nil {
+		switch e := err.(type) {
+		case *actionwait.ErrTimeout:
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Transcription Job",
-				fmt.Sprintf("Transcription job %s did not start within %v", transcriptionJobName, timeout),
+				fmt.Sprintf("Transcription job %s did not reach a running state within %v", transcriptionJobName, timeout),
 			)
-			return
-		}
-
-		// Get job status
-		getInput := &transcribe.GetTranscriptionJobInput{
-			TranscriptionJobName: aws.String(transcriptionJobName),
-		}
-
-		getOutput, err := conn.GetTranscriptionJob(ctx, getInput)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to Get Transcription Job Status",
-				fmt.Sprintf("Could not get status for transcription job %s: %s", transcriptionJobName, err),
-			)
-			return
-		}
-
-		if getOutput.TranscriptionJob == nil {
-			resp.Diagnostics.AddError(
-				"Transcription Job Not Found",
-				fmt.Sprintf("Transcription job %s was not found", transcriptionJobName),
-			)
-			return
-		}
-
-		status := getOutput.TranscriptionJob.TranscriptionJobStatus
-
-		// Send progress updates periodically
-		if time.Since(lastProgressUpdate) >= progressInterval {
-			resp.SendProgress(action.InvokeProgressEvent{
-				Message: fmt.Sprintf("Transcription job %s is currently %s", transcriptionJobName, string(status)),
-			})
-			lastProgressUpdate = time.Now()
-		}
-
-		// Check if job has started successfully
-		switch status {
-		case awstypes.TranscriptionJobStatusInProgress, awstypes.TranscriptionJobStatusCompleted:
-			// Job has started successfully
-			resp.SendProgress(action.InvokeProgressEvent{
-				Message: fmt.Sprintf("Transcription job %s started successfully and is %s", transcriptionJobName, string(status)),
-			})
-
-			tflog.Info(ctx, "Transcription job started successfully", map[string]any{
-				"transcription_job_name": transcriptionJobName,
-				"job_status":             string(status),
-				names.AttrCreationTime:   getOutput.TranscriptionJob.CreationTime,
-			})
-			return
-
-		case awstypes.TranscriptionJobStatusFailed:
-			failureReason := ""
-			if getOutput.TranscriptionJob.FailureReason != nil {
-				failureReason = aws.ToString(getOutput.TranscriptionJob.FailureReason)
-			}
+		case *actionwait.ErrFailureState:
 			resp.Diagnostics.AddError(
 				"Transcription Job Failed",
-				fmt.Sprintf("Transcription job %s failed: %s", transcriptionJobName, failureReason),
+				fmt.Sprintf("Transcription job %s failed: %s", transcriptionJobName, e.Status),
 			)
-			return
-
-		case awstypes.TranscriptionJobStatusQueued:
-			// Job is still queued, continue waiting
-			time.Sleep(pollInterval)
-			continue
-
-		default:
+		case *actionwait.ErrUnexpectedState:
 			resp.Diagnostics.AddError(
 				"Unexpected Transcription Job Status",
-				fmt.Sprintf("Transcription job %s has unexpected status: %s", transcriptionJobName, string(status)),
+				fmt.Sprintf("Transcription job %s entered unexpected status: %s", transcriptionJobName, e.Status),
 			)
-			return
+		default:
+			resp.Diagnostics.AddError(
+				"Error Waiting for Transcription Job",
+				fmt.Sprintf("Error while waiting for transcription job %s: %s", transcriptionJobName, err),
+			)
 		}
+		return
 	}
+
+	resp.SendProgress(action.InvokeProgressEvent{Message: fmt.Sprintf("Transcription job %s started successfully and is %s", transcriptionJobName, fr.Status)})
+	logFields := map[string]any{
+		"transcription_job_name": transcriptionJobName,
+		"job_status":             fr.Status,
+	}
+	if fr.Value != nil {
+		logFields[names.AttrCreationTime] = fr.Value.CreationTime
+	}
+	tflog.Info(ctx, "Transcription job started successfully", logFields)
 }
