@@ -5,6 +5,7 @@ package cloudfront
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -229,7 +230,7 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 		return actionwait.FetchResult[struct{}]{Status: actionwait.Status(status)}, nil
 	}, actionwait.Options[struct{}]{
 		Timeout:          timeout,
-		Interval:         actionwait.FixedInterval(30 * time.Second),
+		Interval:         actionwait.FixedInterval(actionwait.DefaultPollInterval),
 		ProgressInterval: 60 * time.Second,
 		SuccessStates:    []actionwait.Status{"Completed"},
 		TransitionalStates: []actionwait.Status{
@@ -240,18 +241,19 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 		},
 	})
 	if err != nil {
-		switch err.(type) {
-		case *actionwait.ErrTimeout:
+		var timeoutErr *actionwait.TimeoutError
+		var unexpectedErr *actionwait.UnexpectedStateError
+		if errors.As(err, &timeoutErr) {
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Invalidation to Complete",
 				fmt.Sprintf("CloudFront invalidation %s did not complete within %s: %s", invalidationID, timeout, err),
 			)
-		case *actionwait.ErrUnexpectedState:
+		} else if errors.As(err, &unexpectedErr) {
 			resp.Diagnostics.AddError(
 				"Invalid Invalidation State",
 				fmt.Sprintf("CloudFront invalidation %s entered unexpected state: %s", invalidationID, err),
 			)
-		default:
+		} else {
 			resp.Diagnostics.AddError(
 				"Failed While Waiting for Invalidation",
 				fmt.Sprintf("Error waiting for CloudFront invalidation %s: %s", invalidationID, err),
