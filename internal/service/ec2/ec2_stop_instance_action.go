@@ -26,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ec2StopInstancePollInterval defines polling cadence for EC2 stop instance action.
-const ec2StopInstancePollInterval = 10 * time.Second
+// stopInstancePollInterval defines polling cadence for stop instance action.
+const stopInstancePollInterval = 10 * time.Second
 
 // @Action(aws_ec2_stop_instance, name="Stop Instance")
 func newStopInstanceAction(_ context.Context) (action.ActionWithConfigure, error) {
@@ -194,7 +194,7 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 		return actionwait.FetchResult[struct{}]{Status: actionwait.Status(state)}, nil
 	}, actionwait.Options[struct{}]{
 		Timeout:          timeout,
-		Interval:         actionwait.FixedInterval(ec2StopInstancePollInterval),
+		Interval:         actionwait.FixedInterval(stopInstancePollInterval),
 		ProgressInterval: 30 * time.Second,
 		SuccessStates:    []actionwait.Status{actionwait.Status(awstypes.InstanceStateNameStopped)},
 		TransitionalStates: []actionwait.Status{
