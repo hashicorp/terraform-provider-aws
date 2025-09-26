@@ -41,8 +41,8 @@ func resourceEIP() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Read:   schema.DefaultTimeout(15 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute), // Unused.
+			Delete: schema.DefaultTimeout(3 * time.Minute), // Unused.
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -334,7 +334,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
 		ipamPoolID := v.(string)
 		const (
-			timeout = 10 * time.Minute // IPAM eventual consistency
+			timeout = 20 * time.Minute // IPAM eventual consistency
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 			return findIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
