@@ -174,18 +174,21 @@ func resourceDomain() *schema.Resource {
 			"aiml_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"natural_language_query_generation_options": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"desired_state": {
 										Type:             schema.TypeString,
 										Optional:         true,
+										Computed:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.NaturalLanguageQueryGenerationDesiredState](),
 									},
 								},
@@ -194,11 +197,13 @@ func resourceDomain() *schema.Resource {
 						"s3_vectors_engine": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
+										Computed: true,
 										Optional: true,
 									},
 								},
@@ -953,7 +958,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 	}
 	if ds.AIMLOptions != nil {
-		if err := d.Set("aiml_options", []interface{}{flattenAIMLOptionsOutput(ds.AIMLOptions)}); err != nil {
+		if err := d.Set("aiml_options", []any{flattenAIMLOptionsOutput(ds.AIMLOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting aiml_options: %s", err)
 		}
 	} else {
@@ -1085,6 +1090,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("advanced_security_options") {
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
+		}
+
+		if d.HasChange("aiml_options") {
+			if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange("auto_tune_options") {
