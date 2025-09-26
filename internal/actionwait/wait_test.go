@@ -29,8 +29,7 @@ func TestWaitForStatus_ValidationErrors(t *testing.T) {
 		"missing success": {Timeout: time.Second},
 	}
 
-	for name, opts := range cases { // Go 1.22+ copyloopvar: explicit copy not needed
-		opts := opts
+	for name, opts := range cases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			ctx := makeCtx(t)
