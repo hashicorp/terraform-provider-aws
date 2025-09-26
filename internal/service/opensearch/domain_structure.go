@@ -302,11 +302,11 @@ func flattenAIMLOptionsOutput(apiObject *awstypes.AIMLOptionsOutput) map[string]
 	tfMap := map[string]any{}
 
 	if v := apiObject.NaturalLanguageQueryGenerationOptions; v != nil {
-		tfMap["natural_language_query_generation_options"] = []any{flattenNaturalLanguageQueryGenerationOptionsOutput(v)}
+		tfMap["natural_language_query_generation_options"] = []interface{}{flattenNaturalLanguageQueryGenerationOptionsOutput(v)}
 	}
 
 	if v := apiObject.S3VectorsEngine; v != nil {
-		tfMap["s3_vectors_engine"] = []any{flattenS3VectorsEngine(v)}
+		tfMap["s3_vectors_engine"] = []interface{}{flattenS3VectorsEngine(v)}
 	}
 
 	return tfMap

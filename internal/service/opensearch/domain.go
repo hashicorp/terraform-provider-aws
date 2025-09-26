@@ -953,7 +953,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 	}
 	if ds.AIMLOptions != nil {
-		if err := d.Set("aiml_options", []any{flattenAIMLOptionsOutput(ds.AIMLOptions)}); err != nil {
+		if err := d.Set("aiml_options", []interface{}{flattenAIMLOptionsOutput(ds.AIMLOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting aiml_options: %s", err)
 		}
 	} else {
