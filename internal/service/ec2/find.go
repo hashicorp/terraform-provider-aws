@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"iter"
 	"slices"
 	"strconv"
 	"strings"
@@ -379,6 +380,77 @@ func findHost(ctx context.Context, conn *ec2.Client, input *ec2.DescribeHostsInp
 	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Host) bool { return v.HostProperties != nil })
 }
 
+func findInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
+	input := ec2.DescribeInstancesInput{
+		InstanceIds: []string{id},
+	}
+
+	output, err := findInstance(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State.Name; state == awstypes.InstanceStateNameTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.InstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
+func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
+	var output []awstypes.Instance
+	for v, err := range listInstances(ctx, conn, input) {
+		if err != nil {
+			return nil, err
+		}
+		output = append(output, v)
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
+}
+
+// DescribeInstances is an "All-Or-Some" call.
+func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) iter.Seq2[awstypes.Instance, error] {
+	return func(yield func(awstypes.Instance, error) bool) {
+		pages := ec2.NewDescribeInstancesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+				yield(awstypes.Instance{}, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: &input,
+				})
+				return
+			}
+
+			if err != nil {
+				yield(awstypes.Instance{}, err)
+				return
+			}
+
+			for _, v := range page.Reservations {
+				for _, instance := range v.Instances {
+					if !yield(instance, nil) {
+						return
+					}
+				}
+			}
+		}
+	}
+}
+
 func findInstanceCreditSpecifications(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceCreditSpecificationsInput) ([]awstypes.InstanceCreditSpecification, error) {
 	var output []awstypes.InstanceCreditSpecification
 
@@ -401,6 +473,30 @@ func findInstanceCreditSpecifications(ctx context.Context, conn *ec2.Client, inp
 	}
 
 	return output, nil
+}
+
+func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tagKey string) (string, error) {
+	input := ec2.DescribeTagsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"resource-id": instanceID,
+			names.AttrKey: tagKey,
+		}),
+	}
+
+	output, err := conn.DescribeTags(ctx, &input)
+
+	if err != nil {
+		return "", err
+	}
+
+	switch count := len(output.Tags); count {
+	case 0:
+		return "", nil
+	case 1:
+		return aws.ToString(output.Tags[0].Value), nil
+	default:
+		return "", tfresource.NewTooManyResultsError(count, input)
+	}
 }
 
 func findInstanceCreditSpecification(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceCreditSpecificationsInput) (*awstypes.InstanceCreditSpecification, error) {
@@ -432,6 +528,21 @@ func findInstanceCreditSpecificationByID(ctx context.Context, conn *ec2.Client, 
 	}
 
 	return output, nil
+}
+
+func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awstypes.InstanceMetadataDefaultsResponse, error) {
+	input := ec2.GetInstanceMetadataDefaultsInput{}
+	output, err := conn.GetInstanceMetadataDefaults(ctx, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AccountLevel == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AccountLevel, nil
 }
 
 func findInstanceStatus(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceStatusInput) (*awstypes.InstanceStatus, error) {
@@ -770,6 +881,43 @@ func findLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client
 	return output, nil
 }
 
+func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplateSpecification *awstypes.LaunchTemplateSpecification) (*awstypes.ResponseLaunchTemplateData, error) {
+	input := ec2.DescribeLaunchTemplateVersionsInput{}
+
+	if v := aws.ToString(launchTemplateSpecification.LaunchTemplateId); v != "" {
+		input.LaunchTemplateId = aws.String(v)
+	} else if v := aws.ToString(launchTemplateSpecification.LaunchTemplateName); v != "" {
+		input.LaunchTemplateName = aws.String(v)
+	}
+
+	var latestVersion bool
+
+	if v := aws.ToString(launchTemplateSpecification.Version); v != "" {
+		switch v {
+		case launchTemplateVersionDefault:
+			input.Filters = newAttributeFilterList(map[string]string{
+				"is-default-version": "true",
+			})
+		case launchTemplateVersionLatest:
+			latestVersion = true
+		default:
+			input.Versions = []string{v}
+		}
+	}
+
+	output, err := findLaunchTemplateVersions(ctx, conn, &input)
+
+	if err != nil {
+		return nil, fmt.Errorf("reading EC2 Launch Template versions: %w", err)
+	}
+
+	if latestVersion {
+		return output[len(output)-1].LaunchTemplateData, nil
+	}
+
+	return output[0].LaunchTemplateData, nil
+}
+
 func findLocalGatewayRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) (*awstypes.LocalGatewayRouteTable, error) {
 	output, err := findLocalGatewayRouteTables(ctx, conn, input)
 
@@ -1099,6 +1247,48 @@ func findPublicIPv4PoolByID(ctx context.Context, conn *ec2.Client, id string) (*
 	}
 
 	return output, nil
+}
+
+func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) (*awstypes.VolumeAttachment, error) {
+	input := ec2.DescribeVolumesInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"attachment.device":      deviceName,
+			"attachment.instance-id": instanceID,
+		}),
+		VolumeIds: []string{volumeID},
+	}
+
+	output, err := findEBSVolume(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VolumeStateAvailable || state == awstypes.VolumeStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VolumeId) != volumeID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	for _, v := range output.Attachments {
+		if v.State == awstypes.VolumeAttachmentStateDetached {
+			continue
+		}
+
+		if aws.ToString(v.Device) == deviceName && aws.ToString(v.InstanceId) == instanceID {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
 }
 
 func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
@@ -3996,6 +4186,16 @@ func findIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx context.Context, conn 
 	return tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
 		return aws.ToString(v.ResourceId) == resourceID
 	}), nil
+}
+
+func findIPAMPoolAllocationForResource(ctx context.Context, conn *ec2.Client, ipamPoolID, resourceID string) (*awstypes.IpamPoolAllocation, error) {
+	output, err := findIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, ipamPoolID, resourceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertFirstValueResult(output)
 }
 
 func findIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) (*awstypes.IpamPoolCidr, error) {
