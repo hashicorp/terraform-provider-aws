@@ -229,12 +229,10 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 	state.AccountRegion = fwflex.StringToFramework(ctx, out.AwsAccountRegion)
 	state.BlueprintIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
 
-	userParametersList, d := flattenEnvironmentUserParameters(ctx, out.UserParameters)
-	resp.Diagnostics.Append(d...)
+	populateUserParameters(ctx, &state.UserParameters, output.UserParameters, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.UserParameters = userParametersList
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -278,12 +276,14 @@ func (r *environmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.ProjectIdentifier = fwflex.StringToFramework(ctx, out.ProjectId)
 	state.ProfileIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentProfileId)
 
-	userParametersList, d := flattenEnvironmentUserParameters(ctx, out.UserParameters)
-	resp.Diagnostics.Append(d...)
+	if state.UserParameters.IsNull() { // Import
+		importUserParameters(ctx, &state.UserParameters, out.UserParameters, &resp.Diagnostics)
+	} else {
+		populateUserParameters(ctx, &state.UserParameters, out.UserParameters, &resp.Diagnostics)
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.UserParameters = userParametersList
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -551,7 +551,7 @@ type resourceUserParametersData struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func flattenEnvironmentUserParameters(ctx context.Context, userParameters []awstypes.CustomParameter) (fwtypes.ListNestedObjectValueOf[resourceUserParametersData], diag.Diagnostics) {
+func importUserParameters(ctx context.Context, stateUserParams *fwtypes.ListNestedObjectValueOf[resourceUserParametersData], userParameters []awstypes.CustomParameter, diags *diag.Diagnostics) {
 	params := make([]resourceUserParametersData, 0, len(userParameters))
 	for _, param := range userParameters {
 		// If `DefaultValue` is nil, no value has been set
@@ -562,5 +562,26 @@ func flattenEnvironmentUserParameters(ctx context.Context, userParameters []awst
 			})
 		}
 	}
-	return fwtypes.NewListNestedObjectValueOfValueSlice(ctx, params)
+	s, d := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, params)
+	diags.Append(d...)
+	if d.HasError() {
+		return
+	}
+	*stateUserParams = s
+}
+
+func populateUserParameters(ctx context.Context, stateUserParams *fwtypes.ListNestedObjectValueOf[resourceUserParametersData], userParameters []awstypes.CustomParameter, diags *diag.Diagnostics) {
+	params, d := stateUserParams.ToSlice(ctx)
+	diags.Append(d...)
+	if d.HasError() {
+		return
+	}
+	for _, p := range params {
+		for _, up := range userParameters {
+			if p.Name.ValueString() == aws.ToString(up.KeyName) {
+				p.Value = fwflex.StringToFramework(ctx, up.DefaultValue)
+				break
+			}
+		}
+	}
 }

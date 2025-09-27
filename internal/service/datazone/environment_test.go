@@ -35,6 +35,7 @@ func TestAccDataZoneEnvironment_serial(t *testing.T) {
 		"updateNameAndDescription":   testAccDataZoneEnvironment_updateNameAndDescription,
 		"accountIDAndRegion":         testAccDataZoneEnvironment_accountIDAndRegion,
 		"userParameters_Environment": testAccDataZoneEnvironment_userParameters_Environment,
+		"userParameters_Inherited":   testAccDataZoneEnvironment_userParameters_Inherited,
 		"userParameters_Override":    testAccDataZoneEnvironment_userParameters_Override,
 	}
 
@@ -238,6 +239,58 @@ func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_userParameters_Inherited(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_userParameters_Inherited(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":  knownvalue.StringExact("workgroupName"),
+							"value": knownvalue.StringExact(rName + "-workgroup"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"user_parameters",
+				},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("user_parameters.#", "3"),
+					acctest.ImportCheckResourceAttr("user_parameters.0.name", "consumerGlueDbName"),
+					acctest.ImportCheckResourceAttr("user_parameters.0.value", rName+"-consumer-inherited"),
+					acctest.ImportCheckResourceAttr("user_parameters.1.name", "producerGlueDbName"),
+					acctest.ImportCheckResourceAttr("user_parameters.1.value", rName+"-producer-inherited"),
+					acctest.ImportCheckResourceAttr("user_parameters.2.name", "workgroupName"),
+					acctest.ImportCheckResourceAttr("user_parameters.2.value", rName+"-workgroup"),
+				),
 			},
 		},
 	})
@@ -543,6 +596,30 @@ resource "aws_datazone_environment" "test" {
     name  = "producerGlueDbName"
     value = "%[1]s-producer"
   }
+
+  user_parameters {
+    name  = "workgroupName"
+    value = "%[1]s-workgroup"
+  }
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, rName))
+}
+
+func testAccEnvironmentConfig_userParameters_Inherited(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_Inherited(rName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[1]q
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
 
   user_parameters {
     name  = "workgroupName"
