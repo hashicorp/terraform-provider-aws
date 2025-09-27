@@ -601,3 +601,69 @@ func waitThingDeleted(ctx context.Context, conn *example.Example, id string, tim
     ```
 
 Typically, the AWS Go SDK should include constants for various status field values (e.g., `StatusCreating` for `CREATING`). If not, create them in a file named `internal/service/{SERVICE}/consts.go`.
+
+## Configurable Wait Times
+
+Some AWS services require configurable wait times to accommodate different environments and use cases. For example, SQS queue operations have different propagation characteristics in local development environments (like LocalStack) compared to production AWS environments.
+
+### SQS Wait Times Configuration
+
+The SQS service supports configurable wait times through the provider configuration to optimize performance for different environments:
+
+```hcl
+provider "aws" {
+  # ... other provider configuration ...
+
+  sqs_wait_times {
+    create_continuous_target_occurrence = 1  # Default: 6 (30 seconds)
+    delete_continuous_target_occurrence = 2  # Default: 15 (45 seconds)
+  }
+}
+```
+
+#### Configuration Options
+
+- **`create_continuous_target_occurrence`** (Optional, Number): Number of consecutive successful checks required during SQS queue creation. Default is 6, which results in approximately 30 seconds of wait time (6 checks × 5 seconds). Lower values speed up local development environments.
+
+- **`delete_continuous_target_occurrence`** (Optional, Number): Number of consecutive successful checks required during SQS queue deletion. Default is 15, which results in approximately 45 seconds of wait time (15 checks × 3 seconds). Lower values speed up local development environments.
+
+#### Use Cases
+
+**Local Development (LocalStack):**
+```hcl
+provider "aws" {
+  # LocalStack configuration
+  access_key                  = "test"
+  secret_key                  = "test"
+  region                      = "us-east-1"
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_region_validation      = true
+  skip_requesting_account_id  = true
+
+  # Fast wait times for local development
+  sqs_wait_times {
+    create_continuous_target_occurrence = 1  # ~5 seconds
+    delete_continuous_target_occurrence = 2  # ~6 seconds
+  }
+
+  endpoints {
+    sqs = "http://localhost:4566"
+  }
+}
+```
+
+**Production AWS:**
+```hcl
+provider "aws" {
+  # Production configuration uses default wait times
+  # (no sqs_wait_times block needed)
+}
+```
+
+#### Implementation Notes
+
+- Default values are designed to accommodate various AWS regions including GovCloud, commercial, and China regions
+- Lower values should only be used in controlled environments where eventual consistency is not a concern
+- The configuration affects both `aws_sqs_queue` resource creation and deletion operations
+- Changes to wait times do not affect existing resources, only new operations
