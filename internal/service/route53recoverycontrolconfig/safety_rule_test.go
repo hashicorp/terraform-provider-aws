@@ -130,7 +130,7 @@ func testAccSafetyRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSafetyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSafetyRuleConfig_routingControl_tags1(rName, "key1", "value1"),
+				Config: testAccSafetyRuleConfig_routingControl_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -139,8 +139,8 @@ func testAccSafetyRule_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_controls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -149,7 +149,7 @@ func testAccSafetyRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSafetyRuleConfig_routingControl_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSafetyRuleConfig_routingControl_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -158,13 +158,13 @@ func testAccSafetyRule_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_controls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSafetyRuleConfig_routingControl_tags1(rName, "key2", "value2"),
+				Config: testAccSafetyRuleConfig_routingControl_tags1(rName, acctest.CtKey2, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -173,8 +173,8 @@ func testAccSafetyRule_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_controls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -303,7 +303,7 @@ resource "aws_route53recoverycontrolconfig_routing_control" "test" {
   cluster_arn       = aws_route53recoverycontrolconfig_cluster.test.arn
   control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
 }
-	
+
 resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
   name              = %[1]q
   control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
@@ -316,7 +316,7 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
     threshold = 0
     type      = "AND"
   }
- tags = {
+  tags = {
     %[2]q = %[3]q
   }
 }
@@ -352,9 +352,9 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
     threshold = 0
     type      = "AND"
   }
-   tags = {
+  tags = {
     %[2]q = %[3]q
-	%[4]q = %[5]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
