@@ -328,7 +328,7 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		assertionRuleUpdate := &awstypes.AssertionRuleUpdate{
 			SafetyRuleArn: aws.String(d.Get(names.AttrARN).(string)),
 		}
@@ -350,7 +350,6 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Assertion Rule: %s", err)
 		}
-
 	}
 
 	return append(diags, sdkdiag.WrapDiagsf(resourceControlPanelRead(ctx, d, meta), "updating Route53 Recovery Control Config Assertion Rule")...)
@@ -360,8 +359,7 @@ func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta any) dia
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		gatingRuleUpdate := &awstypes.GatingRuleUpdate{
 			SafetyRuleArn: aws.String(d.Get(names.AttrARN).(string)),
 		}

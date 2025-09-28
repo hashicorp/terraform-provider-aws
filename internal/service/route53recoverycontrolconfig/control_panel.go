@@ -130,7 +130,6 @@ func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-
 		input := &r53rcc.UpdateControlPanelInput{
 			ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
 			ControlPanelArn:  aws.String(d.Get(names.AttrARN).(string)),
