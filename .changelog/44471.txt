@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_access_point: Fix tagging operations for S3 Express One Zone Directory Bucket Access Points by routing requests to the correct `s3express-control` API endpoint
+```

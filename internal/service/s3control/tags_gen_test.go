@@ -6,6 +6,8 @@ package s3control
 import "testing"
 
 func TestIsDirectoryBucketARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name     string
 		arn      string
@@ -13,22 +15,22 @@ func TestIsDirectoryBucketARN(t *testing.T) {
 	}{
 		{
 			name:     "Standard S3 bucket ARN",
-			arn:      "arn:aws:s3:::my-bucket",
+			arn:      "arn:partition:s3:::my-bucket",
 			expected: false,
 		},
 		{
 			name:     "S3 Control Access Point ARN",
-			arn:      "arn:aws:s3:us-east-1:123456789012:accesspoint/my-access-point",
+			arn:      "arn:partition:s3:region:123456789012:accesspoint/my-access-point",
 			expected: false,
 		},
 		{
 			name:     "Directory Bucket ARN (S3 Express)",
-			arn:      "arn:aws:s3express:us-east-1:123456789012:bucket/my-directory-bucket--usw2-az1--x-s3",
+			arn:      "arn:partition:s3express:region:123456789012:bucket/my-directory-bucket--usw2-az1--x-s3",
 			expected: true,
 		},
 		{
 			name:     "Directory Bucket Access Point ARN",
-			arn:      "arn:aws:s3express:us-east-1:123456789012:accesspoint/my-access-point",
+			arn:      "arn:partition:s3express:region:123456789012:accesspoint/my-access-point",
 			expected: true,
 		},
 		{
@@ -45,6 +47,7 @@ func TestIsDirectoryBucketARN(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			result := isDirectoryBucketARN(tc.arn)
 			if result != tc.expected {
 				t.Errorf("isDirectoryBucketARN(%q) = %v, expected %v", tc.arn, result, tc.expected)
