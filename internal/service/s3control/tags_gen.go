@@ -3,6 +3,7 @@ package s3control
 
 import (
 	"context"
+	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,6 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// isDirectoryBucketARN returns true if the ARN represents an S3 Directory Bucket (S3 Express One Zone).
+// Directory Bucket ARNs contain "s3express" in the service portion.
+func isDirectoryBucketARN(arn string) bool {
+	return strings.Contains(arn, ":s3express:")
+}
 
 // listTags lists s3control service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
@@ -38,7 +45,16 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
 	c := meta.(*conns.AWSClient)
-	tags, err := listTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx))
+
+	var conn *s3control.Client
+	// Directory Buckets require the S3 Express Control API endpoint
+	if isDirectoryBucketARN(identifier) {
+		conn = c.S3ExpressControlClient(ctx)
+	} else {
+		conn = c.S3ControlClient(ctx)
+	}
+
+	tags, err := listTags(ctx, conn, identifier, c.AccountID(ctx))
 
 	if err != nil {
 		return smarterr.NewError(err)
@@ -147,5 +163,14 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	c := meta.(*conns.AWSClient)
-	return updateTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
+
+	var conn *s3control.Client
+	// Directory Buckets require the S3 Express Control API endpoint
+	if isDirectoryBucketARN(identifier) {
+		conn = c.S3ExpressControlClient(ctx)
+	} else {
+		conn = c.S3ControlClient(ctx)
+	}
+
+	return updateTags(ctx, conn, identifier, c.AccountID(ctx), oldTags, newTags)
 }
