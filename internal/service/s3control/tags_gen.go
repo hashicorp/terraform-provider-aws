@@ -3,30 +3,22 @@ package s3control
 
 import (
 	"context"
-	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// isDirectoryBucketARN returns true if the ARN represents an S3 Directory Bucket (S3 Express One Zone).
-// Directory Bucket ARNs contain "s3express" in the service portion.
-func isDirectoryBucketARN(arn string) bool {
-	return strings.Contains(arn, ":s3express:")
-}
-
-// listTags lists s3control service tags.
+// listTagsImpl lists s3control service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceType string, optFns ...func(*s3control.Options)) (tftags.KeyValueTags, error) {
+func listTagsImpl(ctx context.Context, conn *s3control.Client, identifier, resourceType string, optFns ...func(*s3control.Options)) (tftags.KeyValueTags, error) {
 	input := s3control.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 		AccountId:   aws.String(resourceType),
@@ -39,32 +31,6 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 	}
 
 	return keyValueTags(ctx, output.Tags), nil
-}
-
-// ListTags lists s3control service tags and set them in Context.
-// It is called from outside this package.
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	c := meta.(*conns.AWSClient)
-
-	var conn *s3control.Client
-	// Directory Buckets require the S3 Express Control API endpoint
-	if isDirectoryBucketARN(identifier) {
-		conn = c.S3ExpressControlClient(ctx)
-	} else {
-		conn = c.S3ControlClient(ctx)
-	}
-
-	tags, err := listTags(ctx, conn, identifier, c.AccountID(ctx))
-
-	if err != nil {
-		return smarterr.NewError(err)
-	}
-
-	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(tags)
-	}
-
-	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -115,10 +81,10 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	}
 }
 
-// updateTags updates s3control service tags.
+// updateTagsImpl updates s3control service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourceType string, oldTagsMap, newTagsMap any, optFns ...func(*s3control.Options)) error {
+func updateTagsImpl(ctx context.Context, conn *s3control.Client, identifier, resourceType string, oldTagsMap, newTagsMap any, optFns ...func(*s3control.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -157,20 +123,4 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 	}
 
 	return nil
-}
-
-// UpdateTags updates s3control service tags.
-// It is called from outside this package.
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	c := meta.(*conns.AWSClient)
-
-	var conn *s3control.Client
-	// Directory Buckets require the S3 Express Control API endpoint
-	if isDirectoryBucketARN(identifier) {
-		conn = c.S3ExpressControlClient(ctx)
-	} else {
-		conn = c.S3ControlClient(ctx)
-	}
-
-	return updateTags(ctx, conn, identifier, c.AccountID(ctx), oldTags, newTags)
 }
