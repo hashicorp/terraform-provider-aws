@@ -15,6 +15,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -203,6 +204,8 @@ func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
 
 	var environment datazone.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parameterPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parameterPrefixUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
 	resource.Test(t, resource.TestCase{
@@ -215,7 +218,7 @@ func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_userParameters(rName),
+				Config: testAccEnvironmentConfig_userParameters(rName, parameterPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 				),
@@ -223,17 +226,50 @@ func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"name":  knownvalue.StringExact("consumerGlueDbName"),
-							"value": knownvalue.StringExact(rName + "-consumer"),
+							"value": knownvalue.StringExact(parameterPrefix + "-consumer"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"name":  knownvalue.StringExact("producerGlueDbName"),
-							"value": knownvalue.StringExact(rName + "-producer"),
+							"value": knownvalue.StringExact(parameterPrefix + "-producer"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"name":  knownvalue.StringExact("workgroupName"),
-							"value": knownvalue.StringExact(rName + "-workgroup"),
+							"value": knownvalue.StringExact(parameterPrefix + "-workgroup"),
 						}),
 					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+			{
+				Config: testAccEnvironmentConfig_userParameters(rName, parameterPrefixUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":  knownvalue.StringExact("consumerGlueDbName"),
+							"value": knownvalue.StringExact(parameterPrefixUpdated + "-consumer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":  knownvalue.StringExact("producerGlueDbName"),
+							"value": knownvalue.StringExact(parameterPrefixUpdated + "-producer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":  knownvalue.StringExact("workgroupName"),
+							"value": knownvalue.StringExact(parameterPrefixUpdated + "-workgroup"),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
 				},
 			},
 			{
@@ -615,7 +651,7 @@ resource "aws_datazone_environment" "test" {
 `, rName))
 }
 
-func testAccEnvironmentConfig_userParameters(rName string) string {
+func testAccEnvironmentConfig_userParameters(rName, parameterPrefix string) string {
 	return acctest.ConfigCompose(
 		testAccEnvironmentConfig_base(rName),
 		testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName),
@@ -629,24 +665,24 @@ resource "aws_datazone_environment" "test" {
 
   user_parameters {
     name  = "consumerGlueDbName"
-    value = "%[1]s-consumer"
+    value = "%[2]s-consumer"
   }
 
   user_parameters {
     name  = "producerGlueDbName"
-    value = "%[1]s-producer"
+    value = "%[2]s-producer"
   }
 
   user_parameters {
     name  = "workgroupName"
-    value = "%[1]s-workgroup"
+    value = "%[2]s-workgroup"
   }
 
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
   ]
 }
-`, rName))
+`, rName, parameterPrefix))
 }
 
 func testAccEnvironmentConfig_userParameters_Inherited(rName string) string {

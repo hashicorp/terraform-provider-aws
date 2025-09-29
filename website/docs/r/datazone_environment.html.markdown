@@ -58,7 +58,9 @@ The following arguments are optional:
 * `blueprint_identifier` - (Optional) The blueprint with which the environment is created.
 * `description` - (Optional) The description of the environment.
 * `glossary_terms` - (Optional) The business glossary terms that can be used in this environment.
-* `user_parameters` - (Optional) The user parameters that are used in the environment. See [User Parameters](#user-parameters) for more information.
+* `user_parameters` - (Optional) The user parameters that are used in the environment.
+  See [User Parameters](#user-parameters) for more information.
+  Changing these values recreates the resource.
 
 ### User Parameters
 

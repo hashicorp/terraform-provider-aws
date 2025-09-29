@@ -143,6 +143,7 @@ func (r *environmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceUserParametersData](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
