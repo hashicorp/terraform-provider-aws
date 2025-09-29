@@ -399,7 +399,7 @@ func testAccDataZoneEnvironment_glossaryTerms(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_glossaryTerms(rName),
+				Config: testAccEnvironmentConfig_glossaryTerms(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 				),
@@ -408,6 +408,25 @@ func testAccDataZoneEnvironment_glossaryTerms(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(0), "aws_datazone_glossary_term.test[0]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(1), "aws_datazone_glossary_term.test[1]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(2), "aws_datazone_glossary_term.test[2]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+			{
+				Config: testAccEnvironmentConfig_glossaryTerms(rName, 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glossary_terms"), knownvalue.ListSizeExact(4)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(0), "aws_datazone_glossary_term.test[0]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(1), "aws_datazone_glossary_term.test[1]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(2), "aws_datazone_glossary_term.test[2]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(3), "aws_datazone_glossary_term.test[3]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 				},
 			},
 			{
@@ -779,7 +798,7 @@ resource "aws_datazone_environment_profile" "test" {
 `, rName)
 }
 
-func testAccEnvironmentConfig_glossaryTerms(rName string) string {
+func testAccEnvironmentConfig_glossaryTerms(rName string, count int) string {
 	return acctest.ConfigCompose(
 		testAccEnvironmentConfig_base(rName),
 		testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName),
@@ -806,12 +825,12 @@ resource "aws_datazone_glossary" "test" {
 }
 
 resource "aws_datazone_glossary_term" "test" {
-  count = 3
+  count = %[2]d
 
   domain_identifier   = aws_datazone_glossary.test.domain_identifier
   glossary_identifier = aws_datazone_glossary.test.id
   name                = "%[1]s-${count.index}"
   status              = "ENABLED"
 }
-`, rName))
+`, rName, count))
 }

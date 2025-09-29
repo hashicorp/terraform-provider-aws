@@ -317,6 +317,15 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 		input.Description = plan.Description.ValueStringPointer()
 	}
 
+	if !plan.GlossaryTerms.Equal(state.GlossaryTerms) {
+		needsUpdate = true
+		d := fwflex.Expand(ctx, &plan.GlossaryTerms, &input.GlossaryTerms)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
+			return
+		}
+	}
+
 	if needsUpdate {
 		output, err := conn.UpdateEnvironment(ctx, &input)
 		if err != nil {
