@@ -65,6 +65,7 @@ var (
 
 	AttachPolicyToUser                = attachPolicyToUser
 	CheckPwdPolicy                    = checkPwdPolicy
+	GeneratePassword                  = generatePassword
 	ListGroupsForUserPages            = listGroupsForUserPages
 	RolePolicyParseID                 = rolePolicyParseID
 	ServiceLinkedRoleParseResourceID  = serviceLinkedRoleParseResourceID

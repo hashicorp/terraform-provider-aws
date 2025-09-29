@@ -89,9 +89,9 @@ const (
 	charSymbols = "!@#$%^&*()_+-=[]{}|'"
 )
 
-// GeneratePassword generates a random password of a given length, matching the
+// generatePassword generates a random password of a given length, matching the
 // most restrictive iam password policy.
-func GeneratePassword(length int) (string, error) {
+func generatePassword(length int) (string, error) {
 	const charset = charLower + charUpper + charNumbers + charSymbols
 
 	result := make([]byte, length)
@@ -142,7 +142,7 @@ func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData,
 	username := d.Get("user").(string)
 
 	passwordLength := d.Get("password_length").(int)
-	initialPassword, err := GeneratePassword(passwordLength)
+	initialPassword, err := generatePassword(passwordLength)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM User Login Profile for %q: %s", username, err)
 	}
