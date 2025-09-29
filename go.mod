@@ -100,7 +100,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.37.5
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.46.6
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.19.5
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/drs v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.7
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.4
