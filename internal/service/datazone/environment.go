@@ -221,16 +221,7 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state, fwflex.WithIgnoredFieldNames([]string{"UserParameters"}))...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	state.AccountIdentifier = fwflex.StringToFramework(ctx, out.AwsAccountId)
-	state.AccountRegion = fwflex.StringToFramework(ctx, out.AwsAccountRegion)
-	state.BlueprintIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
-
-	populateUserParameters(ctx, &state.UserParameters, output.UserParameters, &resp.Diagnostics)
+	flattenEnvironment(ctx, output, &state, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -263,25 +254,7 @@ func (r *environmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNamesAppend("UserParameters"),
-		fwflex.WithFieldNamePrefix("Environment"),
-	)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	state.AccountIdentifier = fwflex.StringToFramework(ctx, out.AwsAccountId)
-	state.AccountRegion = fwflex.StringToFramework(ctx, out.AwsAccountRegion)
-	state.BlueprintIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
-	state.ProjectIdentifier = fwflex.StringToFramework(ctx, out.ProjectId)
-	state.ProfileIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentProfileId)
-
-	if state.UserParameters.IsNull() { // Import
-		importUserParameters(ctx, &state.UserParameters, out.UserParameters, &resp.Diagnostics)
-	} else {
-		populateUserParameters(ctx, &state.UserParameters, out.UserParameters, &resp.Diagnostics)
-	}
+	flattenEnvironment(ctx, out, &state, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -355,16 +328,7 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan, fwflex.WithIgnoredFieldNames([]string{"UserParameters"}))...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		plan.AccountIdentifier = fwflex.StringToFramework(ctx, output.AwsAccountId)
-		plan.AccountRegion = fwflex.StringToFramework(ctx, output.AwsAccountRegion)
-		plan.BlueprintIdentifier = fwflex.StringToFramework(ctx, output.EnvironmentBlueprintId)
-
-		populateUserParameters(ctx, &plan.UserParameters, output.UserParameters, &resp.Diagnostics)
+		flattenEnvironment(ctx, output, &plan, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -547,6 +511,22 @@ type environmentResourceModel struct {
 	ProvisionedResources fwtypes.ListNestedObjectValueOf[resourceProvisionedResourcesData] `tfsdk:"provisioned_resources"`
 	Timeouts             timeouts.Value                                                    `tfsdk:"timeouts"`
 	UserParameters       fwtypes.ListNestedObjectValueOf[resourceUserParametersData]       `tfsdk:"user_parameters"`
+}
+
+func flattenEnvironment(ctx context.Context, apiObject *datazone.GetEnvironmentOutput, model *environmentResourceModel, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, apiObject, model, fwflex.WithIgnoredFieldNamesAppend("UserParameters"))...)
+
+	model.AccountIdentifier = fwflex.StringToFramework(ctx, apiObject.AwsAccountId)
+	model.AccountRegion = fwflex.StringToFramework(ctx, apiObject.AwsAccountRegion)
+	model.BlueprintIdentifier = fwflex.StringToFramework(ctx, apiObject.EnvironmentBlueprintId)
+	model.ProfileIdentifier = fwflex.StringToFramework(ctx, apiObject.EnvironmentProfileId)
+	model.ProjectIdentifier = fwflex.StringToFramework(ctx, apiObject.ProjectId)
+
+	if model.UserParameters.IsNull() { // Import
+		importUserParameters(ctx, &model.UserParameters, apiObject.UserParameters, diags)
+	} else {
+		populateUserParameters(ctx, &model.UserParameters, apiObject.UserParameters, diags)
+	}
 }
 
 type resourceLastDeployment struct {
