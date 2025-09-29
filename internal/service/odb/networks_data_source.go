@@ -37,7 +37,7 @@ func (d *dataSourceNetworksList) Schema(ctx context.Context, req datasource.Sche
 			"odb_networks": schema.ListAttribute{
 				Computed:    true,
 				Description: "List of odb networks returns basic information about odb networks.",
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNetworksListModel](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNetworkSummary](ctx),
 			},
 		},
 	}
