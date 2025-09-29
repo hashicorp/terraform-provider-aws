@@ -10,13 +10,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemrserverless "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,18 +22,18 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "hive"),
@@ -64,18 +62,18 @@ func TestAccEMRServerlessApplication_arch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_arch(rName, "ARM64"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "ARM64"),
 				),
 			},
@@ -87,7 +85,7 @@ func TestAccEMRServerlessApplication_arch(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_arch(rName, "X86_64"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
 				),
 			},
@@ -99,18 +97,18 @@ func TestAccEMRServerlessApplication_releaseLabel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_releaseLabel(rName, "emr-6.10.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.10.0"),
 				),
 			},
@@ -122,7 +120,7 @@ func TestAccEMRServerlessApplication_releaseLabel(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_releaseLabel(rName, "emr-6.11.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.11.0"),
 				),
 			},
@@ -134,18 +132,18 @@ func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_initialCapacity(rName, "2 vCPU"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_type", "HiveDriver"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.#", "1"),
@@ -163,7 +161,7 @@ func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_initialCapacity(rName, "4 vCPU"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_type", "HiveDriver"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.#", "1"),
@@ -184,7 +182,7 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 	}
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	firstVersionRegex := regexache.MustCompile(`1\.0\.0`)
 	secondVersionRegex := regexache.MustCompile(`1\.0\.1`)
@@ -199,16 +197,16 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 		t.Error(err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: firstImageConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "image_configuration.0.image_uri", firstVersionRegex),
 				),
@@ -221,7 +219,7 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 			{
 				Config: secondImageConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "image_configuration.0.image_uri", secondVersionRegex),
 				),
@@ -234,18 +232,18 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_interactiveConfiguration(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtTrue),
@@ -259,7 +257,7 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_interactiveConfiguration(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
@@ -268,7 +266,7 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtTrue),
@@ -277,7 +275,7 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled"),
 					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.studio_enabled"),
@@ -291,18 +289,18 @@ func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_maxCapacity(rName, "2 vCPU"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.cpu", "2 vCPU"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.memory", "10 GB"),
@@ -316,7 +314,7 @@ func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_maxCapacity(rName, "4 vCPU"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.cpu", "4 vCPU"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.memory", "10 GB")),
@@ -329,18 +327,18 @@ func TestAccEMRServerlessApplication_network(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_network(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
@@ -359,18 +357,18 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
 				),
@@ -384,18 +382,18 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -408,7 +406,7 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -417,7 +415,7 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -426,14 +424,14 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationExists(ctx context.Context, resourceName string, application *types.Application) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, t *testing.T, resourceName string, application *types.Application) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRServerlessClient(ctx)
 
 		output, err := tfemrserverless.FindApplicationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -450,9 +448,9 @@ func testAccCheckApplicationExists(ctx context.Context, resourceName string, app
 	}
 }
 
-func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emrserverless_application" {
@@ -461,7 +459,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfemrserverless.FindApplicationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

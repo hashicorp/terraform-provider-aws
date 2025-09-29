@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -484,7 +483,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
-			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
+			return findIPAMPoolAllocationForResource(ctx, conn, ipamPoolID, d.Id())
 		})
 
 		if err != nil {
@@ -548,6 +547,7 @@ func defaultIPv6CIDRBlockAssociation(vpc *awstypes.Vpc, associationID string) *a
 		for _, v := range vpc.Ipv6CidrBlockAssociationSet {
 			if v.Ipv6CidrBlockState.State == awstypes.VpcCidrBlockStateCodeAssociated {
 				ipv6CIDRBlockAssociation = v
+				break
 			}
 		}
 	}
@@ -714,28 +714,6 @@ func modifyVPCTenancy(ctx context.Context, conn *ec2.Client, vpcID string, v str
 	}
 
 	return nil
-}
-
-func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID, vpcID string) ([]awstypes.IpamPoolAllocation, error) {
-	input := &ec2.GetIpamPoolAllocationsInput{
-		IpamPoolId: aws.String(poolID),
-	}
-
-	output, err := findIPAMPoolAllocations(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	output = tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
-		return v.ResourceType == awstypes.IpamPoolAllocationResourceTypeVpc && aws.ToString(v.ResourceId) == vpcID
-	})
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
 }
 
 func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) string {
