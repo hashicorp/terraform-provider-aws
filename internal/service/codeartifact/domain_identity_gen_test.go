@@ -23,9 +23,10 @@ func testAccCodeArtifactDomain_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccCodeArtifactDomain_Identity_Basic,
-		"ExistingResource": testAccCodeArtifactDomain_Identity_ExistingResource,
-		"RegionOverride":   testAccCodeArtifactDomain_Identity_RegionOverride,
+		acctest.CtBasic:             testAccCodeArtifactDomain_Identity_Basic,
+		"ExistingResource":          testAccCodeArtifactDomain_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccCodeArtifactDomain_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccCodeArtifactDomain_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

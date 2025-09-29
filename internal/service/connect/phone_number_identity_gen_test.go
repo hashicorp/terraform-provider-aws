@@ -24,9 +24,10 @@ func testAccConnectPhoneNumber_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccConnectPhoneNumber_Identity_Basic,
-		"ExistingResource": testAccConnectPhoneNumber_Identity_ExistingResource,
-		"RegionOverride":   testAccConnectPhoneNumber_Identity_RegionOverride,
+		acctest.CtBasic:             testAccConnectPhoneNumber_Identity_Basic,
+		"ExistingResource":          testAccConnectPhoneNumber_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccConnectPhoneNumber_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

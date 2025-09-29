@@ -24,9 +24,10 @@ func testAccBackupRegionSettings_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccBackupRegionSettings_Identity_Basic,
-		"ExistingResource": testAccBackupRegionSettings_Identity_ExistingResource,
-		"RegionOverride":   testAccBackupRegionSettings_Identity_RegionOverride,
+		acctest.CtBasic:             testAccBackupRegionSettings_Identity_Basic,
+		"ExistingResource":          testAccBackupRegionSettings_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccBackupRegionSettings_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccBackupRegionSettings_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

@@ -23,9 +23,10 @@ func testAccIoTIndexingConfiguration_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccIoTIndexingConfiguration_Identity_Basic,
-		"ExistingResource": testAccIoTIndexingConfiguration_Identity_ExistingResource,
-		"RegionOverride":   testAccIoTIndexingConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:             testAccIoTIndexingConfiguration_Identity_Basic,
+		"ExistingResource":          testAccIoTIndexingConfiguration_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccIoTIndexingConfiguration_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccIoTIndexingConfiguration_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
