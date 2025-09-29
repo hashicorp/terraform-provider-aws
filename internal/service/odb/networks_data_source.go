@@ -51,7 +51,7 @@ func (d *dataSourceNetworksList) Read(ctx context.Context, req datasource.ReadRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	out, err := ListOdbNetworks(ctx, conn)
+	out, err := ListOracleDBNetworks(ctx, conn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameNetworksList, "", err),
@@ -66,25 +66,15 @@ func (d *dataSourceNetworksList) Read(ctx context.Context, req datasource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func ListOdbNetworks(ctx context.Context, conn *odb.Client) (*odb.ListOdbNetworksOutput, error) {
+func ListOracleDBNetworks(ctx context.Context, conn *odb.Client) (*odb.ListOdbNetworksOutput, error) {
 	var out odb.ListOdbNetworksOutput
-	listOfNetworks, err := conn.ListOdbNetworks(ctx, &odb.ListOdbNetworksInput{})
-	if err != nil {
-		return nil, err
-	}
-	if listOfNetworks != nil {
-		out.OdbNetworks = append(out.OdbNetworks, listOfNetworks.OdbNetworks...)
-	}
-	for listOfNetworks != nil && listOfNetworks.NextToken != nil {
-		listOfNetworks, err = conn.ListOdbNetworks(ctx, &odb.ListOdbNetworksInput{
-			NextToken: listOfNetworks.NextToken,
-		})
+	paginator := odb.NewListOdbNetworksPaginator(conn, &odb.ListOdbNetworksInput{})
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		if listOfNetworks != nil {
-			out.OdbNetworks = append(out.OdbNetworks, listOfNetworks.OdbNetworks...)
-		}
+		out.OdbNetworks = append(out.OdbNetworks, output.OdbNetworks...)
 	}
 	return &out, nil
 }
@@ -98,8 +88,7 @@ type odbNetworkSummary struct {
 	OdbNetworkId       types.String `tfsdk:"id"`
 	OdbNetworkArn      types.String `tfsdk:"arn"`
 	OciNetworkAnchorId types.String `tfsdk:"oci_network_anchor_id"`
-	Ocid               types.String `tfsdk:"ocid"`
-	OciUrl             types.String `tfsdk:"oci_url"`
+	OciVcnUrl          types.String `tfsdk:"oci_vcn_url"`
 	OciVcnId           types.String `tfsdk:"oci_vcn_id"`
 	DisplayName        types.String `tfsdk:"display_name"`
 }

@@ -68,21 +68,13 @@ func (d *dataSourceCloudVmClustersList) Read(ctx context.Context, req datasource
 
 func ListCloudVmClusters(ctx context.Context, conn *odb.Client) (*odb.ListCloudVmClustersOutput, error) {
 	var out odb.ListCloudVmClustersOutput
-	vmClusters, err := conn.ListCloudVmClusters(ctx, &odb.ListCloudVmClustersInput{})
-	if err != nil {
-		return nil, err
-	}
-	if vmClusters != nil {
-		out.CloudVmClusters = append(out.CloudVmClusters, vmClusters.CloudVmClusters...)
-	}
-	for vmClusters != nil && vmClusters.NextToken != nil {
-		vmClusters, err = conn.ListCloudVmClusters(ctx, &odb.ListCloudVmClustersInput{
-			NextToken: vmClusters.NextToken,
-		})
+	paginator := odb.NewListCloudVmClustersPaginator(conn, &odb.ListCloudVmClustersInput{})
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		out.CloudVmClusters = append(out.CloudVmClusters, vmClusters.CloudVmClusters...)
+		out.CloudVmClusters = append(out.CloudVmClusters, output.CloudVmClusters...)
 	}
 	return &out, nil
 }

@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +24,7 @@ import (
 type odbNetworksListTestDS struct {
 }
 
-func TestAccListOdbNetworksDataSource(t *testing.T) {
+func TestAccODBListNetworksDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var networkListTest = odbNetworksListTestDS{}
 	var output odb.ListOdbNetworksOutput
@@ -49,7 +49,7 @@ func TestAccListOdbNetworksDataSource(t *testing.T) {
 						i := 0
 						for i < len(output.OdbNetworks) {
 							key := fmt.Sprintf("aws_odb_networks.%q.id", i)
-							resource.TestMatchResourceAttr(dataSourceName, key, regexp.MustCompile(pattern))
+							resource.TestMatchResourceAttr(dataSourceName, key, regexache.MustCompile(pattern))
 						}
 						return nil
 					},
@@ -64,9 +64,7 @@ func (odbNetworksListTestDS) basic() string {
 	config := fmt.Sprintf(`
 
 
-data "aws_odb_networks" "test" {
-
-}
+data "aws_odb_networks" "test" {}
 `)
 	return config
 }
@@ -78,7 +76,7 @@ func (odbNetworksListTestDS) count(ctx context.Context, name string, list *odb.L
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworksList, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-		resp, err := conn.ListOdbNetworks(ctx, &odb.ListOdbNetworksInput{})
+		resp, err := tfodb.ListOracleDBNetworks(ctx, conn)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworksList, rs.Primary.ID, err)
 		}
@@ -89,11 +87,8 @@ func (odbNetworksListTestDS) count(ctx context.Context, name string, list *odb.L
 }
 func (odbNetworksListTestDS) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
-	input := &odb.ListOdbNetworksInput{}
-
-	_, err := conn.ListOdbNetworks(ctx, input)
-
+	input := odb.ListOdbNetworksInput{}
+	_, err := conn.ListOdbNetworks(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

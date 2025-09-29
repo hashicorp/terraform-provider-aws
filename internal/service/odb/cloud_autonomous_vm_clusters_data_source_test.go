@@ -23,7 +23,7 @@ import (
 type listAVMCListDSTest struct {
 }
 
-func TestAccListAutonomousVmClusterDataSource(t *testing.T) {
+func TestAccODBListAutonomousVmClustersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var avmcListTest = listAVMCListDSTest{}
 	var output odb.ListCloudAutonomousVmClustersOutput
@@ -56,9 +56,7 @@ func (listAVMCListDSTest) basic() string {
 	config := fmt.Sprintf(`
 
 
-data "aws_odb_cloud_autonomous_vm_clusters" "test" {
-
-}
+data "aws_odb_cloud_autonomous_vm_clusters" "test" {}
 `)
 	return config
 }
@@ -80,8 +78,8 @@ func (listAVMCListDSTest) count(ctx context.Context, name string, list *odb.List
 }
 func (listAVMCListDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-	input := &odb.ListCloudAutonomousVmClustersInput{}
-	_, err := conn.ListCloudAutonomousVmClusters(ctx, input)
+	input := odb.ListCloudAutonomousVmClustersInput{}
+	_, err := conn.ListCloudAutonomousVmClusters(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

@@ -50,7 +50,7 @@ func (d *dataSourceNetworkPeeringConnectionsList) Read(ctx context.Context, req 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	out, err := ListOdbPeeringConnections(ctx, conn)
+	out, err := ListOracleDBPeeringConnections(ctx, conn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameNetworkPeeringConnectionsList, "", err),
@@ -62,25 +62,15 @@ func (d *dataSourceNetworkPeeringConnectionsList) Read(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func ListOdbPeeringConnections(ctx context.Context, conn *odb.Client) (*odb.ListOdbPeeringConnectionsOutput, error) {
+func ListOracleDBPeeringConnections(ctx context.Context, conn *odb.Client) (*odb.ListOdbPeeringConnectionsOutput, error) {
 	var out odb.ListOdbPeeringConnectionsOutput
-	listOfPeering, err := conn.ListOdbPeeringConnections(ctx, &odb.ListOdbPeeringConnectionsInput{})
-	if err != nil {
-		return nil, err
-	}
-	if listOfPeering != nil {
-		out.OdbPeeringConnections = append(out.OdbPeeringConnections, listOfPeering.OdbPeeringConnections...)
-	}
-	for listOfPeering != nil && listOfPeering.NextToken != nil {
-		listOfPeering, err = conn.ListOdbPeeringConnections(ctx, &odb.ListOdbPeeringConnectionsInput{
-			NextToken: listOfPeering.NextToken,
-		})
+	paginator := odb.NewListOdbPeeringConnectionsPaginator(conn, &odb.ListOdbPeeringConnectionsInput{})
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		if listOfPeering != nil {
-			out.OdbPeeringConnections = append(out.OdbPeeringConnections, listOfPeering.OdbPeeringConnections...)
-		}
+		out.OdbPeeringConnections = append(out.OdbPeeringConnections, output.OdbPeeringConnections...)
 	}
 	return &out, nil
 }
@@ -90,9 +80,9 @@ type odbNetworkPeeringConnectionsListDataSourceModel struct {
 	OdbPeeringConnections fwtypes.ListNestedObjectValueOf[odbNetworkPeeringConnectionSummaryDataSourceModel] `tfsdk:"odb_peering_connections"`
 }
 type odbNetworkPeeringConnectionSummaryDataSourceModel struct {
-	OdbPeeringConnectionId   types.String `tfsdk:"id"`
-	OdbPeeringConnectionArn  types.String `tfsdk:"arn"`
-	DisplayName              types.String `tfsdk:"display_name"`
-	OdbNetworkArn            types.String `tfsdk:"odb_network_arn"`
-	OdbPeeringConnectionType types.String `tfsdk:"odb_peering_connection_type"`
+	OdbPeeringConnectionId  types.String `tfsdk:"id"`
+	OdbPeeringConnectionArn types.String `tfsdk:"arn"`
+	DisplayName             types.String `tfsdk:"display_name"`
+	OdbNetworkArn           types.String `tfsdk:"odb_network_arn"`
+	PeerNetworkArn          types.String `tfsdk:"peer_network_arn"`
 }

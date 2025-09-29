@@ -51,7 +51,8 @@ func (d *dataSourceCloudAutonomousVmClustersList) Read(ctx context.Context, req 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	out, err := conn.ListCloudAutonomousVmClusters(ctx, &odb.ListCloudAutonomousVmClustersInput{})
+	input := odb.ListCloudAutonomousVmClustersInput{}
+	out, err := conn.ListCloudAutonomousVmClusters(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameCloudAutonomousVmClustersList, "", err),
@@ -68,24 +69,13 @@ func (d *dataSourceCloudAutonomousVmClustersList) Read(ctx context.Context, req 
 
 func ListCloudAutonomousVmClusters(ctx context.Context, conn *odb.Client) (*odb.ListCloudAutonomousVmClustersOutput, error) {
 	out := odb.ListCloudAutonomousVmClustersOutput{}
-	listOfAVMC, err := conn.ListCloudAutonomousVmClusters(ctx, &odb.ListCloudAutonomousVmClustersInput{})
-	if err != nil {
-		return nil, err
-	}
-	if listOfAVMC != nil {
-		out.CloudAutonomousVmClusters = append(out.CloudAutonomousVmClusters, listOfAVMC.CloudAutonomousVmClusters...)
-	}
-	for listOfAVMC != nil && listOfAVMC.NextToken != nil {
-		input := odb.ListCloudAutonomousVmClustersInput{
-			NextToken: listOfAVMC.NextToken,
-		}
-		listOfAVMC, err = conn.ListCloudAutonomousVmClusters(ctx, &input)
+	paginator := odb.NewListCloudAutonomousVmClustersPaginator(conn, &odb.ListCloudAutonomousVmClustersInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		if listOfAVMC != nil {
-			out.CloudAutonomousVmClusters = append(out.CloudAutonomousVmClusters, listOfAVMC.CloudAutonomousVmClusters...)
-		}
+		out.CloudAutonomousVmClusters = append(out.CloudAutonomousVmClusters, page.CloudAutonomousVmClusters...)
 	}
 	return &out, nil
 

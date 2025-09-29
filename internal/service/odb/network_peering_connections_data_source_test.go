@@ -23,7 +23,7 @@ import (
 type listOdbNetworkPeering struct {
 }
 
-func TestAccODBNetworkPeeringBasic(t *testing.T) {
+func TestAccODBListNetworkPeeringConnections_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listOfPeeredNwks = listOdbNetworkPeering{}
 	var output odb.ListOdbPeeringConnectionsOutput
@@ -56,9 +56,7 @@ func TestAccODBNetworkPeeringBasic(t *testing.T) {
 func (listOdbNetworkPeering) basic() string {
 	config := fmt.Sprintf(`
 
-data "aws_odb_network_peering_connections" "test" {
-
-}
+data "aws_odb_network_peering_connections" "test" {}
 `)
 	return config
 }
@@ -70,7 +68,7 @@ func (listOdbNetworkPeering) count(ctx context.Context, name string, list *odb.L
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworkPeeringConnectionsList, name, errors.New("not found"))
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-		resp, err := tfodb.ListOdbPeeringConnections(ctx, conn)
+		resp, err := tfodb.ListOracleDBPeeringConnections(ctx, conn)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameNetworkPeeringConnectionsList, rs.Primary.ID, err)
 		}
@@ -80,8 +78,8 @@ func (listOdbNetworkPeering) count(ctx context.Context, name string, list *odb.L
 }
 func (listOdbNetworkPeering) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-	input := &odb.ListOdbPeeringConnectionsInput{}
-	_, err := conn.ListOdbPeeringConnections(ctx, input)
+	input := odb.ListOdbPeeringConnectionsInput{}
+	_, err := conn.ListOdbPeeringConnections(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

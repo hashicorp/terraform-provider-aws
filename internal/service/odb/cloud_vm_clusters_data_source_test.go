@@ -22,7 +22,7 @@ import (
 type listVMCListDSTest struct {
 }
 
-func TestAccListVmClusterDataSource(t *testing.T) {
+func TestAccODBListVmClusterDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vmcListTest = listVMCListDSTest{}
 	var output odb.ListCloudVmClustersOutput
@@ -55,9 +55,7 @@ func (listVMCListDSTest) basic() string {
 	config := fmt.Sprintf(`
 
 
-data "aws_odb_cloud_vm_clusters" "test" {
-
-}
+data "aws_odb_cloud_vm_clusters" "test" {}
 `)
 	return config
 }
@@ -79,8 +77,7 @@ func (listVMCListDSTest) count(ctx context.Context, name string, list *odb.ListC
 }
 func (listVMCListDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-	input := &odb.ListCloudVmClustersInput{}
-	_, err := conn.ListCloudVmClusters(ctx, input)
+	_, err := tfodb.ListCloudVmClusters(ctx, conn)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

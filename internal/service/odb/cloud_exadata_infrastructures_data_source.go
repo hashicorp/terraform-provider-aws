@@ -67,20 +67,13 @@ func (d *dataSourceCloudExadataInfrastructuresList) Read(ctx context.Context, re
 
 func ListCloudExadataInfrastructures(ctx context.Context, conn *odb.Client) (*odb.ListCloudExadataInfrastructuresOutput, error) {
 	var out odb.ListCloudExadataInfrastructuresOutput
-	listOfExadataInfra, err := conn.ListCloudExadataInfrastructures(ctx, &odb.ListCloudExadataInfrastructuresInput{})
-	if err != nil {
-		return nil, err
-	}
-	if listOfExadataInfra != nil {
-		out.CloudExadataInfrastructures = append(out.CloudExadataInfrastructures, listOfExadataInfra.CloudExadataInfrastructures...)
-	}
-	for listOfExadataInfra != nil && listOfExadataInfra.NextToken != nil {
-		input := &odb.ListCloudExadataInfrastructuresInput{NextToken: listOfExadataInfra.NextToken}
-		listOfExadataInfra, err = conn.ListCloudExadataInfrastructures(ctx, input)
+	paginator := odb.NewListCloudExadataInfrastructuresPaginator(conn, &odb.ListCloudExadataInfrastructuresInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		out.CloudExadataInfrastructures = append(out.CloudExadataInfrastructures, listOfExadataInfra.CloudExadataInfrastructures...)
+		out.CloudExadataInfrastructures = append(out.CloudExadataInfrastructures, page.CloudExadataInfrastructures...)
 	}
 	return &out, nil
 }
