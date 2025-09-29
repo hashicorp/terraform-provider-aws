@@ -352,7 +352,7 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	return append(diags, sdkdiag.WrapDiagsf(resourceControlPanelRead(ctx, d, meta), "updating Route53 Recovery Control Config Assertion Rule")...)
+	return append(diags, sdkdiag.WrapDiagsf(resourceSafetyRuleRead(ctx, d, meta), "updating Route53 Recovery Control Config Assertion Rule")...)
 }
 
 func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -383,7 +383,7 @@ func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta any) dia
 		}
 	}
 
-	return append(diags, sdkdiag.WrapDiagsf(resourceControlPanelRead(ctx, d, meta), "updating Route53 Recovery Control Config Gating Rule")...)
+	return append(diags, sdkdiag.WrapDiagsf(resourceSafetyRuleRead(ctx, d, meta), "updating Route53 Recovery Control Config Gating Rule")...)
 }
 func findSafetyRuleByARN(ctx context.Context, conn *r53rcc.Client, arn string) (*r53rcc.DescribeSafetyRuleOutput, error) {
 	input := &r53rcc.DescribeSafetyRuleInput{

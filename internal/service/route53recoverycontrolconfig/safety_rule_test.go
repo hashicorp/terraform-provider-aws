@@ -164,7 +164,7 @@ func testAccSafetyRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSafetyRuleConfig_routingControl_tags1(rName, acctest.CtKey2, acctest.CtValue1Updated),
+				Config: testAccSafetyRuleConfig_routingControl_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
