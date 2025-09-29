@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.50.6
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.40.5
-	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.34.4
+	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.15.7
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.38.6
