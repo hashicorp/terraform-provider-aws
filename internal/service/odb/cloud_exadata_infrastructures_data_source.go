@@ -40,7 +40,6 @@ func (d *dataSourceCloudExadataInfrastructuresList) Schema(ctx context.Context, 
 			},
 		},
 	}
-
 }
 
 func (d *dataSourceCloudExadataInfrastructuresList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

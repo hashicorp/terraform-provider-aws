@@ -6,7 +6,6 @@ package odb_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -54,11 +53,7 @@ func TestAccODBListNetworkPeeringConnections_basic(t *testing.T) {
 }
 
 func (listOdbNetworkPeering) basic() string {
-	config := fmt.Sprintf(`
-
-data "aws_odb_network_peering_connections" "test" {}
-`)
-	return config
+	return `data "aws_odb_network_peering_connections" "test" {}`
 }
 
 func (listOdbNetworkPeering) count(ctx context.Context, name string, list *odb.ListOdbPeeringConnectionsOutput) resource.TestCheckFunc {

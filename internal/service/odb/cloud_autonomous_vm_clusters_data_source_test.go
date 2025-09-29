@@ -6,7 +6,6 @@ package odb_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -53,12 +52,7 @@ func TestAccODBListAutonomousVmClustersDataSource_basic(t *testing.T) {
 }
 
 func (listAVMCListDSTest) basic() string {
-	config := fmt.Sprintf(`
-
-
-data "aws_odb_cloud_autonomous_vm_clusters" "test" {}
-`)
-	return config
+	return `data "aws_odb_cloud_autonomous_vm_clusters" "test" {}`
 }
 
 func (listAVMCListDSTest) count(ctx context.Context, name string, list *odb.ListCloudAutonomousVmClustersOutput) resource.TestCheckFunc {

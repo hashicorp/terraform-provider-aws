@@ -5,7 +5,6 @@ package odb_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -52,12 +51,7 @@ func TestAccODBListVmClusterDataSource_basic(t *testing.T) {
 }
 
 func (listVMCListDSTest) basic() string {
-	config := fmt.Sprintf(`
-
-
-data "aws_odb_cloud_vm_clusters" "test" {}
-`)
-	return config
+	return `data "aws_odb_cloud_vm_clusters" "test" {}`
 }
 
 func (listVMCListDSTest) count(ctx context.Context, name string, list *odb.ListCloudVmClustersOutput) resource.TestCheckFunc {

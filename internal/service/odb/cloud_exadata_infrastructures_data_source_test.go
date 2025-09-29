@@ -6,7 +6,6 @@ package odb_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -52,13 +51,7 @@ func TestAccODBCloudExadataInfrastructuresListDataSource_basic(t *testing.T) {
 }
 
 func (listExaInfraTest) basic() string {
-	config := fmt.Sprintf(`
-
-data "aws_odb_cloud_exadata_infrastructures" "test" {
-
-}
-`)
-	return config
+	return `data "aws_odb_cloud_exadata_infrastructures" "test" {}`
 }
 
 func (listExaInfraTest) countExaInfrastructures(ctx context.Context, name string, listOfInfra *odb.ListCloudExadataInfrastructuresOutput) resource.TestCheckFunc {

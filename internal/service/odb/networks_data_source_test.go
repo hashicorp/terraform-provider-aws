@@ -61,12 +61,7 @@ func TestAccODBListNetworksDataSource_basic(t *testing.T) {
 }
 
 func (odbNetworksListTestDS) basic() string {
-	config := fmt.Sprintf(`
-
-
-data "aws_odb_networks" "test" {}
-`)
-	return config
+	return `data "aws_odb_networks" "test" {}`
 }
 
 func (odbNetworksListTestDS) count(ctx context.Context, name string, list *odb.ListOdbNetworksOutput) resource.TestCheckFunc {

@@ -78,7 +78,6 @@ func ListCloudAutonomousVmClusters(ctx context.Context, conn *odb.Client) (*odb.
 		out.CloudAutonomousVmClusters = append(out.CloudAutonomousVmClusters, page.CloudAutonomousVmClusters...)
 	}
 	return &out, nil
-
 }
 
 type cloudAutonomousVmClusterListModel struct {
