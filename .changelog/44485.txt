@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_lb: Fix panic caused by missing `secondary_ips_auto_assigned_per_subnet` attribute in schema definition
+```
