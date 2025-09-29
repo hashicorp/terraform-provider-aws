@@ -210,7 +210,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.31.8
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.5
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.34.6
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.21.5
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.21.5
