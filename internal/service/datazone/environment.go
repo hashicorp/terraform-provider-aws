@@ -446,7 +446,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 
 func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusActive),
+		Pending: enum.Slice(awstypes.EnvironmentStatusActive, awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusDeleted),
 		Target:  []string{},
 		Refresh: statusEnvironment(ctx, conn, domainId, id),
 		Timeout: timeout,
