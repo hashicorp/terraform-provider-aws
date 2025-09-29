@@ -67,6 +67,7 @@ var (
 	CheckPwdPolicy                    = checkPwdPolicy
 	GeneratePassword                  = generatePassword
 	ListGroupsForUserPages            = listGroupsForUserPages
+	RoleNameSessionFromARN            = roleNameSessionFromARN
 	RolePolicyParseID                 = rolePolicyParseID
 	ServiceLinkedRoleParseResourceID  = serviceLinkedRoleParseResourceID
 	SESSMTPPasswordFromSecretKeySigV4 = sesSMTPPasswordFromSecretKeySigV4
