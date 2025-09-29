@@ -59,7 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.54.4
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.5
-	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.31.5
+	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.31.6
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.58.1
