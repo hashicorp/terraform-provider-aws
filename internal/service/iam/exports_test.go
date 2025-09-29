@@ -54,6 +54,7 @@ var (
 	FindSAMLProviderByARN                       = findSAMLProviderByARN
 	FindServerCertificateByName                 = findServerCertificateByName
 	FindServiceSpecificCredentialByThreePartKey = findServiceSpecificCredentialByThreePartKey
+	FindSigningCertificateByTwoPartKey          = findSigningCertificateByTwoPartKey
 	FindSSHPublicKeyByThreePartKey              = findSSHPublicKeyByThreePartKey
 	FindUserByName                              = findUserByName
 	FindUserPoliciesByName                      = findUserPoliciesByName

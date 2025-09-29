@@ -87,10 +87,8 @@ func RegisterSweepers() {
 		F: sweepRoles,
 	})
 
-	awsv2.Register("aws_iam_saml_provider", sweepSAMLProvider)
-
+	awsv2.Register("aws_iam_saml_provider", sweepSAMLProviders)
 	awsv2.Register("aws_iam_service_specific_credential", sweepServiceSpecificCredentials)
-
 	awsv2.Register("aws_iam_signing_certificate", sweepSigningCertificates)
 
 	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
@@ -346,7 +344,7 @@ func sweepServiceSpecificCredentials(ctx context.Context, client *conns.AWSClien
 		if err != nil {
 			tflog.Warn(ctx, "Skipping resource", map[string]any{
 				"error":            err.Error(),
-				names.AttrUserName: user.UserName,
+				names.AttrUserName: userName,
 			})
 			continue
 		}
@@ -487,7 +485,7 @@ func sweepRoles(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepSAMLProvider(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+func sweepSAMLProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.IAMClient(ctx)
 
 	var sweepResources []sweep.Sweepable
@@ -754,7 +752,8 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 
 func sweepSigningCertificates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.IAMClient(ctx)
-
+	var input iam.ListUsersInput
+	var users []awstypes.User
 	prefixes := []string{
 		"test-user",
 		"test_user",
@@ -762,47 +761,51 @@ func sweepSigningCertificates(ctx context.Context, client *conns.AWSClient) ([]s
 		"tf_acc",
 	}
 
-	var users []awstypes.User
-
-	pages := iam.NewListUsersPaginator(conn, &iam.ListUsersInput{})
+	pages := iam.NewListUsersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
 
-		for _, user := range page.Users {
+		for _, v := range page.Users {
 			for _, prefix := range prefixes {
-				if strings.HasPrefix(aws.ToString(user.UserName), prefix) {
-					users = append(users, user)
+				if strings.HasPrefix(aws.ToString(v.UserName), prefix) {
+					users = append(users, v)
 					break
 				}
 			}
 		}
 	}
 
-	var sweepResources []sweep.Sweepable
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	for _, user := range users {
-		out, err := conn.ListSigningCertificates(ctx, &iam.ListSigningCertificatesInput{
-			UserName: user.UserName,
-		})
-		if err != nil {
-			tflog.Warn(ctx, "Skipping resource", map[string]any{
-				"error":            err.Error(),
-				names.AttrUserName: user.UserName,
-			})
-			continue
+		userName := aws.ToString(user.UserName)
+		input := iam.ListSigningCertificatesInput{
+			UserName: aws.String(userName),
 		}
 
-		for _, cert := range out.Certificates {
-			id := fmt.Sprintf("%s:%s", aws.ToString(cert.CertificateId), aws.ToString(cert.UserName))
+		pages := iam.NewListSigningCertificatesPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 
-			r := resourceSigningCertificate()
-			d := r.Data(nil)
-			d.SetId(id)
+			if err != nil {
+				tflog.Warn(ctx, "Skipping resource", map[string]any{
+					"error":            err.Error(),
+					names.AttrUserName: userName,
+				})
+				continue
+			}
 
-			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+			for _, v := range page.Certificates {
+				r := resourceSigningCertificate()
+				d := r.Data(nil)
+				d.SetId(signingCertificateCreateResourceID(aws.ToString(v.CertificateId), aws.ToString(v.UserName)))
+
+				sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+			}
 		}
 	}
 
