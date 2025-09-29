@@ -307,6 +307,8 @@ resource "terraform_data" "trigger" {
 // nosemgrep: ci.events-in-func-name -- Function reflects PutEvents operation naming for consistency.
 func testAccPutEventsActionConfig_customBus(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
 }
@@ -357,7 +359,7 @@ action "aws_events_put_events" "test" {
       detail_type    = "Custom Event"
       event_bus_name = aws_cloudwatch_event_bus.test.name
       time           = "2023-01-01T12:00:00Z"
-      resources      = ["arn:aws:s3:::example-bucket"]
+      resources      = ["arn:${data.aws_partition.current.partition}:s3:::example-bucket"]
       detail = jsonencode({
         custom_field = "custom_value"
         marker       = %[1]q
