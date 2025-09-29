@@ -16,6 +16,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -27,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -40,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -648,8 +649,7 @@ func findRole(ctx context.Context, conn *iam.Client, input *iam.GetRoleInput) (*
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -662,6 +662,55 @@ func findRole(ctx context.Context, conn *iam.Client, input *iam.GetRoleInput) (*
 	}
 
 	return output.Role, nil
+}
+
+const (
+	roleARNIsUniqueIDState = "uniqueid"
+	roleNotFoundState      = "notfound"
+)
+
+func statusRoleCreate(ctx context.Context, conn *iam.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		role, err := findRoleByName(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, roleNotFoundState, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if arn.IsARN(aws.ToString(role.Arn)) {
+			return role, names.AttrARN, nil
+		}
+
+		return role, roleARNIsUniqueIDState, nil
+	}
+}
+
+func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.Client, id string, role *awstypes.Role) (*awstypes.Role, error) {
+	if arn.IsARN(aws.ToString(role.Arn)) {
+		return role, nil
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{roleARNIsUniqueIDState, roleNotFoundState},
+		Target:                    []string{names.AttrARN},
+		Refresh:                   statusRoleCreate(ctx, conn, id),
+		Timeout:                   propagationTimeout,
+		NotFoundChecks:            10,
+		ContinuousTargetOccurence: 5,
+		Delay:                     10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Role); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func listRoles(ctx context.Context, conn *iam.Client, input *iam.ListRolesInput) iter.Seq2[awstypes.Role, error] {
@@ -729,8 +778,7 @@ func findRoleAttachedPolicies(ctx context.Context, conn *iam.Client, roleName st
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -760,8 +808,7 @@ func findRolePolicyNames(ctx context.Context, conn *iam.Client, roleName string)
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
