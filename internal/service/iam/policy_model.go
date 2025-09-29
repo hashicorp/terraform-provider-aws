@@ -273,12 +273,12 @@ func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.
 	for _, principal := range principals {
 		switch x := principal.(type) {
 		case string:
-			if !IsValidPolicyAWSPrincipal(x) {
+			if !isValidPolicyAWSPrincipal(x) {
 				return false, nil
 			}
 		case []string:
 			for _, s := range x {
-				if !IsValidPolicyAWSPrincipal(s) {
+				if !isValidPolicyAWSPrincipal(s) {
 					return false, nil
 				}
 			}
@@ -288,9 +288,9 @@ func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.
 	return true, nil
 }
 
-// IsValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
+// isValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
 // That is: either an ARN, an AWS account ID, or `*`
-func IsValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
 	if principal == "*" {
 		return true
 	}

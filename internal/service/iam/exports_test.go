@@ -66,6 +66,7 @@ var (
 	AttachPolicyToUser                = attachPolicyToUser
 	CheckPwdPolicy                    = checkPwdPolicy
 	GeneratePassword                  = generatePassword
+	IsValidPolicyAWSPrincipal         = isValidPolicyAWSPrincipal
 	ListGroupsForUserPages            = listGroupsForUserPages
 	RoleNameSessionFromARN            = roleNameSessionFromARN
 	RolePolicyParseID                 = rolePolicyParseID
