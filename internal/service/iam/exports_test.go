@@ -71,3 +71,7 @@ var (
 	ServiceLinkedRoleParseResourceID  = serviceLinkedRoleParseResourceID
 	SESSMTPPasswordFromSecretKeySigV4 = sesSMTPPasswordFromSecretKeySigV4
 )
+
+type (
+	IAMPolicyStatementConditionSet = iamPolicyStatementConditionSet
+)

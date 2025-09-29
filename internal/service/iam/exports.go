@@ -10,3 +10,8 @@ var (
 	DeleteServiceLinkedRole = deleteServiceLinkedRole
 	FindRoleByName          = findRoleByName
 )
+
+type (
+	IAMPolicyDoc       = iamPolicyDoc
+	IAMPolicyStatement = iamPolicyStatement
+)
