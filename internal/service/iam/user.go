@@ -269,10 +269,14 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func findUserByName(ctx context.Context, conn *iam.Client, name string) (*awstypes.User, error) {
-	input := &iam.GetUserInput{
+	input := iam.GetUserInput{
 		UserName: aws.String(name),
 	}
 
+	return findUser(ctx, conn, &input)
+}
+
+func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*awstypes.User, error) {
 	output, err := conn.GetUser(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -281,6 +285,7 @@ func findUserByName(ctx context.Context, conn *iam.Client, name string) (*awstyp
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
