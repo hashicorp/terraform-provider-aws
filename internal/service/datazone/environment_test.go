@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -37,6 +38,7 @@ func TestAccDataZoneEnvironment_serial(t *testing.T) {
 		"userParameters_Environment": testAccDataZoneEnvironment_userParameters_Environment,
 		"userParameters_Inherited":   testAccDataZoneEnvironment_userParameters_Inherited,
 		"userParameters_Override":    testAccDataZoneEnvironment_userParameters_Override,
+		"glossaryTerms":              testAccDataZoneEnvironment_glossaryTerms,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -332,6 +334,44 @@ func testAccDataZoneEnvironment_userParameters_Override(t *testing.T) {
 							"value": knownvalue.StringExact(rName + "-workgroup"),
 						}),
 					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_glossaryTerms(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_glossaryTerms(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glossary_terms"), knownvalue.ListSizeExact(3)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(0), "aws_datazone_glossary_term.test[0]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(1), "aws_datazone_glossary_term.test[1]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(2), "aws_datazone_glossary_term.test[2]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 				},
 			},
 			{
@@ -701,4 +741,41 @@ resource "aws_datazone_environment_profile" "test" {
   }
 }
 `, rName)
+}
+
+func testAccEnvironmentConfig_glossaryTerms(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[1]q
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  glossary_terms = aws_datazone_glossary_term.test[*].id
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+
+resource "aws_datazone_glossary" "test" {
+  name                      = %[1]q
+  owning_project_identifier = aws_datazone_project.test.id
+  status                    = "ENABLED"
+  domain_identifier         = aws_datazone_project.test.domain_identifier
+}
+
+resource "aws_datazone_glossary_term" "test" {
+  count = 3
+
+  domain_identifier   = aws_datazone_glossary.test.domain_identifier
+  glossary_identifier = aws_datazone_glossary.test.id
+  name                = "%[1]s-${count.index}"
+  status              = "ENABLED"
+}
+`, rName))
 }
