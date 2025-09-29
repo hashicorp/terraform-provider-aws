@@ -391,8 +391,8 @@ github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.8 h1:SoLCt2Ig7ki
 github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.8/go.mod h1:TqON/FD1E56TNUpLtwI6m1PbjmuZRhrvbo1ZGOIbzto=
 github.com/aws/aws-sdk-go-v2/service/oam v1.22.5 h1:To+7SakfElByzTR10RrFGAXRH2uWBDvMPTFOYQY0Wrw=
 github.com/aws/aws-sdk-go-v2/service/oam v1.22.5/go.mod h1:huNDbI1vKiFhIuo8Q4hK09wk1kN+RFdbxrrjSsCZtCQ=
-github.com/aws/aws-sdk-go-v2/service/odb v1.4.5 h1:g3WQYf6RoN7x0dqdf9edQROEw13c+rhU6ztseY3cfuo=
-github.com/aws/aws-sdk-go-v2/service/odb v1.4.5/go.mod h1:YcfGEDn5kPX/cObRuQbLj0kaGgfJ62mg6vKwk261gY0=
+github.com/aws/aws-sdk-go-v2/service/odb v1.4.6 h1:AV9JZ+ErtkFZFJAOao1CSSPdcJzY/onnQU5K5wdiV/8=
+github.com/aws/aws-sdk-go-v2/service/odb v1.4.6/go.mod h1:sNgPICtv0QshuEoMhFiRT5rBWnpXMFvLhly/Hu0MqYw=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.4 h1:dFR3ire/PYB9qIdAKes2dsIWSPSbmXDR+hYoWBOSvNM=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.4/go.mod h1:aglzJEixBNrJcfZkRFo9zUIiqgqau71VgMUpNF9aq20=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.26.3 h1:FcB0JD+m42HH2xQebadyl1w4nBsaXy3CezzLotSW5U0=
