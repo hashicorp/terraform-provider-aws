@@ -327,7 +327,7 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	if needsUpdate {
-		output, err := conn.UpdateEnvironment(ctx, &input)
+		out, err := conn.UpdateEnvironment(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEnvironment, plan.Id.String(), err),
@@ -336,7 +336,7 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		if output == nil {
+		if out == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEnvironment, plan.Id.String(), nil),
 				errors.New("empty output").Error(),
@@ -345,13 +345,27 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitEnvironmentUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), updateTimeout)
+		output, err := waitEnvironmentUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), updateTimeout)
 
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForUpdate, ResNameEnvironment, plan.Id.String(), err),
 				err.Error(),
 			)
+			return
+		}
+
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan, fwflex.WithIgnoredFieldNames([]string{"UserParameters"}))...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		plan.AccountIdentifier = fwflex.StringToFramework(ctx, output.AwsAccountId)
+		plan.AccountRegion = fwflex.StringToFramework(ctx, output.AwsAccountRegion)
+		plan.BlueprintIdentifier = fwflex.StringToFramework(ctx, output.EnvironmentBlueprintId)
+
+		populateUserParameters(ctx, &plan.UserParameters, output.UserParameters, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
