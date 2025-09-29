@@ -17,8 +17,6 @@ Terraform resource for managing an AWS DataZone Environment.
 ```terraform
 resource "aws_datazone_environment" "example" {
   name                 = "example"
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.name
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
