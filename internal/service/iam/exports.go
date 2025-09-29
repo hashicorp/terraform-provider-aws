@@ -7,8 +7,6 @@ package iam
 var (
 	ResourceRole = resourceRole
 
-	AttachPolicyToUser      = attachPolicyToUser
 	DeleteServiceLinkedRole = deleteServiceLinkedRole
 	FindRoleByName          = findRoleByName
-	ListGroupsForUserPages  = listGroupsForUserPages
 )
