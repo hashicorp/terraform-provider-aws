@@ -44,6 +44,7 @@ var (
 	FindGroupByName                             = findGroupByName
 	FindGroupPoliciesByName                     = findGroupPoliciesByName
 	FindGroupPolicyAttachmentsByName            = findGroupPolicyAttachmentsByName
+	FindGroupPolicyByTwoPartKey                 = findGroupPolicyByTwoPartKey
 	FindInstanceProfileByName                   = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN              = findOpenIDConnectProviderByARN
 	FindOrganizationsFeatures                   = findOrganizationsFeatures
