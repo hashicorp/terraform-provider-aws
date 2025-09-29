@@ -37,6 +37,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_lb: Fix `Invalid address to set: []string{"secondary_ips_auto_assigned_per_subnet"}` errors ([#44485](https://github.com/hashicorp/terraform-provider-aws/issues/44485))
 * data-source/aws_networkfirewall_firewall_policy: Fix failure to retrieve multiple `firewall_policy.stateful_rule_group_reference` attributes ([#44482](https://github.com/hashicorp/terraform-provider-aws/issues/44482))
 * data-source/aws_servicequotas_service_quota: Fixed a panic that occurred when a non-existing `quota_name` was provided ([#44449](https://github.com/hashicorp/terraform-provider-aws/issues/44449))
 * resource/aws_bedrock_provisioned_model_throughput: Fix `AttributeName("arn") still remains in the path: could not find attribute or block "arn" in schema` errors when upgrading from a pre-v6.0.0 provider version ([#44434](https://github.com/hashicorp/terraform-provider-aws/issues/44434))
