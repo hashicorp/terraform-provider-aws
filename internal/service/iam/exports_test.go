@@ -60,6 +60,7 @@ var (
 	FindUserByName                              = findUserByName
 	FindUserPoliciesByName                      = findUserPoliciesByName
 	FindUserPolicyAttachmentsByName             = findUserPolicyAttachmentsByName
+	FindUserPolicyByTwoPartKey                  = findUserPolicyByTwoPartKey
 	FindVirtualMFADeviceBySerialNumber          = findVirtualMFADeviceBySerialNumber
 
 	AttachPolicyToUser                = attachPolicyToUser

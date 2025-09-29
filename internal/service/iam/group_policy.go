@@ -81,8 +81,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	groupName := d.Get("group").(string)
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	groupName, policyName := d.Get("group").(string), create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := iam.PutGroupPolicyInput{
 		GroupName:      aws.String(groupName),
 		PolicyDocument: aws.String(policyDoc),
