@@ -292,7 +292,8 @@ func sweepOpenIDConnectProvider(ctx context.Context, client *conns.AWSClient) ([
 
 func sweepServiceSpecificCredentials(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.IAMClient(ctx)
-
+	var input iam.ListUsersInput
+	var users []awstypes.User
 	prefixes := []string{
 		"test-user",
 		"test_user",
@@ -300,47 +301,54 @@ func sweepServiceSpecificCredentials(ctx context.Context, client *conns.AWSClien
 		"tf_acc",
 	}
 
-	var users []awstypes.User
-
-	pages := iam.NewListUsersPaginator(conn, &iam.ListUsersInput{})
+	pages := iam.NewListUsersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
 
-		for _, user := range page.Users {
+		for _, v := range page.Users {
 			for _, prefix := range prefixes {
-				if strings.HasPrefix(aws.ToString(user.UserName), prefix) {
-					users = append(users, user)
+				if strings.HasPrefix(aws.ToString(v.UserName), prefix) {
+					users = append(users, v)
 					break
 				}
 			}
 		}
 	}
 
-	var sweepResources []sweep.Sweepable
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	for _, user := range users {
-		out, err := conn.ListServiceSpecificCredentials(ctx, &iam.ListServiceSpecificCredentialsInput{
-			UserName: user.UserName,
+		userName := aws.ToString(user.UserName)
+		input := iam.ListServiceSpecificCredentialsInput{
+			UserName: aws.String(userName),
+		}
+
+		err := listServiceSpecificCredentialsPages(ctx, conn, &input, func(page *iam.ListServiceSpecificCredentialsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.ServiceSpecificCredentials {
+				r := resourceServiceSpecificCredential()
+				d := r.Data(nil)
+				d.SetId(serviceSpecificCredentialCreateResourceID(aws.ToString(v.ServiceName), aws.ToString(v.UserName), aws.ToString(v.ServiceSpecificCredentialId)))
+
+				sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+			}
+
+			return !lastPage
 		})
+
 		if err != nil {
 			tflog.Warn(ctx, "Skipping resource", map[string]any{
 				"error":            err.Error(),
 				names.AttrUserName: user.UserName,
 			})
 			continue
-		}
-
-		for _, cred := range out.ServiceSpecificCredentials {
-			id := fmt.Sprintf("%s:%s:%s", aws.ToString(cred.ServiceName), aws.ToString(cred.UserName), aws.ToString(cred.ServiceSpecificCredentialId))
-
-			r := resourceServiceSpecificCredential()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 

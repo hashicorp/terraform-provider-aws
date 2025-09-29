@@ -15,47 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindServiceSpecificCredential(ctx context.Context, conn *iam.Client, serviceName, userName, credID string) (*awstypes.ServiceSpecificCredentialMetadata, error) {
-	input := &iam.ListServiceSpecificCredentialsInput{
-		ServiceName: aws.String(serviceName),
-		UserName:    aws.String(userName),
-	}
-
-	output, err := conn.ListServiceSpecificCredentials(ctx, input)
-
-	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output.ServiceSpecificCredentials) == 0 {
-		return nil, tfresource.NewEmptyResultError(output)
-	}
-
-	var cred awstypes.ServiceSpecificCredentialMetadata
-
-	for _, crd := range output.ServiceSpecificCredentials {
-		if aws.ToString(crd.ServiceName) == serviceName &&
-			aws.ToString(crd.UserName) == userName &&
-			aws.ToString(crd.ServiceSpecificCredentialId) == credID {
-			cred = crd
-			break
-		}
-	}
-
-	if reflect.ValueOf(cred).IsZero() {
-		return nil, tfresource.NewEmptyResultError(cred)
-	}
-
-	return &cred, nil
-}
-
 func FindSigningCertificate(ctx context.Context, conn *iam.Client, userName, certId string) (*awstypes.SigningCertificate, error) {
 	input := &iam.ListSigningCertificatesInput{
 		UserName: aws.String(userName),
