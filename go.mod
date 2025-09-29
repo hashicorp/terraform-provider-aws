@@ -111,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/efs v1.40.8
 	github.com/aws/aws-sdk-go-v2/service/eks v1.74.2
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.50.5
-	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.33.6
+	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.50.5
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.5
