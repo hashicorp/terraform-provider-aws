@@ -117,7 +117,7 @@ func GeneratePassword(length int) (string, error) {
 			result[i] = charset[r.Int64()]
 		}
 
-		if !CheckPwdPolicy(result) {
+		if !checkPwdPolicy(result) {
 			continue
 		}
 
@@ -129,7 +129,7 @@ func GeneratePassword(length int) (string, error) {
 
 // Check the generated password contains all character classes listed in the
 // IAM password policy.
-func CheckPwdPolicy(pass []byte) bool {
+func checkPwdPolicy(pass []byte) bool {
 	return (bytes.ContainsAny(pass, charLower) &&
 		bytes.ContainsAny(pass, charNumbers) &&
 		bytes.ContainsAny(pass, charSymbols) &&

@@ -61,6 +61,7 @@ var (
 	FindUserPolicyAttachmentsByName             = findUserPolicyAttachmentsByName
 	FindVirtualMFADeviceBySerialNumber          = findVirtualMFADeviceBySerialNumber
 
+	CheckPwdPolicy                    = checkPwdPolicy
 	RolePolicyParseID                 = rolePolicyParseID
 	ServiceLinkedRoleParseResourceID  = serviceLinkedRoleParseResourceID
 	SESSMTPPasswordFromSecretKeySigV4 = sesSMTPPasswordFromSecretKeySigV4
