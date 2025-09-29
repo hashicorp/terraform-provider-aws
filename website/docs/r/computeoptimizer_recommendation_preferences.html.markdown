@@ -59,7 +59,7 @@ This resource supports the following arguments:
 * `inferred_workload_types` - (Optional) The status of the inferred workload types recommendation preference. Valid values: `Active`, `Inactive`.
 * `look_back_period` - (Optional) The preference to control the number of days the utilization metrics of the AWS resource are analyzed. Valid values: `DAYS_14`, `DAYS_32`, `DAYS_93`.
 * `preferred_resource` - (Optional) The preference to control which resource type values are considered when generating rightsizing recommendations. See [Preferred Resources](#preferred-resources) below.
-* `resource_type` - (Required) The target resource type of the recommendation preferences. Valid values: `Ec2Instance`, `AutoScalingGroup`, `RdsDBInstance`.
+* `resource_type` - (Required) The target resource type of the recommendation preferences. Valid values: `Ec2Instance`, `AutoScalingGroup`, `RdsDBInstance`, `AuroraDBClusterStorage`.
 * `savings_estimation_mode` - (Optional) The status of the savings estimation mode preference. Valid values: `AfterDiscounts`, `BeforeDiscounts`.
 * `scope` - (Required) The scope of the recommendation preferences. See [Scope](#scope) below.
 * `utilization_preference` - (Optional) The preference to control the resource’s CPU utilization threshold, CPU utilization headroom, and memory utilization headroom. See [Utilization Preferences](#utilization-preferences) below.

@@ -62,6 +62,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipamPoolId` - (Optional) ID of the IPAM pool you would like information on.
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -96,4 +97,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-7fa43d1926bb56b90cd7a7d2945bf4e174e020e72a90123ee570dce358d6052f -->
+<!-- cache-key: cdktf-0.20.8 input-2baf36625da983bca8a3d9fd123a9b13a1f0d5ecde291d1230c3d4421e13f67c -->

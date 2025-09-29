@@ -1083,6 +1083,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 					MaxItems: 5,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"asn": emptySchema(),
 							"cookie": {
 								Type:     schema.TypeList,
 								Optional: true,

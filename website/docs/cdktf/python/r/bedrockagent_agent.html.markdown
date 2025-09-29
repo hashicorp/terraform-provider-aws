@@ -43,7 +43,7 @@ class MyConvertedCode(TerraformStack):
         example_agent_permissions = DataAwsIamPolicyDocument(self, "example_agent_permissions",
             statement=[DataAwsIamPolicyDocumentStatement(
                 actions=["bedrock:InvokeModel"],
-                resources=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.name + "}::foundation-model/anthropic.claude-v2"
+                resources=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.region + "}::foundation-model/anthropic.claude-v2"
                 ]
             )
             ]
@@ -57,7 +57,7 @@ class MyConvertedCode(TerraformStack):
                     variable="aws:SourceAccount"
                 ), DataAwsIamPolicyDocumentStatementCondition(
                     test="ArnLike",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:agent/*"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:agent/*"
                     ],
                     variable="AWS:SourceArn"
                 )
@@ -100,6 +100,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_collaboration` - (Optional) Agents collaboration role. Valid values: `SUPERVISOR`, `SUPERVISOR_ROUTER`, `DISABLED`.
 * `customer_encryption_key_arn` - (Optional) ARN of the AWS KMS key that encrypts the agent.
 * `description` - (Optional) Description of the agent.
@@ -198,4 +199,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ff5d8123b17c10d54bd6aee6fe0c178bf6cf0326d7c5717f62293d4c9c74dc82 -->
+<!-- cache-key: cdktf-0.20.8 input-a99e781ec67fef057a9939938900924b660de8f6022d71e748011e2b654898a7 -->

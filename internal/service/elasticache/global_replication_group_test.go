@@ -1229,7 +1229,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1266,7 +1266,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1312,7 +1312,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorDown
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1359,7 +1359,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MajorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "5.0.6"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "5.0.6"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1401,7 +1401,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MajorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "5.0.6"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "5.0.6"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1444,7 +1444,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_NoVersio
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
@@ -1478,7 +1478,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_MinorUpg
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
@@ -1522,6 +1522,179 @@ func TestAccElastiCacheGlobalReplicationGroup_UpdateParameterGroupName(t *testin
 			{
 				Config:      testAccGlobalReplicationGroupConfig_engineVersionCustomParam(rName, primaryReplicationGroupId, "5.0.6", "6.2", parameterGroupName, "redis6.x"),
 				ExpectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineOnCreate_ValkeyUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	primaryReplicationGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// create global datastore with valkey 8.0 engine version from a redis 7.1 primary replication group
+				Config: testAccGlobalReplicationGroupConfig_engineParam(rName, primaryReplicationGroupId, "redis", "7.1", "valkey", "8.0", "default.valkey8"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^8\.0\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				// check import of global datastore
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrParameterGroupName},
+			},
+			{
+				// refresh primary replication group after being upgraded by the global datastore
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngineVersion, "8.0"),
+					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestCheckResourceAttrPair(primaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineOnUpdate_ValkeyUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	primaryReplicationGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// create global datastore using redis 7.1 primary replication group engine version
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "7.1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.1\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				// check import of global datastore
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrParameterGroupName},
+			},
+			{
+				// refresh primary replication group after being associated to global datastore
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngineVersion, "7.1"),
+					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestCheckResourceAttrPair(primaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
+				),
+			},
+			{
+				// upgrade engine and version on global datastore
+				Config: testAccGlobalReplicationGroupConfig_engineParam(rName, primaryReplicationGroupId, "redis", "7.1", "valkey", "7.2", "default.valkey7"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.2\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				// check import of global datastore
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrParameterGroupName},
+			},
+			{
+				// refresh primary replication group after being upgraded by the global datastore
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngineVersion, "7.2"),
+					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestCheckResourceAttrPair(primaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheGlobalReplicationGroup_InheritValkeyEngine_SecondaryReplicationGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	primaryReplicationGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	secondaryReplicationGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
+	secondaryReplicationGroupResourceName := "aws_elasticache_replication_group.secondary"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalReplicationGroup(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// create global datastore using Valkey 8.0 primary replication group and add secondary replication group
+				Config: testAccGlobalReplicationGroupConfig_Valkey_inheritEngine_secondaryReplicationGroup(rName, primaryReplicationGroupId, secondaryReplicationGroupId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^8\.0\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				// refresh replication groups to pick up all engine and version computed changes
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, names.AttrEngineVersion, "8.0"),
+					resource.TestMatchResourceAttr(primaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestCheckResourceAttrPair(primaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
+
+					resource.TestCheckResourceAttr(secondaryReplicationGroupResourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(secondaryReplicationGroupResourceName, names.AttrEngineVersion, "8.0"),
+					resource.TestMatchResourceAttr(secondaryReplicationGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestCheckResourceAttrPair(secondaryReplicationGroupResourceName, "global_replication_group_id", resourceName, "global_replication_group_id"),
+				),
 			},
 		},
 	})
@@ -2069,7 +2242,7 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName, numNodeGroups, globalNumNodeGroups)
 }
 
-func testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, repGroupEngineVersion string) string {
+func testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, repGroupEngineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   global_replication_group_id_suffix = %[1]q
@@ -2105,10 +2278,6 @@ resource "aws_elasticache_replication_group" "test" {
   engine_version     = %[3]q
   node_type          = "cache.m5.large"
   num_cache_clusters = 1
-
-  lifecycle {
-    ignore_changes = [engine_version]
-  }
 }
 `, rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion)
 }
@@ -2130,10 +2299,6 @@ resource "aws_elasticache_replication_group" "test" {
   engine_version     = %[3]q
   node_type          = "cache.m5.large"
   num_cache_clusters = 1
-
-  lifecycle {
-    ignore_changes = [engine_version]
-  }
 }
 `, rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion)
 }
@@ -2156,12 +2321,56 @@ resource "aws_elasticache_replication_group" "test" {
   engine_version     = %[3]q
   node_type          = "cache.m5.large"
   num_cache_clusters = 1
-
-  lifecycle {
-    ignore_changes = [engine_version]
-  }
 }
 `, rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion, parameterGroup)
+}
+
+func testAccGlobalReplicationGroupConfig_engineParam(rName, primaryReplicationGroupId, repGroupEngine, repGroupEngineVersion, globalEngine, globalEngineVersion, globalParamGroup string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+
+  engine               = %[5]q
+  engine_version       = %[6]q
+  parameter_group_name = %[7]q
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[2]q
+  description          = "test"
+  engine               = %[3]q
+  engine_version       = %[4]q
+  node_type            = "cache.m5.large"
+  num_cache_clusters   = 1
+}
+`, rName, primaryReplicationGroupId, repGroupEngine, repGroupEngineVersion, globalEngine, globalEngineVersion, globalParamGroup)
+}
+
+func testAccGlobalReplicationGroupConfig_Valkey_inheritEngine_secondaryReplicationGroup(rName, primaryReplicationGroupId, secondaryReplicationGroupId string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[2]q
+  description          = "test"
+  engine               = "valkey"
+  engine_version       = "8.0"
+  node_type            = "cache.m5.large"
+  num_cache_clusters   = 1
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = awsalternate
+
+  replication_group_id        = %[3]q
+  description                 = "test secondary"
+  global_replication_group_id = aws_elasticache_global_replication_group.test.id
+}
+`, rName, primaryReplicationGroupId, secondaryReplicationGroupId))
 }
 
 func testAccGlobalReplicationGroupConfig_engineVersionCustomParam(rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion, parameterGroupName, parameterGroupFamily string) string {
@@ -2182,10 +2391,6 @@ resource "aws_elasticache_replication_group" "test" {
   engine_version     = %[3]q
   node_type          = "cache.m5.large"
   num_cache_clusters = 1
-
-  lifecycle {
-    ignore_changes = [engine_version]
-  }
 }
 
 resource "aws_elasticache_parameter_group" "test" {
@@ -2213,10 +2418,6 @@ resource "aws_elasticache_replication_group" "test" {
   engine_version     = %[3]q
   node_type          = "cache.m5.large"
   num_cache_clusters = 1
-
-  lifecycle {
-    ignore_changes = [engine_version]
-  }
 }
 `, rName, primaryReplicationGroupId, repGroupEngineVersion, parameterGroup)
 }

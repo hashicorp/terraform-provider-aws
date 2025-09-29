@@ -75,22 +75,23 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `instanceName` - (Required) Name of the Lightsail Instance.
-* `portInfo` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `portInfo`. [See below](#port_info).
-
-### port_info
-
-The following arguments are required:
-
-* `fromPort` - (Required) First port in a range of open ports on an instance.
-* `protocol` - (Required) IP protocol name. Valid values: `tcp`, `all`, `udp`, `icmp`.
-* `toPort` - (Required) Last port in a range of open ports on an instance.
+* `instanceName` - (Required) Name of the instance for which to open ports.
+* `portInfo` - (Required) Descriptor of the ports to open for the specified instance. AWS closes all currently open ports that are not included in this argument. See [`portInfo` Block](#port_info-block) for details.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `portInfo` Block
+
+The `portInfo` configuration block supports the following arguments:
+
+* `fromPort` - (Required) First port in a range of open ports on an instance. See [PortInfo](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_PortInfo.html) for details.
+* `protocol` - (Required) IP protocol name. Valid values: `tcp`, `all`, `udp`, `icmp`, `icmpv6`. See [PortInfo](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_PortInfo.html) for details.
+* `toPort` - (Required) Last port in a range of open ports on an instance. See [PortInfo](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_PortInfo.html) for details.
 * `cidrListAliases` - (Optional) Set of CIDR aliases that define access for a preconfigured range of IP addresses.
-* `cidrs` - (Optional) Set of CIDR blocks.
-* `ipv6Cidrs` - (Optional) Set of IPv6 CIDR blocks.
+* `cidrs` - (Optional) Set of IPv4 addresses or ranges of IPv4 addresses (in CIDR notation) that are allowed to connect to an instance through the ports, and the protocol.
+* `ipv6Cidrs` - (Optional) Set of IPv6 addresses or ranges of IPv6 addresses (in CIDR notation) that are allowed to connect to an instance through the ports, and the protocol.
 
 ## Attribute Reference
 
@@ -98,4 +99,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ID of the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-cfba9f94b8b18b34a6f7230f088b39dded3a14fe765be72aa8fcf6a77a82dc91 -->
+<!-- cache-key: cdktf-0.20.8 input-47c52b5d7b027e1958dd8588863cc656925b7c03b56544e46eb0fd14bf5cd761 -->

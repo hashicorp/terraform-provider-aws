@@ -86,6 +86,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aggregateConfiguration` - (Optional) The Aggregate configuration only applies to `FLEXGROUP` volumes. See [`aggregateConfiguration` Block] for details.
 * `bypassSnaplockEnterpriseRetention` - (Optional) Setting this to `true` allows a SnapLock administrator to delete an FSx for ONTAP SnapLock Enterprise volume with unexpired write once, read many (WORM) files. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `copyTagsToBackups` - (Optional) A boolean flag indicating whether tags for the volume should be copied to backups. This value defaults to `false`.
@@ -217,4 +218,4 @@ Using `terraform import`, import FSx ONTAP volume using the `id`. For example:
 % terraform import aws_fsx_ontap_volume.example fsvol-12345678abcdef123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dea13a7585249abb8fa9247e998eea6479171392c1e108716cdbfb4a170a9595 -->
+<!-- cache-key: cdktf-0.20.8 input-7b854bb5a4931e4f61e213fbf9acbd9ad2db509c1ba32549b790d81f5a707f73 -->

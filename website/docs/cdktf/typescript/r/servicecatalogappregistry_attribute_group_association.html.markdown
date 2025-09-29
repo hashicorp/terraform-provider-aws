@@ -69,8 +69,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required) ID of the application.
 * `attributeGroupId` - (Required) ID of the attribute group to associate with the application.
 
@@ -110,4 +111,4 @@ Using `terraform import`, import Service Catalog AppRegistry Attribute Group Ass
 % terraform import aws_servicecatalogappregistry_attribute_group_association.example 12456778723424sdffsdfsdq34,12234t3564dsfsdf34asff4ww3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-368bc6c11766d01afdb1c474b902d60f1e913378b1af7f726edf11cd14a43a4d -->
+<!-- cache-key: cdktf-0.20.8 input-06b21c0fafbd7bd4fc99627a5d68eb7362e6728f63edd3b4282dc969311a3a8f -->

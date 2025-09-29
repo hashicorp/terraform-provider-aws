@@ -225,6 +225,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `experimentOptions` - (Optional) The experiment options for the experiment template. See [experiment_options](#experiment_options) below for more details!
 * `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
@@ -365,4 +366,4 @@ Using `terraform import`, import FIS Experiment Templates using the `id`. For ex
 % terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7ecf15f19d4c03e9f85f51a67106ad1fe0a61fb63c4b30789235fa6c6c9de680 -->
+<!-- cache-key: cdktf-0.20.8 input-ca46f43f7ea4dc10f0160f34ee46899f344e2a63b9d91d7ac1630e7d792a2ee3 -->

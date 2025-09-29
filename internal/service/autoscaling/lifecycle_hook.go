@@ -123,7 +123,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutLifecycleHook(ctx, input)
 		},
 		errCodeValidationError, "Unable to publish test message to notification target")

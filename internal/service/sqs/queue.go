@@ -93,7 +93,7 @@ var (
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      defaultQueueMaximumMessageSize,
-			ValidateFunc: validation.IntBetween(1024, 262_144),
+			ValidateFunc: validation.IntBetween(1024, 1_048_576),
 		},
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
@@ -195,16 +195,15 @@ var (
 // @SDKResource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
+// @IdentityAttribute("url")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(idAttrDuplicates="url")
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
 		ReadWithoutTimeout:   resourceQueueRead,
 		UpdateWithoutTimeout: resourceQueueUpdate,
 		DeleteWithoutTimeout: resourceQueueDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceQueueCustomizeDiff,
 
@@ -238,7 +237,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// create is 2 phase: 1. create, 2. wait for propagation
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 		return conn.CreateQueue(ctx, input)
 	}, errCodeQueueDeletedRecently)
 
@@ -246,7 +245,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 			return conn.CreateQueue(ctx, input)
 		}, errCodeQueueDeletedRecently)
 	}

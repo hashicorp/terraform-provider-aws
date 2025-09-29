@@ -109,6 +109,10 @@ variable "workflow_labels" {
       color       = "dc477d", # color:consul
       description = "Waiting for first response or review from a maintainer."
     },
+    "new-action" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new action."
+    },
     "new-data-source" = {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new data source."
@@ -168,6 +172,10 @@ variable "workflow_labels" {
     "repository" = {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
+    },
+    "resource-identity" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to resource identity."
     },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient

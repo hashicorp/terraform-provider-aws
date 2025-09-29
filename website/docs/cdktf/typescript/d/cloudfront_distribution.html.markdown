@@ -48,6 +48,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `aliases` - List that contains information about CNAMEs (alternate domain names), if any, for this distribution.
 
+* `anycastIpListId` - ID of the Anycast static IP list that is associated with the distribution, if any.
+
 * `arn` - ARN (Amazon Resource Name) for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5, where 123456789012 is your AWS account ID.
 
 * `status` - Current status of the distribution. `Deployed` if the
@@ -70,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
      alias for the zone ID `Z2FDTNDATAQYW2`.
 * `webAclId` AWS WAF web ACL associated with this distribution.
 
-<!-- cache-key: cdktf-0.20.8 input-7b44ab0087c4af7f48dfdb8564eebc07afbeb6c72c98e64a25a0fc3fe8f29955 -->
+<!-- cache-key: cdktf-0.20.8 input-d53bc71e997f4e8ab6d41cb84814eac9d907cf5ed04187aa3ae07f02a9cbda3d -->

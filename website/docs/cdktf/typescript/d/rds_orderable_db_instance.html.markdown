@@ -67,6 +67,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availabilityZoneGroup` - (Optional) Availability zone group.
 * `engineLatestVersion` - (Optional) When set to `true`, the data source attempts to return the most recent version matching the other criteria you provide. You must use `engineLatestVersion` with `preferredInstanceClasses` and/or `preferredEngineVersions`. Using `engineLatestVersion` will avoid `multiple RDS DB Instance Classes` errors. If you use `engineLatestVersion` with `preferredInstanceClasses`, the data source returns the latest version for the _first_ matching instance class (instance class priority). **Note:** The data source uses a best-effort approach at selecting the latest version but due to the complexity of version identifiers across engines, using `engineLatestVersion` may _not_ return the latest version in every situation.
 * `engineVersion` - (Optional) Version of the DB engine. If none is provided, the data source tries to use the AWS-defined default version that matches any other criteria.
@@ -105,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
 * `multiAzCapable` - Whether a DB instance is Multi-AZ capable.
 * `outpostCapable` - Whether a DB instance supports RDS on Outposts.
 
-<!-- cache-key: cdktf-0.20.8 input-b7d7f1ef4f3717ebf717a671d4388db2e9e81bc8063c21466642709438b646f7 -->
+<!-- cache-key: cdktf-0.20.8 input-fbc85aec937bf802d9383955af5a81fc82b7deebbe576e0f9ccf828fde6c4470 -->

@@ -79,7 +79,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidTargetException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidTargetException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.RegisterTargets(ctx, input)
 	})
 

@@ -77,7 +77,7 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", role, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findAttachedRolePolicyByTwoPartKey(ctx, conn, role, policyARN)
 	}, d.IsNewResource())
 
@@ -107,7 +107,7 @@ func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceD
 
 func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AttachRolePolicy(ctx, &iam.AttachRolePolicyInput{
 			PolicyArn: aws.String(policyARN),
 			RoleName:  aws.String(role),
@@ -123,7 +123,7 @@ func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN s
 
 func detachPolicyFromRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DetachRolePolicy(ctx, &iam.DetachRolePolicyInput{
 			PolicyArn: aws.String(policyARN),
 			RoleName:  aws.String(role),

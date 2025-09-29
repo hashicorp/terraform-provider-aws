@@ -130,7 +130,7 @@ func (r *assessmentDelegationResource) Create(ctx context.Context, request resou
 	// Example:
 	//   ResourceNotFoundException: The operation tried to access a nonexistent resource. The resource
 	//   might not be specified correctly, or its status might not be active. Check and try again.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceNotFoundException](ctx, iamPropagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceNotFoundException](ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.BatchCreateDelegationByAssessment(ctx, &input)
 	})
 

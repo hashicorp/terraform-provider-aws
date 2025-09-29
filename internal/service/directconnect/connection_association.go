@@ -106,8 +106,8 @@ func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Cli
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DirectConnectClientException](ctx, timeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.DirectConnectClientException](ctx, timeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DisassociateConnectionFromLag(ctx, input)
 		}, "is in a transitioning state")
 

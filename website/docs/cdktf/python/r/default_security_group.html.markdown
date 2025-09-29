@@ -99,6 +99,7 @@ Removing this resource from your configuration will remove it from your statefil
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `egress` - (Optional, VPC only) Configuration block. Detailed below.
 * `ingress` - (Optional) Configuration block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -158,4 +159,4 @@ Using `terraform import`, import Security Groups using the security group `id`. 
 % terraform import aws_default_security_group.default_sg sg-903004f8
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1772c4a79e74a3aeb963e0bbd212a020fc07e8e9c6c1eef173ce3d3d6f84d54b -->
+<!-- cache-key: cdktf-0.20.8 input-62e064366adf93594802e4f14d117f19197df8ed95f9fbbbfbd10760cf26957e -->

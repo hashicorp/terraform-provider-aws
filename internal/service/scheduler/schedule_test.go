@@ -12,8 +12,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -201,6 +203,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
+					resource.TestCheckResourceAttr(resourceName, "action_after_completion", string(awstypes.ActionAfterCompletionNone)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),
@@ -261,7 +264,57 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfscheduler.ResourceSchedule(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccSchedulerSchedule_actionAfterCompletion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_scheduler_schedule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_actionAfterCompletion(name, string(awstypes.ActionAfterCompletionNone)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "action_after_completion", string(awstypes.ActionAfterCompletionNone)),
+				),
+			},
+			{
+				Config: testAccScheduleConfig_actionAfterCompletion(name, string(awstypes.ActionAfterCompletionDelete)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "action_after_completion", string(awstypes.ActionAfterCompletionDelete)),
+				),
+			},
+			{
+				Config: testAccScheduleConfig_actionAfterCompletion(name, string(awstypes.ActionAfterCompletionNone)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "action_after_completion", string(awstypes.ActionAfterCompletionNone)),
+				),
 			},
 		},
 	})
@@ -1692,6 +1745,32 @@ resource "aws_scheduler_schedule" "test" {
   }
 }
 `, name),
+	)
+}
+
+func testAccScheduleConfig_actionAfterCompletion(rName, actionAfterCompletion string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  action_after_completion = %[2]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_sqs_queue.test.arn
+    role_arn = aws_iam_role.test.arn
+  }
+}
+`, rName, actionAfterCompletion),
 	)
 }
 

@@ -274,7 +274,7 @@ func instanceProfileAddRole(ctx context.Context, conn *iam.Client, profileName, 
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AddRoleToInstanceProfile(ctx, input)
 		},
 		func(err error) (bool, error) {

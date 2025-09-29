@@ -35,7 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-- `ecr_repository_prefix` - (Required) The repository name prefix to use when caching images from the source registry.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `ecr_repository_prefix` - (Required) The repository name prefix to use when caching images from the source registry.
 
 ## Attribute Reference
 
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 - `upstream_registry_url` - The registry URL of the upstream registry to use as the source.
 - `upstream_repository_prefix` - The upstream repository prefix associated with the pull through cache rule.
 
-<!-- cache-key: cdktf-0.20.8 input-7f6f279424890663ab9ec00d76197d11db86bf1cfadb5049a895e13e4f974764 -->
+<!-- cache-key: cdktf-0.20.8 input-e2080b23e6afea8514eb1fb169c0f3157fe09ad83afd7fb0022cf1b0cb732f64 -->

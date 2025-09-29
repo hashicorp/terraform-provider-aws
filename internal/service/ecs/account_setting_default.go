@@ -12,10 +12,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,10 +36,10 @@ func resourceAccountSettingDefault() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SettingName](),
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(settingName_Values(), false),
 			},
 			"principal_arn": {
 				Type:     schema.TypeString,
@@ -176,4 +178,8 @@ func findEffectiveAccountSettingByName(ctx context.Context, conn *ecs.Client, na
 	}
 
 	return findSetting(ctx, conn, input)
+}
+
+func settingName_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.SettingName](), "dualStackIPv6")
 }

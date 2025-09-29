@@ -62,27 +62,20 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the rule. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`. **Note**: Due to the length of the generated suffix, must be 38 characters or less.
 * `scheduleExpression` - (Optional) The scheduling expression. For example, `cron(0 20 * * ? *)` or `rate(5 minutes)`. At least one of `scheduleExpression` or `eventPattern` is required. Can only be used on the default event bus. For more information, refer to the AWS documentation [Schedule Expressions for Rules](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
-* `eventBusName` - (Optional) The name or ARN of the event bus to associate with this rule.
-  If you omit this, the `default` event bus is used.
+* `eventBusName` - (Optional) The name or ARN of the event bus to associate with this rule. If you omit this, the `default` event bus is used.
 * `eventPattern` - (Optional) The event pattern described a JSON object. At least one of `scheduleExpression` or `eventPattern` is required. See full documentation of [Events and Event Patterns in EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-and-event-patterns.html) for details. **Note**: The event pattern size is 2048 by default but it is adjustable up to 4096 characters by submitting a service quota increase request. See [Amazon EventBridge quotas](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-quota.html) for details.
 * `forceDestroy` - (Optional) Used to delete managed rules created by AWS. Defaults to `false`.
 * `description` - (Optional) The description of the rule.
 * `roleArn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
-* `isEnabled` - (Optional, **Deprecated** Use `state` instead) Whether the rule should be enabled.
-  Defaults to `true`.
-  Conflicts with `state`.
-* `state` - (Optional) State of the rule.
-  Valid values are `DISABLED`, `ENABLED`, and `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`.
-  When state is `ENABLED`, the rule is enabled for all events except those delivered by CloudTrail.
-  To also enable the rule for events delivered by CloudTrail, set `state` to `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`.
-  Defaults to `ENABLED`.
-  Conflicts with `isEnabled`.
-
-  **NOTE:** The rule state  `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS` cannot be used in conjunction with the `scheduleExpression` argument.
+* `isEnabled` - (Optional, **Deprecated** Use `state` instead) Whether the rule should be enabled. Defaults to `true`. Conflicts with `state`.
+* `state` - (Optional) State of the rule. Valid values are `DISABLED`, `ENABLED`, and `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`. When state is `ENABLED`, the rule is enabled for all events except those delivered by CloudTrail. To also enable the rule for events delivered by CloudTrail, set `state` to `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`. Defaults to `ENABLED`. Conflicts with `isEnabled`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+**NOTE:** The rule state `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS` cannot be used in conjunction with the `scheduleExpression` argument.
 
 ## Attribute Reference
 
@@ -93,6 +86,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_rule.example
+  identity = {
+    name           = "capture-console-sign-in"
+    event_bus_name = "example-event-bus"
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the EventBridge rule.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `eventBusName` (String) Name of the event bus.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `eventBusName`, the `default` event bus will be used). For example:
 
@@ -110,7 +131,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     CloudwatchEventRule.generateConfigForImport(
       this,
-      "console",
+      "example",
       "example-event-bus/capture-console-sign-in"
     );
   }
@@ -121,7 +142,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `eventBusName`, the `default` event bus will be used). For example:
 
 ```console
-% terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
+% terraform import aws_cloudwatch_event_rule.example example-event-bus/capture-console-sign-in
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1edad67baf5a07ed69fb4e4fec186b1cdb993c657170cf34c502b05f9a833823 -->
+<!-- cache-key: cdktf-0.20.8 input-182d4defbb2adb53d28b5de017c57ceb2322d0f3eef60c595ca406b455d5de40 -->

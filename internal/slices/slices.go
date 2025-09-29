@@ -69,6 +69,10 @@ type Predicate[T any] func(T) bool
 
 // Filter returns a new slice containing all values that return `true` for the filter function `f`.
 func Filter[S ~[]E, E any](s S, f Predicate[E]) S {
+	if len(s) == 0 {
+		return nil
+	}
+
 	v := S(make([]E, 0, len(s)))
 
 	for _, e := range s {

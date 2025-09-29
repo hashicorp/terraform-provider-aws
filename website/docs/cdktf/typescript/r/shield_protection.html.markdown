@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
       name: "example",
       resourceArn:
         "arn:aws:ec2:${" +
-        dataAwsRegionCurrent.name +
+        dataAwsRegionCurrent.region +
         "}:${" +
         current.accountId +
         "}:eip-allocation/${" +
@@ -110,4 +110,4 @@ Using `terraform import`, import Shield protection resources using specifying th
 % terraform import aws_shield_protection.example ff9592dc-22f3-4e88-afa1-7b29fde9669a
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-35847768aaaa80ceec4dd0e0320b0024c8b87792dc136354d8b49f64094399b6 -->
+<!-- cache-key: cdktf-0.20.8 input-c8ad5c34e35b67006c0a905cc6b5ce2aec08f4b21d49f283cd3b0e43e98bff9a -->

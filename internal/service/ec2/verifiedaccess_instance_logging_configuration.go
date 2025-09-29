@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -223,14 +223,14 @@ func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Contex
 	vaiID := d.Id()
 
 	// create structure for reset
-	resetObject := &types.VerifiedAccessLogOptions{
-		CloudWatchLogs: &types.VerifiedAccessLogCloudWatchLogsDestinationOptions{
+	resetObject := &awstypes.VerifiedAccessLogOptions{
+		CloudWatchLogs: &awstypes.VerifiedAccessLogCloudWatchLogsDestinationOptions{
 			Enabled: aws.Bool(false),
 		},
-		KinesisDataFirehose: &types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions{
+		KinesisDataFirehose: &awstypes.VerifiedAccessLogKinesisDataFirehoseDestinationOptions{
 			Enabled: aws.Bool(false),
 		},
-		S3: &types.VerifiedAccessLogS3DestinationOptions{
+		S3: &awstypes.VerifiedAccessLogS3DestinationOptions{
 			Enabled: aws.Bool(false),
 		},
 		IncludeTrustContext: aws.Bool(false),
@@ -265,7 +265,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Contex
 	return diags
 }
 
-func expandVerifiedAccessInstanceAccessLogs(accessLogs []any) *types.VerifiedAccessLogOptions {
+func expandVerifiedAccessInstanceAccessLogs(accessLogs []any) *awstypes.VerifiedAccessLogOptions {
 	if len(accessLogs) == 0 || accessLogs[0] == nil {
 		return nil
 	}
@@ -275,7 +275,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []any) *types.VerifiedAcc
 		return nil
 	}
 
-	result := &types.VerifiedAccessLogOptions{}
+	result := &awstypes.VerifiedAccessLogOptions{}
 
 	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok && len(v) > 0 {
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
@@ -300,7 +300,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []any) *types.VerifiedAcc
 	return result
 }
 
-func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []any) *types.VerifiedAccessLogCloudWatchLogsDestinationOptions {
+func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []any) *awstypes.VerifiedAccessLogCloudWatchLogsDestinationOptions {
 	if len(cloudWatchLogs) == 0 || cloudWatchLogs[0] == nil {
 		return nil
 	}
@@ -310,7 +310,7 @@ func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []any) *types.Verified
 		return nil
 	}
 
-	result := &types.VerifiedAccessLogCloudWatchLogsDestinationOptions{
+	result := &awstypes.VerifiedAccessLogCloudWatchLogsDestinationOptions{
 		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
@@ -321,7 +321,7 @@ func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []any) *types.Verified
 	return result
 }
 
-func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []any) *types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions {
+func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []any) *awstypes.VerifiedAccessLogKinesisDataFirehoseDestinationOptions {
 	if len(kinesisDataFirehose) == 0 || kinesisDataFirehose[0] == nil {
 		return nil
 	}
@@ -331,7 +331,7 @@ func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []any) *type
 		return nil
 	}
 
-	result := &types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions{
+	result := &awstypes.VerifiedAccessLogKinesisDataFirehoseDestinationOptions{
 		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
@@ -342,7 +342,7 @@ func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []any) *type
 	return result
 }
 
-func expandVerifiedAccessLogS3(s3 []any) *types.VerifiedAccessLogS3DestinationOptions {
+func expandVerifiedAccessLogS3(s3 []any) *awstypes.VerifiedAccessLogS3DestinationOptions {
 	if len(s3) == 0 || s3[0] == nil {
 		return nil
 	}
@@ -352,7 +352,7 @@ func expandVerifiedAccessLogS3(s3 []any) *types.VerifiedAccessLogS3DestinationOp
 		return nil
 	}
 
-	result := &types.VerifiedAccessLogS3DestinationOptions{
+	result := &awstypes.VerifiedAccessLogS3DestinationOptions{
 		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
@@ -375,7 +375,7 @@ func expandVerifiedAccessLogS3(s3 []any) *types.VerifiedAccessLogS3DestinationOp
 	return result
 }
 
-func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs) []any {
+func flattenVerifiedAccessInstanceAccessLogs(apiObject *awstypes.VerifiedAccessLogs) []any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
@@ -401,7 +401,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	return []any{tfMap}
 }
 
-func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCloudWatchLogsDestination) []any {
+func flattenVerifiedAccessLogCloudWatchLogs(apiObject *awstypes.VerifiedAccessLogCloudWatchLogsDestination) []any {
 	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
@@ -413,7 +413,7 @@ func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCl
 	return []any{tfMap}
 }
 
-func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccessLogKinesisDataFirehoseDestination) []any {
+func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *awstypes.VerifiedAccessLogKinesisDataFirehoseDestination) []any {
 	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
@@ -425,7 +425,7 @@ func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccess
 	return []any{tfMap}
 }
 
-func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination) []any {
+func flattenVerifiedAccessLogS3(apiObject *awstypes.VerifiedAccessLogS3Destination) []any {
 	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}

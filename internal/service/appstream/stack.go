@@ -301,7 +301,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.UserSettings = expandUserSettings(v.(*schema.Set).List())
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceNotFoundException](ctx, stackOperationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceNotFoundException](ctx, stackOperationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateStack(ctx, &input)
 	})
 

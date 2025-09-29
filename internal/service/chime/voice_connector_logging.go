@@ -82,10 +82,6 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 		return findVoiceConnectorLoggingByID(ctx, conn, d.Id())
 	})
 
-	if tfresource.TimedOut(err) {
-		resp, err = findVoiceConnectorLoggingByID(ctx, conn, d.Id())
-	}
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 		d.SetId("")

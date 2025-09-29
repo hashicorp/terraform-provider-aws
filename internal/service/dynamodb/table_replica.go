@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -142,27 +141,23 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		}},
 	}
 
-	err = retry.RetryContext(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *retry.RetryError {
+	err = tfresource.Retry(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.UpdateTable(ctx, input, optFn)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "simultaneously") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsA[*awstypes.ResourceInUseException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateTable(ctx, input, optFn)
-	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
@@ -358,27 +353,23 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			TableName: aws.String(tableName),
 		}
 
-		err := retry.RetryContext(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func() *retry.RetryError {
+		err := tfresource.Retry(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func(ctx context.Context) *tfresource.RetryError {
 			_, err := conn.UpdateTable(ctx, input, optFn)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsA[*awstypes.ResourceInUseException](err) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateTable(ctx, input, optFn)
-		}
 
 		if err != nil && !tfawserr.ErrMessageContains(err, errCodeValidationException, "no actions specified") {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
@@ -450,27 +441,23 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		},
 	}
 
-	err = retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, updateTableTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.UpdateTable(ctx, input, optFn)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsA[*awstypes.ResourceInUseException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateTable(ctx, input, optFn)
-	}
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
 		return diags

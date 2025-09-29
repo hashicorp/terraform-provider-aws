@@ -1217,7 +1217,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateAutoScalingGroup(ctx, &inputCASG)
 		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
@@ -1235,7 +1235,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 				timeout = 5 * time.Minute
 			)
 			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout,
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.PutLifecycleHook(ctx, input)
 				},
 				errCodeValidationError, "Unable to publish test message to notification target")
@@ -1562,7 +1562,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateAutoScalingGroup(ctx, &input)
 			},
 			errCodeOperationError, errCodeUpdateASG, errCodeValidationError)
@@ -1895,7 +1895,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		ForceDelete:          aws.Bool(forceDeleteGroup),
 	}
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteAutoScalingGroup(ctx, &input)
 		},
 		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
@@ -1989,7 +1989,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.Client, name string, 
 		ForceDelete:          aws.Bool(force),
 	}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteWarmPool(ctx, &input)
 		},
 		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
@@ -4155,7 +4155,7 @@ func startInstanceRefresh(ctx context.Context, conn *autoscaling.Client, input *
 	name := aws.ToString(input.AutoScalingGroupName)
 
 	_, err := tfresource.RetryWhen(ctx, instanceRefreshStartedTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.StartInstanceRefresh(ctx, input)
 		},
 		func(err error) (bool, error) {

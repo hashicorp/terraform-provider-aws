@@ -57,6 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `group_id` - (Required) The identifier for a group in the Identity Store.
 * `identity_store_id` - (Required) Identity Store ID associated with the Single Sign-On Instance.
 
@@ -77,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `user_id` - User identifier of the group member.
 
-<!-- cache-key: cdktf-0.20.8 input-c134d694c955fb553b8516ce79cad078242e966507a3509f77227e372e89cdd0 -->
+<!-- cache-key: cdktf-0.20.8 input-177f82ab0d60f263b7a359588b7856d1cc3bc76b83739dcd44b95a263186a57d -->

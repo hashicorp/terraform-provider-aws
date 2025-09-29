@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration` - (Required) The configuration for the third-party custom source.
     * `crawler_configuration` - (Required) The configuration for the Glue Crawler for the third-party custom source.
         * `role_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role to be used by the AWS Glue crawler.
@@ -103,4 +104,4 @@ Using `terraform import`, import Custom log sources using the source name. For e
 % terraform import aws_securitylake_custom_log_source.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fe7ea5dfcf4721825eec4e59e42112d25a58abf1f74522209383f9ff03f0244a -->
+<!-- cache-key: cdktf-0.20.8 input-9c50acd5144c36e9f75a2a9244059b6a5445fddf18b179c57a4aa62e47427f2c -->

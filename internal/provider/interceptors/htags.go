@@ -21,6 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type taggingAWSClient interface {
+	Partition(context.Context) string
+}
+
 type HTags unique.Handle[inttypes.ServicePackageResourceTags]
 
 func (h HTags) unwrap() unique.Handle[inttypes.ServicePackageResourceTags] {
@@ -64,7 +68,7 @@ func (h HTags) Enabled() bool {
 }
 
 // If the service package has a generic resource list tags methods, call it.
-func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string) error {
+func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c taggingAWSClient, identifier string) error {
 	var err error
 
 	resourceType := h.value().ResourceType
@@ -100,7 +104,7 @@ func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c *conns.A
 }
 
 // If the service package has a generic resource update tags methods, call it.
-func (h HTags) UpdateTags(ctx context.Context, sp conns.ServicePackage, c *conns.AWSClient, identifier string, oldTags, newTags any) error {
+func (h HTags) UpdateTags(ctx context.Context, sp conns.ServicePackage, c taggingAWSClient, identifier string, oldTags, newTags any) error {
 	var err error
 
 	resourceType := h.value().ResourceType

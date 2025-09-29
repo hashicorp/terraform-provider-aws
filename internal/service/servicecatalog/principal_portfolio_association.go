@@ -94,7 +94,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 		PrincipalType:  awstypes.PrincipalType(principalType),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.AssociatePrincipalWithPortfolio(ctx, input)
 	}, "profile does not exist")
 

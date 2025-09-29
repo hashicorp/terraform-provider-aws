@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -73,7 +73,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 
 func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -120,7 +120,7 @@ func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsy
 
 func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -175,7 +175,7 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 
 func testAccVerifiedAccessEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -205,7 +205,7 @@ func testAccVerifiedAccessEndpoint_disappears(t *testing.T, semaphore tfsync.Sem
 
 func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -257,7 +257,7 @@ func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/39186
 func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -303,7 +303,7 @@ func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Sema
 
 func testAccVerifiedAccessEndpoint_cidr(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -349,7 +349,7 @@ func testAccVerifiedAccessEndpoint_cidr(t *testing.T, semaphore tfsync.Semaphore
 
 func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -395,7 +395,7 @@ func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore)
 
 func testAccVerifiedAccessEndpoint_portRangeTCP(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -432,7 +432,7 @@ func testAccVerifiedAccessEndpoint_portRangeTCP(t *testing.T, semaphore tfsync.S
 
 func testAccVerifiedAccessEndpoint_portTCP(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -469,7 +469,7 @@ func testAccVerifiedAccessEndpoint_portTCP(t *testing.T, semaphore tfsync.Semaph
 
 func testAccVerifiedAccessEndpoint_portHTTP(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -509,7 +509,7 @@ func testAccVerifiedAccessEndpoint_portHTTP(t *testing.T, semaphore tfsync.Semap
 
 func testAccVerifiedAccessEndpoint_portHTTPS(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -573,7 +573,7 @@ func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *types.VerifiedAccessEndpoint) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *awstypes.VerifiedAccessEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

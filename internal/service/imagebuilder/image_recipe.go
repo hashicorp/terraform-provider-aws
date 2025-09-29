@@ -29,16 +29,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_image_recipe", name="Image Recipe")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageRecipeCreate,
 		ReadWithoutTimeout:   resourceImageRecipeRead,
 		UpdateWithoutTimeout: resourceImageRecipeUpdate,
 		DeleteWithoutTimeout: resourceImageRecipeDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -82,7 +80,7 @@ func resourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(100, 10000),
+										ValidateFunc: validation.IntBetween(100, 100000),
 									},
 									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
