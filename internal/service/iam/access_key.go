@@ -248,10 +248,11 @@ func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Key: %s", d.Id())
-	_, err := conn.DeleteAccessKey(ctx, &iam.DeleteAccessKeyInput{
+	input := iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
-	})
+	}
+	_, err := conn.DeleteAccessKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
