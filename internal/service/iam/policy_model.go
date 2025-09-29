@@ -249,11 +249,11 @@ func policyDecodeConfigStringList(lI []any) any {
 	return ret
 }
 
-// PolicyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
+// policyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
 // Assumes that non-"AWS" Principals are valid
 // The value can be a single string or a slice of strings
 // Valid strings are either an ARN or an AWS account ID
-func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
+func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
 	var policyData any
 	err := json.Unmarshal([]byte(policy), &policyData)
 	if err != nil {

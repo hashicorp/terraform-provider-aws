@@ -7,8 +7,9 @@ package iam
 var (
 	ResourceRole = resourceRole
 
-	DeleteServiceLinkedRole = deleteServiceLinkedRole
-	FindRoleByName          = findRoleByName
+	DeleteServiceLinkedRole     = deleteServiceLinkedRole
+	FindRoleByName              = findRoleByName
+	PolicyHasValidAWSPrincipals = policyHasValidAWSPrincipals
 )
 
 type (
