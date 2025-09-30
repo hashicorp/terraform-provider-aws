@@ -12,10 +12,10 @@ require (
 	github.com/YakDriver/regexache v0.24.0
 	github.com/YakDriver/smarterr v0.6.0
 	github.com/aws/aws-sdk-go-v2 v1.39.2
-	github.com/aws/aws-sdk-go-v2/config v1.31.11
-	github.com/aws/aws-sdk-go-v2/credentials v1.18.15
+	github.com/aws/aws-sdk-go-v2/config v1.31.12
+	github.com/aws/aws-sdk-go-v2/credentials v1.18.16
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.9
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.9
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.10
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/account v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/acm v1.37.6
@@ -138,7 +138,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/iam v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.32.6
-	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.25.5
@@ -249,7 +249,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.6
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.25.5
-	github.com/aws/aws-sdk-go-v2/service/sso v1.29.5
+	github.com/aws/aws-sdk-go-v2/service/sso v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.42.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.6
@@ -262,7 +262,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.52.6
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.65.7
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.29.5
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.18.5
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.67.7
