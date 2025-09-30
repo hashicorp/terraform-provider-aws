@@ -6,6 +6,7 @@ package actionwait
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -25,8 +26,10 @@ func TestWaitForStatus_ValidationErrors(t *testing.T) {
 	t.Parallel()
 	// Subtests parallelized; each uses its own context with timeout.
 	cases := map[string]Options[struct{}]{
-		"missing timeout": {SuccessStates: []Status{"ok"}},
-		"missing success": {Timeout: time.Second},
+		"missing timeout":            {SuccessStates: []Status{"ok"}},
+		"missing success":            {Timeout: time.Second},
+		"negative consecutive":       {Timeout: time.Second, SuccessStates: []Status{"ok"}, ConsecutiveSuccess: -1},
+		"negative progress interval": {Timeout: time.Second, SuccessStates: []Status{"ok"}, ProgressInterval: -time.Second},
 	}
 
 	for name, opts := range cases {
@@ -287,5 +290,35 @@ func TestWaitForStatus_ProgressSinkDisabled(t *testing.T) {
 	}
 	if progressCalls != 0 { // should not be invoked when ProgressInterval <= 0
 		t.Fatalf("expected zero progress sink calls, got %d", progressCalls)
+	}
+}
+
+func TestWaitForStatus_UnexpectedStateErrorMessage(t *testing.T) {
+	t.Parallel()
+	ctx := makeCtx(t)
+	_, err := WaitForStatus(ctx, func(context.Context) (FetchResult[int], error) {
+		return FetchResult[int]{Status: "UNKNOWN"}, nil
+	}, Options[int]{
+		Timeout:            200 * time.Millisecond,
+		SuccessStates:      []Status{"OK"},
+		TransitionalStates: []Status{"PENDING", "IN_PROGRESS"},
+		Interval:           FixedInterval(fastFixedInterval),
+	})
+	if err == nil {
+		t.Fatal("expected unexpected state error")
+	}
+	unexpectedErr, ok := err.(*UnexpectedStateError)
+	if !ok { //nolint:errorlint // direct type assertion adequate in tests
+		t.Fatalf("expected UnexpectedStateError, got %T", err)
+	}
+	errMsg := unexpectedErr.Error()
+	if !strings.Contains(errMsg, "UNKNOWN") {
+		t.Errorf("error message should contain status 'UNKNOWN', got: %s", errMsg)
+	}
+	if !strings.Contains(errMsg, "allowed:") {
+		t.Errorf("error message should list allowed states, got: %s", errMsg)
+	}
+	if !strings.Contains(errMsg, "PENDING") {
+		t.Errorf("error message should contain allowed state 'PENDING', got: %s", errMsg)
 	}
 }
