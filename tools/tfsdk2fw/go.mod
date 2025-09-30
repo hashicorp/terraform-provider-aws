@@ -20,10 +20,10 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.39.2 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.1 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.31.11 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.18.15 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.31.12 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.18.16 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.9 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.9 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.9 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.9 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
@@ -150,7 +150,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.35.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.47.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.32.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.47.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.1 // indirect
@@ -266,7 +266,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.25.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.29.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.29.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.36.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.42.6 // indirect
@@ -280,7 +280,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.52.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.65.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.29.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.18.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.19.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.67.7 // indirect
