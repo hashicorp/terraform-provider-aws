@@ -17,12 +17,7 @@ import (
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
-type fieldNamePrefixCtxKey string
-
 const (
-	fieldNamePrefixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_PREFIX_RECURSE"
-	fieldNameSuffixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_SUFFIX_RECURSE"
-
 	mapBlockKeyFieldName = "MapBlockKey"
 )
 
@@ -74,7 +69,12 @@ var (
 	plural = pluralize.NewClient()
 )
 
-func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) {
+type fuzzyFieldFinder struct {
+	prefixRecursionDepth int
+	suffixRecursionDepth int
+}
+
+func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) {
 	// first precedence is exact match (case sensitive)
 	if fieldTo, ok := typeTo.FieldByName(fieldNameFrom); ok {
 		return fieldTo, true
@@ -117,16 +117,18 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.
 	// fourth precedence is using field name prefix
 	if v := opts.fieldNamePrefix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(fieldNamePrefixRecurse) == nil {
+		if fff.prefixRecursionDepth == 0 {
 			// so it will only recurse once
-			ctxP := context.WithValue(ctx, fieldNamePrefixRecurse, true)
+			fff.prefixRecursionDepth++
 			if trimmed, ok := strings.CutPrefix(fieldNameFrom, v); ok {
-				if f, ok2 := findFieldFuzzy(ctxP, trimmed, typeFrom, typeTo, flexer); ok2 {
-					return f, true
+				if fieldTo, ok := fff.findField(ctx, trimmed, typeFrom, typeTo, flexer); ok {
+					fff.prefixRecursionDepth--
+					return fieldTo, true
 				}
 			} else {
-				if f, ok2 := findFieldFuzzy(ctxP, v+fieldNameFrom, typeFrom, typeTo, flexer); ok2 {
-					return f, true
+				if fieldTo, ok := fff.findField(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer); ok {
+					fff.prefixRecursionDepth--
+					return fieldTo, true
 				}
 			}
 			// no match via prefix mutation; fall through to suffix handling on the original name
@@ -136,19 +138,99 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.
 	// fifth precedence is using field name suffix
 	if v := opts.fieldNameSuffix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(fieldNameSuffixRecurse) == nil {
+		if fff.suffixRecursionDepth == 0 {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
+			fff.suffixRecursionDepth++
 			if strings.HasSuffix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
+				fieldTo, ok := fff.findField(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
+				fff.suffixRecursionDepth--
+				return fieldTo, ok
 			}
-			return findFieldFuzzy(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
+			fieldTo, ok := fff.findField(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
+			fff.suffixRecursionDepth--
+			return fieldTo, ok
 		}
 	}
 
 	// no finds, fuzzy or otherwise - return zero value
 	return reflect.StructField{}, false
 }
+
+// func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) {
+// 	// first precedence is exact match (case sensitive)
+// 	if fieldTo, ok := typeTo.FieldByName(fieldNameFrom); ok {
+// 		return fieldTo, true
+// 	}
+
+// 	// If a "from" field fuzzy matches a "to" field, we are certain the fuzzy match
+// 	// is NOT correct if "from" also contains a field by the fuzzy matched name.
+// 	// For example, if "from" has "Value" and "Values", "Values" should *never*
+// 	// fuzzy match "Value" in "to" since "from" also has "Value". We check "from"
+// 	// to make sure fuzzy matches are not in "from".
+
+// 	// second precedence is exact match (case insensitive)
+// 	opts := flexer.getOptions()
+// 	for field := range tfreflect.ExportedStructFields(typeTo) {
+// 		fieldNameTo := field.Name
+// 		if opts.isIgnoredField(fieldNameTo) {
+// 			continue
+// 		}
+// 		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
+// 			// probably could assume validity here since reflect gave the field name
+// 			return fieldTo, true
+// 		}
+// 	}
+
+// 	// third precedence is singular/plural
+// 	fieldNameTo := plural.Plural(fieldNameFrom)
+// 	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
+// 		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok {
+// 			return fieldTo, true
+// 		}
+// 	}
+
+// 	fieldNameTo = plural.Singular(fieldNameFrom)
+// 	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, typeFrom) {
+// 		if fieldTo, ok := typeTo.FieldByName(fieldNameTo); ok {
+// 			return fieldTo, true
+// 		}
+// 	}
+
+// 	// fourth precedence is using field name prefix
+// 	if v := opts.fieldNamePrefix; v != "" {
+// 		v = strings.ReplaceAll(v, " ", "")
+// 		if ctx.Value(fieldNamePrefixRecurse) == nil {
+// 			// so it will only recurse once
+// 			ctxP := context.WithValue(ctx, fieldNamePrefixRecurse, true)
+// 			if trimmed, ok := strings.CutPrefix(fieldNameFrom, v); ok {
+// 				if f, ok2 := findFieldFuzzy(ctxP, trimmed, typeFrom, typeTo, flexer); ok2 {
+// 					return f, true
+// 				}
+// 			} else {
+// 				if f, ok2 := findFieldFuzzy(ctxP, v+fieldNameFrom, typeFrom, typeTo, flexer); ok2 {
+// 					return f, true
+// 				}
+// 			}
+// 			// no match via prefix mutation; fall through to suffix handling on the original name
+// 		}
+// 	}
+
+// 	// fifth precedence is using field name suffix
+// 	if v := opts.fieldNameSuffix; v != "" {
+// 		v = strings.ReplaceAll(v, " ", "")
+// 		if ctx.Value(fieldNameSuffixRecurse) == nil {
+// 			// so it will only recurse once
+// 			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
+// 			if strings.HasSuffix(fieldNameFrom, v) {
+// 				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
+// 			}
+// 			return findFieldFuzzy(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
+// 		}
+// 	}
+
+// 	// no finds, fuzzy or otherwise - return zero value
+// 	return reflect.StructField{}, false
+// }
 
 func fieldExistsInStruct(field string, structType reflect.Type) bool {
 	_, ok := structType.FieldByName(field)
