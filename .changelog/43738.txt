@@ -1,3 +1,0 @@
-```release-note:bug
- provider: Fix a logic bug in AutoFlex findFieldFuzzy where configuring a fieldNamePrefix caused the function to short-circuit and skip suffix matching on the original field name.
- ```
