@@ -307,8 +307,8 @@ func TestWaitForStatus_UnexpectedStateErrorMessage(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected unexpected state error")
 	}
-	unexpectedErr, ok := err.(*UnexpectedStateError)
-	if !ok { //nolint:errorlint // direct type assertion adequate in tests
+	var unexpectedErr *UnexpectedStateError
+	if !errors.As(err, &unexpectedErr) {
 		t.Fatalf("expected UnexpectedStateError, got %T", err)
 	}
 	errMsg := unexpectedErr.Error()
