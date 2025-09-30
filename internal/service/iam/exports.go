@@ -9,7 +9,7 @@ var (
 
 	DeleteServiceLinkedRole     = deleteServiceLinkedRole
 	FindRoleByName              = findRoleByName
-	PolicyHasValidAWSPrincipals = policyHasValidAWSPrincipals
+	PolicyHasValidAWSPrincipals = policyHasValidAWSPrincipals // nosemgrep:ci.aws-in-var-name
 )
 
 type (

@@ -67,7 +67,7 @@ var (
 	AttachPolicyToUser                = attachPolicyToUser
 	CheckPwdPolicy                    = checkPwdPolicy
 	GeneratePassword                  = generatePassword
-	IsValidPolicyAWSPrincipal         = isValidPolicyAWSPrincipal
+	IsValidPolicyAWSPrincipal         = isValidPolicyAWSPrincipal // nosemgrep:ci.aws-in-var-name
 	ListGroupsForUserPages            = listGroupsForUserPages
 	RoleNameSessionFromARN            = roleNameSessionFromARN
 	RolePolicyParseID                 = rolePolicyParseID
