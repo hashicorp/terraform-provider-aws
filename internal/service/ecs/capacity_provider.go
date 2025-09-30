@@ -1093,7 +1093,7 @@ func expandInstanceRequirementsRequest(tfList []any) *awstypes.InstanceRequireme
 	}
 
 	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]any); ok && len(v) > 0 {
-		apiObject.BaselineEbsBandwidthMbps = expandBaselineEbsBandwidthMbpsRequest(v)
+		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v)
 	}
 
 	if v, ok := tfMap["burstable_performance"].(string); ok && v != "" {
@@ -1125,7 +1125,7 @@ func expandInstanceRequirementsRequest(tfList []any) *awstypes.InstanceRequireme
 	}
 
 	if v, ok := tfMap["memory_gib_per_vcpu"].([]any); ok && len(v) > 0 {
-		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCpuRequest(v)
+		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v)
 	}
 
 	if v, ok := tfMap["memory_mib"].([]any); ok && len(v) > 0 {
@@ -1157,13 +1157,13 @@ func expandInstanceRequirementsRequest(tfList []any) *awstypes.InstanceRequireme
 	}
 
 	if v, ok := tfMap["vcpu_count"].([]any); ok && len(v) > 0 {
-		apiObject.VCpuCount = expandVCpuCountRangeRequest(v)
+		apiObject.VCpuCount = expandVCPUCountRangeRequest(v)
 	}
 
 	return apiObject
 }
 
-func expandVCpuCountRangeRequest(tfList []any) *awstypes.VCpuCountRangeRequest {
+func expandVCPUCountRangeRequest(tfList []any) *awstypes.VCpuCountRangeRequest {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1201,7 +1201,7 @@ func expandMemoryMiBRequest(tfList []any) *awstypes.MemoryMiBRequest {
 	return apiObject
 }
 
-func expandMemoryGiBPerVCpuRequest(tfList []any) *awstypes.MemoryGiBPerVCpuRequest {
+func expandMemoryGiBPerVCPURequest(tfList []any) *awstypes.MemoryGiBPerVCpuRequest {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1277,7 +1277,7 @@ func expandTotalLocalStorageGBRequest(tfList []any) *awstypes.TotalLocalStorageG
 	return apiObject
 }
 
-func expandBaselineEbsBandwidthMbpsRequest(tfList []any) *awstypes.BaselineEbsBandwidthMbpsRequest {
+func expandBaselineEBSBandwidthMbpsRequest(tfList []any) *awstypes.BaselineEbsBandwidthMbpsRequest {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
