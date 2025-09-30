@@ -45,7 +45,7 @@ func resourceCapacityProvider() *schema.Resource {
 			// Ensure exactly one of auto_scaling_group_provider or managed_instances_provider is specified
 			asgProvider := diff.Get("auto_scaling_group_provider").([]any)
 			managedProvider := diff.Get("managed_instances_provider").([]any)
-			clusterName := diff.Get(names.AttrClusterName).(string)
+			clusterName := diff.Get("cluster").(string)
 
 			if len(asgProvider) == 0 && len(managedProvider) == 0 {
 				return errors.New("exactly one of auto_scaling_group_provider or managed_instances_provider must be specified")
@@ -74,7 +74,7 @@ func resourceCapacityProvider() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrClusterName: {
+			"cluster": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -533,8 +533,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                     getTagsIn(ctx),
 	}
 
-	// Add cluster field support
-	if v, ok := d.GetOk(names.AttrClusterName); ok {
+	if v, ok := d.GetOk("cluster"); ok {
 		input.Cluster = aws.String(v.(string))
 	}
 
@@ -590,10 +589,10 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("auto_scaling_group_provider", flattenAutoScalingGroupProvider(output.AutoScalingGroupProvider)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_scaling_group_provider: %s", err)
 	}
+	d.Set("cluster", output.Cluster)
 	if err := d.Set("managed_instances_provider", flattenManagedInstancesProvider(output.ManagedInstancesProvider)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting managed_instances_provider: %s", err)
 	}
-	d.Set(names.AttrClusterName, output.Cluster)
 	d.Set(names.AttrName, output.Name)
 
 	setTagsOut(ctx, output.Tags)

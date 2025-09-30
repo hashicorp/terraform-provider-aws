@@ -589,8 +589,8 @@ func testAccCapacityProviderConfig_bothProviders(rName string) string {
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name         = %[1]q
-  cluster_name = "dummy"
+  name    = %[1]q
+  cluster = "dummy"
 
   auto_scaling_group_provider {
     auto_scaling_group_arn = "arn:aws:autoscaling:us-west-2:000000000000:autoScalingGroup:a4536b1a-b122-49ef-918f-bfaed967ccfa:autoScalingGroupName/dummy"
@@ -627,8 +627,8 @@ func testAccCapacityProviderConfig_autoScalingGroups_withCluster(rName string) s
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name         = %[1]q
-  cluster_name = "dummy"
+  name    = %[1]q
+  cluster = "dummy"
 
   auto_scaling_group_provider {
     auto_scaling_group_arn = "arn:aws:autoscaling:us-west-2:000000000000:autoScalingGroup:a4536b1a-b122-49ef-918f-bfaed967ccfa:autoScalingGroupName/dummy"
@@ -762,8 +762,8 @@ resource "aws_iam_instance_profile" "test" {
 func testAccCapacityProviderConfig_managedInstancesProvider_basic(rName string) string {
 	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name         = %[1]q
-  cluster_name = aws_ecs_cluster.test.name
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.test.arn
@@ -783,8 +783,8 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccCapacityProviderConfig_managedInstancesProvider_withInstanceRequirements(rName string) string {
 	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name         = %[1]q
-  cluster_name = aws_ecs_cluster.test.name
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.test.arn
@@ -821,8 +821,8 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccCapacityProviderConfig_managedInstancesProvider_withStorageConfiguration(rName string) string {
 	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name         = %[1]q
-  cluster_name = aws_ecs_cluster.test.name
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.test.arn
@@ -857,8 +857,8 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccCapacityProviderConfig_updateManagedInstancesProvider(rName string) string {
 	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name         = %[1]q
-  cluster_name = aws_ecs_cluster.test.name
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.test.arn

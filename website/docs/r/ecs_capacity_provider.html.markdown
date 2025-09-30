@@ -12,7 +12,7 @@ Provides an ECS cluster capacity provider. More information can be found on the 
 
 ~> **NOTE:** Associating an ECS Capacity Provider to an Auto Scaling Group will automatically add the `AmazonECSManaged` tag to the Auto Scaling Group. This tag should be included in the `aws_autoscaling_group` resource configuration to prevent Terraform from removing it in subsequent executions as well as ensuring the `AmazonECSManaged` tag is propagated to all EC2 Instances in the Auto Scaling Group if `min_size` is above 0 on creation. Any EC2 Instances in the Auto Scaling Group without this tag must be manually be updated, otherwise they may cause unexpected scaling behavior and metrics.
 
-~> **NOTE:** You must specify exactly one of `auto_scaling_group_provider` or `managed_instances_provider`. When using `managed_instances_provider`, the `cluster_name` parameter is required. When using `auto_scaling_group_provider`, the `cluster_name` parameter must not be set.
+~> **NOTE:** You must specify exactly one of `auto_scaling_group_provider` or `managed_instances_provider`. When using `managed_instances_provider`, the `cluster` parameter is required. When using `auto_scaling_group_provider`, the `cluster` parameter must not be set.
 
 ## Example Usage
 
@@ -50,8 +50,8 @@ resource "aws_ecs_capacity_provider" "example" {
 
 ```terraform
 resource "aws_ecs_capacity_provider" "example" {
-  name         = "example"
-  cluster_name = "my-cluster"
+  name    = "example"
+  cluster = "my-cluster"
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.ecs_infrastructure.arn
@@ -94,7 +94,7 @@ resource "aws_ecs_capacity_provider" "example" {
 This resource supports the following arguments:
 
 * `auto_scaling_group_provider` - (Optional) Configuration block for the provider for the ECS auto scaling group. Detailed below. Exactly one of `auto_scaling_group_provider` or `managed_instances_provider` must be specified.
-* `cluster_name` - (Optional) Name of the ECS cluster. Required when using `managed_instances_provider`. Must not be set when using `auto_scaling_group_provider`.
+* `cluster` - (Optional) Name of the ECS cluster. Required when using `managed_instances_provider`. Must not be set when using `auto_scaling_group_provider`.
 * `managed_instances_provider` - (Optional) Configuration block for the managed instances provider. Detailed below. Exactly one of `auto_scaling_group_provider` or `managed_instances_provider` must be specified.
 * `name` - (Required) Name of the capacity provider.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
