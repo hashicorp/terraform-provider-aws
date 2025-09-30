@@ -98,11 +98,9 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The number of CPU cores to enable on the VM cluster. Changing this will create a new resource.",
 			},
 			"data_storage_size_in_tbs": schema.Float64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Float64{
 					float64planmodifier.RequiresReplace(),
-					float64planmodifier.UseStateForUnknown(),
 				},
 				Description: "The size of the data disk group, in terabytes (TBs), to allocate for the VM cluster. Changing this will create a new resource.",
 			},
