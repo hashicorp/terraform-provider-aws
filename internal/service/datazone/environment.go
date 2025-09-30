@@ -515,6 +515,7 @@ type environmentResourceModel struct {
 	UserParameters       fwtypes.ListNestedObjectValueOf[resourceUserParametersData]       `tfsdk:"user_parameters"`
 }
 
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenEnvironment(ctx context.Context, apiObject *datazone.GetEnvironmentOutput, model *environmentResourceModel, diags *diag.Diagnostics) {
 	diags.Append(fwflex.Flatten(ctx, apiObject, model, fwflex.WithIgnoredFieldNamesAppend("UserParameters"))...)
 

@@ -71,11 +71,11 @@ func testAccDataZoneEnvironment_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", "aws_datazone_domain.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "profile_identifier", "aws_datazone_environment_profile.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", "aws_datazone_domain.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_identifier", "aws_datazone_environment_profile.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", "aws_datazone_project.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", "aws_datazone_project.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "provider_environment", "Amazon DataZone"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -225,16 +225,16 @@ func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("consumerGlueDbName"),
-							"value": knownvalue.StringExact(parameterPrefix + "-consumer"),
+							names.AttrName:  knownvalue.StringExact("consumerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefix + "-consumer"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("producerGlueDbName"),
-							"value": knownvalue.StringExact(parameterPrefix + "-producer"),
+							names.AttrName:  knownvalue.StringExact("producerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefix + "-producer"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("workgroupName"),
-							"value": knownvalue.StringExact(parameterPrefix + "-workgroup"),
+							names.AttrName:  knownvalue.StringExact("workgroupName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefix + "-workgroup"),
 						}),
 					})),
 				},
@@ -253,16 +253,16 @@ func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("consumerGlueDbName"),
-							"value": knownvalue.StringExact(parameterPrefixUpdated + "-consumer"),
+							names.AttrName:  knownvalue.StringExact("consumerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefixUpdated + "-consumer"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("producerGlueDbName"),
-							"value": knownvalue.StringExact(parameterPrefixUpdated + "-producer"),
+							names.AttrName:  knownvalue.StringExact("producerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefixUpdated + "-producer"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("workgroupName"),
-							"value": knownvalue.StringExact(parameterPrefixUpdated + "-workgroup"),
+							names.AttrName:  knownvalue.StringExact("workgroupName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefixUpdated + "-workgroup"),
 						}),
 					})),
 				},
@@ -306,8 +306,8 @@ func testAccDataZoneEnvironment_userParameters_Inherited(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("workgroupName"),
-							"value": knownvalue.StringExact(rName + "-workgroup"),
+							names.AttrName:  knownvalue.StringExact("workgroupName"),
+							names.AttrValue: knownvalue.StringExact(rName + "-workgroup"),
 						}),
 					})),
 				},
@@ -358,16 +358,16 @@ func testAccDataZoneEnvironment_userParameters_Override(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("consumerGlueDbName"),
-							"value": knownvalue.StringExact(rName + "-consumer"),
+							names.AttrName:  knownvalue.StringExact("consumerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(rName + "-consumer"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("producerGlueDbName"),
-							"value": knownvalue.StringExact(rName + "-producer"),
+							names.AttrName:  knownvalue.StringExact("producerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(rName + "-producer"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name":  knownvalue.StringExact("workgroupName"),
-							"value": knownvalue.StringExact(rName + "-workgroup"),
+							names.AttrName:  knownvalue.StringExact("workgroupName"),
+							names.AttrValue: knownvalue.StringExact(rName + "-workgroup"),
 						}),
 					})),
 				},
