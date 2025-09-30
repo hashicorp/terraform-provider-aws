@@ -24,9 +24,10 @@ func testAccCloudTrailTrail_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccCloudTrailTrail_Identity_Basic,
-		"ExistingResource": testAccCloudTrailTrail_Identity_ExistingResource,
-		"RegionOverride":   testAccCloudTrailTrail_Identity_RegionOverride,
+		acctest.CtBasic:             testAccCloudTrailTrail_Identity_Basic,
+		"ExistingResource":          testAccCloudTrailTrail_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccCloudTrailTrail_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccCloudTrailTrail_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
