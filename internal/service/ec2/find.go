@@ -409,12 +409,10 @@ func findInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstyp
 }
 
 func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
-	var output []awstypes.Instance
-	for v, err := range listInstances(ctx, conn, input) {
-		if err != nil {
-			return nil, err
-		}
-		output = append(output, v)
+	output, err := tfslices.CollectWithError(listInstances(ctx, conn, input))
+
+	if err != nil {
+		return nil, err
 	}
 
 	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })

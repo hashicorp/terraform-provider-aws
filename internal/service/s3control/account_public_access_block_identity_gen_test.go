@@ -23,8 +23,9 @@ func testAccS3ControlAccountPublicAccessBlock_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccS3ControlAccountPublicAccessBlock_Identity_Basic,
-		"ExistingResource": testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource,
+		acctest.CtBasic:             testAccS3ControlAccountPublicAccessBlock_Identity_Basic,
+		"ExistingResource":          testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_NoRefresh_NoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

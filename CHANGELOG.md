@@ -7,12 +7,15 @@ BREAKING CHANGES:
 FEATURES:
 
 * **New Action:** `aws_codebuild_start_build` ([#44444](https://github.com/hashicorp/terraform-provider-aws/issues/44444))
+* **New Action:** `aws_events_put_events` ([#44487](https://github.com/hashicorp/terraform-provider-aws/issues/44487))
 * **New Action:** `aws_sfn_start_execution` ([#44464](https://github.com/hashicorp/terraform-provider-aws/issues/44464))
 * **New Data Source:** `aws_appconfig_application` ([#44168](https://github.com/hashicorp/terraform-provider-aws/issues/44168))
 * **New Data Source:** `aws_odb_db_node` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
 * **New Data Source:** `aws_odb_db_nodes` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
 * **New Data Source:** `aws_odb_db_server` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
 * **New Data Source:** `aws_odb_db_servers` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
+* **New Data Source:** `aws_odb_db_system_shapes` ([#43825](https://github.com/hashicorp/terraform-provider-aws/issues/43825))
+* **New Data Source:** `aws_odb_gi_versions` ([#43825](https://github.com/hashicorp/terraform-provider-aws/issues/43825))
 * **New Resource:** `aws_lakeformation_lf_tag_expression` ([#43883](https://github.com/hashicorp/terraform-provider-aws/issues/43883))
 
 ENHANCEMENTS:
@@ -29,6 +32,9 @@ ENHANCEMENTS:
 * resource/aws_rds_proxy: Add `default_auth_scheme` argument ([#44309](https://github.com/hashicorp/terraform-provider-aws/issues/44309))
 * resource/aws_rds_proxy: Make `auth` configuration block optional ([#44309](https://github.com/hashicorp/terraform-provider-aws/issues/44309))
 * resource/aws_route53recoverycontrolconfig_cluster: Add `network_type` argument ([#44377](https://github.com/hashicorp/terraform-provider-aws/issues/44377))
+* resource/aws_route53recoverycontrolconfig_cluster: Add tagging support ([#44473](https://github.com/hashicorp/terraform-provider-aws/issues/44473))
+* resource/aws_route53recoverycontrolconfig_control_panel: Add tagging support ([#44473](https://github.com/hashicorp/terraform-provider-aws/issues/44473))
+* resource/aws_route53recoverycontrolconfig_safety_rule: Add tagging support ([#44473](https://github.com/hashicorp/terraform-provider-aws/issues/44473))
 * resource/aws_s3control_bucket: Add resource identity support ([#44379](https://github.com/hashicorp/terraform-provider-aws/issues/44379))
 * resource/aws_sfn_activity: Add `arn` argument ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
 * resource/aws_sfn_activity: Add resource identity support ([#44408](https://github.com/hashicorp/terraform-provider-aws/issues/44408))
@@ -37,15 +43,20 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_lb: Fix `Invalid address to set: []string{"secondary_ips_auto_assigned_per_subnet"}` errors ([#44485](https://github.com/hashicorp/terraform-provider-aws/issues/44485))
+* data-source/aws_networkfirewall_firewall_policy: Fix failure to retrieve multiple `firewall_policy.stateful_rule_group_reference` attributes ([#44482](https://github.com/hashicorp/terraform-provider-aws/issues/44482))
 * data-source/aws_servicequotas_service_quota: Fixed a panic that occurred when a non-existing `quota_name` was provided ([#44449](https://github.com/hashicorp/terraform-provider-aws/issues/44449))
 * resource/aws_bedrock_provisioned_model_throughput: Fix `AttributeName("arn") still remains in the path: could not find attribute or block "arn" in schema` errors when upgrading from a pre-v6.0.0 provider version ([#44434](https://github.com/hashicorp/terraform-provider-aws/issues/44434))
 * resource/aws_chatbot_slack_channel_configuration: Force resource replacement when `configuration_name` is modified ([#43996](https://github.com/hashicorp/terraform-provider-aws/issues/43996))
+* resource/aws_cloudwatch_event_rule: Do not retry on `LimitExceededException` ([#44489](https://github.com/hashicorp/terraform-provider-aws/issues/44489))
 * resource/aws_default_vpc: Correctly set `ipv6_cidr_block` when the VPC has multiple associated IPv6 CIDRs ([#44362](https://github.com/hashicorp/terraform-provider-aws/issues/44362))
 * resource/aws_dms_endpoint: Ensure that `postgres_settings` are updated ([#44389](https://github.com/hashicorp/terraform-provider-aws/issues/44389))
 * resource/aws_dsql_cluster: Prevents error when optional attribute `deletion_protection_enabled` not set. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
 * resource/aws_eks_cluster: Change `compute_config`, `kubernetes_network_config.elastic_load_balancing`, and `storage_config.` to Optional and Computed, allowing EKS Auto Mode settings to be enabled, disabled, and removed from configuration ([#44334](https://github.com/hashicorp/terraform-provider-aws/issues/44334))
 * resource/aws_elasticache_cluster: Fix `provider produced unexpected value` for `cache_usage_limits` argument. ([#43841](https://github.com/hashicorp/terraform-provider-aws/issues/43841))
 * resource/aws_fsx_lustre_file_system: Fixed to update `metadata_configuration` first to allow simultaneous increase of `metadata_configuration.iops` and `storage_capacity` ([#44456](https://github.com/hashicorp/terraform-provider-aws/issues/44456))
+* resource/aws_instance: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `capacity_reservation_target` is empty ([#44459](https://github.com/hashicorp/terraform-provider-aws/issues/44459))
+* resource/aws_kinesisanalyticsv2_application: Ensure that configured `application_configuration.run_configuration` values are respected during update ([#43490](https://github.com/hashicorp/terraform-provider-aws/issues/43490))
 * resource/aws_odb_cloud_autonomous_vm_cluster : Fixed planmodifier for computed attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
 * resource/aws_odb_cloud_vm_cluster : Fixed planmodifier for computed attribute. Fixed planmodifier from display_name attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
 * resource/aws_odb_network_peering_connection : Fixed planmodifier for computed attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
