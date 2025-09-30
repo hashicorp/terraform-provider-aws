@@ -14,6 +14,8 @@ FEATURES:
 * **New Data Source:** `aws_odb_db_nodes` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
 * **New Data Source:** `aws_odb_db_server` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
 * **New Data Source:** `aws_odb_db_servers` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
+* **New Data Source:** `aws_odb_db_system_shapes` ([#43825](https://github.com/hashicorp/terraform-provider-aws/issues/43825))
+* **New Data Source:** `aws_odb_gi_versions` ([#43825](https://github.com/hashicorp/terraform-provider-aws/issues/43825))
 * **New Resource:** `aws_lakeformation_lf_tag_expression` ([#43883](https://github.com/hashicorp/terraform-provider-aws/issues/43883))
 
 ENHANCEMENTS:
@@ -54,6 +56,7 @@ BUG FIXES:
 * resource/aws_elasticache_cluster: Fix `provider produced unexpected value` for `cache_usage_limits` argument. ([#43841](https://github.com/hashicorp/terraform-provider-aws/issues/43841))
 * resource/aws_fsx_lustre_file_system: Fixed to update `metadata_configuration` first to allow simultaneous increase of `metadata_configuration.iops` and `storage_capacity` ([#44456](https://github.com/hashicorp/terraform-provider-aws/issues/44456))
 * resource/aws_instance: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `capacity_reservation_target` is empty ([#44459](https://github.com/hashicorp/terraform-provider-aws/issues/44459))
+* resource/aws_kinesisanalyticsv2_application: Ensure that configured `application_configuration.run_configuration` values are respected during update ([#43490](https://github.com/hashicorp/terraform-provider-aws/issues/43490))
 * resource/aws_odb_cloud_autonomous_vm_cluster : Fixed planmodifier for computed attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
 * resource/aws_odb_cloud_vm_cluster : Fixed planmodifier for computed attribute. Fixed planmodifier from display_name attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
 * resource/aws_odb_network_peering_connection : Fixed planmodifier for computed attribute. ([#44401](https://github.com/hashicorp/terraform-provider-aws/issues/44401))
