@@ -28,7 +28,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new DataAwsBatchComputeEnvironment(this, "batch-mongo", {
-      computeEnvironmentName: "batch-mongo-production",
+      name: "batch-mongo-production",
     });
   }
 }
@@ -39,7 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `computeEnvironmentName` - (Required) Name of the Batch Compute Environment
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the Batch Compute Environment
 
 ## Attribute Reference
 
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `updatePolicy` - Specifies the infrastructure update policy for the compute environment.
 * `tags` - Key-value map of resource tags
 
-<!-- cache-key: cdktf-0.20.8 input-662f0abcd8bd58088e6a4ff05cd0dbe7af2797ce5cfa7c0780df612f3a6771ee -->
+<!-- cache-key: cdktf-0.20.8 input-5222910e308777681b3cf743aa91fb7eca92faaa4af674d030446a2f131a05df -->

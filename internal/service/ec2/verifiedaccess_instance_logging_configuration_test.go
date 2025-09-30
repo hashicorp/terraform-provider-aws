@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +24,7 @@ import (
 
 func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustContext(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstanceLoggingConfiguration
+	var v awstypes.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	include_trust_context_original := true
@@ -70,7 +70,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustCon
 
 func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsLogVersion(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstanceLoggingConfiguration
+	var v awstypes.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	log_version_original := "ocsf-0.1"
@@ -116,7 +116,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsLogVersion(t *t
 
 func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstanceLoggingConfiguration
+	var v awstypes.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	logGroupName := "aws_cloudwatch_log_group.test"
@@ -166,7 +166,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(
 
 func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFirehose(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstanceLoggingConfiguration
+	var v awstypes.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	kinesisStreamName := "aws_kinesis_firehose_delivery_stream.test"
@@ -219,7 +219,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFire
 
 func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstanceLoggingConfiguration
+	var v awstypes.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	bucketName := "aws_s3_bucket.test"
@@ -277,7 +277,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3(t *testing.T
 
 func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogsKinesisDataFirehoseS3(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstanceLoggingConfiguration
+	var v awstypes.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	logGroupName := "aws_cloudwatch_log_group.test"
@@ -380,7 +380,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T, 
 	// note: disappears test does not test the logging configuration since the instance is deleted
 	// the logging configuration cannot be deleted, rather, the boolean flags and logging version are reset to the default values
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstanceLoggingConfiguration
+	var v awstypes.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -405,7 +405,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T, 
 	})
 }
 
-func testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx context.Context, n string, v *types.VerifiedAccessInstanceLoggingConfiguration) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx context.Context, n string, v *awstypes.VerifiedAccessInstanceLoggingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

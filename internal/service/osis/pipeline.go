@@ -226,7 +226,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	input.Tags = getTagsIn(ctx)
 
 	// Retry for IAM eventual consistency.
-	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreatePipeline(ctx, &input)
 	})
 

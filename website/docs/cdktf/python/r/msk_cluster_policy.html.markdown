@@ -55,8 +55,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_arn` - (Required) The Amazon Resource Name (ARN) that uniquely identifies the cluster.
 * `policy` - (Required) Resource policy for cluster.
 
@@ -91,4 +92,4 @@ Using `terraform import`, import Managed Streaming for Kafka Cluster Policy usin
 % terraform import aws_msk_cluster_policy.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1d0af5714d8c3f37bc8001ce239abd95f2f1a370064fc908a9872519c5f9e04e -->
+<!-- cache-key: cdktf-0.20.8 input-c73751e80c7b773eb93bc038a018a40b85795e72756c0938b467faea9801db7b -->

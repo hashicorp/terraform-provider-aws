@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ## filter Configuration Block
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Secrets Manager secrets.
 * `names` - Set of names of the matched Secrets Manager secrets.
 
-<!-- cache-key: cdktf-0.20.8 input-46c85b9bf9b25167aa2da6a35a87667dad529e1c4845ee8334fa9d28d689325d -->
+<!-- cache-key: cdktf-0.20.8 input-3d3b9aac239905adb860398de2a7e2cbf3af3476aed7176f8de752ca6d2d1f66 -->

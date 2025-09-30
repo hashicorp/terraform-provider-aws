@@ -132,6 +132,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exportFormat` - (Optional, Forces new resource) Format for the exported data. Valid values are: `DYNAMODB_JSON`, `ION`. See the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport.Output.html#S3DataExport.Output_Data) for more information on these export formats. Default is `DYNAMODB_JSON`.
 * `exportTime` - (Optional, Forces new resource) Time in RFC3339 format from which to export table data. The table export will be a snapshot of the table's state at this point in time. Omitting this value will result in a snapshot from the current time.
 * `exportType` - (Optional, Forces new resource) Whether to execute as a full export or incremental export. Valid values are: `FULL_EXPORT`, `INCREMENTAL_EXPORT`. Defaults to `FULL_EXPORT`. If `INCREMENTAL_EXPORT` is provided, the `incrementalExportSpecification` argument must also be provided.
@@ -170,6 +171,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dynamodb_table_export.example
+  identity = {
+    "arn" = "arn:aws:dynamodb:us-west-2:123456789012:table/example-table/export/01234567890123-a1b2c3d4"
+  }
+}
+
+resource "aws_dynamodb_table_export" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DynamoDB table export.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB table exports using the `arn`. For example:
 
 ```typescript
@@ -200,4 +222,4 @@ Using `terraform import`, import DynamoDB table exports using the `arn`. For exa
 % terraform import aws_dynamodb_table_export.example arn:aws:dynamodb:us-west-2:12345678911:table/my-table-1/export/01580735656614-2c2f422e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-61660f14e725a8fea2ede4c5db113e5e8ff3a70bb5b780ff44dbcd55f13ad7ea -->
+<!-- cache-key: cdktf-0.20.8 input-eb0ee678038118a6488f53b949048625abf309cf684df52abee3ae8309d4df48 -->

@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -66,7 +67,7 @@ func sweepDashboards(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -110,7 +111,7 @@ func sweepDataSets(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -154,7 +155,7 @@ func sweepDataSources(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -249,7 +250,7 @@ func sweepGroups(region string) error {
 	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListGroupsInput{
 		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(defaultUserNamespace),
+		Namespace:    aws.String(quicksightschema.DefaultNamespace),
 	}
 
 	pages := quicksight.NewListGroupsPaginator(conn, input)
@@ -275,7 +276,7 @@ func sweepGroups(region string) error {
 
 			r := resourceGroup()
 			d := r.Data(nil)
-			d.SetId(groupCreateResourceID(awsAccountID, defaultUserNamespace, groupName))
+			d.SetId(groupCreateResourceID(awsAccountID, quicksightschema.DefaultNamespace, groupName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -294,7 +295,7 @@ func sweepTemplates(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -345,7 +346,7 @@ func sweepUsers(region string) error {
 	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListUsersInput{
 		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(defaultUserNamespace),
+		Namespace:    aws.String(quicksightschema.DefaultNamespace),
 	}
 
 	pages := quicksight.NewListUsersPaginator(conn, input)
@@ -371,7 +372,7 @@ func sweepUsers(region string) error {
 
 			r := resourceUser()
 			d := r.Data(nil)
-			d.SetId(userCreateResourceID(awsAccountID, defaultUserNamespace, userName))
+			d.SetId(userCreateResourceID(awsAccountID, quicksightschema.DefaultNamespace, userName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

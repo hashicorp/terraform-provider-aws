@@ -44,6 +44,22 @@ func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.Schema
 	}
 }
 
+// SuppressEquivalentTime returns a difference suppression function that suppresses differences
+// for time values that represent the same instant in different timezones.
+func SuppressEquivalentTime(k, old, new string, d *schema.ResourceData) bool {
+	oldTime, err := time.Parse(time.RFC3339, old)
+	if err != nil {
+		return false
+	}
+
+	newTime, err := time.Parse(time.RFC3339, new)
+	if err != nil {
+		return false
+	}
+
+	return oldTime.Equal(newTime)
+}
+
 // SuppressEquivalentIAMPolicyDocuments provides custom difference suppression
 // for IAM policy documents in the given strings that are equivalent.
 func SuppressEquivalentIAMPolicyDocuments(k, old, new string, _ *schema.ResourceData) bool {

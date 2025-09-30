@@ -171,7 +171,7 @@ func TestFilter(t *testing.T) {
 		},
 		"zero elements": {
 			input:    []string{},
-			expected: []string{},
+			expected: nil,
 		},
 	}
 

@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The optional description for the geofence collection.
 * `kmsKeyId` - (Optional) A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
 * `tags` - (Optional) Key-value tags for the geofence collection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -94,4 +95,4 @@ Using `terraform import`, import Location Geofence Collection using the `collect
 % terraform import aws_location_geofence_collection.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d5f8a31edd538788388ea70b948bf927302bc8710ba3768ffc3484e329693d37 -->
+<!-- cache-key: cdktf-0.20.8 input-f7ee5c761b94eb0a9aedd441e608f8abc906ccd4b9077dd1ce7a7f2c83ca5c23 -->

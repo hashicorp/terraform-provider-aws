@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block. Detailed below.
 
 ### filter
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of all SVM IDs found.
 
-<!-- cache-key: cdktf-0.20.8 input-53b212544455e4cfb98558724cef634288eed6acbc0ade17b88f9d178b4f8b16 -->
+<!-- cache-key: cdktf-0.20.8 input-4d3b73862666fbe57a7f5be9c65f81f32c58dbe7bf28f5254f80e01bbe82bc68 -->

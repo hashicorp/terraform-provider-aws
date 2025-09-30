@@ -83,6 +83,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the backup restore testing selection.
 * `restoreTestingPlanName` - (Required) The name of the restore testing plan.
 * `protectedResourceType` - (Required) The type of the protected resource.
@@ -138,4 +139,4 @@ Using `terraform import`, import Backup Restore Testing Selection using `name:re
 % terraform import aws_backup_restore_testing_selection.example restore_testing_selection_12345678:restore_testing_plan_12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-42b7186423f2dc6adfa8b07d472bf9174787ba95a5894b1d58fe22b8c5caa7c6 -->
+<!-- cache-key: cdktf-0.20.8 input-634e9168d7138755d44c46359397cc22eb75e05f9a21b1ac7bf6fe953a415e96 -->

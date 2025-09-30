@@ -265,7 +265,7 @@ func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceDa
 	input := ec2.DeleteNetworkInsightsPathInput{
 		NetworkInsightsPathId: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteNetworkInsightsPath(ctx, &input)
 	}, errCodeAnalysisExistsForNetworkInsightsPath)
 

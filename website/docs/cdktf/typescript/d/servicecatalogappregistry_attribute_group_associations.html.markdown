@@ -44,12 +44,10 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 ~> Exactly one of `id`or `name` must be set.
-
 * `id`   - (Optional) ID of the application to which attribute groups are associated.
 * `name` - (Optional) Name of the application to which attribute groups are associated.
-
-The following arguments are optional:
 
 ## Attribute Reference
 
@@ -57,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `attributeGroupIds` - Set of attribute group IDs this application is associated with.
 
-<!-- cache-key: cdktf-0.20.8 input-c7a8da650ca6aac7ac6077e5d575c56c29edd44a1f7e3119e630621311cc4d99 -->
+<!-- cache-key: cdktf-0.20.8 input-f7850ddc577f2429ef5b4a8a51527532572913f4b171989d0517cf887480fa99 -->

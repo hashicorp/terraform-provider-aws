@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `route_table_id` - (Required) Identifier of the EC2 Route Table to be associated with the VPC Endpoint.
 * `vpc_endpoint_id` - (Required) Identifier of the VPC Endpoint with which the EC2 Route Table will be associated.
 
@@ -70,4 +71,4 @@ Using `terraform import`, import VPC Endpoint Route Table Associations using `vp
 % terraform import aws_vpc_endpoint_route_table_association.example vpce-aaaaaaaa/rtb-bbbbbbbb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9279baef908b3e9fb91a1e81d78619bda99e30247b0ce7926ced7862a33683e2 -->
+<!-- cache-key: cdktf-0.20.8 input-642bffdb6fac82c79353d54280251de2b233ae4e54c6477e8500b23989e28b95 -->

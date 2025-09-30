@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app` - (Required) Name of the application.
 Refer to the AWS Documentation for the [list of valid values](https://docs.aws.amazon.com/appfabric/latest/api/API_CreateIngestion.html#appfabric-CreateIngestion-request-app)
 * `appBundleArn` - (Required) Amazon Resource Name (ARN) of the app bundle to use for the request.
@@ -92,4 +93,4 @@ Using `terraform import`, import AppFabric Ingestion using the `app_bundle_ident
 % terraform import aws_appfabric_ingestion.example arn:aws:appfabric:[region]:[account]:appbundle/a9b91477-8831-43c0-970c-xxxxxxxxxx,arn:aws:appfabric:[region]:[account]:appbundle/a9b91477-8831-43c0-970c-xxxxxxxxxx/ingestion/32251416-710b-4425-96ca-xxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f1da1e819897a5f6269eabe822cfe25a60434131a1e5f41ecfc0695278733161 -->
+<!-- cache-key: cdktf-0.20.8 input-183a27cb5ba793c46f9d8506f7be1ce496b4108bddcd4354d4110ac1c9ed9c3f -->

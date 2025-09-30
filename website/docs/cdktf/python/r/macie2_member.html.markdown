@@ -44,9 +44,9 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Required) The AWS account ID for the account.
 * `email` - (Required) The email address for the account.
-* `tags` - (Optional) A map of key-value pairs that specifies the tags to associate with the account in Amazon Macie.
 * `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 * `invite` - (Optional) Send an invitation to a member
 * `invitation_message` - (Optional) A custom message to include in the invitation. Amazon Macie adds this message to the standard content that it sends for an invitation.
@@ -90,4 +90,4 @@ Using `terraform import`, import `aws_macie2_member` using the account ID of the
 % terraform import aws_macie2_member.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b534054476d5450a93de1b2992374a90b980c2a661465952fc942e863f31fa4e -->
+<!-- cache-key: cdktf-0.20.8 input-325ebe1c9f78430c0864182721cfde3bdca65a7cb7c7cd93395a2e3cf4ee6904 -->

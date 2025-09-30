@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -46,6 +47,11 @@ func ResourceCollaboration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"analytics_engine": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.AnalyticsEngine](),
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -170,6 +176,10 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:                   getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("analytics_engine"); ok {
+		input.AnalyticsEngine = types.AnalyticsEngine(v.(string))
+	}
+
 	queryLogStatus, err := expandQueryLogStatus(d.Get("query_log_status").(string))
 	if err != nil {
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
@@ -218,6 +228,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, collaboration.Arn)
 	d.Set(names.AttrName, collaboration.Name)
 	d.Set(names.AttrDescription, collaboration.Description)
+	d.Set("analytics_engine", collaboration.AnalyticsEngine)
 	d.Set("creator_display_name", collaboration.CreatorDisplayName)
 	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
 	d.Set("update_time", collaboration.UpdateTime.String())
@@ -256,6 +267,10 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if d.HasChanges(names.AttrName) {
 			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
+		if d.HasChanges("analytics_engine") {
+			input.AnalyticsEngine = types.AnalyticsEngine(d.Get("analytics_engine").(string))
 		}
 
 		_, err := conn.UpdateCollaboration(ctx, input)

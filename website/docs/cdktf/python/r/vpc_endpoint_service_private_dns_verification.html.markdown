@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `wait_for_verification` - (Optional) Whether to wait until the endpoint service returns a `Verified` status for the configured private DNS name.
 
 ## Attribute Reference
@@ -62,4 +63,4 @@ This resource exports no additional attributes.
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.8 input-4671d8cf2673b68762d7174f6686d4fd96e13d38210b0d5fa7bab0049cc74bc4 -->
+<!-- cache-key: cdktf-0.20.8 input-a83ea8bec619313965d3a7baf954d3424d7abe00a491cf45143f60cf959ce6c0 -->

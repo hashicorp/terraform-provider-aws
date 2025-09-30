@@ -52,6 +52,7 @@ The following arguments are optional:
 
 * `healthCheckPath` - (Optional) Health check path of the load balancer. Default value `/`.
 * `ipAddressType` - (Optional) IP address type of the load balancer. Valid values: `dualstack`, `ipv4`. Default value `dualstack`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `defaultTags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -99,4 +100,4 @@ Using `terraform import`, import `aws_lightsail_lb` using the name attribute. Fo
 % terraform import aws_lightsail_lb.example example-load-balancer
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-393f6f8d721bd0eb2a8316849c28703688b01f3cbee2adb3a88bc8715a54d7b2 -->
+<!-- cache-key: cdktf-0.20.8 input-fd5a84bcd8d4d0a2729f798a86072a0ca9daa841a0782924306355daa8e08073 -->

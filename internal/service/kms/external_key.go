@@ -86,13 +86,23 @@ func resourceExternalKey() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"key_spec": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.KeySpec](),
+			},
 			"key_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"key_usage": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.KeyUsageType](),
 			},
 			"multi_region": {
 				Type:     schema.TypeBool,
@@ -118,13 +128,20 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
-		KeyUsage:                       awstypes.KeyUsageTypeEncryptDecrypt,
 		Origin:                         awstypes.OriginTypeExternal,
 		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_spec"); ok {
+		input.KeySpec = awstypes.KeySpec(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_usage"); ok {
+		input.KeyUsage = awstypes.KeyUsageType(v.(string))
 	}
 
 	if v, ok := d.GetOk("multi_region"); ok {
@@ -344,7 +361,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.GetParametersForImport(ctx, &inputGPFI)
 	})
 
@@ -387,7 +404,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.ImportKeyMaterial(ctx, &inputIKM)
 	})
 

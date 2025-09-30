@@ -35,8 +35,10 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `table_name` - (Required) The name of the table to enable contributor insights
 * `index_name` - (Optional) The global secondary index name
+* `mode` - (Optional) argument to specify the [CloudWatch contributor insights mode](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/contributorinsights_HowItWorks.html#contributorinsights_HowItWorks.Modes)
 
 ## Attribute Reference
 
@@ -67,4 +69,4 @@ Using `terraform import`, import `aws_dynamodb_contributor_insights` using the f
 % terraform import aws_dynamodb_contributor_insights.test name:ExampleTableName/index:ExampleIndexName/123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d4f805846bc4797dd113a929cf5b487a41e12a9aff6d1f926f1a2fb7c8b04f60 -->
+<!-- cache-key: cdktf-0.20.8 input-0efcc5fdba9597605c7c7688dad45589b2ba68b2d6cfabe3e9211cd8ad529fd6 -->

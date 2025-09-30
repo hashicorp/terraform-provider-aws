@@ -61,6 +61,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start_multiplex` - (Optional) Whether to start the Multiplex. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the Multiplex. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -110,4 +111,4 @@ Using `terraform import`, import MediaLive Multiplex using the `id`. For example
 % terraform import aws_medialive_multiplex.example 12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ef0b0248360f7c92f3d75bdb422730873d3e865bff521828049e013dc339473a -->
+<!-- cache-key: cdktf-0.20.8 input-c5e1b078ede9d5ca4816fbdc5999fd9f5b320b9eea32d1068f7fb299071a2dac -->

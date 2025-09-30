@@ -58,6 +58,10 @@ The following arguments are required:
 * `enabled` - (Required) Whether to enable session stickiness for the load balancer.
 * `lbName` - (Required) Name of the load balancer to which you want to enable session stickiness.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -96,4 +100,4 @@ Using `terraform import`, import `aws_lightsail_lb_stickiness_policy` using the 
 % terraform import aws_lightsail_lb_stickiness_policy.example example-load-balancer
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ea8d189c8b818db68eef9abc8aee534b38878bd22d3bcf602e3b38f91ed1ae9c -->
+<!-- cache-key: cdktf-0.20.8 input-c0a95d8b93c24cfaf3cdd5de99b92e0b263b6980bcb6b594b70d508998481589 -->

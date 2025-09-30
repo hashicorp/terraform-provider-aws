@@ -72,8 +72,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `display_name` - (Optional) Full friendly name of the contact or escalation plan. If set, must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
-- `tags` - (Optional) Map of tags to assign to the resource.
+- `tags` - (Optional) Key-value tags for the monitor. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -107,4 +108,4 @@ Using `terraform import`, import SSM Contact using the `ARN`. For example:
 % terraform import aws_ssmcontacts_contact.example {ARNValue}
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-173f67d8fb953f3d01d03255003f7c1b228d0bf2e19cde61f9e52c4d62e2e238 -->
+<!-- cache-key: cdktf-0.20.8 input-0ab2bc24e93232d8ef5abaa2beb664f3e908609e01e2ae4a2220c0ee682789b2 -->

@@ -523,9 +523,11 @@ resource "aws_vpc" "vpc_for_lambda" {
 
 resource "aws_subnet" "subnet_for_lambda" {
   vpc_id                          = aws_vpc.vpc_for_lambda.id
-  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
   availability_zone               = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+
+  cidr_block      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -537,9 +539,11 @@ resource "aws_subnet" "subnet_for_lambda" {
 # prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
   vpc_id                          = aws_vpc.vpc_for_lambda.id
-  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
   availability_zone               = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+
+  cidr_block      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -670,9 +674,10 @@ resource "aws_subnet" "test" {
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  cidr_block      = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+
   assign_ipv6_address_on_creation = true
 
   tags = {

@@ -27,16 +27,16 @@ import (
 
 // @SDKResource("aws_ivschat_room", name="Room")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetRoomOutput")
+// @Testing(preIdentityVersion="v6.5.0")
+// @Testing(generator=false)
 func ResourceRoom() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoomCreate,
 		ReadWithoutTimeout:   resourceRoomRead,
 		UpdateWithoutTimeout: resourceRoomUpdate,
 		DeleteWithoutTimeout: resourceRoomDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),

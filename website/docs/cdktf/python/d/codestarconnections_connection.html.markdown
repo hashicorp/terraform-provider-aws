@@ -56,6 +56,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) CodeStar Connection ARN.
 * `name` - (Optional) CodeStar Connection name.
 
@@ -72,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
 * `provider_type` - Name of the external provider where your third-party code repository is configured. Possible values are `Bitbucket`, `GitHub` and `GitLab`. For connections to GitHub Enterprise Server or GitLab Self-Managed instances, you must create an [aws_codestarconnections_host](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codestarconnections_host) resource and use `host_arn` instead.
 * `tags` - Map of key-value resource tags to associate with the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-6f28ecae2d8d7141f1be21ec05ccde9accf02c775d0fd7470654e31d939b8d40 -->
+<!-- cache-key: cdktf-0.20.8 input-9a9a2da1dba0d97cdc2167f83306a6d2c6b6b100d0ab205b1a1459113b464fa4 -->

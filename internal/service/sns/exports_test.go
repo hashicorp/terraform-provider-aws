@@ -11,6 +11,7 @@ var (
 	ResourceTopicPolicy               = resourceTopicPolicy
 	ResourceTopicSubscription         = resourceTopicSubscription
 
+	FindDataProtectionPolicyByARN                  = findDataProtectionPolicyByARN
 	FindPlatformApplicationAttributesByARN         = findPlatformApplicationAttributesByARN
 	FindSubscriptionAttributesByARN                = findSubscriptionAttributesByARN
 	FindTopicAttributesByARN                       = findTopicAttributesByARN
