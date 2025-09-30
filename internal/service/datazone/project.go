@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -301,7 +302,7 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitProjectDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString(), deleteTimeout)
 
-	if err != nil && !errs.IsA[*awstypes.AccessDeniedException](err) {
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.String(), err),
 			err.Error(),
@@ -369,6 +370,14 @@ func statusProject(ctx context.Context, conn *datazone.Client, domain string, id
 			return nil, "", err
 		}
 
+		if len(out.FailureReasons) > 0 {
+			if err := errors.Join(tfslices.ApplyToAll(out.FailureReasons, func(e awstypes.ProjectDeletionError) error {
+				return errors.New(aws.ToString(e.Message))
+			})...); err != nil {
+				return nil, "", err
+			}
+		}
+
 		return out, string(out.ProjectStatus), nil
 	}
 }
@@ -389,7 +398,7 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 		return nil, err
 	}
 
-	if out == nil || !(out.FailureReasons == nil) {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
