@@ -14,6 +14,8 @@ source (e.g., the "rebuild every time a code change is pushed" option in the Cod
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
@@ -259,6 +261,11 @@ resource "aws_codebuild_project" "project-using-github-app" {
   }
 }
 ```
+
+### Runner Project
+
+While no special configuration is required for `aws_codebuild_project` to create a project as a Runner Project, an `aws_codebuild_webhook` resource with an appropriate `filter_group` is required.
+See the [`aws_codebuild_webhook` resource documentation example](/docs/providers/aws/r/codebuild_webhook.html#for-codebuild-runner-project) for more details.
 
 ## Argument Reference
 
@@ -583,6 +590,27 @@ This resource exports the following attributes in addition to the arguments abov
   `default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_project.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:project/project-name"
+  }
+}
+
+resource "aws_codebuild_project" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild project.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Project using the `name`. For example:

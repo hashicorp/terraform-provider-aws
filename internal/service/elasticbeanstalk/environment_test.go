@@ -561,7 +561,7 @@ func testAccVerifyConfig(ctx context.Context, env *awstypes.EnvironmentDescripti
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error describing config settings in testAccVerifyConfig: %s", err)
+			return fmt.Errorf("Error describing config settings in testAccVerifyConfig: %w", err)
 		}
 
 		// should only be 1 environment

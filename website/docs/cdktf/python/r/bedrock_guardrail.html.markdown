@@ -36,15 +36,23 @@ resource "aws_bedrock_guardrail" "example" {
 
   sensitive_information_policy_config {
     pii_entities_config {
-      action = "BLOCK"
-      type   = "NAME"
+      action         = "BLOCK"
+      input_action   = "BLOCK"
+      output_action  = "ANONYMIZE"
+      input_enabled  = true
+      output_enabled = true
+      type           = "NAME"
     }
 
     regexes_config {
-      action      = "BLOCK"
-      description = "example regex"
-      name        = "regex_example"
-      pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
+      action         = "BLOCK"
+      input_action   = "BLOCK"
+      output_action  = "BLOCK"
+      input_enabled  = true
+      output_enabled = false
+      description    = "example regex"
+      name           = "regex_example"
+      pattern        = "^\\d{3}-\\d{2}-\\d{4}$"
     }
   }
 
@@ -183,10 +191,18 @@ The `tier_config` configuration block supports the following arguments:
 #### Managed Word Lists Config
 
 * `type` (Required) Options for managed words.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 
 #### Words Config
 
 * `text` (Required) The custom word text.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 
 ## Attribute Reference
 
@@ -231,4 +247,4 @@ Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-de
 % terraform import aws_bedrock_guardrail.example guardrail-id-12345678,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0e8aa08fd30b7183d6e1a65ac3c7f49d59ca062bb79bb51c1249e9c3c4178cdc -->
+<!-- cache-key: cdktf-0.20.8 input-062be71fb459b2f31e02302a778df0e0e7f39a17e1a253c860432ead2119fcc9 -->

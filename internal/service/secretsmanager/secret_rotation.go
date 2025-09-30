@@ -24,16 +24,16 @@ import (
 )
 
 // @SDKResource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
+// @ArnIdentity("secret_id")
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.DescribeSecretOutput")
+// @Testing(importIgnore="rotate_immediately")
 func resourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretRotationCreate,
 		ReadWithoutTimeout:   resourceSecretRotationRead,
 		UpdateWithoutTimeout: resourceSecretRotationUpdate,
 		DeleteWithoutTimeout: resourceSecretRotationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{

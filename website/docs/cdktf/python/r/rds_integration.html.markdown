@@ -160,6 +160,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_rds_integration.example
+  identity = {
+    "arn" = "arn:aws:rds:us-east-1:123456789012:integration:12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_rds_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the RDS integration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS (Relational Database) Integration using the `arn`. For example:
 
 ```python
@@ -183,4 +204,4 @@ Using `terraform import`, import RDS (Relational Database) Integration using the
 % terraform import aws_rds_integration.example arn:aws:rds:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e1d279db05e5935cabfde974497d8d4bde326c92e9257925cf70f61a7d11fbc9 -->
+<!-- cache-key: cdktf-0.20.8 input-da3978e6abd52038cf3b1c02642c6095f843e68d19ccd9f0f0b76c376e0e4e42 -->

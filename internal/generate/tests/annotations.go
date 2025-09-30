@@ -460,6 +460,22 @@ if err != nil {
 		}
 	}
 
+	if attr, ok := args.Keyword["tlsEcdsaPublicKeyPem"]; ok {
+		if _, err := ParseBoolAttr("tlsEcdsaPublicKeyPem", attr); err != nil {
+			return err
+		} else {
+			varName := "rTlsEcdsaPublicKeyPem"
+			stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+				Code: fmt.Sprintf(`privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
+%s, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)`, varName),
+			})
+			stuff.AdditionalTfVars_[varName] = TFVar{
+				GoVarName: varName,
+				Type:      TFVarTypeString,
+			}
+		}
+	}
+
 	return nil
 }
 

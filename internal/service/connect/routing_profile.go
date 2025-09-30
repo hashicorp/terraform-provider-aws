@@ -377,7 +377,7 @@ func updateRoutingProfileQueueAssociations(ctx context.Context, conn *connect.Cl
 			_, err := conn.DisassociateRoutingProfileQueues(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("disassociating Connect Routing Profile (%s) queues: %s", routingProfileID, err)
+				return fmt.Errorf("disassociating Connect Routing Profile (%s) queues: %w", routingProfileID, err)
 			}
 		}
 	}
@@ -392,7 +392,7 @@ func updateRoutingProfileQueueAssociations(ctx context.Context, conn *connect.Cl
 		_, err := conn.AssociateRoutingProfileQueues(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("associating Connect Routing Profile (%s) queues: %s", routingProfileID, err)
+			return fmt.Errorf("associating Connect Routing Profile (%s) queues: %w", routingProfileID, err)
 		}
 	}
 

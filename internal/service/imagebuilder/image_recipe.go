@@ -80,7 +80,7 @@ func resourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(100, 10000),
+										ValidateFunc: validation.IntBetween(100, 100000),
 									},
 									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,

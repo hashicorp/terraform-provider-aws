@@ -228,7 +228,7 @@ func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFAssociatedItemException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFAssociatedItemException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRegexPatternSet(ctx, input)
 	})
 

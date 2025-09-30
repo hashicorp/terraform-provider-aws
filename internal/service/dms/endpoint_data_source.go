@@ -765,7 +765,7 @@ func resourceEndpointDataSourceSetState(d *schema.ResourceData, endpoint *awstyp
 		}
 	case engineNameS3:
 		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
-			return fmt.Errorf("setting s3_settings for DMS: %s", err)
+			return fmt.Errorf("setting s3_settings for DMS: %w", err)
 		}
 	default:
 		d.Set(names.AttrDatabaseName, endpoint.DatabaseName)

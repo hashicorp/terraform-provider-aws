@@ -417,7 +417,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateIndex(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -567,7 +567,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateIndex(ctx, input)
 			},
 			func(err error) (bool, error) {

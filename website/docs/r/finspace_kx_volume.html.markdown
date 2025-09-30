@@ -18,7 +18,7 @@ Terraform resource for managing an AWS FinSpace Kx Volume.
 resource "aws_finspace_kx_volume" "example" {
   name               = "my-tf-kx-volume"
   environment_id     = aws_finspace_kx_environment.example.id
-  availability_zones = "use1-az2"
+  availability_zones = ["use1-az2"]
   az_mode            = "SINGLE"
   type               = "NAS_1"
   nas1_configuration {

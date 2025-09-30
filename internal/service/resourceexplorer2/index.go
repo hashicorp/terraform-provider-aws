@@ -35,6 +35,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 

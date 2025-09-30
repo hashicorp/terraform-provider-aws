@@ -557,7 +557,7 @@ func flattenContainer(apiObject awstypes.Container) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.ImageUris; v != nil {
-		tfMap["image_uris"] = aws.StringSlice(v)
+		tfMap["image_uris"] = v
 	}
 
 	if v := apiObject.Region; v != nil {

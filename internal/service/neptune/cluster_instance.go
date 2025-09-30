@@ -233,7 +233,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDBInstance(ctx, input)
 	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -345,7 +345,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PromotionTier = aws.Int32(int32(d.Get("promotion_tier").(int)))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 

@@ -213,52 +213,54 @@ func main() {
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
 
-			if resource.PreIdentityVersion.Equal(v5_100_0) {
-				tfTemplatesV5, err := tfTemplates.Clone()
-				if err != nil {
-					g.Fatalf("cloning Terraform config template: %s", err)
-				}
-				ext := filepath.Ext(configTmplFile)
-				name := strings.TrimSuffix(configTmplFile, ext)
-				configTmplV5File := name + "_v5.100.0" + ext
-				configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
-				if _, err := os.Stat(configTmplV5Path); err == nil {
-					b, err := os.ReadFile(configTmplV5Path)
+			if resource.PreIdentityVersion != nil {
+				if resource.PreIdentityVersion.Equal(v5_100_0) {
+					tfTemplatesV5, err := tfTemplates.Clone()
 					if err != nil {
-						g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+						g.Fatalf("cloning Terraform config template: %s", err)
 					}
-					configTmplV5 := string(b)
-					_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
-					if err != nil {
-						g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+					ext := filepath.Ext(configTmplFile)
+					name := strings.TrimSuffix(configTmplFile, ext)
+					configTmplV5File := name + "_v5.100.0" + ext
+					configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
+					if _, err := os.Stat(configTmplV5Path); err == nil {
+						b, err := os.ReadFile(configTmplV5Path)
+						if err != nil {
+							g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+						}
+						configTmplV5 := string(b)
+						_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
+						if err != nil {
+							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+						}
 					}
-				}
-				commonV5 := common
-				commonV5.ExternalProviders = map[string]requiredProvider{
-					"aws": {
-						Source:  "hashicorp/aws",
-						Version: "5.100.0",
-					},
-				}
-				generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
+					commonV5 := common
+					commonV5.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: "5.100.0",
+						},
+					}
+					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
 
-				commonV6 := common
-				commonV6.ExternalProviders = map[string]requiredProvider{
-					"aws": {
-						Source:  "hashicorp/aws",
-						Version: "6.0.0",
-					},
+					commonV6 := common
+					commonV6.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: "6.0.0",
+						},
+					}
+					generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
+				} else {
+					commonPreIdentity := common
+					commonPreIdentity.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: resource.PreIdentityVersion.String(),
+						},
+					}
+					generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
 				}
-				generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
-			} else {
-				commonPreIdentity := common
-				commonPreIdentity.ExternalProviders = map[string]requiredProvider{
-					"aws": {
-						Source:  "hashicorp/aws",
-						Version: resource.PreIdentityVersion.String(),
-					},
-				}
-				generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
 			}
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
@@ -362,25 +364,26 @@ const (
 )
 
 type ResourceDatum struct {
-	service                *serviceRecords
-	FileName               string
-	idAttrDuplicates       string // TODO: Remove. Still needed for Parameterized Identity
-	GenerateConfig         bool
-	ARNFormat              string
-	arnAttribute           string
-	isARNFormatGlobal      triBoolean
-	ArnIdentity            bool
-	MutableIdentity        bool
-	IsGlobal               bool
-	isSingleton            bool
-	HasRegionOverrideTest  bool
-	identityAttributes     []identityAttribute
-	identityAttribute      string
-	IdentityDuplicateAttrs []string
-	IDAttrFormat           string
-	HasV6_0NullValuesError bool
-	HasV6_0RefreshError    bool
-	PreIdentityVersion     *version.Version
+	service                  *serviceRecords
+	FileName                 string
+	idAttrDuplicates         string // TODO: Remove. Still needed for Parameterized Identity
+	GenerateConfig           bool
+	ARNFormat                string
+	arnAttribute             string
+	isARNFormatGlobal        triBoolean
+	ArnIdentity              bool
+	MutableIdentity          bool
+	IsGlobal                 bool
+	isSingleton              bool
+	HasRegionOverrideTest    bool
+	identityAttributes       []identityAttribute
+	identityAttribute        string
+	IdentityDuplicateAttrs   []string
+	IDAttrFormat             string
+	HasV6_0NullValuesError   bool
+	HasV6_0RefreshError      bool
+	HasNoPreExistingResource bool
+	PreIdentityVersion       *version.Version
 	tests.CommonArgs
 }
 
@@ -453,8 +456,9 @@ func (r ResourceDatum) IdentityAttributes() []identityAttribute {
 }
 
 type identityAttribute struct {
-	name     string
-	Optional bool
+	name        string
+	Optional    bool
+	TestNotNull bool
 }
 
 func (i identityAttribute) Name() string {
@@ -548,7 +552,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs:            tests.InitCommonArgs(),
 		IsGlobal:              false,
 		HasRegionOverrideTest: true,
-		PreIdentityVersion:    version.Must(version.NewVersion("5.100.0")),
 	}
 	hasIdentity := false
 	skip := false
@@ -641,6 +644,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
+				if attr, ok := args.Keyword["testNotNull"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityAttribute.TestNotNull = b
+					}
+				}
+
 				d.identityAttributes = append(d.identityAttributes, identityAttribute)
 
 			case "SingletonIdentity":
@@ -696,6 +708,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			// TODO: allow underscore?
 			case "V60SDKv2Fix":
 				d.HasV6_0NullValuesError = true
+				d.PreIdentityVersion = v5_100_0
 
 				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
@@ -758,6 +771,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0NullValuesError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
 					}
 				}
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
@@ -765,6 +781,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0RefreshError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
 					}
 				}
 				if attr, ok := args.Keyword["preIdentityVersion"]; ok {
@@ -774,6 +793,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					}
 					d.PreIdentityVersion = version
+				}
+				if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
+					if b, err := tests.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasNoPreExistingResource = b
+					}
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
 					if b, err := tests.ParseBoolAttr("tlsKey", attr); err != nil {
@@ -839,6 +865,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 			if d.Name == "" {
 				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				return
+			}
+			if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
+				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
 			if !generatorSeen {

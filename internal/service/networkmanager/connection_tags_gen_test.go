@@ -46,6 +46,7 @@ func testAccNetworkManagerConnection_tagsSerial(t *testing.T) {
 
 func testAccNetworkManagerConnection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -226,6 +227,7 @@ func testAccNetworkManagerConnection_tags(t *testing.T) {
 
 func testAccNetworkManagerConnection_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -290,6 +292,7 @@ func testAccNetworkManagerConnection_tags_null(t *testing.T) {
 
 func testAccNetworkManagerConnection_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -350,6 +353,7 @@ func testAccNetworkManagerConnection_tags_EmptyMap(t *testing.T) {
 
 func testAccNetworkManagerConnection_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -430,6 +434,7 @@ func testAccNetworkManagerConnection_tags_EmptyTag_OnCreate(t *testing.T) {
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -519,6 +524,7 @@ func testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -655,6 +661,7 @@ func testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Replace(t *testing.T
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -741,6 +748,7 @@ func testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Replace(t *testing.T
 
 func testAccNetworkManagerConnection_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -920,6 +928,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_providerOnly(t *testing.T)
 
 func testAccNetworkManagerConnection_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1078,6 +1087,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_nonOverlapping(t *testing.
 
 func testAccNetworkManagerConnection_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1252,6 +1262,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_overlapping(t *testing.T) 
 
 func testAccNetworkManagerConnection_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1339,6 +1350,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_updateToProviderOnly(t *te
 
 func testAccNetworkManagerConnection_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1427,6 +1439,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_emptyResourceTag(t *testin
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1492,6 +1505,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_emptyProviderOnlyTag(t *te
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1547,6 +1561,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_emptyProviderOnlyTag(t *te
 
 func testAccNetworkManagerConnection_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1607,6 +1622,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_nullOverlappingResourceTag
 
 func testAccNetworkManagerConnection_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1667,6 +1683,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_nullNonOverlappingResource
 
 func testAccNetworkManagerConnection_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1720,6 +1737,7 @@ func testAccNetworkManagerConnection_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1814,6 +1832,7 @@ func testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Add(t *testing.T)
 
 func testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -1898,6 +1917,7 @@ func testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Replace(t *testin
 
 func testAccNetworkManagerConnection_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -2055,6 +2075,7 @@ func testAccNetworkManagerConnection_tags_IgnoreTags_Overlap_DefaultTag(t *testi
 
 func testAccNetworkManagerConnection_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_connection.test"
 
 	acctest.Test(ctx, t, resource.TestCase{

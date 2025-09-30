@@ -29,16 +29,16 @@ import (
 
 // @SDKResource("aws_route53_resolver_rule", name="Rule")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRule")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomDomainName()")
 func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
 		ReadWithoutTimeout:   resourceRuleRead,
 		UpdateWithoutTimeout: resourceRuleUpdate,
 		DeleteWithoutTimeout: resourceRuleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

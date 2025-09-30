@@ -118,7 +118,7 @@ func forceNewIfRegionChanges() customizeDiffInterceptor {
 }
 
 func importRegion() importInterceptor {
-	return interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+	return interceptorFunc1[*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) error {
 		c, d := opts.c, opts.d
 
 		switch when, why := opts.when, opts.why; when {
@@ -135,7 +135,7 @@ func importRegion() importInterceptor {
 			}
 		}
 
-		return []*schema.ResourceData{d}, nil
+		return nil
 	})
 }
 
@@ -149,7 +149,7 @@ func resourceImportRegion() interceptorInvocation {
 
 // importRegionNoDefault does not provide a default value for `region`. This should be used when the import ID is or contains a region.
 func importRegionNoDefault() importInterceptor {
-	return interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+	return interceptorFunc1[*schema.ResourceData, error](func(ctx context.Context, opts importInterceptorOptions) error {
 		d := opts.d
 
 		switch when, why := opts.when, opts.why; when {
@@ -164,7 +164,7 @@ func importRegionNoDefault() importInterceptor {
 			}
 		}
 
-		return []*schema.ResourceData{d}, nil
+		return nil
 	})
 }
 

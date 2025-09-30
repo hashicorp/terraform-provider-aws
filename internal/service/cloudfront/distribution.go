@@ -628,6 +628,11 @@ func resourceDistribution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
+									names.AttrIPAddressType: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+									},
 									"origin_keepalive_timeout": {
 										Type:         schema.TypeInt,
 										Optional:     true,
@@ -693,6 +698,11 @@ func resourceDistribution() *schema.Resource {
 									},
 								},
 							},
+						},
+						"response_completion_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
 						},
 						"s3_origin_config": {
 							Type:     schema.TypeList,
@@ -917,7 +927,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	const (
 		timeout = 1 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidViewerCertificate](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidViewerCertificate](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDistributionWithTags(ctx, &input)
 	})
 
@@ -1045,7 +1055,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		const (
 			timeout = 1 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidViewerCertificate](ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidViewerCertificate](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateDistribution(ctx, &input)
 		})
 
@@ -1133,7 +1143,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		const (
 			timeout = 3 * time.Minute
 		)
-		_, err = tfresource.RetryWhenIsA[*awstypes.DistributionNotDisabled](ctx, timeout, func() (any, error) {
+		_, err = tfresource.RetryWhenIsA[any, *awstypes.DistributionNotDisabled](ctx, timeout, func(ctx context.Context) (any, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
 		})
 	}
@@ -2144,6 +2154,12 @@ func expandOrigin(tfMap map[string]any) *awstypes.Origin {
 		}
 	}
 
+	if v, ok := tfMap["response_completion_timeout"]; ok {
+		if v := v.(int); v > 0 {
+			apiObject.ResponseCompletionTimeout = aws.Int32(int32(v))
+		}
+	}
+
 	if v, ok := tfMap["s3_origin_config"]; ok {
 		if v := v.([]any); len(v) > 0 {
 			apiObject.S3OriginConfig = expandS3OriginConfig(v[0].(map[string]any))
@@ -2202,6 +2218,12 @@ func flattenOrigin(apiObject *awstypes.Origin) map[string]any {
 
 	if apiObject.OriginShield != nil && aws.ToBool(apiObject.OriginShield.Enabled) {
 		tfMap["origin_shield"] = []any{flattenOriginShield(apiObject.OriginShield)}
+	}
+
+	if apiObject.ResponseCompletionTimeout != nil {
+		tfMap["response_completion_timeout"] = aws.ToInt32(apiObject.ResponseCompletionTimeout)
+	} else {
+		tfMap["response_completion_timeout"] = 0
 	}
 
 	if apiObject.S3OriginConfig != nil && aws.ToString(apiObject.S3OriginConfig.OriginAccessIdentity) != "" {
@@ -2429,6 +2451,10 @@ func expandCustomOriginConfig(tfMap map[string]any) *awstypes.CustomOriginConfig
 		OriginSslProtocols:     expandCustomOriginConfigSSL(tfMap["origin_ssl_protocols"].(*schema.Set).List()),
 	}
 
+	if v, ok := tfMap[names.AttrIPAddressType]; ok && v.(string) != "" {
+		apiObject.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
 	return apiObject
 }
 
@@ -2444,6 +2470,10 @@ func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 		"origin_protocol_policy":   apiObject.OriginProtocolPolicy,
 		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
 		"origin_ssl_protocols":     flattenCustomOriginConfigSSL(apiObject.OriginSslProtocols),
+	}
+
+	if apiObject.IpAddressType != "" {
+		tfMap[names.AttrIPAddressType] = apiObject.IpAddressType
 	}
 
 	return tfMap

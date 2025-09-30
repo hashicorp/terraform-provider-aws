@@ -27,7 +27,7 @@ func TestAccIVSChatLoggingConfiguration_Identity_Basic(t *testing.T) {
 	resourceName := "aws_ivschat_logging_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -112,7 +112,7 @@ func TestAccIVSChatLoggingConfiguration_Identity_RegionOverride(t *testing.T) {
 	resourceName := "aws_ivschat_logging_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -234,7 +234,7 @@ func TestAccIVSChatLoggingConfiguration_Identity_ExistingResource(t *testing.T) 
 	resourceName := "aws_ivschat_logging_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -276,6 +276,64 @@ func TestAccIVSChatLoggingConfiguration_Identity_ExistingResource(t *testing.T) 
 						names.AttrARN: knownvalue.NotNull(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.5.0
+func TestAccIVSChatLoggingConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v ivschat.GetLoggingConfigurationOutput
+	resourceName := "aws_ivschat_logging_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IVSChatServiceID),
+		CheckDestroy: testAccCheckLoggingConfigurationDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/LoggingConfiguration/basic_v6.5.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/LoggingConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
 				},
 			},
 		},

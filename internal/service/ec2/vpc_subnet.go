@@ -31,6 +31,8 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Subnet")
 // @Testing(generator=false)
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.8.0")
 func resourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,9 +40,6 @@ func resourceSubnet() *schema.Resource {
 		ReadWithoutTimeout:   resourceSubnetRead,
 		UpdateWithoutTimeout: resourceSubnetUpdate,
 		DeleteWithoutTimeout: resourceSubnetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

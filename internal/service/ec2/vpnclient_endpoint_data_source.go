@@ -149,6 +149,10 @@ func dataSourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"endpoint_ip_address_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrFilter: customFiltersSchema(),
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
@@ -176,6 +180,10 @@ func dataSourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
+			"traffic_ip_address_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"transport_protocol": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -258,8 +266,9 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set(names.AttrDescription, ep.Description)
 	d.Set(names.AttrDNSName, ep.DnsName)
-	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
-	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
+	d.Set("dns_servers", ep.DnsServers)
+	d.Set("endpoint_ip_address_type", ep.EndpointIpAddressType)
+	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {
@@ -270,6 +279,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("transport_protocol", ep.TransportProtocol)
+	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 

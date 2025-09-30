@@ -312,7 +312,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTrail(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -500,7 +500,7 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateTrail(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -672,7 +672,7 @@ func setEventSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.R
 	input.EventSelectors = eventSelectors
 
 	if _, err := conn.PutEventSelectors(ctx, input); err != nil {
-		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %s", d.Id(), err)
+		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %w", d.Id(), err)
 	}
 
 	return nil

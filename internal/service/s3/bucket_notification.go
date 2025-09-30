@@ -26,16 +26,15 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_notification", name="Bucket Notification")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetBucketNotificationConfigurationOutput")
 func resourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketNotificationPut,
 		ReadWithoutTimeout:   resourceBucketNotificationRead,
 		UpdateWithoutTimeout: resourceBucketNotificationPut,
 		DeleteWithoutTimeout: resourceBucketNotificationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
