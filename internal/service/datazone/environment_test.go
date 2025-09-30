@@ -660,8 +660,8 @@ resource "aws_datazone_environment" "test" {
   project_identifier   = aws_datazone_project.test.id
   domain_identifier    = aws_datazone_domain.test.id
 
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.region
+  account_identifier = data.aws_caller_identity.test.account_id
+  account_region     = data.aws_region.test.region
 
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
