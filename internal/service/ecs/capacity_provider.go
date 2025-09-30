@@ -182,12 +182,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(0),
@@ -217,12 +217,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(0),
@@ -261,12 +261,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(0),
@@ -331,12 +331,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: validation.FloatAtLeast(0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: validation.FloatAtLeast(0),
@@ -350,12 +350,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -369,12 +369,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: validation.FloatAtLeast(0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: validation.FloatAtLeast(0),
@@ -388,12 +388,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -421,12 +421,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: validation.FloatAtLeast(0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: validation.FloatAtLeast(0),
@@ -440,12 +440,12 @@ func resourceCapacityProvider() *schema.Resource {
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -461,20 +461,20 @@ func resourceCapacityProvider() *schema.Resource {
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.ManagedInstancesMonitoringOptions](),
 									},
-									"network_configuration": {
+									names.AttrNetworkConfiguration: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"security_groups": {
+												names.AttrSecurityGroups: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
-												"subnets": {
+												names.AttrSubnets: {
 													Type:     schema.TypeSet,
 													Required: true,
 													Elem: &schema.Schema{
@@ -501,7 +501,7 @@ func resourceCapacityProvider() *schema.Resource {
 								},
 							},
 						},
-						"propagate_tags": {
+						names.AttrPropagateTags: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.PropagateMITags](),
@@ -926,7 +926,7 @@ func expandManagedInstancesProviderCreate(configured any) *awstypes.CreateManage
 		apiObject.InstanceLaunchTemplate = expandInstanceLaunchTemplateCreate(v)
 	}
 
-	if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 		apiObject.PropagateTags = awstypes.PropagateMITags(v)
 	}
 
@@ -953,7 +953,7 @@ func expandManagedInstancesProviderUpdate(configured any) *awstypes.UpdateManage
 		apiObject.InstanceLaunchTemplate = expandInstanceLaunchTemplateUpdate(v)
 	}
 
-	if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 		apiObject.PropagateTags = awstypes.PropagateMITags(v)
 	}
 
@@ -980,7 +980,7 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 		apiObject.Monitoring = awstypes.ManagedInstancesMonitoringOptions(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.NetworkConfiguration = expandManagedInstancesNetworkConfiguration(v)
 	}
 
@@ -1011,7 +1011,7 @@ func expandInstanceLaunchTemplateUpdate(tfList []any) *awstypes.InstanceLaunchTe
 		apiObject.Monitoring = awstypes.ManagedInstancesMonitoringOptions(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.NetworkConfiguration = expandManagedInstancesNetworkConfiguration(v)
 	}
 
@@ -1030,11 +1030,11 @@ func expandManagedInstancesNetworkConfiguration(tfList []any) *awstypes.ManagedI
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ManagedInstancesNetworkConfiguration{}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -1171,11 +1171,11 @@ func expandVCpuCountRangeRequest(tfList []any) *awstypes.VCpuCountRangeRequest {
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.VCpuCountRangeRequest{}
 
-	if v, ok := tfMap["min"].(int); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMin].(int); ok && v > 0 {
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v > 0 {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -1190,11 +1190,11 @@ func expandMemoryMiBRequest(tfList []any) *awstypes.MemoryMiBRequest {
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.MemoryMiBRequest{}
 
-	if v, ok := tfMap["min"].(int); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMin].(int); ok && v > 0 {
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v > 0 {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -1209,11 +1209,11 @@ func expandMemoryGiBPerVCpuRequest(tfList []any) *awstypes.MemoryGiBPerVCpuReque
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.MemoryGiBPerVCpuRequest{}
 
-	if v, ok := tfMap["min"].(float64); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMin].(float64); ok && v > 0 {
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["max"].(float64); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMax].(float64); ok && v > 0 {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -1228,11 +1228,11 @@ func expandNetworkBandwidthGbpsRequest(tfList []any) *awstypes.NetworkBandwidthG
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.NetworkBandwidthGbpsRequest{}
 
-	if v, ok := tfMap["min"].(float64); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMin].(float64); ok && v > 0 {
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["max"].(float64); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMax].(float64); ok && v > 0 {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -1247,11 +1247,11 @@ func expandNetworkInterfaceCountRequest(tfList []any) *awstypes.NetworkInterface
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.NetworkInterfaceCountRequest{}
 
-	if v, ok := tfMap["min"].(int); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMin].(int); ok && v > 0 {
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v > 0 {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -1266,11 +1266,11 @@ func expandTotalLocalStorageGBRequest(tfList []any) *awstypes.TotalLocalStorageG
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.TotalLocalStorageGBRequest{}
 
-	if v, ok := tfMap["min"].(float64); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMin].(float64); ok && v > 0 {
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["max"].(float64); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMax].(float64); ok && v > 0 {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -1285,11 +1285,11 @@ func expandBaselineEbsBandwidthMbpsRequest(tfList []any) *awstypes.BaselineEbsBa
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.BaselineEbsBandwidthMbpsRequest{}
 
-	if v, ok := tfMap["min"].(int); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMin].(int); ok && v > 0 {
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v > 0 {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v > 0 {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -1304,11 +1304,11 @@ func expandAcceleratorCountRequest(tfList []any) *awstypes.AcceleratorCountReque
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.AcceleratorCountRequest{}
 
-	if v, ok := tfMap["min"].(int); ok && v >= 0 {
+	if v, ok := tfMap[names.AttrMin].(int); ok && v >= 0 {
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v >= 0 {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v >= 0 {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -1323,11 +1323,11 @@ func expandAcceleratorTotalMemoryMiBRequest(tfList []any) *awstypes.AcceleratorT
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.AcceleratorTotalMemoryMiBRequest{}
 
-	if v, ok := tfMap["min"].(int); ok && v >= 0 {
+	if v, ok := tfMap[names.AttrMin].(int); ok && v >= 0 {
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v >= 0 {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v >= 0 {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -1341,7 +1341,7 @@ func flattenManagedInstancesProvider(provider *awstypes.ManagedInstancesProvider
 
 	tfMap := map[string]any{
 		"infrastructure_role_arn": aws.ToString(provider.InfrastructureRoleArn),
-		"propagate_tags":          string(provider.PropagateTags),
+		names.AttrPropagateTags:   string(provider.PropagateTags),
 	}
 
 	if provider.InstanceLaunchTemplate != nil {
@@ -1367,12 +1367,12 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 
 	if template.NetworkConfiguration != nil {
 		networkConfig := map[string]any{
-			"subnets": template.NetworkConfiguration.Subnets,
+			names.AttrSubnets: template.NetworkConfiguration.Subnets,
 		}
 		if template.NetworkConfiguration.SecurityGroups != nil {
-			networkConfig["security_groups"] = template.NetworkConfiguration.SecurityGroups
+			networkConfig[names.AttrSecurityGroups] = template.NetworkConfiguration.SecurityGroups
 		}
-		tfMap["network_configuration"] = []map[string]any{networkConfig}
+		tfMap[names.AttrNetworkConfiguration] = []map[string]any{networkConfig}
 	}
 
 	if template.StorageConfiguration != nil {
@@ -1401,8 +1401,8 @@ func flattenInstanceRequirementsRequest(req *awstypes.InstanceRequirementsReques
 
 	if req.AcceleratorCount != nil {
 		tfMap["accelerator_count"] = []map[string]any{{
-			"min": aws.ToInt32(req.AcceleratorCount.Min),
-			"max": aws.ToInt32(req.AcceleratorCount.Max),
+			names.AttrMin: aws.ToInt32(req.AcceleratorCount.Min),
+			names.AttrMax: aws.ToInt32(req.AcceleratorCount.Max),
 		}}
 	}
 
@@ -1416,8 +1416,8 @@ func flattenInstanceRequirementsRequest(req *awstypes.InstanceRequirementsReques
 
 	if req.AcceleratorTotalMemoryMiB != nil {
 		tfMap["accelerator_total_memory_mib"] = []map[string]any{{
-			"min": aws.ToInt32(req.AcceleratorTotalMemoryMiB.Min),
-			"max": aws.ToInt32(req.AcceleratorTotalMemoryMiB.Max),
+			names.AttrMin: aws.ToInt32(req.AcceleratorTotalMemoryMiB.Min),
+			names.AttrMax: aws.ToInt32(req.AcceleratorTotalMemoryMiB.Max),
 		}}
 	}
 
@@ -1431,8 +1431,8 @@ func flattenInstanceRequirementsRequest(req *awstypes.InstanceRequirementsReques
 
 	if req.BaselineEbsBandwidthMbps != nil {
 		tfMap["baseline_ebs_bandwidth_mbps"] = []map[string]any{{
-			"min": aws.ToInt32(req.BaselineEbsBandwidthMbps.Min),
-			"max": aws.ToInt32(req.BaselineEbsBandwidthMbps.Max),
+			names.AttrMin: aws.ToInt32(req.BaselineEbsBandwidthMbps.Min),
+			names.AttrMax: aws.ToInt32(req.BaselineEbsBandwidthMbps.Max),
 		}}
 	}
 
@@ -1454,43 +1454,43 @@ func flattenInstanceRequirementsRequest(req *awstypes.InstanceRequirementsReques
 
 	if req.MemoryGiBPerVCpu != nil {
 		tfMap["memory_gib_per_vcpu"] = []map[string]any{{
-			"min": aws.ToFloat64(req.MemoryGiBPerVCpu.Min),
-			"max": aws.ToFloat64(req.MemoryGiBPerVCpu.Max),
+			names.AttrMin: aws.ToFloat64(req.MemoryGiBPerVCpu.Min),
+			names.AttrMax: aws.ToFloat64(req.MemoryGiBPerVCpu.Max),
 		}}
 	}
 
 	if req.MemoryMiB != nil {
 		tfMap["memory_mib"] = []map[string]any{{
-			"min": aws.ToInt32(req.MemoryMiB.Min),
-			"max": aws.ToInt32(req.MemoryMiB.Max),
+			names.AttrMin: aws.ToInt32(req.MemoryMiB.Min),
+			names.AttrMax: aws.ToInt32(req.MemoryMiB.Max),
 		}}
 	}
 
 	if req.NetworkBandwidthGbps != nil {
 		tfMap["network_bandwidth_gbps"] = []map[string]any{{
-			"min": aws.ToFloat64(req.NetworkBandwidthGbps.Min),
-			"max": aws.ToFloat64(req.NetworkBandwidthGbps.Max),
+			names.AttrMin: aws.ToFloat64(req.NetworkBandwidthGbps.Min),
+			names.AttrMax: aws.ToFloat64(req.NetworkBandwidthGbps.Max),
 		}}
 	}
 
 	if req.NetworkInterfaceCount != nil {
 		tfMap["network_interface_count"] = []map[string]any{{
-			"min": aws.ToInt32(req.NetworkInterfaceCount.Min),
-			"max": aws.ToInt32(req.NetworkInterfaceCount.Max),
+			names.AttrMin: aws.ToInt32(req.NetworkInterfaceCount.Min),
+			names.AttrMax: aws.ToInt32(req.NetworkInterfaceCount.Max),
 		}}
 	}
 
 	if req.TotalLocalStorageGB != nil {
 		tfMap["total_local_storage_gb"] = []map[string]any{{
-			"min": aws.ToFloat64(req.TotalLocalStorageGB.Min),
-			"max": aws.ToFloat64(req.TotalLocalStorageGB.Max),
+			names.AttrMin: aws.ToFloat64(req.TotalLocalStorageGB.Min),
+			names.AttrMax: aws.ToFloat64(req.TotalLocalStorageGB.Max),
 		}}
 	}
 
 	if req.VCpuCount != nil {
 		tfMap["vcpu_count"] = []map[string]any{{
-			"min": aws.ToInt32(req.VCpuCount.Min),
-			"max": aws.ToInt32(req.VCpuCount.Max),
+			names.AttrMin: aws.ToInt32(req.VCpuCount.Min),
+			names.AttrMax: aws.ToInt32(req.VCpuCount.Max),
 		}}
 	}
 
