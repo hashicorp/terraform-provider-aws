@@ -22,7 +22,7 @@ import (
 type listExaInfraTest struct {
 }
 
-func TestAccODBCloudExadataInfrastructuresListDataSource_basic(t *testing.T) {
+func TestAccODBListCloudExadataInfrastructuresDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listExaInfraDSTest = listExaInfraTest{}
 	var infraList odb.ListCloudExadataInfrastructuresOutput

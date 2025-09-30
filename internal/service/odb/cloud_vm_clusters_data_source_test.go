@@ -21,7 +21,7 @@ import (
 type listVMCListDSTest struct {
 }
 
-func TestAccODBListVmClusterDataSource_basic(t *testing.T) {
+func TestAccODBListVmClustersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vmcListTest = listVMCListDSTest{}
 	var output odb.ListCloudVmClustersOutput
