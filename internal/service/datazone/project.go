@@ -288,10 +288,10 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteProject(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil && !errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "is already DELETING") {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameProject, state.ID.String(), err),
 			err.Error(),
