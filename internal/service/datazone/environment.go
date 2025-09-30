@@ -434,10 +434,12 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 
 func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EnvironmentStatusActive, awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusDeleted),
-		Target:  []string{},
-		Refresh: statusEnvironment(ctx, conn, domainId, id),
-		Timeout: timeout,
+		Pending:      enum.Slice(awstypes.EnvironmentStatusActive, awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusDeleted),
+		Target:       []string{},
+		Refresh:      statusEnvironment(ctx, conn, domainId, id),
+		Timeout:      timeout,
+		Delay:        10 * time.Second,
+		PollInterval: 5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
