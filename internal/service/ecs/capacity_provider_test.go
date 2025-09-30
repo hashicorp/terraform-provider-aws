@@ -603,7 +603,7 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = "arn:aws:iam::000000000000:instance-profile/dummy"
 
       network_configuration {
-        subnets = [ "subnet-0b48066557a0e97ac" ]
+        subnets = ["subnet-0b48066557a0e97ac"]
       }
 
       instance_requirements {
@@ -652,7 +652,7 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = "arn:aws:iam::000000000000:instance-profile/dummy"
 
       network_configuration {
-        subnets = [ "subnet-0b48066557a0e97ac" ]
+        subnets = ["subnet-0b48066557a0e97ac"]
       }
 
       instance_requirements {
@@ -773,7 +773,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
       network_configuration {
         subnets = aws_subnet.test[*].id
-      }      
+      }
     }
   }
 }
@@ -808,9 +808,9 @@ resource "aws_ecs_capacity_provider" "test" {
           max = 16384
         }
 
-        cpu_manufacturers      = ["intel", "amd"]
-        instance_generations   = ["current"]
-        burstable_performance  = "excluded"
+        cpu_manufacturers     = ["intel", "amd"]
+        instance_generations  = ["current"]
+        burstable_performance = "excluded"
       }
     }
   }
