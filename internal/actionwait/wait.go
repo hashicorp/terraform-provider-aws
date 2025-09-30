@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -88,7 +89,15 @@ type UnexpectedStateError struct {
 }
 
 func (e *UnexpectedStateError) Error() string {
-	return "operation entered unexpected state: " + string(e.Status)
+	if len(e.Allowed) == 0 {
+		return "operation entered unexpected state: " + string(e.Status)
+	}
+	allowedStr := make([]string, len(e.Allowed))
+	for i, s := range e.Allowed {
+		allowedStr[i] = string(s)
+	}
+	return "operation entered unexpected state: " + string(e.Status) + " (allowed: " +
+		strings.Join(allowedStr, ", ") + ")"
 }
 
 // sentinel errors helpers
@@ -102,20 +111,12 @@ var (
 // context cancellation, or fetch error occurs.
 // On success, the final FetchResult is returned with nil error.
 func WaitForStatus[T any](ctx context.Context, fetch FetchFunc[T], opts Options[T]) (FetchResult[T], error) { //nolint:cyclop // complexity driven by classification/state machine; readability preferred
-	var zero FetchResult[T]
+	if err := validateOptions(opts); err != nil {
+		var zero FetchResult[T]
+		return zero, err
+	}
 
-	if opts.Timeout <= 0 {
-		return zero, errors.New("actionwait: Timeout must be > 0")
-	}
-	if len(opts.SuccessStates) == 0 {
-		return zero, errors.New("actionwait: at least one SuccessState required")
-	}
-	if opts.ConsecutiveSuccess <= 0 {
-		opts.ConsecutiveSuccess = 1
-	}
-	if opts.Interval == nil {
-		opts.Interval = FixedInterval(DefaultPollInterval)
-	}
+	normalizeOptions(&opts)
 
 	start := time.Now()
 	deadline := start.Add(opts.Timeout)
@@ -130,64 +131,37 @@ func WaitForStatus[T any](ctx context.Context, fetch FetchFunc[T], opts Options[
 	allowedTransient = append(allowedTransient, opts.TransitionalStates...)
 
 	for {
+		// Early return: context cancelled
 		if ctx.Err() != nil {
 			return last, ctx.Err()
 		}
-		now := time.Now()
-		if now.After(deadline) {
+
+		// Early return: timeout exceeded
+		if time.Now().After(deadline) {
 			return last, &TimeoutError{LastStatus: last.Status, Timeout: opts.Timeout}
 		}
 
+		// Fetch current status
 		fr, err := fetch(ctx)
 		if err != nil {
-			return fr, err
+			return fr, err // Early return: fetch error
 		}
 		last = fr
 
-		// Classification precedence: failure -> success -> transitional -> unexpected
-		if contains(opts.FailureStates, fr.Status) {
-			return fr, &FailureStateError{Status: fr.Status}
-		}
-		if contains(opts.SuccessStates, fr.Status) {
-			successStreak++
-			if successStreak >= opts.ConsecutiveSuccess {
-				return fr, nil
-			}
-		} else {
-			successStreak = 0
-			if len(opts.TransitionalStates) > 0 {
-				if !contains(opts.TransitionalStates, fr.Status) {
-					return fr, &UnexpectedStateError{Status: fr.Status, Allowed: allowedTransient}
-				}
-			}
+		// Classify status and determine if we should terminate
+		isTerminal, classifyErr := classifyStatus(fr, opts, &successStreak, allowedTransient)
+		if isTerminal {
+			return fr, classifyErr // Early return: terminal state (success or failure)
 		}
 
-		// Progress callback throttling
-		if opts.ProgressSink != nil && opts.ProgressInterval > 0 {
-			if lastProgress.IsZero() || time.Since(lastProgress) >= opts.ProgressInterval {
-				nextPoll := opts.Interval.NextPoll(attempt)
-				opts.ProgressSink(anyFetchResult(fr), ProgressMeta{
-					Attempt:    attempt,
-					Elapsed:    time.Since(start),
-					Remaining:  maxDuration(0, time.Until(deadline)), // time.Until for clarity
-					Deadline:   deadline,
-					NextPollIn: nextPoll,
-				})
-				lastProgress = time.Now()
-			}
+		// Handle progress reporting
+		handleProgressReport(opts, fr, start, deadline, attempt, &lastProgress)
+
+		// Sleep until next attempt, with context cancellation check
+		if err := sleepWithContext(ctx, opts.Interval.NextPoll(attempt)); err != nil {
+			return last, err // Early return: context cancelled during sleep
 		}
 
-		// Sleep until next attempt
-		sleep := opts.Interval.NextPoll(attempt)
-		if sleep > 0 {
-			timer := time.NewTimer(sleep)
-			select {
-			case <-ctx.Done():
-				timer.Stop()
-				return last, ctx.Err()
-			case <-timer.C:
-			}
-		}
 		attempt++
 	}
 }
@@ -197,14 +171,101 @@ func anyFetchResult[T any](fr FetchResult[T]) FetchResult[any] {
 	return FetchResult[any]{Status: fr.Status, Value: any(fr.Value)}
 }
 
-// contains tests membership in a slice of Status.
-func contains(haystack []Status, needle Status) bool {
-	return slices.Contains(haystack, needle)
-}
-
 func maxDuration(a, b time.Duration) time.Duration {
 	if a > b {
 		return a
 	}
 	return b
+}
+
+// validateOptions performs early validation of required options.
+func validateOptions[T any](opts Options[T]) error {
+	if opts.Timeout <= 0 {
+		return errors.New("actionwait: Timeout must be > 0")
+	}
+	if len(opts.SuccessStates) == 0 {
+		return errors.New("actionwait: at least one SuccessState required")
+	}
+	if opts.ConsecutiveSuccess < 0 {
+		return errors.New("actionwait: ConsecutiveSuccess cannot be negative")
+	}
+	if opts.ProgressInterval < 0 {
+		return errors.New("actionwait: ProgressInterval cannot be negative")
+	}
+	return nil
+}
+
+// normalizeOptions sets defaults for optional configuration.
+func normalizeOptions[T any](opts *Options[T]) {
+	if opts.ConsecutiveSuccess <= 0 {
+		opts.ConsecutiveSuccess = 1
+	}
+	if opts.Interval == nil {
+		opts.Interval = FixedInterval(DefaultPollInterval)
+	}
+}
+
+// classifyStatus determines the next action based on the current status.
+// Returns: (isTerminal, error) - if isTerminal is true, polling should stop.
+func classifyStatus[T any](fr FetchResult[T], opts Options[T], successStreak *int, allowedTransient []Status) (bool, error) {
+	// Classification precedence: failure -> success -> transitional -> unexpected
+	if slices.Contains(opts.FailureStates, fr.Status) {
+		return true, &FailureStateError{Status: fr.Status}
+	}
+
+	if slices.Contains(opts.SuccessStates, fr.Status) {
+		*successStreak++
+		if *successStreak >= opts.ConsecutiveSuccess {
+			return true, nil // Success!
+		}
+		return false, nil // Continue polling for consecutive successes
+	}
+
+	// Not a success state, reset streak
+	*successStreak = 0
+
+	// Check if transitional state is allowed
+	// If TransitionalStates is specified, status must be in that list
+	// If TransitionalStates is empty, any non-success/non-failure state is allowed
+	if len(opts.TransitionalStates) > 0 && !slices.Contains(opts.TransitionalStates, fr.Status) {
+		return true, &UnexpectedStateError{Status: fr.Status, Allowed: allowedTransient}
+	}
+
+	return false, nil // Continue polling
+}
+
+// handleProgressReport sends progress updates if conditions are met.
+func handleProgressReport[T any](opts Options[T], fr FetchResult[T], start time.Time, deadline time.Time, attempt uint, lastProgress *time.Time) {
+	if opts.ProgressSink == nil || opts.ProgressInterval <= 0 {
+		return
+	}
+
+	if lastProgress.IsZero() || time.Since(*lastProgress) >= opts.ProgressInterval {
+		nextPoll := opts.Interval.NextPoll(attempt)
+		opts.ProgressSink(anyFetchResult(fr), ProgressMeta{
+			Attempt:    attempt,
+			Elapsed:    time.Since(start),
+			Remaining:  maxDuration(0, time.Until(deadline)),
+			Deadline:   deadline,
+			NextPollIn: nextPoll,
+		})
+		*lastProgress = time.Now()
+	}
+}
+
+// sleepWithContext sleeps for the specified duration while respecting context cancellation.
+func sleepWithContext(ctx context.Context, duration time.Duration) error {
+	if duration <= 0 {
+		return nil
+	}
+
+	timer := time.NewTimer(duration)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
