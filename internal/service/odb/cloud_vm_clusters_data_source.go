@@ -37,7 +37,7 @@ func (d *dataSourceCloudVmClustersList) Schema(ctx context.Context, req datasour
 			"cloud_vm_clusters": schema.ListAttribute{
 				Computed:    true,
 				Description: "List of Cloud VM Clusters. It returns only basic information about the cloud VM clusters.",
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudAutonomousVmClusterSummary](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudVmClusterSummary](ctx),
 			},
 		},
 	}

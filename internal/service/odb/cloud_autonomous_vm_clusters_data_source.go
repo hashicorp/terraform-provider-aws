@@ -46,7 +46,7 @@ func (d *dataSourceCloudAutonomousVmClustersList) Schema(ctx context.Context, re
 // Data sources only have a read method.
 func (d *dataSourceCloudAutonomousVmClustersList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ODBClient(ctx)
-	var data cloudExadataInfrastructuresListDataSourceModel
+	var data cloudAutonomousVmClusterListModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
