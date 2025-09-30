@@ -7,6 +7,7 @@ BREAKING CHANGES:
 FEATURES:
 
 * **New Action:** `aws_codebuild_start_build` ([#44444](https://github.com/hashicorp/terraform-provider-aws/issues/44444))
+* **New Action:** `aws_events_put_events` ([#44487](https://github.com/hashicorp/terraform-provider-aws/issues/44487))
 * **New Action:** `aws_sfn_start_execution` ([#44464](https://github.com/hashicorp/terraform-provider-aws/issues/44464))
 * **New Data Source:** `aws_appconfig_application` ([#44168](https://github.com/hashicorp/terraform-provider-aws/issues/44168))
 * **New Data Source:** `aws_odb_db_node` ([#43792](https://github.com/hashicorp/terraform-provider-aws/issues/43792))
