@@ -209,16 +209,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
 			Name:     "{{ .Name }}",
-			{{- if .TransparentTagging }}
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				{{- if ne .TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
-				{{- end }}
-				{{- if ne .TagsResourceType "" }}
-				ResourceType: "{{ .TagsResourceType }}",
-				{{- end }}
-			}),
-			{{- end }}
+			{{- template "TransparentTagging" . -}}
 			{{- if $value.RegionOverrideDeprecated }}
 				Region: inttypes.ResourceRegionDeprecatedOverride(),
 			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
