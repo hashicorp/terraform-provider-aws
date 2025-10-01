@@ -62,6 +62,10 @@ type ServicePackageResourceTags struct {
 	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
 }
 
+func ResourceTagsInline() ServicePackageResourceTags {
+	return ServicePackageResourceTags{}
+}
+
 // ServicePackageAction represents a Terraform Plugin Framework action
 // implemented by a service package.
 type ServicePackageAction struct {
