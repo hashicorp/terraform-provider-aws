@@ -3345,7 +3345,7 @@ func testAccEndpointConfig_mySQLSourceSettingsBlock(eventPollInterval int) strin
 `, eventPollInterval)
 }
 
-func testAccEndpointConfig_dmsCertificateBase(rName string) string {
+func testAccEndpointConfig_certificateBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id  = %[1]q
@@ -3359,7 +3359,7 @@ func testAccEndpointConfig_mySQLSourceSettings(rName string, outputMySQLSettings
 	if outputMySQLSettings {
 		mysqlSettings = testAccEndpointConfig_mySQLSourceSettingsBlock(eventPollInterval)
 	}
-	return acctest.ConfigCompose(testAccEndpointConfig_dmsCertificateBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_certificateBase(rName), fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
@@ -3418,7 +3418,7 @@ func testAccEndpointConfig_mySQLTargetSettings(rName string, outputMySQLSettings
 	if outputMySQLSettings {
 		mysqlSettings = testAccEndpointConfig_mySQLTargetSettingsBlock(executeTimeout)
 	}
-	return acctest.ConfigCompose(testAccEndpointConfig_dmsCertificateBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_certificateBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   certificate_arn             = aws_dms_certificate.dms_certificate.certificate_arn
   endpoint_id                 = %[1]q
