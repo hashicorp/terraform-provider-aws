@@ -27,6 +27,8 @@ ENHANCEMENTS:
 * resource/aws_connect_instance: Add resource identity support ([#44346](https://github.com/hashicorp/terraform-provider-aws/issues/44346))
 * resource/aws_connect_phone_number: Add resource identity support ([#44365](https://github.com/hashicorp/terraform-provider-aws/issues/44365))
 * resource/aws_dsql_cluster: Adds attribute `force_destroy`. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
+* resource/aws_ebs_volume: Update `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes ([#44514](https://github.com/hashicorp/terraform-provider-aws/issues/44514))
+* resource/aws_networkfirewall_logging_configuration: Add `enable_monitoring_dashboard` argument ([#44515](https://github.com/hashicorp/terraform-provider-aws/issues/44515))
 * resource/aws_opensearch_domain: Add `aiml_options` argument ([#44417](https://github.com/hashicorp/terraform-provider-aws/issues/44417))
 * resource/aws_pinpointsmsvoicev2_phone_number: Update `two_way_channel_arn` argument to accept `connect.[region].amazonaws.com` in addition to ARNs ([#44372](https://github.com/hashicorp/terraform-provider-aws/issues/44372))
 * resource/aws_rds_proxy: Add `default_auth_scheme` argument ([#44309](https://github.com/hashicorp/terraform-provider-aws/issues/44309))
