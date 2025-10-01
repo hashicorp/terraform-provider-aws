@@ -22,6 +22,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"updateDisplayName":  testAccContact_updateDisplayName,
 			"tags":               testAccSSMContactsContact_tagsSerial,
 			"updateType":         testAccContact_updateType,
+			"oncallSchedule":     testAccContact_oncallSchedule,
 		},
 		"ContactDataSource": {
 			acctest.CtBasic: testAccContactDataSource_basic,

@@ -241,6 +241,58 @@ func testAccContact_updateDisplayName(t *testing.T) {
 	})
 }
 
+func testAccContact_oncallSchedule(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssmcontacts_contact.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccContactPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContactConfig_oncallSchedule(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContactExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ONCALL_SCHEDULE"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_ids.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`contact/.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccContactConfig_oncallScheduleUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContactExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ONCALL_SCHEDULE"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_ids.#", "2"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`contact/.+$`)),
+				),
+			},
+			{
+				Config: testAccContactConfig_none(),
+				Check:  testAccCheckContactDestroy(ctx),
+			},
+		},
+	})
+}
+
+
 func testAccCheckContactDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
@@ -382,4 +434,106 @@ resource "aws_ssmcontacts_contact" "contact_one" {
   depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias, displayName))
+}
+
+func testAccContactConfig_oncallSchedule(alias string) string {
+	return acctest.ConfigCompose(
+		testAccContactConfig_base(),
+		fmt.Sprintf(`
+resource "aws_ssmcontacts_contact" "test_contact" {
+  alias = "%[1]s-contact"
+  type  = "PERSONAL"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+
+resource "aws_ssmcontacts_rotation" "test" {
+  contact_ids = [aws_ssmcontacts_contact.test_contact.arn]
+  name        = %[1]q
+  recurrence {
+    number_of_on_calls    = 1
+    recurrence_multiplier = 1
+    daily_settings {
+      hour_of_day    = 9
+      minute_of_hour = 0
+    }
+  }
+  time_zone_id = "America/Los_Angeles"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+
+resource "aws_ssmcontacts_contact" "test" {
+  alias        = %[1]q
+  display_name = %[1]q
+  type         = "ONCALL_SCHEDULE"
+  rotation_ids = [aws_ssmcontacts_rotation.test.arn]
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+`, alias))
+}
+
+func testAccContactConfig_oncallScheduleUpdated(alias string) string {
+	return acctest.ConfigCompose(
+		testAccContactConfig_base(),
+		fmt.Sprintf(`
+resource "aws_ssmcontacts_contact" "test_contact" {
+  alias = "%[1]s-contact"
+  type  = "PERSONAL"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+
+resource "aws_ssmcontacts_contact" "test_contact_2" {
+  alias = "%[1]s-contact-2"
+  type  = "PERSONAL"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+
+resource "aws_ssmcontacts_rotation" "test" {
+  contact_ids = [aws_ssmcontacts_contact.test_contact.arn]
+  name        = %[1]q
+  recurrence {
+    number_of_on_calls    = 1
+    recurrence_multiplier = 1
+    daily_settings {
+      hour_of_day    = 9
+      minute_of_hour = 0
+    }
+  }
+  time_zone_id = "America/Los_Angeles"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+
+resource "aws_ssmcontacts_rotation" "test_2" {
+  contact_ids = [aws_ssmcontacts_contact.test_contact_2.arn]
+  name        = "%[1]s-2"
+  recurrence {
+    number_of_on_calls    = 1
+    recurrence_multiplier = 1
+    daily_settings {
+      hour_of_day    = 14
+      minute_of_hour = 30
+    }
+  }
+  time_zone_id = "America/New_York"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+
+resource "aws_ssmcontacts_contact" "test" {
+  alias        = %[1]q
+  display_name = %[1]q
+  type         = "ONCALL_SCHEDULE"
+  rotation_ids = [
+    aws_ssmcontacts_rotation.test.arn,
+    aws_ssmcontacts_rotation.test_2.arn
+  ]
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+`, alias))
 }

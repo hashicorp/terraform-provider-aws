@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,6 +50,13 @@ func ResourceContact() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"rotation_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -68,12 +76,23 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
+	contactType := types.ContactType(d.Get(names.AttrType).(string))
+
 	input := &ssmcontacts.CreateContactInput{
 		Alias:       aws.String(d.Get(names.AttrAlias).(string)),
 		DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
-		Plan:        &types.Plan{Stages: []types.Stage{}},
 		Tags:        getTagsIn(ctx),
-		Type:        types.ContactType(d.Get(names.AttrType).(string)),
+		Type:        contactType,
+	}
+
+	if contactType == types.ContactTypeOncallSchedule {
+		plan := &types.Plan{}
+		if v, ok := d.GetOk("rotation_ids"); ok {
+			plan.RotationIds = flex.ExpandStringValueList(v.([]any))
+		}
+		input.Plan = plan
+	} else {
+		input.Plan = &types.Plan{Stages: []types.Stage{}}
 	}
 
 	output, err := client.CreateContact(ctx, input)
@@ -117,10 +136,23 @@ func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
-	if d.HasChanges(names.AttrDisplayName) {
+	if d.HasChanges(names.AttrDisplayName, "rotation_ids") {
+		contactType := types.ContactType(d.Get(names.AttrType).(string))
+
 		in := &ssmcontacts.UpdateContactInput{
-			ContactId:   aws.String(d.Id()),
-			DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
+			ContactId: aws.String(d.Id()),
+		}
+
+		if d.HasChange(names.AttrDisplayName) {
+			in.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
+		}
+
+		if d.HasChange("rotation_ids") && contactType == types.ContactTypeOncallSchedule {
+			plan := &types.Plan{}
+			if v, ok := d.GetOk("rotation_ids"); ok {
+				plan.RotationIds = flex.ExpandStringValueList(v.([]any))
+			}
+			in.Plan = plan
 		}
 
 		_, err := conn.UpdateContact(ctx, in)
