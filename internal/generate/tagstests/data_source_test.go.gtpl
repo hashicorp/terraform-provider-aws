@@ -288,11 +288,12 @@ func {{ template "testname" . }}_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 
 {{ if .OverrideIdentifier }}
 func {{ template "expectFullDataSourceTags" . }}(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
-		{{ if ne .OverrideResourceType "" -}}
-		ResourceType:        "{{ .OverrideResourceType }}",
-		{{- end }}
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(
+		{{- if .OverrideResourceType -}}
+			inttypes.ResourceTagsTypeAndAttribute("{{ .OverrideResourceType }}", {{ .OverrideIdentifierAttribute }})
+		{{- else -}}
+			inttypes.ResourceTagsAttribute({{ .OverrideIdentifierAttribute }})
+		{{- end -}}
+	), knownValue)
 }
 {{ end }}

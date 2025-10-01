@@ -227,8 +227,5 @@ func TestAccIAMPolicyDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T
 }
 
 func expectFullPolicyDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrARN,
-		ResourceType:        "Policy",
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsTypeAndAttribute("Policy", names.AttrARN)), knownValue)
 }

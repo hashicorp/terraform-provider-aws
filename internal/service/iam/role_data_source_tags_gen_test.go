@@ -227,8 +227,5 @@ func TestAccIAMRoleDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) 
 }
 
 func expectFullRoleDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrName,
-		ResourceType:        "Role",
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsTypeAndAttribute("Role", names.AttrName)), knownValue)
 }

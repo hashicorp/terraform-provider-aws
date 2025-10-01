@@ -2375,8 +2375,5 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 }
 
 func expectFullPortfolioResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrID,
-		ResourceType:        "Portfolio",
-	}), knownValue)
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsTypeAndAttribute("Portfolio", names.AttrID)), knownValue)
 }
