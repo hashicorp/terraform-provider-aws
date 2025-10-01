@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -39,16 +40,46 @@ func resourceServiceSpecificCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"create_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"credential_age_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1, 36600),
+			},
+			"expiration_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"service_credential_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"service_credential_secret": {
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
+			},
 			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrUserName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+			"service_password": {
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
+			},
+			"service_specific_credential_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"service_user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrStatus: {
 				Type:             schema.TypeString,
@@ -56,18 +87,11 @@ func resourceServiceSpecificCredential() *schema.Resource {
 				Default:          awstypes.StatusTypeActive,
 				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
 			},
-			"service_password": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Computed:  true,
-			},
-			"service_user_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_specific_credential_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+			names.AttrUserName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 		},
 	}
@@ -83,6 +107,10 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 		UserName:    aws.String(userName),
 	}
 
+	if v, ok := d.GetOk("credential_age_days"); ok {
+		input.CredentialAgeDays = aws.Int32(int32(v.(int)))
+	}
+
 	output, err := conn.CreateServiceSpecificCredential(ctx, &input)
 
 	if err != nil {
@@ -92,6 +120,7 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 	cred := output.ServiceSpecificCredential
 	credID := aws.ToString(cred.ServiceSpecificCredentialId)
 	d.SetId(serviceSpecificCredentialCreateResourceID(serviceName, userName, credID))
+	d.Set("service_credential_secret", cred.ServiceCredentialSecret)
 	d.Set("service_password", cred.ServicePassword)
 
 	if v, ok := d.GetOk(names.AttrStatus); ok && awstypes.StatusType(v.(string)) != awstypes.StatusTypeActive {
@@ -134,6 +163,11 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Specific Credential (%s): %s", d.Id(), err)
 	}
 
+	d.Set("create_date", cred.CreateDate.Format(time.RFC3339))
+	if cred.ExpirationDate != nil {
+		d.Set("expiration_date", cred.ExpirationDate.Format(time.RFC3339))
+	}
+	d.Set("service_credential_alias", cred.ServiceCredentialAlias)
 	d.Set(names.AttrServiceName, cred.ServiceName)
 	d.Set("service_specific_credential_id", cred.ServiceSpecificCredentialId)
 	d.Set("service_user_name", cred.ServiceUserName)
