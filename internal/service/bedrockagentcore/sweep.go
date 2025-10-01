@@ -34,7 +34,7 @@ func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 		}
 
 		for _, v := range page.AgentRuntimes {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAgentRuntime, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAgentRuntimeResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.AgentRuntimeId))),
 			)
 		}

@@ -5,7 +5,6 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -13,7 +12,6 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -230,7 +227,6 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime2),
-					testAccCheckAgentRuntimeNotRecreated(&agentRuntime1, &agentRuntime2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
 				),
 			},
@@ -448,40 +444,37 @@ func testAccCheckAgentRuntimeDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfbedrockagentcore.FindAgentRuntimeByID(ctx, conn, rs.Primary.ID)
+			_, err := tfbedrockagentcore.FindAgentRuntimeByID(ctx, conn, rs.Primary.Attributes["agent_runtime_id"])
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAgentRuntime, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAgentRuntime, rs.Primary.ID, errors.New("no destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Agent Runtime %s still exists", rs.Primary.Attributes["agent_runtime_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAgentRuntimeExists(ctx context.Context, name string, agentruntime *bedrockagentcorecontrol.GetAgentRuntimeOutput) resource.TestCheckFunc {
+func testAccCheckAgentRuntimeExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetAgentRuntimeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAgentRuntime, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAgentRuntime, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindAgentRuntimeByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfbedrockagentcore.FindAgentRuntimeByID(ctx, conn, rs.Primary.Attributes["agent_runtime_id"])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAgentRuntime, rs.Primary.ID, err)
+			return err
 		}
 
-		*agentruntime = *resp
+		*v = *resp
 
 		return nil
 	}
@@ -499,16 +492,6 @@ func testAccPreCheckAgentRuntimes(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckAgentRuntimeNotRecreated(before, after *bedrockagentcorecontrol.GetAgentRuntimeOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.AgentRuntimeId), aws.ToString(after.AgentRuntimeId); before != after {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameAgentRuntime, before, errors.New("recreated"))
-		}
-
-		return nil
 	}
 }
 

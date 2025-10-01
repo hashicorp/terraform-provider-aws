@@ -54,10 +54,10 @@ resource "aws_iam_role_policy" "example" {
 }
 
 resource "aws_bedrockagentcore_agent_runtime" "example" {
-  name     = "example-agent-runtime"
-  role_arn = aws_iam_role.example.arn
+  agent_runtime_name = "example-agent-runtime"
+  role_arn           = aws_iam_role.example.arn
 
-  artifact {
+  agent_runtime_artifact {
     container_configuration {
       container_uri = "${aws_ecr_repository.example.repository_url}:latest"
     }
@@ -73,11 +73,11 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 
 ```terraform
 resource "aws_bedrockagentcore_agent_runtime" "example" {
-  name        = "example-agent-runtime"
-  description = "Agent runtime with JWT authorization"
-  role_arn    = aws_iam_role.example.arn
+  agent_runtime_name = "example-agent-runtime"
+  description        = "Agent runtime with JWT authorization"
+  role_arn           = aws_iam_role.example.arn
 
-  artifact {
+  agent_runtime_artifact {
     container_configuration {
       container_uri = "${aws_ecr_repository.example.repository_url}:v1.0"
     }
@@ -110,9 +110,9 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the agent runtime.
+* `agent_runtime_name` - (Required) Name of the agent runtime.
 * `role_arn` - (Required) ARN of the IAM role that the agent runtime assumes to access AWS services.
-* `artifact` - (Required) Container artifact configuration. See [`artifact`](#artifact) below.
+* `agent_runtime_artifact` - (Required) Container artifact configuration. See [`agent_runtime_artifact`](#agent-runtime-artifact) below.
 * `network_configuration` - (Required) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration) below.
 
 The following arguments are optional:
@@ -120,13 +120,13 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the agent runtime.
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
-* `client_token` - (Optional) Unique identifier for request idempotency. If not provided, one will be generated automatically.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `artifact`
+### `agent_runtime_artifact`
 
-The `artifact` block supports the following:
+The `agent_runtime_artifact` block supports the following:
 
 * `container_configuration` - (Required) Container configuration block. See [`container_configuration`](#container_configuration) below.
 
@@ -166,9 +166,10 @@ The `protocol_configuration` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Agent Runtime.
-* `id` - Unique identifier of the Agent Runtime.
-* `version` - Version of the Agent Runtime.
+* `agent_runtime_arn` - ARN of the Agent Runtime.
+* `agent_runtime_id` - Unique identifier of the Agent Runtime.
+* `agent_runtime_version` - Version of the Agent Runtime.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `workload_identity_details` - Workload identity details for the agent runtime. See [`workload_identity_details`](#workload_identity_details) below.
 
 ### `workload_identity_details`
