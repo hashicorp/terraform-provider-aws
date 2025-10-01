@@ -180,7 +180,7 @@ func TestAccODBCloudVmClusterReal_basic(t *testing.T) {
 	}
 	var cloudvmcluster1 odbtypes.CloudVmCluster
 	var cloudvmcluster2 odbtypes.CloudVmCluster
-	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	vmcDisplayName := sdkacctest.RandomWithPrefix("tf-real")
 	resourceName := "aws_odb_cloud_vm_cluster.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -482,7 +482,7 @@ resource "aws_odb_network" "test" {
 }
 
 func (cloudVmClusterResourceTest) cloudVmClusterReal(vmClusterDisplayName, sshKey string) (string, string) {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix("Oreal-exa")
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix("tf-real")
 	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
