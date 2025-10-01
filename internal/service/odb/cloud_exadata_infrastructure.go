@@ -53,8 +53,6 @@ const (
 	ResNameCloudExadataInfrastructure = "Cloud Exadata Infrastructure"
 )
 
-var ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
-
 type resourceCloudExadataInfrastructure struct {
 	framework.ResourceWithModel[cloudExadataInfrastructureResourceModel]
 	framework.WithTimeouts
@@ -379,7 +377,7 @@ func (r *resourceCloudExadataInfrastructure) Read(ctx context.Context, req resou
 		return
 	}
 
-	out, err := FindExadataInfraResourceByID(ctx, conn, state.CloudExadataInfrastructureId.ValueString())
+	out, err := findExadataInfraResourceByID(ctx, conn, state.CloudExadataInfrastructureId.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -536,7 +534,7 @@ func waitCloudExadataInfrastructureDeleted(ctx context.Context, conn *odb.Client
 
 func statusCloudExadataInfrastructure(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindExadataInfraResourceByID(ctx, conn, id)
+		out, err := findExadataInfraResourceByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -549,7 +547,7 @@ func statusCloudExadataInfrastructure(ctx context.Context, conn *odb.Client, id 
 	}
 }
 
-func FindExadataInfraResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudExadataInfrastructure, error) {
+func findExadataInfraResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudExadataInfrastructure, error) {
 	input := odb.GetCloudExadataInfrastructureInput{
 		CloudExadataInfrastructureId: aws.String(id),
 	}
