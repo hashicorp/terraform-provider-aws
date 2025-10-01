@@ -584,23 +584,23 @@ resource "aws_ecs_capacity_provider" "test" {
 }
 
 func testAccCapacityProviderConfig_bothProviders(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = "dummy"
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn = "arn:aws:autoscaling:us-west-2:000000000000:autoScalingGroup:a4536b1a-b122-49ef-918f-bfaed967ccfa:autoScalingGroupName/dummy"
+    auto_scaling_group_arn = "arn:${data.aws_partition.current.partition}:autoscaling:${data.aws_region.current.region}:000000000000:autoScalingGroup:a4536b1a-b122-49ef-918f-bfaed967ccfa:autoScalingGroupName/dummy"
   }
 
   managed_instances_provider {
-    infrastructure_role_arn = "arn:aws:iam::000000000000:role/dummy"
+    infrastructure_role_arn = "arn:${data.aws_partition.current.partition}:iam::000000000000:role/dummy"
 
     instance_launch_template {
-      ec2_instance_profile_arn = "arn:aws:iam::000000000000:instance-profile/dummy"
+      ec2_instance_profile_arn = "arn:${data.aws_partition.current.partition}:iam::000000000000:instance-profile/dummy"
 
       network_configuration {
         subnets = ["subnet-0b48066557a0e97ac"]
@@ -618,38 +618,37 @@ resource "aws_ecs_capacity_provider" "test" {
     }
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccCapacityProviderConfig_autoScalingGroups_withCluster(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
 resource "aws_ecs_capacity_provider" "test" {
   name    = %[1]q
   cluster = "dummy"
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn = "arn:aws:autoscaling:us-west-2:000000000000:autoScalingGroup:a4536b1a-b122-49ef-918f-bfaed967ccfa:autoScalingGroupName/dummy"
+    auto_scaling_group_arn = "arn:${data.aws_partition.current.partition}:autoscaling:${data.aws_region.current.region}:000000000000:autoScalingGroup:a4536b1a-b122-49ef-918f-bfaed967ccfa:autoScalingGroupName/dummy"
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccCapacityProviderConfig_managedInstances_withoutCluster(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
   managed_instances_provider {
-    infrastructure_role_arn = "arn:aws:iam::000000000000:role/dummy"
+    infrastructure_role_arn = "arn:${data.aws_partition.current.partition}:iam::000000000000:role/dummy"
 
     instance_launch_template {
-      ec2_instance_profile_arn = "arn:aws:iam::000000000000:instance-profile/dummy"
+      ec2_instance_profile_arn = "arn:${data.aws_partition.current.partition}:iam::000000000000:instance-profile/dummy"
 
       network_configuration {
         subnets = ["subnet-0b48066557a0e97ac"]
@@ -667,7 +666,7 @@ resource "aws_ecs_capacity_provider" "test" {
     }
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccCapacityProviderConfig_noProviders(rName string) string {
