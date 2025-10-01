@@ -230,7 +230,5 @@ func testAccGuardDutyDetectorDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *t
 }
 
 func expectFullDetectorDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfguardduty.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrARN,
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfguardduty.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)), knownValue)
 }

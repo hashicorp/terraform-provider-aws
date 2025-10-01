@@ -3279,11 +3279,12 @@ func testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(
 
 {{ if .OverrideIdentifier }}
 func {{ template "expectFullResourceTags" . }}(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
-		{{ if ne .OverrideResourceType "" -}}
-		ResourceType:        "{{ .OverrideResourceType }}",
-		{{- end }}
-	}), knownValue)
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(
+		{{- if .OverrideResourceType -}}
+			inttypes.ResourceTagsTypeAndAttribute("{{ .OverrideResourceType }}", {{ .OverrideIdentifierAttribute }})
+		{{- else -}}
+			inttypes.ResourceTagsAttribute({{ .OverrideIdentifierAttribute }})
+		{{- end -}}
+	), knownValue)
 }
 {{ end }}
