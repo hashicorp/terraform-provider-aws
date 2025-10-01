@@ -14,10 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -243,7 +245,27 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateAgentRuntime(ctx, &input)
+	var (
+		out *bedrockagentcorecontrol.CreateAgentRuntimeOutput
+		err error
+	)
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		out, err = conn.CreateAgentRuntime(ctx, &input)
+
+		// IAM propagation.
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Role validation failed") {
+			return tfresource.RetryableError(err)
+		}
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Access denied while validating ECR URI") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.AgentRuntimeName.String())
 		return
@@ -367,6 +389,10 @@ func (r *agentRuntimeResource) Delete(ctx context.Context, request resource.Dele
 	}
 }
 
+func (r *agentRuntimeResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("agent_runtime_id"), request, response)
+}
+
 func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusCreating),
@@ -471,7 +497,7 @@ type agentRuntimeResourceModel struct {
 	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]    `tfsdk:"authorizer_configuration"`
 	Description                types.String                                                     `tfsdk:"description"`
 	EnvironmentVariables       fwtypes.MapOfString                                              `tfsdk:"environment_variables"`
-	NetworkConfiguration       fwtypes.ObjectValueOf[networkConfigurationModel]                 `tfsdk:"network_configuration"`
+	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
 	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
 	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
 	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`

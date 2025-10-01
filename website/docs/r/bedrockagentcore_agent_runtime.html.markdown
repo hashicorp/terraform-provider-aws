@@ -63,7 +63,7 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
     }
   }
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 }
@@ -96,7 +96,7 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
     }
   }
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 
@@ -152,7 +152,7 @@ The `custom_jwt_authorizer` block supports the following:
 
 ### `network_configuration`
 
-The `network_configuration` object supports the following:
+The `network_configuration` block supports the following:
 
 * `network_mode` - (Required) Network mode for the agent runtime. Valid values: `PUBLIC`.
 
@@ -188,17 +188,17 @@ The `workload_identity_details` block contains the following:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Agent Runtime using `agent_runtime_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Agent Runtime using `agent_runtime_id`. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_agent_runtime.example
-  id = "arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/example-agent-runtime"
+  id = "agent-runtime-12345"
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Agent Runtime using `agent_runtime_arn`. For example:
+Using `terraform import`, import Bedrock AgentCore Agent Runtime using `agent_runtime_id`. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_agent_runtime.example arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/example-agent-runtime
+% terraform import aws_bedrockagentcore_agent_runtime.example agent-runtime-12345
 ```
