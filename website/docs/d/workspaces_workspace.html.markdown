@@ -6,7 +6,7 @@ description: |-
   Get information about a WorkSpace in AWS Workspaces Service.
 ---
 
-# Resource: aws_workspaces_workspace
+# Data Source: aws_workspaces_workspace
 
 Use this data source to get information about a workspace in [AWS Workspaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service.
 

@@ -65,7 +65,7 @@ resource "aws_organizations_organizational_unit" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Organizations Organizational Units using the `id`. For example:
 

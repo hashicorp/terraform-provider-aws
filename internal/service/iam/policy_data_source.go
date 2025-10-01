@@ -113,7 +113,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 		func(ctx context.Context) (*awstypes.PolicyVersion, error) {
-			return findPolicyVersion(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
+			return findPolicyVersionByTwoPartKey(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
 		},
 	)
 
