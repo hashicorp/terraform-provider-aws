@@ -74,7 +74,7 @@ type fuzzyFieldFinder struct {
 	suffixRecursionDepth int
 }
 
-func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) {
+func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) { //nolint:unparam
 	// first precedence is exact match (case sensitive)
 	if fieldTo, ok := typeTo.FieldByName(fieldNameFrom); ok {
 		return fieldTo, true
