@@ -6,10 +6,10 @@ package odb
 import (
 	"context"
 	"errors"
-	"github.com/YakDriver/regexache"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
