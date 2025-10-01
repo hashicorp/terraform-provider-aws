@@ -35,10 +35,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceReportDefinition,
 			TypeName: "aws_cur_report_definition",
 			Name:     "Report Definition",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "report_name",
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("report_name")),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }
@@ -49,10 +47,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReportDefinition,
 			TypeName: "aws_cur_report_definition",
 			Name:     "Report Definition",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "report_name",
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("report_name")),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }

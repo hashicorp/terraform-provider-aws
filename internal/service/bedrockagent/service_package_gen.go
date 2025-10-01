@@ -37,10 +37,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAgentResource,
 			TypeName: "aws_bedrockagent_agent",
 			Name:     "Agent",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "agent_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("agent_arn")),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newAgentActionGroupResource,
@@ -52,10 +50,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAgentAliasResource,
 			TypeName: "aws_bedrockagent_agent_alias",
 			Name:     "Agent Alias",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "agent_alias_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("agent_alias_arn")),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newAgentCollaboratorResource,
@@ -79,28 +75,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newFlowResource,
 			TypeName: "aws_bedrockagent_flow",
 			Name:     "Flow",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newKnowledgeBaseResource,
 			TypeName: "aws_bedrockagent_knowledge_base",
 			Name:     "Knowledge Base",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newPromptResource,
 			TypeName: "aws_bedrockagent_prompt",
 			Name:     "Prompt",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

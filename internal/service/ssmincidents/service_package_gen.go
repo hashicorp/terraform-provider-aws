@@ -34,10 +34,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceReplicationSet,
 			TypeName: "aws_ssmincidents_replication_set",
 			Name:     "Replication Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourceResponsePlan,
@@ -54,19 +52,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReplicationSet,
 			TypeName: "aws_ssmincidents_replication_set",
 			Name:     "Replication Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceResponsePlan,
 			TypeName: "aws_ssmincidents_response_plan",
 			Name:     "Response Plan",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

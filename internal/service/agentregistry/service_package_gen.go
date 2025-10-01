@@ -28,10 +28,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newRegistryDataSource,
 			TypeName: "aws_agentregistry_registry",
 			Name:     "Registry",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "registry_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("registry_arn")),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -42,9 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newRegistryResource,
 			TypeName: "aws_agentregistry_registry",
 			Name:     "Registry",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "registry_arn",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("registry_arn")),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("registry_id", true)),
 			Import: inttypes.FrameworkImport{
@@ -60,9 +56,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newRegistryResourceAsListResource,
 			TypeName: "aws_agentregistry_registry",
 			Name:     "Registry",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "registry_arn",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("registry_arn")),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("registry_id", true)),
 		},

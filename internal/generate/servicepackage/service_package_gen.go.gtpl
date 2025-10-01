@@ -88,13 +88,13 @@ inttypes.StringIdentityAttribute(
 	Tags: unique.Make(
 		{{- if not (or .TagsIdentifierAttribute .TagsResourceType) -}}
 			inttypes.ResourceTagsInline()
-		{{- else -}}
+		{{- else if .TagsResourceType -}}
 			inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
-				{{- if .TagsResourceType }}
-					ResourceType: "{{ .TagsResourceType }}",
-				{{- end }}
+				ResourceType: "{{ .TagsResourceType }}",
 			}
+		{{- else -}}
+			inttypes.ResourceTagsAttribute({{ .TagsIdentifierAttribute }})
 		{{- end -}}
 	),
 {{- end }}
