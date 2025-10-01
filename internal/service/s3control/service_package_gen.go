@@ -165,7 +165,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceBucket,
 			TypeName: "aws_s3control_bucket",
 			Name:     "Bucket",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -218,7 +218,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceStorageLensConfiguration,
 			TypeName: "aws_s3control_storage_lens_configuration",
 			Name:     "Storage Lens Configuration",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
