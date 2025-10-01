@@ -6,7 +6,6 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -15,9 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
@@ -33,46 +36,43 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheckAgentRuntimes(ctx, t)
-			testAccAgentRuntimeImageVersionsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "artifact.0.container_configuration.0.container_uri", rImageUri),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.network_mode", "PUBLIC"),
-					resource.TestCheckResourceAttr(resourceName, "workload_identity_details.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "workload_identity_details.0.workload_identity_arn"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock-agentcore", regexache.MustCompile(`runtime/.+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("workload_identity_details"), knownvalue.ListSizeExact(1)),
+				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 		},
 	})
@@ -87,21 +87,20 @@ func TestAccBedrockAgentCoreAgentRuntime_full(t *testing.T) {
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheckAgentRuntimes(ctx, t)
-			testAccAgentRuntimeImageVersionsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -144,21 +143,20 @@ func TestAccBedrockAgentCoreAgentRuntime_disappears(t *testing.T) {
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheckAgentRuntimes(ctx, t)
-			testAccAgentRuntimeImageVersionsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -187,24 +185,23 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var agentRuntime1, agentRuntime2 bedrockagentcorecontrol.GetAgentRuntimeOutput
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheckAgentRuntimes(ctx, t)
-			testAccAgentRuntimeImageVersionsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -213,7 +210,7 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Initial description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime1),
+					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
 				),
 			},
@@ -226,7 +223,7 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime2),
+					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
 				),
 			},
@@ -243,21 +240,20 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheckAgentRuntimes(ctx, t)
-			testAccAgentRuntimeImageVersionsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -290,21 +286,20 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheckAgentRuntimes(ctx, t)
-			testAccAgentRuntimeImageVersionsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -349,21 +344,20 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheckAgentRuntimes(ctx, t)
-			testAccAgentRuntimeImageVersionsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -396,22 +390,21 @@ func TestAccBedrockAgentCoreAgentRuntime_artifact(t *testing.T) {
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUriV1 := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
-	rImageUriV2 := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
+	rImageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUriV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 			testAccPreCheckAgentRuntimes(ctx, t)
-			testAccAgentRuntimeImageVersionsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -495,16 +488,7 @@ func testAccPreCheckAgentRuntimes(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccAgentRuntimeImageVersionsPreCheck(t *testing.T) {
-	if os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI") == "" {
-		t.Skip("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI env var must be set for BedrockAgentCore Agent Runtime acceptance tests.")
-	}
-	if os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI") == "" {
-		t.Skip("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI env var must be set for BedrockAgentCore Agent Runtime acceptance tests.")
-	}
-}
-
-func testAccAgentRuntimeConfig_iamRole(rName string) string {
+func testAccAgentRuntimeConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test_assume" {
   statement {
@@ -552,18 +536,18 @@ resource "aws_iam_role_policy" "test2" {
 }
 
 func testAccAgentRuntimeConfig_basic(rName, rImageUri string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_iamRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
 
-  artifact {
+  agent_runtime_artifact {
     container_configuration {
       container_uri = %[2]q
     }
   }
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 }
@@ -571,19 +555,19 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 }
 
 func testAccAgentRuntimeConfig_description(rName, rImageUri, description string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_iamRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
-  name        = %[1]q
-  description = %[2]q
-  role_arn    = aws_iam_role.test.arn
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  description        = %[2]q
 
-  artifact {
+  agent_runtime_artifact {
     container_configuration {
       container_uri = %[3]q
     }
   }
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 }
@@ -591,22 +575,22 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 }
 
 func testAccAgentRuntimeConfig_environmentVariables(rName, rImageUri, envKey, envValue string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_iamRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
 
   environment_variables = {
     %[2]s = %[3]q
   }
 
-  artifact {
+  agent_runtime_artifact {
     container_configuration {
       container_uri = %[4]q
     }
   }
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 }
@@ -614,12 +598,12 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 }
 
 func testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2 string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_iamRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
 
-  artifact {
+  agent_runtime_artifact {
     container_configuration {
       container_uri = %[2]q
     }
@@ -633,7 +617,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     }
   }
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 }
@@ -641,18 +625,18 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 }
 
 func testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, serverProtocol string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_iamRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
 
-  artifact {
+  agent_runtime_artifact {
     container_configuration {
       container_uri = %[2]q
     }
   }
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 
@@ -664,17 +648,17 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 }
 
 func testAccAgentRuntimeConfig_full(rName, rImageUri, description string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_iamRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
-  name        = %[1]q
-  description = %[2]q
-  role_arn    = aws_iam_role.test.arn
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  description        = %[2]q
 
   environment_variables = {
     "TEST_ENV_KEY" = "test_env_value"
   }
 
-  artifact {
+  agent_runtime_artifact {
     container_configuration {
       container_uri = %[3]q
     }
@@ -688,7 +672,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     }
   }
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 
