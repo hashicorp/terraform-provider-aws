@@ -1272,7 +1272,7 @@ func testAccLoggingConfigurationConfig_s3AndCloudWatchEnableMonitoringDashboard(
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
-  
+
   enable_monitoring_dashboard = %[3]t
 
   logging_configuration {
