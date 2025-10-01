@@ -140,7 +140,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_codebuild_project",
 			Name:     "Project",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 	})

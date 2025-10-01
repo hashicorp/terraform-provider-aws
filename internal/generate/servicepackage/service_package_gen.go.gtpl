@@ -552,16 +552,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			{{- else if not $value.ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionNoPartitionValidation(),
 			{{- end }}
-			{{- if .TransparentTagging }}
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				{{- if ne .TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
-				{{- end }}
-				{{- if ne .TagsResourceType "" }}
-				ResourceType: "{{ .TagsResourceType }}",
-				{{- end }}
-			}),
-			{{- end }}
+			{{- template "TransparentTagging" . -}}
 			{{- if $value.HasResourceIdentity }}
 				Identity:
 				{{- if gt (len $value.IdentityAttributes) 1 }}
