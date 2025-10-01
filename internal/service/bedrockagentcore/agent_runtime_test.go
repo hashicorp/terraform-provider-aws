@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -188,68 +188,8 @@ func TestAccBedrockAgentCoreAgentRuntime_tags(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreAgentRuntime_full(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	resourceName := "aws_bedrockagentcore_agent_runtime.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckAgentRuntimes(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
-				Config: testAccAgentRuntimeConfig_full(rName, rImageUri, "full configuration test"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "full configuration test"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.TEST_ENV_KEY", "test_env_value"),
-					resource.TestCheckResourceAttr(resourceName, "artifact.0.container_configuration.0.container_uri", rImageUri),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.discovery_url", "https://accounts.google.com/.well-known/openid-configuration"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "test1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.*", "client-1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.*", "client-2"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.server_protocol", "HTTP"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
-			},
-		},
-	})
-}
-
 func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
@@ -265,32 +205,41 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
 			{
 				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Initial description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Initial description")),
+				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
 				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Updated description")),
+				},
 			},
 		},
 	})
@@ -298,10 +247,6 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 
 func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
@@ -318,25 +263,43 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
 				Config: testAccAgentRuntimeConfig_environmentVariables(rName, rImageUri, "ENV_KEY_1", "env_value_1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENV_KEY_1", "env_value_1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"ENV_KEY_1": knownvalue.StringExact("env_value_1"),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
 				Config: testAccAgentRuntimeConfig_environmentVariables(rName, rImageUri, "ENV_KEY_2", "env_value_2_updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENV_KEY_2", "env_value_2_updated"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"ENV_KEY_2": knownvalue.StringExact("env_value_2_updated"),
+					})),
+				},
 			},
 		},
 	})
@@ -344,10 +307,6 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 
 func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
@@ -364,37 +323,71 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
 				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://accounts.google.com/.well-known/openid-configuration", "weather", "sports", "client-999", "client-888"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.discovery_url", "https://accounts.google.com/.well-known/openid-configuration"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "weather"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "sports"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.*", "client-999"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.*", "client-888"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("sports"),
+										knownvalue.StringExact("weather"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-888"),
+										knownvalue.StringExact("client-999"),
+									}),
+									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
 				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "finance", "technology", "client-111", "client-222"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.discovery_url", "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "finance"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "technology"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.*", "client-111"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_clients.*", "client-222"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("finance"),
+										knownvalue.StringExact("technology"),
+									}),
+									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("client-111"),
+										knownvalue.StringExact("client-222"),
+									}),
+									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -402,10 +395,6 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 
 func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
@@ -422,25 +411,48 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
 				Config: testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, "HTTP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.server_protocol", "HTTP"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolHttp),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
 				Config: testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, "MCP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.server_protocol", "MCP"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolMcp),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -448,10 +460,6 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 
 func TestAccBedrockAgentCoreAgentRuntime_artifact(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
@@ -469,25 +477,56 @@ func TestAccBedrockAgentCoreAgentRuntime_artifact(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, "artifact.0.container_configuration.0.container_uri", rImageUriV1),
+					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_artifact"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"container_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"container_uri": knownvalue.StringExact(rImageUriV1),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
-					resource.TestCheckResourceAttr(resourceName, "artifact.0.container_configuration.0.container_uri", rImageUriV2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_artifact"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"container_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"container_uri": knownvalue.StringExact(rImageUriV2),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -757,40 +796,4 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, rImageUri, serverProtocol))
-}
-
-func testAccAgentRuntimeConfig_full(rName, rImageUri, description string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_agent_runtime" "test" {
-  agent_runtime_name = %[1]q
-  role_arn           = aws_iam_role.test.arn
-  description        = %[2]q
-
-  environment_variables = {
-    "TEST_ENV_KEY" = "test_env_value"
-  }
-
-  agent_runtime_artifact {
-    container_configuration {
-      container_uri = %[3]q
-    }
-  }
-
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["test1", "test2"]
-      allowed_clients  = ["client-1", "client-2"]
-    }
-  }
-
-  network_configuration {
-    network_mode = "PUBLIC"
-  }
-
-  protocol_configuration {
-    server_protocol = "HTTP"
-  }
-}
-`, rName, description, rImageUri))
 }
