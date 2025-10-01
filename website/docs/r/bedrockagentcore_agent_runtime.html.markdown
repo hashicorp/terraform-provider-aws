@@ -188,17 +188,17 @@ The `workload_identity_details` block contains the following:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Agent Runtime using the agent runtime ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Agent Runtime using `agent_runtime_arn`. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_agent_runtime.example
-  id = "AGENT1234567890"
+  id = "arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/example-agent-runtime"
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Agent Runtime using the agent runtime ID. For example:
+Using `terraform import`, import Bedrock AgentCore Agent Runtime using `agent_runtime_arn`. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_agent_runtime.example AGENT1234567890
+% terraform import aws_bedrockagentcore_agent_runtime.example arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/example-agent-runtime
 ```

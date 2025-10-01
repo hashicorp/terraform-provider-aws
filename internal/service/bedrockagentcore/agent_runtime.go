@@ -41,8 +41,9 @@ import (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_agent_runtime", name="Agent Runtime")
+// @ArnIdentity("agent_runtime_arn")
 // @Tags(identifierAttribute="agent_runtime_arn")
-// @Testing(tagsTest=false)
+// @Testing(tagsTest=false, hasNoPreExistingResource=true)
 func newAgentRuntimeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeResource{}
 
@@ -55,8 +56,8 @@ func newAgentRuntimeResource(_ context.Context) (resource.ResourceWithConfigure,
 
 type agentRuntimeResource struct {
 	framework.ResourceWithModel[agentRuntimeResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
-	framework.WithImportByID
 }
 
 func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -36,8 +35,8 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_basic(t *testing.T) {
 	var r1, r2 bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
-	imageUriV1 := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
-	imageUriV2 := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
+	imageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	imageUriV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -50,7 +49,7 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -95,7 +94,7 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_disappears(t *testing.T) {
 	var agentruntimeendpoint bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
-	imageUri := os.Getenv("AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	imageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -108,7 +107,7 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_iamRole(rName),
+				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Wait for IAM role and policy to propagate
 					acctest.CheckSleep(t, 5*time.Second),
@@ -194,8 +193,6 @@ func testAccCheckAgentRuntimeEndpointExists(ctx context.Context, name string, ag
 }
 
 func testAccAgentRuntimeEndpointPreCheck(ctx context.Context, t *testing.T) {
-	testAccAgentRuntimeImageVersionsPreCheck(t)
-
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.ListAgentRuntimeEndpointsInput{
