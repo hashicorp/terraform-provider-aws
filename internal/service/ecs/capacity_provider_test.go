@@ -643,7 +643,7 @@ func testAccCapacityProviderConfig_managedInstances_withoutCluster(rName string)
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name         = %[1]q
+  name = %[1]q
 
   managed_instances_provider {
     infrastructure_role_arn = "arn:aws:iam::000000000000:role/dummy"
