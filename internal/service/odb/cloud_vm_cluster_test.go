@@ -173,7 +173,7 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 	})
 }
 
-func TestAccODBCloudVmClusterReal_basic(t *testing.T) {
+func TestAccODBCloudVmCluster_real(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
