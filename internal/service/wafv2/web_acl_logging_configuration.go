@@ -49,8 +49,14 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 					MinItems: 1,
 					MaxItems: 100,
 					Elem: &schema.Schema{
-						Type:         schema.TypeString,
-						ValidateFunc: verify.ValidARN,
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							verify.ValidARN,
+							validation.StringMatch(
+								regexache.MustCompile(`^arn:.*:logs:.*:.*:log-group:aws-waf-logs-.*`),
+								"log destination name must begin with 'aws-waf-logs-'",
+							),
+						),
 					},
 					Description: "AWS Kinesis Firehose Delivery Stream ARNs",
 				},
