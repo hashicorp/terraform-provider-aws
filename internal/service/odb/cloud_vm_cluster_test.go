@@ -499,7 +499,7 @@ data "aws_odb_db_servers" "test" {
 resource "aws_odb_cloud_vm_cluster" "test" {
   display_name                    = %[3]q
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
-  cpu_core_count                  = 8
+  cpu_core_count                  = 16
   gi_version                      = "23.0.0.0"
   hostname_prefix                 = "apollo12"
   ssh_public_keys                 = ["%[4]s"]
@@ -533,7 +533,7 @@ data "aws_odb_db_servers" "test" {
 resource "aws_odb_cloud_vm_cluster" "test" {
   display_name                    = %[3]q
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
-  cpu_core_count                  = 8
+  cpu_core_count                  = 16
   gi_version                      = "23.0.0.0"
   hostname_prefix                 = "apollo12"
   ssh_public_keys                 = ["%[4]s"]
