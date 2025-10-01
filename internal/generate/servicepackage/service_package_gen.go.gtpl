@@ -439,16 +439,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
 			Name:     "{{ .Name }}",
-			{{- if $value.TransparentTagging }}
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				{{- if ne $value.TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
-				{{- end }}
-				{{- if ne .TagsResourceType "" }}
-				ResourceType: "{{ .TagsResourceType }}",
-				{{- end }}
-			}),
-			{{- end }}
+			{{- template "TransparentTagging" . -}}
 			{{- if $value.RegionOverrideDeprecated }}
 				Region: inttypes.ResourceRegionDeprecatedOverride(),
 			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}

@@ -45,7 +45,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceCloudFormationStack,
 			TypeName: "aws_serverlessapplicationrepository_cloudformation_stack",
 			Name:     "CloudFormation Stack",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
