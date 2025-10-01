@@ -1175,6 +1175,7 @@ func TestAccDMSEndpoint_MySQL_settings_source(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
+				// Change events_poll_interval from 5 to 10
 				Config: testAccEndpointConfig_mySQLSourceSettings(rName, true, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
@@ -1188,6 +1189,7 @@ func TestAccDMSEndpoint_MySQL_settings_source(t *testing.T) {
 				),
 			},
 			{
+				// Remove mysql_settings block (inherited the previous values)
 				Config: testAccEndpointConfig_mySQLSourceSettings(rName, false, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
@@ -1235,6 +1237,7 @@ func TestAccDMSEndpoint_MySQL_settings_target(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
+				// Change execute_timeout from 100 to 60
 				Config: testAccEndpointConfig_mySQLTargetSettings(rName, true, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
@@ -1248,6 +1251,7 @@ func TestAccDMSEndpoint_MySQL_settings_target(t *testing.T) {
 				),
 			},
 			{
+				// Remove mysql_settings block (inherited the previous values)
 				Config: testAccEndpointConfig_mySQLTargetSettings(rName, false, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
