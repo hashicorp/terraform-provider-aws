@@ -186,19 +186,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
 			Name:     "{{ .Name }}",
-			{{- if .TransparentTagging }}
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				{{- if ne .TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
-				{{- end }}
-				{{- if ne .TagsResourceType "" }}
-				ResourceType: "{{ .TagsResourceType }}",
-				{{- end }}
-			}),
-			{{- end }}
+			{{- template "TransparentTagging" . -}}
 			{{- if $value.RegionOverrideDeprecated }}
 				Region: inttypes.ResourceRegionDeprecatedOverride(),
-			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+			{{- else if and $regionOverrideEnabled .ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
@@ -444,7 +435,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "{{ $typeName }}",
 			Name:     "{{ .Name }}",
 			{{- template "TransparentTagging" . -}}
-			{{- if and $regionOverrideEnabled .ValidateRegionOverrideInPartition }}
+			{{- if $value.RegionOverrideDeprecated }}
+				Region: inttypes.ResourceRegionDeprecatedOverride(),
+			{{- else if and $regionOverrideEnabled .ValidateRegionOverrideInPartition }}
 				Region: inttypes.ResourceRegionDefault(),
 			{{- else if not $regionOverrideEnabled }}
 				Region: inttypes.ResourceRegionDisabled(),
