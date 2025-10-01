@@ -30,19 +30,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newMonitorResource,
 			TypeName: "aws_networkflowmonitor_monitor",
 			Name:     "Monitor",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "monitor_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("monitor_arn")),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newScopeResource,
 			TypeName: "aws_networkflowmonitor_scope",
 			Name:     "Scope",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "scope_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("scope_arn")),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
