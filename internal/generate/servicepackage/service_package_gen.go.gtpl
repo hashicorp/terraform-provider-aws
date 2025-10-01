@@ -117,11 +117,11 @@ type servicePackage struct {}
 func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
 	return []*inttypes.ServicePackageAction {
 {{- range $typeName, $value := .Actions }}
-	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) .RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
+			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
-			Name:     "{{ $value.Name }}",
+			Name:     "{{ .Name }}",
 			{{- if $value.RegionOverrideDeprecated }}
 				Region: inttypes.ResourceRegionDeprecatedOverride(),
 			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
@@ -141,11 +141,11 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource {
 {{- range $typeName, $value := .EphemeralResources }}
-	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) .RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
+			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
-			Name:     "{{ $value.Name }}",
+			Name:     "{{ .Name }}",
 			{{- if $value.RegionOverrideDeprecated }}
 				Region: inttypes.ResourceRegionDeprecatedOverride(),
 			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
@@ -164,11 +164,11 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource {
 {{- range $typeName, $value := .FrameworkDataSources }}
-	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) .RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
+			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
-			Name:     "{{ $value.Name }}",
+			Name:     "{{ .Name }}",
 			{{- if .TransparentTagging }}
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				{{- if ne .TagsIdentifierAttribute "" }}
@@ -196,11 +196,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource {
 {{- range $typeName, $value := .FrameworkResources }}
-	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) .RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
+			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
-			Name:     "{{ $value.Name }}",
+			Name:     "{{ .Name }}",
 			{{- if .TransparentTagging }}
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				{{- if ne .TagsIdentifierAttribute "" }}
@@ -316,11 +316,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource {
 {{- range $typeName, $value := .FrameworkListResources }}
-	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) .RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
+			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
-			Name:     "{{ $value.Name }}",
+			Name:     "{{ .Name }}",
 			{{- if .TransparentTagging }}
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				{{- if ne .TagsIdentifierAttribute "" }}
@@ -421,11 +421,11 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource {
 {{- range $typeName, $value := .SDKDataSources }}
-	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) .RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
+			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
-			Name:     "{{ $value.Name }}",
+			Name:     "{{ .Name }}",
 			{{- if $value.TransparentTagging }}
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				{{- if ne $value.TagsIdentifierAttribute "" }}
@@ -453,11 +453,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource {
 {{- range $typeName, $value := .SDKResources }}
-	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) .RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
+			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
-			Name:     "{{ $value.Name }}",
+			Name:     "{{ .Name }}",
 			{{- if $value.TransparentTagging }}
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				{{- if ne $value.TagsIdentifierAttribute "" }}
@@ -566,11 +566,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource {
 {{- range $typeName, $value := .SDKListResources }}
-	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) .RegionOverrideEnabled }}
 		{
-			Factory:  {{ $value.FactoryName }},
+			Factory:  {{ .FactoryName }},
 			TypeName: "{{ $typeName }}",
-			Name:     "{{ $value.Name }}",
+			Name:     "{{ .Name }}",
 			{{- if $value.RegionOverrideDeprecated }}
 				Region: inttypes.ResourceRegionDeprecatedOverride(),
 			{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
