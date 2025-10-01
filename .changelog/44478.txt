@@ -1,4 +1,0 @@
-```release-note:note
-resource/aws_emr_service: Updates validation messages from `be comprised of only` to `only contain`
-resource/aws_kms_service: Updates validation messages from `be comprised of only` to `only contain`
-```
