@@ -519,7 +519,7 @@ func (r *resourceCloudAutonomousVmCluster) Create(ctx context.Context, req resou
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	createdAVMC, err := waitCloudAutonomousVmClusterCreated(ctx, conn, *out.CloudAutonomousVmClusterId, createTimeout)
+	createdAVMC, err := waitCloudAutonomousVmClusterCreated(ctx, conn, aws.ToString(out.CloudAutonomousVmClusterId), createTimeout)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(out.CloudAutonomousVmClusterId))...)
 	if err != nil {
 		resp.Diagnostics.AddError(

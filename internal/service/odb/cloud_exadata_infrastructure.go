@@ -351,7 +351,7 @@ func (r *resourceCloudExadataInfrastructure) Create(ctx context.Context, req res
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	createdExaInfra, err := waitCloudExadataInfrastructureCreated(ctx, conn, *out.CloudExadataInfrastructureId, createTimeout)
+	createdExaInfra, err := waitCloudExadataInfrastructureCreated(ctx, conn, aws.ToString(out.CloudExadataInfrastructureId), createTimeout)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(out.CloudExadataInfrastructureId))...)
 	if err != nil {
 		resp.Diagnostics.AddError(

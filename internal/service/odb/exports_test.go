@@ -8,6 +8,7 @@ var (
 	ResourceCloudAutonomousVMCluster   = newResourceCloudAutonomousVmCluster
 	ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
 
-	FindCloudAutonomousVmClusterByID = findCloudAutonomousVmClusterByID
-	FindExadataInfraResourceByID     = findExadataInfraResourceByID
+	FindCloudAutonomousVmClusterByID  = findCloudAutonomousVmClusterByID
+	FindExadataInfraResourceByID      = findExadataInfraResourceByID
+	FindCloudVmClusterForResourceByID = findCloudVmClusterForResourceByID
 )
