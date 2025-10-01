@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -113,7 +113,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &iam.CreatePolicyInput{
+	input := iam.CreatePolicyInput{
 		Description:    aws.String(d.Get(names.AttrDescription).(string)),
 		Path:           aws.String(d.Get(names.AttrPath).(string)),
 		PolicyDocument: aws.String(policy),
@@ -121,14 +121,14 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		Tags:           getTagsIn(ctx),
 	}
 
-	output, err := conn.CreatePolicy(ctx, input)
+	output, err := conn.CreatePolicy(ctx, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreatePolicy(ctx, input)
+		output, err = conn.CreatePolicy(ctx, &input)
 	}
 
 	if err != nil {
@@ -171,7 +171,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 			return nil, err
 		}
 
-		if v, err := findPolicyVersion(ctx, conn, d.Id(), aws.ToString(iamPolicy.policy.DefaultVersionId)); err == nil {
+		if v, err := findPolicyVersionByTwoPartKey(ctx, conn, d.Id(), aws.ToString(iamPolicy.policy.DefaultVersionId)); err == nil {
 			iamPolicy.policyVersion = v
 		} else {
 			return nil, err
@@ -202,7 +202,6 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	setTagsOut(ctx, policy.Tags)
 
 	policyDocument, err := url.QueryUnescape(aws.ToString(output.policyVersion.Document))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", d.Id(), err)
 	}
@@ -231,13 +230,13 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
-		input := &iam.CreatePolicyVersionInput{
+		input := iam.CreatePolicyVersionInput{
 			PolicyArn:      aws.String(d.Id()),
 			PolicyDocument: aws.String(policy),
 			SetAsDefault:   true,
 		}
 
-		_, err = conn.CreatePolicyVersion(ctx, input)
+		_, err = conn.CreatePolicyVersion(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
@@ -273,9 +272,10 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	log.Printf("[INFO] Deleting IAM Policy: %s", d.Id())
-	_, err = conn.DeletePolicy(ctx, &iam.DeletePolicyInput{
+	input := iam.DeletePolicyInput{
 		PolicyArn: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeletePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
@@ -325,12 +325,12 @@ func policyPruneVersions(ctx context.Context, conn *iam.Client, arn string) erro
 }
 
 func policyDeleteVersion(ctx context.Context, conn *iam.Client, arn, versionID string) error {
-	input := &iam.DeletePolicyVersionInput{
+	input := iam.DeletePolicyVersionInput{
 		PolicyArn: aws.String(arn),
 		VersionId: aws.String(versionID),
 	}
 
-	_, err := conn.DeletePolicyVersion(ctx, input)
+	_, err := conn.DeletePolicyVersion(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("deleting IAM Policy (%s) version (%s): %w", arn, versionID, err)
@@ -340,10 +340,14 @@ func policyDeleteVersion(ctx context.Context, conn *iam.Client, arn, versionID s
 }
 
 func findPolicyByARN(ctx context.Context, conn *iam.Client, arn string) (*awstypes.Policy, error) {
-	input := &iam.GetPolicyInput{
+	input := iam.GetPolicyInput{
 		PolicyArn: aws.String(arn),
 	}
 
+	return findPolicy(ctx, conn, &input)
+}
+
+func findPolicy(ctx context.Context, conn *iam.Client, input *iam.GetPolicyInput) (*awstypes.Policy, error) {
 	output, err := conn.GetPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -365,12 +369,12 @@ func findPolicyByARN(ctx context.Context, conn *iam.Client, arn string) (*awstyp
 }
 
 func findPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, name, pathPrefix string) (*awstypes.Policy, error) {
-	input := &iam.ListPoliciesInput{}
+	var input iam.ListPoliciesInput
 	if pathPrefix != "" {
 		input.PathPrefix = aws.String(pathPrefix)
 	}
 
-	output, err := findPolicies(ctx, conn, input)
+	output, err := findPolicies(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -397,7 +401,7 @@ func findPolicies(ctx context.Context, conn *iam.Client, input *iam.ListPolicies
 		}
 
 		for _, v := range page.Policies {
-			if !reflect.ValueOf(v).IsZero() {
+			if p := &v; !inttypes.IsZero(p) {
 				output = append(output, v)
 			}
 		}
@@ -406,12 +410,16 @@ func findPolicies(ctx context.Context, conn *iam.Client, input *iam.ListPolicies
 	return output, nil
 }
 
-func findPolicyVersion(ctx context.Context, conn *iam.Client, arn, versionID string) (*awstypes.PolicyVersion, error) {
-	input := &iam.GetPolicyVersionInput{
+func findPolicyVersionByTwoPartKey(ctx context.Context, conn *iam.Client, arn, versionID string) (*awstypes.PolicyVersion, error) {
+	input := iam.GetPolicyVersionInput{
 		PolicyArn: aws.String(arn),
 		VersionId: aws.String(versionID),
 	}
 
+	return findPolicyVersion(ctx, conn, &input)
+}
+
+func findPolicyVersion(ctx context.Context, conn *iam.Client, input *iam.GetPolicyVersionInput) (*awstypes.PolicyVersion, error) {
 	output, err := conn.GetPolicyVersion(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -433,9 +441,14 @@ func findPolicyVersion(ctx context.Context, conn *iam.Client, arn, versionID str
 }
 
 func findPolicyVersionsByARN(ctx context.Context, conn *iam.Client, arn string) ([]awstypes.PolicyVersion, error) {
-	input := &iam.ListPolicyVersionsInput{
+	input := iam.ListPolicyVersionsInput{
 		PolicyArn: aws.String(arn),
 	}
+
+	return findPolicyVersions(ctx, conn, &input)
+}
+
+func findPolicyVersions(ctx context.Context, conn *iam.Client, input *iam.ListPolicyVersionsInput) ([]awstypes.PolicyVersion, error) {
 	var output []awstypes.PolicyVersion
 
 	pages := iam.NewListPolicyVersionsPaginator(conn, input)
@@ -454,7 +467,7 @@ func findPolicyVersionsByARN(ctx context.Context, conn *iam.Client, arn string) 
 		}
 
 		for _, v := range page.Versions {
-			if !reflect.ValueOf(v).IsZero() {
+			if p := &v; !inttypes.IsZero(p) {
 				output = append(output, v)
 			}
 		}

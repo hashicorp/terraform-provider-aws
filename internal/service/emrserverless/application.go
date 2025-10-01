@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -309,7 +309,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	application, err := findApplicationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Serverless Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -447,8 +447,7 @@ func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id str
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -467,8 +466,8 @@ func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id str
 	return output.Application, nil
 }
 
-func statusApplication(ctx context.Context, conn *emrserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplication(conn *emrserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -492,7 +491,7 @@ func waitApplicationCreated(ctx context.Context, conn *emrserverless.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ApplicationStateCreating),
 		Target:     enum.Slice(types.ApplicationStateCreated),
-		Refresh:    statusApplication(ctx, conn, id),
+		Refresh:    statusApplication(conn, id),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      delay,
@@ -502,7 +501,7 @@ func waitApplicationCreated(ctx context.Context, conn *emrserverless.Client, id 
 
 	if output, ok := outputRaw.(*types.Application); ok {
 		if stateChangeReason := output.StateDetails; stateChangeReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
 		}
 
 		return output, err
@@ -520,7 +519,7 @@ func waitApplicationTerminated(ctx context.Context, conn *emrserverless.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Values[types.ApplicationState](),
 		Target:     []string{},
-		Refresh:    statusApplication(ctx, conn, id),
+		Refresh:    statusApplication(conn, id),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      delay,
@@ -530,7 +529,7 @@ func waitApplicationTerminated(ctx context.Context, conn *emrserverless.Client, 
 
 	if output, ok := outputRaw.(*types.Application); ok {
 		if stateChangeReason := output.StateDetails; stateChangeReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
 		}
 
 		return output, err

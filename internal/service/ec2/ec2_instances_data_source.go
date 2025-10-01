@@ -94,15 +94,13 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.Filters = nil
 	}
 
-	output, err := findInstances(ctx, conn, &input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
-	}
-
 	var instanceIDs, privateIPs, publicIPs, ipv6Addresses []string
 
-	for _, v := range output {
+	for v, err := range listInstances(ctx, conn, &input) {
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
+		}
+
 		instanceIDs = append(instanceIDs, aws.ToString(v.InstanceId))
 		if privateIP := aws.ToString(v.PrivateIpAddress); privateIP != "" {
 			privateIPs = append(privateIPs, privateIP)

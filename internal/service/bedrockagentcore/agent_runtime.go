@@ -340,8 +340,8 @@ func (r *resourceAgentRuntime) Delete(ctx context.Context, req resource.DeleteRe
 
 func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.AgentStatusCreating),
-		Target:                    enum.Slice(awstypes.AgentStatusReady),
+		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusCreating),
+		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
 		Refresh:                   statusAgentRuntime(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -358,8 +358,8 @@ func waitAgentRuntimeCreated(ctx context.Context, conn *bedrockagentcorecontrol.
 
 func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.AgentStatusUpdating),
-		Target:                    enum.Slice(awstypes.AgentStatusReady),
+		Pending:                   enum.Slice(awstypes.AgentRuntimeStatusUpdating),
+		Target:                    enum.Slice(awstypes.AgentRuntimeStatusReady),
 		Refresh:                   statusAgentRuntime(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -376,7 +376,7 @@ func waitAgentRuntimeUpdated(ctx context.Context, conn *bedrockagentcorecontrol.
 
 func waitAgentRuntimeDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AgentStatusDeleting, awstypes.AgentStatusReady),
+		Pending: enum.Slice(awstypes.AgentRuntimeStatusDeleting, awstypes.AgentRuntimeStatusReady),
 		Target:  []string{},
 		Refresh: statusAgentRuntime(ctx, conn, id),
 		Timeout: timeout,
@@ -461,7 +461,7 @@ var (
 
 func (m *artifactModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
-	case awstypes.AgentArtifactMemberContainerConfiguration:
+	case awstypes.AgentRuntimeArtifactMemberContainerConfiguration:
 		var model ContainerConfigurationModel
 		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -486,7 +486,7 @@ func (m artifactModel) Expand(ctx context.Context) (result any, diags diag.Diagn
 		if diags.HasError() {
 			return nil, diags
 		}
-		var r awstypes.AgentArtifactMemberContainerConfiguration
+		var r awstypes.AgentRuntimeArtifactMemberContainerConfiguration
 		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags

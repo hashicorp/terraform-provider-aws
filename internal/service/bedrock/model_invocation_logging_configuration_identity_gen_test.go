@@ -24,9 +24,10 @@ func testAccBedrockModelInvocationLoggingConfiguration_IdentitySerial(t *testing
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccBedrockModelInvocationLoggingConfiguration_Identity_Basic,
-		"ExistingResource": testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource,
-		"RegionOverride":   testAccBedrockModelInvocationLoggingConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:             testAccBedrockModelInvocationLoggingConfiguration_Identity_Basic,
+		"ExistingResource":          testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccBedrockModelInvocationLoggingConfiguration_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -305,6 +306,51 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),
+				},
+			},
+		},
+	})
+}
+
+func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
+		CheckDestroy: testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ModelInvocationLoggingConfiguration/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ModelInvocationLoggingConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 				},
 			},
 		},

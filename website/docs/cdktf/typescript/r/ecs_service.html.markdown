@@ -243,7 +243,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
 * `availabilityZoneRebalancing` - (Optional) ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are `ENABLED` and `DISABLED`. When creating a new service, if no value is specified, it defaults to `ENABLED` if the service is compatible with AvailabilityZoneRebalancing. When updating an existing service, if no value is specified it defaults to the existing service's AvailabilityZoneRebalancing value. If the service never had an AvailabilityZoneRebalancing value set, Amazon ECS treats this as `DISABLED`.
-* `capacityProviderStrategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacityProviderStrategy` blocks to greater than 0, or vice versa. [See below](#capacity_provider_strategy). Conflicts with `launchType`.
+* `capacityProviderStrategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. Updating this argument requires `force_new_deployment = true`. [See below](#capacity_provider_strategy). Conflicts with `launchType`.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deploymentCircuitBreaker` - (Optional) Configuration block for deployment circuit breaker. [See below](#deployment_circuit_breaker).
 * `deploymentConfiguration` - (Optional) Configuration block for deployment settings. [See below](#deployment_configuration).
@@ -337,6 +337,7 @@ The `lifecycleHook` configuration block supports the following:
 * `hookTargetArn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
 * `roleArn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
 * `lifecycleStages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
+* `hookDetails` - (Optional) Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
 
 ### deployment_circuit_breaker
 
@@ -548,4 +549,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ee22acce3552dc099212eacab2a7cbeea60aad15bc2203bc5b2ed8c576b2b687 -->
+<!-- cache-key: cdktf-0.20.8 input-d37ec8dbdebd4cf5038208af8cb73345f03049bfafe261d45eb189574a780a3f -->

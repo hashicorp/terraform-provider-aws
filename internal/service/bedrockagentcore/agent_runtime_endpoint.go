@@ -281,8 +281,8 @@ func (r *resourceAgentRuntimeEndpoint) ImportState(ctx context.Context, req reso
 
 func waitAgentRuntimeEndpointCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeId, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.AgentEndpointStatusCreating),
-		Target:                    enum.Slice(awstypes.AgentEndpointStatusReady),
+		Pending:                   enum.Slice(awstypes.AgentRuntimeEndpointStatusCreating),
+		Target:                    enum.Slice(awstypes.AgentRuntimeEndpointStatusReady),
 		Refresh:                   statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeId, endpointName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -299,8 +299,8 @@ func waitAgentRuntimeEndpointCreated(ctx context.Context, conn *bedrockagentcore
 
 func waitAgentRuntimeEndpointUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeId, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.AgentEndpointStatusUpdating),
-		Target:                    enum.Slice(awstypes.AgentEndpointStatusReady),
+		Pending:                   enum.Slice(awstypes.AgentRuntimeEndpointStatusUpdating),
+		Target:                    enum.Slice(awstypes.AgentRuntimeEndpointStatusReady),
 		Refresh:                   statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeId, endpointName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -317,7 +317,7 @@ func waitAgentRuntimeEndpointUpdated(ctx context.Context, conn *bedrockagentcore
 
 func waitAgentRuntimeEndpointDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeId, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AgentEndpointStatusDeleting, awstypes.AgentEndpointStatusReady),
+		Pending: enum.Slice(awstypes.AgentRuntimeEndpointStatusDeleting, awstypes.AgentRuntimeEndpointStatusReady),
 		Target:  []string{},
 		Refresh: statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeId, endpointName),
 		Timeout: timeout,

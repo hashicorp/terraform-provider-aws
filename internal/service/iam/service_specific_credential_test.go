@@ -163,29 +163,22 @@ func TestAccIAMServiceSpecificCredential_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceSpecificCredentialExists(ctx context.Context, n string, cred *awstypes.ServiceSpecificCredentialMetadata) resource.TestCheckFunc {
+func testAccCheckServiceSpecificCredentialExists(ctx context.Context, n string, v *awstypes.ServiceSpecificCredentialMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Server Cert ID is set")
-		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		serviceName, userName, credId, err := tfiam.DecodeServiceSpecificCredentialId(rs.Primary.ID)
+		output, err := tfiam.FindServiceSpecificCredentialByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrServiceName], rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["service_specific_credential_id"])
+
 		if err != nil {
 			return err
 		}
 
-		output, err := tfiam.FindServiceSpecificCredential(ctx, conn, serviceName, userName, credId)
-		if err != nil {
-			return err
-		}
-
-		*cred = *output
+		*v = *output
 
 		return nil
 	}
@@ -200,19 +193,14 @@ func testAccCheckServiceSpecificCredentialDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			serviceName, userName, credId, err := tfiam.DecodeServiceSpecificCredentialId(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			output, err := tfiam.FindServiceSpecificCredential(ctx, conn, serviceName, userName, credId)
+			output, err := tfiam.FindServiceSpecificCredentialByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrServiceName], rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["service_specific_credential_id"])
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if output != nil {
-				return fmt.Errorf("IAM Service Specific Credential (%s) still exists", rs.Primary.ID)
+				return fmt.Errorf("IAM Service-Specific Credential (%s) still exists", rs.Primary.ID)
 			}
 		}
 

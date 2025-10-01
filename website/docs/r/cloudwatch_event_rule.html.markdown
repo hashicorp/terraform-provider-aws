@@ -109,10 +109,9 @@ resource "aws_cloudwatch_event_rule" "example" {
 
 #### Optional
 
-* `event_bus_name` (String) Name of the event bus. If omitted, `default` is used.
-
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `event_bus_name` (String) Name of the event bus.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 

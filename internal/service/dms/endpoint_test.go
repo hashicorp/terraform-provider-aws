@@ -1210,6 +1210,67 @@ func TestAccDMSEndpoint_PostgreSQL_settings_target(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_PostgreSQL_settings_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Create with heartbeat disabled
+				Config: testAccEndpointConfig_postgreSQLHeartbeat(rName, false, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "engine_name", "postgres"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_enable", acctest.CtFalse),
+				),
+			},
+			{
+				// Update only nested postgres_settings: enable heartbeat + set schema
+				Config: testAccEndpointConfig_postgreSQLHeartbeat(rName, true, "dms_heartbeat"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_schema", "dms_heartbeat"),
+				),
+			},
+		},
+	})
+}
+
+func testAccEndpointConfig_postgreSQLHeartbeat(id string, heartbeat bool, schema string) string {
+	schemaLine := ""
+	if schema != "" {
+		schemaLine = fmt.Sprintf(`heartbeat_schema = %q`, schema)
+	}
+
+	// DMS ModifyEndpoint accepts metadata changes without validating connectivity,
+	// so placeholder connection values are sufficient for the test
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %q
+  endpoint_type = "source"
+  engine_name   = "postgres"
+
+  username      = "user"
+  password      = "pass"
+  server_name   = "example.com"
+  database_name = "postgres"
+  port          = 5432
+
+  postgres_settings {
+    heartbeat_enable = %t
+    %s
+  }
+}
+`, id, heartbeat, schemaLine)
+}
+
 func TestAccDMSEndpoint_SQLServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
