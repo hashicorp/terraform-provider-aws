@@ -227,8 +227,5 @@ func TestAccIAMOpenIDConnectProviderDataSource_Tags_IgnoreTags_Overlap_resourceT
 }
 
 func expectFullOpenIDConnectProviderDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrARN,
-		ResourceType:        "OIDCProvider",
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsTypeAndAttribute("OIDCProvider", names.AttrARN)), knownValue)
 }

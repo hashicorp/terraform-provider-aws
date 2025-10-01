@@ -227,7 +227,5 @@ func TestAccRDSDBInstanceDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 }
 
 func expectFullDBInstanceDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfrds.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: "db_instance_arn",
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfrds.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsAttribute("db_instance_arn")), knownValue)
 }

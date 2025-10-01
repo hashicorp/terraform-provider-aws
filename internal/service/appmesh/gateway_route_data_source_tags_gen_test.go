@@ -242,7 +242,5 @@ func testAccAppMeshGatewayRouteDataSource_Tags_IgnoreTags_Overlap_resourceTag(t 
 }
 
 func expectFullGatewayRouteDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrARN,
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)), knownValue)
 }
