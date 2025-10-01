@@ -72,6 +72,13 @@ func ResourceTagsAttribute(identifierAttribute string) ServicePackageResourceTag
 	}
 }
 
+func ResourceTagsTypeAndAttribute(resourceType, identifierAttribute string) ServicePackageResourceTags {
+	return ServicePackageResourceTags{
+		IdentifierAttribute: identifierAttribute,
+		ResourceType:        resourceType,
+	}
+}
+
 // ServicePackageAction represents a Terraform Plugin Framework action
 // implemented by a service package.
 type ServicePackageAction struct {

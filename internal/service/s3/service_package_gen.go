@@ -89,11 +89,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDirectoryBucketResource,
 			TypeName: "aws_s3_directory_bucket",
 			Name:     "Directory Bucket",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "DirectoryBucket",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("DirectoryBucket", names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -117,11 +114,8 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newDirectoryBucketResourceAsListResource,
 			TypeName: "aws_s3_directory_bucket",
 			Name:     "Directory Bucket",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "DirectoryBucket",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("DirectoryBucket", names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 		},
@@ -146,11 +140,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceBucketObject,
 			TypeName: "aws_s3_bucket_object",
 			Name:     "Bucket Object",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "BucketObject",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("BucketObject", names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceBucketObjects,
@@ -168,11 +159,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceObject,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "Object",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Object", names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceObjects,
@@ -189,11 +177,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceBucket,
 			TypeName: "aws_s3_bucket",
 			Name:     "Bucket",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrBucket,
-				ResourceType:        "Bucket",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Bucket", names.AttrBucket)),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithV6_0SDKv2Fix(),
 			),
@@ -281,11 +266,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceBucketObject,
 			TypeName: "aws_s3_bucket_object",
 			Name:     "Bucket Object",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "BucketObject",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("BucketObject", names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
@@ -383,11 +365,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceObject,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "Object",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Object", names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
@@ -401,11 +380,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceObjectCopy,
 			TypeName: "aws_s3_object_copy",
 			Name:     "Object Copy",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "ObjectCopy",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("ObjectCopy", names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -417,10 +393,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_s3_bucket",
 			Name:     "Bucket",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrBucket,
-				ResourceType:        "Bucket",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Bucket", names.AttrBucket)),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
@@ -492,10 +465,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_s3_object",
 			Name:     "Object",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-				ResourceType:        "Object",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Object", names.AttrARN)),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
