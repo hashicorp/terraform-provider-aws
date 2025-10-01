@@ -52,11 +52,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
 			Name:     "Pipeline",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "Pipeline",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Pipeline", names.AttrID)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  ResourcePipelineDefinition,
