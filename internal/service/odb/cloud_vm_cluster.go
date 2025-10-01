@@ -145,11 +145,20 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The domain name associated with the VM cluster.",
 			},
 			"gi_version": schema.StringAttribute{
-				Required: true,
+				Required:  true,
+				WriteOnly: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "A valid software version of Oracle Grid Infrastructure (GI). To get the list of valid values, use the ListGiVersions operation and specify the shape of the Exadata infrastructure. Example: 19.0.0.0 This member is required. Changing this will create a new resource.",
+			},
+			//Underlying API returns complete gi version. For example if gi_version 23.0.0.0 then underlying api returns any version starting with 23
+			"gi_version_computed": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "A complete software version of Oracle Grid Infrastructure (GI).",
 			},
 			//Underlying API treats Hostname as hostname prefix. Therefore, explicitly setting it. API also returns new hostname prefix by appending the input hostname
 			//prefix. Therefore, we have hostname_prefix and hostname_prefix_computed
@@ -474,6 +483,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	plan.HostnamePrefixComputed = types.StringValue(*createdVmCluster.Hostname)
 	//scan listener port not returned by API directly
 	plan.ScanListenerPortTcp = types.Int32PointerValue(createdVmCluster.ListenerPort)
+	plan.GiVersionComputed = types.StringPointerValue(createdVmCluster.GiVersion)
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdVmCluster, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -507,7 +517,7 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 	state.HostnamePrefixComputed = types.StringValue(*out.Hostname)
 	//scan listener port not returned by API directly
 	state.ScanListenerPortTcp = types.Int32PointerValue(out.ListenerPort)
-
+	state.GiVersionComputed = types.StringPointerValue(out.GiVersion)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -634,6 +644,7 @@ type cloudVmClusterResourceModel struct {
 	DisplayName                  types.String                                                                `tfsdk:"display_name"`
 	Domain                       types.String                                                                `tfsdk:"domain"`
 	GiVersion                    types.String                                                                `tfsdk:"gi_version"`
+	GiVersionComputed            types.String                                                                `tfsdk:"gi_version_computed" autoflex:",noflatten"`
 	HostnamePrefixComputed       types.String                                                                `tfsdk:"hostname_prefix_computed" autoflex:",noflatten"`
 	HostnamePrefix               types.String                                                                `tfsdk:"hostname_prefix" autoflex:"-"`
 	IormConfigCache              fwtypes.ListNestedObjectValueOf[cloudVMCExadataIormConfigResourceModel]     `tfsdk:"iorm_config_cache"`

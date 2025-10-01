@@ -48,6 +48,7 @@ func TestAccODBCloudVmCluster_basic(t *testing.T) {
 		return
 	}
 	resourceName := "aws_odb_cloud_vm_cluster.test"
+	basicConfig, _ := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmcDisplayName, publicKey)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -58,7 +59,7 @@ func TestAccODBCloudVmCluster_basic(t *testing.T) {
 		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmcDisplayName, publicKey),
+				Config: basicConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
 				),
@@ -124,6 +125,7 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
+	vmcNoTag, vmcWithTag := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmcDisplayName, publicKey)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -134,7 +136,7 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmcDisplayName, publicKey),
+				Config: vmcNoTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						return nil
@@ -148,7 +150,70 @@ func TestAccODBCloudVmCluster_taggingTest(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: vmClusterTestEntity.testAccCloudVmClusterConfigUpdatedTags(vmcDisplayName, publicKey),
+				Config: vmcWithTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster2.CloudVmClusterId)) != 0 {
+							return errors.New("Should  not create a new cloud vm cluster for tag update")
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBCloudVmClusterReal_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cloudvmcluster1 odbtypes.CloudVmCluster
+	var cloudvmcluster2 odbtypes.CloudVmCluster
+	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	resourceName := "aws_odb_cloud_vm_cluster.test"
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	vmcWithoutTag, vmcWithTag := vmClusterTestEntity.cloudVmClusterReal(vmcDisplayName, publicKey)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			vmClusterTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: vmcWithoutTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						return nil
+					}),
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: vmcWithTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
@@ -184,6 +249,7 @@ func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
+	vmcBasicConfig, _ := vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmClusterDisplayName, publicKey)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -194,7 +260,7 @@ func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: vmClusterTestEntity.testAccCloudVmClusterConfigBasic(vmClusterDisplayName, publicKey),
+				Config: vmcBasicConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudVmCluster, resourceName),
@@ -256,12 +322,12 @@ func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testin
 	}
 }
 
-func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(vmClusterDisplayName, sshKey string) string {
+func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(vmClusterDisplayName, sshKey string) (string, string) {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
 	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
 	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
 	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
-	res := fmt.Sprintf(`
+	vmcNoTag := fmt.Sprintf(`
 
 %s
 
@@ -294,8 +360,46 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 
 }
 `, exaInfra, odbNet, vmClusterDisplayName, sshKey)
-	return res
+
+	vmcWithTag := fmt.Sprintf(`
+
+%s
+
+%s
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 6
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+  tags = {
+    "env" = "dev"
+  }
+
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+	return vmcNoTag, vmcWithTag
+}
+
 func (cloudVmClusterResourceTest) cloudVmClusterWithAllParameters(vmClusterDisplayName, sshKey string) string {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
 	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
@@ -344,50 +448,6 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 	return res
 }
 
-func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigUpdatedTags(vmClusterDisplayName, sshKey string) string {
-	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
-	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
-	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
-	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
-	res := fmt.Sprintf(`
-%s
-
-%s
-
-data "aws_odb_db_servers" "test" {
-  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
-}
-
-resource "aws_odb_cloud_vm_cluster" "test" {
-  display_name                    = %[3]q
-  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
-  cpu_core_count                  = 6
-  gi_version                      = "23.0.0.0"
-  hostname_prefix                 = "apollo12"
-  ssh_public_keys                 = ["%[4]s"]
-  odb_network_id                  = aws_odb_network.test.id
-  is_local_backup_enabled         = true
-  is_sparse_diskgroup_enabled     = true
-  license_model                   = "LICENSE_INCLUDED"
-  data_storage_size_in_tbs        = 20.0
-  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
-  db_node_storage_size_in_gbs     = 120.0
-  memory_size_in_gbs              = 60
-  data_collection_options {
-    is_diagnostics_events_enabled = false
-    is_health_monitoring_enabled  = false
-    is_incident_logs_enabled      = false
-  }
-  tags = {
-    "env" = "dev"
-    "foo" = "bar"
-  }
-
-}
-`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
-	return res
-}
-
 func (cloudVmClusterResourceTest) exaInfra(rName string) string {
 	resource := fmt.Sprintf(`
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
@@ -419,4 +479,83 @@ resource "aws_odb_network" "test" {
 }
 `, rName)
 	return resource
+}
+
+func (cloudVmClusterResourceTest) cloudVmClusterReal(vmClusterDisplayName, sshKey string) (string, string) {
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix("Oreal-exa")
+	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
+	vmClusterResourceNoTag := fmt.Sprintf(`
+
+%s
+
+%s
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 6
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+
+	vmClusterResourceWithTag := fmt.Sprintf(`
+
+%s
+
+%s
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 6
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+  tags = {
+    "env" = "dev"
+  }
+
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+
+	return vmClusterResourceNoTag, vmClusterResourceWithTag
 }
