@@ -3331,7 +3331,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_mySQLSourceSettingsBlock(eventPollInterval int) string {
+func testAccEndpointConfig_mySQLSourceSettingsBlock(eventsPollInterval int) string {
 	return fmt.Sprintf(`
   mysql_settings {
     after_connect_script              = "SELECT NOW();"
@@ -3342,7 +3342,7 @@ func testAccEndpointConfig_mySQLSourceSettingsBlock(eventPollInterval int) strin
     service_access_role_arn           = aws_iam_role.test.arn
 	server_timezone                   = "UTC"
   }
-`, eventPollInterval)
+`, eventsPollInterval)
 }
 
 func testAccEndpointConfig_certificateBase(rName string) string {
@@ -3354,10 +3354,10 @@ resource "aws_dms_certificate" "dms_certificate" {
 `, rName)
 }
 
-func testAccEndpointConfig_mySQLSourceSettings(rName string, outputMySQLSettings bool, eventPollInterval int) string {
+func testAccEndpointConfig_mySQLSourceSettings(rName string, outputMySQLSettings bool, eventsPollInterval int) string {
 	mysqlSettings := ""
 	if outputMySQLSettings {
-		mysqlSettings = testAccEndpointConfig_mySQLSourceSettingsBlock(eventPollInterval)
+		mysqlSettings = testAccEndpointConfig_mySQLSourceSettingsBlock(eventsPollInterval)
 	}
 	return acctest.ConfigCompose(testAccEndpointConfig_certificateBase(rName), fmt.Sprintf(`
 data "aws_region" "current" {}
