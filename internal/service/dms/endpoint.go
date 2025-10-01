@@ -998,7 +998,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				if d.HasChanges(
 					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName,
 					"secrets_manager_access_role_arn", "secrets_manager_arn", "mysql_settings") {
-					settings := &awstypes.MySQLSettings{}
+					var settings *awstypes.MySQLSettings
 
 					if v, ok := d.GetOk("mysql_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 						settings = expandMySQLSettings(v.([]any)[0].(map[string]any))
