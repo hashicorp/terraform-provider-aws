@@ -6,9 +6,9 @@ package ecs_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -242,11 +242,11 @@ func TestAccECSCapacityProvider_clusterFieldValidations(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCapacityProviderConfig_autoScalingGroups_withCluster(rName),
-				ExpectError: regexp.MustCompile(`cluster must not be set when using auto_scaling_group_provider`),
+				ExpectError: regexache.MustCompile(`cluster must not be set when using auto_scaling_group_provider`),
 			},
 			{
 				Config:      testAccCapacityProviderConfig_managedInstances_withoutCluster(rName),
-				ExpectError: regexp.MustCompile(`cluster is required when using managed_instances_provider`),
+				ExpectError: regexache.MustCompile(`cluster is required when using managed_instances_provider`),
 			},
 		},
 	})
@@ -264,11 +264,11 @@ func TestAccECSCapacityProvider_mutualExclusivity(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCapacityProviderConfig_bothProviders(rName),
-				ExpectError: regexp.MustCompile(`only one of auto_scaling_group_provider or managed_instances_provider must be specified`),
+				ExpectError: regexache.MustCompile(`only one of auto_scaling_group_provider or managed_instances_provider must be specified`),
 			},
 			{
 				Config:      testAccCapacityProviderConfig_noProviders(rName),
-				ExpectError: regexp.MustCompile(`exactly one of auto_scaling_group_provider or managed_instances_provider must be specified`),
+				ExpectError: regexache.MustCompile(`exactly one of auto_scaling_group_provider or managed_instances_provider must be specified`),
 			},
 		},
 	})

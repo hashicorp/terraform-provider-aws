@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -246,7 +246,7 @@ func resourceCapacityProvider() *schema.Resource {
 														Type: schema.TypeString,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 30),
-															validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.\*\-]+$`), "must contain only alphanumeric characters, dots, asterisks, and hyphens"),
+															validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\.\*\-]+$`), "must contain only alphanumeric characters, dots, asterisks, and hyphens"),
 														),
 													},
 												},
@@ -295,7 +295,7 @@ func resourceCapacityProvider() *schema.Resource {
 														Type: schema.TypeString,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 30),
-															validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.\*\-]+$`), "must contain only alphanumeric characters, dots, asterisks, and hyphens"),
+															validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\.\*\-]+$`), "must contain only alphanumeric characters, dots, asterisks, and hyphens"),
 														),
 													},
 												},
