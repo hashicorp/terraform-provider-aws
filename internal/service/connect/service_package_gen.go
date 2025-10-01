@@ -159,36 +159,28 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceContactFlow,
 			TypeName: "aws_connect_contact_flow",
 			Name:     "Contact Flow",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceContactFlowModule,
 			TypeName: "aws_connect_contact_flow_module",
 			Name:     "Contact Flow Module",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceHoursOfOperation,
 			TypeName: "aws_connect_hours_of_operation",
 			Name:     "Hours Of Operation",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceInstance,
 			TypeName: "aws_connect_instance",
 			Name:     "Instance",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
@@ -211,9 +203,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePhoneNumber,
 			TypeName: "aws_connect_phone_number",
 			Name:     "Phone Number",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
@@ -224,55 +214,43 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceQueue,
 			TypeName: "aws_connect_queue",
 			Name:     "Queue",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceQuickConnect,
 			TypeName: "aws_connect_quick_connect",
 			Name:     "Quick Connect",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceRoutingProfile,
 			TypeName: "aws_connect_routing_profile",
 			Name:     "Routing Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceSecurityProfile,
 			TypeName: "aws_connect_security_profile",
 			Name:     "Security Profile",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_connect_user",
 			Name:     "User",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUserHierarchyGroup,
 			TypeName: "aws_connect_user_hierarchy_group",
 			Name:     "User Hierarchy Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUserHierarchyStructure,
@@ -284,10 +262,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceVocabulary,
 			TypeName: "aws_connect_vocabulary",
 			Name:     "Vocabulary",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

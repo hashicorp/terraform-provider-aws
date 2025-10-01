@@ -38,10 +38,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceApp,
 			TypeName: "aws_codedeploy_app",
 			Name:     "App",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceDeploymentConfig,
@@ -53,10 +51,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDeploymentGroup,
 			TypeName: "aws_codedeploy_deployment_group",
 			Name:     "Deployment Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

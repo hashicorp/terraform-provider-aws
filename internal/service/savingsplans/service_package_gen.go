@@ -44,10 +44,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newSavingsPlanResource,
 			TypeName: "aws_savingsplans_savings_plan",
 			Name:     "Savings Plan",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "savings_plan_arn",
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("savings_plan_arn")),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }

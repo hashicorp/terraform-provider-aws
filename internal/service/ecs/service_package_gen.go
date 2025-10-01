@@ -39,9 +39,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDaemonResource,
 			TypeName: "aws_ecs_daemon",
 			Name:     "Daemon",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -52,9 +50,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDaemonTaskDefinitionResource,
 			TypeName: "aws_ecs_daemon_task_definition",
 			Name:     "Daemon Task Definition",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -65,10 +61,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newExpressGatewayServiceResource,
 			TypeName: "aws_ecs_express_gateway_service",
 			Name:     "Express Gateway Service",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "service_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("service_arn")),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -79,9 +73,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  daemonResourceAsListResource,
 			TypeName: "aws_ecs_daemon",
 			Name:     "Daemon",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
@@ -89,9 +81,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  daemonTaskDefinitionResourceAsListResource,
 			TypeName: "aws_ecs_daemon_task_definition",
 			Name:     "Daemon Task Definition",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
@@ -147,10 +137,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCapacityProvider,
 			TypeName: "aws_ecs_capacity_provider",
 			Name:     "Capacity Provider",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
@@ -163,9 +151,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCluster,
 			TypeName: "aws_ecs_cluster",
 			Name:     "Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -182,10 +168,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceService,
 			TypeName: "aws_ecs_service",
 			Name:     "Service",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("cluster", true),
 				inttypes.StringIdentityAttribute(names.AttrName, true),
@@ -205,10 +189,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTaskDefinition,
 			TypeName: "aws_ecs_task_definition",
 			Name:     "Task Definition",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrFamily, true),
 				inttypes.IntIdentityAttribute("revision", true),
@@ -224,10 +206,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTaskSet,
 			TypeName: "aws_ecs_task_set",
 			Name:     "Task Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -239,9 +219,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_ecs_cluster",
 			Name:     "Cluster",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
@@ -249,9 +227,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_ecs_service",
 			Name:     "Service",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("cluster", true),
 				inttypes.StringIdentityAttribute(names.AttrName, true),
@@ -262,9 +238,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_ecs_task_definition",
 			Name:     "Task Definition",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrFamily, true),
 				inttypes.IntIdentityAttribute("revision", true),

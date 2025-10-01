@@ -38,10 +38,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAppMonitor,
 			TypeName: "aws_rum_app_monitor",
 			Name:     "App Monitor",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceMetricsDestination,

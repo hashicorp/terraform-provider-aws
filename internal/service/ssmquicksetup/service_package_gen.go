@@ -30,10 +30,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newConfigurationManagerResource,
 			TypeName: "aws_ssmquicksetup_configuration_manager",
 			Name:     "Configuration Manager",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "manager_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("manager_arn")),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

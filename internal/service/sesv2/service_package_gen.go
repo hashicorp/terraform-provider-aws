@@ -36,19 +36,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newMultiRegionEndpointResource,
 			TypeName: "aws_sesv2_multi_region_endpoint",
 			Name:     "Multi Region Endpoint",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newTenantResource,
 			TypeName: "aws_sesv2_tenant",
 			Name:     "Tenant",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "tenant_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("tenant_arn")),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newTenantResourceAssociationResource,
@@ -65,28 +61,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
 			Name:     "Configuration Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
 			Name:     "Dedicated IP Pool",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceEmailIdentity,
 			TypeName: "aws_sesv2_email_identity",
 			Name:     "Email Identity",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceEmailIdentityMailFromAttributes,
@@ -109,10 +99,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
 			Name:     "Configuration Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceConfigurationSetEventDestination,
@@ -124,10 +112,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceContactList,
 			TypeName: "aws_sesv2_contact_list",
 			Name:     "Contact List",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceDedicatedIPAssignment,
@@ -139,19 +125,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
 			Name:     "Dedicated IP Pool",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceEmailIdentity,
 			TypeName: "aws_sesv2_email_identity",
 			Name:     "Email Identity",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceEmailIdentityFeedbackAttributes,

@@ -57,9 +57,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDomainResource,
 			TypeName: "aws_datazone_domain",
 			Name:     "Domain",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.FrameworkImport{

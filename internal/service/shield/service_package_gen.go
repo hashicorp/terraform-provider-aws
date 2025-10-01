@@ -81,19 +81,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceProtection,
 			TypeName: "aws_shield_protection",
 			Name:     "Protection",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  ResourceProtectionGroup,
 			TypeName: "aws_shield_protection_group",
 			Name:     "Protection Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "protection_group_arn",
-			}),
-			Region: inttypes.ResourceRegionDisabled(),
+			Tags:     unique.Make(inttypes.ResourceTagsAttribute("protection_group_arn")),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  ResourceProtectionHealthCheckAssociation,
