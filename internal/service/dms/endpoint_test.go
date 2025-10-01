@@ -1165,7 +1165,7 @@ func TestAccDMSEndpoint_MySQL_settings_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.clean_source_metadata_on_mismatch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.events_poll_interval", "5"),
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "100"),
-					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -1185,7 +1185,7 @@ func TestAccDMSEndpoint_MySQL_settings_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.clean_source_metadata_on_mismatch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.events_poll_interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "100"),
-					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -1199,7 +1199,7 @@ func TestAccDMSEndpoint_MySQL_settings_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.clean_source_metadata_on_mismatch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.events_poll_interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "100"),
-					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 		},

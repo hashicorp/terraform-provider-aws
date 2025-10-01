@@ -692,8 +692,8 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 		} else {
-			settings.Username = aws.String(d.Get("username").(string))
-			settings.Password = aws.String(d.Get("password").(string))
+			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
+			settings.Password = aws.String(d.Get(names.AttrPassword).(string))
 			settings.ServerName = aws.String(d.Get("server_name").(string))
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
