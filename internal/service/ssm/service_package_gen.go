@@ -102,10 +102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAssociation,
 			TypeName: "aws_ssm_association",
 			Name:     "Association",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "Association",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Association", names.AttrID)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrAssociationID, true)),
 			Import: inttypes.SDKv2Import{
@@ -122,10 +119,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDocument,
 			TypeName: "aws_ssm_document",
 			Name:     "Document",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "Document",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Document", names.AttrID)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -136,10 +130,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceMaintenanceWindow,
 			TypeName: "aws_ssm_maintenance_window",
 			Name:     "Maintenance Window",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "MaintenanceWindow",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("MaintenanceWindow", names.AttrID)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
@@ -178,10 +169,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceParameter,
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrName,
-				ResourceType:        "Parameter",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Parameter", names.AttrName)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -192,10 +180,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePatchBaseline,
 			TypeName: "aws_ssm_patch_baseline",
 			Name:     "Patch Baseline",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "PatchBaseline",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("PatchBaseline", names.AttrID)),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.SDKv2Import{
@@ -238,10 +223,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_ssm_association",
 			Name:     "Association",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "Association",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Association", names.AttrID)),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrAssociationID, true)),
 		},
 		{
@@ -249,10 +231,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_ssm_document",
 			Name:     "Document",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "Document",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Document", names.AttrID)),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
@@ -260,10 +239,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrName,
-				ResourceType:        "Parameter",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Parameter", names.AttrName)),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
@@ -271,10 +247,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_ssm_patch_baseline",
 			Name:     "Patch Baseline",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-				ResourceType:        "PatchBaseline",
-			}),
+			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("PatchBaseline", names.AttrID)),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
