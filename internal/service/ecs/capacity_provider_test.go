@@ -299,7 +299,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_basic(t *testing.
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
+					resource.TestCheckResourceAttr(resourceName, "cluster", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},

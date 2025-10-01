@@ -605,14 +605,13 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ecs.UpdateCapacityProviderInput{
+		input := ecs.UpdateCapacityProviderInput{
 			AutoScalingGroupProvider: expandAutoScalingGroupProviderUpdate(d.Get("auto_scaling_group_provider")),
 			ManagedInstancesProvider: expandManagedInstancesProviderUpdate(d.Get("managed_instances_provider")),
 			Name:                     aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		// Add cluster field support
-		if v, ok := d.GetOk(names.AttrClusterName); ok {
+		if v, ok := d.GetOk("cluster"); ok {
 			input.Cluster = aws.String(v.(string))
 		}
 
@@ -620,7 +619,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 			timeout = 10 * time.Minute
 		)
 		_, err := tfresource.RetryWhenIsA[any, *awstypes.UpdateInProgressException](ctx, timeout, func(ctx context.Context) (any, error) {
-			return conn.UpdateCapacityProvider(ctx, input)
+			return conn.UpdateCapacityProvider(ctx, &input)
 		})
 
 		if err != nil {
@@ -640,9 +639,10 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider: %s", d.Id())
-	_, err := conn.DeleteCapacityProvider(ctx, &ecs.DeleteCapacityProviderInput{
+	input := ecs.DeleteCapacityProviderInput{
 		CapacityProvider: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCapacityProvider(ctx, &input)
 
 	// "An error occurred (ClientException) when calling the DeleteCapacityProvider operation: The specified capacity provider does not exist. Specify a valid name or ARN and try again."
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "capacity provider does not exist") {
@@ -698,18 +698,18 @@ func findCapacityProviders(ctx context.Context, conn *ecs.Client, input *ecs.Des
 }
 
 func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.CapacityProvider, error) {
-	input := &ecs.DescribeCapacityProvidersInput{
+	input := ecs.DescribeCapacityProvidersInput{
 		CapacityProviders: []string{arn},
 		Include:           []awstypes.CapacityProviderField{awstypes.CapacityProviderFieldTags},
 	}
 
-	output, err := findCapacityProvider(ctx, conn, input)
+	output, err := findCapacityProvider(ctx, conn, &input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error.
 	if errs.IsUnsupportedOperationInPartitionError(partitionFromConn(conn), err) {
 		input.Include = nil
 
-		output, err = findCapacityProvider(ctx, conn, input)
+		output, err = findCapacityProvider(ctx, conn, &input)
 	}
 
 	if err != nil {
