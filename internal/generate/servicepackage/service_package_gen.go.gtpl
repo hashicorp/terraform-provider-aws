@@ -427,14 +427,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "{{ $typeName }}",
 			Name:     "{{ .Name }}",
 			{{- if $value.TransparentTagging }}
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				{{- if ne $value.TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
-				{{- end }}
-				{{- if ne .TagsResourceType "" }}
-				ResourceType: "{{ .TagsResourceType }}",
-				{{- end }}
-			}),
+			Tags: unique.Make(
+				{{- if not (or .TagsIdentifierAttribute .TagsResourceType) -}}
+					inttypes.ResourceTagsInline()
+				{{- else -}}
+					inttypes.ServicePackageResourceTags{
+					{{- if ne $value.TagsIdentifierAttribute "" }}
+					IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
+					{{- end }}
+					{{- if ne .TagsResourceType "" }}
+					ResourceType: "{{ .TagsResourceType }}",
+					{{- end }}
+				}
+				{{- end -}}
+			),
 			{{- end }}
 			{{- if $value.RegionOverrideDeprecated }}
 				Region: inttypes.ResourceRegionDeprecatedOverride(),
