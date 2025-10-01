@@ -45,7 +45,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newCapacityBlockReservationDataSource,
 			TypeName: "aws_ec2_capacity_block_reservation",
 			Name:     "Capacity Block Reservation",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -58,7 +58,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newServiceLinkVirtualInterfaceDataSource,
 			TypeName: "aws_ec2_service_link_virtual_interface",
 			Name:     "Service Link Virtual Interface",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -83,7 +83,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -108,7 +108,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newVPNConnectionDataSource,
 			TypeName: "aws_vpn_connection",
 			Name:     "VPN Connection",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

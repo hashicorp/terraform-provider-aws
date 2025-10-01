@@ -26,7 +26,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newConnectorDataSource,
 			TypeName: "aws_transfer_connector",
 			Name:     "Connector",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

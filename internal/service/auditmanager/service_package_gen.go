@@ -26,14 +26,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newControlDataSource,
 			TypeName: "aws_auditmanager_control",
 			Name:     "Control",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newFrameworkDataSource,
 			TypeName: "aws_auditmanager_framework",
 			Name:     "Framework",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

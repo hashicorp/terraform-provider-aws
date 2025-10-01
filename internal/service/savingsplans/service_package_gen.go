@@ -32,7 +32,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newSavingsPlanDataSource,
 			TypeName: "aws_savingsplans_savings_plan",
 			Name:     "Savings Plan",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     unique.Make(inttypes.ResourceTagsInline()),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
