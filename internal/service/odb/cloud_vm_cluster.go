@@ -6,6 +6,7 @@ package odb
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -55,6 +57,7 @@ func newResourceCloudVmCluster(_ context.Context) (resource.ResourceWithConfigur
 
 const (
 	ResNameCloudVmCluster = "Cloud Vm Cluster"
+	MajorGiVersionPattern = `^\d+\.0\.0\.0$`
 )
 
 var ResourceCloudVmCluster = newResourceCloudVmCluster
@@ -70,6 +73,9 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 	licenseModelType := fwtypes.StringEnumType[odbtypes.LicenseModel]()
 	diskRedundancyType := fwtypes.StringEnumType[odbtypes.DiskRedundancy]()
 	computeModelType := fwtypes.StringEnumType[odbtypes.ComputeModel]()
+	giVersionValidator := []validator.String{
+		stringvalidator.RegexMatches(regexp.MustCompile(MajorGiVersionPattern), "Gi version must be of the format 19.0.0.0"),
+	}
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -145,14 +151,15 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The domain name associated with the VM cluster.",
 			},
 			"gi_version": schema.StringAttribute{
-				Required:  true,
-				WriteOnly: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				//Note: underlying API only accepts major gi_version.
+				Validators:  giVersionValidator,
 				Description: "A valid software version of Oracle Grid Infrastructure (GI). To get the list of valid values, use the ListGiVersions operation and specify the shape of the Exadata infrastructure. Example: 19.0.0.0 This member is required. Changing this will create a new resource.",
 			},
-			//Underlying API returns complete gi version. For example if gi_version 23.0.0.0 then underlying api returns any version starting with 23
+			//Underlying API returns complete gi version. For example if gi_version 23.0.0.0 then underlying api returns a version starting with 23
 			"gi_version_computed": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -484,6 +491,15 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	//scan listener port not returned by API directly
 	plan.ScanListenerPortTcp = types.Int32PointerValue(createdVmCluster.ListenerPort)
 	plan.GiVersionComputed = types.StringPointerValue(createdVmCluster.GiVersion)
+	giVersionMajor, err := getMajorGiVersion(createdVmCluster.GiVersion)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, plan.DisplayName.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.GiVersion = types.StringPointerValue(giVersionMajor)
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdVmCluster, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -518,6 +534,15 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 	//scan listener port not returned by API directly
 	state.ScanListenerPortTcp = types.Int32PointerValue(out.ListenerPort)
 	state.GiVersionComputed = types.StringPointerValue(out.GiVersion)
+	giVersionMajor, err := getMajorGiVersion(out.GiVersion)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, state.CloudVmClusterId.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	state.GiVersion = types.StringPointerValue(giVersionMajor)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -628,6 +653,16 @@ func FindCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	}
 	return out.CloudVmCluster, nil
 }
+func getMajorGiVersion(giVersionComputed *string) (*string, error) {
+	giVersionMajor := strings.Split(*giVersionComputed, ".")[0]
+	giVersionMajor = giVersionMajor + ".0.0.0"
+	regxGiVersionMajor := regexp.MustCompile(MajorGiVersionPattern)
+	if !regxGiVersionMajor.MatchString(giVersionMajor) {
+		err := errors.New("gi_version major retrieved from gi_version_computed does not match the pattern 19.0.0.0")
+		return nil, err
+	}
+	return &giVersionMajor, nil
+}
 
 type cloudVmClusterResourceModel struct {
 	framework.WithRegionModel
@@ -643,7 +678,7 @@ type cloudVmClusterResourceModel struct {
 	DiskRedundancy               fwtypes.StringEnum[odbtypes.DiskRedundancy]                                 `tfsdk:"disk_redundancy"`
 	DisplayName                  types.String                                                                `tfsdk:"display_name"`
 	Domain                       types.String                                                                `tfsdk:"domain"`
-	GiVersion                    types.String                                                                `tfsdk:"gi_version"`
+	GiVersion                    types.String                                                                `tfsdk:"gi_version" autoflex:",noflatten"`
 	GiVersionComputed            types.String                                                                `tfsdk:"gi_version_computed" autoflex:",noflatten"`
 	HostnamePrefixComputed       types.String                                                                `tfsdk:"hostname_prefix_computed" autoflex:",noflatten"`
 	HostnamePrefix               types.String                                                                `tfsdk:"hostname_prefix" autoflex:"-"`
