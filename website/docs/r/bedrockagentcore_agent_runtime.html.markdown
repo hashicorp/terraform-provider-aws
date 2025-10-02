@@ -122,6 +122,7 @@ The following arguments are optional:
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
+* `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `agent_runtime_artifact`
@@ -154,13 +155,27 @@ The `custom_jwt_authorizer` block supports the following:
 
 The `network_configuration` block supports the following:
 
-* `network_mode` - (Required) Network mode for the agent runtime. Valid values: `PUBLIC`.
+* `network_mode` - (Required) Network mode for the agent runtime. Valid values: `PUBLIC`, `VPC`.
+* `network_mode_config` - (Optional) Network mode configuration. See [`network_mode_config`](#network_mode_config) below.
+
+### `network_mode_config`
+
+The `network_mode_config` block supports the following:
+
+* `security_groups` - (Required) Security groups associated with the VPC configuration.
+* `subnets` - (Required) Subnets associated with the VPC configuration.
 
 ### `protocol_configuration`
 
 The `protocol_configuration` block supports the following:
 
 * `server_protocol` - (Optional) Server protocol for the agent runtime. Valid values: `HTTP`, `MCP`.
+
+### `request_header_configuration`
+
+The `request_header_configuration` block supports the following:
+
+* `request_header_allowlist` - (Optional) A list of HTTP request headers that are allowed to be passed through to the runtime.
 
 ## Attribute Reference
 
