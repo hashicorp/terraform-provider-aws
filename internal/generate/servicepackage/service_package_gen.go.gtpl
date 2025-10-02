@@ -85,15 +85,14 @@ inttypes.StringIdentityAttribute(
 
 {{define "TransparentTagging" -}}
 {{- if .TransparentTagging }}
-	Tags: unique.Make(
+	Tags:
 		{{- if not (or .TagsIdentifierAttribute .TagsResourceType) -}}
-			inttypes.ResourceTagsInline()
+			inttypes.ResourceTagsInline(),
 		{{- else if .TagsResourceType -}}
-			inttypes.ResourceTagsTypeAndAttribute("{{ .TagsResourceType }}", {{ .TagsIdentifierAttribute }})
+			inttypes.ResourceTagsTypeAndAttribute("{{ .TagsResourceType }}", {{ .TagsIdentifierAttribute }}),
 		{{- else -}}
-			inttypes.ResourceTagsAttribute({{ .TagsIdentifierAttribute }})
+			inttypes.ResourceTagsAttribute({{ .TagsIdentifierAttribute }}),
 		{{- end -}}
-	),
 {{- end }}
 {{- end }}
 
@@ -103,7 +102,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 {{ if .GenerateClient }}
 	"github.com/aws/aws-sdk-go-v2/aws"

@@ -8,7 +8,6 @@ package iam_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -227,5 +226,5 @@ func TestAccIAMOpenIDConnectProviderDataSource_Tags_IgnoreTags_Overlap_resourceT
 }
 
 func expectFullOpenIDConnectProviderDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsTypeAndAttribute("OIDCProvider", names.AttrARN)), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsTypeAndAttribute("OIDCProvider", names.AttrARN), knownValue)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,26 +58,48 @@ func ResourceRegionNoPartitionValidation() unique.Handle[ServicePackageResourceR
 }
 
 // ServicePackageResourceTags represents resource-level tagging information.
-type ServicePackageResourceTags struct {
-	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
-	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
+type ServicePackageResourceTags unique.Handle[servicePackageResourceTags]
+
+func (s ServicePackageResourceTags) unwrap() unique.Handle[servicePackageResourceTags] {
+	return unique.Handle[servicePackageResourceTags](s)
+}
+
+func (s ServicePackageResourceTags) value() servicePackageResourceTags {
+	return s.unwrap().Value()
+}
+
+func (s ServicePackageResourceTags) Enabled() bool {
+	return !tfunique.IsHandleNil(s.unwrap())
+}
+
+func (s ServicePackageResourceTags) IdentifierAttribute() string {
+	return s.value().identifierAttribute
+}
+
+func (s ServicePackageResourceTags) ResourceType() string {
+	return s.value().resourceType
+}
+
+type servicePackageResourceTags struct {
+	identifierAttribute string // The attribute for the identifier for UpdateTags etc.
+	resourceType        string // Extra resourceType parameter value for UpdateTags etc.
 }
 
 func ResourceTagsInline() ServicePackageResourceTags {
-	return ServicePackageResourceTags{}
+	return ServicePackageResourceTags(unique.Make(servicePackageResourceTags{}))
 }
 
 func ResourceTagsAttribute(identifierAttribute string) ServicePackageResourceTags {
-	return ServicePackageResourceTags{
-		IdentifierAttribute: identifierAttribute,
-	}
+	return ServicePackageResourceTags(unique.Make(servicePackageResourceTags{
+		identifierAttribute: identifierAttribute,
+	}))
 }
 
 func ResourceTagsTypeAndAttribute(resourceType, identifierAttribute string) ServicePackageResourceTags {
-	return ServicePackageResourceTags{
-		IdentifierAttribute: identifierAttribute,
-		ResourceType:        resourceType,
-	}
+	return ServicePackageResourceTags(unique.Make(servicePackageResourceTags{
+		identifierAttribute: identifierAttribute,
+		resourceType:        resourceType,
+	}))
 }
 
 // ServicePackageAction represents a Terraform Plugin Framework action
@@ -103,7 +126,7 @@ type ServicePackageFrameworkDataSource struct {
 	Factory  func(context.Context) (datasource.DataSourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
@@ -113,7 +136,7 @@ type ServicePackageFrameworkResource struct {
 	Factory  func(context.Context) (resource.ResourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 	Import   FrameworkImport
@@ -123,7 +146,7 @@ type ServicePackageFrameworkListResource struct {
 	Factory  func() list.ListResourceWithConfigure
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 }
@@ -134,7 +157,7 @@ type ServicePackageSDKDataSource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
@@ -144,7 +167,7 @@ type ServicePackageSDKResource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 	Import   SDKv2Import
@@ -159,7 +182,7 @@ type ServicePackageSDKListResource struct {
 	Factory  func() ListResourceForSDK
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 }

@@ -7,7 +7,6 @@ package appsync
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
@@ -30,14 +29,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAPIResource,
 			TypeName: "aws_appsync_api",
 			Name:     "API",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("api_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("api_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newChannelNamespaceResource,
 			TypeName: "aws_appsync_channel_namespace",
 			Name:     "Channel Namespace",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("channel_namespace_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("channel_namespace_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -95,7 +94,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceGraphQLAPI,
 			TypeName: "aws_appsync_graphql_api",
 			Name:     "GraphQL API",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{

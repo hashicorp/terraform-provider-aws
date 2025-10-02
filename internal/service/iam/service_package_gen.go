@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -138,14 +137,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  dataSourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
@@ -164,7 +163,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
@@ -177,7 +176,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
@@ -196,7 +195,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
@@ -280,7 +279,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("InstanceProfile", names.AttrName)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("InstanceProfile", names.AttrName),
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -291,7 +290,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("OIDCProvider", names.AttrARN)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("OIDCProvider", names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -304,7 +303,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Policy", names.AttrARN)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Policy", names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -324,7 +323,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Role", names.AttrName)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Role", names.AttrName),
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
 				inttypes.WithV6_0SDKv2Fix(),
@@ -365,7 +364,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("SAMLProvider", names.AttrARN)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("SAMLProvider", names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -384,14 +383,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("ServerCertificate", names.AttrName)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("ServerCertificate", names.AttrName),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceServiceLinkedRole,
 			TypeName: "aws_iam_service_linked_role",
 			Name:     "Service Linked Role",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("ServiceLinkedRole", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("ServiceLinkedRole", names.AttrID),
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -416,7 +415,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("User", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("User", names.AttrID),
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
 				inttypes.WithMutableIdentity(),
@@ -475,7 +474,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceVirtualMFADevice,
 			TypeName: "aws_iam_virtual_mfa_device",
 			Name:     "Virtual MFA Device",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("VirtualMFADevice", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("VirtualMFADevice", names.AttrID),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
@@ -514,7 +513,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("InstanceProfile", names.AttrName)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("InstanceProfile", names.AttrName),
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
@@ -522,7 +521,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("OIDCProvider", names.AttrARN)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("OIDCProvider", names.AttrARN),
 			Identity: inttypes.GlobalARNIdentity(),
 		},
 		{
@@ -530,7 +529,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Policy", names.AttrARN)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Policy", names.AttrARN),
 			Identity: inttypes.GlobalARNIdentity(),
 		},
 		{
@@ -538,7 +537,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_iam_role",
 			Name:     "Role",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Role", names.AttrName)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Role", names.AttrName),
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
@@ -566,7 +565,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_iam_user",
 			Name:     "User",
 			Region:   inttypes.ResourceRegionDisabled(),
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("User", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("User", names.AttrID),
 			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
 				inttypes.WithMutableIdentity(),
 			),
