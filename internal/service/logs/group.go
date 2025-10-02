@@ -112,7 +112,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := cloudwatchlogs.CreateLogGroupInput{
 		LogGroupClass: awstypes.LogGroupClass(d.Get("log_group_class").(string)),
 		LogGroupName:  aws.String(name),

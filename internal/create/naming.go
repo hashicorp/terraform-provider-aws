@@ -4,6 +4,7 @@
 package create
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/YakDriver/regexache"
@@ -11,7 +12,7 @@ import (
 )
 
 // Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
-func Name(name string, namePrefix string) string {
+func Name(ctx context.Context, name string, namePrefix string) string {
 	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix)).Generate()
 }
 

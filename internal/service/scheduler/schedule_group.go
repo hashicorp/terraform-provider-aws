@@ -96,7 +96,7 @@ func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	in := scheduler.CreateScheduleGroupInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
