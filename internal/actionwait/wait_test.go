@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 )
 
 // fastFixedInterval returns a very small fixed interval to speed tests.
@@ -320,5 +322,105 @@ func TestWaitForStatus_UnexpectedStateErrorMessage(t *testing.T) {
 	}
 	if !strings.Contains(errMsg, "PENDING") {
 		t.Errorf("error message should contain allowed state 'PENDING', got: %s", errMsg)
+	}
+}
+
+func TestBackoffInterval(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name              string
+		delay             backoff.Delay
+		attempts          []uint
+		expectedDurations []time.Duration
+	}{
+		{
+			name:              "fixed delay",
+			delay:             backoff.FixedDelay(100 * time.Millisecond),
+			attempts:          []uint{0, 1, 2, 3},
+			expectedDurations: []time.Duration{0, 100 * time.Millisecond, 100 * time.Millisecond, 100 * time.Millisecond},
+		},
+		{
+			name:              "zero delay",
+			delay:             backoff.ZeroDelay,
+			attempts:          []uint{0, 1, 2},
+			expectedDurations: []time.Duration{0, 0, 0},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			interval := BackoffInterval{delay: tt.delay}
+
+			for i, attempt := range tt.attempts {
+				got := interval.NextPoll(attempt)
+				want := tt.expectedDurations[i]
+				if got != want {
+					t.Errorf("NextPoll(%d) = %v, want %v", attempt, got, want)
+				}
+			}
+		})
+	}
+}
+
+func TestWithBackoffDelay(t *testing.T) {
+	t.Parallel()
+
+	delay := backoff.FixedDelay(50 * time.Millisecond)
+	interval := WithBackoffDelay(delay)
+
+	// Verify it implements IntervalStrategy
+	var _ IntervalStrategy = interval
+
+	// Test that it wraps the delay correctly
+	if got := interval.NextPoll(0); got != 0 {
+		t.Errorf("NextPoll(0) = %v, want 0", got)
+	}
+	if got := interval.NextPoll(1); got != 50*time.Millisecond {
+		t.Errorf("NextPoll(1) = %v, want 50ms", got)
+	}
+}
+
+func TestBackoffIntegration(t *testing.T) {
+	t.Parallel()
+
+	ctx := makeCtx(t)
+
+	var callCount atomic.Int32
+	fetch := func(context.Context) (FetchResult[string], error) {
+		count := callCount.Add(1)
+		switch count {
+		case 1:
+			return FetchResult[string]{Status: "CREATING", Value: "attempt1"}, nil
+		case 2:
+			return FetchResult[string]{Status: "AVAILABLE", Value: "success"}, nil
+		default:
+			t.Errorf("unexpected call count: %d", count)
+			return FetchResult[string]{}, errors.New("too many calls")
+		}
+	}
+
+	opts := Options[string]{
+		Timeout:            2 * time.Second,
+		Interval:           WithBackoffDelay(backoff.FixedDelay(fastFixedInterval)),
+		SuccessStates:      []Status{"AVAILABLE"},
+		TransitionalStates: []Status{"CREATING"},
+	}
+
+	result, err := WaitForStatus(ctx, fetch, opts)
+	if err != nil {
+		t.Fatalf("WaitForStatus() error = %v", err)
+	}
+
+	if result.Status != "AVAILABLE" {
+		t.Errorf("result.Status = %q, want %q", result.Status, "AVAILABLE")
+	}
+	if result.Value != "success" {
+		t.Errorf("result.Value = %q, want %q", result.Value, "success")
+	}
+	if callCount.Load() != 2 {
+		t.Errorf("expected 2 fetch calls, got %d", callCount.Load())
 	}
 }

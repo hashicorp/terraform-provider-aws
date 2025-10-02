@@ -11,6 +11,8 @@ import (
 	"errors"
 	"slices"
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 )
 
 // DefaultPollInterval is the default fixed polling interval used when no custom IntervalStrategy is provided.
@@ -40,6 +42,32 @@ type FixedInterval time.Duration
 
 // NextPoll returns the fixed duration.
 func (fi FixedInterval) NextPoll(uint) time.Duration { return time.Duration(fi) }
+
+// BackoffInterval implements IntervalStrategy using a backoff.Delay strategy.
+// This allows actionwait to leverage sophisticated backoff algorithms while
+// maintaining the declarative status-based polling approach.
+type BackoffInterval struct {
+	delay backoff.Delay
+}
+
+// NextPoll returns the next polling interval using the wrapped backoff delay strategy.
+func (bi BackoffInterval) NextPoll(attempt uint) time.Duration {
+	return bi.delay.Next(attempt)
+}
+
+// WithBackoffDelay creates an IntervalStrategy that uses the provided backoff.Delay.
+// This bridges actionwait's IntervalStrategy interface with the backoff package's
+// delay strategies (fixed, exponential, SDK-compatible, etc.).
+//
+// Example usage:
+//
+//	opts := actionwait.Options[MyType]{
+//	    Interval: actionwait.WithBackoffDelay(backoff.FixedDelay(time.Second)),
+//	    // ... other options
+//	}
+func WithBackoffDelay(delay backoff.Delay) IntervalStrategy {
+	return BackoffInterval{delay: delay}
+}
 
 // Options configure the WaitForStatus loop.
 type Options[T any] struct {
