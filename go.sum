@@ -115,8 +115,8 @@ github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.6 h1:JT7X1tDbH
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.6/go.mod h1:ROgSEKmD43CMB1KWQSPNovieWq6DPPSu/MCdVbwO6II=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.27.0 h1:NMNhVPuxmv+8l/XktsHQTqyk7vhVsqzKEzePMdQWvgE=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.27.0/go.mod h1:8y4H/7OXnf2YSf2ybz8aqQzxbl5pW/yiolNFSSaZ41g=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.34.1 h1:ZE5Rsd9nKFDKU1iApFVkyYZtPBg/WGqUe6jeJz3xVlU=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.34.1/go.mod h1:VyV0Il6a4RYvrqhA6tvNpV13LEBFk77Vu1FMTJs4qyA=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.35.0 h1:9QfQ/5UoWefNT1XJslIoXT0dhDcDrv9xmSG+uLVhLhk=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.35.0/go.mod h1:VyV0Il6a4RYvrqhA6tvNpV13LEBFk77Vu1FMTJs4qyA=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.5 h1:ZoUqKpdIPkGeGRY1v81GCaVoELHgtUYEV0WF67skUhk=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.5/go.mod h1:Q2RJfC6edAyk5hr3gJMS8WANFoTPGIo2SlAzQkZsT0A=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.28.6 h1:jqP2tyJOEj7qDoLyqyKGnDMAW+Lmi0WwNB2OruNao6w=
@@ -183,8 +183,8 @@ github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.6 h1:bm/4K9y+tPlO
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.6/go.mod h1:Ind97CkUL/Sp8b9+eXlZoJzOyAjgSl+zX2NODYGl/5M=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.53.0 h1:MgnY9bNxeOQ2jPCwkQ5PdNVNJtdLlGWsql4BCEA3oKs=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.53.0/go.mod h1:Zp3IfPlmLCI1qU7It4GyqNKmTNLjNP33ZS9XdJSHY38=
-github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.6 h1:m2d6skiMb73o4Af8agl+0/KnudK7vU6ODBAA864Kh4U=
-github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.6/go.mod h1:ct/KZc7aF1iJDdvVtIMUBjbZrIespvcZDXfiobANsVw=
+github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.7 h1:ARnadIHN7MAAMkjNsBScWgV7pRhrhXtBnXMG8YDkDNE=
+github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.7/go.mod h1:ct/KZc7aF1iJDdvVtIMUBjbZrIespvcZDXfiobANsVw=
 github.com/aws/aws-sdk-go-v2/service/databrew v1.38.5 h1:uAyzLnETV1vpvVakHdGNOSnpYtmCPbc8F3e+rjooC+E=
 github.com/aws/aws-sdk-go-v2/service/databrew v1.38.5/go.mod h1:TyoXF8AvpXcKkxjlW7E+Aax/FBDLoObTyby6zRffi14=
 github.com/aws/aws-sdk-go-v2/service/dataexchange v1.39.6 h1:ywlBAsu4TUhGcocmioq7k6709WHhVZx6yHHcuAma1C8=
@@ -225,8 +225,8 @@ github.com/aws/aws-sdk-go-v2/service/ecr v1.50.5 h1:jzjNyiIrXJHumV1hwofcQLpIZtcD
 github.com/aws/aws-sdk-go-v2/service/ecr v1.50.5/go.mod h1:UtPKcYVHY6RrV9EaaM1KZGNaf9dgviFdsT6xoFMLQsM=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.6 h1:pc4te9Px2oORmxWlJXaX/OkHQsdQ3RiPvuZU7525FZc=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.6/go.mod h1:BeseuedjcZNw+lGyqDIbapD3hvvsEVkjkISUIQLzem4=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.65.0 h1:XQSeZzmmdab+P7316/XjRA8T+J/Mxfr4H0zlhKNQcmg=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.65.0/go.mod h1:fu6WrWUHYyPRjzYO13UDXA7O6OShI8QbH5YSl9SOJwQ=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.65.1 h1:pBbXc1fGRbrYl7NFujuubMmEFEp7CJiKTBsoDOIUkuk=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.65.1/go.mod h1:fu6WrWUHYyPRjzYO13UDXA7O6OShI8QbH5YSl9SOJwQ=
 github.com/aws/aws-sdk-go-v2/service/efs v1.40.8 h1:vwqXyeluOHOgkonTOxvFqGgMNh0y5H6r23+8RA5ifZo=
 github.com/aws/aws-sdk-go-v2/service/efs v1.40.8/go.mod h1:xJFehblB1voatQStn4hPPTnr+ueQ3UKxjSCro66JliE=
 github.com/aws/aws-sdk-go-v2/service/eks v1.74.2 h1:GKqBur7gp6rnYbMZXh2+89f8g+/bu26ZKwpXfXrno80=
@@ -407,8 +407,8 @@ github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.25.2 h1:jAVEnaD69Jhc
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.25.2/go.mod h1:LtAy3qbryUglXiyAYdn+OCltWbMMMvYoUK6hAiFc73k=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.6 h1:tZK9NedvW1WYWf+eZ437hUNETq4+eofZ9ja32FtFHLQ=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.6/go.mod h1:fRBVcoZiTYjTywau+UcyTXAjtLxz20Jsaz0XXdG2950=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.13.2 h1:9eVMH9pbh7Va6SY/5ZDPFusc7XbZpcXZJQ0QX6ftyWs=
-github.com/aws/aws-sdk-go-v2/service/pcs v1.13.2/go.mod h1:wyFACwTlB5ZUiOQAqs+5m7gj4xUCbojoUTaZYxa7BjM=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.14.0 h1:Dk/dj8EBPQBPawPMR2M9+tijanojSdoxJDSA5clenZo=
+github.com/aws/aws-sdk-go-v2/service/pcs v1.14.0/go.mod h1:wyFACwTlB5ZUiOQAqs+5m7gj4xUCbojoUTaZYxa7BjM=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.6 h1:6vjEH7AL5aYC49apXto1dHgMBNDdZLh2L3Bve0vkE2o=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.6/go.mod h1:oNyevxM/xQifmv2yk482sM2isWXgloHLrOLoeOrOPHQ=
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.25.5 h1:S/QLsL7GTbrtjrALjKWdab+UBUB7LIHnEJtMvdD9khk=
