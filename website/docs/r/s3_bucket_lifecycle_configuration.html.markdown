@@ -28,10 +28,9 @@ See the Amazon S3 User Guide on [setting lifecycle configuration on a bucket](ht
 
 ### With neither a filter nor prefix specified
 
-The Lifecycle rule applies to all objects in the bucket, i.e. it is equivalent to setting an empty `filter` element.
+When you don't specify a filter or prefix, the lifecycle rule applies to all objects in the bucket. This has the same effect as setting an empty `filter` element.
 
-This configuration is intended to replicate the default behavior of the `lifecycle_rule`
-parameter in the Terraform AWS Provider `aws_s3_bucket` resource prior to `v4.0`.
+This configuration maintains compatibility with the default behavior of the `lifecycle_rule` parameter from the `aws_s3_bucket` resource in versions prior to v4.0 of the Terraform AWS Provider.
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
