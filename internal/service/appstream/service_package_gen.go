@@ -7,7 +7,6 @@ package appstream
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
@@ -51,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceFleet,
 			TypeName: "aws_appstream_fleet",
 			Name:     "Fleet",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -64,14 +63,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceImageBuilder,
 			TypeName: "aws_appstream_image_builder",
 			Name:     "Image Builder",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceStack,
 			TypeName: "aws_appstream_stack",
 			Name:     "Stack",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{

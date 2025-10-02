@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
@@ -32,7 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCollectionResource,
 			TypeName: "aws_rekognition_collection",
 			Name:     "Collection",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("collection_id", true),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -45,7 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newProjectResource,
 			TypeName: "aws_rekognition_project",
 			Name:     "Project",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -58,7 +57,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newStreamProcessorResource,
 			TypeName: "aws_rekognition_stream_processor",
 			Name:     "Stream Processor",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.FrameworkImport{
@@ -74,7 +73,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newCollectionResourceAsListResource,
 			TypeName: "aws_rekognition_collection",
 			Name:     "Collection",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("collection_id", true),
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),

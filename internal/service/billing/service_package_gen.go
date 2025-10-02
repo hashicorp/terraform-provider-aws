@@ -7,7 +7,6 @@ package billing
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
@@ -44,7 +43,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceView,
 			TypeName: "aws_billing_view",
 			Name:     "View",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}

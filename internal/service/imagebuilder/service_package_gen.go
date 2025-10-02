@@ -7,7 +7,6 @@ package imagebuilder
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
@@ -30,7 +29,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newLifecyclePolicyResource,
 			TypeName: "aws_imagebuilder_lifecycle_policy",
 			Name:     "Lifecycle Policy",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
@@ -46,7 +45,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceComponent,
 			TypeName: "aws_imagebuilder_component",
 			Name:     "Component",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -59,7 +58,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceContainerRecipe,
 			TypeName: "aws_imagebuilder_container_recipe",
 			Name:     "Container Recipe",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -72,7 +71,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceDistributionConfiguration,
 			TypeName: "aws_imagebuilder_distribution_configuration",
 			Name:     "Distribution Configuration",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -85,14 +84,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceImage,
 			TypeName: "aws_imagebuilder_image",
 			Name:     "Image",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceImagePipeline,
 			TypeName: "aws_imagebuilder_image_pipeline",
 			Name:     "Image Pipeline",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -105,7 +104,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceImageRecipe,
 			TypeName: "aws_imagebuilder_image_recipe",
 			Name:     "Image Recipe",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -118,7 +117,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceInfrastructureConfiguration,
 			TypeName: "aws_imagebuilder_infrastructure_configuration",
 			Name:     "Infrastructure Configuration",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -136,14 +135,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceComponent,
 			TypeName: "aws_imagebuilder_component",
 			Name:     "Component",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceContainerRecipe,
 			TypeName: "aws_imagebuilder_container_recipe",
 			Name:     "Container Recipe",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -156,7 +155,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDistributionConfiguration,
 			TypeName: "aws_imagebuilder_distribution_configuration",
 			Name:     "Distribution Configuration",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -169,7 +168,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceImage,
 			TypeName: "aws_imagebuilder_image",
 			Name:     "Image",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -182,7 +181,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceImagePipeline,
 			TypeName: "aws_imagebuilder_image_pipeline",
 			Name:     "Image Pipeline",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -195,7 +194,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceImageRecipe,
 			TypeName: "aws_imagebuilder_image_recipe",
 			Name:     "Image Recipe",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -208,7 +207,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceInfrastructureConfiguration,
 			TypeName: "aws_imagebuilder_infrastructure_configuration",
 			Name:     "Infrastructure Configuration",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
@@ -221,7 +220,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceWorkflow,
 			TypeName: "aws_imagebuilder_workflow",
 			Name:     "Workflow",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),

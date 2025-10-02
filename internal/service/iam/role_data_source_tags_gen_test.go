@@ -8,7 +8,6 @@ package iam_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -227,5 +226,5 @@ func TestAccIAMRoleDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) 
 }
 
 func expectFullRoleDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsTypeAndAttribute("Role", names.AttrName)), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfiam.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsTypeAndAttribute("Role", names.AttrName), knownValue)
 }

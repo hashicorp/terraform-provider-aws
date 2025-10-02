@@ -7,7 +7,6 @@ package mwaa
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
@@ -38,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceEnvironment,
 			TypeName: "aws_mwaa_environment",
 			Name:     "Environment",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

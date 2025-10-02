@@ -7,7 +7,6 @@ package inspector
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
@@ -57,7 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAssessmentTemplate,
 			TypeName: "aws_inspector_assessment_template",
 			Name:     "Assessment Template",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),

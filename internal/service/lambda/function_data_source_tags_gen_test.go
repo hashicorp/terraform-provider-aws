@@ -8,7 +8,6 @@ package lambda_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -227,5 +226,5 @@ func TestAccLambdaFunctionDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *test
 }
 
 func expectFullFunctionDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tflambda.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tflambda.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsAttribute(names.AttrARN), knownValue)
 }

@@ -7,7 +7,6 @@ package route53domains
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
@@ -37,7 +36,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDomainResource,
 			TypeName: "aws_route53domains_domain",
 			Name:     "Domain",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrDomainName)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrDomainName),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
@@ -53,7 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceRegisteredDomain,
 			TypeName: "aws_route53domains_registered_domain",
 			Name:     "Registered Domain",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}

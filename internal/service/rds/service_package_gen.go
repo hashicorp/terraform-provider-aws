@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
@@ -40,7 +39,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 			Name:     "Global Cluster",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -58,7 +57,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newClusterSnapshotCopyResource,
 			TypeName: "aws_rds_cluster_snapshot_copy",
 			Name:     "Cluster Snapshot Copy",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("db_cluster_snapshot_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("db_cluster_snapshot_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -77,7 +76,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newIntegrationResource,
 			TypeName: "aws_rds_integration",
 			Name:     "Integration",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
@@ -88,7 +87,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newShardGroupResource,
 			TypeName: "aws_rds_shard_group",
 			Name:     "Shard Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -100,7 +99,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
 			Name:     "DB Cluster Snapshot",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -113,7 +112,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceInstance,
 			TypeName: "aws_db_instance",
 			Name:     "DB Instance",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -138,7 +137,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceSnapshot,
 			TypeName: "aws_db_snapshot",
 			Name:     "DB Snapshot",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -157,7 +156,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCluster,
 			TypeName: "aws_rds_cluster",
 			Name:     "Cluster",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -193,21 +192,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
 			Name:     "DB Cluster Snapshot",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("db_cluster_snapshot_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("db_cluster_snapshot_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceEventSubscription,
 			TypeName: "aws_db_event_subscription",
 			Name:     "Event Subscription",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceInstance,
 			TypeName: "aws_db_instance",
 			Name:     "DB Instance",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrIdentifier, true),
 				inttypes.WithMutableIdentity(),
@@ -232,14 +231,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceOptionGroup,
 			TypeName: "aws_db_option_group",
 			Name:     "DB Option Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceParameterGroup,
 			TypeName: "aws_db_parameter_group",
 			Name:     "DB Parameter Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -250,7 +249,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceProxy,
 			TypeName: "aws_db_proxy",
 			Name:     "DB Proxy",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -263,7 +262,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceProxyEndpoint,
 			TypeName: "aws_db_proxy_endpoint",
 			Name:     "DB Proxy Endpoint",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -276,21 +275,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSnapshot,
 			TypeName: "aws_db_snapshot",
 			Name:     "DB Snapshot",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("db_snapshot_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("db_snapshot_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceSnapshotCopy,
 			TypeName: "aws_db_snapshot_copy",
 			Name:     "DB Snapshot Copy",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("db_snapshot_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("db_snapshot_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceSubnetGroup,
 			TypeName: "aws_db_subnet_group",
 			Name:     "DB Subnet Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
@@ -314,7 +313,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCluster,
 			TypeName: "aws_rds_cluster",
 			Name:     "Cluster",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrClusterIdentifier, true)),
 			Import: inttypes.SDKv2Import{
@@ -331,21 +330,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceClusterEndpoint,
 			TypeName: "aws_rds_cluster_endpoint",
 			Name:     "Cluster Endpoint",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceClusterInstance,
 			TypeName: "aws_rds_cluster_instance",
 			Name:     "Cluster Instance",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceClusterParameterGroup,
 			TypeName: "aws_rds_cluster_parameter_group",
 			Name:     "Cluster Parameter Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -358,21 +357,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCustomDBEngineVersion,
 			TypeName: "aws_rds_custom_db_engine_version",
 			Name:     "Custom DB Engine Version",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 			Name:     "Global Cluster",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceReservedInstance,
 			TypeName: "aws_rds_reserved_instance",
 			Name:     "Reserved Instance",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -385,7 +384,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_db_instance",
 			Name:     "DB Instance",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrIdentifier, true),
 				inttypes.WithMutableIdentity(),
 			),
@@ -395,7 +394,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_db_parameter_group",
 			Name:     "DB Parameter Group",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
@@ -403,7 +402,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_db_subnet_group",
 			Name:     "DB Subnet Group",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
@@ -411,7 +410,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_rds_cluster",
 			Name:     "Cluster",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrClusterIdentifier, true)),
 		},
 	})

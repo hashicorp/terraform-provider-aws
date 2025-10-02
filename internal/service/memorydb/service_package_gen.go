@@ -7,7 +7,6 @@ package memorydb
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
@@ -30,7 +29,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newMultiRegionClusterResource,
 			TypeName: "aws_memorydb_multi_region_cluster",
 			Name:     "Multi Region Cluster",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -42,42 +41,42 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceACL,
 			TypeName: "aws_memorydb_acl",
 			Name:     "ACL",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceCluster,
 			TypeName: "aws_memorydb_cluster",
 			Name:     "Cluster",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
 			Name:     "Parameter Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceSnapshot,
 			TypeName: "aws_memorydb_snapshot",
 			Name:     "Snapshot",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
 			Name:     "Subnet Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceUser,
 			TypeName: "aws_memorydb_user",
 			Name:     "User",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -89,42 +88,42 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceACL,
 			TypeName: "aws_memorydb_acl",
 			Name:     "ACL",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceCluster,
 			TypeName: "aws_memorydb_cluster",
 			Name:     "Cluster",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
 			Name:     "Parameter Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceSnapshot,
 			TypeName: "aws_memorydb_snapshot",
 			Name:     "Snapshot",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
 			Name:     "Subnet Group",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_memorydb_user",
 			Name:     "User",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

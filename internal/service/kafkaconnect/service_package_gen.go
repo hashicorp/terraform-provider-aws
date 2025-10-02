@@ -7,7 +7,6 @@ package kafkaconnect
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
@@ -34,21 +33,21 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceConnector,
 			TypeName: "aws_mskconnect_connector",
 			Name:     "Connector",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceCustomPlugin,
 			TypeName: "aws_mskconnect_custom_plugin",
 			Name:     "Custom Plugin",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceWorkerConfiguration,
 			TypeName: "aws_mskconnect_worker_configuration",
 			Name:     "Worker Configuration",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -60,21 +59,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceConnector,
 			TypeName: "aws_mskconnect_connector",
 			Name:     "Connector",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceCustomPlugin,
 			TypeName: "aws_mskconnect_custom_plugin",
 			Name:     "Custom Plugin",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceWorkerConfiguration,
 			TypeName: "aws_mskconnect_worker_configuration",
 			Name:     "Worker Configuration",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

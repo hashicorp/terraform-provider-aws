@@ -7,7 +7,6 @@ package ram
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
@@ -30,7 +29,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newPermissionResource,
 			TypeName: "aws_ram_permission",
 			Name:     "Permission",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Permission", names.AttrARN)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Permission", names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -56,7 +55,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceResourceShare,
 			TypeName: "aws_ram_resource_share",
 			Name:     "Resource Share",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -80,7 +79,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceResourceShare,
 			TypeName: "aws_ram_resource_share",
 			Name:     "Resource Share",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("ResourceShare", names.AttrARN)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("ResourceShare", names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{

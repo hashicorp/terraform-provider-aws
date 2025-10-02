@@ -7,7 +7,6 @@ package macie2
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
@@ -64,21 +63,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceClassificationJob,
 			TypeName: "aws_macie2_classification_job",
 			Name:     "Classification Job",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("job_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("job_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceCustomDataIdentifier,
 			TypeName: "aws_macie2_custom_data_identifier",
 			Name:     "Custom Data Identifier",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceFindingsFilter,
 			TypeName: "aws_macie2_findings_filter",
 			Name:     "Findings Filter",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -91,7 +90,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceMember,
 			TypeName: "aws_macie2_member",
 			Name:     "Member",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{

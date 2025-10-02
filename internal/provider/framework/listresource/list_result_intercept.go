@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -55,7 +54,7 @@ type tagsInterceptor struct {
 	interceptors.HTags
 }
 
-func TagsInterceptor(tags unique.Handle[inttypes.ServicePackageResourceTags]) tagsInterceptor {
+func TagsInterceptor(tags inttypes.ServicePackageResourceTags) tagsInterceptor {
 	return tagsInterceptor{
 		HTags: interceptors.HTags(tags),
 	}
@@ -348,7 +347,7 @@ type tagsInterceptorSDK struct {
 	interceptors.HTags
 }
 
-func TagsInterceptorSDK(tags unique.Handle[inttypes.ServicePackageResourceTags]) tagsInterceptorSDK {
+func TagsInterceptorSDK(tags inttypes.ServicePackageResourceTags) tagsInterceptorSDK {
 	return tagsInterceptorSDK{
 		HTags: interceptors.HTags(tags),
 	}

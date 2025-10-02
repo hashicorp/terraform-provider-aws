@@ -7,7 +7,6 @@ package bedrockagent
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
@@ -37,7 +36,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAgentResource,
 			TypeName: "aws_bedrockagent_agent",
 			Name:     "Agent",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("agent_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("agent_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -50,7 +49,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAgentAliasResource,
 			TypeName: "aws_bedrockagent_agent_alias",
 			Name:     "Agent Alias",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("agent_alias_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("agent_alias_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -75,21 +74,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newFlowResource,
 			TypeName: "aws_bedrockagent_flow",
 			Name:     "Flow",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newKnowledgeBaseResource,
 			TypeName: "aws_bedrockagent_knowledge_base",
 			Name:     "Knowledge Base",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newPromptResource,
 			TypeName: "aws_bedrockagent_prompt",
 			Name:     "Prompt",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

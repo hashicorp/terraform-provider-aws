@@ -7,7 +7,6 @@ package route53recoverycontrolconfig
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
@@ -39,14 +38,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCluster,
 			TypeName: "aws_route53recoverycontrolconfig_cluster",
 			Name:     "Cluster",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceControlPanel,
 			TypeName: "aws_route53recoverycontrolconfig_control_panel",
 			Name:     "Control Panel",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
@@ -59,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSafetyRule,
 			TypeName: "aws_route53recoverycontrolconfig_safety_rule",
 			Name:     "Safety Rule",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}

@@ -8,7 +8,6 @@ package datapipeline_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -227,5 +226,5 @@ func TestAccDataPipelinePipelineDataSource_Tags_IgnoreTags_Overlap_resourceTag(t
 }
 
 func expectFullPipelineDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfdatapipeline.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsTypeAndAttribute("Pipeline", names.AttrID)), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfdatapipeline.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsTypeAndAttribute("Pipeline", names.AttrID), knownValue)
 }

@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
@@ -63,7 +62,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newApplicationResource,
 			TypeName: "aws_ssoadmin_application",
 			Name:     "Application",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalResourceWithGlobalARNFormat(inttypes.WithIdentityDuplicateAttrs(names.AttrID, "application_arn"),
 				inttypes.WithIdentityFix(),
@@ -140,7 +139,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTrustedTokenIssuerResource,
 			TypeName: "aws_ssoadmin_trusted_token_issuer",
 			Name:     "Trusted Token Issuer",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalResourceWithGlobalARNFormat(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
@@ -224,7 +223,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePermissionSet,
 			TypeName: "aws_ssoadmin_permission_set",
 			Name:     "Permission Set",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{

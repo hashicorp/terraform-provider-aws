@@ -7,7 +7,6 @@ package ssmincidents
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
@@ -34,7 +33,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceReplicationSet,
 			TypeName: "aws_ssmincidents_replication_set",
 			Name:     "Replication Set",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
@@ -52,14 +51,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReplicationSet,
 			TypeName: "aws_ssmincidents_replication_set",
 			Name:     "Replication Set",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  resourceResponsePlan,
 			TypeName: "aws_ssmincidents_response_plan",
 			Name:     "Response Plan",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
