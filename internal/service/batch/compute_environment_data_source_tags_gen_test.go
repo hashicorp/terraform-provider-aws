@@ -8,7 +8,6 @@ package batch_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -227,5 +226,5 @@ func TestAccBatchComputeEnvironmentDataSource_Tags_IgnoreTags_Overlap_resourceTa
 }
 
 func expectFullComputeEnvironmentDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfbatch.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfbatch.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsAttribute(names.AttrARN), knownValue)
 }

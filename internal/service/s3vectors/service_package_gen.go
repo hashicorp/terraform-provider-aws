@@ -7,7 +7,6 @@ package s3vectors
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
@@ -30,7 +29,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newIndexResource,
 			TypeName: "aws_s3vectors_index",
 			Name:     "Index",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("index_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("index_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("index_arn"),
 			Import: inttypes.FrameworkImport{
@@ -41,7 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newVectorBucketResource,
 			TypeName: "aws_s3vectors_vector_bucket",
 			Name:     "Vector Bucket",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("vector_bucket_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("vector_bucket_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("vector_bucket_arn"),
 			Import: inttypes.FrameworkImport{

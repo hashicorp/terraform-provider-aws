@@ -8,7 +8,6 @@ package appmesh_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -242,5 +241,5 @@ func testAccAppMeshVirtualGatewayDataSource_Tags_IgnoreTags_Overlap_resourceTag(
 }
 
 func expectFullVirtualGatewayDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsAttribute(names.AttrARN), knownValue)
 }

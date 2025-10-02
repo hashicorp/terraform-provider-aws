@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"unique"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -26,7 +25,7 @@ type tagsResourceCRUDInterceptor struct {
 	interceptors.HTags
 }
 
-func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
+func resourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags) crudInterceptor {
 	return &tagsResourceCRUDInterceptor{
 		HTags: interceptors.HTags(servicePackageResourceTags),
 	}
@@ -208,7 +207,7 @@ type tagsDataSourceCRUDInterceptor struct {
 	interceptors.HTags
 }
 
-func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
+func dataSourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags) crudInterceptor {
 	return &tagsDataSourceCRUDInterceptor{
 		HTags: interceptors.HTags(servicePackageResourceTags),
 	}

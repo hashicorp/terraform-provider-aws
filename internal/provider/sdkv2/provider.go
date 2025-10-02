@@ -591,7 +591,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				})
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if v.Tags.Enabled() {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
 					why:         Read,
@@ -704,7 +704,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				}
 			}
 
-			if !tfunique.IsHandleNil(resource.Tags) {
+			if resource.Tags.Enabled() {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,

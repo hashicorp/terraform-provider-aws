@@ -7,7 +7,6 @@ package savingsplans
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/savingsplans"
@@ -32,7 +31,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newSavingsPlanDataSource,
 			TypeName: "aws_savingsplans_savings_plan",
 			Name:     "Savings Plan",
-			Tags:     unique.Make(inttypes.ResourceTagsInline()),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
@@ -44,7 +43,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newSavingsPlanResource,
 			TypeName: "aws_savingsplans_savings_plan",
 			Name:     "Savings Plan",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("savings_plan_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("savings_plan_arn"),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}

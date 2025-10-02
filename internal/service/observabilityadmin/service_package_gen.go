@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
@@ -32,14 +31,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newCentralizationRuleForOrganizationResource,
 			TypeName: "aws_observabilityadmin_centralization_rule_for_organization",
 			Name:     "Centralization Rule For Organization",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("rule_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newS3TableIntegrationResource,
 			TypeName: "aws_observabilityadmin_s3_table_integration",
 			Name:     "S3 Table Integration",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -80,7 +79,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTelemetryPipelineResource,
 			TypeName: "aws_observabilityadmin_telemetry_pipeline",
 			Name:     "Telemetry Pipeline",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute(names.AttrARN)),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
@@ -91,7 +90,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTelemetryRuleResource,
 			TypeName: "aws_observabilityadmin_telemetry_rule",
 			Name:     "Telemetry Rule",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("rule_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
 			Import: inttypes.FrameworkImport{
@@ -102,7 +101,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTelemetryRuleForOrganizationResource,
 			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
 			Name:     "Telemetry Rule For Organization",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("rule_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
 			Import: inttypes.FrameworkImport{
@@ -118,7 +117,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newTelemetryRuleResourceAsListResource,
 			TypeName: "aws_observabilityadmin_telemetry_rule",
 			Name:     "Telemetry Rule",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("rule_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
 		},
@@ -126,7 +125,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newTelemetryRuleForOrganizationResourceAsListResource,
 			TypeName: "aws_observabilityadmin_telemetry_rule_for_organization",
 			Name:     "Telemetry Rule For Organization",
-			Tags:     unique.Make(inttypes.ResourceTagsAttribute("rule_arn")),
+			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("rule_name", true)),
 		},

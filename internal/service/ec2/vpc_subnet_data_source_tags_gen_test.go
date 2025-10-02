@@ -8,7 +8,6 @@ package ec2_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -215,5 +214,5 @@ func TestAccVPCSubnetDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T
 }
 
 func expectFullSubnetDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ResourceTagsAttribute(names.AttrID)), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsAttribute(names.AttrID), knownValue)
 }

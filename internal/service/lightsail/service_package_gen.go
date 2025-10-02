@@ -7,7 +7,6 @@ package lightsail
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
@@ -38,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceBucket,
 			TypeName: "aws_lightsail_bucket",
 			Name:     "Bucket",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Bucket", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Bucket", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -57,14 +56,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceCertificate,
 			TypeName: "aws_lightsail_certificate",
 			Name:     "Certificate",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Certificate", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Certificate", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  ResourceContainerService,
 			TypeName: "aws_lightsail_container_service",
 			Name:     "Container Service",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("ContainerService", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("ContainerService", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -77,14 +76,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceDatabase,
 			TypeName: "aws_lightsail_database",
 			Name:     "Database",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Database", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Database", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  ResourceDisk,
 			TypeName: "aws_lightsail_disk",
 			Name:     "Disk",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Disk", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Disk", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -97,7 +96,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceDistribution,
 			TypeName: "aws_lightsail_distribution",
 			Name:     "Distribution",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Distribution", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Distribution", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -116,7 +115,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceInstance,
 			TypeName: "aws_lightsail_instance",
 			Name:     "Instance",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("Instance", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("Instance", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -129,14 +128,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourceKeyPair,
 			TypeName: "aws_lightsail_key_pair",
 			Name:     "KeyPair",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("KeyPair", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("KeyPair", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_lightsail_lb",
 			Name:     "LB",
-			Tags:     unique.Make(inttypes.ResourceTagsTypeAndAttribute("LB", names.AttrID)),
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("LB", names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
