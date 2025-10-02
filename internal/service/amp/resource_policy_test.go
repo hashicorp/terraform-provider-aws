@@ -170,7 +170,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return fmt.Errorf("Prometheus Resource Policy %s still exists", rs.Primary.Attributes["workspace_id"])
+			return fmt.Errorf("Prometheus Workspace Resource Policy %s still exists", rs.Primary.Attributes["workspace_id"])
 		}
 
 		return nil

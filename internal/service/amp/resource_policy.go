@@ -84,27 +84,29 @@ func (r *resourcePolicyResource) Create(ctx context.Context, request resource.Cr
 
 	conn := r.Meta().AMPClient(ctx)
 
+	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
 	input := amp.PutResourcePolicyInput{
 		ClientToken:    aws.String(sdkid.UniqueId()),
 		PolicyDocument: fwflex.StringFromFramework(ctx, data.PolicyDocument),
-		WorkspaceId:    fwflex.StringFromFramework(ctx, data.WorkspaceId),
+		WorkspaceId:    aws.String(workspaceID),
 	}
 
-	if !data.RevisionId.IsNull() {
-		input.RevisionId = fwflex.StringFromFramework(ctx, data.RevisionId)
+	if !data.RevisionID.IsNull() {
+		input.RevisionId = fwflex.StringFromFramework(ctx, data.RevisionID)
 	}
 
 	output, err := conn.PutResourcePolicy(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating Prometheus Workspace Resource Policy", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating Prometheus Workspace (%s) Resource Policy", workspaceID), err.Error())
 		return
 	}
 
 	// Set values for unknowns.
-	data.RevisionId = fwflex.StringToFramework(ctx, output.RevisionId)
-	if _, err := waitResourcePolicyCreated(ctx, conn, data.WorkspaceId.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Workspace Resource Policy (%s) create", data.WorkspaceId.ValueString()), err.Error())
+	data.RevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
+
+	if _, err := waitResourcePolicyCreated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Workspace (%s) Resource Policy create", workspaceID), err.Error())
 		return
 	}
 
@@ -120,7 +122,8 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 
 	conn := r.Meta().AMPClient(ctx)
 
-	output, err := findResourcePolicyByWorkspaceID(ctx, conn, data.WorkspaceId.ValueString())
+	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
+	output, err := findResourcePolicyByWorkspaceID(ctx, conn, workspaceID)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -129,7 +132,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Prometheus Workspace Resource Policy (%s)", data.WorkspaceId.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Prometheus Workspace (%s) Resource Policy", workspaceID), err.Error())
 		return
 	}
 
@@ -155,27 +158,29 @@ func (r *resourcePolicyResource) Update(ctx context.Context, request resource.Up
 
 	conn := r.Meta().AMPClient(ctx)
 
-	if !new.PolicyDocument.Equal(old.PolicyDocument) {
+	if !new.PolicyDocument.Equal(old.PolicyDocument) || !new.RevisionID.Equal(old.RevisionID) {
+		workspaceID := fwflex.StringValueFromFramework(ctx, new.WorkspaceID)
 		input := amp.PutResourcePolicyInput{
 			ClientToken:    aws.String(sdkid.UniqueId()),
 			PolicyDocument: fwflex.StringFromFramework(ctx, new.PolicyDocument),
-			WorkspaceId:    fwflex.StringFromFramework(ctx, new.WorkspaceId),
+			WorkspaceId:    aws.String(workspaceID),
 		}
 
-		if !new.RevisionId.IsNull() {
-			input.RevisionId = fwflex.StringFromFramework(ctx, new.RevisionId)
+		if !new.RevisionID.IsNull() {
+			input.RevisionId = fwflex.StringFromFramework(ctx, new.RevisionID)
 		}
 
 		output, err := conn.PutResourcePolicy(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Workspace Resource Policy (%s)", new.WorkspaceId.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Workspace (%s) Resource Policy", workspaceID), err.Error())
 			return
 		}
 
-		new.RevisionId = fwflex.StringToFramework(ctx, output.RevisionId)
-		if _, err := waitResourcePolicyUpdated(ctx, conn, new.WorkspaceId.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Workspace Resource Policy (%s) update", new.WorkspaceId.ValueString()), err.Error())
+		new.RevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
+
+		if _, err := waitResourcePolicyUpdated(ctx, conn, workspaceID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Workspace (%s) Resource Policy update", workspaceID), err.Error())
 			return
 		}
 	}
@@ -192,13 +197,14 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().AMPClient(ctx)
 
+	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
 	input := amp.DeleteResourcePolicyInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		WorkspaceId: fwflex.StringFromFramework(ctx, data.WorkspaceId),
+		WorkspaceId: aws.String(workspaceID),
 	}
 
-	if !data.RevisionId.IsNull() {
-		input.RevisionId = fwflex.StringFromFramework(ctx, data.RevisionId)
+	if !data.RevisionID.IsNull() {
+		input.RevisionId = fwflex.StringFromFramework(ctx, data.RevisionID)
 	}
 
 	_, err := conn.DeleteResourcePolicy(ctx, &input)
@@ -208,12 +214,12 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Prometheus Workspace Resource Policy (%s)", data.WorkspaceId.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Prometheus Workspace (%s) Resource Policy", workspaceID), err.Error())
 		return
 	}
 
-	if _, err := waitResourcePolicyDeleted(ctx, conn, data.WorkspaceId.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Workspace Resource Policy (%s) delete", data.WorkspaceId.ValueString()), err.Error())
+	if _, err := waitResourcePolicyDeleted(ctx, conn, workspaceID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Workspace (%s) Resource Policy delete", workspaceID), err.Error())
 		return
 	}
 }
@@ -225,9 +231,9 @@ func (r *resourcePolicyResource) ImportState(ctx context.Context, request resour
 type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
 	PolicyDocument fwtypes.IAMPolicy `tfsdk:"policy_document"`
-	RevisionId     types.String      `tfsdk:"revision_id"`
+	RevisionID     types.String      `tfsdk:"revision_id"`
 	Timeouts       timeouts.Value    `tfsdk:"timeouts"`
-	WorkspaceId    types.String      `tfsdk:"workspace_id"`
+	WorkspaceID    types.String      `tfsdk:"workspace_id"`
 }
 
 func findResourcePolicyByWorkspaceID(ctx context.Context, conn *amp.Client, workspaceID string) (*amp.DescribeResourcePolicyOutput, error) {
@@ -235,7 +241,11 @@ func findResourcePolicyByWorkspaceID(ctx context.Context, conn *amp.Client, work
 		WorkspaceId: aws.String(workspaceID),
 	}
 
-	output, err := conn.DescribeResourcePolicy(ctx, &input)
+	return findResourcePolicy(ctx, conn, &input)
+}
+
+func findResourcePolicy(ctx context.Context, conn *amp.Client, input *amp.DescribeResourcePolicyInput) (*amp.DescribeResourcePolicyOutput, error) {
+	output, err := conn.DescribeResourcePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -248,7 +258,7 @@ func findResourcePolicyByWorkspaceID(ctx context.Context, conn *amp.Client, work
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.PolicyDocument == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
