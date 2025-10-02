@@ -64,7 +64,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chime v1.40.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.27.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.34.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.35.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.28.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.66.4 // indirect
@@ -98,7 +98,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.57.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.53.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.38.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.39.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.5 // indirect
@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.254.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.65.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.65.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.40.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.74.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.50.5 // indirect
@@ -210,7 +210,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.56.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.25.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.13.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.14.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.25.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.5 // indirect
