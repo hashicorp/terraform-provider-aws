@@ -25,8 +25,9 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"oncallSchedule":     testAccContact_oncallSchedule,
 		},
 		"ContactDataSource": {
-			acctest.CtBasic: testAccContactDataSource_basic,
-			"tags":          testAccSSMContactsContactDataSource_tagsSerial,
+			acctest.CtBasic:  testAccContactDataSource_basic,
+			"tags":           testAccSSMContactsContactDataSource_tagsSerial,
+			"oncallSchedule": testAccContactDataSource_oncallSchedule,
 		},
 		"ContactChannelResource": {
 			acctest.CtBasic:      testAccContactChannel_basic,

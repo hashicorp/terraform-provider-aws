@@ -292,7 +292,6 @@ func testAccContact_oncallSchedule(t *testing.T) {
 	})
 }
 
-
 func testAccCheckContactDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)

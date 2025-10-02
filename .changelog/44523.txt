@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_ssmcontacts_contact: Add `rotation_ids` argument to support `ONCALL_SCHEDULE` contact type
 ```
+
+```release-note:enhancement
+data-source/aws_ssmcontacts_contact: Add `rotation_ids` attribute to support `ONCALL_SCHEDULE` contact type
+```

@@ -35,6 +35,13 @@ func DataSourceContact() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"rotation_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
