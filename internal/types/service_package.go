@@ -8,8 +8,10 @@ import (
 	"slices"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,6 +42,15 @@ func ResourceRegionDisabled() ServicePackageResourceRegion {
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
 	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
+}
+
+// ServicePackageAction represents a Terraform Plugin Framework action
+// implemented by a service package.
+type ServicePackageAction struct {
+	Factory  func(context.Context) (action.ActionWithConfigure, error)
+	TypeName string
+	Name     string
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageEphemeralResource represents a Terraform Plugin Framework ephemeral resource
@@ -73,6 +84,15 @@ type ServicePackageFrameworkResource struct {
 	Import   FrameworkImport
 }
 
+type ServicePackageFrameworkListResource struct {
+	Factory  func() list.ListResourceWithConfigure
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
 // implemented by a service package.
 type ServicePackageSDKDataSource struct {
@@ -93,6 +113,20 @@ type ServicePackageSDKResource struct {
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 	Import   SDKv2Import
+}
+
+type ListResourceForSDK interface {
+	list.ListResourceWithRawV5Schemas
+	list.ListResourceWithConfigure
+}
+
+type ServicePackageSDKListResource struct {
+	Factory  func() ListResourceForSDK
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
 }
 
 type Identity struct {
@@ -402,4 +436,8 @@ type SDKv2Import struct {
 	WrappedImport bool
 	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
+}
+
+type SDKv2Tagger interface {
+	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
 }

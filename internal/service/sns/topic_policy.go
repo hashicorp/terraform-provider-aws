@@ -23,16 +23,14 @@ import (
 )
 
 // @SDKResource("aws_sns_topic_policy", name="Topic Policy")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.8.0")
 func resourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicPolicyUpsert,
 		ReadWithoutTimeout:   resourceTopicPolicyRead,
 		UpdateWithoutTimeout: resourceTopicPolicyUpsert,
 		DeleteWithoutTimeout: resourceTopicPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

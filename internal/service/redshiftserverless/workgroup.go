@@ -545,7 +545,7 @@ func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input
 		retryTimeout = 20 * time.Minute
 	)
 	_, err := tfresource.RetryWhen(ctx, retryTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.UpdateWorkgroup(ctx, input)
 		}, func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "operation running") {

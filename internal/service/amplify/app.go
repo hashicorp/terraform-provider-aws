@@ -460,7 +460,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	} else {
 		d.Set("auto_branch_creation_config", nil)
 	}
-	d.Set("auto_branch_creation_patterns", aws.StringSlice(app.AutoBranchCreationPatterns))
+	d.Set("auto_branch_creation_patterns", app.AutoBranchCreationPatterns)
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
 	if app.CacheConfig != nil {

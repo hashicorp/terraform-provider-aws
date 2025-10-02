@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params route53profiles.
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up route53profiles endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up route53profiles endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

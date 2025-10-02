@@ -207,6 +207,92 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 	})
 }
 
+func TestAccBedrockGuardrail_wordConfigAction(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+	var guardrail bedrock.GetGuardrailOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_wordConfigAction(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(types.GuardrailManagedWordsTypeProfanity)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_action", string(types.GuardrailWordActionBlock)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "guardrail_id",
+			},
+			{
+				Config: testAccGuardrailConfig_wordConfig_only(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_action"),
+					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.input_enabled"),
+					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_action"),
+					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.output_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.0.type", string(types.GuardrailManagedWordsTypeProfanity)),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_action"),
+					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.input_enabled"),
+					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_action"),
+					resource.TestCheckNoResourceAttr(resourceName, "word_policy_config.0.words_config.0.output_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockGuardrail_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -496,6 +582,36 @@ resource "aws_bedrock_guardrail" "test" {
 `, rName))
 }
 
+func testAccGuardrailConfig_wordConfigAction(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCustomModelConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+
+  word_policy_config {
+    managed_word_lists_config {
+      input_action   = "BLOCK"
+      input_enabled  = true
+      output_action  = "BLOCK"
+      output_enabled = true
+      type           = "PROFANITY"
+    }
+    words_config {
+      input_action   = "BLOCK"
+      input_enabled  = true
+      output_action  = "BLOCK"
+      output_enabled = true
+      text           = "HATE"
+    }
+  }
+}
+`, rName))
+}
+
 func testAccGuardrailConfig_crossRegion(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -574,6 +690,85 @@ resource "aws_bedrock_guardrail" "test" {
     }
     words_config {
       text = "HATE"
+    }
+  }
+}
+`, rName)
+}
+
+func TestAccBedrockGuardrail_enhancedActions(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var guardrail bedrock.GetGuardrailOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_enhancedActions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.input_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.output_action", "ANONYMIZE"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.input_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.output_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.action", "ANONYMIZE"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.input_action", "ANONYMIZE"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.output_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.input_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.output_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "guardrail_id",
+			},
+		},
+	})
+}
+
+func testAccGuardrailConfig_enhancedActions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+
+  sensitive_information_policy_config {
+    pii_entities_config {
+      action         = "BLOCK"
+      input_action   = "BLOCK"
+      output_action  = "ANONYMIZE"
+      input_enabled  = true
+      output_enabled = false
+      type           = "NAME"
+    }
+    regexes_config {
+      action         = "ANONYMIZE"
+      input_action   = "ANONYMIZE"
+      output_action  = "BLOCK"
+      input_enabled  = false
+      output_enabled = true
+      description    = "enhanced regex example"
+      name           = "enhanced_regex"
+      pattern        = "^\\d{3}-\\d{2}-\\d{4}$"
     }
   }
 }

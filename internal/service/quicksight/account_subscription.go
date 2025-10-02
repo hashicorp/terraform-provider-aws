@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,13 +77,7 @@ func resourceAccountSubscription() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					ForceNew: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 				"contact_number": {
 					Type:     schema.TypeString,
 					Optional: true,

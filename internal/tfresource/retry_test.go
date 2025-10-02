@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,18 +22,18 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 	ctx := t.Context()
 	testCases := []struct {
 		Name        string
-		F           func() (any, error)
+		F           func(context.Context) (any, error)
 		ExpectError bool
 	}{
 		{
 			Name: "no error",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, nil
 			},
 		},
 		{
 			Name: "non-retryable other error",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, errors.New("TestCode")
 			},
 			ExpectError: true,
@@ -60,18 +60,18 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 	ctx := t.Context()
 	testCases := []struct {
 		Name        string
-		F           func() (any, error)
+		F           func(context.Context) (any, error)
 		ExpectError bool
 	}{
 		{
 			Name: "no error",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, nil
 			},
 		},
 		{
 			Name: "non-retryable other error",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, errors.New("TestCode")
 			},
 			ExpectError: true,
@@ -349,13 +349,61 @@ func TestRetryUntilNotFound(t *testing.T) {
 	}
 }
 
-func TestRetryContext_error(t *testing.T) {
+func TestRetryContext_nil(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	var expected error
+	f := func(context.Context) *tfresource.RetryError {
+		return nil
+	}
+
+	errCh := make(chan error)
+	go func() {
+		errCh <- tfresource.Retry(ctx, 1*time.Second, f)
+	}()
+
+	select {
+	case err := <-errCh:
+		if err != expected { //nolint:errorlint // We are actually comparing equality
+			t.Fatalf("bad: %#v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timeout")
+	}
+}
+
+func TestRetryContext_nonRetryableError(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
 	expected := fmt.Errorf("nope")
-	f := func() *retry.RetryError {
-		return retry.NonRetryableError(expected)
+	f := func(context.Context) *tfresource.RetryError {
+		return tfresource.NonRetryableError(expected)
+	}
+
+	errCh := make(chan error)
+	go func() {
+		errCh <- tfresource.Retry(ctx, 1*time.Second, f)
+	}()
+
+	select {
+	case err := <-errCh:
+		if err != expected { //nolint:errorlint // We are actually comparing equality
+			t.Fatalf("bad: %#v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timeout")
+	}
+}
+
+func TestRetryContext_retryableError(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	expected := fmt.Errorf("nope")
+	f := func(context.Context) *tfresource.RetryError {
+		return tfresource.RetryableError(expected)
 	}
 
 	errCh := make(chan error)

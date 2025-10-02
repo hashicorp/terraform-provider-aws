@@ -176,8 +176,19 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 {{- if .IsDefaultListTags }}
 // {{ .ListTagsFunc | Title }} lists {{ .ServicePackage }} service tags and set them in Context.
 // It is called from outside this package.
-func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
-	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+{{- if .TagResTypeElem }}
+{{- if .TagResTypeIsAccountID }}
+func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta any, identifier string) error {
+	c := meta.(*conns.AWSClient)
+	tags, err :=  {{ .ListTagsFunc }}(ctx, c.{{ .ProviderNameUpper }}Client(ctx), identifier, c.AccountID(ctx))
+{{- else }}
+func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta any, identifier, resourceType string) error {
+	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier, resourceType)
+{{- end }}
+{{- else }}
+func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta any, identifier string) error {
+	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier)
+{{- end }}
 
 	if err != nil {
 		return smarterr.NewError(err)

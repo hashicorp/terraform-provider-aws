@@ -37,6 +37,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.AutomationRulesConfig")
 // @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &automationRuleResource{}, nil
 }

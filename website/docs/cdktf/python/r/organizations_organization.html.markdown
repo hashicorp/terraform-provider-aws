@@ -77,6 +77,31 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_organization.example
+  identity = {
+    id = "o-1234567"
+  }
+}
+
+resource "aws_organizations_organization" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the AWS Organizations organization.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS organization using the `id`. For example:
 
 ```python
@@ -91,13 +116,13 @@ from imports.aws.organizations_organization import OrganizationsOrganization
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        OrganizationsOrganization.generate_config_for_import(self, "myOrg", "o-1234567")
+        OrganizationsOrganization.generate_config_for_import(self, "example", "o-1234567")
 ```
 
 Using `terraform import`, import the AWS organization using the `id`. For example:
 
 ```console
-% terraform import aws_organizations_organization.my_org o-1234567
+% terraform import aws_organizations_organization.example o-1234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8251075bfb071672ad475734c739ac9b6817c5a88ff44b493b41b8011fd5fe22 -->
+<!-- cache-key: cdktf-0.20.8 input-2a6de131865c417a5af1de8d1fce307e724381fa2ef520708d6f7073b3a39b07 -->

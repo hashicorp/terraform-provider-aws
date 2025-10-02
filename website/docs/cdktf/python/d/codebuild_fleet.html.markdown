@@ -84,6 +84,7 @@ This data source exports the following attributes in addition to the arguments a
 * `base_capacity` - Number of machines allocated to the ﬂeet.
 * `compute_configuration` - Compute configuration of the compute fleet.
     * `disk` - Amount of disk space of the instance type included in the fleet.
+    * `instance_type` - EC2 instance type in the fleet.
     * `machine_type` - Machine type of the instance type included in the fleet.
     * `memory` - Amount of memory of the instance type included in the fleet.
     * `vcpu` - Number of vCPUs of the instance type included in the fleet.
@@ -112,4 +113,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnets` - A list of one or more subnet IDs in your Amazon VPC.
     * `vpc_id` - The ID of the Amazon VPC.
 
-<!-- cache-key: cdktf-0.20.8 input-f1a67ce4dda02793880b9f6c4c12296079337825ba088c2d1283573cdbc646e6 -->
+<!-- cache-key: cdktf-0.20.8 input-3b1117c87574a1a317ccb61265d6be6c28d34b9cea54dba593b25141c9d47591 -->

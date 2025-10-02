@@ -297,6 +297,7 @@ The following arguments are optional:
   Default value is `STANDARD`.
 * `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Configuration block for TTL. See below.
+* `warmThroughput` - (Optional) Sets the number of warm read and write units for the specified table. See below.
 * `writeCapacity` - (Optional) Number of write units for this table. If the `billingMode` is `PROVISIONED`, this field is required.
 
 ### `attribute`
@@ -333,10 +334,11 @@ The following arguments are optional:
 * `hashKey` - (Required) Name of the hash key in the index; must be defined as an attribute in the resource.
 * `name` - (Required) Name of the index.
 * `nonKeyAttributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
-* `onDemandThroughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
+* `onDemandThroughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
 * `projectionType` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `nonKeyAttributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `rangeKey` - (Optional) Name of the range key; must be defined
 * `readCapacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
+* `warmThroughput` - (Optional) Sets the number of warm read and write units for this index. See below.
 * `writeCapacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
 
 ### `localSecondaryIndex`
@@ -363,6 +365,7 @@ The following arguments are optional:
   **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
   **Note:** Changing this value will recreate the replica.
 * `pointInTimeRecovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
+* `deletionProtectionEnabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the replica. Default is `false`.
 * `propagateTags` - (Optional) Whether to propagate the global table's tags to a replica.
   Default is `false`.
   Changes to tags only move in one direction: from global (source) to replica.
@@ -383,6 +386,13 @@ The following arguments are optional:
   Required if `enabled` is `true`, must not be set otherwise.
 * `enabled` - (Optional) Whether TTL is enabled.
   Default value is `false`.
+
+### `warmThroughput`
+
+~> **Note:** Explicitly configuring both `readUnitsPerSecond` and `writeUnitsPerSecond` to the default/minimum values will cause Terraform to report differences.
+
+* `readUnitsPerSecond` - (Optional) Number of read operations a table or index can instantaneously support. For the base table, decreasing this value will force a new resource. For a global secondary index, this value can be increased or decreased without recreation. Minimum value of `12000` (default).
+* `writeUnitsPerSecond` - (Optional) Number of write operations a table or index can instantaneously support. For the base table, decreasing this value will force a new resource. For a global secondary index, this value can be increased or decreased without recreation. Minimum value of `4000` (default).
 
 ## Attribute Reference
 
@@ -439,4 +449,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9d431668cce3a45f5db39617f54f6a63c7cf3f6db1f0546a2f195b8bf9081372 -->
+<!-- cache-key: cdktf-0.20.8 input-a44de8fd002a733ae89feadea1b0a2ab4db5ae5daaf0cc8efec317e74c92336a -->

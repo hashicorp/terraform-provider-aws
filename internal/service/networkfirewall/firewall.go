@@ -569,7 +569,12 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta an
 	input := networkfirewall.DeleteFirewallInput{
 		FirewallArn: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteFirewall(ctx, &input)
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteFirewall(ctx, &input)
+	}, "still in use")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

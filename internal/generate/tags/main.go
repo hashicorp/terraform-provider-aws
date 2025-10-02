@@ -87,6 +87,7 @@ var (
 	tagOpBatchSize        = flag.Int("TagOpBatchSize", 0, "tagOpBatchSize")
 	tagResTypeElem        = flag.String("TagResTypeElem", "", "tagResTypeElem")
 	tagResTypeElemType    = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
+	tagResTypeIsAccountID = flag.Bool("TagResTypeIsAccountID", false, "tagResTypeIsAccountID")
 	tagType               = flag.String("TagType", "Tag", "tagType")
 	tagType2              = flag.String("TagType2", "", "tagType")
 	tagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
@@ -182,6 +183,7 @@ type TemplateData struct {
 	TagOpBatchSize             int
 	TagResTypeElem             string
 	TagResTypeElemType         string
+	TagResTypeIsAccountID      bool
 	TagType                    string
 	TagType2                   string
 	TagTypeAddBoolElem         string
@@ -242,6 +244,10 @@ func main() {
 		createTagsFunc = ""
 	}
 
+	if *tagResTypeIsAccountID && *tagResTypeElem == "" {
+		g.Errorf("TagResTypeIsAccountID requires TagResTypeElem")
+	}
+
 	clientType := fmt.Sprintf("*%s.Client", awsPkg)
 	providerNameUpper := service.ProviderNameUpper()
 	templateData := TemplateData{
@@ -281,6 +287,7 @@ func main() {
 		TagOpBatchSize:             *tagOpBatchSize,
 		TagResTypeElem:             *tagResTypeElem,
 		TagResTypeElemType:         *tagResTypeElemType,
+		TagResTypeIsAccountID:      *tagResTypeIsAccountID,
 		TagType:                    *tagType,
 		TagType2:                   *tagType2,
 		TagTypeAddBoolElem:         *tagTypeAddBoolElem,

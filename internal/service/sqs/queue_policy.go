@@ -12,6 +12,10 @@ import (
 )
 
 // @SDKResource("aws_sqs_queue_policy", name="Queue Policy")
+// @IdentityAttribute("queue_url")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(idAttrDuplicates="queue_url")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 func resourceQueuePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNamePolicy,
@@ -25,10 +29,6 @@ func resourceQueuePolicy() *schema.Resource {
 		ReadWithoutTimeout:   h.Read,
 		UpdateWithoutTimeout: h.Upsert,
 		DeleteWithoutTimeout: h.Delete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		MigrateState:  QueuePolicyMigrateState,
 		SchemaVersion: 1,

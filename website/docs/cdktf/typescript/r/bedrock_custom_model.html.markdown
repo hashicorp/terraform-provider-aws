@@ -121,6 +121,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrock_custom_model.example
+  identity = {
+    "arn" = "arn:aws:bedrock:us-west-2:123456789012:custom-model/amazon.titan-text-lite-v1:0:4k/example-model"
+  }
+}
+
+resource "aws_bedrock_custom_model" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Bedrock custom model.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Custom Model using the `jobArn`. For example:
 
 ```typescript
@@ -151,4 +172,4 @@ Using `terraform import`, import Bedrock custom model using the `jobArn`. For ex
 % terraform import aws_bedrock_custom_model.example arn:aws:bedrock:us-west-2:123456789012:model-customization-job/amazon.titan-text-express-v1:0:8k/1y5n57gh5y2e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dff2569c2ee80bb9888cd14b204ff176ef54b8cbcb97900985c83d81f9611ea4 -->
+<!-- cache-key: cdktf-0.20.8 input-b4660b0cad0c43ae54b44d155c3cc682fecb970c36d0c4553cd06ff8f6f730e2 -->

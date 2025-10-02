@@ -729,7 +729,7 @@ func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.C
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.PriorityInUseException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.PriorityInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		priority, err := highestListenerRulePriority(ctx, conn, listenerARN)
 		if err != nil {
 			return nil, err

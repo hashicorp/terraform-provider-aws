@@ -47,6 +47,7 @@ func testAccMediaLiveMultiplex_tagsSerial(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -241,6 +242,7 @@ func testAccMediaLiveMultiplex_tags(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -311,6 +313,7 @@ func testAccMediaLiveMultiplex_tags_null(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -377,6 +380,7 @@ func testAccMediaLiveMultiplex_tags_EmptyMap(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -461,6 +465,7 @@ func testAccMediaLiveMultiplex_tags_AddOnUpdate(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -556,6 +561,7 @@ func testAccMediaLiveMultiplex_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -699,6 +705,7 @@ func testAccMediaLiveMultiplex_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -791,6 +798,7 @@ func testAccMediaLiveMultiplex_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -984,6 +992,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1153,6 +1162,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1338,6 +1348,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_overlapping(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1431,6 +1442,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_updateToProviderOnly(t *testing.
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1523,6 +1535,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_updateToResourceOnly(t *testing.
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1591,6 +1604,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1651,6 +1665,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1716,6 +1731,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_nullOverlappingResourceTag(t *te
 
 func testAccMediaLiveMultiplex_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1781,6 +1797,7 @@ func testAccMediaLiveMultiplex_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 
 func testAccMediaLiveMultiplex_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1839,6 +1856,7 @@ func testAccMediaLiveMultiplex_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1939,6 +1957,7 @@ func testAccMediaLiveMultiplex_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2029,6 +2048,7 @@ func testAccMediaLiveMultiplex_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 
 func testAccMediaLiveMultiplex_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2191,6 +2211,7 @@ func testAccMediaLiveMultiplex_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 
 func testAccMediaLiveMultiplex_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v medialive.DescribeMultiplexOutput
 	resourceName := "aws_medialive_multiplex.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

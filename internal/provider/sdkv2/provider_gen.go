@@ -195,6 +195,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// arcregionswitch
+
+				"arcregionswitch": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// athena
 
 				"athena": {
@@ -262,6 +270,14 @@ func endpointsSchema() *schema.Schema {
 				// bedrockagent
 
 				"bedrockagent": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// bedrockagentcore
+
+				"bedrockagentcore": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -1565,6 +1581,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// odb
+
+				"odb": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// opensearch
 
 				"opensearch": {
@@ -1914,6 +1938,14 @@ func endpointsSchema() *schema.Schema {
 				// s3tables
 
 				"s3tables": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// s3vectors
+
+				"s3vectors": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -2272,6 +2304,14 @@ func endpointsSchema() *schema.Schema {
 				// wellarchitected
 
 				"wellarchitected": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// workmail
+
+				"workmail": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

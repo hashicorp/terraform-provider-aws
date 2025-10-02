@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Authorize Vpc Endpoint Access using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Authorize Vpc Endpoint Access using the `domain_name`. For example:
 
 ```terraform
 import {
@@ -53,7 +53,7 @@ import {
 }
 ```
 
-Using `terraform import`, import OpenSearch Authorize Vpc Endpoint Access using the `example_id_arg`. For example:
+Using `terraform import`, import OpenSearch Authorize Vpc Endpoint Access using the `domain_name`. For example:
 
 ```console
 % terraform import aws_opensearch_authorize_vpc_endpoint_access.example authorize_vpc_endpoint_access-id-12345678

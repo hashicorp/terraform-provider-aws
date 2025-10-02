@@ -72,7 +72,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Route 53 Profiles Association using the `example_id_arg`. For example:
+Using `terraform import`, import Route 53 Profiles Association using the `id`. For example:
 
 ```console
 % terraform import aws_route53profiles_association.example rpa-id-12345678
