@@ -71,12 +71,11 @@ func resourceGlobalCluster() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc:  validation.StringInSlice(globalClusterEngine_Values(), false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(globalClusterEngine_Values(), false),
 			},
 			"engine_lifecycle_support": {
 				Type:         schema.TypeString,
@@ -124,12 +123,11 @@ func resourceGlobalCluster() *schema.Resource {
 				Computed: true,
 			},
 			"source_db_cluster_identifier": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrEngine},
-				RequiredWith:  []string{names.AttrForceDestroy},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				RequiredWith: []string{names.AttrForceDestroy},
 			},
 			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
@@ -175,6 +173,10 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("source_db_cluster_identifier"); ok {
 		input.SourceDBClusterIdentifier = aws.String(v.(string))
+		// Engine and engine version cannot be sent during create requests if a source
+		// DB cluster is specified.
+		input.Engine = nil
+		input.EngineVersion = nil
 	}
 
 	if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {

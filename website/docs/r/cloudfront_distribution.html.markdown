@@ -29,13 +29,55 @@ resource "aws_s3_bucket" "b" {
   }
 }
 
-resource "aws_s3_bucket_acl" "b_acl" {
-  bucket = aws_s3_bucket.b.id
-  acl    = "private"
+# See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
+data "aws_iam_policy_document" "origin_bucket_policy" {
+  statement {
+    sid    = "AllowCloudFrontServicePrincipalReadWrite"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.b.arn}/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.s3_distribution.arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "b" {
+  bucket = aws_s3_bucket.b.bucket
+  policy = data.aws_iam_policy_document.origin_bucket_policy.json
 }
 
 locals {
   s3_origin_id = "myS3Origin"
+  my_domain    = "mydomain.com"
+}
+
+data "aws_acm_certificate" "my_domain" {
+  region   = "us-east-1"
+  domain   = "*.${local.my_domain}"
+  statuses = ["ISSUED"]
+}
+
+resource "aws_cloudfront_origin_access_control" "default" {
+  name                              = "default-oac"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
@@ -50,13 +92,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   comment             = "Some comment"
   default_root_object = "index.html"
 
-  logging_config {
-    include_cookies = false
-    bucket          = "mylogs.s3.amazonaws.com"
-    prefix          = "myprefix"
-  }
-
-  aliases = ["mysite.example.com", "yoursite.example.com"]
+  aliases = ["mysite.${local.my_domain}", "yoursite.${local.my_domain}"]
 
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
@@ -136,7 +172,26 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn = data.aws_acm_certificate.my_domain.arn
+    ssl_support_method  = "sni-only"
+  }
+}
+
+# Create Route53 records for the CloudFront distribution aliases
+data "aws_route53_zone" "my_domain" {
+  name = local.my_domain
+}
+
+resource "aws_route53_record" "cloudfront" {
+  for_each = aws_cloudfront_distribution.s3_distribution.aliases
+  zone_id  = data.aws_route53_zone.my_domain.zone_id
+  name     = each.value
+  type     = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.s3_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.s3_distribution.hosted_zone_id
+    evaluate_target_health = false
   }
 }
 ```
@@ -494,6 +549,7 @@ argument should not be specified.
 
 * `http_port` (Required) - HTTP port the custom origin listens on.
 * `https_port` (Required) - HTTPS port the custom origin listens on.
+* `ip_address_type` (Optional) - IP protocol CloudFront uses when connecting to your origin. Valid values: `ipv4`, `ipv6`, `dualstack`.
 * `origin_protocol_policy` (Required) - Origin protocol policy to apply to your origin. One of `http-only`, `https-only`, or `match-viewer`.
 * `origin_ssl_protocols` (Required) - List of SSL/TLS protocols that CloudFront can use when connecting to your origin over HTTPS. Valid values: `SSLv3`, `TLSv1`, `TLSv1.1`, `TLSv1.2`. For more information, see [Minimum Origin SSL Protocol](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginSSLProtocols) in the Amazon CloudFront Developer Guide.
 * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `5`.
