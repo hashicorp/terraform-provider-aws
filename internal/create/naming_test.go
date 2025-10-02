@@ -4,6 +4,7 @@
 package create
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -55,7 +56,7 @@ func TestName(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			got := Name(testCase.configuredName, testCase.configuredPrefix)
+			got := Name(context.Background(), testCase.configuredName, testCase.configuredPrefix)
 
 			if !testCase.expectedRegexp.MatchString(got) {
 				t.Errorf("Name(%q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, got, testCase.expectedRegexp)
@@ -302,7 +303,7 @@ func TestNamePrefixFromName(t *testing.T) {
 
 		for i := range 10 {
 			prefix := "test-"
-			input := Name("", prefix)
+			input := Name(context.Background(), "", prefix)
 			got := NamePrefixFromName(input)
 
 			if got == nil {
