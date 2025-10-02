@@ -317,7 +317,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	budget.BudgetName = aws.String(name)
 
 	accountID := cmp.Or(d.Get(names.AttrAccountID).(string), c.AccountID(ctx))

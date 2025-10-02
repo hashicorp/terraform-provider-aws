@@ -651,7 +651,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		JobType:         awstypes.JobType(d.Get("job_type").(string)),

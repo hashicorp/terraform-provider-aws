@@ -115,7 +115,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	sslCertName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get(names.AttrPrivateKey).(string)),
@@ -217,7 +217,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 			oldName, newName := d.GetChange(names.AttrName)
 
 			// Handle both a name change and a switch to using a name prefix
-			newSSLCertName := create.Name(newName.(string), d.Get(names.AttrNamePrefix).(string))
+			newSSLCertName := create.Name(ctx, newName.(string), d.Get(names.AttrNamePrefix).(string))
 
 			input.ServerCertificateName = aws.String(oldName.(string))
 			input.NewServerCertificateName = aws.String(newSSLCertName)
@@ -225,7 +225,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 			oldName := d.Get(names.AttrName).(string)
 
 			// Handle only a name prefix change using an empty string as name (as it hasn't been changed)
-			newSSLCertName := create.Name("", d.Get(names.AttrNamePrefix).(string))
+			newSSLCertName := create.Name(ctx, "", d.Get(names.AttrNamePrefix).(string))
 
 			input.ServerCertificateName = aws.String(oldName)
 			input.NewServerCertificateName = aws.String(newSSLCertName)

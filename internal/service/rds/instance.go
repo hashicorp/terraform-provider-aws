@@ -766,7 +766,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var requiresRebootDbInstance bool
 
 	// See discussion of IDs at the top of file - this is NOT d.Id()
-	identifier := create.Name(d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
+	identifier := create.Name(ctx, d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
 
 	var resourceID string // will be assigned depending on how it is created
 

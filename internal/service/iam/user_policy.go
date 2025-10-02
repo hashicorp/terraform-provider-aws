@@ -84,7 +84,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	userName, policyName := d.Get("user").(string), create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	userName, policyName := d.Get("user").(string), create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := iam.PutUserPolicyInput{
 		PolicyDocument: aws.String(policyDoc),
 		PolicyName:     aws.String(policyName),
