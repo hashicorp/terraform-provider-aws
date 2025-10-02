@@ -476,7 +476,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	createdVmCluster, err := waitCloudVmClusterCreated(ctx, conn, *out.CloudVmClusterId, createTimeout)
+	createdVmCluster, err := waitCloudVmClusterCreated(ctx, conn, aws.ToString(out.CloudVmClusterId), createTimeout)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(out.CloudVmClusterId))...)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -486,8 +486,8 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		return
 	}
 	hostnamePrefix := strings.Split(*input.Hostname, "-")[0]
-	plan.HostnamePrefix = types.StringValue(hostnamePrefix)
-	plan.HostnamePrefixComputed = types.StringValue(*createdVmCluster.Hostname)
+	plan.HostnamePrefix = flex.StringValueToFramework(ctx, hostnamePrefix)
+	plan.HostnamePrefixComputed = flex.StringToFramework(ctx, createdVmCluster.Hostname)
 	//scan listener port not returned by API directly
 	plan.ScanListenerPortTcp = flex.Int32ToFramework(ctx, createdVmCluster.ListenerPort)
 	plan.GiVersionComputed = flex.StringToFramework(ctx, createdVmCluster.GiVersion)
@@ -515,7 +515,7 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	out, err := FindCloudVmClusterForResourceByID(ctx, conn, state.CloudVmClusterId.ValueString())
+	out, err := findCloudVmClusterForResourceByID(ctx, conn, state.CloudVmClusterId.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -620,7 +620,7 @@ func waitCloudVmClusterDeleted(ctx context.Context, conn *odb.Client, id string,
 
 func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindCloudVmClusterForResourceByID(ctx, conn, id)
+		out, err := findCloudVmClusterForResourceByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -633,7 +633,7 @@ func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) retr
 	}
 }
 
-func FindCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudVmCluster, error) {
+func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudVmCluster, error) {
 	input := odb.GetCloudVmClusterInput{
 		CloudVmClusterId: aws.String(id),
 	}
