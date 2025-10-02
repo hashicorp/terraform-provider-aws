@@ -174,11 +174,11 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"security_groups": schema.SetAttribute{
+									names.AttrSecurityGroups: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Required:   true,
 									},
-									"subnets": schema.SetAttribute{
+									names.AttrSubnets: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringType,
 										Required:   true,
 									},
