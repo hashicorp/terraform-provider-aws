@@ -20,14 +20,19 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_dms_endpoint: Add `mysql_settings` attribute ([#44516](https://github.com/hashicorp/terraform-provider-aws/issues/44516))
 * data-source/aws_ec2_instance_type_offering: Add `location` attribute ([#44328](https://github.com/hashicorp/terraform-provider-aws/issues/44328))
 * data-source/aws_rds_proxy: Add `default_auth_scheme` attribute ([#44309](https://github.com/hashicorp/terraform-provider-aws/issues/44309))
 * resource/aws_cleanrooms_configured_table: Add resource identity support ([#44435](https://github.com/hashicorp/terraform-provider-aws/issues/44435))
 * resource/aws_cloudfront_distribution: Add `ip_address_type` argument to `origin.custom_origin_config` block ([#44463](https://github.com/hashicorp/terraform-provider-aws/issues/44463))
 * resource/aws_connect_instance: Add resource identity support ([#44346](https://github.com/hashicorp/terraform-provider-aws/issues/44346))
 * resource/aws_connect_phone_number: Add resource identity support ([#44365](https://github.com/hashicorp/terraform-provider-aws/issues/44365))
+* resource/aws_dms_endpoint: Add `mysql_settings` configuration block ([#44516](https://github.com/hashicorp/terraform-provider-aws/issues/44516))
 * resource/aws_dsql_cluster: Adds attribute `force_destroy`. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
 * resource/aws_ebs_volume: Update `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes ([#44514](https://github.com/hashicorp/terraform-provider-aws/issues/44514))
+* resource/aws_ecs_capacity_provider: Add `cluster` and `managed_instances_provider` arguments ([#44509](https://github.com/hashicorp/terraform-provider-aws/issues/44509))
+* resource/aws_ecs_capacity_provider: Make `auto_scaling_group_provider` optional ([#44509](https://github.com/hashicorp/terraform-provider-aws/issues/44509))
+* resource/aws_iam_service_specific_credential: Add support for Bedrock API keys with `credential_age_days`, `service_credential_alias`, `service_credential_secret`, `create_date`, and `expiration_date` attributes ([#44299](https://github.com/hashicorp/terraform-provider-aws/issues/44299))
 * resource/aws_networkfirewall_logging_configuration: Add `enable_monitoring_dashboard` argument ([#44515](https://github.com/hashicorp/terraform-provider-aws/issues/44515))
 * resource/aws_opensearch_domain: Add `aiml_options` argument ([#44417](https://github.com/hashicorp/terraform-provider-aws/issues/44417))
 * resource/aws_pinpointsmsvoicev2_phone_number: Update `two_way_channel_arn` argument to accept `connect.[region].amazonaws.com` in addition to ARNs ([#44372](https://github.com/hashicorp/terraform-provider-aws/issues/44372))
@@ -55,6 +60,8 @@ BUG FIXES:
 * resource/aws_dms_endpoint: Ensure that `postgres_settings` are updated ([#44389](https://github.com/hashicorp/terraform-provider-aws/issues/44389))
 * resource/aws_dsql_cluster: Prevents error when optional attribute `deletion_protection_enabled` not set. ([#44406](https://github.com/hashicorp/terraform-provider-aws/issues/44406))
 * resource/aws_eks_cluster: Change `compute_config`, `kubernetes_network_config.elastic_load_balancing`, and `storage_config.` to Optional and Computed, allowing EKS Auto Mode settings to be enabled, disabled, and removed from configuration ([#44334](https://github.com/hashicorp/terraform-provider-aws/issues/44334))
+* resource/aws_elastic_beanstalk_configuration_template: Fix `inconsistent final plan` error in some cases with `setting` elements. ([#44461](https://github.com/hashicorp/terraform-provider-aws/issues/44461))
+* resource/aws_elastic_beanstalk_environment: Fix `inconsistent final plan` error in some cases with `setting` elements. ([#44461](https://github.com/hashicorp/terraform-provider-aws/issues/44461))
 * resource/aws_elasticache_cluster: Fix `provider produced unexpected value` for `cache_usage_limits` argument. ([#43841](https://github.com/hashicorp/terraform-provider-aws/issues/43841))
 * resource/aws_fsx_lustre_file_system: Fixed to update `metadata_configuration` first to allow simultaneous increase of `metadata_configuration.iops` and `storage_capacity` ([#44456](https://github.com/hashicorp/terraform-provider-aws/issues/44456))
 * resource/aws_instance: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `capacity_reservation_target` is empty ([#44459](https://github.com/hashicorp/terraform-provider-aws/issues/44459))

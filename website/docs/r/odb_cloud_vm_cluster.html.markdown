@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_odb_cloud_vm_cluster
 
-Terraform data source for Exadata Infrastructure resource in AWS for Oracle Database@AWS.
+Terraform to manage cloud vm cluster resource in AWS for Oracle Database@AWS.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -82,11 +82,11 @@ The following arguments are required:
 * `odb_network_id` - (Required) The unique identifier of the ODB network for the VM cluster. Changing this will create a new resource.
 * `ssh_public_keys` - (Required) The public key portion of one or more key pairs used for SSH access to the VM cluster. Changing this will create a new resource.
 * `data_collection_options` - (Required) The set of preferences for the various diagnostic collection options for the VM cluster.
+* `data_storage_size_in_tbs` - (Required) The size of the data disk group, in terabytes (TBs), to allocate for the VM cluster. Changing this will create a new resource.
 
 The following arguments are optional:
 
 * `cluster_name` - (Optional) The name of the Grid Infrastructure (GI) cluster. Changing this will create a new resource.
-* `data_storage_size_in_tbs` - (Optional) The size of the data disk group, in terabytes (TBs), to allocate for the VM cluster. Changing this will create a new resource.
 * `db_node_storage_size_in_gbs` - (Optional) The amount of local node storage, in gigabytes (GBs), to allocate for the VM cluster. Changing this will create a new resource.
 * `is_local_backup_enabled` - (Optional) Specifies whether to enable database backups to local Exadata storage for the VM cluster. Changing this will create a new resource.
 * `is_sparse_diskgroup_enabled` - (Optional) Specifies whether to create a sparse disk group for the VM cluster. Changing this will create a new resource.
@@ -123,6 +123,7 @@ This data source exports the following attributes in addition to the arguments a
 * `system_version` - The operating system version of the image chosen for the VM cluster.
 * `vip_ids` - The virtual IP (VIP) addresses assigned to the VM cluster. CRS assigns one VIP per node for failover support.
 * `created_at` - The timestamp when the VM cluster was created.
+* `gi_version_computed` - A complete software version of Oracle Grid Infrastructure (GI).
 * `compute_model` - The compute model used when the instance is created or cloned — either ECPU or OCPU. ECPU is a virtualized compute unit; OCPU is a physical processor core with hyper-threading.
 * `tags_all` - The combined set of user-defined and provider-defined tags.
 
