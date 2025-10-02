@@ -23,9 +23,10 @@ func testAccIVSPlaybackKeyPair_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccIVSPlaybackKeyPair_Identity_Basic,
-		"ExistingResource": testAccIVSPlaybackKeyPair_Identity_ExistingResource,
-		"RegionOverride":   testAccIVSPlaybackKeyPair_Identity_RegionOverride,
+		acctest.CtBasic:             testAccIVSPlaybackKeyPair_Identity_Basic,
+		"ExistingResource":          testAccIVSPlaybackKeyPair_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccIVSPlaybackKeyPair_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccIVSPlaybackKeyPair_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

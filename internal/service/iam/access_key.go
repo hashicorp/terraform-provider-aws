@@ -9,7 +9,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log"
-	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -249,10 +248,11 @@ func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Key: %s", d.Id())
-	_, err := conn.DeleteAccessKey(ctx, &iam.DeleteAccessKeyInput{
+	input := iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
-	})
+	}
+	_, err := conn.DeleteAccessKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
@@ -281,7 +281,7 @@ func findAccessKeyByTwoPartKey(ctx context.Context, conn *iam.Client, username, 
 		UserName: aws.String(username),
 	}
 
-	return findAccessKey(ctx, conn, input, func(v awstypes.AccessKeyMetadata) bool {
+	return findAccessKey(ctx, conn, input, func(v *awstypes.AccessKeyMetadata) bool {
 		return aws.ToString(v.AccessKeyId) == id
 	})
 }
@@ -291,10 +291,10 @@ func findAccessKeysByUser(ctx context.Context, conn *iam.Client, username string
 		UserName: aws.String(username),
 	}
 
-	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[awstypes.AccessKeyMetadata]())
+	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[*awstypes.AccessKeyMetadata]())
 }
 
-func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[awstypes.AccessKeyMetadata]) (*awstypes.AccessKeyMetadata, error) {
+func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*awstypes.AccessKeyMetadata]) (*awstypes.AccessKeyMetadata, error) {
 	output, err := findAccessKeys(ctx, conn, input, filter)
 
 	if err != nil {
@@ -304,7 +304,7 @@ func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessK
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[awstypes.AccessKeyMetadata]) ([]awstypes.AccessKeyMetadata, error) {
+func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*awstypes.AccessKeyMetadata]) ([]awstypes.AccessKeyMetadata, error) {
 	var output []awstypes.AccessKeyMetadata
 
 	pages := iam.NewListAccessKeysPaginator(conn, input)
@@ -323,7 +323,7 @@ func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccess
 		}
 
 		for _, v := range page.AccessKeyMetadata {
-			if !reflect.ValueOf(v).IsZero() && filter(v) {
+			if p := &v; !inttypes.IsZero(p) && filter(p) {
 				output = append(output, v)
 			}
 		}
@@ -371,5 +371,5 @@ func sesSMTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	versionedSig := make([]byte, 0, len(rawSig)+1)
 	versionedSig = append(versionedSig, version)
 	versionedSig = append(versionedSig, rawSig...)
-	return itypes.Base64Encode(versionedSig), nil
+	return inttypes.Base64Encode(versionedSig), nil
 }

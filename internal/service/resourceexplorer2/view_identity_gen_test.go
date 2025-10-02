@@ -24,9 +24,10 @@ func testAccResourceExplorer2View_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccResourceExplorer2View_Identity_Basic,
-		"ExistingResource": testAccResourceExplorer2View_Identity_ExistingResource,
-		"RegionOverride":   testAccResourceExplorer2View_Identity_RegionOverride,
+		acctest.CtBasic:             testAccResourceExplorer2View_Identity_Basic,
+		"ExistingResource":          testAccResourceExplorer2View_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccResourceExplorer2View_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccResourceExplorer2View_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

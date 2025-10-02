@@ -24,9 +24,10 @@ func testAccBedrockCustomModel_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccBedrockCustomModel_Identity_Basic,
-		"ExistingResource": testAccBedrockCustomModel_Identity_ExistingResource,
-		"RegionOverride":   testAccBedrockCustomModel_Identity_RegionOverride,
+		acctest.CtBasic:             testAccBedrockCustomModel_Identity_Basic,
+		"ExistingResource":          testAccBedrockCustomModel_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccBedrockCustomModel_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccBedrockCustomModel_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
