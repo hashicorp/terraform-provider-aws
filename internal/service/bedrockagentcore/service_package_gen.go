@@ -33,10 +33,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceAgentRuntimeEndpoint,
+			Factory:  newAgentRuntimeEndpointResource,
 			TypeName: "aws_bedrockagentcore_agent_runtime_endpoint",
 			Name:     "Agent Runtime Endpoint",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "agent_runtime_endpoint_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

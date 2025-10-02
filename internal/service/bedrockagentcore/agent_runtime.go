@@ -370,7 +370,7 @@ func (r *agentRuntimeResource) Delete(ctx context.Context, request resource.Dele
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.DeleteAgentRuntimeInput{
-		AgentRuntimeId: data.AgentRuntimeID.ValueStringPointer(),
+		AgentRuntimeId: fwflex.StringFromFramework(ctx, data.AgentRuntimeID),
 	}
 
 	_, err := conn.DeleteAgentRuntime(ctx, &input)

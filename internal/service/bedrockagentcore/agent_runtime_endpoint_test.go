@@ -5,22 +5,23 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,15 +29,10 @@ import (
 
 func TestAccBedrockAgentCoreAgentRuntimeEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var r1, r2 bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
+	var agentruntimeendpoint bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
-	imageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
-	imageUriV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -49,35 +45,27 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
-				Config: testAccAgentRuntimeEndpointConfig_basic(rName, "test endpoint", imageUriV1),
+				Config: testAccAgentRuntimeEndpointConfig_basic(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &r1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "agent_runtime_version", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock-agentcore", regexache.MustCompile(`runtime/.+/runtime-endpoint/.+$`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "agent_runtime_arn", "bedrock-agentcore", regexache.MustCompile(`runtime/.+$`)),
+					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &agentruntimeendpoint),
 				),
-			},
-			{
-				Config: testAccAgentRuntimeEndpointConfig_basic(rName, "updated endpoint", imageUriV2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &r2),
-					testAccCheckAgentRuntimeEndpointNotRecreated(&r1, &r2),
-					resource.TestCheckResourceAttr(resourceName, "agent_runtime_version", "2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated endpoint"),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_endpoint_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/.+/runtime-endpoint/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAgentRuntimeEndpointImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "agent_runtime_id", names.AttrName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
@@ -87,14 +75,10 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreAgentRuntimeEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var agentruntimeendpoint bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
-	imageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -107,20 +91,16 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_baseIAMRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					// Wait for IAM role and policy to propagate
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
-				Config: testAccAgentRuntimeEndpointConfig_basic(rName, "test endpoint", imageUri),
+				Config: testAccAgentRuntimeEndpointConfig_basic(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &agentruntimeendpoint),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceAgentRuntimeEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -130,15 +110,144 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccAgentRuntimeEndpointImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["agent_runtime_id"], rs.Primary.Attributes[names.AttrName]), nil
-	}
+func TestAccBedrockAgentCoreAgentRuntimeEndpoint_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentruntimeendpoint bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
+	rImageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rImageUriV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccAgentRuntimeEndpointPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeEndpointConfig_description(rName, rImageUriV1, "test endpoint"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &agentruntimeendpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test endpoint")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "agent_runtime_id", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccAgentRuntimeEndpointConfig_description(rName, rImageUriV2, "updated endpoint"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &agentruntimeendpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated endpoint")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+		},
+	})
 }
+
+func TestAccBedrockAgentCoreAgentRuntimeEndpoint_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentruntimeendpoint bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccAgentRuntimeEndpointPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeEndpointConfig_tags1(rName, rImageUri, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &agentruntimeendpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "agent_runtime_id", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccAgentRuntimeEndpointConfig_tags2(rName, rImageUri, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &agentruntimeendpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccAgentRuntimeEndpointConfig_tags1(rName, rImageUri, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &agentruntimeendpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAgentRuntimeEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
@@ -148,45 +257,37 @@ func testAccCheckAgentRuntimeEndpointDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			endpointName := rs.Primary.Attributes[names.AttrName]
-
-			_, err := tfbedrockagentcore.FindAgentRuntimeEndpointByRuntimeIDAndName(ctx, conn, rs.Primary.Attributes["agent_runtime_id"], endpointName)
+			_, err := tfbedrockagentcore.FindAgentRuntimeEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["agent_runtime_id"], rs.Primary.Attributes[names.AttrName])
 			if tfresource.NotFound(err) {
 				return nil
 			}
+
 			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAgentRuntimeEndpoint, endpointName, err)
+				return err
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAgentRuntimeEndpoint, endpointName, errors.New("not destroyed"))
+			return fmt.Errorf("Bedrock Agent Core Agent Runtime Endpoint %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAgentRuntimeEndpointExists(ctx context.Context, name string, agentruntimeendpoint *bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput) resource.TestCheckFunc {
+func testAccCheckAgentRuntimeEndpointExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAgentRuntimeEndpoint, name, errors.New("not found"))
-		}
-
-		endpointARN := rs.Primary.Attributes[names.AttrARN]
-		name := rs.Primary.Attributes[names.AttrName]
-
-		if endpointARN == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAgentRuntimeEndpoint, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindAgentRuntimeEndpointByRuntimeIDAndName(ctx, conn, rs.Primary.Attributes["agent_runtime_id"], name)
+		resp, err := tfbedrockagentcore.FindAgentRuntimeEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["agent_runtime_id"], rs.Primary.Attributes[names.AttrName])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAgentRuntimeEndpoint, name, err)
+			return err
 		}
 
-		*agentruntimeendpoint = *resp
+		*v = *resp
 
 		return nil
 	}
@@ -209,23 +310,52 @@ func testAccAgentRuntimeEndpointPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckAgentRuntimeEndpointNotRecreated(before, after *bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.AgentRuntimeEndpointArn), aws.ToString(after.AgentRuntimeEndpointArn); before != after {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameAgentRuntimeEndpoint, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
+func testAccAgentRuntimeEndpointConfig_basic(rName, imageUri string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, imageUri), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime_endpoint" "test" {
+  name                  = %[1]q
+  agent_runtime_id      = aws_bedrockagentcore_agent_runtime.test.agent_runtime_id
+  agent_runtime_version = aws_bedrockagentcore_agent_runtime.test.agent_runtime_version
+}
+`, rName))
 }
 
-func testAccAgentRuntimeEndpointConfig_basic(rName, description, imageUri string) string {
+func testAccAgentRuntimeEndpointConfig_description(rName, imageUri, description string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, imageUri), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime_endpoint" "test" {
   name                  = %[1]q
   description           = %[2]q
-  agent_runtime_id      = aws_bedrockagentcore_agent_runtime.test.id
-  agent_runtime_version = aws_bedrockagentcore_agent_runtime.test.version
+  agent_runtime_id      = aws_bedrockagentcore_agent_runtime.test.agent_runtime_id
+  agent_runtime_version = aws_bedrockagentcore_agent_runtime.test.agent_runtime_version
 }
 `, rName, description))
+}
+
+func testAccAgentRuntimeEndpointConfig_tags1(rName, imageUri, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, imageUri), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime_endpoint" "test" {
+  name                  = %[1]q
+  agent_runtime_id      = aws_bedrockagentcore_agent_runtime.test.agent_runtime_id
+  agent_runtime_version = aws_bedrockagentcore_agent_runtime.test.agent_runtime_version
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag1Key, tag1Value))
+}
+
+func testAccAgentRuntimeEndpointConfig_tags2(rName, imageUri, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, imageUri), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime_endpoint" "test" {
+  name                  = %[1]q
+  agent_runtime_id      = aws_bedrockagentcore_agent_runtime.test.agent_runtime_id
+  agent_runtime_version = aws_bedrockagentcore_agent_runtime.test.agent_runtime_version
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
