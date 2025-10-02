@@ -280,7 +280,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	budgetName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {

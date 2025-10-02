@@ -314,7 +314,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	budget.BudgetName = aws.String(name)
 
 	accountID := d.Get(names.AttrAccountID).(string)
