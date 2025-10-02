@@ -43,9 +43,8 @@ import (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_agent_runtime", name="Agent Runtime")
-// @ArnIdentity("agent_runtime_arn")
 // @Tags(identifierAttribute="agent_runtime_arn")
-// @Testing(tagsTest=false, hasNoPreExistingResource=true)
+// @Testing(tagsTest=false)
 func newAgentRuntimeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeResource{}
 

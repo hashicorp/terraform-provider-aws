@@ -30,11 +30,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "agent_runtime_arn",
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentityNamed("agent_runtime_arn"),
-			Import: inttypes.FrameworkImport{
-				WrappedImport: true,
-			},
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newResourceAgentRuntimeEndpoint,
