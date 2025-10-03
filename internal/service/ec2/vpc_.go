@@ -283,99 +283,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.ToString(vpc.OwnerId)
-	d.Set(names.AttrARN, vpcARN(ctx, c, ownerID, d.Id()))
-	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
-	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
-	d.Set("instance_tenancy", vpc.InstanceTenancy)
-	d.Set(names.AttrOwnerID, ownerID)
-
-	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
-	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
-	} else {
-		d.Set("enable_dns_hostnames", v)
-	}
-
-	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
-	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
-	} else {
-		d.Set("enable_dns_support", v)
-	}
-
-	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
-	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
-	} else {
-		d.Set("enable_network_address_usage_metrics", v)
-	}
-
-	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
-	} else {
-		d.Set("default_network_acl_id", v.NetworkAclId)
-	}
-
-	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
-		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
-		d.Set("default_route_table_id", nil)
-		d.Set("main_route_table_id", nil)
-	} else {
-		d.Set("default_route_table_id", v.RouteTableId)
-		d.Set("main_route_table_id", v.RouteTableId)
-	}
-
-	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
-		d.Set("default_security_group_id", nil)
-	} else {
-		d.Set("default_security_group_id", v.GroupId)
-	}
-
-	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
-		d.Set("assign_generated_ipv6_cidr_block", nil)
-		d.Set("ipv6_association_id", nil)
-		d.Set("ipv6_cidr_block", nil)
-		d.Set("ipv6_cidr_block_network_border_group", nil)
-		d.Set("ipv6_ipam_pool_id", nil)
-		d.Set("ipv6_netmask_length", nil)
-	} else {
-		cidrBlock := aws.ToString(ipv6CIDRBlockAssociation.Ipv6CidrBlock)
-		ipv6PoolID := aws.ToString(ipv6CIDRBlockAssociation.Ipv6Pool)
-		isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
-		d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
-		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
-		d.Set("ipv6_cidr_block", cidrBlock)
-		d.Set("ipv6_cidr_block_network_border_group", ipv6CIDRBlockAssociation.NetworkBorderGroup)
-		if isAmazonIPv6Pool {
-			d.Set("ipv6_ipam_pool_id", nil)
-		} else {
-			if ipv6PoolID == ipamManagedIPv6PoolID {
-				d.Set("ipv6_ipam_pool_id", d.Get("ipv6_ipam_pool_id"))
-			} else {
-				d.Set("ipv6_ipam_pool_id", ipv6PoolID)
-			}
-		}
-		d.Set("ipv6_netmask_length", nil)
-		if ipv6PoolID != "" && !isAmazonIPv6Pool {
-			parts := strings.Split(cidrBlock, "/")
-			if len(parts) == 2 {
-				if v, err := strconv.Atoi(parts[1]); err == nil {
-					d.Set("ipv6_netmask_length", v)
-				} else {
-					log.Printf("[WARN] Unable to parse CIDR (%s) netmask length: %s", cidrBlock, err)
-				}
-			} else {
-				log.Printf("[WARN] Invalid CIDR block format: %s", cidrBlock)
-			}
-		}
-	}
-
-	setTagsOut(ctx, vpc.Tags)
+	diags = append(diags, resourceVPCFlatten(ctx, c, vpc, d)...)
 
 	return diags
 }
@@ -724,6 +632,107 @@ func modifyVPCTenancy(ctx context.Context, conn *ec2.Client, vpcID string, v str
 	}
 
 	return nil
+}
+
+func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awstypes.Vpc, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := client.EC2Client(ctx)
+	ownerID := aws.ToString(vpc.OwnerId)
+	d.Set(names.AttrARN, vpcARN(ctx, client, ownerID, d.Id()))
+	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
+	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
+	d.Set("instance_tenancy", vpc.InstanceTenancy)
+	d.Set(names.AttrOwnerID, ownerID)
+
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
+		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
+	}, d.IsNewResource()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
+	} else {
+		d.Set("enable_dns_hostnames", v)
+	}
+
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
+		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
+	}, d.IsNewResource()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
+	} else {
+		d.Set("enable_dns_support", v)
+	}
+
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
+		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+	}, d.IsNewResource()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+	} else {
+		d.Set("enable_network_address_usage_metrics", v)
+	}
+
+	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
+	} else {
+		d.Set("default_network_acl_id", v.NetworkAclId)
+	}
+
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
+		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
+		d.Set("default_route_table_id", nil)
+		d.Set("main_route_table_id", nil)
+	} else {
+		d.Set("default_route_table_id", v.RouteTableId)
+		d.Set("main_route_table_id", v.RouteTableId)
+	}
+
+	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
+		d.Set("default_security_group_id", nil)
+	} else {
+		d.Set("default_security_group_id", v.GroupId)
+	}
+
+	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
+		d.Set("assign_generated_ipv6_cidr_block", nil)
+		d.Set("ipv6_association_id", nil)
+		d.Set("ipv6_cidr_block", nil)
+		d.Set("ipv6_cidr_block_network_border_group", nil)
+		d.Set("ipv6_ipam_pool_id", nil)
+		d.Set("ipv6_netmask_length", nil)
+	} else {
+		cidrBlock := aws.ToString(ipv6CIDRBlockAssociation.Ipv6CidrBlock)
+		ipv6PoolID := aws.ToString(ipv6CIDRBlockAssociation.Ipv6Pool)
+		isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
+		d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
+		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
+		d.Set("ipv6_cidr_block", cidrBlock)
+		d.Set("ipv6_cidr_block_network_border_group", ipv6CIDRBlockAssociation.NetworkBorderGroup)
+		if isAmazonIPv6Pool {
+			d.Set("ipv6_ipam_pool_id", nil)
+		} else {
+			if ipv6PoolID == ipamManagedIPv6PoolID {
+				d.Set("ipv6_ipam_pool_id", d.Get("ipv6_ipam_pool_id"))
+			} else {
+				d.Set("ipv6_ipam_pool_id", ipv6PoolID)
+			}
+		}
+		d.Set("ipv6_netmask_length", nil)
+		if ipv6PoolID != "" && !isAmazonIPv6Pool {
+			parts := strings.Split(cidrBlock, "/")
+			if len(parts) == 2 {
+				if v, err := strconv.Atoi(parts[1]); err == nil {
+					d.Set("ipv6_netmask_length", v)
+				} else {
+					log.Printf("[WARN] Unable to parse CIDR (%s) netmask length: %s", cidrBlock, err)
+				}
+			} else {
+				log.Printf("[WARN] Invalid CIDR block format: %s", cidrBlock)
+			}
+		}
+	}
+
+	setTagsOut(ctx, vpc.Tags)
+
+	return diags
 }
 
 func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) string {
