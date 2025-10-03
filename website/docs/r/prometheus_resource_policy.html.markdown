@@ -133,6 +133,13 @@ The following actions are supported in resource policies for Prometheus workspac
 * `aps:GetLabels` - Allows retrieving label names and values
 * `aps:GetMetricMetadata` - Allows retrieving metric metadata
 
+## Notes
+
+* Only Prometheus-compatible APIs can be used for workspace sharing. Non-Prometheus-compatible APIs added to the policy will be ignored.
+* If your workspace uses customer-managed KMS keys for encryption, you must grant the principals in your resource-based policy access to those KMS keys through KMS grants.
+* The resource ARN in the policy document must match the workspace ARN that the policy is being attached to.
+* Resource policies enable cross-account access and fine-grained permissions for Prometheus workspaces.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Resource Policy using the workspace ID. For example:
@@ -157,10 +164,3 @@ Using `terraform import`, import AMP Resource Policies using the workspace ID. F
 - `create` - (Default `5m`)
 - `update` - (Default `5m`)
 - `delete` - (Default `5m`)
-
-## Notes
-
-* Only Prometheus-compatible APIs can be used for workspace sharing. Non-Prometheus-compatible APIs added to the policy will be ignored.
-* If your workspace uses customer-managed KMS keys for encryption, you must grant the principals in your resource-based policy access to those KMS keys through KMS grants.
-* The resource ARN in the policy document must match the workspace ARN that the policy is being attached to.
-* Resource policies enable cross-account access and fine-grained permissions for Prometheus workspaces.
