@@ -120,4 +120,5 @@ This action supports the following arguments:
 * `media_sample_rate_hertz` - (Optional) Sample rate of the input media file in Hertz. If not specified, Amazon Transcribe will attempt to determine the sample rate automatically. Valid range: 8000-48000.
 * `output_bucket_name` - (Optional) Name of the S3 bucket where you want your transcription output stored. If not specified, output is stored in a service-managed bucket.
 * `output_key` - (Optional) S3 object key for your transcription output. If not specified, a default key is generated.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `timeout` - (Optional) Maximum time in seconds to wait for the transcription job to start. Must be between 60 and 3600 seconds. Default: `300`.
