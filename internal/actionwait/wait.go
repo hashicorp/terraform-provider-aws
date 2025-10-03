@@ -10,8 +10,9 @@ import (
 	"context"
 	"errors"
 	"slices"
-	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 )
 
 // DefaultPollInterval is the default fixed polling interval used when no custom IntervalStrategy is provided.
@@ -42,6 +43,32 @@ type FixedInterval time.Duration
 // NextPoll returns the fixed duration.
 func (fi FixedInterval) NextPoll(uint) time.Duration { return time.Duration(fi) }
 
+// BackoffInterval implements IntervalStrategy using a backoff.Delay strategy.
+// This allows actionwait to leverage sophisticated backoff algorithms while
+// maintaining the declarative status-based polling approach.
+type BackoffInterval struct {
+	delay backoff.Delay
+}
+
+// NextPoll returns the next polling interval using the wrapped backoff delay strategy.
+func (bi BackoffInterval) NextPoll(attempt uint) time.Duration {
+	return bi.delay.Next(attempt)
+}
+
+// WithBackoffDelay creates an IntervalStrategy that uses the provided backoff.Delay.
+// This bridges actionwait's IntervalStrategy interface with the backoff package's
+// delay strategies (fixed, exponential, SDK-compatible, etc.).
+//
+// Example usage:
+//
+//	opts := actionwait.Options[MyType]{
+//	    Interval: actionwait.WithBackoffDelay(backoff.FixedDelay(time.Second)),
+//	    // ... other options
+//	}
+func WithBackoffDelay(delay backoff.Delay) IntervalStrategy {
+	return BackoffInterval{delay: delay}
+}
+
 // Options configure the WaitForStatus loop.
 type Options[T any] struct {
 	Timeout            time.Duration    // Required total timeout.
@@ -62,50 +89,6 @@ type ProgressMeta struct {
 	Deadline   time.Time
 	NextPollIn time.Duration
 }
-
-// TimeoutError is returned when the operation does not reach a success state within Timeout.
-type TimeoutError struct {
-	LastStatus Status
-	Timeout    time.Duration
-}
-
-func (e *TimeoutError) Error() string {
-	return "timeout waiting for target status after " + e.Timeout.String()
-}
-
-// FailureStateError indicates the operation entered a declared failure state.
-type FailureStateError struct {
-	Status Status
-}
-
-func (e *FailureStateError) Error() string {
-	return "operation entered failure state: " + string(e.Status)
-}
-
-// UnexpectedStateError indicates the operation entered a state outside success/transitional/failure sets.
-type UnexpectedStateError struct {
-	Status  Status
-	Allowed []Status
-}
-
-func (e *UnexpectedStateError) Error() string {
-	if len(e.Allowed) == 0 {
-		return "operation entered unexpected state: " + string(e.Status)
-	}
-	allowedStr := make([]string, len(e.Allowed))
-	for i, s := range e.Allowed {
-		allowedStr[i] = string(s)
-	}
-	return "operation entered unexpected state: " + string(e.Status) + " (allowed: " +
-		strings.Join(allowedStr, ", ") + ")"
-}
-
-// sentinel errors helpers
-var (
-	_ error = (*TimeoutError)(nil)
-	_ error = (*FailureStateError)(nil)
-	_ error = (*UnexpectedStateError)(nil)
-)
 
 // WaitForStatus polls using fetch until a success state, failure state, timeout, unexpected state,
 // context cancellation, or fetch error occurs.

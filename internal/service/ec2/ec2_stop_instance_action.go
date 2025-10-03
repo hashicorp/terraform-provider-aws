@@ -185,6 +185,8 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 	}
 
 	// Wait for instance to stop with periodic progress updates using actionwait
+	// Use fixed interval since EC2 instance state transitions are predictable and
+	// relatively quick - consistent polling every 10s is optimal for this operation
 	_, err = actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[struct{}], error) {
 		instance, derr := findInstanceByID(ctx, conn, instanceID)
 		if derr != nil {

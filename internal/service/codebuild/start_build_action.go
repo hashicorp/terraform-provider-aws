@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -134,7 +135,9 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		Message: "Build started, waiting for completion...",
 	})
 
-	// Poll for build completion using actionwait
+	// Poll for build completion using actionwait with backoff strategy
+	// Use backoff since builds can take a long time and status changes less frequently
+	// as the build progresses - start with frequent polling then back off
 	_, err = actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[*awstypes.Build], error) {
 		input := codebuild.BatchGetBuildsInput{Ids: []string{buildID}}
 		batch, berr := conn.BatchGetBuilds(ctx, &input)
@@ -148,7 +151,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		return actionwait.FetchResult[*awstypes.Build]{Status: actionwait.Status(b.BuildStatus), Value: &b}, nil
 	}, actionwait.Options[*awstypes.Build]{
 		Timeout:          timeout,
-		Interval:         actionwait.FixedInterval(actionwait.DefaultPollInterval),
+		Interval:         actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay()),
 		ProgressInterval: 2 * time.Minute,
 		SuccessStates:    []actionwait.Status{actionwait.Status(awstypes.StatusTypeSucceeded)},
 		TransitionalStates: []actionwait.Status{

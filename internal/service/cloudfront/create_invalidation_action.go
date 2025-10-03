@@ -218,6 +218,8 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 	})
 
 	// Wait for invalidation to complete with periodic progress updates using actionwait
+	// Use fixed interval since CloudFront invalidations have predictable timing and
+	// don't benefit from exponential backoff - status changes are infrequent and consistent
 	_, err = actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[struct{}], error) {
 		input := cloudfront.GetInvalidationInput{
 			DistributionId: aws.String(distributionID),
