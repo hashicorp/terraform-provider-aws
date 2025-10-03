@@ -19,6 +19,42 @@ resource "aws_ec2_transit_gateway_route_table_association" "example" {
 }
 ```
 
+### Direct Connect Gateway Association
+
+When associating a Direct Connect Gateway attachment, reference the `transit_gateway_attachment_id` attribute directly from the `aws_dx_gateway_association` resource (available in v6.5.0+):
+
+```terraform
+resource "aws_dx_gateway" "example" {
+  name            = "example"
+  amazon_side_asn = 64512
+}
+
+resource "aws_ec2_transit_gateway" "example" {
+  description = "example"
+}
+
+resource "aws_dx_gateway_association" "example" {
+  dx_gateway_id         = aws_dx_gateway.example.id
+  associated_gateway_id = aws_ec2_transit_gateway.example.id
+
+  allowed_prefixes = [
+    "10.0.0.0/16",
+  ]
+}
+
+resource "aws_ec2_transit_gateway_route_table" "example" {
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
+}
+
+# Correct: Reference the attachment ID directly from the association resource
+resource "aws_ec2_transit_gateway_route_table_association" "example" {
+  transit_gateway_attachment_id  = aws_dx_gateway_association.example.transit_gateway_attachment_id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.example.id
+}
+```
+
+~> **NOTE:** Avoid using the `aws_ec2_transit_gateway_dx_gateway_attachment` data source to retrieve the attachment ID, as this can cause unnecessary resource recreation when unrelated attributes of the Direct Connect Gateway association change (such as `allowed_prefixes`). Always reference the `transit_gateway_attachment_id` attribute directly from the `aws_dx_gateway_association` resource when available.
+
 ## Argument Reference
 
 This resource supports the following arguments:
