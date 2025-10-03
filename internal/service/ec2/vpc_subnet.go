@@ -13,16 +13,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -156,6 +162,14 @@ func resourceSubnet() *schema.Resource {
 			},
 		},
 	}
+}
+
+// @SDKListResource("aws_subnet")
+func subnetResourceAsListResource() itypes.ListResourceForSDK {
+	l := subnetListResource{}
+	l.SetResourceSchema(resourceSubnet())
+
+	return &l
 }
 
 func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -684,4 +698,96 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	}
 
 	setTagsOut(ctx, subnet.Tags)
+}
+
+var _ list.ListResourceWithRawV5Schemas = &subnetListResource{}
+
+type subnetListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type subnetListResourceModel struct {
+	framework.WithRegionModel
+	Filters customListFilters `tfsdk:"filter"`
+}
+
+func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: customListFiltersBlock(ctx),
+		},
+	}
+}
+
+func (l *subnetListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.EC2Client(ctx)
+
+	var query subnetListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input ec2.DescribeSubnetsInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			for _, subnet := range page.Subnets {
+				// Skip default subnets.
+				if aws.ToBool(subnet.DefaultForAz) {
+					continue
+				}
+
+				result := request.NewListResult(ctx)
+
+				tags := keyValueTags(ctx, subnet.Tags)
+
+				rd := l.ResourceData()
+				rd.SetId(aws.ToString(subnet.SubnetId))
+				resourceSubnetFlatten(ctx, &subnet, rd)
+
+				// set tags
+				err = l.SetTags(ctx, awsClient, rd)
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				if v, ok := tags["Name"]; ok {
+					result.DisplayName = v.ValueString()
+				} else {
+					result.DisplayName = aws.ToString(subnet.SubnetId)
+				}
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
+			}
+		}
+	}
 }

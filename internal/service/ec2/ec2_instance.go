@@ -4042,7 +4042,6 @@ type instanceListResourceModel struct {
 	IncludeAutoScaled types.Bool        `tfsdk:"include_auto_scaled"`
 }
 
-// ListResourceConfigSchema defines the schema for the List configuration
 func (l *instanceListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
