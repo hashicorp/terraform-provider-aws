@@ -142,7 +142,7 @@ func testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation(t *te
 	})
 }
 
-func testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayRouteTableAssociation_recreatedDXGateway(t *testing.T, semaphore tfsync.Semaphore) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -174,11 +174,9 @@ func testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &a),
 				),
-				// Calling a NotRecreated function, such as testAccCheckRouteTableAssociationNotRecreated, as is typical,
-				// won't work here because the recreated resource ID will be the same, because it's two IDs pegged together.
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 			},

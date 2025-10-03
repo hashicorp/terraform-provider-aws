@@ -145,12 +145,13 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:              testAccTransitGatewayRouteTableAssociation_basic,
 			acctest.CtDisappears:         testAccTransitGatewayRouteTableAssociation_disappears,
 			"replaceExistingAssociation": testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation,
-			"notRecreatedDXGateway":      testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway,
+			"recreatedDXGateway":         testAccTransitGatewayRouteTableAssociation_recreatedDXGateway,
 		},
 		"RouteTablePropagation": {
-			acctest.CtBasic:         testAccTransitGatewayRouteTablePropagation_basic,
-			acctest.CtDisappears:    testAccTransitGatewayRouteTablePropagation_disappears,
-			"notRecreatedDXGateway": testAccTransitGatewayRouteTablePropagtion_notRecreatedDXGateway,
+			acctest.CtBasic:      testAccTransitGatewayRouteTablePropagation_basic,
+			acctest.CtDisappears: testAccTransitGatewayRouteTablePropagation_disappears,
+			"attachmentChange":   testAccTransitGatewayRouteTablePropagation_attachmentChange,
+			"recreatedDXGateway": testAccTransitGatewayRouteTablePropagtion_recreatedDXGateway,
 		},
 		"VPCAttachment": {
 			acctest.CtBasic:                   testAccTransitGatewayVPCAttachment_basic,
