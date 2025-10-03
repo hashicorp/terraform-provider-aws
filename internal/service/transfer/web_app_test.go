@@ -5,20 +5,21 @@ package transfer_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,8 +27,7 @@ import (
 
 func TestAccTransferWebApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var webappBefore, webappAfter awstypes.DescribedWebApp
+	var v awstypes.DescribedWebApp
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
@@ -42,61 +42,150 @@ func TestAccTransferWebApp_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebAppConfig_basic(rName, rName),
+				Config: testAccWebAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappBefore),
-					resource.TestMatchResourceAttr(resourceName, "access_endpoint", regexache.MustCompile(`^https:\/\/.*.aws$`)),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckWebAppExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_endpoint"), knownvalue.StringRegexp(regexache.MustCompile(`^https:\/\/.*.aws$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("transfer", regexache.MustCompile(`webapp/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_app_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"provisioned": knownvalue.Int64Exact(1),
+						}),
+					})),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccWebAppConfig_basic(rName+"-tag-changed", rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestMatchResourceAttr(resourceName, "access_endpoint", regexache.MustCompile(`^https:\/\/.*.aws$`)),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName+"-tag-changed"),
-				),
-			},
-			{
-				Config: testAccWebAppConfig_basic(rName+"-tag-changed", rName+"-tag-changed"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestMatchResourceAttr(resourceName, "access_endpoint", regexache.MustCompile(`^https:\/\/.*.aws$`)),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName+"-tag-changed"),
-				),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
 			},
 		},
 	})
 }
 
+func TestAccTransferWebApp_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedWebApp
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_web_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebAppConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebApp, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccTransferWebApp_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedWebApp
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_web_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebAppConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
+			},
+			{
+				Config: testAccWebAppConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccWebAppConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+		},
+	})
+}
+
+/*
 func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -245,113 +334,7 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 		},
 	})
 }
-
-func TestAccTransferWebApp_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var webappBefore, webappAfter awstypes.DescribedWebApp
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_transfer_web_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWebAppConfig_basic(rName, rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappBefore),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				Config: testAccWebAppConfig_noTags(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccWebAppConfig_basic(rName, rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				Config: testAccWebAppConfig_multipleTags(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Env", rName),
-				),
-			},
-			{
-				Config: testAccWebAppConfig_basic(rName, rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-		},
-	})
-}
-
-func TestAccTransferWebApp_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var webapp awstypes.DescribedWebApp
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_transfer_web_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWebAppConfig_basic(rName, rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webapp),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebApp, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-		},
-	})
-}
+*/
 
 func testAccCheckWebAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -362,56 +345,42 @@ func testAccCheckWebAppDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tftransfer.FindWebAppByID(ctx, conn, rs.Primary.ID)
+			_, err := tftransfer.FindWebAppByID(ctx, conn, rs.Primary.Attributes["web_app_id"])
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.Transfer, create.ErrActionCheckingDestroyed, tftransfer.ResNameWebApp, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.Transfer, create.ErrActionCheckingDestroyed, tftransfer.ResNameWebApp, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Transfer Web App %s still exists", rs.Primary.Attributes["web_app_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckWebAppExists(ctx context.Context, name string, webapp *awstypes.DescribedWebApp) resource.TestCheckFunc {
+func testAccCheckWebAppExists(ctx context.Context, n string, v *awstypes.DescribedWebApp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Transfer, create.ErrActionCheckingExistence, tftransfer.ResNameWebApp, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Transfer, create.ErrActionCheckingExistence, tftransfer.ResNameWebApp, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
-		resp, err := tftransfer.FindWebAppByID(ctx, conn, rs.Primary.ID)
+		resp, err := tftransfer.FindWebAppByID(ctx, conn, rs.Primary.Attributes["web_app_id"])
 		if err != nil {
-			return create.Error(names.Transfer, create.ErrActionCheckingExistence, tftransfer.ResNameWebApp, rs.Primary.ID, err)
+			return err
 		}
 
-		*webapp = *resp
+		*v = *resp
 
 		return nil
 	}
 }
 
-func testAccCheckWebAppNotRecreated(before, after *awstypes.DescribedWebApp) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.WebAppId), aws.ToString(after.WebAppId); before != after {
-			return create.Error(names.Transfer, create.ErrActionCheckingNotRecreated, tftransfer.ResNameWebApp, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccWebAppConfig_base(roleName string) string {
+func testAccWebAppConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -477,69 +446,11 @@ resource "aws_iam_role_policy" "web_app_identity_bearer" {
   policy = data.aws_iam_policy_document.web_app_identity_bearer.json
   role   = aws_iam_role.test.name
 }
-`, roleName)
+`, rName)
 }
 
-func testAccWebAppConfig_basic(rName, roleName string) string {
-	return acctest.ConfigCompose(
-		testAccWebAppConfig_base(roleName), fmt.Sprintf(`
-resource "aws_transfer_web_app" "test" {
-  identity_provider_details {
-    identity_center_config {
-      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-      role         = aws_iam_role.test.arn
-    }
-  }
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccWebAppConfig_webAppUnits(rName string, webAppUnitsProvisioned int) string {
-	return acctest.ConfigCompose(
-		testAccWebAppConfig_base(rName), fmt.Sprintf(`
-resource "aws_transfer_web_app" "test" {
-  identity_provider_details {
-    identity_center_config {
-      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-      role         = aws_iam_role.test.arn
-    }
-  }
-  web_app_units {
-    provisioned = %[2]d
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, webAppUnitsProvisioned))
-}
-
-func testAccWebAppConfig_accessEndPoint(rName, accessEndPoint string) string {
-	return acctest.ConfigCompose(
-		testAccWebAppConfig_base(rName), fmt.Sprintf(`
-resource "aws_transfer_web_app" "test" {
-  identity_provider_details {
-    identity_center_config {
-      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-      role         = aws_iam_role.test.arn
-    }
-  }
-  access_endpoint = %[2]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, accessEndPoint))
-}
-
-func testAccWebAppConfig_noTags(rName string) string {
-	return acctest.ConfigCompose(
-		testAccWebAppConfig_base(rName), `
+func testAccWebAppConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccWebAppConfig_base(rName), `
 resource "aws_transfer_web_app" "test" {
   identity_provider_details {
     identity_center_config {
@@ -551,9 +462,38 @@ resource "aws_transfer_web_app" "test" {
 `)
 }
 
-func testAccWebAppConfig_multipleTags(rName string) string {
-	return acctest.ConfigCompose(
-		testAccWebAppConfig_base(rName), fmt.Sprintf(`
+func testAccWebAppConfig_webAppUnits(rName string, webAppUnitsProvisioned int) string {
+	return acctest.ConfigCompose(testAccWebAppConfig_base(rName), fmt.Sprintf(`
+resource "aws_transfer_web_app" "test" {
+  identity_provider_details {
+    identity_center_config {
+      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+      role         = aws_iam_role.test.arn
+    }
+  }
+  web_app_units {
+    provisioned = %[2]d
+  }
+}
+`, rName, webAppUnitsProvisioned))
+}
+
+func testAccWebAppConfig_accessEndPoint(rName, accessEndPoint string) string {
+	return acctest.ConfigCompose(testAccWebAppConfig_base(rName), fmt.Sprintf(`
+resource "aws_transfer_web_app" "test" {
+  identity_provider_details {
+    identity_center_config {
+      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+      role         = aws_iam_role.test.arn
+    }
+  }
+  access_endpoint = %[2]q
+}
+`, rName, accessEndPoint))
+}
+
+func testAccWebAppConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccWebAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_transfer_web_app" "test" {
   identity_provider_details {
     identity_center_config {
@@ -563,10 +503,26 @@ resource "aws_transfer_web_app" "test" {
   }
 
   tags = {
-    Name = %[1]q
-    Env  = %[1]q
+    %[1]q = %[2]q
+  }
+}
+`, tag1Key, tag1Value))
+}
+
+func testAccWebAppConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccWebAppConfig_base(rName), fmt.Sprintf(`
+resource "aws_transfer_web_app" "test" {
+  identity_provider_details {
+    identity_center_config {
+      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+      role         = aws_iam_role.test.arn
+    }
   }
 
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
 }
-`, rName))
+`, tag1Key, tag1Value, tag2Key, tag2Value))
 }

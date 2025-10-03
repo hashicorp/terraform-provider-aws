@@ -5,19 +5,16 @@ package transfer
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"time"
+	"reflect"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -25,16 +22,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,67 +34,46 @@ import (
 
 // @FrameworkResource("aws_transfer_web_app", name="Web App")
 // @Tags(identifierAttribute="arn")
-func newResourceWebApp(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceWebApp{}
-
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
+func newWebAppResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &webAppResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameWebApp = "Web App"
-)
-
-type resourceWebApp struct {
-	framework.ResourceWithModel[resourceWebAppModel]
-	framework.WithTimeouts
-	framework.WithImportByID
+type webAppResource struct {
+	framework.ResourceWithModel[webAppResourceModel]
 }
 
-func (r *resourceWebApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *webAppResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_endpoint": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
-					stringvalidator.LengthAtMost(1024),
+					stringvalidator.LengthBetween(1, 1024),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
-			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"web_app_endpoint_policy": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.WebAppEndpointPolicy](),
 				Optional:   true,
 				Computed:   true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.WebAppEndpointPolicy](),
-				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			"web_app_units": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[webAppUnitsModel](ctx),
-				Optional:   true,
-				Computed:   true,
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"provisioned": types.Int64Type,
-					},
-				},
-			},
+			"web_app_id":    framework.IDAttribute(),
+			"web_app_units": framework.ResourceOptionalComputedListOfObjectsAttribute[webAppUnitsModel](ctx, 1, nil),
 		},
 		Blocks: map[string]schema.Block{
 			"identity_provider_details": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[identityProviderDetailsModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[webAppIdentityProviderDetailsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
@@ -120,18 +91,12 @@ func (r *resourceWebApp) Schema(ctx context.Context, req resource.SchemaRequest,
 										Computed: true,
 									},
 									"instance_arn": schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(10, 1024),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^arn:[\w-]+:sso:::instance/(sso)?ins-[a-zA-Z0-9-.]{16}$`), ""),
-										},
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
 									},
 									names.AttrRole: schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(20, 2048),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^arn:.*role/\S+$`), ""),
-										},
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
 									},
 								},
 							},
@@ -139,276 +104,158 @@ func (r *resourceWebApp) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: false,
-				Delete: true,
-			}),
 		},
 	}
 }
 
-func (r *resourceWebApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().TransferClient(ctx)
-
-	var plan resourceWebAppModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *webAppResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data webAppResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().TransferClient(ctx)
 
 	var input transfer.CreateWebAppInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateWebApp(ctx, &input)
+	output, err := conn.CreateWebApp(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionCreating, ResNameWebApp, "", err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionCreating, ResNameWebApp, "", nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating Transfer Web App", err.Error())
+
 		return
 	}
 
-	plan.WebAppId = flex.StringToFramework(ctx, out.WebAppId)
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitWebAppCreated(ctx, conn, plan.WebAppId.ValueString(), createTimeout)
+	webAppID := aws.ToString(output.WebAppId)
+	webApp, err := findWebAppByID(ctx, conn, webAppID)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionWaitingForCreation, ResNameWebApp, plan.WebAppId.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Transfer Web App (%s)", webAppID), err.Error())
+
 		return
 	}
 
-	rout, _ := findWebAppByID(ctx, conn, plan.WebAppId.ValueString())
-	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan, flex.WithFieldNamePrefix("Described"))...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, webApp, &data, fwflex.WithFieldNamePrefix("Described"))...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceWebApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().TransferClient(ctx)
-
-	var state resourceWebAppModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *webAppResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data webAppResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findWebAppByID(ctx, conn, state.WebAppId.ValueString())
+	conn := r.Meta().TransferClient(ctx)
+
+	webAppID := fwflex.StringValueFromFramework(ctx, data.WebAppID)
+	out, err := findWebAppByID(ctx, conn, webAppID)
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionReading, ResNameWebApp, state.WebAppId.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Transfer Web App (%s)", webAppID), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Described"))...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("Described"))...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, out.Tags)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceWebApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	needUpdate := false
-	conn := r.Meta().TransferClient(ctx)
-
-	var plan, state resourceWebAppModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *webAppResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old webAppResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	conn := r.Meta().TransferClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
-		input := transfer.UpdateWebAppInput{
-			WebAppId: state.WebAppId.ValueStringPointer(),
+		webAppID := fwflex.StringValueFromFramework(ctx, new.WebAppID)
+		var input transfer.UpdateWebAppInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		if !state.AccessEndpoint.Equal(plan.AccessEndpoint) {
-			if v := plan.AccessEndpoint.ValueStringPointer(); v != nil && aws.ToString(v) != "" {
-				input.AccessEndpoint = v
-			}
-			needUpdate = true
-		}
-		if !state.IdentityProviderDetails.Equal(plan.IdentityProviderDetails) {
-			if v, diags := plan.IdentityProviderDetails.ToPtr(ctx); v != nil && !diags.HasError() {
-				if v, diags := v.IdentityCenterConfig.ToPtr(ctx); v != nil && !diags.HasError() {
-					input.IdentityProviderDetails = &awstypes.UpdateWebAppIdentityProviderDetailsMemberIdentityCenterConfig{
-						Value: awstypes.UpdateWebAppIdentityCenterConfig{
-							Role: v.Role.ValueStringPointer(),
-						},
-					}
-					needUpdate = true
-				}
-			}
-		}
-		if !state.WebAppUnits.Equal(plan.WebAppUnits) {
-			if v, diags := plan.WebAppUnits.ToPtr(ctx); v != nil && !diags.HasError() {
-				if v, diags := plan.WebAppUnits.ToPtr(ctx); v != nil && !diags.HasError() {
-					input.WebAppUnits = &awstypes.WebAppUnitsMemberProvisioned{
-						Value: flex.Int32ValueFromFrameworkInt64(ctx, v.Provisioned),
-					}
-					needUpdate = true
-				}
-			}
+		_, err := conn.UpdateWebApp(ctx, &input)
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Transfer Web App (%s)", webAppID), err.Error())
+
+			return
 		}
 
-		if needUpdate {
-			out, err := conn.UpdateWebApp(ctx, &input)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.Transfer, create.ErrActionUpdating, ResNameWebApp, plan.WebAppId.String(), err),
-					err.Error(),
-				)
-				return
-			}
-			if out == nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.Transfer, create.ErrActionUpdating, ResNameWebApp, plan.WebAppId.String(), nil),
-					errors.New("empty output").Error(),
-				)
-				return
-			}
+		webApp, err := findWebAppByID(ctx, conn, webAppID)
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading Transfer Web App (%s)", webAppID), err.Error())
+
+			return
 		}
 
-		if !state.Tags.Equal(plan.Tags) {
-			if err := updateTags(ctx, conn, plan.ARN.ValueString(), state.Tags, plan.Tags); err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.Transfer, create.ErrActionUpdating, ResNameWebApp, plan.WebAppId.String(), err),
-					err.Error(),
-				)
-				return
-			}
-		}
-
-		if resp.Diagnostics.HasError() {
+		// Set values for unknowns.
+		response.Diagnostics.Append(fwflex.Flatten(ctx, webApp, &new, fwflex.WithFieldNamePrefix("Described"))...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	rout, _ := findWebAppByID(ctx, conn, plan.WebAppId.ValueString())
-	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan, flex.WithFieldNamePrefix("Described"))...)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceWebApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *webAppResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data webAppResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().TransferClient(ctx)
 
-	var state resourceWebAppModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	webAppID := fwflex.StringValueFromFramework(ctx, data.WebAppID)
 	input := transfer.DeleteWebAppInput{
-		WebAppId: state.WebAppId.ValueStringPointer(),
+		WebAppId: aws.String(webAppID),
 	}
-
 	_, err := conn.DeleteWebApp(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionDeleting, ResNameWebApp, state.WebAppId.String(), err),
-			err.Error(),
-		)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitWebAppDeleted(ctx, conn, state.WebAppId.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionWaitingForDeletion, ResNameWebApp, state.WebAppId.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Transfer Web App (%s)", webAppID), err.Error())
+
 		return
 	}
 }
 
-const (
-	statusNormal = "Normal"
-)
-
-func waitWebAppCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedWebApp, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusWebApp(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DescribedWebApp); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitWebAppDeleted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedWebApp, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusNormal},
-		Target:  []string{},
-		Refresh: statusWebApp(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DescribedWebApp); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusWebApp(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findWebAppByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, statusNormal, nil
-	}
+func (r *webAppResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("web_app_id"), request.ID)...)
 }
 
 func findWebAppByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedWebApp, error) {
@@ -416,15 +263,20 @@ func findWebAppByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 		WebAppId: aws.String(id),
 	}
 
-	out, err := conn.DescribeWebApp(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
-		}
+	return findWebApp(ctx, conn, &input)
+}
 
+func findWebApp(ctx context.Context, conn *transfer.Client, input *transfer.DescribeWebAppInput) (*awstypes.DescribedWebApp, error) {
+	out, err := conn.DescribeWebApp(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -435,88 +287,65 @@ func findWebAppByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	return out.WebApp, nil
 }
 
-type resourceWebAppModel struct {
+type webAppResourceModel struct {
 	framework.WithRegionModel
-	AccessEndpoint          types.String                                                  `tfsdk:"access_endpoint"`
-	ARN                     types.String                                                  `tfsdk:"arn"`
-	IdentityProviderDetails fwtypes.ListNestedObjectValueOf[identityProviderDetailsModel] `tfsdk:"identity_provider_details"`
-	Tags                    tftags.Map                                                    `tfsdk:"tags"`
-	TagsAll                 tftags.Map                                                    `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
-	WebAppEndpointPolicy    fwtypes.StringEnum[awstypes.WebAppEndpointPolicy]             `tfsdk:"web_app_endpoint_policy"`
-	WebAppUnits             fwtypes.ListNestedObjectValueOf[webAppUnitsModel]             `tfsdk:"web_app_units"`
-	WebAppId                types.String                                                  `tfsdk:"id"`
+	AccessEndpoint          types.String                                                        `tfsdk:"access_endpoint"`
+	ARN                     types.String                                                        `tfsdk:"arn"`
+	IdentityProviderDetails fwtypes.ListNestedObjectValueOf[webAppIdentityProviderDetailsModel] `tfsdk:"identity_provider_details"`
+	Tags                    tftags.Map                                                          `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                          `tfsdk:"tags_all"`
+	WebAppEndpointPolicy    fwtypes.StringEnum[awstypes.WebAppEndpointPolicy]                   `tfsdk:"web_app_endpoint_policy"`
+	WebAppID                types.String                                                        `tfsdk:"web_app_id"`
+	WebAppUnits             fwtypes.ListNestedObjectValueOf[webAppUnitsModel]                   `tfsdk:"web_app_units"`
 }
 
-type identityProviderDetailsModel struct {
+type webAppIdentityProviderDetailsModel struct {
 	IdentityCenterConfig fwtypes.ListNestedObjectValueOf[identityCenterConfigModel] `tfsdk:"identity_center_config"`
 }
 
 type identityCenterConfigModel struct {
-	ApplicationArn types.String `tfsdk:"application_arn"`
-	InstanceArn    types.String `tfsdk:"instance_arn"`
-	Role           types.String `tfsdk:"role"`
+	ApplicationARN types.String `tfsdk:"application_arn"`
+	InstanceARN    fwtypes.ARN  `tfsdk:"instance_arn"`
+	Role           fwtypes.ARN  `tfsdk:"role"`
 }
 
 type webAppUnitsModel struct {
 	Provisioned types.Int64 `tfsdk:"provisioned"`
 }
 
-func sweepWebApps(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := transfer.ListWebAppsInput{}
-	conn := client.TransferClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := transfer.NewListWebAppsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.WebApps {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceWebApp, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.WebAppId))),
-			)
-		}
-	}
-
-	return sweepResources, nil
-}
-
 var (
-	_ flex.Expander  = webAppUnitsModel{}
-	_ flex.Flattener = &webAppUnitsModel{}
-	_ flex.Expander  = identityProviderDetailsModel{}
-	_ flex.Flattener = &identityProviderDetailsModel{}
+	_ fwflex.Expander  = webAppUnitsModel{}
+	_ fwflex.Flattener = &webAppUnitsModel{}
 )
 
 func (m webAppUnitsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var v awstypes.WebAppUnits
 
 	switch {
 	case !m.Provisioned.IsNull():
-		var apiObject awstypes.WebAppUnitsMemberProvisioned
-		apiObject.Value = aws.ToInt32(flex.Int32FromFrameworkInt64(ctx, &m.Provisioned))
-		v = &apiObject
+		var r awstypes.WebAppUnitsMemberProvisioned
+		r.Value = aws.ToInt32(fwflex.Int32FromFrameworkInt64(ctx, &m.Provisioned))
+		return &r, diags
 	}
-
-	return v, diags
+	return nil, diags
 }
 
 func (m *webAppUnitsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.WebAppUnitsMemberProvisioned:
-		m.Provisioned = flex.Int32ToFrameworkInt64(ctx, &t.Value)
+		m.Provisioned = fwflex.Int32ToFrameworkInt64(ctx, &t.Value)
 	}
 	return diags
 }
 
-func (m identityProviderDetailsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+var (
+	_ fwflex.Expander  = webAppIdentityProviderDetailsModel{}
+	_ fwflex.Flattener = &webAppIdentityProviderDetailsModel{}
+)
+
+func (m webAppIdentityProviderDetailsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var v awstypes.WebAppIdentityProviderDetails
 
 	switch {
 	case !m.IdentityCenterConfig.IsNull():
@@ -525,30 +354,32 @@ func (m identityProviderDetailsModel) Expand(ctx context.Context) (any, diag.Dia
 		if diags.HasError() {
 			return nil, diags
 		}
-		var apiObject awstypes.WebAppIdentityProviderDetailsMemberIdentityCenterConfig
-		diags.Append(flex.Expand(ctx, data, &apiObject.Value)...)
+		var r awstypes.WebAppIdentityProviderDetailsMemberIdentityCenterConfig
+		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
-		v = &apiObject
+		return &r, diags
 	}
-
-	return v, diags
+	return nil, diags
 }
 
-func (m *identityProviderDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+func (m *webAppIdentityProviderDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch t := v.(type) {
 	case awstypes.DescribedWebAppIdentityProviderDetailsMemberIdentityCenterConfig:
 		var data identityCenterConfigModel
-		diags.Append(flex.Flatten(ctx, t.Value, &data)...)
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
 		if diags.HasError() {
 			return diags
 		}
-		m.IdentityCenterConfig = fwtypes.NewListNestedObjectValueOfPtrMust[identityCenterConfigModel](ctx, &data)
+		m.IdentityCenterConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	default:
-		diags.AddError("Interface Conversion Error", fmt.Sprintf("cannot flatten %T into %T", v, m))
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("artifact flatten: %s", reflect.TypeOf(v).String()),
+		)
 	}
 	return diags
 }

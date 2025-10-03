@@ -4,14 +4,17 @@
 package transfer
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -114,4 +117,26 @@ func sweepWorkflows(region string) error {
 	}
 
 	return nil
+}
+
+func sweepWebApps(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := transfer.ListWebAppsInput{}
+	conn := client.TransferClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := transfer.NewListWebAppsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.WebApps {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newWebAppResource, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.WebAppId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

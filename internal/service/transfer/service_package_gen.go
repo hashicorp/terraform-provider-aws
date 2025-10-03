@@ -31,7 +31,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceWebApp,
+			Factory:  newWebAppResource,
 			TypeName: "aws_transfer_web_app",
 			Name:     "Web App",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

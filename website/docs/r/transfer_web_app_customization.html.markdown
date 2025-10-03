@@ -31,7 +31,7 @@ resource "aws_transfer_web_app" "test" {
 }
 
 resource "aws_transfer_web_app_customization" "test" {
-  web_app_id   = aws_transfer_web_app.test.id
+  web_app_id   = aws_transfer_web_app.test.web_app_id
   favicon_file = filebase64("${path.module}/favicon.png")
   logo_file    = filebase64("${path.module}/logo.png")
   title        = "test"
@@ -53,16 +53,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - Same as `web_app_id`.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `5m`)
-* `delete` - (Default `5m`)
+This resource exports no additional attributes.
 
 ## Import
 

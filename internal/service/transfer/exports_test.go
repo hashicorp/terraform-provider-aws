@@ -14,7 +14,7 @@ var (
 	ResourceSSHKey              = resourceSSHKey
 	ResourceTag                 = resourceTag
 	ResourceUser                = resourceUser
-	ResourceWebApp              = newResourceWebApp
+	ResourceWebApp              = newWebAppResource
 	ResourceWebAppCustomization = newResourceWebAppCustomization
 	ResourceWorkflow            = resourceWorkflow
 

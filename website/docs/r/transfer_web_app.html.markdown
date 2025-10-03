@@ -117,26 +117,19 @@ The following arguments are optional:
 
 ### Identity center config
 
-* instance_arn - (Optional) ARN of the IAM Identity Center used for the web app.
-* role - (Optional) ARN of an identity bearer role for your web app.
+* `instance_arn` - (Optional) ARN of the IAM Identity Center used for the web app.
+* `role` - (Optional) ARN of an identity bearer role for your web app.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Web App.
-* `id` - ID of the Wep App resource.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `10m`)
-* `delete` - (Default `10m`)
+* `web_app_id` - ID of the Wep App resource.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Family Web App using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Family Web App using the `web_app_id`. For example:
 
 ```terraform
 import {
@@ -145,7 +138,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Transfer Family Web App using the `example_id_arg`. For example:
+Using `terraform import`, import Transfer Family Web App using the `web_app_id`. For example:
 
 ```console
 % terraform import aws_transfer_web_app.example web_app-id-12345678

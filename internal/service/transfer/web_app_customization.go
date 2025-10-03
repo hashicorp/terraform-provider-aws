@@ -7,14 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,9 +35,6 @@ import (
 func newResourceWebAppCustomization(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceWebAppCustomization{}
 
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
-
 	return r, nil
 }
 
@@ -48,8 +44,6 @@ const (
 
 type resourceWebAppCustomization struct {
 	framework.ResourceWithModel[resourceWebAppCustomizationModel]
-	framework.WithTimeouts
-	framework.WithImportByID
 }
 
 func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -69,7 +63,7 @@ func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(), // TODO TEMP Remove
 			"logo_file": schema.StringAttribute{
 				// Same as favicon_file
 				Optional: true,
@@ -93,13 +87,6 @@ func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-		},
-		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: false,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -141,16 +128,6 @@ func (r *resourceWebAppCustomization) Create(ctx context.Context, req resource.C
 	}
 
 	plan.ID = flex.StringToFramework(ctx, out.WebAppId)
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitWebAppCustomizationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionWaitingForCreation, ResNameWebAppCustomization, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
 
 	rout, _ := findWebAppCustomizationByID(ctx, conn, plan.ID.ValueString())
 	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan)...)
@@ -267,65 +244,10 @@ func (r *resourceWebAppCustomization) Delete(ctx context.Context, req resource.D
 		)
 		return
 	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitWebAppCustomizationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionWaitingForDeletion, ResNameWebAppCustomization, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
 }
 
-func waitWebAppCustomizationCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedWebAppCustomization, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusWebAppCustomization(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DescribedWebAppCustomization); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitWebAppCustomizationDeleted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedWebAppCustomization, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusNormal},
-		Target:  []string{},
-		Refresh: statusWebAppCustomization(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DescribedWebAppCustomization); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusWebAppCustomization(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findWebAppCustomizationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, statusNormal, nil
-	}
+func (r *resourceWebAppCustomization) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("web_app_id"), request.ID)...)
 }
 
 func findWebAppCustomizationByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedWebAppCustomization, error) {
@@ -354,13 +276,14 @@ func findWebAppCustomizationByID(ctx context.Context, conn *transfer.Client, id 
 
 type resourceWebAppCustomizationModel struct {
 	framework.WithRegionModel
-	ARN         types.String   `tfsdk:"arn"`
-	FaviconFile types.String   `tfsdk:"favicon_file"`
-	ID          types.String   `tfsdk:"id"`
-	LogoFile    types.String   `tfsdk:"logo_file"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
-	Title       types.String   `tfsdk:"title"`
-	WebAppID    types.String   `tfsdk:"web_app_id"`
+	ARN         types.String `tfsdk:"arn"`
+	FaviconFile types.String `tfsdk:"favicon_file"`
+	LogoFile    types.String `tfsdk:"logo_file"`
+	Title       types.String `tfsdk:"title"`
+	WebAppID    types.String `tfsdk:"web_app_id"`
+
+	// TEMP TODO Remove
+	ID types.String `tfsdk:"id"`
 }
 
 var (
