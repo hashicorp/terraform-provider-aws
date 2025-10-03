@@ -277,7 +277,7 @@ func (r *webAppResource) Delete(ctx context.Context, request resource.DeleteRequ
 }
 
 func (r *webAppResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("web_app_id"), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("web_app_id"), request, response)
 }
 
 func findWebAppByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedWebApp, error) {
