@@ -33,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -462,7 +461,7 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 			return tfresource.NonRetryableError(err)
 		}
 
-		if lastOutput == nil || !lifecycleConfigEqual(ctx, lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
+		if lastOutput == nil || !lifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
 			lastOutput = output
 			return tfresource.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
 		}
@@ -521,11 +520,6 @@ func (r *bucketLifecycleConfigurationResource) Update(ctx context.Context, reque
 	lifecycleConfiguraton := awstypes.BucketLifecycleConfiguration{
 		Rules: rules,
 	}
-
-	tflog.Debug(ctx, "Updating S3 Bucket Lifecycle Configuration", map[string]interface{}{
-		"Bucket": bucket,
-		"Rules":  rules,
-	})
 
 	input.LifecycleConfiguration = &lifecycleConfiguraton
 
@@ -635,19 +629,10 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 
 	for i := range output.Rules {
 		rule := &output.Rules[i]
-		if (*rule).Prefix != nil && *(*rule).Prefix == "" {
-			tflog.Debug(ctx, "Found S3 Bucket Lifecycle Configuration rule with empty Prefix", map[string]interface{}{
-				"Bucket": bucket,
-				"RuleID": *(*rule).ID,
-			})
+		if (*rule).Prefix != nil && (*(*rule).Prefix == "" || *(*rule).Prefix == "/") {
 			(*rule).Prefix = nil
 		}
 	}
-
-	tflog.Debug(ctx, "Found S3 Bucket Lifecycle Configuration post mutate", map[string]interface{}{
-		"Bucket": bucket,
-		"Rules":  output.Rules,
-	})
 
 	if err != nil {
 		return nil, err
@@ -660,36 +645,18 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	return output, nil
 }
 
-func lifecycleConfigEqual(ctx context.Context, transitionMinSize1 awstypes.TransitionDefaultMinimumObjectSize, rules1 []awstypes.LifecycleRule, transitionMinSize2 awstypes.TransitionDefaultMinimumObjectSize, rules2 []awstypes.LifecycleRule) bool {
+func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumObjectSize, rules1 []awstypes.LifecycleRule, transitionMinSize2 awstypes.TransitionDefaultMinimumObjectSize, rules2 []awstypes.LifecycleRule) bool {
 	if transitionMinSize1 != transitionMinSize2 {
-		tflog.Debug(ctx, "Different transition minimum object size", map[string]interface{}{
-			"transition_min_size1": transitionMinSize1,
-			"transition_min_size2": transitionMinSize2,
-		})
 		return false
 	}
 
 	if len(rules1) != len(rules2) {
-		tflog.Debug(ctx, "Different number of rules", map[string]interface{}{
-			"len(rules1)": len(rules1),
-			"len(rules2)": len(rules2),
-		})
 		return false
 	}
 
 	for _, rule1 := range rules1 {
 		if !slices.ContainsFunc(rules2, func(rule2 awstypes.LifecycleRule) bool {
-
-			equal := reflect.DeepEqual(rule1, rule2)
-
-			if !equal {
-				tflog.Debug(ctx, "Rules are not equal", map[string]interface{}{
-					"output": rule1,
-					"input":  rule2,
-				})
-			}
-
-			return equal
+			return reflect.DeepEqual(rule1, rule2)
 		}) {
 			return false
 		}
@@ -710,7 +677,7 @@ func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, o
 			return nil, "", err
 		}
 
-		return output, strconv.FormatBool(lifecycleConfigEqual(ctx, output.TransitionDefaultMinimumObjectSize, output.Rules, transitionMinSize, rules)), nil
+		return output, strconv.FormatBool(lifecycleConfigEqual(output.TransitionDefaultMinimumObjectSize, output.Rules, transitionMinSize, rules)), nil
 	}
 }
 

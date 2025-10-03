@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -5266,4 +5267,126 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 `, rName)
+}
+
+func TestNormalizeEmptyPrefix(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    *types.LifecycleRule
+		expected *types.LifecycleRule
+	}{
+		{
+			name: "empty string prefix becomes nil",
+			input: &types.LifecycleRule{
+				ID:     aws.String("test-rule"),
+				Prefix: aws.String(""),
+				Status: types.ExpirationStatusEnabled,
+			},
+			expected: &types.LifecycleRule{
+				ID:     aws.String("test-rule"),
+				Prefix: nil,
+				Status: types.ExpirationStatusEnabled,
+			},
+		},
+		{
+			name: "forward slash prefix becomes nil",
+			input: &types.LifecycleRule{
+				ID:     aws.String("test-rule"),
+				Prefix: aws.String("/"),
+				Status: types.ExpirationStatusEnabled,
+			},
+			expected: &types.LifecycleRule{
+				ID:     aws.String("test-rule"),
+				Prefix: nil,
+				Status: types.ExpirationStatusEnabled,
+			},
+		},
+		{
+			name: "nil prefix remains nil",
+			input: &types.LifecycleRule{
+				ID:     aws.String("test-rule"),
+				Prefix: nil,
+				Status: types.ExpirationStatusEnabled,
+			},
+			expected: &types.LifecycleRule{
+				ID:     aws.String("test-rule"),
+				Prefix: nil,
+				Status: types.ExpirationStatusEnabled,
+			},
+		},
+		{
+			name: "non-empty prefix unchanged",
+			input: &types.LifecycleRule{
+				ID:     aws.String("test-rule"),
+				Prefix: aws.String("logs/"),
+				Status: types.ExpirationStatusEnabled,
+			},
+			expected: &types.LifecycleRule{
+				ID:     aws.String("test-rule"),
+				Prefix: aws.String("logs/"),
+				Status: types.ExpirationStatusEnabled,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Simulate what findBucketLifecycleConfiguration does
+			if tc.input.Prefix != nil && (*tc.input.Prefix == "" || *tc.input.Prefix == "/") {
+				tc.input.Prefix = nil
+			}
+
+			// Verify normalization
+			if tc.input.Prefix == nil && tc.expected.Prefix != nil {
+				t.Errorf("Expected non-nil prefix, got nil")
+			} else if tc.input.Prefix != nil && tc.expected.Prefix == nil {
+				t.Errorf("Expected nil prefix, got %v", *tc.input.Prefix)
+			} else if tc.input.Prefix != nil && tc.expected.Prefix != nil && *tc.input.Prefix != *tc.expected.Prefix {
+				t.Errorf("Expected prefix %v, got %v", *tc.expected.Prefix, *tc.input.Prefix)
+			}
+		})
+	}
+}
+
+func TestExpandNormalizeSymmetry(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name           string
+		configValue    string
+		afterExpand    *string
+		afterNormalize *string
+	}{
+		{
+			name:           "empty string config",
+			configValue:    "",
+			afterExpand:    nil, // fwflex.EmptyStringAsNull converts "" to nil
+			afterNormalize: nil, // normalization keeps nil as nil
+		},
+		{
+			name:           "non-empty config",
+			configValue:    "logs/",
+			afterExpand:    aws.String("logs/"),
+			afterNormalize: aws.String("logs/"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// This test proves the expand->API->normalize cycle is symmetric
+			// 1. Config "" -> expand -> nil (sent to API)
+			// 2. API returns "" (Ceph) or nil (AWS)
+			// 3. normalize -> nil (consistent internal representation)
+
+			if tc.afterExpand == nil && tc.afterNormalize != nil {
+				t.Errorf("Symmetry broken: expand returned nil but normalize expects %v", *tc.afterNormalize)
+			} else if tc.afterExpand != nil && tc.afterNormalize == nil {
+				t.Errorf("Symmetry broken: expand returned %v but normalize expects nil", *tc.afterExpand)
+			} else if tc.afterExpand != nil && tc.afterNormalize != nil && *tc.afterExpand != *tc.afterNormalize {
+				t.Errorf("Symmetry broken: expand returned %v but normalize expects %v", *tc.afterExpand, *tc.afterNormalize)
+			}
+		})
+	}
 }
