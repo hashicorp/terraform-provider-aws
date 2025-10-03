@@ -16,11 +16,36 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_transfer_certificate", sweepCertificates)
 	awsv2.Register("aws_transfer_connector", sweepConnectors)
 	awsv2.Register("aws_transfer_profile", sweepProfiles)
 	awsv2.Register("aws_transfer_server", sweepServers)
 	awsv2.Register("aws_transfer_web_app", sweepWebApps)
 	awsv2.Register("aws_transfer_workflow", sweepWorkflows, "aws_transfer_server")
+}
+
+func sweepCertificates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.TransferClient(ctx)
+	var input transfer.ListCertificatesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := transfer.NewListCertificatesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Certificates {
+			r := resourceCertificate()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.CertificateId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepConnectors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
