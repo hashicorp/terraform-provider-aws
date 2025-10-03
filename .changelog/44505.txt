@@ -1,2 +1,3 @@
-ENHANCEMENTS:
-* resource/aws_launch_template: Update `kms_key_id` parameter validation to accept key ID, key alias, and alias ARN in addition to key ARN [GH-44505]
+```release-note:bug
+resource/aws_launch_template: `kms_key_id` validation now accepts key ID, alias, and alias ARN in addition to key ARN
+```
