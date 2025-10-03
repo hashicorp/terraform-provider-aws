@@ -51,6 +51,7 @@ func (r *hostKeyResource) Schema(ctx context.Context, request resource.SchemaReq
 					stringvalidator.LengthBetween(0, 200),
 				},
 			},
+			// TODO host_key_body plus _wo
 			"host_key_fingerprint": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
