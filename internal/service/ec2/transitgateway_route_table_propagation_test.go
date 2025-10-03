@@ -301,7 +301,38 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
 }
 
 func testAccTransitGatewayRouteTablePropagationConfig_attachmentChange(rName string, attachmentIndex int) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  count = 2
+
+  cidr_block = "10.${count.index}.0.0/16"
+
+  tags = {
+    Name = "%[1]s-${count.index}"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test[count.index].id
+  cidr_block        = "10.${count.index}.0.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "%[1]s-${count.index}"
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -313,7 +344,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 
   subnet_ids         = [aws_subnet.test[count.index].id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
-  vpc_id             = aws_vpc.test.id
+  vpc_id             = aws_vpc.test[count.index].id
 
   tags = {
     Name = "%[1]s-${count.index}"
@@ -332,5 +363,5 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test[%[2]d].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
-`, rName, attachmentIndex))
+`, rName, attachmentIndex)
 }

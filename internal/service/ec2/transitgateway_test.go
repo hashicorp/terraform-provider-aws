@@ -145,6 +145,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:              testAccTransitGatewayRouteTableAssociation_basic,
 			acctest.CtDisappears:         testAccTransitGatewayRouteTableAssociation_disappears,
 			"replaceExistingAssociation": testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation,
+			"attachmentChange":           testAccTransitGatewayRouteTableAssociation_attachmentChange,
 			"recreatedDXGateway":         testAccTransitGatewayRouteTableAssociation_recreatedDXGateway,
 		},
 		"RouteTablePropagation": {
