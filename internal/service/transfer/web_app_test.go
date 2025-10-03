@@ -55,6 +55,7 @@ func TestAccTransferWebApp_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_endpoint"), knownvalue.StringRegexp(regexache.MustCompile(`^https:\/\/.*.aws$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("transfer", regexache.MustCompile(`webapp/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_app_endpoint_policy"), tfknownvalue.StringExact(awstypes.WebAppEndpointPolicyStandard)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_app_units"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"provisioned": knownvalue.Int64Exact(1),
@@ -185,11 +186,9 @@ func TestAccTransferWebApp_tags(t *testing.T) {
 	})
 }
 
-/*
 func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var webappBefore, webappAfter awstypes.DescribedWebApp
+	var v awstypes.DescribedWebApp
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
@@ -204,56 +203,47 @@ func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebAppConfig_webAppUnits(rName, 1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappBefore),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccWebAppConfig_webAppUnits(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "2"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckWebAppExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_app_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"provisioned": knownvalue.Int64Exact(2),
+						}),
+					})),
+				},
 			},
 			{
-				Config: testAccWebAppConfig_basic(rName, rName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
+			},
+			{
+				Config: testAccWebAppConfig_webAppUnits(rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "2"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckWebAppExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("web_app_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"provisioned": knownvalue.Int64Exact(4),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -261,8 +251,7 @@ func TestAccTransferWebApp_webAppUnits(t *testing.T) {
 
 func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var webappBefore, webappAfter awstypes.DescribedWebApp
+	var v awstypes.DescribedWebApp
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app.test"
 
@@ -279,62 +268,41 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 			{
 				Config: testAccWebAppConfig_accessEndPoint(rName, "https://example.com"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappBefore),
-					resource.TestCheckResourceAttr(resourceName, "access_endpoint", "https://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckWebAppExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_endpoint"), knownvalue.StringExact("https://example.com")),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
 			},
 			{
-				Config: testAccWebAppConfig_accessEndPoint(rName, "https://example2.com"),
+				Config: testAccWebAppConfig_accessEndPoint(rName, "https://example.net"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, "access_endpoint", "https://example2.com"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckWebAppExists(ctx, resourceName, &v),
 				),
-			},
-			{
-				Config: testAccWebAppConfig_basic(rName, rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppExists(ctx, resourceName, &webappAfter),
-					testAccCheckWebAppNotRecreated(&webappBefore, &webappAfter),
-					resource.TestCheckResourceAttr(resourceName, "access_endpoint", "https://example2.com"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.0.identity_center_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity_provider_details.0.identity_center_config.0.role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_units.0.provisioned", "1"),
-					resource.TestCheckResourceAttr(resourceName, "web_app_endpoint_policy", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_endpoint"), knownvalue.StringExact("https://example.net")),
+				},
 			},
 		},
 	})
 }
-*/
 
 func testAccCheckWebAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

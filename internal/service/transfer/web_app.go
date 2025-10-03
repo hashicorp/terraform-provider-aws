@@ -93,6 +93,9 @@ func (r *webAppResource) Schema(ctx context.Context, request resource.SchemaRequ
 									"instance_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrRole: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
@@ -201,9 +204,28 @@ func (r *webAppResource) Update(ctx context.Context, request resource.UpdateRequ
 	if diff.HasChanges() {
 		webAppID := fwflex.StringValueFromFramework(ctx, new.WebAppID)
 		var input transfer.UpdateWebAppInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, fwflex.WithIgnoredFieldNamesAppend("IdentityProviderDetails"))...)
 		if response.Diagnostics.HasError() {
 			return
+		}
+
+		//
+		if !new.IdentityProviderDetails.Equal(old.IdentityProviderDetails) {
+			if v, diags := new.IdentityProviderDetails.ToPtr(ctx); v != nil && !diags.HasError() {
+				if v, diags := v.IdentityCenterConfig.ToPtr(ctx); v != nil && !diags.HasError() {
+					input.IdentityProviderDetails = &awstypes.UpdateWebAppIdentityProviderDetailsMemberIdentityCenterConfig{
+						Value: awstypes.UpdateWebAppIdentityCenterConfig{
+							Role: fwflex.StringFromFramework(ctx, v.Role),
+						},
+					}
+				} else {
+					response.Diagnostics.Append(diags...)
+					return
+				}
+			} else {
+				response.Diagnostics.Append(diags...)
+				return
+			}
 		}
 
 		_, err := conn.UpdateWebApp(ctx, &input)
