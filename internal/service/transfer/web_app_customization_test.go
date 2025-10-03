@@ -5,7 +5,6 @@ package transfer_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -13,11 +12,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -26,8 +27,7 @@ import (
 
 func TestAccTransferWebAppCustomization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var webappcustomization awstypes.DescribedWebAppCustomization
+	var v awstypes.DescribedWebAppCustomization
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app_customization.test"
 
@@ -35,7 +35,7 @@ func TestAccTransferWebAppCustomization_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,23 +44,28 @@ func TestAccTransferWebAppCustomization_basic(t *testing.T) {
 			{
 				Config: testAccWebAppCustomizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
 			},
 		},
 	})
 }
 
-func TestAccTransferWebAppCustomization_title(t *testing.T) {
+func TestAccTransferWebAppCustomization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var webappcustomization awstypes.DescribedWebAppCustomization
+	var v awstypes.DescribedWebAppCustomization
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app_customization.test"
 
@@ -68,7 +73,80 @@ func TestAccTransferWebAppCustomization_title(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebAppCustomizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebAppCustomizationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebAppCustomization, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccTransferWebAppCustomization_Disappears_webApp(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedWebAppCustomization
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_web_app_customization.test"
+	webAppResourceName := "aws_transfer_web_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebAppCustomizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebAppCustomizationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebApp, webAppResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccTransferWebAppCustomization_title(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedWebAppCustomization
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_web_app_customization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -77,31 +155,51 @@ func TestAccTransferWebAppCustomization_title(t *testing.T) {
 			{
 				Config: testAccWebAppCustomizationConfig_title(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "title", "test"),
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("title"), knownvalue.StringExact("test")),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
 			},
 			{
 				Config: testAccWebAppCustomizationConfig_title(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "title", "test2"),
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("title"), knownvalue.StringExact("test2")),
+				},
 			},
 			{
 				Config: testAccWebAppCustomizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckNoResourceAttr(resourceName, "title"),
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("title"), knownvalue.Null()),
+				},
 			},
 		},
 	})
@@ -109,8 +207,7 @@ func TestAccTransferWebAppCustomization_title(t *testing.T) {
 
 func TestAccTransferWebAppCustomization_files(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var webappcustomization awstypes.DescribedWebAppCustomization
+	var v awstypes.DescribedWebAppCustomization
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_web_app_customization.test"
 	darkBytes, _ := os.ReadFile("test-fixtures/Terraform-LogoMark_onDark.png")
@@ -122,7 +219,7 @@ func TestAccTransferWebAppCustomization_files(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -131,66 +228,48 @@ func TestAccTransferWebAppCustomization_files(t *testing.T) {
 			{
 				Config: testAccWebAppCustomizationConfig_files(rName, "Dark", "Light"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logo_file", darkFileBase64Encoded),
-					resource.TestCheckResourceAttr(resourceName, "favicon_file", lightFileBase64Encoded),
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("favicon_file"), knownvalue.StringExact(lightFileBase64Encoded)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logo_file"), knownvalue.StringExact(darkFileBase64Encoded)),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
 			},
 			{
 				Config: testAccWebAppCustomizationConfig_files(rName, "Light", "Dark"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logo_file", lightFileBase64Encoded),
-					resource.TestCheckResourceAttr(resourceName, "favicon_file", darkFileBase64Encoded),
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
 				),
-			},
-			{
-				Config: testAccWebAppCustomizationConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					resource.TestCheckResourceAttrPair(resourceName, "web_app_id", "aws_transfer_web_app.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logo_file", lightFileBase64Encoded),
-					resource.TestCheckResourceAttr(resourceName, "favicon_file", darkFileBase64Encoded),
-				),
-			},
-		},
-	})
-}
-
-func TestAccTransferWebAppCustomization_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var webappcustomization awstypes.DescribedWebAppCustomization
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_transfer_web_app_customization.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebAppCustomizationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWebAppCustomizationConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebAppCustomizationExists(ctx, resourceName, &webappcustomization),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebAppCustomization, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("favicon_file"), knownvalue.StringExact(darkFileBase64Encoded)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logo_file"), knownvalue.StringExact(lightFileBase64Encoded)),
+				},
+			},
+			{
+				Config: testAccWebAppCustomizationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -207,85 +286,63 @@ func testAccCheckWebAppCustomizationDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := tftransfer.FindWebAppCustomizationByID(ctx, conn, rs.Primary.ID)
+			_, err := tftransfer.FindWebAppCustomizationByID(ctx, conn, rs.Primary.Attributes["web_app_id"])
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.Transfer, create.ErrActionCheckingDestroyed, tftransfer.ResNameWebAppCustomization, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.Transfer, create.ErrActionCheckingDestroyed, tftransfer.ResNameWebAppCustomization, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Transfer Web App Customization %s still exists", rs.Primary.Attributes["web_app_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckWebAppCustomizationExists(ctx context.Context, name string, webappcustomization *awstypes.DescribedWebAppCustomization) resource.TestCheckFunc {
+func testAccCheckWebAppCustomizationExists(ctx context.Context, n string, v *awstypes.DescribedWebAppCustomization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Transfer, create.ErrActionCheckingExistence, tftransfer.ResNameWebAppCustomization, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Transfer, create.ErrActionCheckingExistence, tftransfer.ResNameWebAppCustomization, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
-		resp, err := tftransfer.FindWebAppCustomizationByID(ctx, conn, rs.Primary.ID)
+		resp, err := tftransfer.FindWebAppCustomizationByID(ctx, conn, rs.Primary.Attributes["web_app_id"])
 		if err != nil {
-			return create.Error(names.Transfer, create.ErrActionCheckingExistence, tftransfer.ResNameWebAppCustomization, rs.Primary.ID, err)
+			return err
 		}
 
-		*webappcustomization = *resp
+		*v = *resp
 
 		return nil
 	}
 }
 
-func testAccWebAppCustomizationConfig_base(rName string) string {
-	return acctest.ConfigCompose(
-		testAccWebAppConfig_base(rName), `
-resource "aws_transfer_web_app" "test" {
-  identity_provider_details {
-    identity_center_config {
-      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-      role         = aws_iam_role.test.arn
-    }
-  }
-}
-`)
-}
-
 func testAccWebAppCustomizationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccWebAppCustomizationConfig_base(rName), `
+	return acctest.ConfigCompose(testAccWebAppConfig_basic(rName), `
 resource "aws_transfer_web_app_customization" "test" {
-  web_app_id = aws_transfer_web_app.test.id
+  web_app_id = aws_transfer_web_app.test.web_app_id
 }
 `)
 }
 
 func testAccWebAppCustomizationConfig_title(rName, title string) string {
-	return acctest.ConfigCompose(
-		testAccWebAppCustomizationConfig_base(rName),
+	return acctest.ConfigCompose(testAccWebAppConfig_basic(rName),
 		fmt.Sprintf(`
 resource "aws_transfer_web_app_customization" "test" {
-  web_app_id = aws_transfer_web_app.test.id
+  web_app_id = aws_transfer_web_app.test.web_app_id
   title      = %[1]q
 }
 `, title))
 }
 
 func testAccWebAppCustomizationConfig_files(rName, logoFileSuffix, faviconFileSuffix string) string {
-	return acctest.ConfigCompose(
-		testAccWebAppCustomizationConfig_base(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWebAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_transfer_web_app_customization" "test" {
-  web_app_id   = aws_transfer_web_app.test.id
+  web_app_id   = aws_transfer_web_app.test.web_app_id
   logo_file    = filebase64("test-fixtures/Terraform-LogoMark_on%[1]s.png")
   favicon_file = filebase64("test-fixtures/Terraform-LogoMark_on%[2]s.png")
 }

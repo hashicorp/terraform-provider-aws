@@ -15,7 +15,7 @@ var (
 	ResourceTag                 = resourceTag
 	ResourceUser                = resourceUser
 	ResourceWebApp              = newWebAppResource
-	ResourceWebAppCustomization = newResourceWebAppCustomization
+	ResourceWebAppCustomization = newWebAppCustomizationResource
 	ResourceWorkflow            = resourceWorkflow
 
 	FindAccessByTwoPartKey       = findAccessByTwoPartKey

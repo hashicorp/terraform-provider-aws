@@ -5,7 +5,6 @@ package transfer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,35 +20,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @FrameworkResource("aws_transfer_web_app_customization", name="Web App Customization")
-func newResourceWebAppCustomization(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceWebAppCustomization{}
+func newWebAppCustomizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &webAppCustomizationResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameWebAppCustomization = "Web App Customization"
-)
-
-type resourceWebAppCustomization struct {
-	framework.ResourceWithModel[resourceWebAppCustomizationModel]
+type webAppCustomizationResource struct {
+	framework.ResourceWithModel[webAppCustomizationResourceModel]
 }
 
-func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *webAppCustomizationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"favicon_file": schema.StringAttribute{
 				// If faviconFile is not specified when calling the UpdateWebAppCustomization API,
 				// the existing favicon remains unchanged.
@@ -63,9 +55,8 @@ func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(), // TODO TEMP Remove
 			"logo_file": schema.StringAttribute{
-				// Same as favicon_file
+				// Same as favicon_file.
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
@@ -91,162 +82,129 @@ func (r *resourceWebAppCustomization) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceWebAppCustomization) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().TransferClient(ctx)
-
-	var plan resourceWebAppCustomizationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *webAppCustomizationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data webAppCustomizationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().TransferClient(ctx)
 
 	var input transfer.UpdateWebAppCustomizationInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(expandUpdateWebAppCustomizationInput(ctx, &data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.UpdateWebAppCustomization(ctx, &input)
+	webAppID := fwflex.StringValueFromFramework(ctx, data.WebAppID)
+	_, err := conn.UpdateWebAppCustomization(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionCreating, ResNameWebAppCustomization, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionCreating, ResNameWebAppCustomization, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Transfer Web App (%s) Customization", webAppID), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if data.FaviconFile.IsUnknown() {
+		data.FaviconFile = types.StringNull()
+	}
+	if data.LogoFile.IsUnknown() {
+		data.LogoFile = types.StringNull()
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.WebAppId)
-
-	rout, _ := findWebAppCustomizationByID(ctx, conn, plan.ID.ValueString())
-	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan)...)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceWebAppCustomization) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().TransferClient(ctx)
-
-	var state resourceWebAppCustomizationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *webAppCustomizationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data webAppCustomizationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findWebAppCustomizationByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().TransferClient(ctx)
+
+	webAppID := fwflex.StringValueFromFramework(ctx, data.WebAppID)
+	out, err := findWebAppCustomizationByID(ctx, conn, webAppID)
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionReading, ResNameWebAppCustomization, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Transfer Web App (%s) Customization", webAppID), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flattenDescribedWebAppCustomization(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	state.ID = flex.StringToFramework(ctx, out.WebAppId)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceWebAppCustomization) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().TransferClient(ctx)
-
-	var plan, state resourceWebAppCustomizationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *webAppCustomizationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old webAppCustomizationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	conn := r.Meta().TransferClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input transfer.UpdateWebAppCustomizationInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(expandUpdateWebAppCustomizationInput(ctx, &new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateWebAppCustomization(ctx, &input)
+		webAppID := fwflex.StringValueFromFramework(ctx, new.WebAppID)
+		_, err := conn.UpdateWebAppCustomization(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Transfer, create.ErrActionUpdating, ResNameWebAppCustomization, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Transfer, create.ErrActionUpdating, ResNameWebAppCustomization, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
+			response.Diagnostics.AddError(fmt.Sprintf("updating Transfer Web App (%s) Customization", webAppID), err.Error())
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	rout, _ := findWebAppCustomizationByID(ctx, conn, plan.ID.ValueString())
-	resp.Diagnostics.Append(flex.Flatten(ctx, rout, &plan)...)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceWebAppCustomization) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *webAppCustomizationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data webAppCustomizationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().TransferClient(ctx)
 
-	var state resourceWebAppCustomizationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	webAppID := fwflex.StringValueFromFramework(ctx, data.WebAppID)
+	input := transfer.DeleteWebAppCustomizationInput{
+		WebAppId: aws.String(webAppID),
+	}
+	_, err := conn.DeleteWebAppCustomization(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
-
-	input := transfer.DeleteWebAppCustomizationInput{
-		WebAppId: state.ID.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteWebAppCustomization(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Transfer Web App (%s) Customization", webAppID), err.Error())
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionDeleting, ResNameWebAppCustomization, state.ID.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
 
-func (r *resourceWebAppCustomization) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *webAppCustomizationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("web_app_id"), request.ID)...)
 }
 
@@ -255,15 +213,20 @@ func findWebAppCustomizationByID(ctx context.Context, conn *transfer.Client, id 
 		WebAppId: aws.String(id),
 	}
 
-	out, err := conn.DescribeWebAppCustomization(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
-		}
+	return findWebAppCustomization(ctx, conn, &input)
+}
 
+func findWebAppCustomization(ctx context.Context, conn *transfer.Client, input *transfer.DescribeWebAppCustomizationInput) (*awstypes.DescribedWebAppCustomization, error) {
+	out, err := conn.DescribeWebAppCustomization(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -274,74 +237,59 @@ func findWebAppCustomizationByID(ctx context.Context, conn *transfer.Client, id 
 	return out.WebAppCustomization, nil
 }
 
-type resourceWebAppCustomizationModel struct {
+type webAppCustomizationResourceModel struct {
 	framework.WithRegionModel
-	ARN         types.String `tfsdk:"arn"`
 	FaviconFile types.String `tfsdk:"favicon_file"`
 	LogoFile    types.String `tfsdk:"logo_file"`
 	Title       types.String `tfsdk:"title"`
 	WebAppID    types.String `tfsdk:"web_app_id"`
-
-	// TEMP TODO Remove
-	ID types.String `tfsdk:"id"`
 }
 
-var (
-	_ flex.Expander  = resourceWebAppCustomizationModel{}
-	_ flex.Flattener = &resourceWebAppCustomizationModel{}
-)
-
-func (m resourceWebAppCustomizationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var input transfer.UpdateWebAppCustomizationInput
+func expandUpdateWebAppCustomizationInput(ctx context.Context, data *webAppCustomizationResourceModel, apiObject *transfer.UpdateWebAppCustomizationInput) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	var diags diag.Diagnostics
-	input.WebAppId = m.WebAppID.ValueStringPointer()
 
-	if !m.FaviconFile.IsNull() && m.FaviconFile.ValueString() != "" {
-		if v, err := itypes.Base64Decode(m.FaviconFile.ValueString()); err != nil {
-			diags.AddError(
-				"Favicon File Decode Error",
-				"An unexpected error occurred while decoding the Favicon File. ",
-			)
+	if !data.FaviconFile.IsNull() && !data.FaviconFile.IsUnknown() {
+		if v, err := inttypes.Base64Decode(fwflex.StringValueFromFramework(ctx, data.FaviconFile)); err != nil {
+			diags.AddError("Favicon File Decode Error", err.Error())
 		} else {
-			input.FaviconFile = v
+			apiObject.FaviconFile = v
 		}
-	} else {
-		input.FaviconFile = nil
 	}
-	if !m.LogoFile.IsNull() && m.LogoFile.ValueString() != "" {
-		if v, err := itypes.Base64Decode(m.LogoFile.ValueString()); err != nil {
-			diags.AddError(
-				"Logo File Decode Error",
-				"An unexpected error occurred while decoding the Logo File. ",
-			)
+
+	if !data.LogoFile.IsNull() && !data.LogoFile.IsUnknown() {
+		if v, err := inttypes.Base64Decode(fwflex.StringValueFromFramework(ctx, data.LogoFile)); err != nil {
+			diags.AddError("Logo File Decode Error", err.Error())
 		} else {
-			input.LogoFile = v
+			apiObject.LogoFile = v
 		}
-	} else {
-		input.LogoFile = nil
 	}
-	if !m.Title.IsNull() && m.Title.ValueString() != "" {
-		input.Title = m.Title.ValueStringPointer()
+
+	if !data.Title.IsNull() {
+		apiObject.Title = fwflex.StringFromFramework(ctx, data.Title)
 	} else {
-		input.Title = aws.String("")
+		apiObject.Title = aws.String("")
 	}
-	return &input, nil
+
+	apiObject.WebAppId = fwflex.StringFromFramework(ctx, data.WebAppID)
+
+	return diags
 }
 
-func (m *resourceWebAppCustomizationModel) Flatten(ctx context.Context, in any) diag.Diagnostics {
+func flattenDescribedWebAppCustomization(ctx context.Context, apiObject *awstypes.DescribedWebAppCustomization, data *webAppCustomizationResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
-	switch t := in.(type) {
-	case awstypes.DescribedWebAppCustomization:
-		m.ARN = flex.StringToFramework(ctx, t.Arn)
-		m.FaviconFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.FaviconFile)))
-		m.ID = flex.StringToFramework(ctx, t.WebAppId)
-		m.LogoFile = flex.StringToFramework(ctx, aws.String(itypes.Base64Encode(t.LogoFile)))
-		m.Title = flex.StringToFramework(ctx, t.Title)
-		m.WebAppID = flex.StringToFramework(ctx, t.WebAppId)
-	case transfer.UpdateWebAppCustomizationOutput:
-		m.WebAppID = flex.StringToFramework(ctx, t.WebAppId)
-	default:
-		diags.AddError("Interface Conversion Error", fmt.Sprintf("cannot flatten %T into %T", in, m))
+
+	if v := apiObject.FaviconFile; v != nil {
+		data.FaviconFile = fwflex.StringToFramework(ctx, aws.String(inttypes.Base64Encode(v)))
+	} else {
+		data.FaviconFile = types.StringNull()
 	}
+	if v := apiObject.LogoFile; v != nil {
+		data.LogoFile = fwflex.StringToFramework(ctx, aws.String(inttypes.Base64Encode(v)))
+	} else {
+		data.LogoFile = types.StringNull()
+	}
+	data.Title = fwflex.StringToFramework(ctx, apiObject.Title)
+	data.WebAppID = fwflex.StringToFramework(ctx, apiObject.WebAppId)
+
 	return diags
 }
