@@ -140,6 +140,14 @@ The following actions are supported in resource policies for Prometheus workspac
 * The resource ARN in the policy document must match the workspace ARN that the policy is being attached to.
 * Resource policies enable cross-account access and fine-grained permissions for Prometheus workspaces.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Resource Policy using the workspace ID. For example:
@@ -156,11 +164,3 @@ Using `terraform import`, import AMP Resource Policies using the workspace ID. F
 ```console
 % terraform import aws_prometheus_resource_policy.example ws-12345678-90ab-cdef-1234-567890abcdef
 ```
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `5m`)
-- `update` - (Default `5m`)
-- `delete` - (Default `5m`)
