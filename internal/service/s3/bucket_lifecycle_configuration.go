@@ -632,7 +632,7 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	for i := range output.Rules {
 		rule := &output.Rules[i]
 		//nolint:staticcheck // Yes the attribute Prefix is deprecated, but the following functionality is required for compatibility with non AWS systems
-		if (*rule).Prefix != nil && *(*rule).Prefix == "" {
+		if aws.ToString((*rule).Prefix) == "" {
 			//nolint:staticcheck // Yes the attribute Prefix is deprecated, but the following functionality is required for compatibility with non AWS systems
 			(*rule).Prefix = nil
 		}
