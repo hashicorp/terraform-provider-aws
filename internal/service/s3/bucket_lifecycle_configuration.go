@@ -631,7 +631,9 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	// Some S3 compatible services might return empty string as an equivalent representation. To maintain a consistent state we should normalize that back to nil.
 	for i := range output.Rules {
 		rule := &output.Rules[i]
+		//nolint:staticcheck // Yes the attribute Prefix is deprecated, but the following functionality is required for compatibility with non AWS systems
 		if (*rule).Prefix != nil && *(*rule).Prefix == "" {
+			//nolint:staticcheck // Yes the attribute Prefix is deprecated, but the following functionality is required for compatibility with non AWS systems
 			(*rule).Prefix = nil
 		}
 	}
