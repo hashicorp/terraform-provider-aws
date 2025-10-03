@@ -2734,7 +2734,7 @@ func testAccEventSourceMappingConfig_msk(rName, batchSize string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 2
 
   broker_node_group_info {
@@ -2771,7 +2771,7 @@ func testAccEventSourceMappingConfig_mskWithEventSourceConfig(rName, batchSize s
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 2
 
   broker_node_group_info {
