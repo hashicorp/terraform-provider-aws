@@ -23,8 +23,9 @@ func testAccSSMContactsContactChannel_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccSSMContactsContactChannel_Identity_Basic,
-		"ExistingResource": testAccSSMContactsContactChannel_Identity_ExistingResource,
+		acctest.CtBasic:             testAccSSMContactsContactChannel_Identity_Basic,
+		"ExistingResource":          testAccSSMContactsContactChannel_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccSSMContactsContactChannel_Identity_ExistingResource_NoRefresh_NoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

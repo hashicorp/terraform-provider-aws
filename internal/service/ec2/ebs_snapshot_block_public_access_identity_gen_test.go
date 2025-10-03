@@ -23,9 +23,10 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_Basic,
-		"ExistingResource": testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource,
-		"RegionOverride":   testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_RegionOverride,
+		acctest.CtBasic:             testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_Basic,
+		"ExistingResource":          testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

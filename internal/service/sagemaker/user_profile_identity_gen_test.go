@@ -24,9 +24,10 @@ func testAccSageMakerUserProfile_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccSageMakerUserProfile_Identity_Basic,
-		"ExistingResource": testAccSageMakerUserProfile_Identity_ExistingResource,
-		"RegionOverride":   testAccSageMakerUserProfile_Identity_RegionOverride,
+		acctest.CtBasic:             testAccSageMakerUserProfile_Identity_Basic,
+		"ExistingResource":          testAccSageMakerUserProfile_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccSageMakerUserProfile_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccSageMakerUserProfile_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
