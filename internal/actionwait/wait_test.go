@@ -371,9 +371,6 @@ func TestWithBackoffDelay(t *testing.T) {
 	delay := backoff.FixedDelay(50 * time.Millisecond)
 	interval := WithBackoffDelay(delay)
 
-	// Verify it implements IntervalStrategy
-	var _ IntervalStrategy = interval
-
 	// Test that it wraps the delay correctly
 	if got := interval.NextPoll(0); got != 0 {
 		t.Errorf("NextPoll(0) = %v, want 0", got)
