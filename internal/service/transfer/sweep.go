@@ -5,124 +5,52 @@ package transfer
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_transfer_server", &resource.Sweeper{
-		Name: "aws_transfer_server",
-		F:    sweepServers,
-	})
-
-	resource.AddTestSweepers("aws_transfer_workflow", &resource.Sweeper{
-		Name: "aws_transfer_workflow",
-		F:    sweepWorkflows,
-		Dependencies: []string{
-			"aws_transfer_server",
-		},
-	})
-
+	awsv2.Register("aws_transfer_server", sweepServers)
 	awsv2.Register("aws_transfer_web_app", sweepWebApps)
+	awsv2.Register("aws_transfer_workflow", sweepWorkflows, "aws_transfer_server")
 }
 
-func sweepServers(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepServers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.TransferClient(ctx)
-	input := &transfer.ListServersInput{}
+	var input transfer.ListServersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := transfer.NewListServersPaginator(conn, input)
+	pages := transfer.NewListServersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Transfer Server sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing Transfer Servers (%s): %w", region, err)
+			return nil, err
 		}
 
-		for _, server := range page.Servers {
+		for _, v := range page.Servers {
 			r := resourceServer()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(server.ServerId))
+			d.SetId(aws.ToString(v.ServerId))
 			d.Set(names.AttrForceDestroy, true) // In lieu of an aws_transfer_user sweeper.
-			d.Set("identity_provider_type", server.IdentityProviderType)
+			d.Set("identity_provider_type", v.IdentityProviderType)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Transfer Servers (%s): %w", region, err)
-	}
-
-	return nil
-}
-
-func sweepWorkflows(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-	conn := client.TransferClient(ctx)
-	input := &transfer.ListWorkflowsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	pages := transfer.NewListWorkflowsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Transfer Workflow sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing Transfer Workflows (%s): %w", region, err)
-		}
-
-		for _, server := range page.Workflows {
-			r := resourceWorkflow()
-			d := r.Data(nil)
-			d.SetId(aws.ToString(server.WorkflowId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Transfer Workflows (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepWebApps(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := transfer.ListWebAppsInput{}
 	conn := client.TransferClient(ctx)
-	var sweepResources []sweep.Sweepable
+	var input transfer.ListWebAppsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := transfer.NewListWebAppsPaginator(conn, &input)
 	for pages.HasMorePages() {
@@ -132,9 +60,33 @@ func sweepWebApps(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, v := range page.WebApps {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newWebAppResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.WebAppId))),
+			sweepResources = append(sweepResources, framework.NewSweepResource(newWebAppResource, client,
+				framework.NewAttribute("web_app_id", aws.ToString(v.WebAppId))),
 			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepWorkflows(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.TransferClient(ctx)
+	var input transfer.ListWorkflowsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := transfer.NewListWorkflowsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Workflows {
+			r := resourceWorkflow()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.WorkflowId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
