@@ -158,7 +158,7 @@ func resourceRegisteredDomain() *schema.Resource {
 				"admin_privacy": {
 					Type:     schema.TypeBool,
 					Optional: true,
-					Default:  true,
+					Computed:  true,
 				},
 				"auto_renew": {
 					Type:     schema.TypeBool,
@@ -169,7 +169,7 @@ func resourceRegisteredDomain() *schema.Resource {
 				"billing_privacy": {
 					Type:     schema.TypeBool,
 					Optional: true,
-					Default:  true,
+					Computed:  true,
 				},
 				names.AttrCreationDate: {
 					Type:     schema.TypeString,
@@ -214,7 +214,7 @@ func resourceRegisteredDomain() *schema.Resource {
 				"registrant_privacy": {
 					Type:     schema.TypeBool,
 					Optional: true,
-					Default:  true,
+					Computed:  true,
 				},
 				"registrar_name": {
 					Type:     schema.TypeString,
@@ -239,7 +239,7 @@ func resourceRegisteredDomain() *schema.Resource {
 				"tech_privacy": {
 					Type:     schema.TypeBool,
 					Optional: true,
-					Default:  true,
+					Computed:  true,
 				},
 				"transfer_lock": {
 					Type:     schema.TypeBool,
