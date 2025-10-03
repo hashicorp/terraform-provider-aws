@@ -137,10 +137,7 @@ func (r *webAppCustomizationResource) Read(ctx context.Context, request resource
 		return
 	}
 
-	response.Diagnostics.Append(flattenDescribedWebAppCustomization(ctx, out, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	flattenDescribedWebAppCustomization(ctx, out, &data)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -275,9 +272,7 @@ func expandUpdateWebAppCustomizationInput(ctx context.Context, data *webAppCusto
 	return diags
 }
 
-func flattenDescribedWebAppCustomization(ctx context.Context, apiObject *awstypes.DescribedWebAppCustomization, data *webAppCustomizationResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
-	var diags diag.Diagnostics
-
+func flattenDescribedWebAppCustomization(ctx context.Context, apiObject *awstypes.DescribedWebAppCustomization, data *webAppCustomizationResourceModel) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	if v := apiObject.FaviconFile; v != nil {
 		data.FaviconFile = fwflex.StringToFramework(ctx, aws.String(inttypes.Base64Encode(v)))
 	} else {
@@ -290,6 +285,4 @@ func flattenDescribedWebAppCustomization(ctx context.Context, apiObject *awstype
 	}
 	data.Title = fwflex.StringToFramework(ctx, apiObject.Title)
 	data.WebAppID = fwflex.StringToFramework(ctx, apiObject.WebAppId)
-
-	return diags
 }
