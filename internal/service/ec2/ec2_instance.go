@@ -4043,7 +4043,6 @@ type instanceListResourceModel struct {
 }
 
 // ListResourceConfigSchema defines the schema for the List configuration
-// might be able to intercept or wrap this for simplicity
 func (l *instanceListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
