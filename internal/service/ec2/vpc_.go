@@ -15,16 +15,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -183,6 +189,14 @@ func resourceVPC() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
+}
+
+// @SDKListResource("aws_vpc")
+func vpcResourceAsListResource() inttypes.ListResourceForSDK {
+	l := vpcListResource{}
+	l.SetResourceSchema(resourceVPC())
+
+	return &l
 }
 
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -737,4 +751,100 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 
 func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) string {
 	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "vpc/"+vpcID)
+}
+
+var _ list.ListResourceWithRawV5Schemas = &vpcListResource{}
+
+type vpcListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type vpcListResourceModel struct {
+	framework.WithRegionModel
+	Filters customListFilters `tfsdk:"filter"`
+}
+
+func (l *vpcListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: customListFiltersBlock(ctx),
+		},
+	}
+}
+
+func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.EC2Client(ctx)
+
+	var query vpcListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input ec2.DescribeVpcsInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		pages := ec2.NewDescribeVpcsPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			for _, vpc := range page.Vpcs {
+				// Skip default VPCs.
+				if aws.ToBool(vpc.IsDefault) {
+					continue
+				}
+
+				result := request.NewListResult(ctx)
+
+				tags := keyValueTags(ctx, vpc.Tags)
+
+				rd := l.ResourceData()
+				rd.SetId(aws.ToString(vpc.VpcId))
+				result.Diagnostics.Append(translateDiags(resourceVPCFlatten(ctx, awsClient, &vpc, rd))...)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				// set tags
+				err = l.SetTags(ctx, awsClient, rd)
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				if v, ok := tags["Name"]; ok {
+					result.DisplayName = v.ValueString()
+				} else {
+					result.DisplayName = aws.ToString(vpc.VpcId)
+				}
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
+			}
+		}
+	}
 }
