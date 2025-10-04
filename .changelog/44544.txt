@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster_instance: Change `monitoring_interval` from `Default: 0` to `Computed` to allow inheritance from the cluster
+```
