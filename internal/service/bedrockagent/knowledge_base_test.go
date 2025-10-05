@@ -450,25 +450,40 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 }
 
 func TestAccBedrockAgentKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
-	domain := skipIfOSDomainEnvVarNotSet(t)
-	bedrockIAMRoleName := skipIfIAMRoleVarNotSet(t)
 
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"opensearch": {
+			Source:            "opensearch-project/opensearch",
+			VersionConstraint: "~> 2.2.0",
+		},
+		"random": {
+			Source:            "hashicorp/random",
+			VersionConstraint: "~> 3.5.0",
+		},
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/opensearchservice.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, domain, bedrockIAMRoleName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -486,9 +501,15 @@ func TestAccBedrockAgentKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:          testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, foundationModel),
+				ResourceName:    resourceName,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					},
+				},
 			},
 		},
 	})
@@ -527,34 +548,6 @@ func skipIfOSSCollectionNameEnvVarNotSet(t *testing.T) string {
 		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
 			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
 			"where the vector index is configured.")
-	}
-	return v
-}
-
-// skipIfOSDomainEnvVarNotSet handles skipping tests when an environment
-// variable providing a valid OpenSearch domain name is unset
-//
-// This should be called in all acceptance tests currently dependent on an OpenSearch
-// Managed Cluster domain.
-func skipIfOSDomainEnvVarNotSet(t *testing.T) string {
-	t.Helper()
-
-	v := os.Getenv("TF_AWS_BEDROCK_OS_DOMAIN_NAME")
-	if v == "" {
-		acctest.Skip(t, "This test requires external configuration of an OpenSearch domain. "+
-			"Set the TF_AWS_BEDROCK_OS_DOMAIN_NAME environment variable to the OpenSearch domain name.")
-	}
-	return v
-}
-
-func skipIfIAMRoleVarNotSet(t *testing.T) string {
-	t.Helper()
-
-	v := os.Getenv("TF_AWS_BEDROCK_IAM_ROLE_ARN")
-	if v == "" {
-		acctest.Skip(t, "This test requires external configuration of an IAM Role with permissions on the OpenSearch Cluster."+
-			"It must be able to be assumed by the Amazon Bedrock service"+
-			"Set the TF_AWS_BEDROCK_IAM_ROLE_ARN environment variable to the IAM Role's ARN.")
 	}
 	return v
 }
@@ -1014,20 +1007,13 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 `, rName, model))
 }
 
-func testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, domainName, bedrockRole, model string) string {
+func testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, model string) string {
 	return acctest.ConfigCompose(
+		testAccKnowledgeBaseConfig_OpenSearchManagedCluster(rName, model),
 		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-data "aws_opensearch_domain" "test" {
-  domain_name = %[4]q
-}
-
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
-  role_arn = %[3]q
+  role_arn = aws_iam_role.bedrock_kb_role.arn
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
@@ -1039,8 +1025,8 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   storage_configuration {
     type = "OPENSEARCH_MANAGED_CLUSTER"
     opensearch_managed_cluster_configuration {
-      domain_arn        = data.aws_opensearch_domain.test.arn
-      domain_endpoint   = "https://${data.aws_opensearch_domain.test.endpoint}"
+      domain_arn        = aws_opensearch_domain.knowledge_base.arn
+      domain_endpoint   = "https://${aws_opensearch_domain.knowledge_base.endpoint}"
       vector_index_name = "knowledge-index"
       field_mapping {
         vector_field   = "vector_embedding"
@@ -1049,6 +1035,315 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       }
     }
   }
+
+  depends_on = [
+    aws_opensearch_domain.knowledge_base,
+    opensearch_index.vector_index,
+    opensearch_roles_mapping.mapper,
+    aws_iam_role_policy_attachment.opensearch_access,
+    aws_iam_role_policy_attachment.bedrock_models_access,
+  ]
 }
-`, rName, model, bedrockRole, domainName))
+`, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_OpenSearchManagedCluster(rName, model string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+terraform {
+  required_providers {
+    opensearch = {
+      source  = "opensearch-project/opensearch"
+      version = "~> 2.2.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5.0"
+    }
+  }
+}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_role" "opensearch" {
+  name = "AWSServiceRoleForAmazonOpenSearchService"
+}
+
+resource "aws_iam_role" "bedrock_kb_role" {
+  name = %[1]q
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "bedrock.${data.aws_partition.current.dns_suffix}"
+        }
+        Action = "sts:AssumeRole"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount": data.aws_caller_identity.current.account_id
+          },
+          ArnLike = {
+            "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "bedrock_models_access" {
+  name		  = "bedrock-%[1]s"
+  description = "IAM policy for Amazon Bedrock to access embedding models"
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:RetrieveAndGenerate"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:ListFoundationModels",
+          "bedrock:ListCustomModels"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel"
+        ]
+        Resource = [
+          "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "opensearch_access" {
+  name 		  = "os-%[1]s"
+  description = "IAM policy for Amazon Bedrock to access OpenSearch domain"
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "es:ESHttpGet",
+          "es:ESHttpPost",
+          "es:ESHttpPut",
+          "es:ESHttpDelete"
+        ]
+        Resource = [
+          "*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "es:DescribeDomain",
+		  "es:DescribeElasticsearchDomain"
+        ]
+        Resource = [
+          "*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "bedrock_models_access" {
+  role       = aws_iam_role.bedrock_kb_role.name
+  policy_arn = aws_iam_policy.bedrock_models_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "opensearch_access" {
+  role       = aws_iam_role.bedrock_kb_role.name
+  policy_arn = aws_iam_policy.opensearch_access.arn
+}
+
+resource "random_password" "opensearch_master" {
+  length           = 16
+  special          = true
+  min_lower        = 1
+  min_numeric      = 1
+  min_special      = 1
+  min_upper        = 1
+  override_special = "!#$&*()-_=+"
+  
+  # Don't replace the password on each apply
+  lifecycle {
+    ignore_changes = [length, special, override_special]
+  }
+}
+
+resource "aws_opensearch_domain" "knowledge_base" {
+  domain_name    = substr(%[1]q, 0, 28)
+  engine_version = "OpenSearch_3.1"
+  access_policies = local.opensearch_access_policy
+
+  cluster_config {
+    instance_type            = "or2.medium.search"
+    instance_count           = 1
+    zone_awareness_enabled   = false
+    dedicated_master_enabled = false
+  }
+
+  # Configure EBS volumes for the data nodes
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 20
+    volume_type = "gp3"
+  }
+
+  # Enable encryption at rest
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  # Enable node to node encryption
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  # Configure domain endpoint options
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
+  }
+
+  # Configure advanced security options
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "admin"
+      master_user_password = random_password.opensearch_master.result
+    }
+  }
+
+  # Auto-Tune options
+  auto_tune_options {
+    desired_state = "ENABLED"
+  }
+
+  # Software update options
+  software_update_options {
+    auto_software_update_enabled = true
+  }
+
+  # This is required to reference the existing service-linked role
+  depends_on = [
+    data.aws_iam_role.opensearch
+  ]
+}
+
+locals {
+  opensearch_access_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "es:*"
+        Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${substr(%[1]q, 0, 28)}/*"
+      }
+    ]
+  })
+}
+
+provider "opensearch" {
+  url                   = "https://${aws_opensearch_domain.knowledge_base.endpoint}"
+  username              = "admin"
+  password              = random_password.opensearch_master.result
+  insecure              = false
+  aws_region            = data.aws_region.current.region
+  healthcheck           = false
+  sniff                 = false
+  sign_aws_requests     = false
+}
+
+resource "opensearch_role" "os_kb_role" {
+  role_name   = "kb-%[1]s"
+  description = "Knowledge Base Role"
+
+  cluster_permissions = ["*"]
+
+  index_permissions {
+    index_patterns  = ["*"]
+    allowed_actions = ["*"]
+  }
+
+  tenant_permissions {
+    tenant_patterns = ["*"]
+    allowed_actions = ["*"]
+  }
+}
+
+resource "opensearch_roles_mapping" "mapper" {
+  role_name   = opensearch_role.os_kb_role.role_name
+  description = "Mapping AWS IAM roles to ES role"
+  backend_roles = [
+    aws_iam_role.bedrock_kb_role.arn,
+    data.aws_caller_identity.current.arn
+  ]
+}
+
+resource "opensearch_index" "vector_index" {
+  name               = "knowledge-index"
+  number_of_shards   = "5"
+  number_of_replicas = "1"
+  index_knn          = true
+  
+  # Mappings for Bedrock Knowledge Base compatibility
+  mappings = jsonencode({
+    "properties": {
+      "vector_embedding": {
+        "type": "knn_vector",
+        "dimension": 1024,
+        "space_type": "l2",
+        "method": {
+          "name": "hnsw",
+          "engine": "faiss",
+          "parameters": {
+            "ef_construction": 128,
+            "m": 24
+          }
+        }
+      },
+      "text": {
+        "type": "text",
+        "index": true
+      },
+      "metadata": {
+        "type": "text",
+        "index": false
+      }
+    }
+  })
+  
+  lifecycle {
+    ignore_changes = [ mappings ]
+  }
+
+  depends_on = [ aws_opensearch_domain.knowledge_base ]
+}
+
+`, rName, model))
 }
