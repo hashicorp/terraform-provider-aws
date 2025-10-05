@@ -16,7 +16,9 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_lakeformation_permissions", sweepPermissions)
+	awsv2.Register("aws_lakeformation_permissions", sweepPermissions,
+		"aws_datazone_environment",
+	)
 
 	awsv2.Register("aws_lakeformation_resource", sweepResource)
 }

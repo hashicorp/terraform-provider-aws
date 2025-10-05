@@ -233,6 +233,7 @@ func resourceTaskDefinition() *schema.Resource {
 						"EC2",
 						"FARGATE",
 						"EXTERNAL",
+						"MANAGED_INSTANCES",
 					}, false),
 				},
 			},

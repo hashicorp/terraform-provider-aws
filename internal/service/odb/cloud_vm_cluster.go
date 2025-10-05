@@ -9,12 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -55,6 +57,7 @@ func newResourceCloudVmCluster(_ context.Context) (resource.ResourceWithConfigur
 
 const (
 	ResNameCloudVmCluster = "Cloud Vm Cluster"
+	MajorGiVersionPattern = `^\d+\.0\.0\.0$`
 )
 
 var ResourceCloudVmCluster = newResourceCloudVmCluster
@@ -70,6 +73,9 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 	licenseModelType := fwtypes.StringEnumType[odbtypes.LicenseModel]()
 	diskRedundancyType := fwtypes.StringEnumType[odbtypes.DiskRedundancy]()
 	computeModelType := fwtypes.StringEnumType[odbtypes.ComputeModel]()
+	giVersionValidator := []validator.String{
+		stringvalidator.RegexMatches(regexache.MustCompile(MajorGiVersionPattern), "Gi version must be of the format 19.0.0.0"),
+	}
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -98,11 +104,9 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The number of CPU cores to enable on the VM cluster. Changing this will create a new resource.",
 			},
 			"data_storage_size_in_tbs": schema.Float64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Float64{
 					float64planmodifier.RequiresReplace(),
-					float64planmodifier.UseStateForUnknown(),
 				},
 				Description: "The size of the data disk group, in terabytes (TBs), to allocate for the VM cluster. Changing this will create a new resource.",
 			},
@@ -151,7 +155,17 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				//Note: underlying API only accepts major gi_version.
+				Validators:  giVersionValidator,
 				Description: "A valid software version of Oracle Grid Infrastructure (GI). To get the list of valid values, use the ListGiVersions operation and specify the shape of the Exadata infrastructure. Example: 19.0.0.0 This member is required. Changing this will create a new resource.",
+			},
+			//Underlying API returns complete gi version. For example if gi_version 23.0.0.0 then underlying api returns a version starting with 23
+			"gi_version_computed": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "A complete software version of Oracle Grid Infrastructure (GI).",
 			},
 			//Underlying API treats Hostname as hostname prefix. Therefore, explicitly setting it. API also returns new hostname prefix by appending the input hostname
 			//prefix. Therefore, we have hostname_prefix and hostname_prefix_computed
@@ -462,7 +476,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	createdVmCluster, err := waitCloudVmClusterCreated(ctx, conn, *out.CloudVmClusterId, createTimeout)
+	createdVmCluster, err := waitCloudVmClusterCreated(ctx, conn, aws.ToString(out.CloudVmClusterId), createTimeout)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(out.CloudVmClusterId))...)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -472,10 +486,20 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		return
 	}
 	hostnamePrefix := strings.Split(*input.Hostname, "-")[0]
-	plan.HostnamePrefix = types.StringValue(hostnamePrefix)
-	plan.HostnamePrefixComputed = types.StringValue(*createdVmCluster.Hostname)
+	plan.HostnamePrefix = flex.StringValueToFramework(ctx, hostnamePrefix)
+	plan.HostnamePrefixComputed = flex.StringToFramework(ctx, createdVmCluster.Hostname)
 	//scan listener port not returned by API directly
-	plan.ScanListenerPortTcp = types.Int32PointerValue(createdVmCluster.ListenerPort)
+	plan.ScanListenerPortTcp = flex.Int32ToFramework(ctx, createdVmCluster.ListenerPort)
+	plan.GiVersionComputed = flex.StringToFramework(ctx, createdVmCluster.GiVersion)
+	giVersionMajor, err := getMajorGiVersion(createdVmCluster.GiVersion)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, plan.DisplayName.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.GiVersion = flex.StringToFramework(ctx, giVersionMajor)
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdVmCluster, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -491,7 +515,7 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	out, err := FindCloudVmClusterForResourceByID(ctx, conn, state.CloudVmClusterId.ValueString())
+	out, err := findCloudVmClusterForResourceByID(ctx, conn, state.CloudVmClusterId.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -508,8 +532,17 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 	state.HostnamePrefix = types.StringValue(hostnamePrefix)
 	state.HostnamePrefixComputed = types.StringValue(*out.Hostname)
 	//scan listener port not returned by API directly
-	state.ScanListenerPortTcp = types.Int32PointerValue(out.ListenerPort)
-
+	state.ScanListenerPortTcp = flex.Int32ToFramework(ctx, out.ListenerPort)
+	state.GiVersionComputed = flex.StringToFramework(ctx, out.GiVersion)
+	giVersionMajor, err := getMajorGiVersion(out.GiVersion)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, state.CloudVmClusterId.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	state.GiVersion = flex.StringToFramework(ctx, giVersionMajor)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -587,7 +620,7 @@ func waitCloudVmClusterDeleted(ctx context.Context, conn *odb.Client, id string,
 
 func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindCloudVmClusterForResourceByID(ctx, conn, id)
+		out, err := findCloudVmClusterForResourceByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -600,7 +633,7 @@ func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) retr
 	}
 }
 
-func FindCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudVmCluster, error) {
+func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudVmCluster, error) {
 	input := odb.GetCloudVmClusterInput{
 		CloudVmClusterId: aws.String(id),
 	}
@@ -620,6 +653,16 @@ func FindCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	}
 	return out.CloudVmCluster, nil
 }
+func getMajorGiVersion(giVersionComputed *string) (*string, error) {
+	giVersionMajor := strings.Split(*giVersionComputed, ".")[0]
+	giVersionMajor = giVersionMajor + ".0.0.0"
+	regxGiVersionMajor := regexache.MustCompile(MajorGiVersionPattern)
+	if !regxGiVersionMajor.MatchString(giVersionMajor) {
+		err := errors.New("gi_version major retrieved from gi_version_computed does not match the pattern 19.0.0.0")
+		return nil, err
+	}
+	return &giVersionMajor, nil
+}
 
 type cloudVmClusterResourceModel struct {
 	framework.WithRegionModel
@@ -635,7 +678,8 @@ type cloudVmClusterResourceModel struct {
 	DiskRedundancy               fwtypes.StringEnum[odbtypes.DiskRedundancy]                                 `tfsdk:"disk_redundancy"`
 	DisplayName                  types.String                                                                `tfsdk:"display_name"`
 	Domain                       types.String                                                                `tfsdk:"domain"`
-	GiVersion                    types.String                                                                `tfsdk:"gi_version"`
+	GiVersion                    types.String                                                                `tfsdk:"gi_version" autoflex:",noflatten"`
+	GiVersionComputed            types.String                                                                `tfsdk:"gi_version_computed" autoflex:",noflatten"`
 	HostnamePrefixComputed       types.String                                                                `tfsdk:"hostname_prefix_computed" autoflex:",noflatten"`
 	HostnamePrefix               types.String                                                                `tfsdk:"hostname_prefix" autoflex:"-"`
 	IormConfigCache              fwtypes.ListNestedObjectValueOf[cloudVMCExadataIormConfigResourceModel]     `tfsdk:"iorm_config_cache"`

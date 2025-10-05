@@ -550,11 +550,18 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 
 	inner, _ := spec.Factory(context.TODO())
 
-	if len(spec.Identity.Attributes) > 0 {
-		interceptors = append(interceptors, newIdentityInterceptor(spec.Identity.Attributes))
-		if v, ok := inner.(framework.Identityer); ok {
-			v.SetIdentitySpec(spec.Identity)
+	if len(spec.Identity.Attributes) == 0 {
+		return &wrappedResource{
+			inner:              inner,
+			servicePackageName: servicePackageName,
+			spec:               spec,
+			interceptors:       interceptors,
 		}
+	}
+
+	interceptors = append(interceptors, newIdentityInterceptor(spec.Identity.Attributes))
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
 	}
 
 	if spec.Import.WrappedImport {
@@ -564,11 +571,14 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 		// If the resource does not implement framework.ImportByIdentityer,
 		// it will be caught by `validateResourceSchemas`, so we can ignore it here.
 	}
-	return &wrappedResource{
-		inner:              inner,
-		servicePackageName: servicePackageName,
-		spec:               spec,
-		interceptors:       interceptors,
+
+	return &wrappedResourceWithIdentity{
+		wrappedResource: wrappedResource{
+			inner:              inner,
+			servicePackageName: servicePackageName,
+			spec:               spec,
+			interceptors:       interceptors,
+		},
 	}
 }
 
@@ -788,7 +798,11 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 	return nil
 }
 
-func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+type wrappedResourceWithIdentity struct {
+	wrappedResource
+}
+
+func (w *wrappedResourceWithIdentity) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	if len(w.spec.Identity.Attributes) > 0 {
 		resp.IdentitySchema = identity.NewIdentitySchema(w.spec.Identity)
 	}
