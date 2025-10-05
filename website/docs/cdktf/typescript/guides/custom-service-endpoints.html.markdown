@@ -134,6 +134,7 @@ class MyConvertedCode extends TerraformStack {
 |App Runner|`apprunner`|`AWS_ENDPOINT_URL_APPRUNNER`|`apprunner`|
 |AppStream 2.0|`appstream`|`AWS_ENDPOINT_URL_APPSTREAM`|`appstream`|
 |AppSync|`appsync`|`AWS_ENDPOINT_URL_APPSYNC`|`appsync`|
+|Application Resilience Controller Region Switch|`arcregionswitch`|`AWS_ENDPOINT_URL_ARC_REGION_SWITCH`|`arc_region_switch`|
 |Athena|`athena`|`AWS_ENDPOINT_URL_ATHENA`|`athena`|
 |Audit Manager|`auditmanager`|`AWS_ENDPOINT_URL_AUDITMANAGER`|`auditmanager`|
 |Auto Scaling|`autoscaling`|`AWS_ENDPOINT_URL_AUTO_SCALING`|`auto_scaling`|
@@ -365,6 +366,7 @@ class MyConvertedCode extends TerraformStack {
 |WAF Classic Regional|`wafregional`|`AWS_ENDPOINT_URL_WAF_REGIONAL`|`waf_regional`|
 |WAF|`wafv2`|`AWS_ENDPOINT_URL_WAFV2`|`wafv2`|
 |Well-Architected Tool|`wellarchitected`|`AWS_ENDPOINT_URL_WELLARCHITECTED`|`wellarchitected`|
+|WorkMail|`workmail`|`AWS_ENDPOINT_URL_WORKMAIL`|`workmail`|
 |WorkSpaces|`workspaces`|`AWS_ENDPOINT_URL_WORKSPACES`|`workspaces`|
 |WorkSpaces Web|`workspacesweb`|`AWS_ENDPOINT_URL_WORKSPACES_WEB`|`workspaces_web`|
 |X-Ray|`xray`|`AWS_ENDPOINT_URL_XRAY`|`xray`|
@@ -475,4 +477,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a78f3598f8f5681bb9608091eb346e5b7070f7c49bcaaa27785ecb5952584aca -->
+<!-- cache-key: cdktf-0.20.8 input-2d189b69b48f538edfb5faf6832fb3d5759a5fe2c468ba857facc367f4a1c3fa -->

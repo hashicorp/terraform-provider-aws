@@ -326,7 +326,8 @@ This resource supports the following arguments:
 * `metadataOptions` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
 * `networkInterface` - (Optional, **Deprecated** to specify the primary network interface, use `primaryNetworkInterface`, to attach additional network interfaces, use `aws_network_interface_attachment` resources) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
-* `placementGroup` - (Optional) Placement Group to start the instance in.
+* `placementGroup` - (Optional) Placement Group to start the instance in. Conflicts with `placementGroupId`.
+* `placementGroupId` - (Optional) Placement Group ID to start the instance in. Conflicts with `placementGroup`.
 * `placementPartitionNumber` - (Optional) Number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
 * `primaryNetworkInterface` - (Optional) The primary network interface. See [Primary Network Interface](#primary-network-interface) below.
 * `privateDnsNameOptions` - (Optional) Options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
@@ -573,6 +574,32 @@ For `instanceMarketOptions`, in addition to the arguments above, the following a
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_instance.example
+  identity = {
+    id = "i-12345678"
+  }
+}
+
+resource "aws_instance" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the instance.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import instances using the `id`. For example:
 
 ```typescript
@@ -599,4 +626,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-192eaf494aaf48a8f7bf0a56e366e4eae220394953fad8b84293cf2f709b74f5 -->
+<!-- cache-key: cdktf-0.20.8 input-826a604246933c61962bdaeaa7cf2123773c0bd582539e65145da57eb934955e -->

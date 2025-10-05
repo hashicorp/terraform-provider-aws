@@ -144,6 +144,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ce_cost_category.example
+  identity = {
+    "arn" = "arn:aws:ce::123456789012:costcategory/12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_ce_cost_category" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Cost Explorer cost category.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_cost_category` using the id. For example:
 
 ```typescript
@@ -170,4 +191,4 @@ Using `terraform import`, import `aws_ce_cost_category` using the id. For exampl
 % terraform import aws_ce_cost_category.example costCategoryARN
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b2b39c60cbc0c8a25b73429cbba03ec3e73496da550be36a8d32f8fc287b2c48 -->
+<!-- cache-key: cdktf-0.20.8 input-28d9147ae8337a74e828fc273df54ca3d1a7d64dd4a65bd7f46036f311200b3d -->

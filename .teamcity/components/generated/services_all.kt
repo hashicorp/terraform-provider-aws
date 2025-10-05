@@ -258,6 +258,7 @@ val services = mapOf(
     "wafv2" to ServiceSpec("WAF"),
     "wavelength" to ServiceSpec("Wavelength", vpcLock = true, patternOverride = "TestAccWavelength", splitPackageRealPackage = "ec2"),
     "wellarchitected" to ServiceSpec("Well-Architected Tool"),
+    "workmail" to ServiceSpec("WorkMail"),
     "workspaces" to ServiceSpec("WorkSpaces", vpcLock = true),
     "workspacesweb" to ServiceSpec("WorkSpaces Web"),
     "xray" to ServiceSpec("X-Ray"),

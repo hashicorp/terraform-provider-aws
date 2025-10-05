@@ -273,7 +273,7 @@ func functionEventInvokeConfigParseResourceID(id string) (string, string, error)
 		parsedARN, err := arn.Parse(id)
 
 		if err != nil {
-			return "", "", fmt.Errorf("parsing ARN (%s): %s", id, err)
+			return "", "", fmt.Errorf("parsing ARN (%s): %w", id, err)
 		}
 
 		function := strings.TrimPrefix(parsedARN.Resource, "function:")

@@ -54,7 +54,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				group, err := findDeploymentGroupByTwoPartKey(ctx, conn, applicationName, deploymentGroupName)
 
 				if err != nil {
-					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Deployment Group (%s): %s", d.Id(), err)
+					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Deployment Group (%s): %w", d.Id(), err)
 				}
 
 				d.SetId(aws.ToString(group.DeploymentGroupId))

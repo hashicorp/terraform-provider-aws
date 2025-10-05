@@ -7,7 +7,6 @@ import (
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +27,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDataCellsFilterResource,
 			TypeName: "aws_lakeformation_data_cells_filter",
 			Name:     "Data Cells Filter",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newLFTagExpressionResource,
+			TypeName: "aws_lakeformation_lf_tag_expression",
+			Name:     "LF Tag Expression",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
@@ -126,7 +131,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *lakeformation.Options) {
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
-				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
 			}
 		},
 		withExtraOptions(ctx, p, config),

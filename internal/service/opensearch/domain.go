@@ -52,7 +52,6 @@ func resourceDomain() *schema.Resource {
 
 				name := d.Id()
 				ds, err := findDomainByName(ctx, conn, name)
-
 				if err != nil {
 					return nil, fmt.Errorf("reading OpenSearch Domain (%s): %w", name, err)
 				}
@@ -165,6 +164,47 @@ func resourceDomain() *schema.Resource {
 										Type:      schema.TypeString,
 										Optional:  true,
 										Sensitive: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"aiml_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"natural_language_query_generation_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"desired_state": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.NaturalLanguageQueryGenerationDesiredState](),
+									},
+								},
+							},
+						},
+						"s3_vectors_engine": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Computed: true,
+										Optional: true,
 									},
 								},
 							},
@@ -716,6 +756,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]any))
 	}
 
+	if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
 		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]any)[0].(map[string]any))
 	}
@@ -831,7 +875,6 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		},
 		domainErrorRetryable,
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Domain (%s): %s", name, err)
 	}
@@ -854,7 +897,6 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 			},
 			domainErrorRetryable,
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
 		}
@@ -887,7 +929,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	output, err := conn.DescribeDomainConfig(ctx, &opensearch.DescribeDomainConfigInput{
 		DomainName: aws.String(name),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s) Config: %s", d.Id(), err)
 	}
@@ -915,6 +956,13 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
+	}
+	if ds.AIMLOptions != nil {
+		if err := d.Set("aiml_options", []any{flattenAIMLOptionsOutput(ds.AIMLOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting aiml_options: %s", err)
+		}
+	} else {
+		d.Set("aiml_options", nil)
 	}
 	d.Set(names.AttrARN, ds.ARN)
 	if v := dc.AutoTuneOptions; v != nil {
@@ -1042,6 +1090,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("advanced_security_options") {
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
+		}
+
+		if d.HasChange("aiml_options") {
+			if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange("auto_tune_options") {
@@ -1172,7 +1226,6 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			},
 			domainErrorRetryable,
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
 		}
@@ -1188,7 +1241,6 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			_, err := conn.UpgradeDomain(ctx, &input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "upgrading OpenSearch Domain (%s): %s", d.Id(), err)
 			}

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
@@ -487,8 +486,8 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		}
 
 	case reflect.Interface:
-		if s, ok := vFrom.(fwtypes.SmithyJSON[smithyjson.JSONStringer]); ok {
-			v, d := s.ValueInterface()
+		if s, ok := vFrom.(fwtypes.SmithyDocumentValue); ok {
+			v, d := s.ToSmithyObjectDocument(ctx)
 			diags.Append(d...)
 			if diags.HasError() {
 				return diags
@@ -1166,7 +1165,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		fromFieldName := fromField.Name
 		_, fromFieldOpts := autoflexTags(fromField)
 
-		toField, ok := findFieldFuzzy(ctx, fromFieldName, typeFrom, typeTo, flexer)
+		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
