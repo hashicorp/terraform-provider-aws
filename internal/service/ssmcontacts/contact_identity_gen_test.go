@@ -116,7 +116,7 @@ func testAccSSMContactsContact_Identity_Basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.14.1
+// Resource Identity was added after v6.15.0
 func testAccSSMContactsContact_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -133,7 +133,7 @@ func testAccSSMContactsContact_Identity_ExistingResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Contact/basic_v6.14.1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Contact/basic_v6.15.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -171,7 +171,7 @@ func testAccSSMContactsContact_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.14.1
+// Resource Identity was added after v6.15.0
 func testAccSSMContactsContact_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -193,7 +193,7 @@ func testAccSSMContactsContact_Identity_ExistingResource_NoRefresh_NoChange(t *t
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Contact/basic_v6.14.1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Contact/basic_v6.15.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
