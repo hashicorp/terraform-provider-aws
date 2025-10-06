@@ -24,6 +24,8 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/stringplanmodifier"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/privatestate"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,6 +42,10 @@ func newHostKeyResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type hostKeyResource struct {
 	framework.ResourceWithModel[hostKeyResourceModel]
 }
+
+const (
+	hostKeyBodyWOKey = "host_key_body_wo"
+)
 
 func (r *hostKeyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
@@ -74,7 +80,7 @@ func (r *hostKeyResource) Schema(ctx context.Context, request resource.SchemaReq
 					stringvalidator.LengthBetween(0, 4096),
 				},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					tfstringplanmodifier.RequiresReplaceWO(hostKeyBodyWOKey),
 				},
 			},
 			"host_key_fingerprint": schema.StringAttribute{
@@ -129,6 +135,15 @@ func (r *hostKeyResource) Create(ctx context.Context, request resource.CreateReq
 		response.Diagnostics.AddError(fmt.Sprintf("creating Transfer Host Key (%s)", serverID), err.Error())
 
 		return
+	}
+
+	// Store hash of write-only value.
+	if !config.HostKeyBodyWO.IsNull() {
+		woStore := privatestate.NewWriteOnlyValueStore(response.Private, hostKeyBodyWOKey)
+		response.Diagnostics.Append(woStore.SetValue(ctx, config.HostKeyBodyWO)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	hostKeyID := aws.ToString(out.HostKeyId)
