@@ -52,8 +52,24 @@ func (r *hostKeyResource) Schema(ctx context.Context, request resource.SchemaReq
 				},
 			},
 			"host_key_body": schema.StringAttribute{
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 4096),
+					stringvalidator.ExactlyOneOf(
+						path.MatchRoot("host_key_body"),
+						path.MatchRoot("host_key_body_wo"),
+					),
+					stringvalidator.PreferWriteOnlyAttribute(path.MatchRoot("host_key_body_wo")),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"host_key_body_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 4096),
 				},
@@ -61,7 +77,6 @@ func (r *hostKeyResource) Schema(ctx context.Context, request resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			// TODO host_key_body_wo plus some way to ForceNew.
 			"host_key_fingerprint": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -82,19 +97,28 @@ func (r *hostKeyResource) Schema(ctx context.Context, request resource.SchemaReq
 }
 
 func (r *hostKeyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data hostKeyResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	var plan, config hostKeyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().TransferClient(ctx)
 
-	serverID := fwflex.StringValueFromFramework(ctx, data.ServerID)
+	serverID := fwflex.StringValueFromFramework(ctx, plan.ServerID)
 	var input transfer.ImportHostKeyInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// Prefer write-only value. It's only in Config, not Plan.
+	if !config.HostKeyBodyWO.IsNull() {
+		input.HostKeyBody = fwflex.StringFromFramework(ctx, config.HostKeyBodyWO)
 	}
 
 	// Additional fields.
@@ -116,12 +140,12 @@ func (r *hostKeyResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, hostKey, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, hostKey, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
 func (r *hostKeyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -267,6 +291,7 @@ type hostKeyResourceModel struct {
 	ARN                types.String `tfsdk:"arn"`
 	Description        types.String `tfsdk:"description"`
 	HostKeyBody        types.String `tfsdk:"host_key_body"`
+	HostKeyBodyWO      types.String `tfsdk:"host_key_body_wo"`
 	HostKeyFingerprint types.String `tfsdk:"host_key_fingerprint"`
 	HostKeyID          types.String `tfsdk:"host_key_id"`
 	ServerID           types.String `tfsdk:"server_id"`

@@ -236,6 +236,141 @@ func testAccHostKey_description(t *testing.T) {
 	})
 }
 
+func testAccHostKey_updateHostKeyBody(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedHostKey
+	resourceName := "aws_transfer_host_key.test"
+	_, privateKey1, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+	_, privateKey2, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostKeyConfig_basic(privateKey1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHostKeyExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccHostKeyConfig_basic(privateKey2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHostKeyExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccHostKey_hostKeyBodyWO(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedHostKey
+	resourceName := "aws_transfer_host_key.test"
+	_, privateKey, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostKeyConfig_hostKeyBodyWO(privateKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHostKeyExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("transfer", regexache.MustCompile(`host-key/.+/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("host_key_fingerprint"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("host_key_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "host_key_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "server_id", "host_key_id"),
+				ImportStateVerifyIgnore:              []string{"host_key_body"},
+			},
+		},
+	})
+}
+
+func testAccHostKey_updateHostKeyBodyWO(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedHostKey
+	resourceName := "aws_transfer_host_key.test"
+	_, privateKey1, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+	_, privateKey2, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostKeyConfig_hostKeyBodyWO(privateKey1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHostKeyExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccHostKeyConfig_hostKeyBodyWO(privateKey2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHostKeyExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckHostKeyExists(ctx context.Context, n string, v *awstypes.DescribedHostKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -351,4 +486,19 @@ EOT
   }
 }
 `, privateKey, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccHostKeyConfig_hostKeyBodyWO(privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+  identity_provider_type = "SERVICE_MANAGED"
+}
+
+resource "aws_transfer_host_key" "test" {
+  server_id        = aws_transfer_server.test.id
+  host_key_body_wo = <<EOT
+%[1]s
+EOT
+}
+`, privateKey)
 }

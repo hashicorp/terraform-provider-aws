@@ -26,7 +26,8 @@ resource "aws_transfer_host_key" "example" {
 This resource supports the following arguments:
 
 * `description` - (Optional) Text description.
-* `host_key_body` - (Required) Private key portion of an SSH key pair.
+* `host_key_body` - (Optional) Private key portion of an SSH key pair.
+* `host_key_body_wo` - (Optional) [Write-only](https://developer.hashicorp.com/terraform/language/manage-sensitive-data/ephemeral#write-only-arguments) private key portion of an SSH key pair, guaranteed not to be written to plan or state artifacts. One of `token` or `token_wo` must be configured.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `server_id` - (Required) Server ID.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
