@@ -5,7 +5,6 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -21,18 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var browser bedrockagentcorecontrol.GetBrowserOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_browser.test"
@@ -69,10 +63,6 @@ func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var browser bedrockagentcorecontrol.GetBrowserOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_browser.test"
@@ -110,10 +100,6 @@ func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 
 func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var browser bedrockagentcorecontrol.GetBrowserOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_browser.test"
@@ -147,10 +133,6 @@ func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 
 func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var browser bedrockagentcorecontrol.GetBrowserOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_browser.test"
@@ -194,10 +176,6 @@ func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 
 func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var browser bedrockagentcorecontrol.GetBrowserOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_browser.test"
@@ -241,40 +219,38 @@ func testAccCheckBrowserDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_bedrockagentcore_browser" {
 				continue
 			}
+
 			_, err := tfbedrockagentcore.FindBrowserByID(ctx, conn, rs.Primary.Attributes["browser_id"])
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameBrowser, rs.Primary.Attributes["browser_id"], err)
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameBrowser, rs.Primary.Attributes["browser_id"], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Browser %s still exists", rs.Primary.Attributes["browser_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckBrowserExists(ctx context.Context, name string, browser *bedrockagentcorecontrol.GetBrowserOutput) resource.TestCheckFunc {
+func testAccCheckBrowserExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetBrowserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameBrowser, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameBrowser, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindBrowserByID(ctx, conn, rs.Primary.Attributes["browser_id"])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameBrowser, rs.Primary.Attributes["browser_id"], err)
+			return err
 		}
 
-		*browser = *resp
+		*v = *resp
 
 		return nil
 	}

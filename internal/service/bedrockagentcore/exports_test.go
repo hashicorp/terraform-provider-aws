@@ -5,7 +5,11 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
-	ResourceBrowser = newBrowserResource
+	ResourceAgentRuntime         = newAgentRuntimeResource
+	ResourceAgentRuntimeEndpoint = newAgentRuntimeEndpointResource
+	ResourceBrowser              = newBrowserResource
 
-	FindBrowserByID = findBrowserByID
+	FindAgentRuntimeByID                 = findAgentRuntimeByID
+	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
+	FindBrowserByID                      = findBrowserByID
 )

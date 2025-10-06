@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -34,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -55,7 +57,6 @@ func newBrowserResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type browserResource struct {
 	framework.ResourceWithModel[browserResourceModel]
 	framework.WithTimeouts
-	framework.WithNoUpdate
 }
 
 func (r *browserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -108,7 +109,7 @@ func (r *browserResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 					Blocks: map[string]schema.Block{
 						"network_mode_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[browserVpcConfigModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -213,7 +214,7 @@ func (r *browserResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(tfresource.PseudoUniqueToken(ctx))
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -322,12 +323,11 @@ func (r *browserResource) ImportState(ctx context.Context, request resource.Impo
 }
 
 func waitBrowserCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetBrowserOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BrowserStatusCreating),
 		Target:                    enum.Slice(awstypes.BrowserStatusReady),
-		Refresh:                   statusBrowser(ctx, conn, id),
+		Refresh:                   statusBrowser(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -340,10 +340,10 @@ func waitBrowserCreated(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 }
 
 func waitBrowserDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetBrowserOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BrowserStatusDeleting, awstypes.BrowserStatusReady),
 		Target:  []string{},
-		Refresh: statusBrowser(ctx, conn, id),
+		Refresh: statusBrowser(conn, id),
 		Timeout: timeout,
 	}
 
@@ -355,8 +355,8 @@ func waitBrowserDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 	return nil, smarterr.NewError(err)
 }
 
-func statusBrowser(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBrowser(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findBrowserByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -375,15 +375,20 @@ func findBrowserByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, 
 		BrowserId: aws.String(id),
 	}
 
-	out, err := conn.GetBrowser(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
+	return findBrowser(ctx, conn, &input)
+}
 
+func findBrowser(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetBrowserInput) (*bedrockagentcorecontrol.GetBrowserOutput, error) {
+	out, err := conn.GetBrowser(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
@@ -409,13 +414,8 @@ type browserResourceModel struct {
 }
 
 type browserNetworkConfigurationModel struct {
-	NetworkMode fwtypes.StringEnum[awstypes.BrowserNetworkMode]        `tfsdk:"network_mode"`
-	VpcConfig   fwtypes.ListNestedObjectValueOf[browserVpcConfigModel] `tfsdk:"network_mode_config"`
-}
-
-type browserVpcConfigModel struct {
-	SecurityGroups fwtypes.SetOfString `tfsdk:"security_groups"`
-	Subnets        fwtypes.SetOfString `tfsdk:"subnets"`
+	NetworkMode fwtypes.StringEnum[awstypes.BrowserNetworkMode] `tfsdk:"network_mode"`
+	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel] `tfsdk:"network_mode_config"`
 }
 
 type recordingConfigModel struct {
