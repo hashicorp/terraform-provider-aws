@@ -6,9 +6,16 @@ list "aws_vpc" "test" {
 
   config {
     vpc_ids = local.vpc_ids
+    filter {
+      name   = "tag:expected"
+      values = [var.rName]
+    }
   }
 }
 
 locals {
-  vpc_ids = aws_vpc.test[*].id
+  vpc_ids = concat(
+    aws_vpc.expected[*].id,
+    aws_vpc.not_expected[*].id,
+  )
 }
