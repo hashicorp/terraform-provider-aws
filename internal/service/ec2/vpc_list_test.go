@@ -6,6 +6,7 @@ package ec2_test
 import (
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -421,6 +422,36 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 						names.AttrID:        tfknownvalue.StringPtrExact(&notExpected2),
 					}),
 				},
+			},
+		},
+	})
+}
+
+func TestAccVPC_List_Filtered_IsDefault(t *testing.T) {
+	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
+
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_filtered_is_default"),
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_filtered_is_default/"),
+				ExpectError:              regexache.MustCompile(`The filter "is-default" is not supported. To list default VPCs, use the resource type "aws_default_vpc".`),
 			},
 		},
 	})

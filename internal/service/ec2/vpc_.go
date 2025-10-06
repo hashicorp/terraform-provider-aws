@@ -15,8 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	fdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -779,8 +781,53 @@ func (l *vpcListResource) ListResourceConfigSchema(ctx context.Context, request 
 			},
 		},
 		Blocks: map[string]listschema.Block{
-			names.AttrFilter: customListFiltersBlock(ctx),
+			names.AttrFilter: listschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
+				NestedObject: listschema.NestedBlockObject{
+					Attributes: map[string]listschema.Attribute{
+						names.AttrName: listschema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								notIsDefaultValidator{},
+							},
+						},
+						names.AttrValues: listschema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+						},
+					},
+				},
+			},
 		},
+	}
+}
+
+var _ validator.String = notIsDefaultValidator{}
+
+type notIsDefaultValidator struct{}
+
+func (v notIsDefaultValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v notIsDefaultValidator) MarkdownDescription(_ context.Context) string {
+	return ""
+}
+
+func (v notIsDefaultValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	value := request.ConfigValue
+
+	if value.ValueString() == "is-default" {
+		response.Diagnostics.Append(fdiag.NewAttributeErrorDiagnostic(
+			request.Path,
+			"Invalid Attribute Value",
+			`The filter "is-default" is not supported. To list default VPCs, use the resource type "aws_default_vpc".`,
+		))
 	}
 }
 
