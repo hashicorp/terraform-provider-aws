@@ -5,7 +5,6 @@ package bedrockagentcore
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -198,18 +197,18 @@ func (r *browserResource) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *browserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan browserResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
+func (r *browserResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data browserResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
 	var input bedrockagentcorecontrol.CreateBrowserInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -236,84 +235,75 @@ func (r *browserResource) Create(ctx context.Context, req resource.CreateRequest
 		return nil
 	})
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitBrowserCreated(ctx, conn, plan.BrowserID.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+	if _, err := waitBrowserCreated(ctx, conn, data.BrowserID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
-func (r *browserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state browserResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+func (r *browserResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data browserResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findBrowserByID(ctx, conn, state.BrowserID.ValueString())
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	out, err := findBrowserByID(ctx, conn, data.BrowserID.ValueString())
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.BrowserID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.BrowserID.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
-func (r *browserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state browserResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+func (r *browserResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data browserResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.DeleteBrowserInput{
-		BrowserId: state.BrowserID.ValueStringPointer(),
+		BrowserId: fwflex.StringFromFramework(ctx, data.BrowserID),
 	}
 
 	_, err := conn.DeleteBrowser(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.BrowserID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.BrowserID.String())
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBrowserDeleted(ctx, conn, state.BrowserID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.BrowserID.String())
+	if _, err := waitBrowserDeleted(ctx, conn, data.BrowserID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.BrowserID.String())
 		return
 	}
 }

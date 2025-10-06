@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
@@ -42,13 +43,20 @@ func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrowserConfig_basic(rName, "test description"),
+				Config: testAccBrowserConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserExists(ctx, resourceName, &browser),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.network_mode", "PUBLIC"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "browser_arn", "bedrock-agentcore", regexache.MustCompile(`browser-custom/.+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`browser-custom/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -81,11 +89,12 @@ func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 				Config: testAccBrowserConfig_role_recording(rName, "bucket.test.com", "the_prefix"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserExists(ctx, resourceName, &browser),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "recording.s3_location.bucket", "bucket.test.com"),
-					resource.TestCheckResourceAttr(resourceName, "recording.s3_location.prefix", "the_prefix"),
-					resource.TestCheckResourceAttr(resourceName, "recording.enabled", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -115,13 +124,16 @@ func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrowserConfig_basic(rName, "test description"),
+				Config: testAccBrowserConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserExists(ctx, resourceName, &browser),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceBrowser, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -148,7 +160,7 @@ func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrowserConfig_tags1(rName, "test description", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccBrowserConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserExists(ctx, resourceName, &browser),
 				),
@@ -169,6 +181,39 @@ func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_id"),
 				ImportStateVerifyIdentifierAttribute: "browser_id",
+			},
+			{
+				Config: testAccBrowserConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrowserExists(ctx, resourceName, &browser),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccBrowserConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBrowserExists(ctx, resourceName, &browser),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -194,11 +239,12 @@ func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 				Config: testAccBrowserConfig_networkConfiguration_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserExists(ctx, resourceName, &browser),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.network_mode", "VPC"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.network_mode_config.0.security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.network_mode_config.0.subnets.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "network_configuration.0.network_mode_config.0.security_groups.*", "aws_security_group.test", names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -271,20 +317,19 @@ func testAccPreCheckBrowser(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccBrowserConfig_basic(rName, description string) string {
+func testAccBrowserConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_browser" "test" {
-  name        = %[1]q
-  description = %[2]q
+  name = %[1]q
 
   network_configuration {
     network_mode = "PUBLIC"
   }
 }
-`, rName, description)
+`, rName)
 }
 
-func testAccBrowserConfig_IAMRole(rName string) string {
+func testAccBrowserConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -305,7 +350,7 @@ data "aws_iam_policy_document" "test_assume" {
 }
 
 func testAccBrowserConfig_role_recording(rName, bucket, prefix string) string {
-	return acctest.ConfigCompose(testAccBrowserConfig_IAMRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBrowserConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_browser" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -325,40 +370,50 @@ resource "aws_bedrockagentcore_browser" "test" {
 `, rName, bucket, prefix))
 }
 
-func testAccBrowserConfig_tags1(rName, description, tag1Key, tag1Value string) string {
+func testAccBrowserConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_browser" "test" {
-  name        = %[1]q
-  description = %[2]q
+  name = %[1]q
 
   network_configuration {
     network_mode = "PUBLIC"
   }
 
   tags = {
-    %[3]q = %[4]q
+    %[2]q = %[3]q
   }
 }
-`, rName, description, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value)
+}
+
+func testAccBrowserConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_browser" "test" {
+  name = %[1]q
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
 func testAccBrowserConfig_networkConfiguration_vpc(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-}
-
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_bedrockagentcore_browser" "test" {
