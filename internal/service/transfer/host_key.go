@@ -51,7 +51,17 @@ func (r *hostKeyResource) Schema(ctx context.Context, request resource.SchemaReq
 					stringvalidator.LengthBetween(0, 200),
 				},
 			},
-			// TODO host_key_body plus _wo
+			"host_key_body": schema.StringAttribute{
+				Required:  true,
+				Sensitive: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 4096),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			// TODO host_key_body_wo plus some way to ForceNew.
 			"host_key_fingerprint": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -256,6 +266,7 @@ type hostKeyResourceModel struct {
 	framework.WithRegionModel
 	ARN                types.String `tfsdk:"arn"`
 	Description        types.String `tfsdk:"description"`
+	HostKeyBody        types.String `tfsdk:"host_key_body"`
 	HostKeyFingerprint types.String `tfsdk:"host_key_fingerprint"`
 	HostKeyID          types.String `tfsdk:"host_key_id"`
 	ServerID           types.String `tfsdk:"server_id"`
