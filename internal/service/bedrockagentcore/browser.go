@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -15,22 +16,23 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -38,12 +40,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_browser", name="Browser")
 // @Tags(identifierAttribute="browser_arn")
 // @Testing(tagsTest=false)
-func newResourceBrowser(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBrowser{}
+func newBrowserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &browserResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -51,17 +52,13 @@ func newResourceBrowser(_ context.Context) (resource.ResourceWithConfigure, erro
 	return r, nil
 }
 
-const (
-	ResNameBrowser = "Browser"
-)
-
-type resourceBrowser struct {
-	framework.ResourceWithModel[resourceBrowserModel]
+type browserResource struct {
+	framework.ResourceWithModel[browserResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
 
-func (r *resourceBrowser) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *browserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"browser_arn": framework.ARNAttributeComputedOnly(),
@@ -78,25 +75,11 @@ func (r *resourceBrowser) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"recording": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[browserRecordingModel](ctx),
-				Optional:   true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -107,6 +90,7 @@ func (r *resourceBrowser) Schema(ctx context.Context, req resource.SchemaRequest
 				CustomType: fwtypes.NewListNestedObjectTypeOf[browserNetworkConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
@@ -153,6 +137,58 @@ func (r *resourceBrowser) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
+			"recording": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[recordingConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrEnabled: schema.BoolAttribute{
+							Optional: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"s3_location": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3LocationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrBucket: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									names.AttrPrefix: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtLeast(1),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
@@ -161,22 +197,23 @@ func (r *resourceBrowser) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceBrowser) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *browserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan resourceBrowserModel
+	var plan browserResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input bedrockagentcorecontrol.CreateBrowserInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Additional fields.
+	input.ClientToken = aws.String(tfresource.PseudoUniqueToken(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -206,7 +243,7 @@ func (r *resourceBrowser) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -221,10 +258,10 @@ func (r *resourceBrowser) Create(ctx context.Context, req resource.CreateRequest
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceBrowser) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *browserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var state resourceBrowserModel
+	var state browserResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -241,7 +278,7 @@ func (r *resourceBrowser) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -249,10 +286,10 @@ func (r *resourceBrowser) Read(ctx context.Context, req resource.ReadRequest, re
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceBrowser) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *browserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var state resourceBrowserModel
+	var state browserResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -280,12 +317,12 @@ func (r *resourceBrowser) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceBrowser) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *browserResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("browser_id"), request, response)
 }
 
 func waitBrowserCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetBrowserOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BrowserStatusCreating),
 		Target:                    enum.Slice(awstypes.BrowserStatusReady),
 		Refresh:                   statusBrowser(ctx, conn, id),
@@ -303,7 +340,7 @@ func waitBrowserCreated(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 }
 
 func waitBrowserDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetBrowserOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BrowserStatusDeleting, awstypes.BrowserStatusReady),
 		Target:  []string{},
 		Refresh: statusBrowser(ctx, conn, id),
@@ -318,7 +355,7 @@ func waitBrowserDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 	return nil, smarterr.NewError(err)
 }
 
-func statusBrowser(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
+func statusBrowser(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findBrowserByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -341,7 +378,7 @@ func findBrowserByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, 
 	out, err := conn.GetBrowser(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
+			return nil, smarterr.NewError(&sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			})
@@ -357,16 +394,15 @@ func findBrowserByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, 
 	return out, nil
 }
 
-type resourceBrowserModel struct {
+type browserResourceModel struct {
 	framework.WithRegionModel
 	BrowserARN           types.String                                                      `tfsdk:"browser_arn"`
 	BrowserID            types.String                                                      `tfsdk:"browser_id"`
-	ClientToken          types.String                                                      `tfsdk:"client_token"`
 	Description          types.String                                                      `tfsdk:"description"`
 	ExecutionRoleARN     fwtypes.ARN                                                       `tfsdk:"execution_role_arn"`
 	Name                 types.String                                                      `tfsdk:"name"`
 	NetworkConfiguration fwtypes.ListNestedObjectValueOf[browserNetworkConfigurationModel] `tfsdk:"network_configuration"`
-	Recording            fwtypes.ObjectValueOf[browserRecordingModel]                      `tfsdk:"recording"`
+	Recording            fwtypes.ListNestedObjectValueOf[recordingConfigModel]             `tfsdk:"recording"`
 	Tags                 tftags.Map                                                        `tfsdk:"tags"`
 	TagsAll              tftags.Map                                                        `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                                    `tfsdk:"timeouts"`
@@ -382,9 +418,9 @@ type browserVpcConfigModel struct {
 	Subnets        fwtypes.SetOfString `tfsdk:"subnets"`
 }
 
-type browserRecordingModel struct {
-	Enabled    types.Bool                             `tfsdk:"enabled"`
-	S3Location fwtypes.ObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
+type recordingConfigModel struct {
+	Enabled    types.Bool                                       `tfsdk:"enabled"`
+	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
 }
 
 type s3LocationModel struct {

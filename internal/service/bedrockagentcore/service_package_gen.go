@@ -24,7 +24,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceBrowser,
+			Factory:  newBrowserResource,
 			TypeName: "aws_bedrockagentcore_browser",
 			Name:     "Browser",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

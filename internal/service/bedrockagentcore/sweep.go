@@ -32,7 +32,7 @@ func sweepBrowsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, v := range page.BrowserSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceBrowser, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newBrowserResource, client,
 				framework.NewAttribute("browser_id", aws.ToString(v.BrowserId))),
 			)
 		}
