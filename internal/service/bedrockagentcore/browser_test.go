@@ -86,7 +86,7 @@ func TestAccBedrockAgentCoreBrowser_role_recording(t *testing.T) {
 		CheckDestroy:             testAccCheckBrowserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrowserConfig_role_recording(rName, "bucket.test.com", "the_prefix"),
+				Config: testAccBrowserConfig_role_recording(rName, sdkacctest.RandomWithPrefix("tf-test-bucket")),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserExists(ctx, resourceName, &browser),
 				),
@@ -330,7 +330,7 @@ resource "aws_bedrockagentcore_browser" "test" {
 `, rName)
 }
 
-func testAccBrowserConfig_role_recording(rName, bucket, prefix string) string {
+func testAccBrowserConfig_role_recording(rName, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -348,6 +348,27 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "s3:*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[2]q
+
+  force_destroy = true
+}
+
 resource "aws_bedrockagentcore_browser" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -358,13 +379,13 @@ resource "aws_bedrockagentcore_browser" "test" {
 
   recording {
     s3_location {
-      bucket = %[2]q
-      prefix = %[3]q
+      bucket = aws_s3_bucket.test.bucket
+      prefix = "prefix1"
     }
     enabled = true
   }
 }
-`, rName, bucket, prefix)
+`, rName, bucketName)
 }
 
 func testAccBrowserConfig_tags1(rName, tag1Key, tag1Value string) string {
