@@ -439,11 +439,6 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/aws-service-role/BedrockAgentCoreNetworkServiceRolePolicy"
-}
-
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = %[1]q
