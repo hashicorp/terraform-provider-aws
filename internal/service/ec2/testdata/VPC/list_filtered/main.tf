@@ -9,7 +9,7 @@ resource "aws_vpc" "expected" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    expected = "true"
+    expected = var.rName
   }
 }
 
@@ -17,8 +17,10 @@ resource "aws_vpc" "not_expected" {
   count = 2
 
   cidr_block = "10.1.0.0/16"
+}
 
-  tags = {
-    expected = "false"
-  }
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }

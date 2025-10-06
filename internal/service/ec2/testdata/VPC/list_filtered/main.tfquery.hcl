@@ -7,7 +7,7 @@ list "aws_vpc" "test" {
   config {
     filter {
       name   = "tag:expected"
-      values = ["true"]
+      values = [var.rName]
     }
   }
 }
