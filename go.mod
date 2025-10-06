@@ -52,7 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chime v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.67.0
@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.49.6
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.82.6
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.83.2
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.84.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.6
