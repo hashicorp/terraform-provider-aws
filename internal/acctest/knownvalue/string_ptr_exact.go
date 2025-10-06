@@ -15,8 +15,6 @@ type stringPtrExact[T ~string] struct {
 	value *T
 }
 
-// CheckValue determines whether the passed value is of type *string, and
-// contains a matching sequence of bytes.
 func (v stringPtrExact[T]) CheckValue(other any) error {
 	otherVal, ok := other.(string)
 
