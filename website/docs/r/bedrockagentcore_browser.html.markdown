@@ -57,9 +57,9 @@ resource "aws_bedrockagentcore_browser" "example" {
     network_mode = "PUBLIC"
   }
 
-  recording = {
+  recording {
     enabled = true
-    s3_location = {
+    s3_location {
       bucket = aws_s3_bucket.recording.bucket
       prefix = "browser-sessions/"
     }

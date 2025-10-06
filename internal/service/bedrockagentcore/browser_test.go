@@ -220,6 +220,7 @@ func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
 }
 
 func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
+	acctest.Skip(t, "ENIs of type \"agentic_ai\" remain")
 	ctx := acctest.Context(t)
 	var browser bedrockagentcorecontrol.GetBrowserOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
@@ -329,14 +330,14 @@ resource "aws_bedrockagentcore_browser" "test" {
 `, rName)
 }
 
-func testAccBrowserConfig_baseIAMRole(rName string) string {
+func testAccBrowserConfig_role_recording(rName, bucket, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+  assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
-data "aws_iam_policy_document" "test_assume" {
+data "aws_iam_policy_document" "test" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -346,11 +347,7 @@ data "aws_iam_policy_document" "test_assume" {
     }
   }
 }
-`, rName)
-}
 
-func testAccBrowserConfig_role_recording(rName, bucket, prefix string) string {
-	return acctest.ConfigCompose(testAccBrowserConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_browser" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -359,15 +356,15 @@ resource "aws_bedrockagentcore_browser" "test" {
     network_mode = "PUBLIC"
   }
 
-  recording = {
-    s3_location = {
+  recording {
+    s3_location {
       bucket = %[2]q
       prefix = %[3]q
     }
     enabled = true
   }
 }
-`, rName, bucket, prefix))
+`, rName, bucket, prefix)
 }
 
 func testAccBrowserConfig_tags1(rName, tag1Key, tag1Value string) string {
@@ -404,9 +401,28 @@ resource "aws_bedrockagentcore_browser" "test" {
 }
 
 func testAccBrowserConfig_networkConfiguration_vpc(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com", "network.bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/aws-service-role/BedrockAgentCoreNetworkServiceRolePolicy"
+}
+
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = %[1]q
@@ -417,8 +433,8 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_bedrockagentcore_browser" "test" {
-  name        = %[1]q
-  description = "test VPC configuration"
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
 
   network_configuration {
     network_mode = "VPC"
