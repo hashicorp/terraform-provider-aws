@@ -40,19 +40,19 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.45.6
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.59.3
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.29.5
-	github.com/aws/aws-sdk-go-v2/service/backup v1.47.7
+	github.com/aws/aws-sdk-go-v2/service/backup v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/batch v1.57.10
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.11.8
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.50.6
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.6.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/chime v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.67.0
@@ -130,7 +130,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.46.6
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.31.6
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.34.6
-	github.com/aws/aws-sdk-go-v2/service/glue v1.129.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.130.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.31.6
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.37.6
@@ -166,14 +166,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.49.6
-	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.44.6
+	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.82.6
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.83.2
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.84.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.6
-	github.com/aws/aws-sdk-go-v2/service/memorydb v1.31.6
+	github.com/aws/aws-sdk-go-v2/service/memorydb v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.37.5
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.4
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.6
@@ -201,16 +201,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.30.6
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.94.3
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.94.4
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.26.6
-	github.com/aws/aws-sdk-go-v2/service/rds v1.108.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.108.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.37.6
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.31.8
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.5
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.34.6
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.21.6
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.21.6
@@ -280,7 +280,7 @@ require (
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.66
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.67
 	github.com/hashicorp/awspolicyequivalence v1.7.0
 	github.com/hashicorp/cli v1.1.7
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -369,7 +369,7 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zclconf/go-cty v1.17.0 // indirect
-	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
+	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.63.0 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect

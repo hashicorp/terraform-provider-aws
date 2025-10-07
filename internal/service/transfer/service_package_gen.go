@@ -39,6 +39,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newWebAppResource,
+			TypeName: "aws_transfer_web_app",
+			Name:     "Web App",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newWebAppCustomizationResource,
+			TypeName: "aws_transfer_web_app_customization",
+			Name:     "Web App Customization",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
