@@ -74,6 +74,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the application.
 * `network_configuration` - (Optional) The network configuration for customer VPC connectivity.
 * `release_label` - (Required) The EMR release version associated with the application.
+* `scheduler_configuration` - (Optional) Scheduler configuration for batch and streaming jobs running on this application. Supported with release labels emr-7.0.0 and above. See [scheduler_configuration Arguments](#scheduler_configuration-arguments) below.
 * `type` - (Required) The type of application you want to start, such as `spark` or `hive`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -121,6 +122,11 @@ This resource supports the following arguments:
 * `cpu` - (Required) The CPU requirements for every worker instance of the worker type.
 * `disk` - (Optional) The disk requirements for every worker instance of the worker type.
 * `memory` - (Required) The memory requirements for every worker instance of the worker type.
+
+### scheduler_configuration Arguments
+
+* `max_concurrent_runs` - (Optional) Maximum concurrent job runs on this application. Valid range is 1 to 1000. Defaults to 15.
+* `queue_timeout_minutes` - (Optional) Maximum duration in minutes for the job in QUEUED state. Valid range is from 15 to 720. Defaults to 360 minutes.
 
 ## Attribute Reference
 
