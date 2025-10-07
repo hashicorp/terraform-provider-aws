@@ -9,6 +9,7 @@ var (
 	ResourceAgreement           = resourceAgreement
 	ResourceCertificate         = resourceCertificate
 	ResourceConnector           = resourceConnector
+	ResourceHostKey             = newHostKeyResource
 	ResourceProfile             = resourceProfile
 	ResourceServer              = resourceServer
 	ResourceSSHKey              = resourceSSHKey
@@ -22,6 +23,7 @@ var (
 	FindAgreementByTwoPartKey    = findAgreementByTwoPartKey
 	FindCertificateByID          = findCertificateByID
 	FindConnectorByID            = findConnectorByID
+	FindHostKeyByTwoPartKey      = findHostKeyByTwoPartKey
 	FindProfileByID              = findProfileByID
 	FindServerByID               = findServerByID
 	FindTag                      = findTag
