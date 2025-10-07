@@ -17,7 +17,9 @@ resource "aws_transfer_host_key" "example" {
   server_id   = aws_transfer_server.example.id
   description = "example additional host key"
 
-  host_key_body = file("example-ssh-rsa-key")
+  host_key_body_wo = <<EOT
+# Private key PEM.
+EOT
 }
 ```
 
