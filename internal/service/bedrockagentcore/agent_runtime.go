@@ -153,6 +153,22 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					},
 				},
 			},
+			"lifecycle_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"idle_runtime_session_timeout": schema.Int32Attribute{
+							Optional: true,
+						},
+						"max_lifetime": schema.Int32Attribute{
+							Optional: true,
+						},
+					},
+				},
+			},
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -496,6 +512,7 @@ type agentRuntimeResourceModel struct {
 	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]    `tfsdk:"authorizer_configuration"`
 	Description                types.String                                                     `tfsdk:"description"`
 	EnvironmentVariables       fwtypes.MapOfString                                              `tfsdk:"environment_variables"`
+	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]     `tfsdk:"lifecycle_configuration"`
 	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
 	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
 	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
@@ -606,6 +623,11 @@ type customJWTAuthorizerConfigurationModel struct {
 	AllowedAudience fwtypes.SetOfString `tfsdk:"allowed_audience"`
 	AllowedClients  fwtypes.SetOfString `tfsdk:"allowed_clients"`
 	DiscoveryURL    types.String        `tfsdk:"discovery_url"`
+}
+
+type lifecycleConfigurationModel struct {
+	IdleRuntimeSessionTimeout types.Int32 `tfsdk:"idle_runtime_session_timeout"`
+	MaxLifetime               types.Int32 `tfsdk:"max_lifetime"`
 }
 
 type networkConfigurationModel struct {
