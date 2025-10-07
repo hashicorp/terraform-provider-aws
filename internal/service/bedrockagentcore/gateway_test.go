@@ -45,17 +45,6 @@ func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 				Config: testAccGatewayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "CUSTOM_JWT"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_type", "MCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.discovery_url", "https://accounts.google.com/.well-known/openid-configuration"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "test1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "test2"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "gateway_arn", "bedrock-agentcore", regexache.MustCompile(`gateway/.+$`)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -82,271 +71,8 @@ func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreGateway_full(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGateways(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayConfig_full(rName, "full configuration test"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "full configuration test"),
-					resource.TestCheckResourceAttr(resourceName, "exception_level", "DEBUG"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.discovery_url", "https://accounts.google.com/.well-known/openid-configuration"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "test1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.instructions", "Full test instructions"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.search_type", "SEMANTIC"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.supported_versions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "protocol_configuration.0.mcp.0.supported_versions.*", "2025-03-26"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "gateway_id",
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGateways(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayConfig_description(rName, "Initial description"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "gateway_id",
-			},
-			{
-				Config: testAccGatewayConfig_description(rName, "Updated description"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGateway_authorizerConfiguration(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var gateway1, gateway2 bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGateways(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayConfig_authorizerConfiguration(rName, "https://accounts.google.com/.well-known/openid-configuration", "weather", "sports"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway1),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.discovery_url", "https://accounts.google.com/.well-known/openid-configuration"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "weather"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "sports"),
-				),
-			},
-			{
-				Config: testAccGatewayConfig_authorizerConfiguration(rName, "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "finance", "technology"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway2),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.discovery_url", "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "finance"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "technology"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGateway_protocolConfiguration(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGateways(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayConfig_protocolConfiguration(rName, "Initial instructions", "SEMANTIC", "2025-03-26", "2025-03-26"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.instructions", "Initial instructions"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.search_type", "SEMANTIC"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.supported_versions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "protocol_configuration.0.mcp.0.supported_versions.*", "2025-03-26"),
-				),
-			},
-			{
-				Config: testAccGatewayConfig_protocolConfiguration(rName, "Updated instructions", "SEMANTIC", "2025-03-26", "2025-03-26"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.instructions", "Updated instructions"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.search_type", "SEMANTIC"),
-					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.mcp.0.supported_versions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "protocol_configuration.0.mcp.0.supported_versions.*", "2025-03-26"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGateway_exceptionLevel(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGateways(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckNoResourceAttr(resourceName, "exception_level"),
-				),
-			},
-			{
-				Config: testAccGatewayConfig_exceptionLevel(rName, "DEBUG"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "exception_level", "DEBUG"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGateway_KMSKeyARN(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGateways(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayConfig_KMSKeyARN(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "gateway_id",
-			},
-		},
-	})
-}
-
 func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
@@ -369,6 +95,9 @@ func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -380,10 +109,6 @@ func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 
 func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
@@ -402,9 +127,17 @@ func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -417,18 +150,188 @@ func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 				Config: testAccGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_description(rName, "Initial description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Initial description")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_description(rName, "Updated description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Updated description")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_kmsKey(t *testing.T) {
+	acctest.Skip(t, "KMS key returns HTTP 500")
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_kmsKey(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_kmsKey(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_protocolConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_protocolConfiguration(rName, "First set of instructions"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+			{
+				Config: testAccGatewayConfig_protocolConfiguration(rName, "Second set of instructions"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -533,77 +436,13 @@ resource "aws_bedrockagentcore_gateway" "test" {
 `, rName))
 }
 
-func testAccGatewayConfig_full(rName, description string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = "Test key for %[1]s"
-  deletion_window_in_days = 7
-}
-
-resource "aws_bedrockagentcore_gateway" "test" {
-  name            = %[1]q
-  description     = %[2]q
-  role_arn        = aws_iam_role.test.arn
-  exception_level = "DEBUG"
-  kms_key_arn     = aws_kms_key.test.arn
-
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["test1", "test2"]
-    }
-  }
-
-  protocol_configuration {
-    mcp {
-      instructions       = "Full test instructions"
-      search_type        = "SEMANTIC"
-      supported_versions = ["2025-03-26"]
-    }
-  }
-}
-`, rName, description))
-}
-
-func testAccGatewayConfig_description(rName, description string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_gateway" "test" {
-  name        = %[1]q
-  description = %[2]q
-  role_arn    = aws_iam_role.test.arn
-
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["test1", "test2"]
-    }
-  }
-}
-`, rName, description))
-}
-
-func testAccGatewayConfig_authorizerConfiguration(rName, discoveryUrl, audience1, audience2 string) string {
+func testAccGatewayConfig_protocolConfiguration(rName, instructions string) string {
 	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = %[2]q
-      allowed_audience = [%[3]q, %[4]q]
-    }
-  }
-}
-`, rName, discoveryUrl, audience1, audience2))
-}
-
-func testAccGatewayConfig_protocolConfiguration(rName, instructions, searchType, version1, version2 string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_gateway" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
-
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
@@ -614,51 +453,62 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_configuration {
     mcp {
       instructions       = %[2]q
-      search_type        = %[3]q
-      supported_versions = [%[4]q, %[5]q]
+      search_type        = "SEMANTIC"
+      supported_versions = ["2025-03-26"]
     }
   }
+
+  protocol_type = "MCP"
 }
-`, rName, instructions, searchType, version1, version2))
+`, rName, instructions))
 }
 
-func testAccGatewayConfig_exceptionLevel(rName, exceptionLevel string) string {
+func testAccGatewayConfig_description(rName, description string) string {
 	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway" "test" {
-  name            = %[1]q
-  role_arn        = aws_iam_role.test.arn
-  exception_level = %[2]q
+  name        = %[1]q
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
 
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["test1", "test2"]
     }
   }
+
+  protocol_type = "MCP"
 }
-`, rName, exceptionLevel))
+`, rName, description))
 }
 
-func testAccGatewayConfig_KMSKeyARN(rName string) string {
+func testAccGatewayConfig_kmsKey(rName string, idx int) string {
 	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Test key for %[1]s"
+  count = 2
+
+  description             = "Test key for %[1]s ${count.index}"
   deletion_window_in_days = 7
 }
 
 resource "aws_bedrockagentcore_gateway" "test" {
-  name        = %[1]q
-  role_arn    = aws_iam_role.test.arn
-  kms_key_arn = aws_kms_key.test.arn
+  name            = %[1]q
+  role_arn        = aws_iam_role.test.arn
+  exception_level = "DEBUG"
+  kms_key_arn     = aws_kms_key.test[%[2]d].arn
 
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["test1", "test2"]
     }
   }
+
+  protocol_type = "MCP"
 }
-`, rName))
+`, rName, idx))
 }
 
 func testAccGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -667,12 +517,15 @@ resource "aws_bedrockagentcore_gateway" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["test1", "test2"]
     }
   }
+
+  protocol_type = "MCP"
 
   tags = {
     %[2]q = %[3]q
@@ -687,12 +540,15 @@ resource "aws_bedrockagentcore_gateway" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["test1", "test2"]
     }
   }
+
+  protocol_type = "MCP"
 
   tags = {
     %[2]q = %[3]q

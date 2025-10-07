@@ -35,11 +35,15 @@ resource "aws_bedrockagentcore_gateway" "example" {
   name     = "example-gateway"
   role_arn = aws_iam_role.example.arn
 
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
-      discovery_url = "https://accounts.google.com/.well-known/openid-configuration"
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
     }
   }
+
+  protocol_type = "MCP"
 }
 ```
 
@@ -51,6 +55,7 @@ resource "aws_bedrockagentcore_gateway" "example" {
   description = "Gateway for MCP communication"
   role_arn    = aws_iam_role.example.arn
 
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
       discovery_url    = "https://auth.example.com/.well-known/openid-configuration"
@@ -59,6 +64,7 @@ resource "aws_bedrockagentcore_gateway" "example" {
     }
   }
 
+  protocol_type = "MCP"
   protocol_configuration {
     mcp {
       instructions       = "Gateway for handling MCP requests"
@@ -73,19 +79,18 @@ resource "aws_bedrockagentcore_gateway" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the gateway.
-* `role_arn` - (Required) ARN of the IAM role that the gateway assumes to access AWS services.
 * `authorizer_configuration` - (Required) Configuration for request authorization. See [`authorizer_configuration`](#authorizer_configuration) below.
+* `authorizer_type` - (Required) Type of authorizer to use. Valid values: `CUSTOM_JWT`.
+* `name` - (Required) Name of the gateway.
+* `protocol_type` - (Required) Protocol type for the gateway. Valid values: `MCP`.
+* `role_arn` - (Required) ARN of the IAM role that the gateway assumes to access AWS services.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `authorizer_type` - (Optional) Type of authorizer to use. Valid values: `CUSTOM_JWT`. Defaults to `CUSTOM_JWT`.
-* `client_token` - (Optional) Unique identifier for request idempotency. If not provided, one will be generated automatically.
 * `description` - (Optional) Description of the gateway.
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `INFO`, `WARN`, `ERROR`.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
-* `protocol_type` - (Optional) Protocol type for the gateway. Valid values: `MCP`. Defaults to `MCP`.
 * `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

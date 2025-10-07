@@ -287,6 +287,9 @@ func (r *gatewayResource) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 
+		// Additional fields.
+		input.GatewayIdentifier = aws.String(gatewayID)
+
 		_, err := conn.UpdateGateway(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
