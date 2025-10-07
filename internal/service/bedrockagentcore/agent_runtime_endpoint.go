@@ -107,6 +107,7 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, data.Name)
 	var input bedrockagentcorecontrol.CreateAgentRuntimeEndpointInput
 	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input, fwflex.WithFieldNamePrefix("AgentRuntimeEndpoint")))
 	if response.Diagnostics.HasError() {
@@ -119,7 +120,7 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 
 	out, err := conn.CreateAgentRuntimeEndpoint(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -127,8 +128,8 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 	data.AgentRuntimeEndpointARN = fwflex.StringToFramework(ctx, out.AgentRuntimeEndpointArn)
 	data.AgentRuntimeVersion = fwflex.StringToFramework(ctx, out.TargetVersion)
 
-	if _, err := waitAgentRuntimeEndpointCreated(ctx, conn, data.AgentRuntimeID.ValueString(), data.Name.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+	if _, err := waitAgentRuntimeEndpointCreated(ctx, conn, agentRuntimeID, name, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -144,14 +145,15 @@ func (r *agentRuntimeEndpointResource) Read(ctx context.Context, request resourc
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	out, err := findAgentRuntimeEndpointByTwoPartKey(ctx, conn, data.AgentRuntimeID.ValueString(), data.Name.ValueString())
+	agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, data.Name)
+	out, err := findAgentRuntimeEndpointByTwoPartKey(ctx, conn, agentRuntimeID, name)
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -181,6 +183,7 @@ func (r *agentRuntimeEndpointResource) Update(ctx context.Context, request resou
 	}
 
 	if diff.HasChanges() {
+		agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, new.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, new.Name)
 		var input bedrockagentcorecontrol.UpdateAgentRuntimeEndpointInput
 		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input, fwflex.WithFieldNamePrefix("Endpoint")))
 		if response.Diagnostics.HasError() {
@@ -192,18 +195,18 @@ func (r *agentRuntimeEndpointResource) Update(ctx context.Context, request resou
 
 		out, err := conn.UpdateAgentRuntimeEndpoint(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.Name.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
 		}
 
 		new.AgentRuntimeVersion = fwflex.StringToFramework(ctx, out.TargetVersion)
+
+		if _, err := waitAgentRuntimeEndpointUpdated(ctx, conn, agentRuntimeID, name, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+			return
+		}
 	} else {
 		new.AgentRuntimeVersion = old.AgentRuntimeVersion
-	}
-
-	if _, err := waitAgentRuntimeEndpointUpdated(ctx, conn, new.AgentRuntimeID.ValueString(), new.Name.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.Name.String())
-		return
 	}
 
 	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
@@ -218,10 +221,11 @@ func (r *agentRuntimeEndpointResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, data.Name)
 	input := bedrockagentcorecontrol.DeleteAgentRuntimeEndpointInput{
-		AgentRuntimeId: fwflex.StringFromFramework(ctx, data.AgentRuntimeID),
+		AgentRuntimeId: aws.String(agentRuntimeID),
 		ClientToken:    aws.String(sdkid.UniqueId()),
-		EndpointName:   fwflex.StringFromFramework(ctx, data.Name),
+		EndpointName:   aws.String(name),
 	}
 
 	_, err := conn.DeleteAgentRuntimeEndpoint(ctx, &input)
@@ -232,12 +236,12 @@ func (r *agentRuntimeEndpointResource) Delete(ctx context.Context, request resou
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	if _, err := waitAgentRuntimeEndpointDeleted(ctx, conn, data.AgentRuntimeID.ValueString(), data.Name.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+	if _, err := waitAgentRuntimeEndpointDeleted(ctx, conn, agentRuntimeID, name, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 }

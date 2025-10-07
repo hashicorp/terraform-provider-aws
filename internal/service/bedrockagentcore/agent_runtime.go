@@ -88,6 +88,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 			},
+			"lifecycle_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[lifecycleConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -149,22 +150,6 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-			"lifecycle_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"idle_runtime_session_timeout": schema.Int32Attribute{
-							Optional: true,
-						},
-						"max_lifetime": schema.Int32Attribute{
-							Optional: true,
 						},
 					},
 				},
@@ -286,14 +271,22 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	// Set values for unknowns.
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
-	if response.Diagnostics.HasError() {
+	agentRuntimeID := aws.ToString(out.AgentRuntimeId)
+
+	if _, err := waitAgentRuntimeCreated(ctx, conn, agentRuntimeID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 		return
 	}
 
-	if _, err := waitAgentRuntimeCreated(ctx, conn, data.AgentRuntimeID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.AgentRuntimeName.String())
+	runtime, err := findAgentRuntimeByID(ctx, conn, agentRuntimeID)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+		return
+	}
+
+	// Set values for unknowns.
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -309,14 +302,15 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	out, err := findAgentRuntimeByID(ctx, conn, data.AgentRuntimeID.ValueString())
+	agentRuntimeID := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID)
+	out, err := findAgentRuntimeByID(ctx, conn, agentRuntimeID)
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.AgentRuntimeID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 		return
 	}
 
@@ -345,6 +339,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 	}
 
 	if diff.HasChanges() {
+		agentRuntimeID := fwflex.StringValueFromFramework(ctx, new.AgentRuntimeID)
 		var input bedrockagentcorecontrol.UpdateAgentRuntimeInput
 		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input, fwflex.WithFieldNamePrefix("AgentRuntime")))
 		if response.Diagnostics.HasError() {
@@ -356,7 +351,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 
 		out, err := conn.UpdateAgentRuntime(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.AgentRuntimeID.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 			return
 		}
 
@@ -365,8 +360,8 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
-		if _, err := waitAgentRuntimeUpdated(ctx, conn, new.AgentRuntimeID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.AgentRuntimeID.String())
+		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 			return
 		}
 	} else {
@@ -385,8 +380,9 @@ func (r *agentRuntimeResource) Delete(ctx context.Context, request resource.Dele
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	agentRuntimeID := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID)
 	input := bedrockagentcorecontrol.DeleteAgentRuntimeInput{
-		AgentRuntimeId: fwflex.StringFromFramework(ctx, data.AgentRuntimeID),
+		AgentRuntimeId: aws.String(agentRuntimeID),
 	}
 
 	_, err := conn.DeleteAgentRuntime(ctx, &input)
@@ -394,12 +390,12 @@ func (r *agentRuntimeResource) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.AgentRuntimeID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 		return
 	}
 
-	if _, err := waitAgentRuntimeDeleted(ctx, conn, data.AgentRuntimeID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.AgentRuntimeID.String())
+	if _, err := waitAgentRuntimeDeleted(ctx, conn, agentRuntimeID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 		return
 	}
 }
