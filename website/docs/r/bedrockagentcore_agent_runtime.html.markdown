@@ -121,6 +121,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the agent runtime.
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
+* `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
 * `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -151,6 +152,13 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 
+### `lifecycle_configuration`
+
+The `lifecycle_configuration` block supports the following:
+
+* `idle_runtime_session_timeout` - (Optional) Timeout in seconds for idle runtime sessions.
+* `max_lifetime` - (Optional) Maximum lifetime for the instance in seconds.
+
 ### `network_configuration`
 
 The `network_configuration` block supports the following:
@@ -169,7 +177,7 @@ The `network_mode_config` block supports the following:
 
 The `protocol_configuration` block supports the following:
 
-* `server_protocol` - (Optional) Server protocol for the agent runtime. Valid values: `HTTP`, `MCP`.
+* `server_protocol` - (Optional) Server protocol for the agent runtime. Valid values: `HTTP`, `MCP`, `A2A`.
 
 ### `request_header_configuration`
 

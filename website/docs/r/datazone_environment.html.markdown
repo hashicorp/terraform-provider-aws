@@ -17,8 +17,6 @@ Terraform resource for managing an AWS DataZone Environment.
 ```terraform
 resource "aws_datazone_environment" "example" {
   name                 = "example"
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.name
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
@@ -58,7 +56,9 @@ The following arguments are optional:
 * `blueprint_identifier` - (Optional) The blueprint with which the environment is created.
 * `description` - (Optional) The description of the environment.
 * `glossary_terms` - (Optional) The business glossary terms that can be used in this environment.
-* `user_parameters` - (Optional) The user parameters that are used in the environment. See [User Parameters](#user-parameters) for more information.
+* `user_parameters` - (Optional) The user parameters that are used in the environment.
+  See [User Parameters](#user-parameters) for more information.
+  Changing these values recreates the resource.
 
 ### User Parameters
 
