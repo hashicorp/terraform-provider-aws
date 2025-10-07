@@ -5,7 +5,11 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
-	ResourceCodeInterpreter = newResourceCodeInterpreter
+	ResourceAgentRuntime         = newAgentRuntimeResource
+	ResourceAgentRuntimeEndpoint = newAgentRuntimeEndpointResource
+	ResourceCodeInterpreter      = newResourceCodeInterpreter
 
-	FindCodeInterpreterByID = findCodeInterpreterByID
+	FindAgentRuntimeByID                 = findAgentRuntimeByID
+	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
+	FindCodeInterpreterByID              = findCodeInterpreterByID
 )
