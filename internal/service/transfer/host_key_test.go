@@ -441,7 +441,7 @@ resource "aws_transfer_server" "test" {
 
 resource "aws_transfer_host_key" "test" {
   server_id     = aws_transfer_server.test.id
-  description  = %[2]q
+  description   = %[2]q
   host_key_body = <<EOT
 %[1]s
 EOT
