@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
@@ -72,6 +71,7 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 			},
 			"ipv4_addresses_per_eni": schema.Int32Attribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.Int32{
 					int32validator.AtLeast(1),
 					int32validator.AtMost(62),
@@ -79,7 +79,6 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
-				Default: int32default.StaticInt32(16),
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -152,7 +151,7 @@ func (r *resourceGatewayResource) Create(ctx context.Context, request resource.C
 
 	// Ipv4AddressesPerEni is irrelevant if IPAddressType is IPv6
 	if data.IPAddressType.ValueEnum() != awstypes.ResourceGatewayIpAddressTypeIpv6 {
-		input.Ipv4AddressesPerEni = fwflex.Int32FromFramework(ctx, data.Ipv4AddressesPerEni)
+		input.Ipv4AddressesPerEni = fwflex.Int32FromFramework(ctx, data.IPV4AddressesPerEni)
 	}
 
 	outputCRG, err := conn.CreateResourceGateway(ctx, &input)
@@ -376,7 +375,7 @@ type resourceGatewayResourceModel struct {
 	ARN                 types.String                                              `tfsdk:"arn"`
 	ID                  types.String                                              `tfsdk:"id"`
 	IPAddressType       fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`
-	Ipv4AddressesPerEni types.Int32                                               `tfsdk:"ipv4_addresses_per_eni"`
+	IPV4AddressesPerEni types.Int32                                               `tfsdk:"ipv4_addresses_per_eni"`
 	Name                types.String                                              `tfsdk:"name"`
 	SecurityGroupIDs    fwtypes.SetOfString                                       `tfsdk:"security_group_ids"`
 	Status              fwtypes.StringEnum[awstypes.ResourceGatewayStatus]        `tfsdk:"status"`
