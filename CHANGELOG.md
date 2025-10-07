@@ -16,6 +16,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Correctly validate AWS European Sovereign Cloud Regions in ARNs ([#44573](https://github.com/hashicorp/terraform-provider-aws/issues/44573))
 * resource/aws_datazone_environment: Correctly updates `glossary_terms`. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_datazone_environment: Prevents `unknown value` error when optional `account_identifier` is not specified. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_datazone_environment: Prevents `unknown value` error when optional `account_region` is not specified. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
