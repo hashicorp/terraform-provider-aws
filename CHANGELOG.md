@@ -2,11 +2,15 @@
 
 FEATURES:
 
+* **New Action:** `aws_transcribe_start_transcription_job` ([#44445](https://github.com/hashicorp/terraform-provider-aws/issues/44445))
 * **New Resource:** `aws_prometheus_resource_policy` ([#44256](https://github.com/hashicorp/terraform-provider-aws/issues/44256))
+* **New Resource:** `aws_transfer_web_app` ([#42708](https://github.com/hashicorp/terraform-provider-aws/issues/42708))
+* **New Resource:** `aws_transfer_web_app_customization` ([#42708](https://github.com/hashicorp/terraform-provider-aws/issues/42708))
 
 ENHANCEMENTS:
 
 * resource/aws_lambda_event_source_mapping: Add `schema_registry_config` configuration blocks to `amazon_managed_kafka_event_source_config` and `self_managed_kafka_event_source_config` blocks ([#44540](https://github.com/hashicorp/terraform-provider-aws/issues/44540))
+* resource/aws_ssmcontacts_contact: Add resource identity support ([#44548](https://github.com/hashicorp/terraform-provider-aws/issues/44548))
 
 BUG FIXES:
 
