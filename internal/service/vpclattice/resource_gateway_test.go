@@ -429,7 +429,7 @@ resource "aws_vpclattice_resource_gateway" "test" {
   vpc_id                 = aws_vpc.test.id
   security_group_ids     = [aws_security_group.test.id]
   subnet_ids             = [aws_subnet.test.id]
-  ipv4_addresses_per_eni = %[2]q
+  ipv4_addresses_per_eni = %[2]d
 }
 `, rName, ipAddressesPerEni))
 }
