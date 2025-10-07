@@ -25,6 +25,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_s3_bucket", sweepBuckets,
+		"aws_datazone_domain",
 		"aws_s3_access_point",
 		"aws_s3_object_gp_bucket",
 		"aws_s3control_access_grants_instance",

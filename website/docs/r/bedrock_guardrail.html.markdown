@@ -121,7 +121,7 @@ The `tier_config` configuration block supports the following arguments:
 
 ### Contextual Grounding Policy Config
 
-* `filters_config` (Required) List of contextual grounding filter configs. See [Contextual Grounding Filters Config](#contextual-grounding-filters-config) for more information.
+* `filters_config` (Required) One or more blocks defining contextual grounding filter configs. See [Contextual Grounding Filters Config](#contextual-grounding-filters-config) for more information.
 
 #### Contextual Grounding Filters Config
 
