@@ -78,6 +78,7 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 				},
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
+					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
