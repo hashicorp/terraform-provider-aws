@@ -849,6 +849,11 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 		return
 	}
 
+	input.Filters = append(input.Filters, awstypes.Filter{
+		Name:   aws.String("is-default"),
+		Values: []string{"false"},
+	})
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		pages := ec2.NewDescribeVpcsPaginator(conn, &input)
 		for pages.HasMorePages() {
@@ -860,11 +865,6 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 			}
 
 			for _, vpc := range page.Vpcs {
-				// Skip default VPCs.
-				if aws.ToBool(vpc.IsDefault) {
-					continue
-				}
-
 				result := request.NewListResult(ctx)
 
 				tags := keyValueTags(ctx, vpc.Tags)
