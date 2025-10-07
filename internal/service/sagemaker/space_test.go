@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -403,6 +404,62 @@ func testAccSpace_jupyterServerAppSettings(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSpace_remoteAccess(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeSpaceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_space.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpaceConfig_remoteAccess(rName, string(awstypes.FeatureStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.remote_access", string(awstypes.FeatureStatusEnabled)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Set remote_access to DISABLED
+				Config: testAccSpaceConfig_remoteAccess(rName, string(awstypes.FeatureStatusDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.remote_access", string(awstypes.FeatureStatusDisabled)),
+				),
+			},
+			{
+				// Set remote_access back to ENABLED
+				Config: testAccSpaceConfig_remoteAccess(rName, string(awstypes.FeatureStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.remote_access", string(awstypes.FeatureStatusEnabled)),
+				),
+			},
+			{
+				// Remove remote_access (inherit from the previous value)
+				Config: testAccSpaceConfig_spaceSettingsEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.remote_access", string(awstypes.FeatureStatusEnabled)),
+				),
 			},
 		},
 	})
@@ -829,4 +886,28 @@ resource "aws_sagemaker_space" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, baseImage))
+}
+
+func testAccSpaceConfig_remoteAccess(rName, remoteAccess string) string {
+	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = %[1]q
+
+  space_settings {
+    remote_access = %[2]q
+  }
+}
+`, rName, remoteAccess))
+}
+
+func testAccSpaceConfig_spaceSettingsEmpty(rName string) string {
+	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = %[1]q
+
+  space_settings {}
+}
+`, rName))
 }
