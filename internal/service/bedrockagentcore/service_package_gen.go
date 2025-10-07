@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceCodeInterpreter,
+			Factory:  newCodeInterpreterResource,
 			TypeName: "aws_bedrockagentcore_code_interpreter",
 			Name:     "Code Interpreter",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

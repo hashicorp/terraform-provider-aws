@@ -5,41 +5,46 @@ package bedrockagentcore
 
 import (
 	"context"
-	"errors"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider.  DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_code_interpreter", name="Code Interpreter")
 // @Tags(identifierAttribute="code_interpreter_arn")
 // @Testing(tagsTest=false)
-func newResourceCodeInterpreter(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCodeInterpreter{}
+func newCodeInterpreterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &codeInterpreterResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -47,50 +52,32 @@ func newResourceCodeInterpreter(_ context.Context) (resource.ResourceWithConfigu
 	return r, nil
 }
 
-const (
-	ResNameCodeInterpreter = "Code Interpreter"
-)
-
-type resourceCodeInterpreter struct {
-	framework.ResourceWithModel[resourceCodeInterpreterModel]
-	framework.WithNoUpdate
+type codeInterpreterResource struct {
+	framework.ResourceWithModel[codeInterpreterResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceCodeInterpreter) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"code_interpreter_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"code_interpreter_arn": framework.ARNAttributeComputedOnly(),
+			"code_interpreter_id":  framework.IDAttribute(),
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 4096),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"code_interpreter_id": framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			names.AttrNetworkConfiguration: schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[codeInterpreterNetworkConfigurationModel](ctx),
-				Required:   true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
@@ -104,6 +91,57 @@ func (r *resourceCodeInterpreter) Schema(ctx context.Context, req resource.Schem
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			names.AttrNetworkConfiguration: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[codeInterpreterNetworkConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"network_mode": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.CodeInterpreterNetworkMode](),
+							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"vpc_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrSecurityGroups: schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Required:   true,
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
+										},
+									},
+									names.AttrSubnets: schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Required:   true,
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
@@ -112,22 +150,23 @@ func (r *resourceCodeInterpreter) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceCodeInterpreter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan resourceCodeInterpreterModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
+func (r *codeInterpreterResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data codeInterpreterResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
 	var input bedrockagentcorecontrol.CreateCodeInterpreterInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -149,99 +188,94 @@ func (r *resourceCodeInterpreter) Create(ctx context.Context, req resource.Creat
 		return nil
 	})
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
+	codeInterpreterID := aws.ToString(out.CodeInterpreterId)
+
+	if _, err := waitCodeInterpreterCreated(ctx, conn, codeInterpreterID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitCodeInterpreterCreated(ctx, conn, plan.CodeInterpreterID.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+	// Set values for unknowns.
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
-func (r *resourceCodeInterpreter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state resourceCodeInterpreterModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+func (r *codeInterpreterResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data codeInterpreterResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findCodeInterpreterByID(ctx, conn, state.CodeInterpreterID.ValueString())
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	codeInterpreterID := fwflex.StringValueFromFramework(ctx, data.CodeInterpreterID)
+	out, err := findCodeInterpreterByID(ctx, conn, codeInterpreterID)
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.CodeInterpreterID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
-func (r *resourceCodeInterpreter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state resourceCodeInterpreterModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+func (r *codeInterpreterResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data codeInterpreterResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	codeInterpreterID := fwflex.StringValueFromFramework(ctx, data.CodeInterpreterID)
 	input := bedrockagentcorecontrol.DeleteCodeInterpreterInput{
-		CodeInterpreterId: state.CodeInterpreterID.ValueStringPointer(),
+		CodeInterpreterId: aws.String(codeInterpreterID),
 	}
 
 	_, err := conn.DeleteCodeInterpreter(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.CodeInterpreterID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitCodeInterpreterDeleted(ctx, conn, state.CodeInterpreterID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.CodeInterpreterID.String())
+	if _, err := waitCodeInterpreterDeleted(ctx, conn, codeInterpreterID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}
 }
 
-func (r *resourceCodeInterpreter) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("code_interpreter_id"), req, resp)
+func (r *codeInterpreterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("code_interpreter_id"), request, response)
 }
 
 func waitCodeInterpreterCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetCodeInterpreterOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CodeInterpreterStatusCreating),
 		Target:                    enum.Slice(awstypes.CodeInterpreterStatusReady),
-		Refresh:                   statusCodeInterpreter(ctx, conn, id),
+		Refresh:                   statusCodeInterpreter(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -257,7 +291,7 @@ func waitCodeInterpreterDeleted(ctx context.Context, conn *bedrockagentcorecontr
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CodeInterpreterStatusDeleting, awstypes.CodeInterpreterStatusReady),
 		Target:  []string{},
-		Refresh: statusCodeInterpreter(ctx, conn, id),
+		Refresh: statusCodeInterpreter(conn, id),
 		Timeout: timeout,
 	}
 
@@ -269,8 +303,8 @@ func waitCodeInterpreterDeleted(ctx context.Context, conn *bedrockagentcorecontr
 	return nil, smarterr.NewError(err)
 }
 
-func statusCodeInterpreter(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCodeInterpreter(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findCodeInterpreterByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -289,15 +323,20 @@ func findCodeInterpreterByID(ctx context.Context, conn *bedrockagentcorecontrol.
 		CodeInterpreterId: aws.String(id),
 	}
 
-	out, err := conn.GetCodeInterpreter(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
+	return findCodeInterpreter(ctx, conn, &input)
+}
 
+func findCodeInterpreter(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetCodeInterpreterInput) (*bedrockagentcorecontrol.GetCodeInterpreterOutput, error) {
+	out, err := conn.GetCodeInterpreter(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
@@ -308,20 +347,20 @@ func findCodeInterpreterByID(ctx context.Context, conn *bedrockagentcorecontrol.
 	return out, nil
 }
 
-type resourceCodeInterpreterModel struct {
+type codeInterpreterResourceModel struct {
 	framework.WithRegionModel
-	CodeInterpreterARN   fwtypes.ARN                                                     `tfsdk:"code_interpreter_arn"`
-	ClientToken          types.String                                                    `tfsdk:"client_token"`
-	Description          types.String                                                    `tfsdk:"description"`
-	ExecutionRoleARN     fwtypes.ARN                                                     `tfsdk:"execution_role_arn"`
-	CodeInterpreterID    types.String                                                    `tfsdk:"code_interpreter_id"`
-	Name                 types.String                                                    `tfsdk:"name"`
-	NetworkConfiguration fwtypes.ObjectValueOf[codeInterpreterNetworkConfigurationModel] `tfsdk:"network_configuration"`
-	Tags                 tftags.Map                                                      `tfsdk:"tags"`
-	TagsAll              tftags.Map                                                      `tfsdk:"tags_all"`
-	Timeouts             timeouts.Value                                                  `tfsdk:"timeouts"`
+	CodeInterpreterARN   types.String                                                              `tfsdk:"code_interpreter_arn"`
+	CodeInterpreterID    types.String                                                              `tfsdk:"code_interpreter_id"`
+	Description          types.String                                                              `tfsdk:"description"`
+	ExecutionRoleARN     fwtypes.ARN                                                               `tfsdk:"execution_role_arn"`
+	Name                 types.String                                                              `tfsdk:"name"`
+	NetworkConfiguration fwtypes.ListNestedObjectValueOf[codeInterpreterNetworkConfigurationModel] `tfsdk:"network_configuration"`
+	Tags                 tftags.Map                                                                `tfsdk:"tags"`
+	TagsAll              tftags.Map                                                                `tfsdk:"tags_all"`
+	Timeouts             timeouts.Value                                                            `tfsdk:"timeouts"`
 }
 
 type codeInterpreterNetworkConfigurationModel struct {
 	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode] `tfsdk:"network_mode"`
+	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel]         `tfsdk:"vpc_config"`
 }

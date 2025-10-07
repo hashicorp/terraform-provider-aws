@@ -19,7 +19,7 @@ resource "aws_bedrockagentcore_code_interpreter" "example" {
   name        = "example-code-interpreter"
   description = "Code interpreter for data analysis"
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 }
@@ -74,7 +74,15 @@ The following arguments are optional:
 
 The `network_configuration` object supports the following:
 
-* `network_mode` - (Required) Network mode for the code interpreter. Valid values: `PUBLIC`, `SANDBOX`.
+* `network_mode` - (Required) Network mode for the code interpreter. Valid values: `PUBLIC`, `SANDBOX`, `VPC`.
+* `vpc_config` - (Optional) VPC configuration. See [`vpc_config`](#vpc_config) below.
+
+### `vpc_config`
+
+The `vpc_config` block supports the following:
+
+* `security_groups` - (Required) Security groups associated with the VPC configuration.
+* `subnets` - (Required) Subnets associated with the VPC configuration.
 
 ## Attribute Reference
 

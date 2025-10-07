@@ -81,7 +81,7 @@ func sweepCodeInterpreters(ctx context.Context, client *conns.AWSClient) ([]swee
 		}
 
 		for _, v := range page.CodeInterpreterSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCodeInterpreter, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newCodeInterpreterResource, client,
 				framework.NewAttribute("code_interpreter_id", aws.ToString(v.CodeInterpreterId))),
 			)
 		}

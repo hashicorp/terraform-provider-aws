@@ -7,7 +7,7 @@ package bedrockagentcore
 var (
 	ResourceAgentRuntime         = newAgentRuntimeResource
 	ResourceAgentRuntimeEndpoint = newAgentRuntimeEndpointResource
-	ResourceCodeInterpreter      = newResourceCodeInterpreter
+	ResourceCodeInterpreter      = newCodeInterpreterResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
