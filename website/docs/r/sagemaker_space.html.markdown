@@ -50,6 +50,7 @@ The `space_settings` block supports the following arguments:
 * `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [`jupyter_lab_app_settings` Block](#jupyter_lab_app_settings-block) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [`jupyter_server_app_settings` Block](#jupyter_server_app_settings-block) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [`kernel_gateway_app_settings` Block](#kernel_gateway_app_settings-block) below.
+* `remote_access` - (Optional) Setting that enables or disables remote access for a SageMaker space. Valid values are `ENABLED` and `DISABLED`.
 * `space_storage_settings` - (Optional) The storage settings. See [`space_storage_settings` Block](#space_storage_settings-block) below.
 
 ### `space_sharing_settings` Block
