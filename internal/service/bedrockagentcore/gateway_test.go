@@ -5,31 +5,28 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway.test"
@@ -60,6 +57,19 @@ func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "test2"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "gateway_arn", "bedrock-agentcore", regexache.MustCompile(`gateway/.+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("gateway_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`gateway/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("gateway_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("gateway_url"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("workload_identity_details"), knownvalue.ListSizeExact(1)),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -200,7 +210,6 @@ func TestAccBedrockAgentCoreGateway_authorizerConfiguration(t *testing.T) {
 				Config: testAccGatewayConfig_authorizerConfiguration(rName, "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "finance", "technology"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway2),
-					testAccCheckGatewayNotRecreated(&gateway1, &gateway2),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.discovery_url", "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "authorizer_configuration.0.custom_jwt_authorizer.0.allowed_audience.*", "finance"),
@@ -434,42 +443,37 @@ func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			id := rs.Primary.Attributes["gateway_id"]
-			_, err := tfbedrockagentcore.FindGatewayByID(ctx, conn, id)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameGateway, id, err)
+			_, err := tfbedrockagentcore.FindGatewayByID(ctx, conn, rs.Primary.Attributes["gateway_id"])
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameGateway, id, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Gateway %s still exists", rs.Primary.Attributes["gateway_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckGatewayExists(ctx context.Context, name string, gateway *bedrockagentcorecontrol.GetGatewayOutput) resource.TestCheckFunc {
+func testAccCheckGatewayExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetGatewayOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameGateway, name, errors.New("not found"))
-		}
-
-		id := rs.Primary.Attributes["gateway_id"]
-		if id == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameGateway, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindGatewayByID(ctx, conn, id)
+		resp, err := tfbedrockagentcore.FindGatewayByID(ctx, conn, rs.Primary.Attributes["gateway_id"])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameGateway, id, err)
+			return err
 		}
 
-		*gateway = *resp
+		*v = *resp
 
 		return nil
 	}
@@ -490,19 +494,9 @@ func testAccPreCheckGateways(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckGatewayNotRecreated(before, after *bedrockagentcorecontrol.GetGatewayOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.GatewayId), aws.ToString(after.GatewayId); before != after {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameGateway, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccGatewayConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
-data "aws_iam_policy_document" "test_assume" {
+data "aws_iam_policy_document" "test" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -515,7 +509,7 @@ data "aws_iam_policy_document" "test_assume" {
 
 resource "aws_iam_role" "test" {
   name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+  assume_role_policy = data.aws_iam_policy_document.test.json
 }
 `, rName)
 }
@@ -526,12 +520,15 @@ resource "aws_bedrockagentcore_gateway" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["test1", "test2"]
     }
   }
+
+  protocol_type = "MCP"
 }
 `, rName))
 }

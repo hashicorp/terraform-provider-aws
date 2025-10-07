@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceGateway,
+			Factory:  newGatewayResource,
 			TypeName: "aws_bedrockagentcore_gateway",
 			Name:     "Gateway",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
