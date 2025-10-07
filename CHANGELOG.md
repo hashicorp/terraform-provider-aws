@@ -1,5 +1,27 @@
 ## 6.16.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_prometheus_resource_policy` ([#44256](https://github.com/hashicorp/terraform-provider-aws/issues/44256))
+
+ENHANCEMENTS:
+
+* resource/aws_lambda_event_source_mapping: Add `schema_registry_config` configuration blocks to `amazon_managed_kafka_event_source_config` and `self_managed_kafka_event_source_config` blocks ([#44540](https://github.com/hashicorp/terraform-provider-aws/issues/44540))
+
+BUG FIXES:
+
+* resource/aws_datazone_environment: Correctly updates `glossary_terms`. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_environment: Prevents `unknown value` error when optional `account_identifier` is not specified. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_environment: Prevents `unknown value` error when optional `account_region` is not specified. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_environment: Prevents error when updating. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_environment: Prevents occasional `unexpected state` error when deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_environment: Properly passes `blueprint_identifier` on creation. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_environment: Sets values for `user_parameters` when importing. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_environment: Values in `user_parameters` should not be updateable. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_project: No longer ignores errors when deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_datazone_project: No longer returns error when already deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_launch_template: `kms_key_id` validation now accepts key ID, alias, and alias ARN in addition to key ARN ([#44505](https://github.com/hashicorp/terraform-provider-aws/issues/44505))
+
 ## 6.15.0 (October 2, 2025)
 
 BREAKING CHANGES:

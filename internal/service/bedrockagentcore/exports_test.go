@@ -5,9 +5,13 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
-	ResourceGateway       = newResourceGateway
-	ResourceGatewayTarget = newResourceGatewayTarget
+	ResourceAgentRuntime         = newAgentRuntimeResource
+	ResourceAgentRuntimeEndpoint = newAgentRuntimeEndpointResource
+	ResourceGateway              = newResourceGateway
+	ResourceGatewayTarget        = newResourceGatewayTarget
 
-	FindGatewayByID       = findGatewayByID
-	FindGatewayTargetByID = findGatewayTargetByID
+	FindAgentRuntimeByID                 = findAgentRuntimeByID
+	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
+	FindGatewayByID                      = findGatewayByID
+	FindGatewayTargetByID                = findGatewayTargetByID
 )
