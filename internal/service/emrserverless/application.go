@@ -229,6 +229,28 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"scheduler_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_concurrent_runs": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 1000),
+						},
+						"queue_timeout_minutes": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(15, 720),
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
@@ -286,6 +308,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateApplication(ctx, input)
@@ -353,6 +379,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
+	if err := d.Set("scheduler_configuration", []any{flattenSchedulerConfiguration(application.SchedulerConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scheduler_configuration: %s", err)
+	}
+
 	setTagsOut(ctx, application.Tags)
 
 	return diags
@@ -398,6 +428,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("release_label"); ok {
@@ -860,5 +894,39 @@ func flattenWorkerResourceConfig(apiObject *types.WorkerResourceConfig) map[stri
 		tfMap["memory"] = aws.ToString(v)
 	}
 
+	return tfMap
+}
+
+func expandSchedulerConfiguration(tfMap map[string]any) *types.SchedulerConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.SchedulerConfiguration{}
+
+	if v, ok := tfMap["max_concurrent_runs"].(int); ok {
+		apiObject.MaxConcurrentRuns = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["queue_timeout_minutes"].(int); ok {
+		apiObject.QueueTimeoutMinutes = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenSchedulerConfiguration(apiObject *types.SchedulerConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.MaxConcurrentRuns; v != nil {
+		tfMap["max_concurrent_runs"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.QueueTimeoutMinutes; v != nil {
+		tfMap["queue_timeout_minutes"] = aws.ToInt32(v)
+	}
 	return tfMap
 }
