@@ -19,7 +19,8 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_agent_runtime", sweepAgentRuntimes)
 	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints)
-	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways)
+	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
+	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
 }
 
 func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -81,14 +82,8 @@ func sweepGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, v := range page.Items {
-			gatewayIdentifier := aws.ToString(v.GatewayId)
-			sweepTargets, err := sweepGatewayTargets(ctx, client, gatewayIdentifier)
-			if err != nil {
-				return nil, smarterr.NewError(err)
-			}
-			sweepResources = append(sweepResources, sweepTargets...)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceGateway, client,
-				framework.NewAttribute("gateway_id", gatewayIdentifier)),
+				framework.NewAttribute("gateway_id", aws.ToString(v.GatewayId))),
 			)
 		}
 	}
@@ -96,12 +91,12 @@ func sweepGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 	return sweepResources, nil
 }
 
-func sweepGatewayTargets(ctx context.Context, client *conns.AWSClient, gatewayIdentifier string) ([]sweep.Sweepable, error) {
-	input := bedrockagentcorecontrol.ListGatewayTargetsInput{}
+func sweepGatewayTargets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListGatewaysInput{}
 	conn := client.BedrockAgentCoreClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	pages := bedrockagentcorecontrol.NewListGatewayTargetsPaginator(conn, &input)
+	pages := bedrockagentcorecontrol.NewListGatewaysPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
@@ -109,9 +104,25 @@ func sweepGatewayTargets(ctx context.Context, client *conns.AWSClient, gatewayId
 		}
 
 		for _, v := range page.Items {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceGatewayTarget, client,
-				framework.NewAttribute("gateway_identifier", gatewayIdentifier), framework.NewAttribute(names.AttrID, aws.ToString(v.TargetId))),
-			)
+			gatewayID := aws.ToString(v.GatewayId)
+			input := bedrockagentcorecontrol.ListGatewayTargetsInput{
+				GatewayIdentifier: aws.String(gatewayID),
+			}
+
+			pages := bedrockagentcorecontrol.NewListGatewayTargetsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, v := range page.Items {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceGatewayTarget, client,
+						framework.NewAttribute("gateway_identifier", gatewayID),
+						framework.NewAttribute("target_id", aws.ToString(v.TargetId))),
+					)
+				}
+			}
 		}
 	}
 
