@@ -483,13 +483,11 @@ func TestAccEMRServerlessApplication_schedulerConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "120"),
 				),
 			},
-			{
+			{ // When `scheduler_configuration` is removed,  scheduler configuration is disabled
 				Config: testAccApplicationConfig_basic(rName, "emr-7.1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.max_concurrent_runs", "20"),
-					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "120"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "0"),
 				),
 			},
 		},

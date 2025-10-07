@@ -232,7 +232,6 @@ func resourceApplication() *schema.Resource {
 			"scheduler_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -379,7 +378,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
-	if err := d.Set("scheduler_configuration", []any{flattenSchedulerConfiguration(application.SchedulerConfiguration)}); err != nil {
+	if err := d.Set("scheduler_configuration", flattenSchedulerConfiguration(application.SchedulerConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scheduler_configuration: %s", err)
 	}
 
@@ -432,6 +431,8 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any)[0].(map[string]any))
+		} else {
+			input.SchedulerConfiguration = &types.SchedulerConfiguration{}
 		}
 
 		if v, ok := d.GetOk("release_label"); ok {
@@ -915,7 +916,7 @@ func expandSchedulerConfiguration(tfMap map[string]any) *types.SchedulerConfigur
 	return apiObject
 }
 
-func flattenSchedulerConfiguration(apiObject *types.SchedulerConfiguration) map[string]any {
+func flattenSchedulerConfiguration(apiObject *types.SchedulerConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -928,5 +929,5 @@ func flattenSchedulerConfiguration(apiObject *types.SchedulerConfiguration) map[
 	if v := apiObject.QueueTimeoutMinutes; v != nil {
 		tfMap["queue_timeout_minutes"] = aws.ToInt32(v)
 	}
-	return tfMap
+	return []any{tfMap}
 }
