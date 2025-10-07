@@ -52,12 +52,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.45.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.59.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.29.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/backup v1.47.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/backup v1.48.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.57.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.11.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.47.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.50.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.6.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.39.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.6 // indirect
@@ -142,7 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.46.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.31.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.34.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.129.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.130.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.31.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.37.6 // indirect
@@ -183,14 +183,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.36.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.25.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.49.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.44.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.45.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.82.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.84.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/memorydb v1.31.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/memorydb v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.37.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.6 // indirect
@@ -218,16 +218,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.39.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.30.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.94.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.94.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.26.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.108.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.108.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.59.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.37.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.31.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.34.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.21.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.30.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.21.6 // indirect
