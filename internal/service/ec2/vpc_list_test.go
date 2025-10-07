@@ -5,6 +5,7 @@ package ec2_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -28,7 +29,9 @@ func TestAccVPC_List_Basic(t *testing.T) {
 	resourceName2 := "aws_vpc.test[1]"
 	resourceName3 := "aws_vpc.test[2]"
 
-	var id1, id2, id3 string
+	id1 := tfstatecheck.StateValue()
+	id2 := tfstatecheck.StateValue()
+	id3 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -42,20 +45,23 @@ func TestAccVPC_List_Basic(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_basic"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("aws_vpc.test.0", names.AttrID, getter(&id1)),
-					resource.TestCheckResourceAttrWith("aws_vpc.test.1", names.AttrID, getter(&id2)),
-					resource.TestCheckResourceAttrWith("aws_vpc.test.2", names.AttrID, getter(&id3)),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					id2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					id3.GetStateValue(resourceName3, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName3, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
 				},
 			},
 
 			// Step 2: Query
 			{
+				PreConfig: func() {
+					time.Sleep(2 * time.Minute)
+				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_basic"),
@@ -63,19 +69,19 @@ func TestAccVPC_List_Basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
+						names.AttrID:        id1.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
+						names.AttrID:        id2.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id3),
+						names.AttrID:        id3.Value(),
 					}),
 				},
 			},
@@ -90,7 +96,9 @@ func TestAccVPC_List_RegionOverride(t *testing.T) {
 	resourceName2 := "aws_vpc.test[1]"
 	resourceName3 := "aws_vpc.test[2]"
 
-	var id1, id2, id3 string
+	id1 := tfstatecheck.StateValue()
+	id2 := tfstatecheck.StateValue()
+	id3 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -107,20 +115,23 @@ func TestAccVPC_List_RegionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("aws_vpc.test.0", names.AttrID, getter(&id1)),
-					resource.TestCheckResourceAttrWith("aws_vpc.test.1", names.AttrID, getter(&id2)),
-					resource.TestCheckResourceAttrWith("aws_vpc.test.2", names.AttrID, getter(&id3)),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					id2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					id3.GetStateValue(resourceName3, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName3, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
 				},
 			},
 
 			// Step 2: Query
 			{
+				PreConfig: func() {
+					time.Sleep(2 * time.Minute)
+				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_region_override/"),
@@ -131,19 +142,19 @@ func TestAccVPC_List_RegionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
+						names.AttrID:        id1.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
+						names.AttrID:        id2.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id3),
+						names.AttrID:        id3.Value(),
 					}),
 				},
 			},
@@ -161,8 +172,10 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	var expected1, expected2 string
-	var notExpected1, notExpected2 string
+	expected1 := tfstatecheck.StateValue()
+	expected2 := tfstatecheck.StateValue()
+	notExpected1 := tfstatecheck.StateValue()
+	notExpected2 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -179,22 +192,26 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("aws_vpc.expected.0", names.AttrID, getter(&expected1)),
-					resource.TestCheckResourceAttrWith("aws_vpc.expected.1", names.AttrID, getter(&expected2)),
-					resource.TestCheckResourceAttrWith("aws_vpc.not_expected.0", names.AttrID, getter(&notExpected1)),
-					resource.TestCheckResourceAttrWith("aws_vpc.not_expected.1", names.AttrID, getter(&notExpected2)),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					expected1.GetStateValue(resourceNameExpected1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameExpected1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					expected2.GetStateValue(resourceNameExpected2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameExpected2, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					notExpected1.GetStateValue(resourceNameNotExpected1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameNotExpected1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					notExpected2.GetStateValue(resourceNameNotExpected2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameNotExpected2, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
 				},
 			},
 
 			// Step 2: Query
 			{
+				PreConfig: func() {
+					time.Sleep(2 * time.Minute)
+				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_filtered/"),
@@ -205,25 +222,25 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&expected1),
+						names.AttrID:        expected1.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&expected2),
+						names.AttrID:        expected2.Value(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&notExpected1),
+						names.AttrID:        notExpected1.Value(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&notExpected2),
+						names.AttrID:        notExpected2.Value(),
 					}),
 				},
 			},
@@ -234,8 +251,8 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 func TestAccVPC_List_DefaultVPC_Exclude(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var id string
-	var defaultVPCID string
+	id := tfstatecheck.StateValue()
+	defaultVPCID := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -252,14 +269,17 @@ func TestAccVPC_List_DefaultVPC_Exclude(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_exclude_default"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("aws_vpc.test", names.AttrID, getter(&id)),
-					resource.TestCheckResourceAttrWith("data.aws_vpc.default", names.AttrID, getter(&defaultVPCID)),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					id.GetStateValue("aws_vpc.test", tfjsonpath.New(names.AttrID)),
+					defaultVPCID.GetStateValue("data.aws_vpc.default", tfjsonpath.New(names.AttrID)),
+				},
 			},
 
 			// Step 2: Query
 			{
+				PreConfig: func() {
+					time.Sleep(2 * time.Minute)
+				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_exclude_default"),
@@ -267,13 +287,13 @@ func TestAccVPC_List_DefaultVPC_Exclude(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id),
+						names.AttrID:        id.Value(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&defaultVPCID),
+						names.AttrID:        defaultVPCID.Value(),
 					}),
 				},
 			},
@@ -288,7 +308,9 @@ func TestAccVPC_List_VPCIDs(t *testing.T) {
 	resourceName2 := "aws_vpc.test[1]"
 	resourceName3 := "aws_vpc.test[2]"
 
-	var id1, id2, id3 string
+	id1 := tfstatecheck.StateValue()
+	id2 := tfstatecheck.StateValue()
+	id3 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -302,20 +324,23 @@ func TestAccVPC_List_VPCIDs(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_vpc_ids"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("aws_vpc.test.0", names.AttrID, getter(&id1)),
-					resource.TestCheckResourceAttrWith("aws_vpc.test.1", names.AttrID, getter(&id2)),
-					resource.TestCheckResourceAttrWith("aws_vpc.test.2", names.AttrID, getter(&id3)),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					id2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					id3.GetStateValue(resourceName3, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName3, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
 				},
 			},
 
 			// Step 2: Query
 			{
+				PreConfig: func() {
+					time.Sleep(2 * time.Minute)
+				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_vpc_ids"),
@@ -325,19 +350,19 @@ func TestAccVPC_List_VPCIDs(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
+						names.AttrID:        id1.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
+						names.AttrID:        id2.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&id3),
+						names.AttrID:        id3.Value(),
 					}),
 				},
 			},
@@ -355,8 +380,10 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	var expected1, expected2 string
-	var notExpected1, notExpected2 string
+	expected1 := tfstatecheck.StateValue()
+	expected2 := tfstatecheck.StateValue()
+	notExpected1 := tfstatecheck.StateValue()
+	notExpected2 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -373,22 +400,26 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("aws_vpc.expected.0", names.AttrID, getter(&expected1)),
-					resource.TestCheckResourceAttrWith("aws_vpc.expected.1", names.AttrID, getter(&expected2)),
-					resource.TestCheckResourceAttrWith("aws_vpc.not_expected.0", names.AttrID, getter(&notExpected1)),
-					resource.TestCheckResourceAttrWith("aws_vpc.not_expected.1", names.AttrID, getter(&notExpected2)),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					expected1.GetStateValue(resourceNameExpected1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameExpected1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					expected2.GetStateValue(resourceNameExpected2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameExpected2, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					notExpected1.GetStateValue(resourceNameNotExpected1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameNotExpected1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+
+					notExpected2.GetStateValue(resourceNameNotExpected2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceNameNotExpected2, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
 				},
 			},
 
 			// Step 2: Query
 			{
+				PreConfig: func() {
+					time.Sleep(2 * time.Minute)
+				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_filtered_vpc_ids/"),
@@ -401,25 +432,25 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&expected1),
+						names.AttrID:        expected1.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&expected2),
+						names.AttrID:        expected2.Value(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&notExpected1),
+						names.AttrID:        notExpected1.Value(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        tfknownvalue.StringPtrExact(&notExpected2),
+						names.AttrID:        notExpected2.Value(),
 					}),
 				},
 			},
