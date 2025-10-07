@@ -7,44 +7,59 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/privatestate"
 )
 
+// RequiresReplaceWO returns a plan modifier that forces resource replacement
+// if a write-only value changes.
 func RequiresReplaceWO(privateStateKey string) planmodifier.String {
-	description := "If the value of this write-only attribute changes, Terraform will destroy and recreate the resource."
+	return requiresReplaceWO{
+		privateStateKey: privateStateKey,
+	}
+}
 
-	return stringplanmodifier.RequiresReplaceIf(func(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-		newValue := request.ConfigValue
-		newValueExists := !newValue.IsNull()
+type requiresReplaceWO struct {
+	privateStateKey string
+}
 
-		woStore := privatestate.NewWriteOnlyValueStore(request.Private, privateStateKey)
-		oldValueExists, diags := woStore.HasValue(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+func (m requiresReplaceWO) Description(ctx context.Context) string {
+	return m.MarkdownDescription(ctx)
+}
 
-		if !newValueExists {
-			if oldValueExists {
-				response.RequiresReplace = true
-			}
-			return
-		}
+func (m requiresReplaceWO) MarkdownDescription(context.Context) string {
+	return "If the value of this write-only attribute changes, Terraform will destroy and recreate the resource."
+}
 
-		if !oldValueExists {
-			response.RequiresReplace = true
-			return
-		}
+func (m requiresReplaceWO) PlanModifyString(ctx context.Context, request planmodifier.StringRequest, response *planmodifier.StringResponse) {
+	newValue := request.ConfigValue
+	newValueExists := !newValue.IsNull()
 
-		equal, diags := woStore.EqualValue(ctx, newValue)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	woStore := privatestate.NewWriteOnlyValueStore(request.Private, m.privateStateKey)
+	oldValueExists, diags := woStore.HasValue(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-		if !equal {
+	if !newValueExists {
+		if oldValueExists {
 			response.RequiresReplace = true
 		}
-	}, description, description)
+		return
+	}
+
+	if !oldValueExists {
+		response.RequiresReplace = true
+		return
+	}
+
+	equal, diags := woStore.EqualValue(ctx, newValue)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !equal {
+		response.RequiresReplace = true
+	}
 }
