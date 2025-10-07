@@ -58,8 +58,8 @@ type browserResource struct {
 	framework.WithTimeouts
 }
 
-func (r *browserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *browserResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"browser_arn": framework.ARNAttributeComputedOnly(),
 			"browser_id":  framework.IDAttribute(),
@@ -239,13 +239,15 @@ func (r *browserResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
+	browserID := aws.ToString(out.BrowserId)
+
 	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if _, err := waitBrowserCreated(ctx, conn, data.BrowserID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+	if _, err := waitBrowserCreated(ctx, conn, browserID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, browserID)
 		return
 	}
 
@@ -261,14 +263,15 @@ func (r *browserResource) Read(ctx context.Context, request resource.ReadRequest
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	out, err := findBrowserByID(ctx, conn, data.BrowserID.ValueString())
+	browserID := fwflex.StringValueFromFramework(ctx, data.BrowserID)
+	out, err := findBrowserByID(ctx, conn, browserID)
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.BrowserID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, browserID)
 		return
 	}
 
@@ -289,8 +292,9 @@ func (r *browserResource) Delete(ctx context.Context, request resource.DeleteReq
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	browserID := fwflex.StringValueFromFramework(ctx, data.BrowserID)
 	input := bedrockagentcorecontrol.DeleteBrowserInput{
-		BrowserId: fwflex.StringFromFramework(ctx, data.BrowserID),
+		BrowserId: aws.String(browserID),
 	}
 
 	_, err := conn.DeleteBrowser(ctx, &input)
@@ -298,12 +302,12 @@ func (r *browserResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.BrowserID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, browserID)
 		return
 	}
 
-	if _, err := waitBrowserDeleted(ctx, conn, data.BrowserID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.BrowserID.String())
+	if _, err := waitBrowserDeleted(ctx, conn, browserID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, browserID)
 		return
 	}
 }
