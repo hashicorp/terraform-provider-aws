@@ -57,8 +57,6 @@ const (
 	ResNameCloudAutonomousVmCluster = "Cloud Autonomous Vm Cluster"
 )
 
-var ResourceCloudAutonomousVMCluster = newResourceCloudAutonomousVmCluster
-
 type resourceCloudAutonomousVmCluster struct {
 	framework.ResourceWithModel[cloudAutonomousVmClusterResourceModel]
 	framework.WithTimeouts
@@ -521,7 +519,7 @@ func (r *resourceCloudAutonomousVmCluster) Create(ctx context.Context, req resou
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	createdAVMC, err := waitCloudAutonomousVmClusterCreated(ctx, conn, *out.CloudAutonomousVmClusterId, createTimeout)
+	createdAVMC, err := waitCloudAutonomousVmClusterCreated(ctx, conn, aws.ToString(out.CloudAutonomousVmClusterId), createTimeout)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(out.CloudAutonomousVmClusterId))...)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -543,7 +541,7 @@ func (r *resourceCloudAutonomousVmCluster) Read(ctx context.Context, req resourc
 		return
 	}
 
-	out, err := FindCloudAutonomousVmClusterByID(ctx, conn, state.CloudAutonomousVmClusterId.ValueString())
+	out, err := findCloudAutonomousVmClusterByID(ctx, conn, state.CloudAutonomousVmClusterId.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -635,7 +633,7 @@ func waitCloudAutonomousVmClusterDeleted(ctx context.Context, conn *odb.Client, 
 
 func statusCloudAutonomousVmCluster(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindCloudAutonomousVmClusterByID(ctx, conn, id)
+		out, err := findCloudAutonomousVmClusterByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -648,7 +646,7 @@ func statusCloudAutonomousVmCluster(ctx context.Context, conn *odb.Client, id st
 	}
 }
 
-func FindCloudAutonomousVmClusterByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudAutonomousVmCluster, error) {
+func findCloudAutonomousVmClusterByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudAutonomousVmCluster, error) {
 	input := odb.GetCloudAutonomousVmClusterInput{
 		CloudAutonomousVmClusterId: aws.String(id),
 	}

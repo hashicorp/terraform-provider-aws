@@ -1165,7 +1165,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		fromFieldName := fromField.Name
 		_, fromFieldOpts := autoflexTags(fromField)
 
-		toField, ok := findFieldFuzzy(ctx, fromFieldName, typeFrom, typeTo, flexer)
+		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{

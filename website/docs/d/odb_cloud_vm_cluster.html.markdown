@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_odb_cloud_vm_cluster
 
-Terraform data source for Exadata Infrastructure resource in AWS for Oracle Database@AWS.
+Terraform data source for cloud vm cluster in AWS for Oracle Database@AWS.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -17,8 +17,8 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 ### Basic Usage
 
 ```terraform
-data "aws_odb_db_servers_list" "example" {
-  cloud_exadata_infrastructure_id = "example-id"
+data "aws_odb_cloud_vm_cluster" "example" {
+  id = "example-id"
 }
 ```
 
@@ -26,7 +26,7 @@ data "aws_odb_db_servers_list" "example" {
 
 The following arguments are required:
 
-* `id` - (Required) The unique identifier of the Exadata infrastructure.
+* `id` - (Required) The unique identifier of the cloud vm cluster.
 
 The following arguments are optional:
 

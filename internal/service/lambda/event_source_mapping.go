@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -61,6 +62,7 @@ func resourceEventSourceMapping() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 200),
 						},
+						"schema_registry_config": kafkaSchemaRegistryConfigSchema(),
 					},
 				},
 			},
@@ -352,6 +354,7 @@ func resourceEventSourceMapping() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 200),
 						},
+						"schema_registry_config": kafkaSchemaRegistryConfigSchema(),
 					},
 				},
 			},
@@ -412,6 +415,70 @@ func resourceEventSourceMapping() *schema.Resource {
 			"uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+		},
+	}
+}
+
+func kafkaSchemaRegistryConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		ForceNew: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"access_config": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.KafkaSchemaRegistryAuthType](),
+							},
+							names.AttrURI: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"event_record_format": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SchemaRegistryEventRecordFormat](),
+				},
+				"schema_registry_uri": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 10000),
+						validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9-/*:_+=.@-]*`), "must be ARN or URL of the registry"),
+					),
+				},
+				"schema_validation_config": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.KafkaSchemaValidationAttribute](),
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -1134,6 +1201,9 @@ func expandAmazonManagedKafkaEventSourceConfig(tfMap map[string]any) *awstypes.A
 	if v, ok := tfMap["consumer_group_id"].(string); ok && v != "" {
 		apiObject.ConsumerGroupId = aws.String(v)
 	}
+	if v, ok := tfMap["schema_registry_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SchemaRegistryConfig = expandKafkaSchemaRegistryConfig(v[0].(map[string]any))
+	}
 
 	return apiObject
 }
@@ -1147,6 +1217,10 @@ func flattenAmazonManagedKafkaEventSourceConfig(apiObject *awstypes.AmazonManage
 
 	if v := apiObject.ConsumerGroupId; v != nil {
 		tfMap["consumer_group_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SchemaRegistryConfig; v != nil {
+		tfMap["schema_registry_config"] = []any{flattenKafkaSchemaRegistryConfig(v)}
 	}
 
 	return tfMap
@@ -1163,6 +1237,10 @@ func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]any) *awstypes.Sel
 		apiObject.ConsumerGroupId = aws.String(v)
 	}
 
+	if v, ok := tfMap["schema_registry_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SchemaRegistryConfig = expandKafkaSchemaRegistryConfig(v[0].(map[string]any))
+	}
+
 	return apiObject
 }
 
@@ -1175,6 +1253,10 @@ func flattenSelfManagedKafkaEventSourceConfig(apiObject *awstypes.SelfManagedKaf
 
 	if v := apiObject.ConsumerGroupId; v != nil {
 		tfMap["consumer_group_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SchemaRegistryConfig; v != nil {
+		tfMap["schema_registry_config"] = []any{flattenKafkaSchemaRegistryConfig(v)}
 	}
 
 	return tfMap
@@ -1441,4 +1523,138 @@ func flattenEventSourceMappingMetricsConfig(apiObject *awstypes.EventSourceMappi
 	}
 
 	return tfMap
+}
+
+func expandKafkaSchemaRegistryConfig(tfMap map[string]any) *awstypes.KafkaSchemaRegistryConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.KafkaSchemaRegistryConfig{}
+
+	if v, ok := tfMap["access_config"].(*schema.Set); ok && v != nil && v.Len() > 0 {
+		apiObject.AccessConfigs = expandKafkaSchemaRegistryAccessConfig(v.List())
+	}
+
+	if v, ok := tfMap["event_record_format"].(string); ok && v != "" {
+		apiObject.EventRecordFormat = awstypes.SchemaRegistryEventRecordFormat(v)
+	}
+
+	if v, ok := tfMap["schema_registry_uri"].(string); ok && v != "" {
+		apiObject.SchemaRegistryURI = aws.String(v)
+	}
+
+	if v, ok := tfMap["schema_validation_config"].(*schema.Set); ok && v != nil && v.Len() > 0 {
+		apiObject.SchemaValidationConfigs = expandKafkaSchemaValidationConfig(v.List())
+	}
+
+	return apiObject
+}
+
+func expandKafkaSchemaRegistryAccessConfig(tfList []any) []awstypes.KafkaSchemaRegistryAccessConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	var apiObjects []awstypes.KafkaSchemaRegistryAccessConfig
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.KafkaSchemaRegistryAccessConfig{}
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+			apiObject.Type = awstypes.KafkaSchemaRegistryAuthType(v)
+		}
+		if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
+			apiObject.URI = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+	return apiObjects
+}
+
+func expandKafkaSchemaValidationConfig(tfList []any) []awstypes.KafkaSchemaValidationConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	var apiObjects []awstypes.KafkaSchemaValidationConfig
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.KafkaSchemaValidationConfig{}
+		if v, ok := tfMap["attribute"].(string); ok && v != "" {
+			apiObject.Attribute = awstypes.KafkaSchemaValidationAttribute(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+	return apiObjects
+}
+
+func flattenKafkaSchemaRegistryConfig(apiObject *awstypes.KafkaSchemaRegistryConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.AccessConfigs; len(v) > 0 {
+		tfMap["access_config"] = flattenKafkaSchemaRegistryAccessConfig(v)
+	}
+	if v := apiObject.EventRecordFormat; v != "" {
+		tfMap["event_record_format"] = v
+	}
+	if v := apiObject.SchemaRegistryURI; v != nil {
+		tfMap["schema_registry_uri"] = aws.ToString(v)
+	}
+	if v := apiObject.SchemaValidationConfigs; len(v) > 0 {
+		tfMap["schema_validation_config"] = flattenSchemaValidationConfig(v)
+	}
+
+	return tfMap
+}
+
+func flattenKafkaSchemaRegistryAccessConfig(apiObjects []awstypes.KafkaSchemaRegistryAccessConfig) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+		if v := apiObject.Type; v != "" {
+			tfMap[names.AttrType] = v
+		}
+		if v := apiObject.URI; v != nil {
+			tfMap[names.AttrURI] = aws.ToString(v)
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
+}
+
+func flattenSchemaValidationConfig(apiObjects []awstypes.KafkaSchemaValidationConfig) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+		if v := apiObject.Attribute; v != "" {
+			tfMap["attribute"] = v
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
 }

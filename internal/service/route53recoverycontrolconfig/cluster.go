@@ -18,11 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53recoverycontrolconfig_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -69,6 +71,8 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -101,6 +105,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if _, err := waitClusterCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Cluster (%s) to be Deployed: %s", d.Id(), err)
+	}
+
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Control Config Cluster (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
@@ -138,26 +146,28 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
-	input := &r53rcc.UpdateClusterInput{
-		ClusterArn: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &r53rcc.UpdateClusterInput{
+			ClusterArn: aws.String(d.Id()),
+		}
 
-	if d.HasChanges("network_type") {
-		input.NetworkType = awstypes.NetworkType(d.Get("network_type").(string))
-	}
+		if d.HasChanges("network_type") {
+			input.NetworkType = awstypes.NetworkType(d.Get("network_type").(string))
+		}
 
-	output, err := conn.UpdateCluster(ctx, input)
+		output, err := conn.UpdateCluster(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Cluster: %s", err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Cluster: %s", err)
+		}
 
-	if output == nil || output.Cluster == nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Cluster: empty response")
-	}
+		if output == nil || output.Cluster == nil {
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Cluster: empty response")
+		}
 
-	if _, err := waitClusterUpdated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Cluster (%s) to be Updated: %s", d.Id(), err)
+		if _, err := waitClusterUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Cluster (%s) to be Updated: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
