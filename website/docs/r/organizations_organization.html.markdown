@@ -43,6 +43,8 @@ This resource exports the following attributes in addition to the arguments abov
     * `arn` - ARN of the account
     * `email` - Email of the account
     * `id` - Identifier of the account
+    * `joined_method` - The method by which the account joined the organization.
+    * `joined_timestamp` - The date the account became a part of the organization.    
     * `name` - Name of the account
     * `status` - Current status of the account
 * `arn` - ARN of the organization
@@ -55,6 +57,8 @@ This resource exports the following attributes in addition to the arguments abov
     * `arn` - ARN of the account
     * `email` - Email of the account
     * `id` - Identifier of the account
+    * `joined_method` - The method by which the account joined the organization.
+    * `joined_timestamp` - The date the account became a part of the organization.    
     * `name` - Name of the account
     * `status` - Current status of the account
 * `roots` - List of organization roots. All elements have these attributes:

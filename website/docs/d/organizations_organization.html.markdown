@@ -91,6 +91,8 @@ If the account is the master account or a delegated administrator for the organi
     * `arn` - ARN of the account
     * `email` - Email of the account
     * `id` - Identifier of the account
+    * `joined_method` - The method by which the account joined the organization.
+    * `joined_timestamp` - The date the account became a part of the organization.
     * `name` - Name of the account
     * `status` - (**Deprecated** use `state` instead)Status of the account
     * `state` - State of the account
@@ -100,6 +102,8 @@ If the account is the master account or a delegated administrator for the organi
     * `arn` - ARN of the account
     * `email` - Email of the account
     * `id` - Identifier of the account
+    * `joined_method` - The method by which the account joined the organization.
+    * `joined_timestamp` - The date the account became a part of the organization.    
     * `name` - Name of the account
     * `status` - (**Deprecated** use `state` instead)Status of the account
     * `state` - State of the account

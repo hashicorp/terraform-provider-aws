@@ -34,6 +34,8 @@ This data source exports the following attributes in addition to the arguments a
     * `arn` - The Amazon Resource Name (ARN) of the account.
     * `email` - The email address associated with the AWS account.
     * `id` - The unique identifier (ID) of the account.
+    * `joined_method` - The method by which the account joined the organization.
+    * `joined_timestamp` - The date the account became a part of the organization.   
     * `name` - The friendly name of the account.
     * `status` - (**Deprecated** use `state` instead) The status of the account in the organization.
     * `state` - The state of the account in the organization.
