@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -50,13 +49,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx),
 		Steps: []resource.TestStep{
-			// Setup
-			{
-				Config: testAccMemoryConfig_iamRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
+			// Setup: Create memory
 			{
 				Config: memoryConfig(rName),
 			},
@@ -149,13 +142,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx),
 		Steps: []resource.TestStep{
-			// Setup
-			{
-				Config: testAccMemoryConfig_iamRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
+			// Setup: Create memory
 			{
 				Config: memoryConfig(rName),
 			},
@@ -279,16 +266,6 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx),
 		Steps: []resource.TestStep{
-			// Setup
-			{
-				Config: testAccMemoryConfig_iamRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
-			{
-				Config: memoryConfig(rName),
-			},
 			{
 				Config: testAccMemoryStrategyConfig(rName, "SEMANTIC", "Example Description", "default"),
 				Check: resource.ComposeAggregateTestCheckFunc(

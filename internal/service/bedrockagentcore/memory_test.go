@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -46,12 +45,6 @@ func TestAccBedrockAgentCoreMemory_full(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccMemoryConfig_iamRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckSleep(t, 5*time.Second),
-				),
-			},
 			{
 				Config: testAccMemoryConfig(rName, "test description", 30, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(

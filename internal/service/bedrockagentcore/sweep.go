@@ -68,7 +68,6 @@ func sweepAgentRuntimeEndpoints(ctx context.Context, client *conns.AWSClient) ([
 	return sweepResources, nil
 }
 
-
 func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := bedrockagentcorecontrol.ListMemoriesInput{}
 	conn := client.BedrockAgentCoreClient(ctx)

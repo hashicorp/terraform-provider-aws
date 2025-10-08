@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -120,7 +121,27 @@ func (r *resourceMemory) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	out, err := conn.CreateMemory(ctx, &input)
+	var (
+		out *bedrockagentcorecontrol.CreateMemoryOutput
+		err error
+	)
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		out, err = conn.CreateMemory(ctx, &input)
+
+		// IAM propagation - retry if role validation fails
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Role validation failed") {
+			return tfresource.RetryableError(err)
+		}
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "valid trust policy") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
@@ -246,7 +267,7 @@ func (r *resourceMemory) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 }
 
-func (w *resourceMemory) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) { // nosemgrep:ci.semgrep.framework.with-import-by-id
+func (r *resourceMemory) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) { // nosemgrep:ci.semgrep.framework.with-import-by-id
 	resource.ImportStatePassthroughID(ctx, path.Root("memory_id"), request, response)
 }
 
