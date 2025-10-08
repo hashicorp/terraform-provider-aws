@@ -51,8 +51,7 @@ func (d *dataSourceCloudAutonomousVmClustersList) Read(ctx context.Context, req 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input := odb.ListCloudAutonomousVmClustersInput{}
-	out, err := conn.ListCloudAutonomousVmClusters(ctx, &input)
+	out, err := ListCloudAutonomousVmClusters(ctx, conn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameCloudAutonomousVmClustersList, "", err),
