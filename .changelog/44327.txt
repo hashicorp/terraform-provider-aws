@@ -7,7 +7,7 @@ resource/aws_organizations_account: The `status` attribute is being deprecated i
 ```
 
 ```release-note:enhancement
-data-source/aws_organizations_organization: Add `state` attribute to `accounts` and `non_master_accounts` blocks.
+data-source/aws_organizations_organization: Add `state`, `joined_method` and 'joined_timestamp` attributes to `accounts` and `non_master_accounts` blocks.
 ```
 
 ```release-note:note
@@ -15,7 +15,7 @@ data-source/aws_organizations_organization: The `status` attribute is being depr
 ```
 
 ```release-note:enhancement
-data-source/aws_organizations_organizational_unit_child_accounts: Add `state` attribute to `accounts` block.
+data-source/aws_organizations_organizational_unit_child_accounts: Add `state``joined_method` and 'joined_timestamp` attributes to `accounts` block.
 ```
 
 ```release-note:note
@@ -23,7 +23,7 @@ data-source/aws_organizations_organizational_unit_child_accounts: The `status` a
 ```
 
 ```release-note:enhancement
-data-source/aws_organizations_organizational_unit_descendant_accounts: Add `state` attribute to `accounts` block.
+data-source/aws_organizations_organizational_unit_descendant_accounts: Add `state`, `joined_method` and 'joined_timestamp` attributes to `accounts` block.
 ```
 
 ```release-note:note
