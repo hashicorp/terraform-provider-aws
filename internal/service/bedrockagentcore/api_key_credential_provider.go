@@ -49,9 +49,14 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				Optional:  true,
 				Sensitive: true,
 				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(
+						path.MatchRoot("api_key"),
+						path.MatchRoot("api_key_wo"),
+					),
 					stringvalidator.ConflictsWith(path.Expressions{
-						path.MatchRelative().AtParent().AtName("api_key_wo"),
+						path.MatchRoot("api_key_wo"),
 					}...),
+					stringvalidator.PreferWriteOnlyAttribute(path.MatchRoot("api_key_wo")),
 				},
 			},
 			"api_key_wo": schema.StringAttribute{
@@ -59,11 +64,12 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				WriteOnly: true,
 				Sensitive: true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.Expressions{
-						path.MatchRelative().AtParent().AtName("api_key"),
-					}...),
+					stringvalidator.ExactlyOneOf(
+						path.MatchRoot("api_key"),
+						path.MatchRoot("api_key_wo"),
+					),
 					stringvalidator.AlsoRequires(path.Expressions{
-						path.MatchRelative().AtParent().AtName("api_key_wo_version"),
+						path.MatchRoot("api_key_wo_version"),
 					}...),
 				},
 			},
@@ -71,7 +77,7 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				Optional: true,
 				Validators: []validator.Int64{
 					int64validator.AlsoRequires(path.Expressions{
-						path.MatchRelative().AtParent().AtName("api_key_wo"),
+						path.MatchRoot("api_key_wo"),
 					}...),
 				},
 			},
