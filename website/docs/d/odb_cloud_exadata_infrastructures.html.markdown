@@ -40,4 +40,3 @@ This data source exports the following attributes in addition to the arguments a
 * `oci_url` - The HTTPS link to the Exadata infrastructure in OCI.
 * `ocid` - The OCID of the Exadata infrastructure in OCI.
 * `display_name` - The display name of the Exadata infrastructure.
-
