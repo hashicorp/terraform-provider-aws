@@ -7,7 +7,6 @@ import (
 	"context"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -134,7 +133,6 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		input.ShareTagOptions = v.(bool)
 	}
 
-	// mutex lock for creation/deletion serialization
 	conns.GlobalMutexKV.Lock(portfolioShareMutexKey)
 	defer conns.GlobalMutexKV.Unlock(portfolioShareMutexKey)
 
@@ -180,13 +178,6 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	}
-
-	// Only one share create/second is allowed, but unfortunately not all throttling
-	// happens as a return from CreatePortfolioShare(). That can succeed and then
-	// the throttling can happen as part of the account accepting. If everything
-	// else succeeds, sleep a bit to give us time between sequentially executed
-	// portfolio shares.
-	time.Sleep(15 * time.Second)
 
 	return append(diags, resourcePortfolioShareRead(ctx, d, meta)...)
 }
@@ -311,7 +302,6 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 		input.OrganizationNode = orgNode
 	}
 
-	// mutex lock for creation/deletion serialization
 	conns.GlobalMutexKV.Lock(portfolioShareMutexKey)
 	defer conns.GlobalMutexKV.Unlock(portfolioShareMutexKey)
 
