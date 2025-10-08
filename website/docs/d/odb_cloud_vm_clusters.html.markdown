@@ -42,4 +42,3 @@ This data source exports the following attributes in addition to the arguments a
 * `oci_url` - The HTTPS link to the VM cluster in OCI.
 * `ocid` - The OCID of the VM cluster.
 * `display_name` - The display name of the VM cluster.
-
