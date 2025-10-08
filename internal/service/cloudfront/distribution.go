@@ -628,6 +628,11 @@ func resourceDistribution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
+									names.AttrIPAddressType: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+									},
 									"origin_keepalive_timeout": {
 										Type:         schema.TypeInt,
 										Optional:     true,
@@ -2446,6 +2451,10 @@ func expandCustomOriginConfig(tfMap map[string]any) *awstypes.CustomOriginConfig
 		OriginSslProtocols:     expandCustomOriginConfigSSL(tfMap["origin_ssl_protocols"].(*schema.Set).List()),
 	}
 
+	if v, ok := tfMap[names.AttrIPAddressType]; ok && v.(string) != "" {
+		apiObject.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
 	return apiObject
 }
 
@@ -2461,6 +2470,10 @@ func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 		"origin_protocol_policy":   apiObject.OriginProtocolPolicy,
 		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
 		"origin_ssl_protocols":     flattenCustomOriginConfigSSL(apiObject.OriginSslProtocols),
+	}
+
+	if apiObject.IpAddressType != "" {
+		tfMap[names.AttrIPAddressType] = apiObject.IpAddressType
 	}
 
 	return tfMap

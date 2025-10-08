@@ -22,8 +22,9 @@ func testAccEC2SerialConsoleAccess_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccEC2SerialConsoleAccess_Identity_Basic,
-		"ExistingResource": testAccEC2SerialConsoleAccess_Identity_ExistingResource,
+		acctest.CtBasic:             testAccEC2SerialConsoleAccess_Identity_Basic,
+		"ExistingResource":          testAccEC2SerialConsoleAccess_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccEC2SerialConsoleAccess_Identity_ExistingResource_NoRefresh_NoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

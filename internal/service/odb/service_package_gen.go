@@ -89,6 +89,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceDBSystemShapes,
+			TypeName: "aws_odb_db_system_shapes",
+			Name:     "Db System Shapes",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceGiVersions,
+			TypeName: "aws_odb_gi_versions",
+			Name:     "Gi Versions",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",

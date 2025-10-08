@@ -7,8 +7,12 @@ package iam
 var (
 	ResourceRole = resourceRole
 
-	DeleteServiceLinkedRole = deleteServiceLinkedRole
-	FindRoleByName          = findRoleByName
-	ListGroupsForUserPages  = listGroupsForUserPages
-	AttachPolicyToUser      = attachPolicyToUser
+	DeleteServiceLinkedRole     = deleteServiceLinkedRole
+	FindRoleByName              = findRoleByName
+	PolicyHasValidAWSPrincipals = policyHasValidAWSPrincipals // nosemgrep:ci.aws-in-var-name
+)
+
+type (
+	IAMPolicyDoc       = iamPolicyDoc
+	IAMPolicyStatement = iamPolicyStatement
 )

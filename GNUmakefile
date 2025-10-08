@@ -414,6 +414,7 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 
 quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
+	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
 quick-fix: quick-fix-heading fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
 

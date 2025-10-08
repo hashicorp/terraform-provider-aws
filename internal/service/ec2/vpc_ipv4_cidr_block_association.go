@@ -163,7 +163,7 @@ func resourceVPCIPv4CIDRBlockAssociationDelete(ctx context.Context, d *schema.Re
 	}
 	_, err := conn.DisassociateVpcCidrBlock(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound, errCodeInvalidVPCIDNotFound) {
 		return diags
 	}
 

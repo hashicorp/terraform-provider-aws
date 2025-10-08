@@ -19,10 +19,12 @@ func TestAccRoute53RecoveryControlConfig_serial(t *testing.T) {
 			acctest.CtBasic:      testAccCluster_basic,
 			acctest.CtDisappears: testAccCluster_disappears,
 			"networkType":        testAccCluster_networkType,
+			"tags":               testAccCluster_tags,
 		},
 		"ControlPanel": {
 			acctest.CtBasic:      testAccControlPanel_basic,
 			acctest.CtDisappears: testAccControlPanel_disappears,
+			"tags":               testAccControlPanel_tags,
 		},
 		"RoutingControl": {
 			acctest.CtBasic:         testAccRoutingControl_basic,
@@ -33,6 +35,7 @@ func TestAccRoute53RecoveryControlConfig_serial(t *testing.T) {
 			"assertionRule":      testAccSafetyRule_assertionRule,
 			"gatingRule":         testAccSafetyRule_gatingRule,
 			acctest.CtDisappears: testAccSafetyRule_disappears,
+			"tags":               testAccSafetyRule_tags,
 		},
 	}
 
