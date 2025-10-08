@@ -7,9 +7,11 @@ package bedrockagentcore
 var (
 	ResourceAgentRuntime             = newAgentRuntimeResource
 	ResourceAgentRuntimeEndpoint     = newAgentRuntimeEndpointResource
+	ResourceAPIKeyCredentialProvider = newAPIKeyCredentialProviderResource
 	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
+	FindAPIKeyCredentialProviderByName   = findAPIKeyCredentialProviderByName
 	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
 )

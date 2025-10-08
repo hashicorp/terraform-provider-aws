@@ -42,6 +42,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newAPIKeyCredentialProviderResource,
+			TypeName: "aws_bedrockagentcore_api_key_credential_provider",
+			Name:     "Api Key Credential Provider",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newOAuth2CredentialProviderResource,
 			TypeName: "aws_bedrockagentcore_oauth2_credential_provider",
 			Name:     "OAuth2 Credential Provider",
