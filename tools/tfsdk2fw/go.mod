@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-go 1.24.6
+go 1.24.8
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.1
