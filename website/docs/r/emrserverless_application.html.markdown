@@ -125,8 +125,11 @@ This resource supports the following arguments:
 
 ### scheduler_configuration Arguments
 
+When an empty `scheduler_configuration {}` block is specified, the feature is enabled with default settings.
+To disable the feature after it has been enabled, remove the block from the configuration.
+
 * `max_concurrent_runs` - (Optional) Maximum concurrent job runs on this application. Valid range is 1 to 1000. Defaults to 15.
-* `queue_timeout_minutes` - (Optional) Maximum duration in minutes for the job in QUEUED state. Valid range is from 15 to 720. Defaults to 360 minutes.
+* `queue_timeout_minutes` - (Optional) Maximum duration in minutes for the job in QUEUED state. Valid range is from 15 to 720. Defaults to 360.
 
 ## Attribute Reference
 
