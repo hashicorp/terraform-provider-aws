@@ -72,15 +72,24 @@ func resourceApplicationMaintenanceConfigurationPut(ctx context.Context, d *sche
 
 	applicationName := d.Get("application_name").(string)
 
+	// Read application details to verify state and store original maintenance window
+	// From flink docs, this UpdateApplicationMaintenanceConfiguration can only be invoked when the state of the application is either on READY or RUNNING
+	// See the docs here: https://docs.aws.amazon.com/managed-flink/latest/apiv2/API_UpdateApplicationMaintenanceConfiguration.html
+	application, err := findApplicationDetailByName(ctx, conn, applicationName)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
+	}
+
+	// Verify application is in READY or RUNNING state
+	if status := application.ApplicationStatus; status != awstypes.ApplicationStatusReady && status != awstypes.ApplicationStatusRunning {
+		return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application Maintenance Configuration (%s): application must be in READY or RUNNING state, current state: %s", applicationName, status)
+	}
+
 	// Store original maintenance window on create
 	// We are storing this because by default, AWS Managed Flink provides default value for maintenance window
 	// As stated by AWS docs, we can't opt out for this maintenance window
 	// We need to store the default value so that when we're deleting this resource, the maintenance window will be put back to its default value
 	if d.IsNewResource() {
-		application, err := findApplicationDetailByName(ctx, conn, applicationName)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
-		}
 		if application.ApplicationMaintenanceConfigurationDescription != nil {
 			d.Set("original_maintenance_window_start_time", application.ApplicationMaintenanceConfigurationDescription.ApplicationMaintenanceWindowStartTime)
 		}
@@ -93,7 +102,7 @@ func resourceApplicationMaintenanceConfigurationPut(ctx context.Context, d *sche
 		},
 	}
 
-	_, err := conn.UpdateApplicationMaintenanceConfiguration(ctx, input)
+	_, err = conn.UpdateApplicationMaintenanceConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application Maintenance Configuration (%s): %s", applicationName, err)
@@ -132,6 +141,16 @@ func resourceApplicationMaintenanceConfigurationDelete(ctx context.Context, d *s
 	applicationName := d.Id()
 	originalTime := d.Get("original_maintenance_window_start_time").(string)
 
+	// Verify application is in READY or RUNNING state
+	application, err := findApplicationDetailByName(ctx, conn, applicationName)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
+	}
+
+	if status := application.ApplicationStatus; status != awstypes.ApplicationStatusReady && status != awstypes.ApplicationStatusRunning {
+		return sdkdiag.AppendErrorf(diags, "restoring Kinesis Analytics v2 Application Maintenance Configuration (%s): application must be in READY or RUNNING state, current state: %s", applicationName, status)
+	}
+
 	input := &kinesisanalyticsv2.UpdateApplicationMaintenanceConfigurationInput{
 		ApplicationName: aws.String(applicationName),
 		ApplicationMaintenanceConfigurationUpdate: &awstypes.ApplicationMaintenanceConfigurationUpdate{
@@ -139,7 +158,7 @@ func resourceApplicationMaintenanceConfigurationDelete(ctx context.Context, d *s
 		},
 	}
 
-	_, err := conn.UpdateApplicationMaintenanceConfiguration(ctx, input)
+	_, err = conn.UpdateApplicationMaintenanceConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "restoring Kinesis Analytics v2 Application Maintenance Configuration (%s): %s", applicationName, err)

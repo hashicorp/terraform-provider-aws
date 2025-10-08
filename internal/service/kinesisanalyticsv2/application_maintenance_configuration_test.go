@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -221,4 +223,81 @@ resource "aws_kinesisanalyticsv2_application_maintenance_configuration" "test" {
   application_maintenance_window_start_time = %[2]q
 }
 `, appName, maintenanceTime)
+}
+
+func TestAccKinesisAnalyticsV2ApplicationMaintenanceConfiguration_runningApplication(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_kinesisanalyticsv2_application_maintenance_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationMaintenanceConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationMaintenanceConfigurationConfig_runningApplication(rName, "02:00"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationMaintenanceConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "application_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "application_maintenance_window_start_time", "02:00"),
+				),
+			},
+			{
+				Config: testAccApplicationMaintenanceConfigurationConfig_runningApplication(rName, "03:30"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationMaintenanceConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "application_maintenance_window_start_time", "03:30"),
+				),
+			},
+		},
+	})
+}
+
+func testAccApplicationMaintenanceConfigurationConfig_runningApplication(rName, maintenanceTime string) string {
+	return acctest.ConfigCompose(
+		testAccApplicationConfig_flinkConfiguration(rName, acctest.CtTrue, "FLINK-1_20"),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application_maintenance_configuration" "test" {
+  application_name                          = aws_kinesisanalyticsv2_application.test.name
+  application_maintenance_window_start_time = %[1]q
+}
+`, maintenanceTime))
+}
+
+func TestAccKinesisAnalyticsV2ApplicationMaintenanceConfiguration_applicationNotReady(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationMaintenanceConfigurationConfig_basic(rName, "02:00"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationMaintenanceConfigurationExists(ctx, "aws_kinesisanalyticsv2_application_maintenance_configuration.test"),
+					testAccCheckApplicationStop(ctx, rName),
+				),
+			},
+			{
+				Config:      testAccApplicationMaintenanceConfigurationConfig_basic(rName, "03:30"),
+				ExpectError: regexache.MustCompile(`application must be in READY or RUNNING state`),
+			},
+		},
+	})
+}
+
+func testAccCheckApplicationStop(ctx context.Context, applicationName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
+
+		_, err := conn.StopApplication(ctx, &kinesisanalyticsv2.StopApplicationInput{
+			ApplicationName: aws.String(applicationName),
+		})
+
+		return err
+	}
 }
