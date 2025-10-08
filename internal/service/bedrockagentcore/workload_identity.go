@@ -5,19 +5,21 @@ package bedrockagentcore
 
 import (
 	"context"
-	"errors"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -38,10 +40,6 @@ type workloadIdentityResource struct {
 	framework.ResourceWithModel[workloadIdentityResourceModel]
 }
 
-const (
-	ResNameWorkloadIdentity = "Workload Identity"
-)
-
 func (r *workloadIdentityResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -51,143 +49,132 @@ func (r *workloadIdentityResource) Schema(ctx context.Context, request resource.
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 255),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"workload_identity_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"workload_identity_arn": framework.ARNAttributeComputedOnly(),
 		},
 	}
 }
 
 func (r *workloadIdentityResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan workloadIdentityResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	var data workloadIdentityResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input bedrockagentcorecontrol.CreateWorkloadIdentityInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.CreateWorkloadIdentity(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-	if response.Diagnostics.HasError() {
-		return
-	}
+	data.WorkloadIdentityARN = fwflex.StringToFramework(ctx, out.WorkloadIdentityArn)
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *workloadIdentityResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state workloadIdentityResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	var data workloadIdentityResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findWorkloadIdentityByName(ctx, conn, state.Name.ValueString())
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	out, err := findWorkloadIdentityByName(ctx, conn, data.Name.ValueString())
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	// Normalize.
+	if len(out.AllowedResourceOauth2ReturnUrls) == 0 {
+		out.AllowedResourceOauth2ReturnUrls = nil
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *workloadIdentityResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan, state workloadIdentityResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	var new, old workloadIdentityResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := fwflex.Diff(ctx, plan, state)
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
 	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
+		name := fwflex.StringValueFromFramework(ctx, new.Name)
 		var input bedrockagentcorecontrol.UpdateWorkloadIdentityInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateWorkloadIdentity(ctx, &input)
+		_, err := conn.UpdateWorkloadIdentity(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
-			return
-		}
-		if out == nil {
-			smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-			return
-		}
-
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-		if response.Diagnostics.HasError() {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
 		}
 	}
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *workloadIdentityResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state workloadIdentityResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	var data workloadIdentityResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := bedrockagentcorecontrol.DeleteWorkloadIdentityInput{
-		Name: state.Name.ValueStringPointer(),
+		Name: aws.String(name),
 	}
-
 	_, err := conn.DeleteWorkloadIdentity(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 }
@@ -201,15 +188,20 @@ func findWorkloadIdentityByName(ctx context.Context, conn *bedrockagentcorecontr
 		Name: aws.String(name),
 	}
 
-	out, err := conn.GetWorkloadIdentity(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
+	return findWorkloadIdentity(ctx, conn, &input)
+}
 
+func findWorkloadIdentity(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetWorkloadIdentityInput) (*bedrockagentcorecontrol.GetWorkloadIdentityOutput, error) {
+	out, err := conn.GetWorkloadIdentity(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
@@ -222,7 +214,7 @@ func findWorkloadIdentityByName(ctx context.Context, conn *bedrockagentcorecontr
 
 type workloadIdentityResourceModel struct {
 	framework.WithRegionModel
-	AllowedResourceOauth2ReturnUrls fwtypes.SetOfString `tfsdk:"allowed_resource_oauth2_return_urls"`
+	AllowedResourceOauth2ReturnURLs fwtypes.SetOfString `tfsdk:"allowed_resource_oauth2_return_urls"`
 	Name                            types.String        `tfsdk:"name"`
-	WorkloadIdentityARN             fwtypes.ARN         `tfsdk:"workload_identity_arn"`
+	WorkloadIdentityARN             types.String        `tfsdk:"workload_identity_arn"`
 }

@@ -5,7 +5,6 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -13,23 +12,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockAgentCoreWorkloadIdentity_full(t *testing.T) {
+func TestAccBedrockAgentCoreWorkloadIdentity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var w1, w2 bedrockagentcorecontrol.GetWorkloadIdentityOutput
+	var w bedrockagentcorecontrol.GetWorkloadIdentityOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_workload_identity.test"
 
@@ -44,30 +42,24 @@ func TestAccBedrockAgentCoreWorkloadIdentity_full(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkloadIdentityConfig(rName, `"https://example.com/callback"`),
+				Config: testAccWorkloadIdentityConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "allowed_resource_oauth2_return_urls.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_resource_oauth2_return_urls.*", "https://example.com/callback"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "workload_identity_arn", "bedrock-agentcore", regexache.MustCompile(`workload-identity-directory/.+/workload-identity/.+$`)),
+					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
 				),
-			},
-			{
-				Config: testAccWorkloadIdentityConfig(rName, `"https://app.example.com/auth","https://example.com/callback"`),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w2),
-					testAccCheckWorkloadIdentityNotRecreated(&w1, &w2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "allowed_resource_oauth2_return_urls.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_resource_oauth2_return_urls.*", "https://example.com/callback"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_resource_oauth2_return_urls.*", "https://app.example.com/auth"),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("workload_identity_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`workload-identity-directory/.+/workload-identity/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_resource_oauth2_return_urls"), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateId:                        rName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
@@ -77,11 +69,7 @@ func TestAccBedrockAgentCoreWorkloadIdentity_full(t *testing.T) {
 
 func TestAccBedrockAgentCoreWorkloadIdentity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var workloadIdentity bedrockagentcorecontrol.GetWorkloadIdentityOutput
+	var w bedrockagentcorecontrol.GetWorkloadIdentityOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_workload_identity.test"
 
@@ -96,16 +84,74 @@ func TestAccBedrockAgentCoreWorkloadIdentity_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkloadIdentityConfig(rName, `"https://example.com/callback"`),
+				Config: testAccWorkloadIdentityConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkloadIdentityExists(ctx, resourceName, &workloadIdentity),
+					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceWorkloadIdentity, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreWorkloadIdentity_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var w bedrockagentcorecontrol.GetWorkloadIdentityOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_workload_identity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckWorkloadIdentities(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkloadIdentityConfig_urls(rName, `"https://example.com/callback"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_resource_oauth2_return_urls"), knownvalue.SetSizeExact(1)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccWorkloadIdentityConfig_urls(rName, `"https://app.example.com/auth","https://example.com/callback"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_resource_oauth2_return_urls"), knownvalue.SetSizeExact(2)),
 				},
 			},
 		},
@@ -121,52 +167,38 @@ func testAccCheckWorkloadIdentityDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			rName := rs.Primary.Attributes[names.AttrName]
-			_, err := tfbedrockagentcore.FindWorkloadIdentityByName(ctx, conn, rName)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameWorkloadIdentity, rName, err)
+			_, err := tfbedrockagentcore.FindWorkloadIdentityByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameWorkloadIdentity, rName, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Workload Identity %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckWorkloadIdentityExists(ctx context.Context, name string, workloadIdentity *bedrockagentcorecontrol.GetWorkloadIdentityOutput) resource.TestCheckFunc {
+func testAccCheckWorkloadIdentityExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetWorkloadIdentityOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameWorkloadIdentity, name, errors.New("not found"))
-		}
-
-		rName := rs.Primary.Attributes[names.AttrName]
-		if rName == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameWorkloadIdentity, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindWorkloadIdentityByName(ctx, conn, rName)
+		resp, err := tfbedrockagentcore.FindWorkloadIdentityByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameWorkloadIdentity, rName, err)
+			return err
 		}
 
-		*workloadIdentity = *resp
+		*v = *resp
 
-		return nil
-	}
-}
-
-func testAccCheckWorkloadIdentityNotRecreated(before, after *bedrockagentcorecontrol.GetWorkloadIdentityOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if beforeName, afterName := *before.Name, *after.Name; beforeName != afterName {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameWorkloadIdentity, beforeName, errors.New("recreated"))
-		}
 		return nil
 	}
 }
@@ -186,7 +218,15 @@ func testAccPreCheckWorkloadIdentities(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccWorkloadIdentityConfig(rName, urls string) string {
+func testAccWorkloadIdentityConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_workload_identity" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccWorkloadIdentityConfig_urls(rName, urls string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_workload_identity" "test" {
   name = %[1]q
