@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -27,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -40,7 +41,7 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
 func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceOauth2CredentialProvider{}
+	r := &oauth2CredentialProviderResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -49,11 +50,7 @@ func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWi
 	return r, nil
 }
 
-const (
-	ResNameOAuth2CredentialProvider = "OAuth2 Credential Provider"
-)
-
-type resourceOauth2CredentialProvider struct {
+type oauth2CredentialProviderResource struct {
 	framework.ResourceWithModel[oauth2CredentialProviderResourceModel]
 	framework.WithTimeouts
 }
@@ -144,9 +141,7 @@ func basicOAuth2ProviderBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-func (r *resourceOauth2CredentialProvider) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	vendorType := fwtypes.StringEnumType[awstypes.CredentialProviderVendorType]()
-
+func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"client_secret_arn": schema.StringAttribute{
@@ -156,23 +151,17 @@ func (r *resourceOauth2CredentialProvider) Schema(ctx context.Context, request r
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"credential_provider_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"credential_provider_arn": framework.ARNAttributeComputedOnly(),
 			"credential_provider_vendor": schema.StringAttribute{
-				Computed:    true,
-				CustomType:  vendorType,
-				Description: "The credential provider vendor type, automatically determined from config block type",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.CredentialProviderVendorType](),
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 128),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9\-_]+$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -254,7 +243,7 @@ func (r *resourceOauth2CredentialProvider) Schema(ctx context.Context, request r
 	}
 }
 
-func (r resourceOauth2CredentialProvider) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r oauth2CredentialProviderResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	if !request.Plan.Raw.IsNull() {
 		var plan oauth2CredentialProviderResourceModel
 		smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
@@ -277,7 +266,7 @@ func (r resourceOauth2CredentialProvider) ModifyPlan(ctx context.Context, reques
 	}
 }
 
-func (r *resourceOauth2CredentialProvider) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var plan oauth2CredentialProviderResourceModel
@@ -341,7 +330,7 @@ func (r *resourceOauth2CredentialProvider) Create(ctx context.Context, request r
 	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
-func (r *resourceOauth2CredentialProvider) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var state oauth2CredentialProviderResourceModel
@@ -384,7 +373,7 @@ func (r *resourceOauth2CredentialProvider) Read(ctx context.Context, request res
 	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
 }
 
-func (r *resourceOauth2CredentialProvider) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var plan, state oauth2CredentialProviderResourceModel
@@ -454,7 +443,7 @@ func (r *resourceOauth2CredentialProvider) Update(ctx context.Context, request r
 	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
-func (r *resourceOauth2CredentialProvider) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var state oauth2CredentialProviderResourceModel
@@ -478,7 +467,7 @@ func (r *resourceOauth2CredentialProvider) Delete(ctx context.Context, request r
 	}
 }
 
-func (r *resourceOauth2CredentialProvider) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *oauth2CredentialProviderResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
@@ -487,15 +476,20 @@ func findOAuth2CredentialProviderByName(ctx context.Context, conn *bedrockagentc
 		Name: aws.String(name),
 	}
 
-	out, err := conn.GetOauth2CredentialProvider(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
+	return findOAuth2CredentialProvider(ctx, conn, &input)
+}
 
+func findOAuth2CredentialProvider(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetOauth2CredentialProviderInput) (*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, error) {
+	out, err := conn.GetOauth2CredentialProvider(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
@@ -510,10 +504,10 @@ type oauth2CredsKey struct{}
 
 type oauth2Creds struct {
 	ClientID             types.String
+	ClientIDWO           types.String
 	ClientSecret         types.String
-	ClientIDWo           types.String
-	ClientSecretWo       types.String
-	ClientCredsWoVersion types.Int64
+	ClientSecretWO       types.String
+	ClientCredsWOVersion types.Int64
 }
 
 func withOAuth2Creds(ctx context.Context, c oauth2Creds) context.Context {
@@ -529,10 +523,10 @@ func oauth2CredsFrom(ctx context.Context) (oauth2Creds, bool) {
 type oauth2CredentialProviderResourceModel struct {
 	framework.WithRegionModel
 	ClientSecretARN          fwtypes.ARN                                                     `tfsdk:"client_secret_arn" autoflex:"-"`
-	CredentialProviderArn    fwtypes.ARN                                                     `tfsdk:"credential_provider_arn"`
+	CredentialProviderARN    types.String                                                    `tfsdk:"credential_provider_arn"`
 	CredentialProviderVendor fwtypes.StringEnum[awstypes.CredentialProviderVendorType]       `tfsdk:"credential_provider_vendor"`
 	Name                     types.String                                                    `tfsdk:"name"`
-	Oauth2ProviderConfig     fwtypes.ListNestedObjectValueOf[oauth2ProviderConfigInputModel] `tfsdk:"config"`
+	OAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[oauth2ProviderConfigInputModel] `tfsdk:"oauth2_provider_config"`
 	Timeouts                 timeouts.Value                                                  `tfsdk:"timeouts"`
 }
 
@@ -548,10 +542,10 @@ type oauth2ProviderConfigInputModel struct {
 func (m *oauth2CredentialProviderResourceModel) VendorValue(ctx context.Context) (string, diag.Diagnostics) {
 	var vendor string
 
-	if m.Oauth2ProviderConfig.IsNull() || m.Oauth2ProviderConfig.IsUnknown() {
+	if m.OAuth2ProviderConfig.IsNull() || m.OAuth2ProviderConfig.IsUnknown() {
 		return vendor, nil
 	}
-	c, diags := m.Oauth2ProviderConfig.ToPtr(ctx)
+	c, diags := m.OAuth2ProviderConfig.ToPtr(ctx)
 	if diags.HasError() {
 		return vendor, diags
 	}
@@ -580,10 +574,10 @@ func (m *oauth2CredentialProviderResourceModel) VendorValue(ctx context.Context)
 }
 
 func (m *oauth2CredentialProviderResourceModel) CredsValue(ctx context.Context) (oauth2Creds, diag.Diagnostics) {
-	if m.Oauth2ProviderConfig.IsNull() || m.Oauth2ProviderConfig.IsUnknown() {
+	if m.OAuth2ProviderConfig.IsNull() || m.OAuth2ProviderConfig.IsUnknown() {
 		return oauth2Creds{}, nil
 	}
-	c, diags := m.Oauth2ProviderConfig.ToPtr(ctx)
+	c, diags := m.OAuth2ProviderConfig.ToPtr(ctx)
 	if diags.HasError() {
 		return oauth2Creds{}, diags
 	}
@@ -614,9 +608,9 @@ func (m *oauth2CredentialProviderResourceModel) CredsValue(ctx context.Context) 
 	return oauth2Creds{
 		ClientID:             model.ClientID,
 		ClientSecret:         model.ClientSecret,
-		ClientIDWo:           model.ClientIDWo,
-		ClientSecretWo:       model.ClientSecretWo,
-		ClientCredsWoVersion: model.ClientCredsWoVersion,
+		ClientIDWO:           model.ClientIDWo,
+		ClientSecretWO:       model.ClientSecretWo,
+		ClientCredsWOVersion: model.ClientCredsWoVersion,
 	}, diags
 }
 
@@ -633,7 +627,7 @@ func (m *oauth2ProviderConfigInputModel) Flatten(ctxWithCreds context.Context, v
 	if creds, ok := oauth2CredsFrom(ctxWithCreds); ok {
 		model.ClientID = creds.ClientID
 		model.ClientSecret = creds.ClientSecret
-		model.ClientCredsWoVersion = creds.ClientCredsWoVersion
+		model.ClientCredsWoVersion = creds.ClientCredsWOVersion
 	}
 
 	switch t := v.(type) {
@@ -735,9 +729,9 @@ func (m oauth2ProviderConfigInputModel) Expand(ctxWithCreds context.Context) (re
 	}
 
 	if creds, ok := oauth2CredsFrom(ctxWithCreds); ok {
-		if !creds.ClientIDWo.IsNull() && !creds.ClientSecretWo.IsNull() {
-			from.ClientID = creds.ClientIDWo
-			from.ClientSecret = creds.ClientSecretWo
+		if !creds.ClientIDWO.IsNull() && !creds.ClientSecretWO.IsNull() {
+			from.ClientID = creds.ClientIDWO
+			from.ClientSecret = creds.ClientSecretWO
 		}
 	}
 

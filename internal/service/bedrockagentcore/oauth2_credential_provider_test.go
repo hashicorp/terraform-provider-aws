@@ -5,7 +5,6 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -17,18 +16,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
@@ -72,10 +66,6 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
@@ -109,10 +99,6 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var oauth2credentialprovider1, oauth2credentialprovider2 bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
@@ -163,10 +149,6 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
@@ -215,10 +197,6 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
@@ -273,43 +251,37 @@ func testAccCheckOAuth2CredentialProviderDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			rName := rs.Primary.Attributes[names.AttrName]
+			_, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+			if retry.NotFound(err) {
+				continue
+			}
 
-			_, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rName)
-			if tfresource.NotFound(err) {
-				return nil
-			}
 			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rName, err)
+				return err
 			}
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rName, errors.New("not destroyed"))
+
+			return fmt.Errorf("Bedrock Agent Core OAuth2 Credential Provider %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckOAuth2CredentialProviderExists(ctx context.Context, name string, oauth2credentialprovider *bedrockagentcorecontrol.GetOauth2CredentialProviderOutput) resource.TestCheckFunc {
+func testAccCheckOAuth2CredentialProviderExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetOauth2CredentialProviderOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameOAuth2CredentialProvider, name, errors.New("not found"))
-		}
-
-		rName := rs.Primary.Attributes[names.AttrName]
-
-		if rName == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameOAuth2CredentialProvider, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rName)
+		resp, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameOAuth2CredentialProvider, rName, err)
+			return err
 		}
 
-		*oauth2credentialprovider = *resp
+		*v = *resp
 
 		return nil
 	}
@@ -335,7 +307,8 @@ func testAccOAuth2CredentialProviderConfig_basic(rName string) string {
 resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   name = %[1]q
 
-  config {
+  credential_provider_vendor = "GithubOauth2"
+  oauth2_provider_config {
     github {
       client_id     = "test-client-id"
       client_secret = "test-client-secret"
@@ -350,7 +323,8 @@ func testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, clientI
 resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   name = %[1]q
 
-  config {
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
     custom {
       client_id_wo                  = %[2]q
       client_secret_wo              = %[3]q
@@ -370,7 +344,8 @@ func testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, c
 resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   name = %[1]q
 
-  config {
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
     custom {
       client_id_wo                  = %[2]q
       client_secret_wo              = %[3]q
@@ -395,7 +370,8 @@ func testAccOAuth2CredentialProviderConfig_full(rName string) string {
 resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   name = %[1]q
 
-  config {
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
     custom {
       client_id_wo                  = "full-test-client-id"
       client_secret_wo              = "full-test-client-secret"

@@ -20,7 +20,8 @@ Manages an AWS Bedrock AgentCore OAuth2 Credential Provider. OAuth2 credential p
 resource "aws_bedrockagentcore_oauth2_credential_provider" "github" {
   name = "github-oauth-provider"
 
-  config {
+  credential_provider_vendor = "GithubOauth2"
+  oauth2_provider_config {
     github {
       client_id     = "your-github-client-id"
       client_secret = "your-github-client-secret"
@@ -35,7 +36,8 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "github" {
 resource "aws_bedrockagentcore_oauth2_credential_provider" "auth0" {
   name = "auth0-oauth-provider"
 
-  config {
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
     custom {
       client_id_wo                  = "auth0-client-id"
       client_secret_wo              = "auth0-client-secret"
@@ -55,7 +57,8 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "auth0" {
 resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
   name = "keycloak-oauth-provider"
 
-  config {
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
     custom {
       client_id_wo                  = "keycloak-client-id"
       client_secret_wo              = "keycloak-client-secret"
@@ -78,16 +81,17 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 
 The following arguments are required:
 
+* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values: `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `Microsoft`, `SalesforceOauth2`, `SlackOauth2`.
 * `name` - (Required) Name of the OAuth2 credential provider.
-* `config` - (Required) OAuth2 provider configuration. Must contain exactly one provider type. See [`config`](#config) below.
+* `oauth2_provider_config` - (Required) OAuth2 provider configuration. Must contain exactly one provider type. See [`oauth2_provider_config`](#oauth2_provider_config) below.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `config`
+### `oauth2_provider_config`
 
-The `config` block must contain exactly one of the following provider configurations:
+The `oauth2_provider_config` block must contain exactly one of the following provider configurations:
 
 * `custom` - (Optional) Custom OAuth2 provider configuration. See [`custom`](#custom) below.
 * `github` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-microsoft-salesforce-slack) below.
@@ -152,9 +156,8 @@ The `authorization_server_metadata` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the OAuth2 credential provider.
+* `credential_provider_arn` - ARN of the OAuth2 credential provider.
 * `client_secret_arn` - ARN of the AWS Secrets Manager secret containing the client secret.
-* `vendor` - OAuth2 provider vendor type, automatically determined from the configuration block type. Possible values: `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `Microsoft`, `SalesforceOauth2`, `SlackOauth2`.
 
 ## Timeouts
 
