@@ -702,7 +702,7 @@ func (m *CustomConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 	var d diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.StrategyConfiguration:
-		m.Type = fwtypes.StringEnumValue[awstypes.OverrideType](t.Type)
+		m.Type = fwtypes.StringEnumValue(t.Type)
 
 		if t.Consolidation != nil {
 			var consolidation OverrideDetailsModel
@@ -751,7 +751,7 @@ func (m CustomConfigurationModel) ExpandTo(ctx context.Context, targetType refle
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("configuration expand target type: %T", targetType),
+			fmt.Sprintf("configuration expand target type: %s", targetType),
 		)
 	}
 	return nil, diags

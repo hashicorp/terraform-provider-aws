@@ -130,12 +130,10 @@ func (r *resourceMemory) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &plan, fwflex.WithFieldNamePrefix("Memory")))
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	plan.MemoryID = fwflex.StringToFramework(ctx, out.Memory.Id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitMemoryCreated(ctx, conn, plan.MemoryID.ValueString(), createTimeout)
@@ -167,7 +165,7 @@ func (r *resourceMemory) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &state))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &state, fwflex.WithFieldNamePrefix("Memory")))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -208,7 +206,7 @@ func (r *resourceMemory) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &plan))
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &plan, fwflex.WithFieldNamePrefix("Memory")))
 		if response.Diagnostics.HasError() {
 			return
 		}
