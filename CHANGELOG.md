@@ -27,6 +27,7 @@ BUG FIXES:
 * resource/aws_datazone_environment: Values in `user_parameters` should not be updateable. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_datazone_project: No longer ignores errors when deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_datazone_project: No longer returns error when already deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
+* resource/aws_dynamodb_table: Do not retry on `LimitExceededException` ([#44576](https://github.com/hashicorp/terraform-provider-aws/issues/44576))
 * resource/aws_launch_template: `kms_key_id` validation now accepts key ID, alias, and alias ARN in addition to key ARN ([#44505](https://github.com/hashicorp/terraform-provider-aws/issues/44505))
 
 ## 6.15.0 (October 2, 2025)
