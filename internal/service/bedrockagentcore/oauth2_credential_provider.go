@@ -5,17 +5,14 @@ package bedrockagentcore
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -24,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -42,17 +40,11 @@ import (
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
 func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &oauth2CredentialProviderResource{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
 type oauth2CredentialProviderResource struct {
 	framework.ResourceWithModel[oauth2CredentialProviderResourceModel]
-	framework.WithTimeouts
 }
 
 func clientCredentialAttributes() map[string]schema.Attribute {
@@ -144,13 +136,7 @@ func basicOAuth2ProviderBlock(ctx context.Context) schema.ListNestedBlock {
 func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"client_secret_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"client_secret_arn":       framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"credential_provider_arn": framework.ARNAttributeComputedOnly(),
 			"credential_provider_vendor": schema.StringAttribute{
 				Required:   true,
@@ -234,13 +220,186 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
+}
+
+func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var plan, config oauth2CredentialProviderResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	creds, d := config.CredsValue(ctx)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	ctxWithCreds := withOAuth2Creds(ctx, creds)
+
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+	var input bedrockagentcorecontrol.CreateOauth2CredentialProviderInput
+	smerr.EnrichAppend(ctx, &response.Diagnostics,
+		fwflex.Expand(ctxWithCreds, plan, &input,
+			fwflex.WithFieldNameSuffix("Input"),
+		))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.CreateOauth2CredentialProvider(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	// Refresh from GET as oauth_discovery is not returned in CreateOauth2CredentialProviderOutput.
+	provider, err := findOAuth2CredentialProviderByName(ctx, conn, name)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics,
+		fwflex.Flatten(ctxWithCreds, provider, &plan,
+			fwflex.WithFieldNameSuffix("Output"),
+		))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+}
+
+func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data oauth2CredentialProviderResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	out, err := findOAuth2CredentialProviderByName(ctx, conn, name)
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	// TODO Remove before AgentCore GA
+	// Store clientId/clientSecret in context before flattening zeroes them
+	// This won't be necessary in AgentCore GA - AWS API already returns those values but awstypes don't
+	creds, d := data.CredsValue(ctx)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	ctxWithCreds := withOAuth2Creds(ctx, creds)
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics,
+		fwflex.Flatten(ctxWithCreds, out, &data,
+			fwflex.WithFieldNameSuffix("Output")))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var plan, state, config oauth2CredentialProviderResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	credsConfig, d := config.CredsValue(ctx)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	ctxWithCreds := withOAuth2Creds(ctx, credsConfig)
+
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		name := fwflex.StringValueFromFramework(ctx, plan.Name)
+		var input bedrockagentcorecontrol.UpdateOauth2CredentialProviderInput
+		smerr.EnrichAppend(ctx, &response.Diagnostics,
+			fwflex.Expand(ctxWithCreds, plan, &input,
+				fwflex.WithFieldNameSuffix("Input")))
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateOauth2CredentialProvider(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		// Refresh from GET as oauth_discovery is not returned in CreateOauth2CredentialProviderOutput.
+		got, err := findOAuth2CredentialProviderByName(ctx, conn, name)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		smerr.EnrichAppend(ctx, &response.Diagnostics,
+			fwflex.Flatten(ctxWithCreds, got, &plan,
+				fwflex.WithFieldNameSuffix("Output"),
+			))
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+}
+
+func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data oauth2CredentialProviderResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	input := bedrockagentcorecontrol.DeleteOauth2CredentialProviderInput{
+		Name: aws.String(name),
+	}
+	_, err := conn.DeleteOauth2CredentialProvider(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		return
+	}
+}
+
+func (r *oauth2CredentialProviderResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func (r oauth2CredentialProviderResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -264,211 +423,6 @@ func (r oauth2CredentialProviderResource) ModifyPlan(ctx context.Context, reques
 		}
 		response.Plan.SetAttribute(ctx, path.Root("credential_provider_vendor"), newVendorValue)
 	}
-}
-
-func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	// Extract credentials from the raw configuration because write‑only
-	// attributes are not present in plan or state.
-	var configModel oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &configModel))
-	if response.Diagnostics.HasError() {
-		return
-	}
-	creds, d := configModel.CredsValue(ctx)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	ctxWithCreds := withOAuth2Creds(ctx, creds)
-
-	var input bedrockagentcorecontrol.CreateOauth2CredentialProviderInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics,
-		fwflex.Expand(ctxWithCreds, plan, &input,
-			fwflex.WithFieldNameSuffix("Input"),
-		))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := conn.CreateOauth2CredentialProvider(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-		return
-	}
-
-	// Refresh from GET as oauth_discovery is not returned in CreateOauth2CredentialProviderOutput.
-	got, err := findOAuth2CredentialProviderByName(ctx, conn, plan.Name.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &response.Diagnostics,
-		fwflex.Flatten(ctxWithCreds, got, &plan,
-			fwflex.WithFieldNameSuffix("Output"),
-		))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if got.ClientSecretArn != nil && got.ClientSecretArn.SecretArn != nil {
-		plan.ClientSecretARN = fwtypes.ARNValue(*got.ClientSecretArn.SecretArn)
-	}
-
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
-}
-
-func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := findOAuth2CredentialProviderByName(ctx, conn, state.Name.ValueString())
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.Name.String())
-		return
-	}
-
-	// TODO Remove before AgentCore GA
-	// Store clientId/clientSecret in context before flattening zeroes them
-	// This won't be necessary in AgentCore GA - AWS API already returns those values but awstypes don't
-	creds, d := state.CredsValue(ctx)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	ctxWithCreds := withOAuth2Creds(ctx, creds)
-
-	smerr.EnrichAppend(ctx, &response.Diagnostics,
-		fwflex.Flatten(ctxWithCreds, out, &state,
-			fwflex.WithFieldNameSuffix("Output")))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if out.ClientSecretArn != nil && out.ClientSecretArn.SecretArn != nil {
-		state.ClientSecretARN = fwtypes.ARNValue(*out.ClientSecretArn.SecretArn)
-	}
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
-}
-
-func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan, state oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	// Extract credentials from the raw configuration because write‑only
-	// attributes are not present in plan or state.
-	var configModel oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &configModel))
-	if response.Diagnostics.HasError() {
-		return
-	}
-	credsConfig, d := configModel.CredsValue(ctx)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	ctxWithCreds := withOAuth2Creds(ctx, credsConfig)
-
-	diff, d := fwflex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
-		var input bedrockagentcorecontrol.UpdateOauth2CredentialProviderInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics,
-			fwflex.Expand(ctxWithCreds, plan, &input,
-				fwflex.WithFieldNameSuffix("Input")))
-		if response.Diagnostics.HasError() {
-			return
-		}
-		out, err := conn.UpdateOauth2CredentialProvider(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
-			return
-		}
-		if out == nil {
-			smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-			return
-		}
-
-		// Refresh from GET as oauth_discovery is not returned in CreateOauth2CredentialProviderOutput.
-		got, err := findOAuth2CredentialProviderByName(ctx, conn, plan.Name.ValueString())
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
-			return
-		}
-
-		smerr.EnrichAppend(ctx, &response.Diagnostics,
-			fwflex.Flatten(ctxWithCreds, got, &plan,
-				fwflex.WithFieldNameSuffix("Output"),
-			))
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if got.ClientSecretArn != nil && got.ClientSecretArn.SecretArn != nil {
-			plan.ClientSecretARN = fwtypes.ARNValue(*got.ClientSecretArn.SecretArn)
-		}
-	}
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
-}
-
-func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state oauth2CredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	input := bedrockagentcorecontrol.DeleteOauth2CredentialProviderInput{
-		Name: state.Name.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteOauth2CredentialProvider(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.Name.String())
-		return
-	}
-}
-
-func (r *oauth2CredentialProviderResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findOAuth2CredentialProviderByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, error) {
@@ -522,12 +476,11 @@ func oauth2CredsFrom(ctx context.Context) (oauth2Creds, bool) {
 
 type oauth2CredentialProviderResourceModel struct {
 	framework.WithRegionModel
-	ClientSecretARN          fwtypes.ARN                                                     `tfsdk:"client_secret_arn" autoflex:"-"`
+	ClientSecretARN          fwtypes.ListNestedObjectValueOf[secretModel]                    `tfsdk:"client_secret_arn"`
 	CredentialProviderARN    types.String                                                    `tfsdk:"credential_provider_arn"`
 	CredentialProviderVendor fwtypes.StringEnum[awstypes.CredentialProviderVendorType]       `tfsdk:"credential_provider_vendor"`
 	Name                     types.String                                                    `tfsdk:"name"`
 	OAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[oauth2ProviderConfigInputModel] `tfsdk:"oauth2_provider_config"`
-	Timeouts                 timeouts.Value                                                  `tfsdk:"timeouts"`
 }
 
 type oauth2ProviderConfigInputModel struct {

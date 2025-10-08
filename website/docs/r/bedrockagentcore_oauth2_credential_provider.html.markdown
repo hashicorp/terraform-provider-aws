@@ -158,14 +158,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `credential_provider_arn` - ARN of the OAuth2 credential provider.
 * `client_secret_arn` - ARN of the AWS Secrets Manager secret containing the client secret.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
+    * `secret_arn` - ARN of the secret in AWS Secrets Manager.
 
 ## Import
 
