@@ -93,7 +93,7 @@ func statusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Cli
 		status := output.Status
 		if (status == awstypes.ShareStatusCompletedWithErrors || status == awstypes.ShareStatusError) &&
 			output.ShareDetails != nil && output.ShareDetails.ShareErrors != nil && len(output.ShareDetails.ShareErrors) > 0 {
-			return output, string(status), fmt.Errorf("error with portfolio share status: %+v", output.ShareDetails.ShareErrors)
+			return output, string(status), fmt.Errorf("portfolio share status: %+v", output.ShareDetails.ShareErrors)
 		}
 
 		return output, string(status), err
