@@ -21,9 +21,9 @@ func RegisterSweepers() {
 
 func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.DSQLClient(ctx)
-	var input dsql.ListClustersInput
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
+	var input dsql.ListClustersInput
 	pages := dsql.NewListClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -34,8 +34,9 @@ func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 
 		for _, v := range page.Clusters {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newClusterResource, client,
-				framework.NewAttribute(names.AttrIdentifier, aws.ToString(v.Identifier))),
-			)
+				framework.NewAttribute(names.AttrIdentifier, aws.ToString(v.Identifier)),
+				framework.NewAttribute(names.AttrForceDestroy, true),
+			))
 		}
 	}
 

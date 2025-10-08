@@ -128,8 +128,8 @@ resource "aws_ecr_repository" "service" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Repositories using the `name`. For example:
 
@@ -154,4 +154,4 @@ Using `terraform import`, import ECR Repositories using the `name`. For example:
 % terraform import aws_ecr_repository.service test-service
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7b8a1955fb880606c5c2308cd53aee30f01aff66a3825b2eadb13716e69a52bb -->
+<!-- cache-key: cdktf-0.20.8 input-946ecdf7481bbb0a6e38a438bbef63e3dee7b374c268af4bfadabd5b69e74f42 -->

@@ -21,19 +21,18 @@ import (
 )
 
 // @SDKResource("aws_ssmcontacts_contact", name="Contact")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.15.0")
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,
 		ReadWithoutTimeout:   resourceContactRead,
 		UpdateWithoutTimeout: resourceContactUpdate,
 		DeleteWithoutTimeout: resourceContactDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
