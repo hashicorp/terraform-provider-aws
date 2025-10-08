@@ -199,7 +199,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := waitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) || tfresource.NotFound(err)) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
