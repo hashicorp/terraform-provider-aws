@@ -1482,7 +1482,7 @@ func (m *schemaPropertyLeafModel) Flatten(ctx context.Context, v any) diag.Diagn
 				diags.AddWarning("Failed to marshal items for items_json", err.Error())
 				m.ItemsJSON = types.StringNull()
 			} else {
-				m.ItemsJSON = types.StringValue(s)
+				m.ItemsJSON = types.StringValue(strings.TrimSpace(s))
 			}
 		} else {
 			m.ItemsJSON = types.StringNull()
