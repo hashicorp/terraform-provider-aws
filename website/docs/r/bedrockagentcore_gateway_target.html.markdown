@@ -299,7 +299,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `client_token` - (Optional) Unique identifier for request idempotency. If not provided, one will be generated automatically.
 * `description` - (Optional) Description of the gateway target.
 * `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
 
@@ -427,7 +426,7 @@ The `property` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier of the gateway target.
+* `target_id` - Unique identifier of the gateway target.
 
 ## Timeouts
 

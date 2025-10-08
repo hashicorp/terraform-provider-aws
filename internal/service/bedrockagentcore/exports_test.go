@@ -8,10 +8,10 @@ var (
 	ResourceAgentRuntime         = newAgentRuntimeResource
 	ResourceAgentRuntimeEndpoint = newAgentRuntimeEndpointResource
 	ResourceGateway              = newGatewayResource
-	ResourceGatewayTarget        = newResourceGatewayTarget
+	ResourceGatewayTarget        = newGatewayTargetResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
 	FindGatewayByID                      = findGatewayByID
-	FindGatewayTargetByID                = findGatewayTargetByID
+	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
 )

@@ -5,7 +5,6 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -18,18 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
@@ -50,7 +44,7 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "target_id"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
@@ -60,12 +54,18 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.0.tool_schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.0.tool_schema.0.inline_payload.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccGatewayTargetImportStateIdFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
 			},
 		},
 	})
@@ -73,10 +73,6 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreGatewayTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
@@ -99,10 +95,288 @@ func TestAccBedrockAgentCoreGatewayTarget_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGatewayTargets(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_primitive()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.0.tool_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.0.tool_schema.0.inline_payload.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Example 2: Object with properties + required
+			{
+				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_objectWithProperties()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Example 3: Array of primitives
+			{
+				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfPrimitives()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Example 4: Array of objects
+			{
+				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfObjects()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Example 5: Array of arrays
+			{
+				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfArrays()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			//Example 6: Mixed nested object/array
+			{
+				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_mixedNested()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Example 7: Array with ignored keywords
+			{
+				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayWithIgnoredKeywords()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Invalid Example 8: Both items and properties at the same node
+			{
+				Config:      testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_invalidBothItemsAndProperties()),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			// Invalid Example 9: Missing type
+			{
+				Config:      testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_invalidMissingType()),
+				ExpectError: regexache.MustCompile("Missing required argument"),
+			},
+			// Invalid Example 10: Unsupported type
+			{
+				Config:      testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_invalidUnsupportedType()),
+				ExpectError: regexache.MustCompile("Invalid String Enum Value"),
+			},
+			// Return to valid configuration to proceed with post-test destroy
+			{
+				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_objectWithProperties()),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGatewayTargets(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Gateway IAM Role provider with Lambda target
+			{
+				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 2: API Key provider with OpenAPI Schema target (creates new resource)
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderNonLambda(rName, testAccCredentialProvider_apiKey()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "credential_provider_configuration.0.api_key.0.provider_arn"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Step 3: OAuth provider with OpenAPI Schema target (updates credential provider only)
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderNonLambda(rName, testAccCredentialProvider_oauth()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "credential_provider_configuration.0.oauth.0.provider_arn"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Step 4: Gateway IAM Role provider with Smithy Model target (creates new resource due to both changes)
+			{
+				Config: testAccGatewayTargetConfig_credentialProviderSmithy(rName, testAccCredentialProvider_gatewayIAMRole()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			// Step 5: Back to Gateway IAM Role with Lambda target (creates new resource again)
+			{
+				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGatewayTargets(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Invalid: Multiple credential providers
+			{
+				Config:      testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_multipleProviders()),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination|cannot be specified`),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_empty()),
+				ExpectError: regexache.MustCompile("Invalid Credential Provider Configuration|At least one credential provider must be configured"),
 			},
 		},
 	})
@@ -117,50 +391,37 @@ func testAccCheckGatewayTargetDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			_, err := tfbedrockagentcore.FindGatewayTargetByID(ctx, conn, rs.Primary.Attributes["gateway_identifier"], rs.Primary.ID)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameGatewayTarget, rs.Primary.ID, err)
+			_, err := tfbedrockagentcore.FindGatewayTargetByTwoPartKey(ctx, conn, rs.Primary.Attributes["gateway_identifier"], rs.Primary.Attributes["target_id"])
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameGatewayTarget, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Gateway Target %s still exists", rs.Primary.Attributes["target_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckGatewayTargetExists(ctx context.Context, name string, gatewayTarget *bedrockagentcorecontrol.GetGatewayTargetOutput) resource.TestCheckFunc {
+func testAccCheckGatewayTargetExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetGatewayTargetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameGatewayTarget, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameGatewayTarget, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindGatewayTargetByID(ctx, conn, rs.Primary.Attributes["gateway_identifier"], rs.Primary.ID)
+		resp, err := tfbedrockagentcore.FindGatewayTargetByTwoPartKey(ctx, conn, rs.Primary.Attributes["gateway_identifier"], rs.Primary.Attributes["target_id"])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameGatewayTarget, rs.Primary.ID, err)
+			return err
 		}
 
-		*gatewayTarget = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckGatewayTargetNotRecreated(before, after *bedrockagentcorecontrol.GetGatewayTargetOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.TargetId), aws.ToString(after.TargetId); before != after {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameGatewayTarget, before, errors.New("recreated"))
-		}
+		*v = *resp
 
 		return nil
 	}
@@ -187,7 +448,7 @@ func testAccGatewayTargetConfig_infra(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-data "aws_iam_policy_document" "test_assume" {
+data "aws_iam_policy_document" "test" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -200,7 +461,7 @@ data "aws_iam_policy_document" "test_assume" {
 
 resource "aws_iam_role" "test" {
   name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+  assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
 data "aws_iam_policy_document" "lambda_assume" {
@@ -232,28 +493,17 @@ resource "aws_bedrockagentcore_gateway" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
+  authorizer_type = "CUSTOM_JWT"
   authorizer_configuration {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["test"]
     }
   }
+
+  protocol_type = "MCP"
 }
 `, rName)
-}
-
-func testAccGatewayTargetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
-
-		gatewayIdentifier := rs.Primary.Attributes["gateway_identifier"]
-		targetId := rs.Primary.ID
-
-		return fmt.Sprintf("%s,%s", gatewayIdentifier, targetId), nil
-	}
 }
 
 func testAccGatewayTargetConfig_basic(rName string) string {
@@ -294,236 +544,6 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 }
 
 `, rName))
-}
-
-func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway_target.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_primitive()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.0.tool_schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.0.tool_schema.0.inline_payload.#", "1"),
-				),
-			},
-			// Example 2: Object with properties + required
-			{
-				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_objectWithProperties()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
-					testAccCheckGatewayTargetNotRecreated(&gatewayTarget, &gatewayTargetPrev),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-			},
-			// Example 3: Array of primitives
-			{
-				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfPrimitives()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
-					testAccCheckGatewayTargetNotRecreated(&gatewayTargetPrev, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-			},
-			// Example 4: Array of objects
-			{
-				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfObjects()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-			},
-			// Example 5: Array of arrays
-			{
-				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfArrays()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-			},
-			//Example 6: Mixed nested object/array
-			{
-				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_mixedNested()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
-					testAccCheckGatewayTargetNotRecreated(&gatewayTarget, &gatewayTargetPrev),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-			},
-			// Example 7: Array with ignored keywords
-			{
-				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayWithIgnoredKeywords()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-			},
-			// Invalid Example 8: Both items and properties at the same node
-			{
-				Config:      testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_invalidBothItemsAndProperties()),
-				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
-			},
-			// Invalid Example 9: Missing type
-			{
-				Config:      testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_invalidMissingType()),
-				ExpectError: regexache.MustCompile("Missing required argument"),
-			},
-			// Invalid Example 10: Unsupported type
-			{
-				Config:      testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_invalidUnsupportedType()),
-				ExpectError: regexache.MustCompile("Invalid String Enum Value"),
-			},
-			// Return to valid configuration to proceed with post-test destroy
-			{
-				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_objectWithProperties()),
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway_target.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
-		Steps: []resource.TestStep{
-			// Step 1: Gateway IAM Role provider with Lambda target
-			{
-				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
-				),
-			},
-			// Step 2: API Key provider with OpenAPI Schema target (creates new resource)
-			{
-				Config: testAccGatewayTargetConfig_credentialProviderNonLambda(rName, testAccCredentialProvider_apiKey()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "credential_provider_configuration.0.api_key.0.provider_arn"),
-				),
-			},
-			// Step 3: OAuth provider with OpenAPI Schema target (updates credential provider only)
-			{
-				Config: testAccGatewayTargetConfig_credentialProviderNonLambda(rName, testAccCredentialProvider_oauth()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
-					testAccCheckGatewayTargetNotRecreated(&gatewayTargetPrev, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "credential_provider_configuration.0.oauth.0.provider_arn"),
-				),
-			},
-			// Step 4: Gateway IAM Role provider with Smithy Model target (creates new resource due to both changes)
-			{
-				Config: testAccGatewayTargetConfig_credentialProviderSmithy(rName, testAccCredentialProvider_gatewayIAMRole()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
-				),
-			},
-			// Step 5: Back to Gateway IAM Role with Lambda target (creates new resource again)
-			{
-				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccGatewayTargetImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
-		Steps: []resource.TestStep{
-			// Invalid: Multiple credential providers
-			{
-				Config:      testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_multipleProviders()),
-				ExpectError: regexache.MustCompile(`Invalid Attribute Combination|cannot be specified`),
-			},
-			{
-				Config:      testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_empty()),
-				ExpectError: regexache.MustCompile("Invalid Credential Provider Configuration|At least one credential provider must be configured"),
-			},
-		},
-	})
 }
 
 func testAccGatewayTargetConfig_credentialProvider(rName, credentialProviderContent string) string {

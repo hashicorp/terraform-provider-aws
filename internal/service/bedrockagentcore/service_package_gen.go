@@ -51,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceGatewayTarget,
+			Factory:  newGatewayTargetResource,
 			TypeName: "aws_bedrockagentcore_gateway_target",
 			Name:     "Gateway Target",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

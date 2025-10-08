@@ -5,13 +5,12 @@ package bedrockagentcore
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -29,22 +28,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_gateway_target", name="Gateway Target")
-func newResourceGatewayTarget(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceGatewayTarget{}
+func newGatewayTargetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &gatewayTargetResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -53,12 +54,8 @@ func newResourceGatewayTarget(_ context.Context) (resource.ResourceWithConfigure
 	return r, nil
 }
 
-const (
-	ResNameGatewayTarget = "Gateway Target"
-)
-
-type resourceGatewayTarget struct {
-	framework.ResourceWithModel[resourceGatewayTargetModel]
+type gatewayTargetResource struct {
+	framework.ResourceWithModel[gatewayTargetResourceModel]
 	framework.WithTimeouts
 }
 
@@ -197,17 +194,14 @@ func schemaDefinitionNestedBlock(ctx context.Context) schema.NestedBlockObject {
 	}
 }
 
-func (r *resourceGatewayTarget) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"client_token": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 200),
+				},
 			},
 			"gateway_identifier": schema.StringAttribute{
 				Required: true,
@@ -215,13 +209,16 @@ func (r *resourceGatewayTarget) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][-]?){1,100}$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"target_id": framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"credential_provider_configuration": schema.ListNestedBlock{
@@ -481,24 +478,170 @@ func (r *resourceGatewayTarget) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func (r resourceGatewayTarget) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+func (r *gatewayTargetResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data gatewayTargetResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	gatewayIdentifier := fwflex.StringValueFromFramework(ctx, data.GatewayIdentifier)
+	var input bedrockagentcorecontrol.CreateGatewayTargetInput
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+
+	out, err := conn.CreateGatewayTarget(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+		return
+	}
+
+	targetID := aws.ToString(out.TargetId)
+	data.TargetID = fwflex.StringValueToFramework(ctx, targetID)
+
+	if _, err := waitGatewayTargetCreated(ctx, conn, gatewayIdentifier, targetID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+}
+
+func (r *gatewayTargetResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data gatewayTargetResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	gatewayIdentifier, targetID := fwflex.StringValueFromFramework(ctx, data.GatewayIdentifier), fwflex.StringValueFromFramework(ctx, data.TargetID)
+	out, err := findGatewayTargetByTwoPartKey(ctx, conn, gatewayIdentifier, targetID)
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"GatewayArn"})))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+func (r *gatewayTargetResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old gatewayTargetResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		gatewayIdentifier, targetID := fwflex.StringValueFromFramework(ctx, new.GatewayIdentifier), fwflex.StringValueFromFramework(ctx, new.TargetID)
+		var input bedrockagentcorecontrol.UpdateGatewayTargetInput
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateGatewayTarget(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
+			return
+		}
+
+		_, err = waitGatewayTargetUpdated(ctx, conn, gatewayIdentifier, targetID, r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
+			return
+		}
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+}
+
+func (r *gatewayTargetResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data gatewayTargetResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	gatewayIdentifier, targetID := fwflex.StringValueFromFramework(ctx, data.GatewayIdentifier), fwflex.StringValueFromFramework(ctx, data.TargetID)
+	input := bedrockagentcorecontrol.DeleteGatewayTargetInput{
+		GatewayIdentifier: aws.String(gatewayIdentifier),
+		TargetId:          aws.String(targetID),
+	}
+	_, err := conn.DeleteGatewayTarget(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
+		return
+	}
+
+	if _, err := waitGatewayTargetDeleted(ctx, conn, gatewayIdentifier, targetID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
+		return
+	}
+}
+
+func (r *gatewayTargetResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	parts := strings.Split(request.ID, ",")
+
+	if len(parts) != 2 {
+		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "GatewayIdentifier,TargetId"`, request.ID))
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("gateway_identifier"), parts[0]))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("target_id"), parts[1]))
+}
+
+func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if request.State.Raw.IsNull() || request.Plan.Raw.IsNull() {
 		return
 	}
 
 	// Force replacement if target configuration changes between lambda, smithy_model, and open_api_schema
-	var plan, state resourceGatewayTargetModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+	var plan, state gatewayTargetResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	planTargetData, diags := plan.TargetConfiguration.ToPtr(ctx)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, diags)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, diags)
 	stateTargetData, diags := state.TargetConfiguration.ToPtr(ctx)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, diags)
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, diags)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -506,230 +649,66 @@ func (r resourceGatewayTarget) ModifyPlan(ctx context.Context, req resource.Modi
 	stateTargetType := stateTargetData.GetConfigurationType(ctx)
 
 	if planTargetType != stateTargetType {
-		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("target_configuration"))
+		response.RequiresReplace = append(response.RequiresReplace, path.Root("target_configuration"))
 	}
 }
 
-func (r *resourceGatewayTarget) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan resourceGatewayTargetModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var input bedrockagentcorecontrol.CreateGatewayTargetInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := conn.CreateGatewayTarget(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithIgnoredFieldNames([]string{"GatewayArn"})))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	plan.ID = flex.StringToFramework(ctx, out.TargetId)
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitGatewayTargetCreated(ctx, conn, plan.GatewayIdentifier.ValueString(), plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
-}
-
-func (r *resourceGatewayTarget) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state resourceGatewayTargetModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := findGatewayTargetByID(ctx, conn, state.GatewayIdentifier.ValueString(), state.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNames([]string{"GatewayArn"})))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	state.ID = flex.StringToFramework(ctx, out.TargetId)
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *resourceGatewayTarget) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan, state resourceGatewayTargetModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
-		var input bedrockagentcorecontrol.UpdateGatewayTargetInput
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.TargetId = plan.ID.ValueStringPointer()
-
-		out, err := conn.UpdateGatewayTarget(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
-			return
-		}
-
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithIgnoredFieldNames([]string{"GatewayArn"})))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		plan.ID = flex.StringToFramework(ctx, out.TargetId)
-
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitGatewayTargetUpdated(ctx, conn, plan.GatewayIdentifier.ValueString(), plan.ID.ValueString(), updateTimeout)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
-}
-
-func (r *resourceGatewayTarget) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state resourceGatewayTargetModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	input := bedrockagentcorecontrol.DeleteGatewayTargetInput{
-		GatewayIdentifier: state.GatewayIdentifier.ValueStringPointer(),
-		TargetId:          state.ID.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteGatewayTarget(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitGatewayTargetDeleted(ctx, conn, state.GatewayIdentifier.ValueString(), state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-}
-
-func (r *resourceGatewayTarget) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ",")
-
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "GatewayIdentifier,TargetId"`, req.ID))
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root("gateway_identifier"), parts[0]))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1]))
-}
-
-func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetId string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
+func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TargetStatusCreating),
 		Target:                    enum.Slice(awstypes.TargetStatusReady),
-		Refresh:                   statusGatewayTarget(ctx, conn, gatewayIdentifier, targetId),
+		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
+		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetId string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
+func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TargetStatusUpdating),
 		Target:                    enum.Slice(awstypes.TargetStatusReady),
-		Refresh:                   statusGatewayTarget(ctx, conn, gatewayIdentifier, targetId),
+		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
+		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetId string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
+func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady),
 		Target:  []string{},
-		Refresh: statusGatewayTarget(ctx, conn, gatewayIdentifier, targetId),
+		Refresh: statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
+		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func statusGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetId string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findGatewayTargetByID(ctx, conn, gatewayIdentifier, targetId)
+func statusGatewayTarget(conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findGatewayTargetByTwoPartKey(ctx, conn, gatewayIdentifier, targetID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -742,21 +721,26 @@ func statusGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Clie
 	}
 }
 
-func findGatewayTargetByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetId string) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
+func findGatewayTargetByTwoPartKey(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	input := bedrockagentcorecontrol.GetGatewayTargetInput{
 		GatewayIdentifier: aws.String(gatewayIdentifier),
-		TargetId:          aws.String(targetId),
+		TargetId:          aws.String(targetID),
 	}
 
-	out, err := conn.GetGatewayTarget(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
+	return findGatewayTarget(ctx, conn, &input)
+}
 
+func findGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetGatewayTargetInput) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
+	out, err := conn.GetGatewayTarget(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
@@ -767,15 +751,14 @@ func findGatewayTargetByID(ctx context.Context, conn *bedrockagentcorecontrol.Cl
 	return out, nil
 }
 
-type resourceGatewayTargetModel struct {
+type gatewayTargetResourceModel struct {
 	framework.WithRegionModel
-	ClientToken                     types.String                                                          `tfsdk:"client_token"`
+	CredentialProviderConfiguration fwtypes.ListNestedObjectValueOf[credentialProviderConfigurationModel] `tfsdk:"credential_provider_configuration"`
 	Description                     types.String                                                          `tfsdk:"description"`
 	GatewayIdentifier               types.String                                                          `tfsdk:"gateway_identifier"`
-	ID                              types.String                                                          `tfsdk:"id"`
 	Name                            types.String                                                          `tfsdk:"name"`
-	CredentialProviderConfiguration fwtypes.ListNestedObjectValueOf[credentialProviderConfigurationModel] `tfsdk:"credential_provider_configuration"`
 	TargetConfiguration             fwtypes.ListNestedObjectValueOf[targetConfigurationModel]             `tfsdk:"target_configuration"`
+	TargetID                        types.String                                                          `tfsdk:"target_id"`
 	Timeouts                        timeouts.Value                                                        `tfsdk:"timeouts"`
 }
 
@@ -786,18 +769,19 @@ type credentialProviderConfigurationModel struct {
 }
 
 var (
-	_ flex.Expander  = credentialProviderConfigurationModel{}
-	_ flex.Flattener = &credentialProviderConfigurationModel{}
+	_ fwflex.Expander  = credentialProviderConfigurationModel{}
+	_ fwflex.Flattener = &credentialProviderConfigurationModel{}
 )
 
-func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.CredentialProviderConfiguration:
 		switch t.CredentialProviderType {
 		case awstypes.CredentialProviderTypeApiKey:
 			if apiKeyProvider, ok := t.CredentialProvider.(*awstypes.CredentialProviderMemberApiKeyCredentialProvider); ok {
 				var model apiKeyCredentialProviderModel
-				smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, apiKeyProvider.Value, &model))
+				smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, apiKeyProvider.Value, &model))
 				if diags.HasError() {
 					return diags
 				}
@@ -807,7 +791,7 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 		case awstypes.CredentialProviderTypeOauth:
 			if oauthProvider, ok := t.CredentialProvider.(*awstypes.CredentialProviderMemberOauthCredentialProvider); ok {
 				var model oauthCredentialProviderModel
-				smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, oauthProvider.Value, &model))
+				smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, oauthProvider.Value, &model))
 				if diags.HasError() {
 					return diags
 				}
@@ -833,7 +817,8 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 	return diags
 }
 
-func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	var c awstypes.CredentialProviderConfiguration
 	switch {
 	case !m.ApiKey.IsNull():
@@ -844,7 +829,7 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (resul
 		}
 
 		var r awstypes.CredentialProviderMemberApiKeyCredentialProvider
-		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, apiKeyCredentialProviderConfigurationData, &r.Value))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, apiKeyCredentialProviderConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -860,7 +845,7 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (resul
 		}
 
 		var r awstypes.CredentialProviderMemberOauthCredentialProvider
-		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, oauthCredentialProviderConfigurationData, &r.Value))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, oauthCredentialProviderConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -900,15 +885,16 @@ func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) str
 }
 
 var (
-	_ flex.Expander  = targetConfigurationModel{}
-	_ flex.Flattener = &targetConfigurationModel{}
+	_ fwflex.Expander  = targetConfigurationModel{}
+	_ fwflex.Flattener = &targetConfigurationModel{}
 )
 
-func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.TargetConfigurationMemberMcp:
 		var model mcpConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -917,13 +903,14 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("target configuration flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("target configuration flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m targetConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	switch {
 	case !m.MCP.IsNull():
 		mcpConfigurationData, d := m.MCP.ToPtr(ctx)
@@ -933,7 +920,7 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (result any, diags
 		}
 
 		var r awstypes.TargetConfigurationMemberMcp
-		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, mcpConfigurationData, &r.Value))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, mcpConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -951,15 +938,16 @@ type mcpConfigurationModel struct {
 }
 
 var (
-	_ flex.Expander  = mcpConfigurationModel{}
-	_ flex.Flattener = &mcpConfigurationModel{}
+	_ fwflex.Expander  = mcpConfigurationModel{}
+	_ fwflex.Flattener = &mcpConfigurationModel{}
 )
 
-func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.McpTargetConfigurationMemberLambda:
 		var model mcpLambdaConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -967,7 +955,7 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.
 
 	case awstypes.McpTargetConfigurationMemberOpenApiSchema:
 		var model apiSchemaConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -975,7 +963,7 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.
 
 	case awstypes.McpTargetConfigurationMemberSmithyModel:
 		var model apiSchemaConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -984,13 +972,14 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("mcp configuration flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("mcp configuration flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m mcpConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m mcpConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	switch {
 	case !m.Lambda.IsNull():
 		lambdaMCPConfigurationData, d := m.Lambda.ToPtr(ctx)
@@ -1000,7 +989,7 @@ func (m mcpConfigurationModel) Expand(ctx context.Context) (result any, diags di
 		}
 
 		var r awstypes.McpTargetConfigurationMemberLambda
-		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, lambdaMCPConfigurationData, &r.Value))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, lambdaMCPConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1014,7 +1003,7 @@ func (m mcpConfigurationModel) Expand(ctx context.Context) (result any, diags di
 		}
 
 		var r awstypes.McpTargetConfigurationMemberOpenApiSchema
-		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, openApiMCPConfigurationData, &r.Value))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, openApiMCPConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1027,7 +1016,7 @@ func (m mcpConfigurationModel) Expand(ctx context.Context) (result any, diags di
 			return nil, diags
 		}
 		var r awstypes.McpTargetConfigurationMemberSmithyModel
-		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, smithyMCPConfigurationData, &r.Value))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, smithyMCPConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1064,17 +1053,18 @@ type toolSchemaModel struct {
 }
 
 var (
-	_ flex.Expander  = toolSchemaModel{}
-	_ flex.Flattener = &toolSchemaModel{}
+	_ fwflex.Expander  = toolSchemaModel{}
+	_ fwflex.Flattener = &toolSchemaModel{}
 )
 
-func (m *toolSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *toolSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.ToolSchemaMemberInlinePayload:
 		var toolDefModels []*toolDefinitionModel
 		for _, toolDef := range t.Value {
 			var model toolDefinitionModel
-			smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, toolDef, &model))
+			smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, toolDef, &model))
 			if diags.HasError() {
 				return diags
 			}
@@ -1084,7 +1074,7 @@ func (m *toolSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 
 	case awstypes.ToolSchemaMemberS3:
 		var model s3ConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -1093,13 +1083,14 @@ func (m *toolSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagno
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("tool schema configuration flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("tool schema configuration flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m toolSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m toolSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	switch {
 	case !m.InlinePayload.IsNull():
 		inlinePayloadToolSchemaData, d := m.InlinePayload.ToSlice(ctx)
@@ -1111,7 +1102,7 @@ func (m toolSchemaModel) Expand(ctx context.Context) (result any, diags diag.Dia
 		var toolDefs []awstypes.ToolDefinition
 		for _, toolDefModel := range inlinePayloadToolSchemaData {
 			var toolDef awstypes.ToolDefinition
-			smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, toolDefModel, &toolDef))
+			smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, toolDefModel, &toolDef))
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -1130,7 +1121,7 @@ func (m toolSchemaModel) Expand(ctx context.Context) (result any, diags diag.Dia
 		}
 
 		var r awstypes.ToolSchemaMemberS3
-		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, s3ToolSchemaData, &r.Value))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, s3ToolSchemaData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1158,16 +1149,17 @@ type schemaDefinitionModel struct {
 }
 
 var (
-	_ flex.Expander  = schemaDefinitionModel{}
-	_ flex.Flattener = &schemaDefinitionModel{}
+	_ fwflex.Expander  = schemaDefinitionModel{}
+	_ fwflex.Flattener = &schemaDefinitionModel{}
 )
 
-func (m *schemaDefinitionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *schemaDefinitionModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// Ensure Properties is a typed Null when absent to avoid zero-value Set panics during state encoding
 	m.Properties = fwtypes.NewSetNestedObjectValueOfNull[schemaPropertyModel](ctx)
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, v, &m.schemaDefinitionCoreModel))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaDefinitionCoreModel))
 		if diags.HasError() {
 			return diags
 		}
@@ -1188,17 +1180,18 @@ func (m *schemaDefinitionModel) Flatten(ctx context.Context, v any) (diags diag.
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("schema definition flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("schema definition flatten: %T", v),
 		)
 	}
 
 	return diags
 }
 
-func (m schemaDefinitionModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m schemaDefinitionModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	schemaDefinitionData := &awstypes.SchemaDefinition{}
 
-	diags.Append(flex.Expand(ctx, m.schemaDefinitionCoreModel, schemaDefinitionData)...)
+	diags.Append(fwflex.Expand(ctx, m.schemaDefinitionCoreModel, schemaDefinitionData)...)
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -1228,16 +1221,17 @@ type schemaItemsModel struct {
 }
 
 var (
-	_ flex.Expander  = schemaItemsModel{}
-	_ flex.Flattener = &schemaItemsModel{}
+	_ fwflex.Expander  = schemaItemsModel{}
+	_ fwflex.Flattener = &schemaItemsModel{}
 )
 
-func (m *schemaItemsModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *schemaItemsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// Ensure Properties is a typed Null when absent to avoid zero-value Set panics during state encoding
 	m.Properties = fwtypes.NewSetNestedObjectValueOfNull[schemaPropertyLeafModel](ctx)
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, v, &m.schemaItemsCoreModel))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaItemsCoreModel))
 		if diags.HasError() {
 			return diags
 		}
@@ -1258,17 +1252,18 @@ func (m *schemaItemsModel) Flatten(ctx context.Context, v any) (diags diag.Diagn
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("schema items flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("schema items flatten: %T", v),
 		)
 	}
 
 	return diags
 }
 
-func (m schemaItemsModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m schemaItemsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	schemaDefinitionData := &awstypes.SchemaDefinition{}
 
-	diags.Append(flex.Expand(ctx, m.schemaItemsCoreModel, schemaDefinitionData)...)
+	diags.Append(fwflex.Expand(ctx, m.schemaItemsCoreModel, schemaDefinitionData)...)
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -1300,16 +1295,17 @@ type schemaPropertyModel struct {
 }
 
 var (
-	_ flex.Expander  = schemaPropertyModel{}
-	_ flex.Flattener = &schemaPropertyModel{}
+	_ fwflex.Expander  = schemaPropertyModel{}
+	_ fwflex.Flattener = &schemaPropertyModel{}
 )
 
-func (m *schemaPropertyModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *schemaPropertyModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// Ensure Properties is a typed Null when absent to avoid zero-value Set panics during state encoding
 	m.Properties = fwtypes.NewSetNestedObjectValueOfNull[schemaPropertyLeafModel](ctx)
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, v, &m.schemaPropertyCoreModel))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaPropertyCoreModel))
 		if diags.HasError() {
 			return diags
 		}
@@ -1330,15 +1326,16 @@ func (m *schemaPropertyModel) Flatten(ctx context.Context, v any) (diags diag.Di
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("schema property flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("schema property flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m schemaPropertyModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m schemaPropertyModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	var schemaDefinitionLeafData = awstypes.SchemaDefinition{}
-	smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, m.schemaPropertyCoreModel, &schemaDefinitionLeafData))
+	smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, m.schemaPropertyCoreModel, &schemaDefinitionLeafData))
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -1369,26 +1366,27 @@ type schemaItemsLeafModel struct {
 }
 
 var (
-	_ flex.Expander  = schemaItemsLeafModel{}
-	_ flex.Flattener = &schemaItemsLeafModel{}
+	_ fwflex.Expander  = schemaItemsLeafModel{}
+	_ fwflex.Flattener = &schemaItemsLeafModel{}
 )
 
-func (m *schemaItemsLeafModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *schemaItemsLeafModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, v, &m.schemaItemsLeafCoreModel))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaItemsLeafCoreModel))
 		if diags.HasError() {
 			return diags
 		}
 		// Populate ItemsJSON
 		if t.Items != nil {
 			jsonItems := convertToJSONSchemaDefinition(t.Items)
-			b, err := json.Marshal(jsonItems)
+			s, err := tfjson.EncodeToString(jsonItems)
 			if err != nil {
 				diags.AddWarning("Failed to marshal items for items_json", err.Error())
 				m.ItemsJSON = types.StringNull()
 			} else {
-				m.ItemsJSON = types.StringValue(string(b))
+				m.ItemsJSON = types.StringValue(s)
 			}
 		} else {
 			m.ItemsJSON = types.StringNull()
@@ -1400,12 +1398,12 @@ func (m *schemaItemsLeafModel) Flatten(ctx context.Context, v any) (diags diag.D
 				Required:   t.Required,
 			}
 			jsonProps := convertToJSONSchemaDefinition(&propObj)
-			b, err := json.Marshal(jsonProps)
+			s, err := tfjson.EncodeToString(jsonProps)
 			if err != nil {
 				diags.AddWarning("Failed to marshal properties for properties_json", err.Error())
 				m.PropertiesJSON = types.StringNull()
 			} else {
-				m.PropertiesJSON = types.StringValue(string(b))
+				m.PropertiesJSON = types.StringValue(s)
 			}
 		} else {
 			m.PropertiesJSON = types.StringNull()
@@ -1413,16 +1411,17 @@ func (m *schemaItemsLeafModel) Flatten(ctx context.Context, v any) (diags diag.D
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("schema items leaf flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("schema items leaf flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m schemaItemsLeafModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m schemaItemsLeafModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	var sd awstypes.SchemaDefinition
 	// Expand core (type/description)
-	smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, m.schemaItemsLeafCoreModel, &sd))
+	smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, m.schemaItemsLeafCoreModel, &sd))
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -1463,26 +1462,27 @@ type schemaPropertyLeafModel struct {
 }
 
 var (
-	_ flex.Expander  = schemaPropertyLeafModel{}
-	_ flex.Flattener = &schemaPropertyLeafModel{}
+	_ fwflex.Expander  = schemaPropertyLeafModel{}
+	_ fwflex.Flattener = &schemaPropertyLeafModel{}
 )
 
-func (m *schemaPropertyLeafModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *schemaPropertyLeafModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, flex.Flatten(ctx, v, &m.schemaPropertyLeafCoreModel))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaPropertyLeafCoreModel))
 		if diags.HasError() {
 			return diags
 		}
 		// Populate ItemsJSON
 		if t.Items != nil {
 			jsonItems := convertToJSONSchemaDefinition(t.Items)
-			b, err := json.Marshal(jsonItems)
+			s, err := tfjson.EncodeToString(jsonItems)
 			if err != nil {
 				diags.AddWarning("Failed to marshal items for items_json", err.Error())
 				m.ItemsJSON = types.StringNull()
 			} else {
-				m.ItemsJSON = types.StringValue(string(b))
+				m.ItemsJSON = types.StringValue(s)
 			}
 		} else {
 			m.ItemsJSON = types.StringNull()
@@ -1494,12 +1494,12 @@ func (m *schemaPropertyLeafModel) Flatten(ctx context.Context, v any) (diags dia
 				Required:   t.Required,
 			}
 			jsonProps := convertToJSONSchemaDefinition(&propObj)
-			b, err := json.Marshal(jsonProps)
+			s, err := tfjson.EncodeToString(jsonProps)
 			if err != nil {
 				diags.AddWarning("Failed to marshal properties for properties_json", err.Error())
 				m.PropertiesJSON = types.StringNull()
 			} else {
-				m.PropertiesJSON = types.StringValue(string(b))
+				m.PropertiesJSON = types.StringValue(s)
 			}
 		} else {
 			m.PropertiesJSON = types.StringNull()
@@ -1507,16 +1507,17 @@ func (m *schemaPropertyLeafModel) Flatten(ctx context.Context, v any) (diags dia
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("schema property leaf flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("schema property leaf flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m schemaPropertyLeafModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m schemaPropertyLeafModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	var schemaDefinitionData = awstypes.SchemaDefinition{}
 
-	smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, m.schemaPropertyLeafCoreModel, &schemaDefinitionData))
+	smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, m.schemaPropertyLeafCoreModel, &schemaDefinitionData))
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -1552,11 +1553,12 @@ type apiSchemaConfigurationModel struct {
 }
 
 var (
-	_ flex.Expander  = apiSchemaConfigurationModel{}
-	_ flex.Flattener = &apiSchemaConfigurationModel{}
+	_ fwflex.Expander  = apiSchemaConfigurationModel{}
+	_ fwflex.Flattener = &apiSchemaConfigurationModel{}
 )
 
-func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.ApiSchemaConfigurationMemberInlinePayload:
 		var model inlinePayloadModel
@@ -1566,7 +1568,7 @@ func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) (diags
 
 	case awstypes.ApiSchemaConfigurationMemberS3:
 		var model s3ConfigurationModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		smerr.EnrichAppend(ctx, &diags, d)
 		if diags.HasError() {
 			return diags
@@ -1576,13 +1578,14 @@ func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) (diags
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("api schema configuration flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("api schema configuration flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m apiSchemaConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m apiSchemaConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	switch {
 	case !m.InlinePayload.IsNull():
 		inlinePayloadApiSchemaConfigurationData, d := m.InlinePayload.ToPtr(ctx)
@@ -1603,7 +1606,7 @@ func (m apiSchemaConfigurationModel) Expand(ctx context.Context) (result any, di
 		}
 
 		var r awstypes.ApiSchemaConfigurationMemberS3
-		smerr.EnrichAppend(ctx, &diags, flex.Expand(ctx, s3ApiSchemaConfigurationData, &r.Value))
+		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, s3ApiSchemaConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1743,7 +1746,7 @@ func parseJSONSchemaDefinition(s string) (*awstypes.SchemaDefinition, diag.Diagn
 		return nil, diags
 	}
 	var sd awstypes.SchemaDefinition
-	if err := json.Unmarshal([]byte(s), &sd); err != nil {
+	if err := tfjson.DecodeFromString(s, &sd); err != nil {
 		diags.AddError("Invalid JSON", err.Error())
 		return nil, diags
 	}

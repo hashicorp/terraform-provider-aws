@@ -132,7 +132,7 @@ func sweepGatewayTargets(ctx context.Context, client *conns.AWSClient) ([]sweep.
 				}
 
 				for _, v := range page.Items {
-					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceGatewayTarget, client,
+					sweepResources = append(sweepResources, framework.NewSweepResource(newGatewayTargetResource, client,
 						framework.NewAttribute("gateway_identifier", gatewayID),
 						framework.NewAttribute("target_id", aws.ToString(v.TargetId))),
 					)
