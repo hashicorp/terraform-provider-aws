@@ -38,9 +38,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
-func newResourceOAuth2CredentialProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceOauth2CredentialProvider{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)

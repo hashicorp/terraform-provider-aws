@@ -5,7 +5,11 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
-	ResourceOAuth2CredentialProvider = newResourceOAuth2CredentialProvider
+	ResourceAgentRuntime             = newAgentRuntimeResource
+	ResourceAgentRuntimeEndpoint     = newAgentRuntimeEndpointResource
+	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
 
-	FindOAuth2CredentialProviderByName = findOAuth2CredentialProviderByName
+	FindAgentRuntimeByID                 = findAgentRuntimeByID
+	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
+	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
 )
