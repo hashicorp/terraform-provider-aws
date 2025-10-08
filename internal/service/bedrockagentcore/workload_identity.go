@@ -38,9 +38,7 @@ type workloadIdentityResource struct {
 	framework.ResourceWithModel[workloadIdentityResourceModel]
 }
 
-(
-	const ResNameWorkloadIdentity = "Workload Identity"
-)
+const ResNameWorkloadIdentity = "Workload Identity"
 
 func (r *workloadIdentityResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{

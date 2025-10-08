@@ -5,7 +5,11 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
-	ResourceWorkloadIdentity = newWorkloadIdentityResource
+	ResourceAgentRuntime         = newAgentRuntimeResource
+	ResourceAgentRuntimeEndpoint = newAgentRuntimeEndpointResource
+	ResourceWorkloadIdentity     = newWorkloadIdentityResource
 
-	FindWorkloadIdentityByName = findWorkloadIdentityByName
+	FindAgentRuntimeByID                 = findAgentRuntimeByID
+	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
+	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 )

@@ -1,3 +1,11 @@
 ```release-note:new-resource
+<<<<<<< HEAD
 aws_bedrockagentcore_workload_identity
+=======
+aws_bedrockagentcore_agent_runtime
+```
+
+```release-note:new-resource
+aws_bedrockagentcore_agent_runtime_endpoint
+>>>>>>> 367a655a7aea729b22c9729a04da825a71da8dc1
 ```
