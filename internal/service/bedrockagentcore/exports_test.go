@@ -5,9 +5,13 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
-	ResourceMemory         = newResourceMemory
-	ResourceMemoryStrategy = newResourceMemoryStrategy
+	ResourceAgentRuntime         = newAgentRuntimeResource
+	ResourceAgentRuntimeEndpoint = newAgentRuntimeEndpointResource
+	ResourceMemory               = newResourceMemory
+	ResourceMemoryStrategy       = newResourceMemoryStrategy
 
-	FindMemoryByID         = findMemoryByID
-	FindMemoryStrategyByID = findMemoryStrategyByID
+	FindAgentRuntimeByID                 = findAgentRuntimeByID
+	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
+	FindMemoryByID                       = findMemoryByID
+	FindMemoryStrategyByID               = findMemoryStrategyByID
 )

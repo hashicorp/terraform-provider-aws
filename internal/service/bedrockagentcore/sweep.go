@@ -17,8 +17,57 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_bedrockagentcore_agent_runtime", sweepAgentRuntimes)
+	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints)
 	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
 }
+
+func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListAgentRuntimesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.AgentRuntimes {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAgentRuntimeResource, client,
+				framework.NewAttribute("agent_runtime_id", aws.ToString(v.AgentRuntimeId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAgentRuntimeEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListAgentRuntimeEndpointsInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListAgentRuntimeEndpointsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.RuntimeEndpoints {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAgentRuntimeEndpointResource, client,
+				framework.NewAttribute("agent_runtime_id", aws.ToString(v.Id)),
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name)),
+			),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
 
 func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := bedrockagentcorecontrol.ListMemoriesInput{}
