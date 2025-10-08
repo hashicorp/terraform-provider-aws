@@ -30,3 +30,12 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `odb_networks` - List of odb networks returns basic information about odb networks.
+
+### odb_networks
+
+* `id` - Unique identifier of the odb network resource.
+* `arn` - Amazon Resource Name (ARN) of the odb network resource.
+* `oci_network_anchor_id` - The unique identifier of the OCI network anchor for the ODB network.
+* `oci_vcn_url` - The URL of the OCI VCN for the ODB network.
+* `oci_vcn_id` - The unique identifier  Oracle Cloud ID (OCID) of the OCI VCN for the ODB network.
+* `display_name` - Display name for the network resource.

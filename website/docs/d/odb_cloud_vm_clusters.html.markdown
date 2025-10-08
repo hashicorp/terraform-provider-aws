@@ -31,3 +31,15 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `cloud_vm_clusters` - List of Cloud VM Clusters. It returns only basic information about the cloud VM clusters.
+
+### cloud_vm_clusters
+
+* `id` - The unique identifier of the cloud vm cluster.
+* `arn` - The Amazon Resource Name (ARN) for the cloud vm cluster.
+* `cloud_exadata_infrastructure_id` - The ID of the Cloud Exadata Infrastructure.
+* `oci_resource_anchor_name` - The name of the OCI Resource Anchor.
+* `odb_network_id` - The ID of the ODB network.
+* `oci_url` - The HTTPS link to the VM cluster in OCI.
+* `ocid` - The OCID of the VM cluster.
+* `display_name` - The display name of the VM cluster.
+

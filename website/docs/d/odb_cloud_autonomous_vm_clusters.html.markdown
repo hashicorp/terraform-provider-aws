@@ -31,3 +31,14 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `cloud_autonomous_vm_clusters` - List of Cloud Autonomous VM Clusters. The list going to contain basic information about the cloud autonomous VM clusters.
+
+### cloud_autonomous_vm_clusters
+
+* `id` - The unique identifier of the cloud autonomous vm cluster.
+* `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure id associated with this cloud autonomous VM cluster.
+* `odb_network_id` - The unique identifier of the ODB network associated with this Autonomous VM cluster.
+* `oci_resource_anchor_name` - The name of the OCI resource anchor associated with this Autonomous VM cluster.
+* `oci_url` - The URL for accessing the OCI console page for this Autonomous VM cluster.
+* `ocid` - The Oracle Cloud Identifier (OCID) of the Autonomous VM cluster.
+* `display_name` - The display name of the Autonomous VM cluster.

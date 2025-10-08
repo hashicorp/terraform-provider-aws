@@ -31,3 +31,11 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `odb_peering_connections` - The list of ODB peering connections. A summary of an ODB peering connection.
+
+### odb_peering_connections
+
+* `id` - The unique identifier of the  ODB network peering connection.
+* `arn` - The Amazon Resource Name (ARN) for the  ODB network peering connection.
+* `display_name` - Display name of the ODB network peering connection.
+* `odb_network_arn` - ARN of the ODB network peering connection.
+* `peer_network_arn` - ARN of the peer network peering connection.

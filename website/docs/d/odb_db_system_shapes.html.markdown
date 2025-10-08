@@ -34,6 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `db_system_shapes` - The list of shapes and their properties. Information about a hardware system model (shape) that's available for an Exadata infrastructure. The shape determines resources, such as CPU cores, memory, and storage, to allocate to the Exadata infrastructure.
 
 ### db_system_shapes
+
 * `are_server_types_supported` - Indicates whether the hardware system model supports configurable database and server storage types.
 * `available_core_count` - The maximum number of CPU cores that can be enabled for the shape.
 * `available_core_count_per_node` - The maximum number of CPU cores per DB node that can be enabled for the shape.
