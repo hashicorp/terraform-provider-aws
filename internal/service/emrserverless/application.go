@@ -309,8 +309,9 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any)[0].(map[string]any))
+	// Empty block (len(v.([]any)) > 0 but v.([]any)[0] == nil) is allowed to enable scheduler_configuration with default values
+	if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 {
+		input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any))
 	}
 
 	output, err := conn.CreateApplication(ctx, input)
@@ -429,10 +430,14 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any)[0].(map[string]any))
-		} else {
-			input.SchedulerConfiguration = &types.SchedulerConfiguration{}
+		if d.HasChange("scheduler_configuration") {
+			// Empty block (len(v.([]any)) > 0 but v.([]any)[0] == nil) is allowed to enable scheduler_configuration with default values
+			if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 {
+				input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any))
+			} else {
+				// scheduler_configuration block is removed
+				input.SchedulerConfiguration = &types.SchedulerConfiguration{}
+			}
 		}
 
 		if v, ok := d.GetOk("release_label"); ok {
@@ -898,18 +903,24 @@ func flattenWorkerResourceConfig(apiObject *types.WorkerResourceConfig) map[stri
 	return tfMap
 }
 
-func expandSchedulerConfiguration(tfMap map[string]any) *types.SchedulerConfiguration {
-	if tfMap == nil {
-		return nil
+func expandSchedulerConfiguration(tfList []any) *types.SchedulerConfiguration {
+	// SchedulerConfiguration without any attributes disables the scheduler_configuration.
+	// If an empty block is specified, the scheduler_configuration is enabled with default values.
+	if tfList[0] == nil {
+		return &types.SchedulerConfiguration{
+			MaxConcurrentRuns:   aws.Int32(15),  // default
+			QueueTimeoutMinutes: aws.Int32(360), // default
+		}
 	}
 
 	apiObject := &types.SchedulerConfiguration{}
+	m := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["max_concurrent_runs"].(int); ok {
+	if v, ok := m["max_concurrent_runs"].(int); ok && v != 0 {
 		apiObject.MaxConcurrentRuns = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["queue_timeout_minutes"].(int); ok {
+	if v, ok := m["queue_timeout_minutes"].(int); ok && v != 0 {
 		apiObject.QueueTimeoutMinutes = aws.Int32(int32(v))
 	}
 
