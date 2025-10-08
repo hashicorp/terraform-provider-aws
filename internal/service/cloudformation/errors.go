@@ -1,32 +1,50 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
-	"fmt"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	multierror "github.com/hashicorp/go-multierror"
+	"strings"
 )
 
 const (
-	ErrCodeValidationError = "ValidationError"
+	errCodeValidationError = "ValidationError"
 )
 
-func StackSetOperationError(apiObjects []*cloudformation.StackSetOperationResultSummary) error {
-	var errors *multierror.Error
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		errors = multierror.Append(errors, fmt.Errorf("Account (%s) Region (%s) Status (%s) Status Reason: %s",
-			aws.StringValue(apiObject.Account),
-			aws.StringValue(apiObject.Region),
-			aws.StringValue(apiObject.Status),
-			aws.StringValue(apiObject.StatusReason),
-		))
+func isRetryableIAMPropagationErr(err error) (bool, error) {
+	if err == nil {
+		return false, nil
 	}
 
-	return errors.ErrorOrNil()
+	message := err.Error()
+
+	// IAM eventual consistency
+	if strings.Contains(message, "AccountGate check failed") {
+		return true, err
+	}
+
+	// IAM eventual consistency
+	// User: XXX is not authorized to perform: cloudformation:CreateStack on resource: YYY
+	if strings.Contains(message, "is not authorized") {
+		return true, err
+	}
+
+	// IAM eventual consistency
+	// XXX role has insufficient YYY permissions
+	if strings.Contains(message, "role has insufficient") {
+		return true, err
+	}
+
+	// IAM eventual consistency
+	// Account XXX should have YYY role with trust relationship to Role ZZZ
+	if strings.Contains(message, "role with trust relationship") {
+		return true, err
+	}
+
+	// IAM eventual consistency
+	if strings.Contains(message, "The security token included in the request is invalid") {
+		return true, err
+	}
+
+	return false, err
 }

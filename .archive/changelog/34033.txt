@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_config_config_rule: Add `evaluation_mode` attribute
+```

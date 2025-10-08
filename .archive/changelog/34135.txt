@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lb: Fix `InvalidConfigurationRequest: Load balancer attribute key 'dns_record.client_routing_policy' is not supported on load balancers with type 'network'` errors on resource Create in AWS GovCloud (US)
+```
+
+```release-note:enhancement
+data-source/aws_lb: Add `dns_record_client_routing_policy` attribute
+```

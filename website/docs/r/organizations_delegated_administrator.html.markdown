@@ -21,14 +21,14 @@ resource "aws_organizations_delegated_administrator" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The account ID number of the member account in the organization to register as a delegated administrator.
 * `service_principal` - (Required) The service principal of the AWS service for which you want to make the member account a delegated administrator.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the delegated administrator.
 * `arn` - The Amazon Resource Name (ARN) of the delegated administrator's account.
@@ -41,8 +41,44 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_organizations_delegated_administrator` can be imported by using the account ID and its service principal, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_organizations_delegated_administrator.example
+  identity = {
+    service_principal    = "config.amazonaws.com"
+    delegated_account_id = "123456789012"
+  }
+}
+
+resource "aws_organizations_delegated_administrator" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_organizations_delegated_administrator.example 123456789012/config.amazonaws.com
+
+### Identity Schema
+
+#### Required
+
+* `service_principal` (String) Service principal for the AWS service.
+* `delegated_account_id` (String) Account ID to be designated as a delegated administrator.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_delegated_administrator` using the account ID and its service principal. For example:
+
+```terraform
+import {
+  to = aws_organizations_delegated_administrator.example
+  id = "123456789012/config.amazonaws.com"
+}
+```
+
+Using `terraform import`, import `aws_organizations_delegated_administrator` using the account ID and its service principal. For example:
+
+```console
+% terraform import aws_organizations_delegated_administrator.example 123456789012/config.amazonaws.com
 ```

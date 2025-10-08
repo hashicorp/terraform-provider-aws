@@ -72,7 +72,7 @@ resource "aws_cloudfront_realtime_log_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint` - (Required) The Amazon Kinesis data streams where real-time log data is sent.
 * `fields` - (Required) The fields that are included in each real-time log record. See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-fields) for supported values.
@@ -90,17 +90,47 @@ The `kinesis_stream_config` object supports the following:
 See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-iam-role) for more information.
 * `stream_arn` - (Required) The ARN of the [Kinesis data stream](kinesis_stream.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the CloudFront real-time log configuration.
 * `arn` - The ARN (Amazon Resource Name) of the CloudFront real-time log configuration.
 
 ## Import
 
-CloudFront real-time log configurations can be imported using the ARN, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_realtime_log_config.example
+  identity = {
+    "arn" = "arn:aws:cloudfront::123456789012:realtime-log-config/ExampleNameForRealtimeLogConfig"
+  }
+}
+
+resource "aws_cloudfront_realtime_log_config" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_cloudfront_realtime_log_config.example arn:aws:cloudfront::111122223333:realtime-log-config/ExampleNameForRealtimeLogConfig
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CloudFront real-time log configuration.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront real-time log configurations using the ARN. For example:
+
+```terraform
+import {
+  to = aws_cloudfront_realtime_log_config.example
+  id = "arn:aws:cloudfront::111122223333:realtime-log-config/ExampleNameForRealtimeLogConfig"
+}
+```
+
+Using `terraform import`, import CloudFront real-time log configurations using the ARN. For example:
+
+```console
+% terraform import aws_cloudfront_realtime_log_config.example arn:aws:cloudfront::111122223333:realtime-log-config/ExampleNameForRealtimeLogConfig
 ```

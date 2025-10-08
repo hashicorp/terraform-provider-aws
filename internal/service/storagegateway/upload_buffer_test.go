@@ -1,21 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/storagegateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDecodeUploadBufferID(t *testing.T) {
+func TestUploadBufferParseResourceID(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {
@@ -57,7 +60,7 @@ func TestDecodeUploadBufferID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gatewayARN, diskID, err := tfstoragegateway.DecodeUploadBufferID(tc.Input)
+		gatewayARN, diskID, err := tfstoragegateway.UploadBufferParseResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -82,19 +85,18 @@ func TestAccStorageGatewayUploadBuffer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// Storage Gateway API does not support removing upload buffers,
-		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckGatewayDestroy(ctx),
+		// Storage Gateway API does not support removing upload buffers.
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadBufferConfig_diskID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadBufferExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -106,7 +108,7 @@ func TestAccStorageGatewayUploadBuffer_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17809
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17809.
 func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -116,19 +118,17 @@ func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// Storage Gateway API does not support removing upload buffers,
-		// but we want to ensure other resources are removed.
-		CheckDestroy: testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadBufferConfig_diskPath(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadBufferExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "disk_id", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, "disk_id", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -140,36 +140,28 @@ func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 	})
 }
 
-func testAccCheckUploadBufferExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckUploadBufferExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
-		gatewayARN, diskID, err := tfstoragegateway.DecodeUploadBufferID(rs.Primary.ID)
+		gatewayARN, diskID, err := tfstoragegateway.UploadBufferParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		foundDiskID, err := tfstoragegateway.FindUploadBufferDisk(ctx, conn, gatewayARN, diskID)
+		_, err = tfstoragegateway.FindUploadBufferDiskIDByTwoPartKey(ctx, conn, gatewayARN, diskID)
 
-		if err != nil {
-			return fmt.Errorf("error reading Storage Gateway Upload Buffer (%s): %w", rs.Primary.ID, err)
-		}
-
-		if foundDiskID == nil {
-			return fmt.Errorf("Storage Gateway Upload Buffer (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccUploadBufferConfig_diskID(rName string) string {
-	return testAccGatewayConfig_typeStored(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_typeStored(rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
@@ -196,11 +188,11 @@ resource "aws_storagegateway_upload_buffer" "test" {
   disk_id     = data.aws_storagegateway_local_disk.test.id
   gateway_arn = aws_storagegateway_gateway.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccUploadBufferConfig_diskPath(rName string) string {
-	return testAccGatewayConfig_typeCached(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_typeCached(rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
@@ -227,5 +219,5 @@ resource "aws_storagegateway_upload_buffer" "test" {
   disk_path   = data.aws_storagegateway_local_disk.test.disk_path
   gateway_arn = aws_storagegateway_gateway.test.arn
 }
-`, rName)
+`, rName))
 }

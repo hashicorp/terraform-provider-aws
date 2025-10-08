@@ -1,11 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package validators_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -16,8 +17,8 @@ func TestARNValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val                 types.String
-		expectedDiagnostics diag.Diagnostics
+		val         types.String
+		expectError bool
 	}
 
 	tests := map[string]testCase{
@@ -31,19 +32,12 @@ func TestARNValidator(t *testing.T) {
 			val: types.StringValue("arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"),
 		},
 		"invalid_arn": {
-			val: types.StringValue("arn"),
-			expectedDiagnostics: diag.Diagnostics{
-				diag.NewAttributeErrorDiagnostic(
-					path.Root("test"),
-					"Invalid Attribute Value",
-					`Attribute test value must be a valid Amazon Resource Name, got: arn`,
-				),
-			},
+			val:         types.StringValue("arn"),
+			expectError: true,
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -55,8 +49,12 @@ func TestARNValidator(t *testing.T) {
 			response := validator.StringResponse{}
 			fwvalidators.ARN().ValidateString(context.Background(), request, &response)
 
-			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
-				t.Errorf("unexpected diagnostics difference: %s", diff)
+			if !response.Diagnostics.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if response.Diagnostics.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %s", response.Diagnostics)
 			}
 		})
 	}

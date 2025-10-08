@@ -10,6 +10,8 @@ description: |-
 
 Provides a CloudWatch Evidently Segment resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
 ## Example Usage
 
 ### Basic
@@ -58,16 +60,17 @@ resource "aws_evidently_segment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource) Specifies the description of the segment.
 * `name` - (Required, Forces new resource) A name for the segment.
 * `pattern` - (Required, Forces new resource) The pattern to use for the segment. For more information about pattern syntax, see [Segment rule pattern syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Evidently-segments.html#CloudWatch-Evidently-segments-syntax.html).
 * `tags` - (Optional) Tags to apply to the segment. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the segment.
 * `created_time` - The date and time that the segment is created.
@@ -79,8 +82,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Evidently Segment can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Evidently Segment using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_evidently_segment.example
+  id = "arn:aws:evidently:us-west-2:123456789012:segment/example"
+}
 ```
-$ terraform import aws_evidently_segment.example arn:aws:evidently:us-west-2:123456789012:segment/example
+
+Using `terraform import`, import CloudWatch Evidently Segment using the `arn`. For example:
+
+```console
+% terraform import aws_evidently_segment.example arn:aws:evidently:us-west-2:123456789012:segment/example
 ```

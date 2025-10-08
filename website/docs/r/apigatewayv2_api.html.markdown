@@ -35,8 +35,9 @@ resource "aws_apigatewayv2_api" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
 * `protocol_type` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
 * `api_key_selection_expression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).
@@ -48,6 +49,7 @@ Applicable for WebSocket APIs.
 * `disable_execute_api_endpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
 By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
 To require that clients use a custom domain name to invoke the API, disable the default endpoint.
+* `ip_address_type` - (Optional) The IP address types that can invoke the API. Valid values: `ipv4`, `dualstack`. Use `ipv4` to allow only IPv4 addresses to invoke your API, or use `dualstack` to allow both IPv4 and IPv6 addresses to invoke your API. Defaults to `ipv4`.
 * `route_key` - (Optional) Part of _quick create_. Specifies any [route key](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html). Applicable for HTTP APIs.
 * `route_selection_expression` - (Optional) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
 Defaults to `$request.method $request.path`.
@@ -75,9 +77,9 @@ The `cors_configuration` object supports the following:
 * `expose_headers` - (Optional) Set of exposed HTTP headers.
 * `max_age` - (Optional) Number of seconds that the browser should cache preflight request results.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API identifier.
 * `api_endpoint` - URI of the API, of the form `https://{api-id}.execute-api.{region}.amazonaws.com` for HTTP APIs and `wss://{api-id}.execute-api.{region}.amazonaws.com` for WebSocket APIs.
@@ -89,8 +91,17 @@ See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigate
 
 ## Import
 
-`aws_apigatewayv2_api` can be imported by using the API identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_api` using the API identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_api.example
+  id = "aabbccddee"
+}
 ```
-$ terraform import aws_apigatewayv2_api.example aabbccddee
+
+Using `terraform import`, import `aws_apigatewayv2_api` using the API identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_api.example aabbccddee
 ```

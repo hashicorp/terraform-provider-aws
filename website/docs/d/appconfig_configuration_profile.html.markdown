@@ -23,14 +23,15 @@ data "aws_appconfig_configuration_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) ID of the AppConfig application to which this configuration profile belongs.
 * `configuration_profile_id` - (Required) ID of the Configuration Profile.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Configuration Profile.
 * `description` - Description of the Configuration Profile.

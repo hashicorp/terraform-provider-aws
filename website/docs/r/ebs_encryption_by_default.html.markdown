@@ -22,18 +22,28 @@ resource "aws_ebs_encryption_by_default" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enabled` - (Optional) Whether or not default EBS encryption is enabled. Valid values are `true` or `false`. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Default EBS encryption state can be imported, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the default EBS encryption state. For example:
 
+```terraform
+import {
+  to = aws_ebs_encryption_by_default.example
+  id = "default"
+}
 ```
-$ terraform import aws_ebs_encryption_by_default.example default
+
+Using `terraform import`, import the default EBS encryption state. For example:
+
+```console
+% terraform import aws_ebs_encryption_by_default.example default
 ```

@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
@@ -13,7 +16,7 @@ resource "aws_db_instance" "default" {
   engine                 = var.engine
   engine_version         = var.engine_version[var.engine]
   instance_class         = var.instance_class
-  name                   = var.db_name
+  db_name                = var.db_name
   username               = var.username
   password               = var.password
   vpc_security_group_ids = [aws_security_group.default.id]

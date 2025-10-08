@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint_test
 
 import (
@@ -5,18 +8,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel pinpoint.BaiduChannelResponse
+	var channel awstypes.BaiduChannelResponse
 	resourceName := "aws_pinpoint_baidu_channel.channel"
 
 	apiKey := "123"
@@ -25,7 +29,7 @@ func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBaiduChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,31 +37,31 @@ func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 				Config: testAccBaiduChannelConfig_basic(apiKey, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBaiduChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
-					resource.TestCheckResourceAttr(resourceName, "secret_key", secretKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSecretKey, secretKey),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"api_key", "secret_key"},
+				ImportStateVerifyIgnore: []string{"api_key", names.AttrSecretKey},
 			},
 			{
 				Config: testAccBaiduChannelConfig_basic(apikeyUpdated, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBaiduChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apikeyUpdated),
-					resource.TestCheckResourceAttr(resourceName, "secret_key", secretKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSecretKey, secretKey),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckBaiduChannelExists(ctx context.Context, n string, channel *pinpoint.BaiduChannelResponse) resource.TestCheckFunc {
+func testAccCheckBaiduChannelExists(ctx context.Context, n string, channel *awstypes.BaiduChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -68,19 +72,41 @@ func testAccCheckBaiduChannelExists(ctx context.Context, n string, channel *pinp
 			return fmt.Errorf("No Pinpoint Baidu channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
-		// Check if the Baidu Channel exists
-		params := &pinpoint.GetBaiduChannelInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetBaiduChannelWithContext(ctx, params)
+		output, err := tfpinpoint.FindBaiduChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*channel = *output.BaiduChannelResponse
+		*channel = *output
+
+		return nil
+	}
+}
+
+func testAccCheckBaiduChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_pinpoint_baidu_channel" {
+				continue
+			}
+
+			_, err := tfpinpoint.FindBaiduChannelByApplicationId(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Pinpoint Baidu Channel %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
@@ -98,31 +124,4 @@ resource "aws_pinpoint_baidu_channel" "channel" {
   secret_key = "%s"
 }
 `, apiKey, secretKey)
-}
-
-func testAccCheckBaiduChannelDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_pinpoint_baidu_channel" {
-				continue
-			}
-
-			// Check if the Baidu channel exists by fetching its attributes
-			params := &pinpoint.GetBaiduChannelInput{
-				ApplicationId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetBaiduChannelWithContext(ctx, params)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-					continue
-				}
-				return err
-			}
-			return fmt.Errorf("Baidu Channel exists when it should be destroyed!")
-		}
-
-		return nil
-	}
 }

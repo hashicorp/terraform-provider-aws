@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -10,16 +13,26 @@ func TestAccGlue_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"CatalogTableOptimizer": {
+			acctest.CtBasic:                                   testAccCatalogTableOptimizer_basic,
+			"deleteOrphanFileConfiguration":                   testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration,
+			"deleteOrphanFileConfigurationWithRunRateInHours": testAccCatalogTableOptimizer_DeleteOrphanFileConfigurationWithRunRateInHours,
+			acctest.CtDisappears:                              testAccCatalogTableOptimizer_disappears,
+			"retentionConfiguration":                          testAccCatalogTableOptimizer_RetentionConfiguration,
+			"retentionConfigurationWithRunRateInHours":        testAccCatalogTableOptimizer_RetentionConfigurationWithRunRateInHours,
+			"update": testAccCatalogTableOptimizer_update,
+		},
 		"DataCatalogEncryptionSettings": {
-			"basic":      testAccDataCatalogEncryptionSettings_basic,
-			"dataSource": testAccDataCatalogEncryptionSettingsDataSource_basic,
+			acctest.CtBasic: testAccDataCatalogEncryptionSettings_basic,
+			"dataSource":    testAccDataCatalogEncryptionSettingsDataSource_basic,
 		},
 		"ResourcePolicy": {
-			"basic":      testAccResourcePolicy_basic,
-			"update":     testAccResourcePolicy_update,
-			"hybrid":     testAccResourcePolicy_hybrid,
-			"disappears": testAccResourcePolicy_disappears,
-			"equivalent": testAccResourcePolicy_ignoreEquivalent,
+			acctest.CtBasic:      testAccResourcePolicy_basic,
+			"update":             testAccResourcePolicy_update,
+			"hybrid":             testAccResourcePolicy_hybrid,
+			acctest.CtDisappears: testAccResourcePolicy_disappears,
+			"equivalent":         testAccResourcePolicy_ignoreEquivalent,
+			"Identity":           testAccGlueResourcePolicy_IdentitySerial,
 		},
 	}
 

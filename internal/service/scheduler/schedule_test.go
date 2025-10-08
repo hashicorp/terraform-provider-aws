@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler_test
 
 import (
@@ -7,10 +10,13 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfscheduler "github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
@@ -64,7 +70,6 @@ func TestResourceScheduleIDFromARN(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.ARN, func(t *testing.T) {
 			t.Parallel()
 
@@ -147,7 +152,6 @@ func TestResourceScheduleParseID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.ID, func(t *testing.T) {
 			t.Parallel()
 
@@ -184,13 +188,13 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -198,20 +202,21 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "scheduler", regexp.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
+					resource.TestCheckResourceAttr(resourceName, "action_after_completion", string(awstypes.ActionAfterCompletionNone)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.mode", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "group_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("default/%s", name)),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, "default"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("default/%s", name)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression_timezone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", "0"),
@@ -219,7 +224,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.kinesis_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_event_age_in_seconds", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_retry_attempts", "185"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", "0"),
 				),
@@ -243,13 +248,13 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -259,7 +264,57 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfscheduler.ResourceSchedule(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccSchedulerSchedule_actionAfterCompletion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_scheduler_schedule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_actionAfterCompletion(name, string(awstypes.ActionAfterCompletionNone)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "action_after_completion", string(awstypes.ActionAfterCompletionNone)),
+				),
+			},
+			{
+				Config: testAccScheduleConfig_actionAfterCompletion(name, string(awstypes.ActionAfterCompletionDelete)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "action_after_completion", string(awstypes.ActionAfterCompletionDelete)),
+				),
+			},
+			{
+				Config: testAccScheduleConfig_actionAfterCompletion(name, string(awstypes.ActionAfterCompletionNone)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "action_after_completion", string(awstypes.ActionAfterCompletionNone)),
+				),
 			},
 		},
 	})
@@ -275,13 +330,13 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -289,7 +344,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 				Config: testAccScheduleConfig_description(name, "test 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "description", "test 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test 1"),
 				),
 			},
 			{
@@ -301,7 +356,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 				Config: testAccScheduleConfig_description(name, "test 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "description", "test 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test 2"),
 				),
 			},
 			{
@@ -313,7 +368,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 				Config: testAccScheduleConfig_description(name, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -335,13 +390,13 @@ func TestAccSchedulerSchedule_endDate(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -395,13 +450,13 @@ func TestAccSchedulerSchedule_flexibleTimeWindow(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -458,13 +513,13 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -472,7 +527,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 				Config: testAccScheduleConfig_groupName(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "group_name", "aws_scheduler_schedule_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, "aws_scheduler_schedule_group.test", names.AttrName),
 				),
 			},
 			{
@@ -494,13 +549,13 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -508,7 +563,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 				Config: testAccScheduleConfig_kmsKeyARN(name, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -520,7 +575,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 				Config: testAccScheduleConfig_kmsKeyARN(name, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test.1", names.AttrARN),
 				),
 			},
 			{
@@ -532,7 +587,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 				),
 			},
 			{
@@ -553,13 +608,13 @@ func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
 	var schedule scheduler.GetScheduleOutput
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -567,8 +622,8 @@ func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
 				Config: testAccScheduleConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -589,13 +644,13 @@ func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
 	var schedule scheduler.GetScheduleOutput
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -603,8 +658,8 @@ func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
 				Config: testAccScheduleConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -626,13 +681,13 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -640,7 +695,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccScheduleConfig_scheduleExpression(name, "rate(1 hour)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 				),
 			},
 			{
@@ -652,7 +707,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccScheduleConfig_scheduleExpression(name, "rate(1 day)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 day)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 day)"),
 				),
 			},
 			{
@@ -674,13 +729,13 @@ func TestAccSchedulerSchedule_scheduleExpressionTimezone(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -734,13 +789,13 @@ func TestAccSchedulerSchedule_startDate(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -794,13 +849,13 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -808,7 +863,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 				Config: testAccScheduleConfig_state(name, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 				),
 			},
 			{
@@ -820,7 +875,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 				Config: testAccScheduleConfig_state(name, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 				),
 			},
 			{
@@ -832,7 +887,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 				),
 			},
 			{
@@ -854,13 +909,13 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -868,7 +923,7 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 				Config: testAccScheduleConfig_targetARN(name, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -880,7 +935,7 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 				Config: testAccScheduleConfig_targetARN(name, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.1", names.AttrARN),
 				),
 			},
 			{
@@ -902,13 +957,13 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -916,7 +971,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 				Config: testAccScheduleConfig_targetDeadLetterConfig(name, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.0", names.AttrARN),
 				),
 			},
 			{
@@ -928,7 +983,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 				Config: testAccScheduleConfig_targetDeadLetterConfig(name, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.1", names.AttrARN),
 				),
 			},
 			{
@@ -962,13 +1017,13 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -977,8 +1032,8 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.#", "0"),
@@ -989,7 +1044,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
 			{
@@ -1005,29 +1060,29 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              "2",
 						"capacity_provider": "test1",
-						"weight":            "50",
+						names.AttrWeight:    "50",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              "0",
 						"capacity_provider": "test2",
-						"weight":            "50",
+						names.AttrWeight:    "50",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "true"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", "my-task-group"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.assign_public_ip", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.assign_public_ip", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.*", "sg-111111111"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111111"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
-						"type":       "memberOf",
-						"expression": "attribute:ecs.os-family in [LINUX]",
+						names.AttrType:       "memberOf",
+						names.AttrExpression: "attribute:ecs.os-family in [LINUX]",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
-						"type":  "binpack",
-						"field": "cpu",
+						names.AttrType:  "binpack",
+						names.AttrField: "cpu",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "LATEST"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", "TASK_DEFINITION"),
@@ -1036,7 +1091,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key2", "Value2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
 			{
@@ -1052,13 +1107,13 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              "3",
 						"capacity_provider": "test3",
-						"weight":            "100",
+						names.AttrWeight:    "100",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", "my-task-group-2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.assign_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.*", "sg-111111112"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.*", "sg-111111113"),
@@ -1066,11 +1121,11 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111112"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111113"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
-						"type": "distinctInstance",
+						names.AttrType: "distinctInstance",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
-						"type":  "spread",
-						"field": "cpu",
+						names.AttrType:  "spread",
+						names.AttrField: "cpu",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "1.1.0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", ""),
@@ -1078,7 +1133,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key1", "Value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
 			{
@@ -1091,8 +1146,8 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "EC2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.#", "0"),
@@ -1103,7 +1158,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
 			{
@@ -1138,13 +1193,13 @@ func TestAccSchedulerSchedule_targetEventBridgeParameters(t *testing.T) {
 	eventBusName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1201,13 +1256,13 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 	resourceName := "aws_scheduler_schedule.test"
 	var queueUrl string
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1215,7 +1270,7 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 				Config: testAccScheduleConfig_targetInput(name, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrWith("aws_sqs_queue.test", "url", func(value string) error {
+					resource.TestCheckResourceAttrWith("aws_sqs_queue.test", names.AttrURL, func(value string) error {
 						queueUrl = value
 						return nil
 					}),
@@ -1266,13 +1321,13 @@ func TestAccSchedulerSchedule_targetKinesisParameters(t *testing.T) {
 	streamName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1326,13 +1381,13 @@ func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1389,13 +1444,13 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1403,7 +1458,7 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 				Config: testAccScheduleConfig_targetRoleARN(name, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -1415,7 +1470,7 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 				Config: testAccScheduleConfig_targetRoleARN(name, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test1", names.AttrARN),
 				),
 			},
 			{
@@ -1437,26 +1492,26 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, "key1", "value1"),
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key1",
-							"value": "value1",
+							names.AttrName:  acctest.CtKey1,
+							names.AttrValue: acctest.CtValue1,
 						}),
 				),
 			},
@@ -1466,21 +1521,21 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetSageMakerPipelineParameters2(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters2(name, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key1",
-							"value": "value1updated",
+							names.AttrName:  acctest.CtKey1,
+							names.AttrValue: acctest.CtValue1Updated,
 						}),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key2",
-							"value": "value2",
+							names.AttrName:  acctest.CtKey2,
+							names.AttrValue: acctest.CtValue2,
 						}),
 				),
 			},
@@ -1490,15 +1545,15 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, "key2", "value2"),
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key2",
-							"value": "value2",
+							names.AttrName:  acctest.CtKey2,
+							names.AttrValue: acctest.CtValue2,
 						}),
 				),
 			},
@@ -1533,13 +1588,13 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1585,7 +1640,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 
 func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(t).SchedulerClient()
+		conn := acctest.ProviderMeta(ctx, t).SchedulerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_scheduler_schedule" {
@@ -1632,7 +1687,7 @@ func testAccCheckScheduleExists(ctx context.Context, t *testing.T, name string, 
 			return err
 		}
 
-		conn := acctest.ProviderMeta(t).SchedulerClient()
+		conn := acctest.ProviderMeta(ctx, t).SchedulerClient(ctx)
 
 		output, err := tfscheduler.FindScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 
@@ -1690,6 +1745,32 @@ resource "aws_scheduler_schedule" "test" {
   }
 }
 `, name),
+	)
+}
+
+func testAccScheduleConfig_actionAfterCompletion(rName, actionAfterCompletion string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  action_after_completion = %[2]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_sqs_queue.test.arn
+    role_arn = aws_iam_role.test.arn
+  }
+}
+`, rName, actionAfterCompletion),
 	)
 }
 
@@ -1805,7 +1886,9 @@ func testAccScheduleConfig_kmsKeyARN(name string, index int) string {
 resource "aws_sqs_queue" "test" {}
 
 resource "aws_kms_key" "test" {
-  count = 2
+  count                   = 2
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_scheduler_schedule" "test" {
@@ -2508,7 +2591,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:pipeline/test"
     role_arn = aws_iam_role.test.arn
 
     sagemaker_pipeline_parameters {
@@ -2539,7 +2622,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:pipeline/test"
     role_arn = aws_iam_role.test.arn
 
     sagemaker_pipeline_parameters {

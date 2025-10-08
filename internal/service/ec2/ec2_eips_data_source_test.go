@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EIPsDataSource_basic(t *testing.T) {
@@ -16,13 +19,13 @@ func TestAccEC2EIPsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_eips.all", "allocation_ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_eips.all", "allocation_ids.#", 1),
 					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "allocation_ids.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "public_ips.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_eips.none", "allocation_ids.#", "0"),
@@ -36,7 +39,7 @@ func TestAccEC2EIPsDataSource_basic(t *testing.T) {
 func testAccEIPsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test1" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "%[1]s-1"
@@ -44,7 +47,7 @@ resource "aws_eip" "test1" {
 }
 
 resource "aws_eip" "test2" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "%[1]s-2"

@@ -29,7 +29,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of a custom routing accelerator.
 * `ip_address_type` - (Optional) The IP address type that an accelerator supports. For a custom routing accelerator, the value must be `"IPV4"`.
@@ -38,17 +38,18 @@ The following arguments are supported:
 * `attributes` - (Optional) The attributes of the accelerator. Fields documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-**attributes** supports the following attributes:
+`attributes` supports the following arguments:
 
 * `flow_logs_enabled` - (Optional) Indicates whether flow logs are enabled. Defaults to `false`. Valid values: `true`, `false`.
 * `flow_logs_s3_bucket` - (Optional) The name of the Amazon S3 bucket for the flow logs. Required if `flow_logs_enabled` is `true`.
 * `flow_logs_s3_prefix` - (Optional) The prefix for the location in the Amazon S3 bucket for the flow logs. Required if `flow_logs_enabled` is `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the custom accelerator.
+* `arn` - The Amazon Resource Name (ARN) of the custom accelerator.
 * `dns_name` - The DNS name of the accelerator. For example, `a5d53ff5ee6bca4ce.awsglobalaccelerator.com`.
 * `hosted_zone_id` --  The Global Accelerator Route 53 zone ID that can be used to
   route an [Alias Resource Record Set][1] to the Global Accelerator. This attribute
@@ -72,8 +73,38 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Global Accelerator custom routing accelerators can be imported using the `arn`, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_globalaccelerator_custom_routing_accelerator.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
+  }
+}
+
+resource "aws_globalaccelerator_custom_routing_accelerator" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_globalaccelerator_custom_routing_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator custom routing accelerator.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing accelerators using the `arn`. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_custom_routing_accelerator.example
+  id = "arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
+```
+
+Using `terraform import`, import Global Accelerator custom routing accelerators using the `arn`. For example:
+
+```console
+% terraform import aws_globalaccelerator_custom_routing_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```

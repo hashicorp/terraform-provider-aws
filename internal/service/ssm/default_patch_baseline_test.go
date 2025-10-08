@@ -1,21 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,7 +35,7 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,8 +43,8 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -54,7 +56,7 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -73,7 +75,7 @@ func testAccSSMDefaultPatchBaseline_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +103,7 @@ func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,8 +111,8 @@ func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_patchBaselineARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -122,7 +124,7 @@ func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -142,16 +144,16 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, types.OperatingSystemAmazonLinux2022),
+				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, awstypes.OperatingSystemAmazonLinux2022),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -163,7 +165,7 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -180,13 +182,13 @@ func testAccSSMDefaultPatchBaseline_wrongOperatingSystem(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName, types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu))),
+				Config:      testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName, awstypes.OperatingSystemAmazonLinux2022, awstypes.OperatingSystemUbuntu),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", awstypes.OperatingSystemAmazonLinux2022, awstypes.OperatingSystemUbuntu))),
 			},
 		},
 	})
@@ -203,7 +205,7 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -211,8 +213,8 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_systemDefault(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineDataSourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineDataSourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -224,7 +226,7 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -245,24 +247,24 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, types.OperatingSystemWindows),
+				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, awstypes.OperatingSystemWindows),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
 			},
 			{
-				Config: testAccDefaultPatchBaselineConfig_updated(rName, types.OperatingSystemWindows),
+				Config: testAccDefaultPatchBaselineConfig_updated(rName, awstypes.OperatingSystemWindows),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineUpdatedResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineUpdatedResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineUpdatedResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineUpdatedResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -274,7 +276,7 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -297,7 +299,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -305,12 +307,12 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &main),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &alternate),
-					resource.TestCheckResourceAttrPair(resourceAlternateName, "baseline_id", baselineAlternateResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceAlternateName, "id", baselineAlternateResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceAlternateName, "baseline_id", baselineAlternateResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceAlternateName, names.AttrID, baselineAlternateResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -322,7 +324,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -332,70 +334,59 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 
 func testAccCheckDefaultPatchBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_default_patch_baseline" {
 				continue
 			}
 
-			defaultOSPatchBaseline, err := tfssm.FindDefaultDefaultPatchBaselineIDForOS(ctx, conn, types.OperatingSystem(rs.Primary.ID))
+			defaultOSPatchBaseline, err := tfssm.FindDefaultDefaultPatchBaselineIDByOperatingSystem(ctx, conn, awstypes.OperatingSystem(rs.Primary.ID))
+
 			if err != nil {
 				return err
 			}
 
-			// If the resource has been deleted, the default patch baseline will be the AWS-provided patch baseline for the OS
-			out, err := tfssm.FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(rs.Primary.ID))
+			// If the resource has been deleted, the default patch baseline will be the AWS-provided patch baseline for the OS.
+			output, err := tfssm.FindDefaultPatchBaselineByOperatingSystem(ctx, conn, awstypes.OperatingSystem(rs.Primary.ID))
+
 			if tfresource.NotFound(err) {
-				return nil
+				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			if aws.ToString(out.BaselineId) == defaultOSPatchBaseline {
-				return nil
+			if aws.ToString(output.BaselineId) == aws.ToString(defaultOSPatchBaseline) {
+				continue
 			}
 
-			return create.Error(names.SSM, create.ErrActionCheckingDestroyed, tfssm.ResNameDefaultPatchBaseline, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("SSM Default Patch Baseline %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDefaultPatchBaselineExists(ctx context.Context, name string, defaultpatchbaseline *ssm.GetDefaultPatchBaselineOutput) resource.TestCheckFunc {
+func testAccCheckDefaultPatchBaselineExists(ctx context.Context, n string, v *ssm.GetDefaultPatchBaselineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SSM, create.ErrActionCheckingExistence, tfssm.ResNameDefaultPatchBaseline, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.SSM, create.ErrActionCheckingExistence, tfssm.ResNameDefaultPatchBaseline, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
+		output, err := tfssm.FindDefaultPatchBaselineByOperatingSystem(ctx, conn, awstypes.OperatingSystem(rs.Primary.ID))
 
-		resp, err := tfssm.FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(rs.Primary.ID))
 		if err != nil {
-			return create.Error(names.SSM, create.ErrActionCheckingExistence, tfssm.ResNameDefaultPatchBaseline, rs.Primary.ID, err)
+			return err
 		}
 
-		*defaultpatchbaseline = *resp
+		*v = *output
 
 		return nil
-	}
-}
-
-func testAccDefaultPatchBaselineImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["baseline_id"], nil
 	}
 }
 
@@ -415,7 +406,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccDefaultPatchBaselineConfig_operatingSystem(rName string, os types.OperatingSystem) string {
+func testAccDefaultPatchBaselineConfig_operatingSystem(rName string, os awstypes.OperatingSystem) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_default_patch_baseline" "test" {
   baseline_id      = aws_ssm_patch_baseline.test.id
@@ -432,7 +423,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName, os)
 }
 
-func testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName string, baselineOS, defaultOS types.OperatingSystem) string {
+func testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName string, baselineOS, defaultOS awstypes.OperatingSystem) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_default_patch_baseline" "test" {
   baseline_id      = aws_ssm_patch_baseline.test.id
@@ -480,7 +471,7 @@ data "aws_ssm_patch_baseline" "test" {
 `
 }
 
-func testAccDefaultPatchBaselineConfig_updated(rName string, os types.OperatingSystem) string {
+func testAccDefaultPatchBaselineConfig_updated(rName string, os awstypes.OperatingSystem) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_default_patch_baseline" "test" {
   baseline_id      = aws_ssm_patch_baseline.updated.id

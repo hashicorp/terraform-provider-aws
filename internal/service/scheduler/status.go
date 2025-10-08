@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler
 
 import (
@@ -14,7 +17,7 @@ const (
 )
 
 func statusScheduleGroup(ctx context.Context, conn *scheduler.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findScheduleGroupByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

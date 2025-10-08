@@ -29,7 +29,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool_domain" "main" {
-  domain          = "example-domain"
+  domain          = "auth.example.com"
   certificate_arn = aws_acm_certificate.cert.arn
   user_pool_id    = aws_cognito_user_pool.example.id
 }
@@ -57,15 +57,17 @@ resource "aws_route53_record" "auth-cognito-A" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
+* `managed_login_version` - (Optional) A version number that indicates the state of managed login for your domain. Valid values: `1` for hosted UI (classic), `2` for the newer managed login with the branding designer.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `aws_account_id` - The AWS account ID for the user pool owner.
 * `cloudfront_distribution` - The Amazon CloudFront endpoint (e.g. `dpp0gtxikpq3y.cloudfront.net`) that you use as the target of the alias that you set up with your Domain Name Service (DNS) provider.
@@ -76,8 +78,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pool Domains can be imported using the `domain`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User Pool Domains using the `domain`. For example:
 
+```terraform
+import {
+  to = aws_cognito_user_pool_domain.main
+  id = "auth.example.org"
+}
 ```
-$ terraform import aws_cognito_user_pool_domain.main auth.example.org
+
+Using `terraform import`, import Cognito User Pool Domains using the `domain`. For example:
+
+```console
+% terraform import aws_cognito_user_pool_domain.main auth.example.org
 ```

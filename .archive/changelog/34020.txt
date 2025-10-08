@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_task_definition: Add `0` as a valid value for `volume.efs_volume_configuration.transit_encryption_port`, preventing unexpected drift
+```

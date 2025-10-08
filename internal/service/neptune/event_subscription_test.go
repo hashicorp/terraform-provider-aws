@@ -1,55 +1,107 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
-	rInt := sdkacctest.RandInt()
-	rName := fmt.Sprintf("tf-acc-test-neptune-event-subs-%d", rInt)
-
+	var v awstypes.EventSubscription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig_basic(rName, rInt),
+				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.ResourcePrefix),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-instance"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
-				Config: testAccEventSubscriptionConfig_update(rName, rInt),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventSubscriptionConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-parameter-group"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-acc-test1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-parameter-group"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNeptuneEventSubscription_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.EventSubscription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_event_subscription.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSubscriptionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceEventSubscription(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNeptuneEventSubscription_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.EventSubscription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_event_subscription.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSubscriptionConfig_nameGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-"),
 				),
 			},
 			{
@@ -61,32 +113,76 @@ func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccNeptuneEventSubscription_withPrefix(t *testing.T) {
+func TestAccNeptuneEventSubscription_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
-	rInt := sdkacctest.RandInt()
-	startsWithPrefix := regexp.MustCompile("^tf-acc-test-neptune-event-subs-")
-
+	var v awstypes.EventSubscription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig_prefix(rInt),
+				Config: testAccEventSubscriptionConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "name", startsWithPrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNeptuneEventSubscription_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.EventSubscription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_event_subscription.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventSubscriptionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -94,37 +190,31 @@ func TestAccNeptuneEventSubscription_withPrefix(t *testing.T) {
 
 func TestAccNeptuneEventSubscription_withSourceIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
-	rInt := sdkacctest.RandInt()
-
+	var v awstypes.EventSubscription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig_sourceIDs(rInt),
+				Config: testAccEventSubscriptionConfig_sourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-parameter-group"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-parameter-group"),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 				),
 			},
 			{
-				Config: testAccEventSubscriptionConfig_updateSourceIDs(rInt),
+				Config: testAccEventSubscriptionConfig_updateSourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-parameter-group"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-parameter-group"),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "2"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -132,91 +222,69 @@ func TestAccNeptuneEventSubscription_withSourceIDs(t *testing.T) {
 
 func TestAccNeptuneEventSubscription_withCategories(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.EventSubscription
-	rInt := sdkacctest.RandInt()
-	rName := fmt.Sprintf("tf-acc-test-neptune-event-subs-%d", rInt)
-
+	var v awstypes.EventSubscription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig_basic(rName, rInt),
+				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "5"),
 				),
 			},
 			{
-				Config: testAccEventSubscriptionConfig_updateCategories(rName, rInt),
+				Config: testAccEventSubscriptionConfig_updateCategories(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "1"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *neptune.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *awstypes.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Neptune Event Subscription is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
-
-		opts := neptune.DescribeEventSubscriptionsInput{
-			SubscriptionName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeEventSubscriptionsWithContext(ctx, &opts)
+		output, err := tfneptune.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.EventSubscriptionsList) != 1 ||
-			aws.StringValue(resp.EventSubscriptionsList[0].CustSubscriptionId) != rs.Primary.ID {
-			return fmt.Errorf("Neptune Event Subscription not found")
-		}
+		*v = *output
 
-		*v = *resp.EventSubscriptionsList[0]
 		return nil
 	}
 }
 
 func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_event_subscription" {
 				continue
 			}
 
-			var err error
-			resp, err := conn.DescribeEventSubscriptionsWithContext(ctx, &neptune.DescribeEventSubscriptionsInput{
-				SubscriptionName: aws.String(rs.Primary.ID),
-			})
+			_, err := tfneptune.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -224,25 +292,22 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			if len(resp.EventSubscriptionsList) != 0 &&
-				aws.StringValue(resp.EventSubscriptionsList[0].CustSubscriptionId) == rs.Primary.ID {
-				return fmt.Errorf("Event Subscription still exists")
-			}
+			return fmt.Errorf("Neptune Event Subscription %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccEventSubscriptionConfig_basic(subscriptionName string, rInt int) string {
+func testAccEventSubscriptionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sns_topic" "aws_sns_topic" {
-  name = "tf-acc-test-neptune-event-subs-sns-topic-%[1]d"
+resource "aws_sns_topic" "test" {
+  name = %[1]q
 }
 
 resource "aws_neptune_event_subscription" "test" {
-  name          = %[2]q
-  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
+  name          = %[1]q
+  sns_topic_arn = aws_sns_topic.test.arn
   source_type   = "db-instance"
 
   event_categories = [
@@ -252,23 +317,81 @@ resource "aws_neptune_event_subscription" "test" {
     "deletion",
     "maintenance",
   ]
-
-  tags = {
-    Name = "tf-acc-test"
-  }
 }
-`, rInt, subscriptionName)
+`, rName)
 }
 
-func testAccEventSubscriptionConfig_update(subscriptionName string, rInt int) string {
+func testAccEventSubscriptionConfig_update(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sns_topic" "aws_sns_topic" {
-  name = "tf-acc-test-neptune-event-subs-sns-topic-%[1]d"
+resource "aws_sns_topic" "test" {
+  name = %[1]q
 }
 
 resource "aws_neptune_event_subscription" "test" {
-  name          = %[2]q
-  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
+  name          = %[1]q
+  sns_topic_arn = aws_sns_topic.test.arn
+  enabled       = false
+  source_type   = "db-parameter-group"
+
+  event_categories = [
+    "configuration change",
+  ]
+}
+`, rName)
+}
+
+func testAccEventSubscriptionConfig_nameGenerated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_neptune_event_subscription" "test" {
+  sns_topic_arn = aws_sns_topic.test.arn
+  source_type   = "db-instance"
+
+  event_categories = [
+    "availability",
+    "backup",
+    "creation",
+    "deletion",
+    "maintenance",
+  ]
+}
+`, rName)
+}
+
+func testAccEventSubscriptionConfig_namePrefix(rName, namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_neptune_event_subscription" "test" {
+  name_prefix   = %[2]q
+  sns_topic_arn = aws_sns_topic.test.arn
+  source_type   = "db-instance"
+
+  event_categories = [
+    "availability",
+    "backup",
+    "creation",
+    "deletion",
+    "maintenance",
+  ]
+}
+`, rName, namePrefix)
+}
+
+func testAccEventSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_neptune_event_subscription" "test" {
+  name          = %[1]q
+  sns_topic_arn = aws_sns_topic.test.arn
   enabled       = false
   source_type   = "db-parameter-group"
 
@@ -277,120 +400,96 @@ resource "aws_neptune_event_subscription" "test" {
   ]
 
   tags = {
-    Name = "tf-acc-test1"
+    %[2]q = %[3]q
   }
 }
-`, rInt, subscriptionName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccEventSubscriptionConfig_prefix(rInt int) string {
+func testAccEventSubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_sns_topic" "aws_sns_topic" {
-  name = "tf-acc-test-neptune-event-subs-sns-topic-%d"
+resource "aws_sns_topic" "test" {
+  name = %[1]q
 }
 
 resource "aws_neptune_event_subscription" "test" {
-  name_prefix   = "tf-acc-test-neptune-event-subs-"
-  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
-  source_type   = "db-instance"
-
-  event_categories = [
-    "availability",
-    "backup",
-    "creation",
-    "deletion",
-    "maintenance",
-  ]
-
-  tags = {
-    Name = "tf-acc-test"
-  }
-}
-`, rInt)
-}
-
-func testAccEventSubscriptionConfig_sourceIDs(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_sns_topic" "aws_sns_topic" {
-  name = "tf-acc-test-neptune-event-subs-sns-topic-%[1]d"
-}
-
-resource "aws_neptune_parameter_group" "test" {
-  name        = "neptune-parameter-group-event-%[1]d"
-  family      = "neptune1"
-  description = "Test parameter group for terraform"
-}
-
-resource "aws_neptune_event_subscription" "test" {
-  name          = "tf-acc-test-neptune-event-subs-with-ids-%[1]d"
-  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
+  name          = %[1]q
+  sns_topic_arn = aws_sns_topic.test.arn
+  enabled       = false
   source_type   = "db-parameter-group"
-  source_ids    = [aws_neptune_parameter_group.test.id]
 
   event_categories = [
     "configuration change",
   ]
 
   tags = {
-    Name = "tf-acc-test"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rInt)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccEventSubscriptionConfig_updateSourceIDs(rInt int) string {
+func testAccEventSubscriptionConfig_baseSourceIDs(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sns_topic" "aws_sns_topic" {
-  name = "tf-acc-test-neptune-event-subs-sns-topic-%[1]d"
+resource "aws_sns_topic" "test" {
+  name = %[1]q
 }
 
 resource "aws_neptune_parameter_group" "test" {
-  name        = "neptune-parameter-group-event-%[1]d"
-  family      = "neptune1"
-  description = "Test parameter group for terraform"
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  family = "neptune1"
+}
+`, rName)
 }
 
-resource "aws_neptune_parameter_group" "test_2" {
-  name        = "neptune-parameter-group-event-2-%[1]d"
-  family      = "neptune1"
-  description = "Test parameter group for terraform"
-}
-
+func testAccEventSubscriptionConfig_sourceIDs(rName string) string {
+	return acctest.ConfigCompose(testAccEventSubscriptionConfig_baseSourceIDs(rName), fmt.Sprintf(`
 resource "aws_neptune_event_subscription" "test" {
-  name          = "tf-acc-test-neptune-event-subs-with-ids-%[1]d"
-  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
+  name          = %[1]q
+  sns_topic_arn = aws_sns_topic.test.arn
   source_type   = "db-parameter-group"
-  source_ids    = [aws_neptune_parameter_group.test.id, aws_neptune_parameter_group.test_2.id]
+  source_ids    = [aws_neptune_parameter_group.test[0].id]
 
   event_categories = [
     "configuration change",
   ]
-
-  tags = {
-    Name = "tf-acc-test"
-  }
 }
-`, rInt)
+`, rName))
 }
 
-func testAccEventSubscriptionConfig_updateCategories(subscriptionName string, rInt int) string {
+func testAccEventSubscriptionConfig_updateSourceIDs(rName string) string {
+	return acctest.ConfigCompose(testAccEventSubscriptionConfig_baseSourceIDs(rName), fmt.Sprintf(`
+resource "aws_neptune_event_subscription" "test" {
+  name          = %[1]q
+  sns_topic_arn = aws_sns_topic.test.arn
+  source_type   = "db-parameter-group"
+  source_ids    = aws_neptune_parameter_group.test[*].id
+
+  event_categories = [
+    "configuration change",
+  ]
+}
+`, rName))
+}
+
+func testAccEventSubscriptionConfig_updateCategories(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sns_topic" "aws_sns_topic" {
-  name = "tf-acc-test-neptune-event-subs-sns-topic-%[1]d"
+resource "aws_sns_topic" "test" {
+  name = %[1]q
 }
 
 resource "aws_neptune_event_subscription" "test" {
-  name          = %[2]q
-  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
+  name          = %[1]q
+  sns_topic_arn = aws_sns_topic.test.arn
   source_type   = "db-instance"
+  enabled       = false
 
   event_categories = [
     "availability",
   ]
-
-  tags = {
-    Name = "tf-acc-test"
-  }
 }
-`, rInt, subscriptionName)
+`, rName)
 }

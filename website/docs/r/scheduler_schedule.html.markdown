@@ -27,7 +27,7 @@ resource "aws_scheduler_schedule" "example" {
     mode = "OFF"
   }
 
-  schedule_expression = "rate(1 hour)"
+  schedule_expression = "rate(1 hours)"
 
   target {
     arn      = aws_sqs_queue.example.arn
@@ -48,7 +48,7 @@ resource "aws_scheduler_schedule" "example" {
     mode = "OFF"
   }
 
-  schedule_expression = "rate(1 hour)"
+  schedule_expression = "rate(1 hours)"
 
   target {
     arn      = "arn:aws:scheduler:::aws-sdk:sqs:sendMessage"
@@ -72,12 +72,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `action_after_completion` - (Optional) Action that applies to the schedule after completing invocation of the target. Valid values are `NONE` and `DELETE`. Defaults to `NONE`.
 * `description` - (Optional) Brief description of the schedule.
 * `end_date` - (Optional) The date, in UTC, before which the schedule can invoke its target. Depending on the schedule's recurrence expression, invocations might stop on, or before, the end date you specify. EventBridge Scheduler ignores the end date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
 * `group_name` - (Optional, Forces new resource) Name of the schedule group to associate with this schedule. When omitted, the `default` schedule group is used.
 * `kms_key_arn` - (Optional) ARN for the customer managed KMS key that EventBridge Scheduler will use to encrypt and decrypt your data.
 * `name` - (Optional, Forces new resource) Name of the schedule. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `schedule_expression_timezone` - (Optional) Timezone in which the scheduling expression is evaluated. Defaults to `UTC`. Example: `Australia/Sydney`.
 * `start_date` - (Optional) The date, in UTC, after which the schedule can begin invoking its target. Depending on the schedule's recurrence expression, invocations might occur on, or after, the start date you specify. EventBridge Scheduler ignores the start date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
 * `state` - (Optional) Specifies whether the schedule is enabled or disabled. One of: `ENABLED` (default), `DISABLED`.
@@ -96,13 +98,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dead_letter_config` - (Optional) Information about an Amazon SQS queue that EventBridge Scheduler uses as a dead-letter queue for your schedule. If specified, EventBridge Scheduler delivers failed events that could not be successfully delivered to a target to the queue. Detailed below.
 * `ecs_parameters` - (Optional) Templated target type for the Amazon ECS [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) API operation. Detailed below.
 * `eventbridge_parameters` - (Optional) Templated target type for the EventBridge [`PutEvents`](https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html) API operation. Detailed below.
 * `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
 * `kinesis_parameters` - (Optional) Templated target type for the Amazon Kinesis [`PutRecord`](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html) API operation. Detailed below.
 * `retry_policy` - (Optional) Information about the retry policy settings. Detailed below.
-* `sagemaker_pipeline_parameters` - (Optional) Templated target type for the Amazon SageMaker [`StartPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
+* `sagemaker_pipeline_parameters` - (Optional) Templated target type for the Amazon SageMaker AI [`StartPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
 * `sqs_parameters` - (Optional) The templated target type for the Amazon SQS [`SendMessage`](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html) API operation. Detailed below.
 
 #### dead_letter_config Configuration Block
@@ -117,6 +120,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity_provider_strategy` - (Optional) Up to `6` capacity provider strategies to use for the task. Detailed below.
 * `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the task. For more information, see [Tagging Your Amazon ECS Resources](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-using-tags.html) in the Amazon ECS Developer Guide.
 * `enable_execute_command` - (Optional) Specifies whether to enable the execute command functionality for the containers in this task.
@@ -169,28 +173,37 @@ The following arguments are optional:
 
 #### sagemaker_pipeline_parameters Configuration Block
 
-* `pipeline_parameter` - (Optional) Set of up to 200 parameter names and values to use when executing the SageMaker Model Building Pipeline. Detailed below.
+* `pipeline_parameter` - (Optional) Set of up to 200 parameter names and values to use when executing the SageMaker AI Model Building Pipeline. Detailed below.
 
 ##### pipeline_parameter Configuration Block
 
-* `name` - (Required) Name of parameter to start execution of a SageMaker Model Building Pipeline.
-* `value` - (Required) Value of parameter to start execution of a SageMaker Model Building Pipeline.
+* `name` - (Required) Name of parameter to start execution of a SageMaker AI Model Building Pipeline.
+* `value` - (Required) Value of parameter to start execution of a SageMaker AI Model Building Pipeline.
 
 #### sqs_parameters Configuration Block
 
 * `message_group_id` - (Optional) FIFO message group ID to use as the target.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the schedule.
 * `arn` - ARN of the schedule.
 
 ## Import
 
-Schedules can be imported using the combination `group_name/name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import schedules using the combination `group_name/name`. For example:
 
+```terraform
+import {
+  to = aws_scheduler_schedule.example
+  id = "my-schedule-group/my-schedule"
+}
 ```
-$ terraform import aws_scheduler_schedule.example my-schedule-group/my-schedule
+
+Using `terraform import`, import schedules using the combination `group_name/name`. For example:
+
+```console
+% terraform import aws_scheduler_schedule.example my-schedule-group/my-schedule
 ```

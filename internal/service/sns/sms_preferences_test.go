@@ -1,19 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
-	multierror "github.com/hashicorp/go-multierror"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // The preferences are account-wide, so the tests must be serialized
@@ -35,7 +38,7 @@ func testAccSMSPreferences_defaultSMSType(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -60,7 +63,7 @@ func testAccSMSPreferences_almostAll(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,14 +87,14 @@ func testAccSMSPreferences_deliveryRole(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSPreferencesConfig_deliveryRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "delivery_status_iam_role_arn", iamRoleName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "delivery_status_iam_role_arn", iamRoleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "delivery_status_success_sampling_rate", "75"),
 				),
 			},
@@ -106,9 +109,9 @@ func testAccCheckSMSPreferencesDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
-			attrs, err := conn.GetSMSAttributesWithContext(ctx, &sns.GetSMSAttributesInput{})
+			attrs, err := conn.GetSMSAttributes(ctx, &sns.GetSMSAttributesInput{})
 
 			if err != nil {
 				return err
@@ -118,19 +121,19 @@ func testAccCheckSMSPreferencesDestroy(ctx context.Context) resource.TestCheckFu
 				return nil
 			}
 
-			var attrErrs *multierror.Error
+			var errs []error
 
 			// The API is returning undocumented keys, e.g. "UsageReportS3Enabled". Only check the keys we're aware of.
 			for _, snsAttrName := range tfsns.SMSPreferencesAttributeMap.APIAttributeNames() {
-				v := aws.StringValue(attrs.Attributes[snsAttrName])
+				v := attrs.Attributes[snsAttrName]
 				if snsAttrName != "MonthlySpendLimit" {
 					if v != "" {
-						attrErrs = multierror.Append(attrErrs, fmt.Errorf("expected SMS attribute %q to be empty, but received: %q", snsAttrName, v))
+						errs = append(errs, fmt.Errorf("expected SMS attribute %q to be empty, but received: %q", snsAttrName, v))
 					}
 				}
 			}
 
-			return attrErrs.ErrorOrNil()
+			return errors.Join(errs...)
 		}
 
 		return nil

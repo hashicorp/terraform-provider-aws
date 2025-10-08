@@ -6,7 +6,7 @@ description: |-
   Provides details about a specific CostExplorer Cost Category Definition
 ---
 
-# Resource: aws_ce_cost_category
+# Data Source: aws_ce_cost_category
 
 Provides details about a specific CostExplorer Cost Category.
 
@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `cost_category_arn` - (Required) Unique name for the Cost Category.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cost category.
 * `default_value` - Default value for the cost category.

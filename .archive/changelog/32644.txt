@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Grid layout `optimized_view_port_width` argument changed to Optional
+```
+
+```release-note:bug
+resource/aws_quicksight_dashboard: Grid layout `optimized_view_port_width` argument changed to Optional
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Grid layout `optimized_view_port_width` argument changed to Optional
+```

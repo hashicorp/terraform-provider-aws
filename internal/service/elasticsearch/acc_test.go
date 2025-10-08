@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch_test
 
 import (
 	"fmt"
 
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func testAccCheckPolicyMatch(resource, attr, expectedPolicy string) resource.TestCheckFunc {
@@ -26,7 +29,7 @@ func testAccCheckPolicyMatch(resource, attr, expectedPolicy string) resource.Tes
 
 		areEquivalent, err := awspolicy.PoliciesAreEquivalent(given, expectedPolicy)
 		if err != nil {
-			return fmt.Errorf("Comparing AWS Policies failed: %s", err)
+			return fmt.Errorf("Comparing AWS Policies failed: %w", err)
 		}
 
 		if !areEquivalent {

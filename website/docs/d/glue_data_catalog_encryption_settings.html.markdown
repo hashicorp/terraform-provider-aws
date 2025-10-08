@@ -20,12 +20,17 @@ data "aws_glue_data_catalog_encryption_settings" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Required) ID of the Data Catalog. This is typically the AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
 
-* `data_catalog_encryption_settings` – The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
-* `id` – The ID of the Data Catalog to set the security configuration for.
+This data source exports the following attributes in addition to the arguments above:
+
+* `data_catalog_encryption_settings` - The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
+* `id` - The ID of the Data Catalog to set the security configuration for.
 
 ### data_catalog_encryption_settings
 
@@ -40,4 +45,5 @@ data "aws_glue_data_catalog_encryption_settings" "example" {
 ### encryption_at_rest
 
 * `catalog_encryption_mode` - The encryption-at-rest mode for encrypting Data Catalog data.
+* `catalog_encryption_service_role` - The ARN of the AWS IAM role used for accessing encrypted Data Catalog data.
 * `sse_aws_kms_key_id` - ARN of the AWS KMS key to use for encryption at rest.

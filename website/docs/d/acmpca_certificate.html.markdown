@@ -21,14 +21,15 @@ data "aws_acmpca_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the certificate issued by the private certificate authority.
 * `certificate_authority_arn` - (Required) ARN of the certificate authority.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `certificate` - PEM-encoded certificate value.
 * `certificate_chain` - PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.

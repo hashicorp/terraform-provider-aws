@@ -1,0 +1,30 @@
+{
+  "governedRegions": ["us-west-2", "us-west-1"],
+  "organizationStructure": {
+    "security": {
+      "name": "CORE"
+    },
+    "sandbox": {
+      "name": "Sandbox"
+    }
+  },
+  "centralizedLogging": {
+    "accountId": "222222222222",
+    "configurations": {
+      "loggingBucket": {
+        "retentionDays": 60
+      },
+      "accessLoggingBucket": {
+        "retentionDays": 60
+      },
+      "kmsKeyArn": "arn:aws:kms:us-west-1:123456789123:key/e84XXXXX-6bXX-49XX-9eXX-ecfXXXXXXXXX"
+    },
+    "enabled": true
+  },
+  "securityRoles": {
+    "accountId": "333333333333"
+  },
+  "accessManagement": {
+    "enabled": true
+  }
+}

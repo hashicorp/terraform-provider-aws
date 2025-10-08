@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package evidently_test
 
 import (
@@ -6,19 +9,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEvidentlyLaunch_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -29,9 +33,9 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,26 +43,26 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("project/%s/launch/%s", rName, rName3)),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s/launch/%s", rName, rName3)),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					// not returned at create time
 					// resource.TestCheckResourceAttr(resourceName, "execution.#", "1"),
 					// resource.TestCheckResourceAttr(resourceName, "execution.0.started_time", startTime),
 					resource.TestCheckResourceAttr(resourceName, "groups.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
-					resource.TestCheckResourceAttrPair(resourceName, "project", "aws_evidently_project.test", "arn"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrLastUpdatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
+					resource.TestCheckResourceAttrPair(resourceName, "project", "aws_evidently_project.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "randomization_salt", rName3), // set to name if not specified
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime),
-					resource.TestCheckResourceAttr(resourceName, "status", cloudwatchevidently.LaunchStatusCreated),
-					resource.TestCheckResourceAttr(resourceName, "type", cloudwatchevidently.LaunchTypeAwsEvidentlySplits),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.LaunchStatusCreated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.LaunchTypeScheduledSplitsLaunch)),
 				),
 			},
 			{
@@ -72,7 +76,7 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 
 func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -85,9 +89,9 @@ func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +99,7 @@ func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 				Config: testAccLaunchConfig_description(rName, rName2, rName3, startTime, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -107,7 +111,7 @@ func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 				Config: testAccLaunchConfig_description(rName, rName2, rName3, startTime, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
@@ -116,7 +120,7 @@ func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 
 func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -129,9 +133,9 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -140,7 +144,7 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
 					resource.TestCheckResourceAttr(resourceName, "groups.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
 				),
@@ -156,11 +160,11 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
 					resource.TestCheckResourceAttr(resourceName, "groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.description", "first-group-add-desc"),
-					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1UpdatedName"),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "groups.1.description", "second-group"),
-					resource.TestCheckResourceAttrPair(resourceName, "groups.1.feature", "aws_evidently_feature.test2", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.1.feature", "aws_evidently_feature.test2", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.1.name", "Variation2OriginalName"),
 					resource.TestCheckResourceAttr(resourceName, "groups.1.variation", "Variation2"),
 				),
@@ -171,15 +175,15 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
 					resource.TestCheckResourceAttr(resourceName, "groups.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.description", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "groups.1.description", "second-group-update-desc"),
-					resource.TestCheckResourceAttrPair(resourceName, "groups.1.feature", "aws_evidently_feature.test2", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.1.feature", "aws_evidently_feature.test2", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.1.name", "Variation2UpdatedName"),
 					resource.TestCheckResourceAttr(resourceName, "groups.1.variation", "Variation2a"),
 					resource.TestCheckResourceAttr(resourceName, "groups.2.description", "third-group"),
-					resource.TestCheckResourceAttrPair(resourceName, "groups.2.feature", "aws_evidently_feature.test3", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.2.feature", "aws_evidently_feature.test3", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.2.name", "Variation3OriginalName"),
 					resource.TestCheckResourceAttr(resourceName, "groups.2.variation", "Variation3"),
 				),
@@ -189,7 +193,7 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
 					resource.TestCheckResourceAttr(resourceName, "groups.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
 				),
@@ -200,7 +204,7 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 
 func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -211,9 +215,9 @@ func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -290,7 +294,7 @@ func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 
 func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -303,9 +307,9 @@ func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -334,7 +338,7 @@ func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
 
 func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -349,9 +353,9 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -424,7 +428,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 
 func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -438,9 +442,9 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -454,7 +458,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation1", "20000"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime),
@@ -475,11 +479,11 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test3", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test3", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation2", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.evaluation_order", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.segment", "aws_evidently_segment.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.segment", "aws_evidently_segment.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation1", "40000"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation2", "30000"),
@@ -496,16 +500,16 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation2", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.evaluation_order", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.segment", "aws_evidently_segment.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.segment", "aws_evidently_segment.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation1", "60000"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation2", "70000"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.evaluation_order", "4"),
-					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.segment", "aws_evidently_segment.test3", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.segment", "aws_evidently_segment.test3", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.weights.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.weights.Variation1", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.weights.Variation2", "90000"),
@@ -522,7 +526,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation1", "20000"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime),
@@ -534,7 +538,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 
 func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -545,18 +549,18 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, "key1", "value1"),
+				Config: testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -565,20 +569,20 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchConfig_tags2(rName, rName2, rName3, startTime, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLaunchConfig_tags2(rName, rName2, rName3, startTime, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, "key2", "value2"),
+				Config: testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -587,7 +591,7 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 
 func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -597,7 +601,7 @@ func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -615,7 +619,7 @@ func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 
 func testAccCheckLaunchDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_evidently_launch" {
 				continue
@@ -644,7 +648,7 @@ func testAccCheckLaunchDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLaunchExists(ctx context.Context, n string, v *cloudwatchevidently.Launch) resource.TestCheckFunc {
+func testAccCheckLaunchExists(ctx context.Context, n string, v *awstypes.Launch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -662,7 +666,7 @@ func testAccCheckLaunchExists(ctx context.Context, n string, v *cloudwatcheviden
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
 
 		output, err := tfcloudwatchevidently.FindLaunchWithProjectNameorARN(ctx, conn, launchName, projectNameOrARN)
 

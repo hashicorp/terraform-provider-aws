@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudsearch_test
 
 import (
@@ -5,14 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudsearch"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudsearch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
@@ -21,8 +24,12 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudsearch.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,8 +55,12 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudsearch.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,11 +94,7 @@ func testAccDomainServiceAccessPolicyExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudSearch Domain Service Access Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
 
 		_, err := tfcloudsearch.FindAccessPolicyByName(ctx, conn, rs.Primary.ID)
 
@@ -102,7 +109,7 @@ func testAccCheckDomainServiceAccessPolicyDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
 
 			_, err := tfcloudsearch.FindAccessPolicyByName(ctx, conn, rs.Primary.ID)
 

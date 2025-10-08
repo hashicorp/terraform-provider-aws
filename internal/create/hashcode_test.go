@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package create
 
 import (
@@ -9,7 +12,7 @@ func TestStringHashcode(t *testing.T) {
 
 	v := "hello, world"
 	expected := StringHashcode(v)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		actual := StringHashcode(v)
 		if actual != expected {
 			t.Fatalf("bad: %#v\n\t%#v", actual, expected)

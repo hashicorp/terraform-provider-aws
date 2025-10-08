@@ -20,13 +20,31 @@ resource "aws_ses_active_receipt_rule_set" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rule_set_name` - (Required) The name of the rule set
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The SES receipt rule set name.
 * `arn` - The SES receipt rule set ARN.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import active SES receipt rule sets using the rule set name. For example:
+
+```terraform
+import {
+  to = aws_ses_active_receipt_rule_set.my_rule_set
+  id = "my_rule_set_name"
+}
+```
+
+Using `terraform import`, import active SES receipt rule sets using the rule set name. For example:
+
+```console
+% terraform import aws_ses_active_receipt_rule_set.my_rule_set my_rule_set_name
+```

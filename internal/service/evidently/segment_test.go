@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package evidently_test
 
 import (
@@ -5,19 +8,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEvidentlySegment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var segment cloudwatchevidently.Segment
+	var segment awstypes.Segment
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_evidently_segment.test"
@@ -26,9 +30,9 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,13 +40,13 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 				Config: testAccSegmentConfig_basic(rName, pattern),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("segment/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "evidently", fmt.Sprintf("segment/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "id", "evidently", fmt.Sprintf("segment/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "evidently", fmt.Sprintf("segment/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", pattern),
 				),
 			},
@@ -57,7 +61,7 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 
 func TestAccEvidentlySegment_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var segment cloudwatchevidently.Segment
+	var segment awstypes.Segment
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "example description"
@@ -66,9 +70,9 @@ func TestAccEvidentlySegment_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +80,7 @@ func TestAccEvidentlySegment_description(t *testing.T) {
 				Config: testAccSegmentConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{
@@ -90,7 +94,7 @@ func TestAccEvidentlySegment_description(t *testing.T) {
 
 func TestAccEvidentlySegment_patternJSON(t *testing.T) {
 	ctx := acctest.Context(t)
-	var segment cloudwatchevidently.Segment
+	var segment awstypes.Segment
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_evidently_segment.test"
@@ -99,9 +103,9 @@ func TestAccEvidentlySegment_patternJSON(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -123,7 +127,7 @@ func TestAccEvidentlySegment_patternJSON(t *testing.T) {
 
 func TestAccEvidentlySegment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var segment cloudwatchevidently.Segment
+	var segment awstypes.Segment
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_evidently_segment.test"
@@ -131,18 +135,18 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSegmentConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSegmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -151,12 +155,12 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSegmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSegmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -165,11 +169,11 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSegmentConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSegmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -178,7 +182,7 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 
 func TestAccEvidentlySegment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var segment cloudwatchevidently.Segment
+	var segment awstypes.Segment
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	pattern := "{\"Price\":[{\"numeric\":[\">\",10,\"<=\",20]}]}"
@@ -186,7 +190,7 @@ func TestAccEvidentlySegment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -204,7 +208,7 @@ func TestAccEvidentlySegment_disappears(t *testing.T) {
 
 func testAccCheckSegmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_evidently_segment" {
 				continue
@@ -227,7 +231,7 @@ func testAccCheckSegmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSegmentExists(ctx context.Context, n string, v *cloudwatchevidently.Segment) resource.TestCheckFunc {
+func testAccCheckSegmentExists(ctx context.Context, n string, v *awstypes.Segment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -239,7 +243,7 @@ func testAccCheckSegmentExists(ctx context.Context, n string, v *cloudwatchevide
 			return fmt.Errorf("No CloudWatch Evidently Segment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
 
 		output, err := tfcloudwatchevidently.FindSegmentByNameOrARN(ctx, conn, rs.Primary.ID)
 

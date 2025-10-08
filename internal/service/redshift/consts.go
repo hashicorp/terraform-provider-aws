@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -24,6 +27,13 @@ const (
 	clusterSnapshotStatusAvailable = "available"
 	clusterSnapshotStatusCreating  = "creating"
 	clusterSnapshotStatusDeleted   = "deleted"
+)
+
+const (
+	clusterRestoreStatusStarting  = "starting"
+	clusterRestoreStatusRestoring = "restoring"
+	clusterRestoreStatusCompleted = "completed"
+	clusterRestoreStatusFailed    = "failed"
 )
 
 const (

@@ -20,8 +20,9 @@ resource "aws_dx_connection_confirmation" "confirmation" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connection_id` - (Required) The ID of the hosted connection.
 
 ### Removing `aws_dx_connection_confirmation` from your configuration
@@ -29,8 +30,8 @@ The following arguments are supported:
 Removing an `aws_dx_connection_confirmation` resource from your configuration will remove it
 from your statefile and management, **but will not destroy the Hosted Connection.**
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the connection.

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appflow_connector_profile: Fix validation on `oauth2` in `custom_connector_profile`
+```

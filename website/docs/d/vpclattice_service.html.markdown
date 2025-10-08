@@ -16,24 +16,29 @@ Terraform data source for managing an AWS VPC Lattice Service.
 
 ```terraform
 data "aws_vpclattice_service" "example" {
+  name = "example"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
-* `service_identifier` - (Required) ID or Amazon Resource Name (ARN) of the service network
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Optional) Service name.
+* `service_identifier` - (Optional) ID or Amazon Resource Name (ARN) of the service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service.
 * `auth_type` - Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificate_arn` - Amazon Resource Name (ARN) of the certificate.
 * `custom_domain_name` - Custom domain name of the service.
-* `dns_entry` - DNS name of the service.
+* `dns_entry` - List of objects with DNS names.
+    * `domain_name` - DNS name for the service.
+    * `hosted_zone_id` - Hosted zone ID where the DNS name is registered.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.

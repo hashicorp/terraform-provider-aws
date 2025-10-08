@@ -1,20 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccInsight_basic(t *testing.T) {
@@ -24,7 +28,7 @@ func testAccInsight_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,13 +36,13 @@ func testAccInsight_basic(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
-						"comparison": securityhub.StringFilterComparisonEquals,
-						"value":      "1234567890",
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "1234567890",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
 				),
@@ -59,7 +63,7 @@ func testAccInsight_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,12 +84,12 @@ func testAccInsight_DateFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
-	endDate := time.Now().Add(5 * time.Minute).Format(time.RFC1123)
-	startDate := time.Now().Format(time.RFC1123)
+	endDate := time.Now().Add(5 * time.Minute).Format(time.RFC3339)
+	startDate := time.Now().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +101,7 @@ func testAccInsight_DateFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.0.created_at.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.created_at.*", map[string]string{
 						"date_range.#":       "1",
-						"date_range.0.unit":  securityhub.DateRangeUnitDays,
+						"date_range.0.unit":  string(types.DateRangeUnitDays),
 						"date_range.0.value": "5",
 					}),
 				),
@@ -135,7 +139,7 @@ func testAccInsight_IPFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -166,7 +170,7 @@ func testAccInsight_KeywordFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -177,7 +181,7 @@ func testAccInsight_KeywordFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.keyword.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.keyword.*", map[string]string{
-						"value": rName,
+						names.AttrValue: rName,
 					}),
 				),
 			},
@@ -197,7 +201,7 @@ func testAccInsight_MapFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -208,9 +212,9 @@ func testAccInsight_MapFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
-						"comparison": securityhub.MapFilterComparisonEquals,
-						"key":        "key1",
-						"value":      "value1",
+						"comparison":    string(types.MapFilterComparisonEquals),
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
 					}),
 				),
 			},
@@ -230,7 +234,7 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -241,23 +245,23 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
-						"comparison": securityhub.StringFilterComparisonEquals,
-						"value":      "1234567890",
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "1234567890",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
-						"comparison": securityhub.StringFilterComparisonEquals,
-						"value":      "09876543210",
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "09876543210",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
-						"comparison": securityhub.MapFilterComparisonEquals,
-						"key":        "key1",
-						"value":      "value1",
+						"comparison":    string(types.MapFilterComparisonEquals),
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
-						"comparison": securityhub.MapFilterComparisonEquals,
-						"key":        "key2",
-						"value":      "value2",
+						"comparison":    string(types.MapFilterComparisonEquals),
+						names.AttrKey:   acctest.CtKey2,
+						names.AttrValue: acctest.CtValue2,
 					}),
 				),
 			},
@@ -273,8 +277,8 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
-						"comparison": securityhub.StringFilterComparisonEquals,
-						"value":      "1234567890",
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "1234567890",
 					}),
 				),
 			},
@@ -291,7 +295,7 @@ func testAccInsight_Name(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -299,16 +303,16 @@ func testAccInsight_Name(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccInsightConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
 			{
@@ -327,7 +331,7 @@ func testAccInsight_NumberFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -385,7 +389,7 @@ func testAccInsight_GroupByAttribute(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -421,7 +425,7 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInsightDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -432,8 +436,8 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.workflow_status.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.workflow_status.*", map[string]string{
-						"comparison": securityhub.StringFilterComparisonEquals,
-						"value":      securityhub.WorkflowStatusNew,
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: string(types.WorkflowStatusNew),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "WorkflowStatus"),
 				),
@@ -449,28 +453,24 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 
 func testAccCheckInsightDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_insight" {
 				continue
 			}
 
-			insight, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindInsightByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-					continue
-				}
-				if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-					continue
-				}
-				return fmt.Errorf("error deleting Security Hub Insight (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if insight != nil {
-				return fmt.Errorf("Security Hub Insight (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Security Hub Insight (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -484,30 +484,22 @@ func testAccCheckInsightExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		insight, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindInsightByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return fmt.Errorf("error reading Security Hub Insight (%s): %w", rs.Primary.ID, err)
-		}
-
-		if insight == nil {
-			return fmt.Errorf("error reading Security Hub Insight (%s): not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
 // testAccCheckInsightARN checks the computed ARN value
 // and accounts for differences in SecurityHub on GovCloud where the partition portion
 // of the ARN is still "aws" while other services utilize the "aws-us-gov" partition
-func testAccCheckInsightARN(resourceName string) resource.TestCheckFunc {
+func testAccCheckInsightARN(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(), acctest.AccountID())
+		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(ctx), acctest.AccountID(ctx))
 		//lintignore:AWSAT001
-		return resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(expectedArn))(s)
+		return resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(expectedArn))(s)
 	}
 }
 

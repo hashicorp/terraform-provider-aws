@@ -23,8 +23,9 @@ data "aws_dx_router_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `virtual_interface_id` - (Required) ID of the Direct Connect Virtual Interface
 * `router_type_identifier` - (Required) ID of the Router Type. For example: `CiscoSystemsInc-2900SeriesRouters-IOS124`
 
@@ -45,9 +46,9 @@ There is currently no AWS API to retrieve the full list of `router_type_identifi
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `customer_router_config` - Instructions for configuring your router
 * `router` - Block of the router type details

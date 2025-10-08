@@ -54,8 +54,9 @@ resource "aws_apigatewayv2_route" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `route_key` - (Required) Route key for the route. For HTTP APIs, the route key can be either `$default`, or a combination of an HTTP method and resource path, for example, `GET /pets`.
 * `api_key_required` - (Optional) Boolean whether an API key is required for the route. Defaults to `false`. Supported only for WebSocket APIs.
@@ -77,18 +78,27 @@ The `request_parameter` object supports the following:
 * `request_parameter_key` - (Required) Request parameter key. This is a [request data mapping parameter](https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-data-mapping.html#websocket-mapping-request-parameters).
 * `required` - (Required) Boolean whether or not the parameter is required.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Route identifier.
 
 ## Import
 
-`aws_apigatewayv2_route` can be imported by using the API identifier and route identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_route` using the API identifier and route identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_route.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_route.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_route` using the API identifier and route identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_route.example aabbccddee/1122334
 ```
 
 -> **Note:** The API Gateway managed route created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.

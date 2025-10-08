@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Increase maximum value of `disk_iops_configuration.iops` to `2400000`
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: `throughput_capacity` is Optional
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Add `ha_pairs` and `throughput_capacity_per_ha_pair` arguments
+```
+
+```release-note:enhancement
+data-source/aws_fsx_ontap_file_system: Add `ha_pairs` and `throughput_capacity_per_ha_pair` attributes
+```

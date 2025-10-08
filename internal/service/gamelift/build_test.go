@@ -1,25 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGameLiftBuild_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Build
+	var conf awstypes.Build
 	resourceName := "aws_gamelift_build.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,10 +49,10 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -55,14 +60,14 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 				Config: testAccBuildConfig_basic(rName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`build/build-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2016"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -75,14 +80,14 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 				Config: testAccBuildConfig_basic(rNameUpdated, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`build/build-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2016"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -91,7 +96,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 
 func TestAccGameLiftBuild_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Build
+	var conf awstypes.Build
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_build.test"
@@ -115,19 +120,19 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key1", "value1"),
+				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -137,20 +142,20 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"storage_location"},
 			},
 			{
-				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key2", "value2"),
+				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -159,7 +164,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 
 func TestAccGameLiftBuild_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Build
+	var conf awstypes.Build
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_build.test"
@@ -183,10 +188,10 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,29 +208,26 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBuildExists(ctx context.Context, n string, res *gamelift.Build) resource.TestCheckFunc {
+func testAccCheckBuildExists(ctx context.Context, n string, v *awstypes.Build) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No GameLift Build ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+		output, err := tfgamelift.FindBuildByID(ctx, conn, rs.Primary.ID)
 
-		build, err := tfgamelift.FindBuildByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(build.BuildId) != rs.Primary.ID {
+		if aws.ToString(output.BuildId) != rs.Primary.ID {
 			return fmt.Errorf("GameLift Build not found")
 		}
 
-		*res = *build
+		*v = *output
 
 		return nil
 	}
@@ -233,22 +235,24 @@ func testAccCheckBuildExists(ctx context.Context, n string, res *gamelift.Build)
 
 func testAccCheckBuildDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_build" {
 				continue
 			}
 
-			build, err := tfgamelift.FindBuildByID(ctx, conn, rs.Primary.ID)
+			_, err := tfgamelift.FindBuildByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
-			if build != nil {
-				return fmt.Errorf("GameLift Build (%s) still exists", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("GameLift Build %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -256,11 +260,11 @@ func testAccCheckBuildDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 	input := &gamelift.ListBuildsInput{}
 
-	_, err := conn.ListBuildsWithContext(ctx, input)
+	_, err := conn.ListBuilds(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -274,13 +278,13 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccBuildConfig_basic(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name             = "%s"
-  operating_system = "WINDOWS_2012"
+  name             = %[1]q
+  operating_system = "WINDOWS_2016"
 
   storage_location {
-    bucket   = "%s"
-    key      = "%s"
-    role_arn = "%s"
+    bucket   = %[2]q
+    key      = %[3]q
+    role_arn = %[4]q
   }
 }
 `, buildName, bucketName, key, roleArn)
@@ -290,7 +294,7 @@ func testAccBuildConfig_basicTags1(buildName, bucketName, key, roleArn, tagKey1,
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
   name             = %[1]q
-  operating_system = "WINDOWS_2012"
+  operating_system = "WINDOWS_2016"
 
   storage_location {
     bucket   = %[2]q
@@ -309,7 +313,7 @@ func testAccBuildConfig_basicTags2(buildName, bucketName, key, roleArn, tagKey1,
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
   name             = %[1]q
-  operating_system = "WINDOWS_2012"
+  operating_system = "WINDOWS_2016"
 
   storage_location {
     bucket   = %[2]q

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
@@ -11,9 +14,12 @@ func TestAccKMS_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"CustomKeyStore": {
-			"basic":      testAccCustomKeyStore_basic,
-			"update":     testAccCustomKeyStore_update,
-			"disappears": testAccCustomKeyStore_disappears,
+			acctest.CtBasic:      testAccCustomKeyStore_basic,
+			"update":             testAccCustomKeyStore_update,
+			acctest.CtDisappears: testAccCustomKeyStore_disappears,
+		},
+		"CustomKeyStoreDataSource": {
+			acctest.CtBasic: testAccCustomKeyStoreDataSource_basic,
 		},
 	}
 

@@ -10,8 +10,6 @@ description: |-
 
 Terraform resource for managing an AWS MediaLive MultiplexProgram.
 
-~> **Note** Attribute `statemux_settings` has been deprecated and will be removed in a future major release. Please use `statmux_settings` instead.
-
 ## Example Usage
 
 ### Basic Usage
@@ -64,6 +62,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### Multiple Program Settings
 
 * `program_number` - (Required) Unique program number.
@@ -79,8 +79,7 @@ The following arguments are optional:
 ### Video Settings
 
 * `constant_bitrate` - (Optional) Constant bitrate value.
-* `statemux_settings` - (Optional, **Deprecated**) Statemux settings. See [Statmux Settings](#statemux-settings) for more details. Settings from this attribute will apply to `statmux_settings`. Conflicts with `statmux_settings`.
-* `statmux_settings` - (Optional) Statmux settings. See [Statmux Settings](#statmux-settings) for more details Conflicts with `statemux_settings`.
+* `statmux_settings` - (Optional) Statmux settings. See [Statmux Settings](#statmux-settings) for more details.
 
 ### Statmux Settings
 
@@ -88,23 +87,32 @@ The following arguments are optional:
 * `maximum_bitrate` - (Optional) Maximum bitrate.
 * `priority` - (Optional) Priority value.
 
-### Statemux Settings
+## Attribute Reference
 
-* `minimum_bitrate` - (Optional) Minimum bitrate.
-* `maximum_bitrate` - (Optional) Maximum bitrate.
-* `priority` - (Optional) Priority value.
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the MultiplexProgram.
 * `example_attribute` - Concise description.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30s`)
+
 ## Import
 
-MediaLive MultiplexProgram can be imported using the `id`, or a combination of "`program_name`/`multiplex_id`" e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive MultiplexProgram using the `id`, or a combination of "`program_name`/`multiplex_id`". For example:
 
+```terraform
+import {
+  to = aws_medialive_multiplex_program.example
+  id = "example_program/1234567"
+}
 ```
-$ terraform import aws_medialive_multiplex_program.example example_program/1234567
+
+Using `terraform import`, import MediaLive MultiplexProgram using the `id`, or a combination of "`program_name`/`multiplex_id`". For example:
+
+```console
+% terraform import aws_medialive_multiplex_program.example example_program/1234567
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -11,7 +14,9 @@ func validConnectionBandWidth() schema.SchemaValidateFunc {
 		"2Gbps",
 		"5Gbps",
 		"10Gbps",
+		"25Gbps",
 		"100Gbps",
+		"400Gbps",
 		"50Mbps",
 		"100Mbps",
 		"200Mbps",

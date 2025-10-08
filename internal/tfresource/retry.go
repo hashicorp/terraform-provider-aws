@@ -1,16 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"math/rand"
-	"sync"
 	"time"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
+
+var ErrFoundResource = retry.ErrFoundResource
 
 // Retryable is a function that is used to decide if a function's error is retryable or not.
 // The error argument can be `nil`.
@@ -18,43 +23,15 @@ import (
 // If the error is not retryable, returns a bool value of `false` and either no error (success state) or an error (not necessarily the error passed as the argument).
 type Retryable func(error) (bool, error)
 
-// RetryWhen retries the function `f` when the error it returns satisfies `predicate`.
+// RetryWhen retries the function `f` when the error it returns satisfies `retryable`.
 // `f` is retried until `timeout` expires.
-func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
-	var output interface{}
-
-	err := Retry(ctx, timeout, func() *retry.RetryError {
-		var err error
-		var again bool
-
-		output, err = f()
-		again, err = retryable(err)
-
-		if again {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+func RetryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable Retryable) (T, error) {
+	return retryWhen(ctx, timeout, f, retryable)
 }
 
-// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
-func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
+func RetryWhenAWSErrCodeEquals[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), codes ...string) (T, error) { // nosemgrep:ci.aws-in-func-name
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrCodeEquals(err, codes...) {
 			return true, err
 		}
@@ -63,9 +40,20 @@ func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f fun
 	})
 }
 
+// RetryWhenAWSErrCodeContains retries the specified function when it returns an AWS error containing the specified code.
+func RetryWhenAWSErrCodeContains[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), code string) (T, error) { // nosemgrep:ci.aws-in-func-name
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if tfawserr.ErrCodeContains(err, code) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
 // RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
-func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenAWSErrMessageContains[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), code, message string) (T, error) { // nosemgrep:ci.aws-in-func-name
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrMessageContains(err, code, message) {
 			return true, err
 		}
@@ -74,9 +62,9 @@ func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, 
 	})
 }
 
-func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (interface{}, error), needle string) (interface{}, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if errs.IsAErrorMessageContains[T](err, needle) {
+func RetryWhenIsA[T any, E error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[E](err) {
 			return true, err
 		}
 
@@ -84,43 +72,81 @@ func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.
 	})
 }
 
-var ErrFoundResource = errors.New(`found resource`)
-
-// RetryUntilNotFound retries the specified function until it returns a retry.NotFoundError.
-func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if NotFound(err) {
-			return false, nil
+func RetryWhenIsOneOf2[T any, E1, E2 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[E1](err) || errs.IsA[E2](err) {
+			return true, err
 		}
 
+		return false, err
+	})
+}
+
+func RetryWhenIsOneOf3[T any, E1, E2, E3 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[E1](err) || errs.IsA[E2](err) || errs.IsA[E3](err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsOneOf4[T any, E1, E2, E3, E4 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[E1](err) || errs.IsA[E2](err) || errs.IsA[E3](err) || errs.IsA[E4](err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsAErrorMessageContains[T any, E errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), needle string) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsAErrorMessageContains[E](err, needle) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+// RetryUntilEqual retries the specified function until it returns a value equal to `target`.
+func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, target T, f func(context.Context) (T, error), opts ...backoff.Option) (T, error) {
+	t, err := retry.Op(f).If(func(t T, err error) (bool, error) {
 		if err != nil {
 			return false, err
 		}
+		return t != target, nil
+	})(ctx, timeout, opts...)
 
-		return true, ErrFoundResource
-	})
+	if TimedOut(err) {
+		err = fmt.Errorf("output = %v, want %v", t, target)
+	}
+
+	return t, err
+}
+
+// RetryUntilNotFound retries the specified function until it returns a retry.NotFoundError.
+func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func(context.Context) (any, error)) (any, error) {
+	return retry.Op(f).UntilNotFound()(ctx, timeout)
 }
 
 // RetryWhenNotFound retries the specified function when it returns a retry.NotFoundError.
-func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if NotFound(err) {
-			return true, err
-		}
-
-		return false, err
-	})
+func RetryWhenNotFound[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retry.Op(f).UntilFoundN(1)(ctx, timeout)
 }
 
 // RetryWhenNewResourceNotFound retries the specified function when it returns a retry.NotFoundError and `isNewResource` is true.
-func RetryWhenNewResourceNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenNewResourceNotFound[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), isNewResource bool) (T, error) {
+	return retry.Op(f).If(func(_ T, err error) (bool, error) {
 		if isNewResource && NotFound(err) {
 			return true, err
 		}
 
 		return false, err
-	})
+	})(ctx, timeout)
 }
 
 type Options struct {
@@ -195,72 +221,36 @@ func WithContinuousTargetOccurence(continuousTargetOccurence int) OptionsFunc {
 // Retry allows configuration of StateChangeConf's various time arguments.
 // This is especially useful for AWS services that are prone to throttling, such as Route53, where
 // the default durations cause problems.
-func Retry(ctx context.Context, timeout time.Duration, f retry.RetryFunc, optFns ...OptionsFunc) error {
-	// These are used to pull the error out of the function; need a mutex to
-	// avoid a data race.
-	var resultErr error
-	var resultErrMu sync.Mutex
-
-	options := Options{}
+func Retry(ctx context.Context, timeout time.Duration, f func(context.Context) *RetryError, optFns ...OptionsFunc) error {
+	options := Options{
+		MinPollInterval: 500 * time.Millisecond, //nolint:mnd // 500ms is the Plugin SDKv2 default
+	}
 	for _, fn := range optFns {
 		fn(&options)
 	}
 
-	c := &retry.StateChangeConf{
-		Pending:    []string{"retryableerror"},
-		Target:     []string{"success"},
-		Timeout:    timeout,
-		MinTimeout: 500 * time.Millisecond,
-		Refresh: func() (interface{}, string, error) {
-			rerr := f()
-
-			resultErrMu.Lock()
-			defer resultErrMu.Unlock()
-
-			if rerr == nil {
-				resultErr = nil
-				return 42, "success", nil
-			}
-
-			resultErr = rerr.Err
-
-			if rerr.Retryable {
-				return 42, "retryableerror", nil
-			}
-
-			return nil, "quit", rerr.Err
+	_, err := retryWhen(ctx, timeout,
+		func(ctx context.Context) (any, error) {
+			return nil, f(ctx)
 		},
-	}
+		func(err error) (bool, error) {
+			if err, ok := errs.As[*RetryError](err); ok {
+				if err != nil {
+					return err.isRetryable, err.err
+				}
+				return false, nil
+			}
 
-	options.Apply(c)
+			return false, err
+		},
+		backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(options.Delay, options.PollInterval, options.MinPollInterval)),
+	)
 
-	_, waitErr := c.WaitForStateContext(ctx)
-
-	// Need to acquire the lock here to be able to avoid race using resultErr as
-	// the return value
-	resultErrMu.Lock()
-	defer resultErrMu.Unlock()
-
-	// resultErr may be nil because the wait timed out and resultErr was never
-	// set; this is still an error
-	if resultErr == nil {
-		return waitErr
-	}
-	// resultErr takes precedence over waitErr if both are set because it is
-	// more likely to be useful
-	return resultErr
+	return err
 }
 
-type deadline time.Time
-
-func NewDeadline(duration time.Duration) deadline {
-	return deadline(time.Now().Add(duration))
-}
-
-func (d deadline) Remaining() time.Duration {
-	if v := time.Until(time.Time(d)); v < 0 {
-		return 0
-	} else {
-		return v
-	}
+func retryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable Retryable, opts ...backoff.Option) (T, error) {
+	return retry.Op(f).If(func(_ T, err error) (bool, error) {
+		return retryable(err)
+	})(ctx, timeout, opts...)
 }

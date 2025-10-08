@@ -22,20 +22,29 @@ resource "aws_backup_global_settings" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_settings` - (Required) A list of resources along with the opt-in preferences for the account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The AWS Account ID.
 
 ## Import
 
-Backup Global Settings can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup Global Settings using the `id`. For example:
 
+```terraform
+import {
+  to = aws_backup_global_settings.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_backup_global_settings.example 123456789012
+
+Using `terraform import`, import Backup Global Settings using the `id`. For example:
+
+```console
+% terraform import aws_backup_global_settings.example 123456789012
 ```

@@ -1,0 +1,14 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+---
+schema: 1.1
+
+partition: tf-ecosystem
+
+summary:
+  owner: team-tf-aws
+  description: |
+    The Terraform AWS provider is a plugin that enables Terraform to manage AWS resources.
+
+  visibility: external

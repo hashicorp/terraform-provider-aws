@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
@@ -8,7 +11,7 @@ provider "aws" {
 
 resource "aws_eip" "default" {
   instance = aws_instance.web.id
-  vpc      = true
+  domain   = "vpc"
 }
 
 # Our default security group to access
@@ -64,7 +67,12 @@ resource "aws_instance" "web" {
   # this should be on port 80
   user_data = file("userdata.sh")
 
-  #Instance tags
+  # Force IMDSv2.
+  metadata_options {
+    http_tokens = "required"
+  }
+
+  # Instance tags.
   tags = {
     Name = "eip-example"
   }

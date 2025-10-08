@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_default_patch_baseline: Fix `*conns.AWSClient is not ssm.ssmClient: missing method SSMClient` panic
+```

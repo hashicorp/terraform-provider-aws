@@ -26,10 +26,15 @@ data "aws_api_gateway_resource" "my_resource" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) REST API id that owns the resource. If no REST API is found, an error will be returned.
 * `path` - (Required) Full path of the resource.  If no path is found, an error will be returned.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Set to the ID of the found Resource.
 * `parent_id` - Set to the ID of the parent Resource.

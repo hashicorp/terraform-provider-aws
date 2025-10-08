@@ -1,66 +1,69 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package evidently
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_evidently_project", &resource.Sweeper{
-		Name: "aws_evidently_project",
-		F:    sweepProject,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_evidently_project", sweepProjects)
+
+	awsv2.Register("aws_evidently_segment", sweepSegments)
 }
 
-func sweepProject(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).EvidentlyConn()
-	input := &cloudwatchevidently.ListProjectsInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]sweep.Sweepable, 0)
+func sweepProjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EvidentlyClient(ctx)
 
-	err = conn.ListProjectsPagesWithContext(ctx, input, func(page *cloudwatchevidently.ListProjectsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	var sweepResources []sweep.Sweepable
+
+	pages := evidently.NewListProjectsPaginator(conn, &evidently.ListProjectsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, project := range page.Projects {
 			r := ResourceProject()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(project.Name))
+			d.SetId(aws.ToString(project.Name))
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepSegments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EvidentlyClient(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	pages := evidently.NewListSegmentsPaginator(conn, &evidently.ListSegmentsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		return !lastPage
-	})
+		for _, segment := range page.Segments {
+			r := ResourceSegment()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(segment.Arn))
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Evidently Project sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+		}
 	}
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Evidently Projects for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Evidently Projects for %s: %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }

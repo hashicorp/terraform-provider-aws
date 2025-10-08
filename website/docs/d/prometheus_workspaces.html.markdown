@@ -29,13 +29,14 @@ data "aws_prometheus_workspaces" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias_prefix` - (Optional) Limits results to workspaces with aliases that begin with this value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `aliases` - List of aliases of the matched Prometheus workspaces.
 * `arns` - List of ARNs of the matched Prometheus workspaces.

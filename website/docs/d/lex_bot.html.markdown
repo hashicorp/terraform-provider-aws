@@ -21,14 +21,15 @@ data "aws_lex_bot" "order_flowers_bot" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the bot. The name is case sensitive.
 * `version` - (Optional) Version or alias of the bot.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the bot.
 * `checksum` - Checksum of the bot used to identify a specific revision of the bot's `$LATEST` version.

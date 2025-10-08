@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer_test
 
 import (
@@ -5,41 +8,38 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_signer_signing_job.test"
-	profileResourceName := "aws_signer_signing_profile.test"
-
 	var job signer.DescribeSigningJobOutput
-	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
 					testAccCheckSigningJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "status", "Succeeded"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Succeeded"),
 				),
 			},
 		},
@@ -100,29 +100,22 @@ resource "aws_signer_signing_job" "test" {
 `, rName)
 }
 
-func testAccCheckSigningJobExists(ctx context.Context, res string, job *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
+func testAccCheckSigningJobExists(ctx context.Context, n string, v *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[res]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Signing job not found: %s", res)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Signing job with that ID does not exist")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+		output, err := tfsigner.FindSigningJobByID(ctx, conn, rs.Primary.ID)
 
-		params := &signer.DescribeSigningJobInput{
-			JobId: aws.String(rs.Primary.ID),
-		}
-
-		getJob, err := conn.DescribeSigningJobWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
 
-		*job = *getJob
+		*v = *output
 
 		return nil
 	}

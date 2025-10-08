@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivschat_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -31,7 +34,7 @@ func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,10 +42,10 @@ func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_basic_cloudwatch(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.cloudwatch_logs.0.log_group_name", "aws_cloudwatch_log_group.test", "name"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexp.MustCompile(`logging-configuration/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.cloudwatch_logs.0.log_group_name", "aws_cloudwatch_log_group.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -70,7 +73,7 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,10 +81,10 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_basic_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.firehose.0.delivery_stream_name", "aws_kinesis_firehose_delivery_stream.test", "name"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexp.MustCompile(`logging-configuration/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.firehose.0.delivery_stream_name", "aws_kinesis_firehose_delivery_stream.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -105,7 +108,7 @@ func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,10 +116,10 @@ func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_basic_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.s3.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexp.MustCompile(`logging-configuration/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.s3.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -140,7 +143,7 @@ func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,7 +163,7 @@ func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v2),
 					testAccCheckLoggingConfigurationNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -179,16 +182,16 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLoggingConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -197,22 +200,22 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLoggingConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v2),
 					testAccCheckLoggingConfigurationNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccLoggingConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v3),
 					testAccCheckLoggingConfigurationNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -227,29 +230,29 @@ func TestAccIVSChatLoggingConfiguration_failure_invalidDestination(t *testing.T)
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_cloudwatch_s3(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_firehose_s3(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_cloudwatch_firehose(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_cloudwatch_firehose_s3(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_noDestination(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -271,7 +274,7 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -289,7 +292,7 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 
 func testAccCheckLoggingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivschat_logging_configuration" {
@@ -325,7 +328,7 @@ func testAccCheckLoggingConfigurationExists(ctx context.Context, name string, lo
 			return create.Error(names.IVSChat, create.ErrActionCheckingExistence, tfivschat.ResNameLoggingConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 		resp, err := conn.GetLoggingConfiguration(ctx, &ivschat.GetLoggingConfigurationInput{
 			Identifier: aws.String(rs.Primary.ID),
@@ -342,7 +345,7 @@ func testAccCheckLoggingConfigurationExists(ctx context.Context, name string, lo
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 	input := &ivschat.ListLoggingConfigurationsInput{}
 	_, err := conn.ListLoggingConfigurations(ctx, input)
@@ -399,11 +402,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket_prefix = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {

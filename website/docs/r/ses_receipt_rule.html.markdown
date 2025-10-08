@@ -36,8 +36,9 @@ resource "aws_ses_receipt_rule" "store" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule
 * `rule_set_name` - (Required) The name of the rule set
 * `after` - (Optional) The name of the rule to place this rule after
@@ -78,6 +79,7 @@ Lambda actions support the following:
 S3 actions support the following:
 
 * `bucket_name` - (Required) The name of the S3 bucket
+* `iam_role_arn` - (Optional) The ARN of the IAM role to be used by Amazon Simple Email Service while writing to the Amazon S3 bucket, optionally encrypting your mail via the provided customer managed key, and publishing to the Amazon SNS topic
 * `kms_key_arn` - (Optional) The ARN of the KMS key
 * `object_key_prefix` - (Optional) The key prefix of the S3 bucket
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
@@ -101,17 +103,26 @@ WorkMail actions support the following:
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The SES receipt rule name.
 * `arn` - The SES receipt rule ARN.
 
 ## Import
 
-SES receipt rules can be imported using the ruleset name and rule name separated by `:`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES receipt rules using the ruleset name and rule name separated by `:`. For example:
 
+```terraform
+import {
+  to = aws_ses_receipt_rule.my_rule
+  id = "my_rule_set:my_rule"
+}
 ```
-$ terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
+
+Using `terraform import`, import SES receipt rules using the ruleset name and rule name separated by `:`. For example:
+
+```console
+% terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
 ```

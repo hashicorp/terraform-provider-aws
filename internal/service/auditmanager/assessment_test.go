@@ -1,20 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,7 +31,7 @@ func TestAccAuditManagerAssessment_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,14 +39,14 @@ func TestAccAuditManagerAssessment_basic(t *testing.T) {
 				Config: testAccAssessmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "assessment_reports_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "assessment_reports_destination.0.destination_type", "S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_accounts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_services.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "auditmanager", regexp.MustCompile(`assessment/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_services.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`assessment/.+$`)),
 				),
 			},
 			{
@@ -68,7 +70,7 @@ func TestAccAuditManagerAssessment_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,17 +97,17 @@ func TestAccAuditManagerAssessment_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAssessmentConfig_tags1(rName, "key1", "value1"),
+				Config: testAccAssessmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -115,22 +117,22 @@ func TestAccAuditManagerAssessment_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"roles"},
 			},
 			{
-				Config: testAccAssessmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAssessmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAssessmentConfig_tags1(rName, "key2", "value2"),
+				Config: testAccAssessmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -148,7 +150,7 @@ func TestAccAuditManagerAssessment_optional(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -156,8 +158,8 @@ func TestAccAuditManagerAssessment_optional(t *testing.T) {
 				Config: testAccAssessmentConfig_optional(rName, "text"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "text"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text"),
 				),
 			},
 			{
@@ -170,8 +172,8 @@ func TestAccAuditManagerAssessment_optional(t *testing.T) {
 				Config: testAccAssessmentConfig_optional(rName, "text updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "text updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text updated"),
 				),
 			},
 		},
@@ -180,7 +182,7 @@ func TestAccAuditManagerAssessment_optional(t *testing.T) {
 
 func testAccCheckAssessmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_assessment" {
@@ -188,45 +190,44 @@ func testAccCheckAssessmentDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfauditmanager.FindAssessmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.AuditManager, create.ErrActionCheckingDestroyed, tfauditmanager.ResNameAssessment, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Audit Manager Assessment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAssessmentExists(ctx context.Context, name string, assessment *types.Assessment) resource.TestCheckFunc {
+func testAccCheckAssessmentExists(ctx context.Context, n string, v *types.Assessment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessment, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessment, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
-		resp, err := tfauditmanager.FindAssessmentByID(ctx, conn, rs.Primary.ID)
+		output, err := tfauditmanager.FindAssessmentByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessment, rs.Primary.ID, err)
+			return err
 		}
 
-		*assessment = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccAssessmentConfigBase(rName string) string {
+func testAccAssessmentConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -278,7 +279,7 @@ resource "aws_auditmanager_framework" "test" {
 
 func testAccAssessmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAssessmentConfigBase(rName),
+		testAccAssessmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_auditmanager_assessment" "test" {
   name = %[1]q
@@ -298,9 +299,6 @@ resource "aws_auditmanager_assessment" "test" {
   scope {
     aws_accounts {
       id = data.aws_caller_identity.current.account_id
-    }
-    aws_services {
-      service_name = "S3"
     }
   }
 }
@@ -309,7 +307,7 @@ resource "aws_auditmanager_assessment" "test" {
 
 func testAccAssessmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccAssessmentConfigBase(rName),
+		testAccAssessmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_auditmanager_assessment" "test" {
   name = %[1]q
@@ -329,9 +327,6 @@ resource "aws_auditmanager_assessment" "test" {
   scope {
     aws_accounts {
       id = data.aws_caller_identity.current.account_id
-    }
-    aws_services {
-      service_name = "S3"
     }
   }
 
@@ -344,7 +339,7 @@ resource "aws_auditmanager_assessment" "test" {
 
 func testAccAssessmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccAssessmentConfigBase(rName),
+		testAccAssessmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_auditmanager_assessment" "test" {
   name = %[1]q
@@ -364,9 +359,6 @@ resource "aws_auditmanager_assessment" "test" {
   scope {
     aws_accounts {
       id = data.aws_caller_identity.current.account_id
-    }
-    aws_services {
-      service_name = "S3"
     }
   }
 
@@ -380,7 +372,7 @@ resource "aws_auditmanager_assessment" "test" {
 
 func testAccAssessmentConfig_optional(rName, description string) string {
 	return acctest.ConfigCompose(
-		testAccAssessmentConfigBase(rName),
+		testAccAssessmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_auditmanager_assessment" "test" {
   name        = %[1]q
@@ -401,9 +393,6 @@ resource "aws_auditmanager_assessment" "test" {
   scope {
     aws_accounts {
       id = data.aws_caller_identity.current.account_id
-    }
-    aws_services {
-      service_name = "S3"
     }
   }
 }

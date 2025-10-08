@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_guardduty_organization_configuration: Add `auto_enable_organization_members` attribute
+```
+
+```release-note:note
+resource/aws_guardduty_organization_configuration: The `auto_enable` argument has been deprecated. Use the `auto_enable_organization_members` argument instead.
+ ```

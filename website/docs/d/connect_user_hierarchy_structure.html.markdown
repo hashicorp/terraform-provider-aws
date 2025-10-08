@@ -12,7 +12,7 @@ Provides details about a specific Amazon Connect User Hierarchy Structure
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
 }
@@ -20,13 +20,14 @@ data "aws_connect_user_hierarchy_structure" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `hierarchy_structure` - Block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
 

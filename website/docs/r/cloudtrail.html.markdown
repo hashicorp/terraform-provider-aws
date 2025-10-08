@@ -22,21 +22,21 @@ Enable CloudTrail to capture all compatible management events in region.
 For capturing events from services like IAM, `include_global_service_events` must be enabled.
 
 ```terraform
-data "aws_caller_identity" "current" {}
+resource "aws_cloudtrail" "example" {
+  depends_on = [aws_s3_bucket_policy.example]
 
-resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-trail-foobar"
-  s3_bucket_name                = aws_s3_bucket.foo.id
+  name                          = "example"
+  s3_bucket_name                = aws_s3_bucket.example.id
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
 }
 
-resource "aws_s3_bucket" "foo" {
+resource "aws_s3_bucket" "example" {
   bucket        = "tf-test-trail"
   force_destroy = true
 }
 
-data "aws_iam_policy_document" "foo" {
+data "aws_iam_policy_document" "example" {
   statement {
     sid    = "AWSCloudTrailAclCheck"
     effect = "Allow"
@@ -47,7 +47,12 @@ data "aws_iam_policy_document" "foo" {
     }
 
     actions   = ["s3:GetBucketAcl"]
-    resources = [aws_s3_bucket.foo.arn]
+    resources = [aws_s3_bucket.example.arn]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/example"]
+    }
   }
 
   statement {
@@ -60,19 +65,31 @@ data "aws_iam_policy_document" "foo" {
     }
 
     actions   = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.foo.arn}/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    resources = ["${aws_s3_bucket.example.arn}/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
 
     condition {
       test     = "StringEquals"
       variable = "s3:x-amz-acl"
       values   = ["bucket-owner-full-control"]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/example"]
+    }
   }
 }
-resource "aws_s3_bucket_policy" "foo" {
-  bucket = aws_s3_bucket.foo.id
-  policy = data.aws_iam_policy_document.foo.json
+
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.example.json
 }
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
 ```
 
 ### Data Event Logging
@@ -230,7 +247,7 @@ resource "aws_cloudtrail" "example" {
       field = "resources.ARN"
 
       #The trailing slash is intentional; do not exclude it.
-      equals = [
+      starts_with = [
         "${data.aws_s3_bucket.important-bucket-1.arn}/",
         "${data.aws_s3_bucket.important-bucket-2.arn}/"
       ]
@@ -263,7 +280,6 @@ resource "aws_cloudtrail" "example" {
     field_selector {
       field = "resources.ARN"
 
-      #The trailing slash is intentional; do not exclude it.
       equals = [
         "${data.aws_s3_bucket.important-bucket-3.arn}/important-prefix"
       ]
@@ -305,6 +321,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `advanced_event_selector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `event_selector`.
 * `cloud_watch_logs_group_arn` - (Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `cloud_watch_logs_role_arn` - (Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group.
@@ -317,7 +334,7 @@ The following arguments are optional:
 * `is_organization_trail` - (Optional) Whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account. Defaults to `false`.
 * `kms_key_id` - (Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `s3_key_prefix` - (Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery.
-* `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery.
+* `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery. Specify the SNS topic ARN if it resides in another region.
 * `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### event_selector
@@ -351,19 +368,29 @@ The following arguments are optional:
 * `not_starts_with` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
 * `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
-* `id` - Name of the trail.
+* `id` - ARN of the trail.
+* `sns_topic_arn` - ARN of the Amazon SNS topic that CloudTrail uses to send notifications when log files are delivered.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Cloudtrails can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_cloudtrail.sample
+  id = "arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail"
+}
 ```
-$ terraform import aws_cloudtrail.sample my-sample-trail
+
+Using `terraform import`, import Cloudtrails using the `arn`. For example:
+
+```console
+% terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```

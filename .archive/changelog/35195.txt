@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_catalog_database: Properly handle out-of-band resource deletion
+```

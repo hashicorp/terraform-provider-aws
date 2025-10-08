@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpclattice_listener_rule: Remove `action.forward.target_groups` maximum item limit
+```

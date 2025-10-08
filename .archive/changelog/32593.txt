@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_mq_broker: Fix `setting user: Invalid address to set` errors
+```

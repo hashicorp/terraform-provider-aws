@@ -1,27 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
+	dataSourceOfferingsName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceType, dataSourceOfferingsName, "instance_types.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrLocation, dataSourceOfferingsName, "locations.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "location_type", dataSourceOfferingsName, "location_types.0"),
 				),
 			},
 		},
@@ -31,17 +37,20 @@ func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
+	dataSourceOfferingsName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceType, dataSourceOfferingsName, "instance_types.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrLocation, dataSourceOfferingsName, "locations.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "location_type", dataSourceOfferingsName, "location_types.0"),
 				),
 			},
 		},
@@ -54,14 +63,16 @@ func TestAccEC2InstanceTypeOfferingDataSource_preferredInstanceTypes(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingDataSourceConfig_preferreds(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "instance_type", "t3.micro"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "t3.micro"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrLocation),
+					resource.TestCheckResourceAttrSet(dataSourceName, "location_type"),
 				),
 			},
 		},

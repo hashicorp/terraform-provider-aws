@@ -19,9 +19,15 @@ data "aws_ecrpublic_authorization_token" "token" {
 }
 ```
 
-## Attributes Reference
+## Argument Reference
 
-The following attributes are exported:
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `authorization_token` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `user_name:password`.
 * `expires_at` - Time in UTC RFC3339 format when the authorization token expires.

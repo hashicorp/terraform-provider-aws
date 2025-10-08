@@ -89,8 +89,9 @@ resource "aws_redshift_scheduled_action" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The scheduled action name.
 * `description` - (Optional) The description of the scheduled action.
 * `enable` - (Optional) Whether to enable the scheduled action. Default is `true` .
@@ -124,16 +125,25 @@ The following arguments are supported:
 
 * `cluster_identifier` - (Required) The identifier of the cluster to be resumed.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Redshift Scheduled Action name.
 
 ## Import
 
-Redshift Scheduled Action can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Scheduled Action using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_scheduled_action.example
+  id = "tf-redshift-scheduled-action"
+}
 ```
-$ terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
+
+Using `terraform import`, import Redshift Scheduled Action using the `name`. For example:
+
+```console
+% terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
 ```

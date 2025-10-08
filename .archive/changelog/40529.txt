@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ami_ids: Fix `sort_ascending` to sort in ascending order
+```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline_test
 
 import (
@@ -5,27 +8,29 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datapipeline"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datapipeline/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatapipeline "github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataPipelinePipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf1, conf2 datapipeline.PipelineDescription
+	var conf1, conf2 awstypes.PipelineDescription
 	rName1 := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	rName2 := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,7 +38,7 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -41,7 +46,7 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf2),
 					testAccCheckPipelineNotEqual(&conf1, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 			{
@@ -55,13 +60,13 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 
 func TestAccDataPipelinePipeline_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf1, conf2 datapipeline.PipelineDescription
+	var conf1, conf2 awstypes.PipelineDescription
 	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -69,7 +74,7 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 				Config: testAccPipelineConfig_description(rName, "test description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 				),
 			},
 			{
@@ -77,7 +82,7 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf2),
 					testAccCheckPipelineNotEqual(&conf1, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "description", "update description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "update description"),
 				),
 			},
 			{
@@ -91,13 +96,13 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 
 func TestAccDataPipelinePipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf datapipeline.PipelineDescription
+	var conf awstypes.PipelineDescription
 	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,64 +118,14 @@ func TestAccDataPipelinePipeline_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDataPipelinePipeline_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf datapipeline.PipelineDescription
-	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
-	resourceName := "aws_datapipeline_pipeline.default"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPipelineConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.fizz", "buzz"),
-				),
-			},
-			{
-				Config: testAccPipelineConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.foo", "bar2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.fizz2", "buzz2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccPipelineConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckPipelineDisappears(ctx context.Context, conf *datapipeline.PipelineDescription) resource.TestCheckFunc {
+func testAccCheckPipelineDisappears(ctx context.Context, conf *awstypes.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
 		params := &datapipeline.DeletePipelineInput{
 			PipelineId: conf.PipelineId,
 		}
 
-		_, err := conn.DeletePipelineWithContext(ctx, params)
+		_, err := conn.DeletePipeline(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -180,17 +135,17 @@ func testAccCheckPipelineDisappears(ctx context.Context, conf *datapipeline.Pipe
 
 func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datapipeline_pipeline" {
 				continue
 			}
 			// Try to find the Pipeline
-			pipelineDescription, err := tfdatapipeline.PipelineRetrieve(ctx, rs.Primary.ID, conn)
-			if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) {
+			pipelineDescription, err := tfdatapipeline.FindPipeline(ctx, conn, rs.Primary.ID)
+			if errs.IsA[*awstypes.PipelineNotFoundException](err) {
 				continue
-			} else if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
+			} else if errs.IsA[*awstypes.PipelineDeletedException](err) {
 				continue
 			}
 
@@ -206,7 +161,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPipelineExists(ctx context.Context, n string, v *datapipeline.PipelineDescription) resource.TestCheckFunc {
+func testAccCheckPipelineExists(ctx context.Context, n string, v *awstypes.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -217,9 +172,9 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *datapipeline.P
 			return fmt.Errorf("No DataPipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
 
-		pipelineDescription, err := tfdatapipeline.PipelineRetrieve(ctx, rs.Primary.ID, conn)
+		pipelineDescription, err := tfdatapipeline.FindPipeline(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -234,11 +189,11 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *datapipeline.P
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
 
 	input := &datapipeline.ListPipelinesInput{}
 
-	_, err := conn.ListPipelinesWithContext(ctx, input)
+	_, err := conn.ListPipelines(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -249,9 +204,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckPipelineNotEqual(pipeline1, pipeline2 *datapipeline.PipelineDescription) resource.TestCheckFunc {
+func testAccCheckPipelineNotEqual(pipeline1, pipeline2 *awstypes.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(pipeline1.PipelineId) == aws.StringValue(pipeline2.PipelineId) {
+		if aws.ToString(pipeline1.PipelineId) == aws.ToString(pipeline2.PipelineId) {
 			return fmt.Errorf("Pipeline IDs are equal")
 		}
 
@@ -272,16 +227,4 @@ resource "aws_datapipeline_pipeline" "default" {
   name        = "%[1]s"
   description = %[2]q
 }`, rName, description)
-}
-
-func testAccPipelineConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_datapipeline_pipeline" "default" {
-  name = "%[1]s"
-
-  tags = {
-    %[2]s = %[3]q
-    %[4]s = %[5]q
-  }
-}`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

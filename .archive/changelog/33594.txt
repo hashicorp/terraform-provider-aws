@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `rate_based_statement.custom_key` configuration block
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `rate_based_statement.custom_key` configuration block
+```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime_test
 
 import (
@@ -5,26 +8,30 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chime"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccChimeVoiceConnectorGroup_basic(t *testing.T) {
+func testAccVoiceConnectorGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnectorGroup *chime.VoiceConnectorGroup
+	var voiceConnectorGroup *awstypes.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,7 +39,7 @@ func TestAccChimeVoiceConnectorGroup_basic(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "1"),
 				),
@@ -46,16 +53,19 @@ func TestAccChimeVoiceConnectorGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorGroup_disappears(t *testing.T) {
+func testAccVoiceConnectorGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnectorGroup *chime.VoiceConnectorGroup
+	var voiceConnectorGroup *awstypes.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,16 +81,19 @@ func TestAccChimeVoiceConnectorGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnectorGroup_update(t *testing.T) {
+func testAccVoiceConnectorGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnectorGroup *chime.VoiceConnectorGroup
+	var voiceConnectorGroup *awstypes.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,15 +101,15 @@ func TestAccChimeVoiceConnectorGroup_update(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorGroupConfig_updated(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-updated-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-updated-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "3"),
 				),
 			},
 			{
@@ -138,13 +151,13 @@ resource "aws_chime_voice_connector_group" "test" {
 
   connector {
     voice_connector_id = aws_chime_voice_connector.chime.id
-    priority           = 10
+    priority           = 3
   }
 }
 `, name)
 }
 
-func testAccCheckVoiceConnectorGroupExists(ctx context.Context, name string, vc *chime.VoiceConnectorGroup) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorGroupExists(ctx context.Context, name string, vc *awstypes.VoiceConnectorGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -155,17 +168,18 @@ func testAccCheckVoiceConnectorGroupExists(ctx context.Context, name string, vc 
 			return fmt.Errorf("no Chime voice connector group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
-		input := &chime.GetVoiceConnectorGroupInput{
-			VoiceConnectorGroupId: aws.String(rs.Primary.ID),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-		resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, input)
-		if err != nil || resp.VoiceConnectorGroup == nil {
+		resp, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*awstypes.VoiceConnectorGroup, error) {
+			return tfchime.FindVoiceConnectorGroupByID(ctx, conn, rs.Primary.ID)
+		})
+
+		if err != nil {
 			return err
 		}
 
-		vc = resp.VoiceConnectorGroup
+		vc = resp
+
 		return nil
 	}
 }
@@ -176,18 +190,23 @@ func testAccCheckVoiceConnectorGroupDestroy(ctx context.Context) resource.TestCh
 			if rs.Type != "aws_chime_voice_connector" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
-			input := &chime.GetVoiceConnectorGroupInput{
-				VoiceConnectorGroupId: aws.String(rs.Primary.ID),
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+
+			_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*awstypes.VoiceConnectorGroup, error) {
+				return tfchime.FindVoiceConnectorGroupByID(ctx, conn, rs.Primary.ID)
+			})
+
+			if errs.IsA[*awstypes.NotFoundException](err) {
+				continue
 			}
-			resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, input)
-			if err == nil {
-				if resp.VoiceConnectorGroup != nil && aws.StringValue(resp.VoiceConnectorGroup.Name) != "" {
-					return fmt.Errorf("error Chime Voice Connector still exists")
-				}
+
+			if err != nil {
+				return err
 			}
-			return nil
+
+			return fmt.Errorf("voice connector group still exists: (%s)", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

@@ -3,13 +3,14 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_customer_gateway_association"
 description: |-
-  Associates a customer gateway with a device and optionally, with a link.
+  Manages a Network Manager Customer Gateway Association.
 ---
 
 # Resource: aws_networkmanager_customer_gateway_association
 
-Associates a customer gateway with a device and optionally, with a link.
-If you specify a link, it must be associated with the specified device.
+Manages a Network Manager Customer Gateway Association.
+
+Use this resource to associate a customer gateway with a device and optionally, with a link. If you specify a link, it must be associated with the specified device.
 
 ## Example Usage
 
@@ -60,21 +61,40 @@ resource "aws_networkmanager_customer_gateway_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `customer_gateway_arn` - (Required) The Amazon Resource Name (ARN) of the customer gateway.
-* `device_id` - (Required) The ID of the device.
-* `global_network_id` - (Required) The ID of the global network.
-* `link_id` - (Optional) The ID of the link.
+* `customer_gateway_arn` - (Required) ARN of the customer gateway.
+* `device_id` - (Required) ID of the device.
+* `global_network_id` - (Required) ID of the global network.
 
-## Attributes Reference
+The following arguments are optional:
 
-No additional attributes are exported.
+* `link_id` - (Optional) ID of the link.
+
+## Attribute Reference
+
+This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
-`aws_networkmanager_customer_gateway_association` can be imported using the global network ID and customer gateway ARN, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_customer_gateway_association` using the global network ID and customer gateway ARN. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_customer_gateway_association.example
+  id = "global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:customer-gateway/cgw-123abc05e04123abc"
+}
 ```
-$ terraform import aws_networkmanager_customer_gateway_association.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:customer-gateway/cgw-123abc05e04123abc
+
+Using `terraform import`, import `aws_networkmanager_customer_gateway_association` using the global network ID and customer gateway ARN. For example:
+
+```console
+% terraform import aws_networkmanager_customer_gateway_association.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:customer-gateway/cgw-123abc05e04123abc
 ```

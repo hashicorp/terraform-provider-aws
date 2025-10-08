@@ -35,6 +35,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Recording Configuration name.
 * `recording_reconnect_window_seconds` - (Optional) If a broadcast disconnects and then reconnects within the specified interval, the multiple streams will be considered a single broadcast and merged together.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -42,9 +43,9 @@ The following arguments are optional:
     * `recording_mode` - (Optional) Thumbnail recording mode. Valid values: `DISABLED`, `INTERVAL`.
     * `target_interval_seconds` (Configurable [and required] only if `recording_mode` is `INTERVAL`) - The targeted thumbnail-generation interval in seconds.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Recording Configuration.
 * `state` -  The current state of the Recording Configuration.
@@ -59,8 +60,38 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IVS (Interactive Video) Recording Configuration can be imported using the ARN, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_ivs_recording_configuration.example
+  identity = {
+    "arn" = "arn:aws:ivs:us-west-2:123456789012:recording-configuration/abcdABCDefgh"
+  }
+}
+
+resource "aws_ivs_recording_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_ivs_recording_configuration.example arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IVS recording configuration.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Recording Configuration using the ARN. For example:
+
+```terraform
+import {
+  to = aws_ivs_recording_configuration.example
+  id = "arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47"
+}
+```
+
+Using `terraform import`, import IVS (Interactive Video) Recording Configuration using the ARN. For example:
+
+```console
+% terraform import aws_ivs_recording_configuration.example arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47
 ```

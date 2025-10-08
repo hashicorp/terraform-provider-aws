@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_finspace_kx_environment: Increase default deletion timeout to 45 minutes
+```
+
+```release-note:enhancement
+resource/aws_finspace_kx_cluster: Increase default creation timeout to 45 minutes, default deletion timeout to 60 minutes
+```

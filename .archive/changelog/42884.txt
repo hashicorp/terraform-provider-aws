@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc_endpoint_subnet_association: Fix `OperationInProgress: VpcEndpoint modify operation in progress` errors when deleting multiple associations in parallel
+```

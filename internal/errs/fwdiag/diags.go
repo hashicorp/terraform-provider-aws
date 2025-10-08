@@ -1,38 +1,87 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fwdiag
 
 import (
 	"errors"
 	"fmt"
+	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 )
 
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
-func DiagnosticsError(diags diag.Diagnostics) (errs error) {
-	if !diags.HasError() {
-		return
-	}
+func DiagnosticsError(diags diag.Diagnostics) error {
+	var errs []error
 
 	for _, d := range diags.Errors() {
-		errs = multierror.Append(errs, errors.New(DiagnosticString(d)))
+		errs = append(errs, errors.New(DiagnosticString(d)))
 	}
 
-	return
+	return errors.Join(errs...)
 }
 
 // DiagnosticString formats a Diagnostic
 // If there is no `Detail`, only prints summary, otherwise prints both
 func DiagnosticString(d diag.Diagnostic) string {
-	if d.Detail() == "" {
-		return d.Summary()
+	var buf strings.Builder
+
+	fmt.Fprint(&buf, d.Summary())
+	if d.Detail() != "" {
+		fmt.Fprintf(&buf, "\n\n%s", d.Detail())
 	}
-	return fmt.Sprintf("%s\n\n%s", d.Summary(), d.Detail())
+	if withPath, ok := d.(diag.DiagnosticWithPath); ok {
+		fmt.Fprintf(&buf, "\n%s", withPath.Path().String())
+	}
+
+	return buf.String()
+}
+
+func NewCreatingResourceIDErrorDiagnostic(err error) diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		"Creating Resource ID",
+		err.Error(),
+	)
+}
+
+func NewParsingResourceIDErrorDiagnostic(err error) diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		"Parsing Resource ID",
+		err.Error(),
+	)
 }
 
 func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 	return diag.NewWarningDiagnostic(
 		"AWS resource not found during refresh",
-		fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: %s", err.Error()),
+		"Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: "+err.Error(),
 	)
+}
+
+func NewListResultErrorDiagnostic(err error) list.ListResult {
+	return list.ListResult{
+		Diagnostics: diag.Diagnostics{
+			diag.NewErrorDiagnostic(
+				"Error Listing Remote Resources",
+				err.Error(),
+			),
+		},
+	}
+}
+
+func AsError[T any](x T, diags diag.Diagnostics) (T, error) {
+	return x, DiagnosticsError(diags)
+}
+
+// DiagnosticsString formats a Diagnostics
+func DiagnosticsString(diags diag.Diagnostics) string {
+	var buf strings.Builder
+
+	for _, d := range diags {
+		fmt.Fprintln(&buf, DiagnosticString(d))
+	}
+
+	return buf.String()
 }

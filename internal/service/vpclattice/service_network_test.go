@@ -1,28 +1,95 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestIDFromIDOrARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		idOrARN string
+		want    string
+	}{
+		{
+			idOrARN: "",
+			want:    "",
+		},
+		{
+			idOrARN: "sn-1234567890abcdefg",
+			want:    "sn-1234567890abcdefg",
+		},
+		{
+			idOrARN: "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
+			want:    "sn-1234567890abcdefg",
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := tfvpclattice.IDFromIDOrARN(testCase.idOrARN), testCase.want; got != want {
+			t.Errorf("IDFromIDOrARN(%q) = %v, want %v", testCase.idOrARN, got, want)
+		}
+	}
+}
+
+func TestSuppressEquivalentIDOrARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old  string
+		new  string
+		want bool
+	}{
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "sn-1234567890abcdefg",
+			want: true,
+		},
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "sn-1234567890abcdefh",
+			want: false,
+		},
+		{
+			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
+			new:  "sn-1234567890abcdefg",
+			want: true,
+		},
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
+			want: true,
+		},
+		{
+			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
+			new:  "sn-1234567890abcdefh",
+			want: false,
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := tfvpclattice.SuppressEquivalentIDOrARN("test_property", testCase.old, testCase.new, nil), testCase.want; got != want {
+			t.Errorf("SuppressEquivalentIDOrARN(%q, %q) = %v, want %v", testCase.old, testCase.new, got, want)
+		}
+	}
+}
+
 func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetwork vpclattice.GetServiceNetworkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network.test"
@@ -33,7 +100,7 @@ func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,8 +108,8 @@ func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 				Config: testAccServiceNetworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &servicenetwork),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("servicenetwork/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
 				),
 			},
 			{
@@ -56,7 +123,6 @@ func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 
 func TestAccVPCLatticeServiceNetwork_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetwork vpclattice.GetServiceNetworkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network.test"
@@ -67,7 +133,7 @@ func TestAccVPCLatticeServiceNetwork_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +151,6 @@ func TestAccVPCLatticeServiceNetwork_disappears(t *testing.T) {
 
 func TestAccVPCLatticeServiceNetwork_full(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetwork vpclattice.GetServiceNetworkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network.test"
@@ -96,7 +161,7 @@ func TestAccVPCLatticeServiceNetwork_full(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,9 +169,9 @@ func TestAccVPCLatticeServiceNetwork_full(t *testing.T) {
 				Config: testAccServiceNetworkConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &servicenetwork),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "AWS_IAM"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("servicenetwork/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
 				),
 			},
 			{
@@ -126,16 +191,16 @@ func TestAccVPCLatticeServiceNetwork_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkConfig_tags1(rName, "key1", "value1"),
+				Config: testAccServiceNetworkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &serviceNetwork1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -144,20 +209,20 @@ func TestAccVPCLatticeServiceNetwork_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceNetworkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServiceNetworkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &serviceNetwork2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccServiceNetworkConfig_tags1(rName, "key2", "value2"),
+				Config: testAccServiceNetworkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &serviceNetwork3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -166,66 +231,50 @@ func TestAccVPCLatticeServiceNetwork_tags(t *testing.T) {
 
 func testAccCheckServiceNetworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_service_network" {
 				continue
 			}
 
-			_, err := conn.GetServiceNetwork(ctx, &vpclattice.GetServiceNetworkInput{
-				ServiceNetworkIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfvpclattice.FindServiceNetworkByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameServiceNetwork, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Lattice Service Network %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckServiceNetworkExists(ctx context.Context, name string, servicenetwork *vpclattice.GetServiceNetworkOutput) resource.TestCheckFunc {
+func testAccCheckServiceNetworkExists(ctx context.Context, n string, v *vpclattice.GetServiceNetworkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameServiceNetwork, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameServiceNetwork, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
-		resp, err := conn.GetServiceNetwork(ctx, &vpclattice.GetServiceNetworkInput{
-			ServiceNetworkIdentifier: aws.String(rs.Primary.ID),
-		})
+		output, err := tfvpclattice.FindServiceNetworkByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameServiceNetwork, rs.Primary.ID, err)
+			return err
 		}
 
-		*servicenetwork = *resp
+		*v = *output
 
 		return nil
 	}
 }
-
-// func testAccCheckServiceNetworkNotRecreated(before, after *vpclattice.DescribeServiceNetworkResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.StringValue(before.ServiceNetworkId), aws.StringValue(after.ServiceNetworkId); before != after {
-// 			return create.Error(names.VPCLattice, create.ErrActionCheckingNotRecreated, tfvpclattice.ResNameServiceNetwork, aws.StringValue(before.ServiceNetworkId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccServiceNetworkConfig_basic(rName string) string {
 	return fmt.Sprintf(`

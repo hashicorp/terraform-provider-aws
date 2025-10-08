@@ -18,9 +18,9 @@ Manages an individual ECS resource tag. This resource should only be used in cas
 
 ```terraform
 resource "aws_batch_compute_environment" "example" {
-  compute_environment_name = "example"
-  service_role             = aws_iam_role.example.arn
-  type                     = "UNMANAGED"
+  name         = "example"
+  service_role = aws_iam_role.example.arn
+  type         = "UNMANAGED"
 }
 
 resource "aws_ecs_tag" "example" {
@@ -32,22 +32,32 @@ resource "aws_ecs_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the ECS resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ECS resource identifier and key, separated by a comma (`,`)
 
 ## Import
 
-`aws_ecs_tag` can be imported by using the ECS resource identifier and key, separated by a comma (`,`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ecs_tag` using the ECS resource identifier and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_ecs_tag.example
+  id = "arn:aws:ecs:us-east-1:123456789012:cluster/example,Name"
+}
 ```
-$ terraform import aws_ecs_tag.example arn:aws:ecs:us-east-1:123456789012:cluster/example,Name
+
+Using `terraform import`, import `aws_ecs_tag` using the ECS resource identifier and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_ecs_tag.example arn:aws:ecs:us-east-1:123456789012:cluster/example,Name
 ```

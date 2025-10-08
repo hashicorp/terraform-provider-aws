@@ -12,9 +12,19 @@ Provides an SSM Parameter data source.
 
 ## Example Usage
 
+### Default
+
 ```terraform
 data "aws_ssm_parameter" "foo" {
   name = "foo"
+}
+```
+
+### With version
+
+```terraform
+data "aws_ssm_parameter" "foo" {
+  name = "foo:3"
 }
 ```
 
@@ -25,15 +35,19 @@ data "aws_ssm_parameter" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Required) Name of the parameter.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the parameter. To query by parameter version use `name:version` (e.g., `foo:3`).
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the parameter.
 * `name` - Name of the parameter.
 * `type` - Type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - Value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
+* `insecure_value` - Value of the parameter. **Use caution:** This value is never marked as sensitive.
 * `version` - Version of the parameter.

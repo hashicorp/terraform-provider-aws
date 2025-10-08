@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_trigger: Fix crash when null `action` is configured
+```

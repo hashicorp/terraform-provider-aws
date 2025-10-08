@@ -33,8 +33,9 @@ resource "aws_elasticache_parameter_group" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the ElastiCache parameter group.
 * `family` - (Required) The family of the ElastiCache parameter group.
 * `description` - (Optional) The description of the ElastiCache parameter group. Defaults to "Managed by Terraform".
@@ -46,9 +47,9 @@ Parameter blocks support the following:
 * `name` - (Required) The name of the ElastiCache parameter.
 * `value` - (Required) The value of the ElastiCache parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ElastiCache parameter group name.
 * `arn` - The AWS ARN associated with the parameter group.
@@ -56,8 +57,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache Parameter Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_parameter_group.default
+  id = "redis-params"
+}
 ```
-$ terraform import aws_elasticache_parameter_group.default redis-params
+
+Using `terraform import`, import ElastiCache Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_elasticache_parameter_group.default redis-params
 ```

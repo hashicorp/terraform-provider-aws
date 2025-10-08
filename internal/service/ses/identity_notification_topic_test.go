@@ -1,25 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
 	"context"
 	"fmt"
-	"log"
-	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
-	topicName := sdkacctest.RandomWithPrefix("test-topic")
+	topicName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_identity_notification_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,24 +28,24 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityNotificationTopicDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_basic, domain),
+				Config: testAccIdentityNotificationTopicConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_update, domain, topicName),
+				Config: testAccIdentityNotificationTopicConfig_update(domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_headers, domain, topicName),
+				Config: testAccIdentityNotificationTopicConfig_headers(domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
 				),
@@ -58,98 +59,63 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckIdentityNotificationTopicDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+// https://github.com/hashicorp/terraform-provider-aws/issues/36275.
+func TestAccSESIdentityNotificationTopic_Disappears_domainIdentity(t *testing.T) {
+	ctx := acctest.Context(t)
+	domain := acctest.RandomDomainName()
+	resourceName := "aws_ses_identity_notification_topic.test"
 
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_ses_identity_notification_topic" {
-				continue
-			}
-
-			identity := rs.Primary.Attributes["identity"]
-			params := &ses.GetIdentityNotificationAttributesInput{
-				Identities: []*string{aws.String(identity)},
-			}
-
-			log.Printf("[DEBUG] Testing SES Identity Notification Topic Destroy: %#v", params)
-
-			response, err := conn.GetIdentityNotificationAttributesWithContext(ctx, params)
-			if err != nil {
-				return err
-			}
-
-			if response.NotificationAttributes[identity] != nil {
-				return fmt.Errorf("SES Identity Notification Topic %s still exists. Failing!", identity)
-			}
-		}
-
-		return nil
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityNotificationTopicConfig_basic(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Identity Notification Topic not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Identity Notification Topic identity not set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		identity := rs.Primary.Attributes["identity"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		_, err := tfses.FindIdentityNotificationAttributesByIdentity(ctx, conn, rs.Primary.Attributes["identity"])
 
-		params := &ses.GetIdentityNotificationAttributesInput{
-			Identities: []*string{aws.String(identity)},
-		}
-
-		log.Printf("[DEBUG] Testing SES Identity Notification Topic Exists: %#v", params)
-
-		response, err := conn.GetIdentityNotificationAttributesWithContext(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		if response.NotificationAttributes[identity] == nil {
-			return fmt.Errorf("SES Identity Notification Topic %s not found in AWS", identity)
-		}
-
-		notificationType := rs.Primary.Attributes["notification_type"]
-		headersExpected, _ := strconv.ParseBool(rs.Primary.Attributes["include_original_headers"])
-
-		var headersIncluded bool
-		switch notificationType {
-		case ses.NotificationTypeBounce:
-			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled)
-		case ses.NotificationTypeComplaint:
-			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled)
-		case ses.NotificationTypeDelivery:
-			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled)
-		}
-
-		if headersIncluded != headersExpected {
-			return fmt.Errorf("Wrong value applied for include_original_headers for %s", identity)
-		}
-
-		return nil
+		return err
 	}
 }
 
-const testAccIdentityNotificationTopicConfig_basic = `
+func testAccIdentityNotificationTopicConfig_basic(domain string) string {
+	return fmt.Sprintf(`
 resource "aws_ses_identity_notification_topic" "test" {
   identity          = aws_ses_domain_identity.test.arn
   notification_type = "Complaint"
 }
 
 resource "aws_ses_domain_identity" "test" {
-  domain = "%s"
+  domain = %[1]q
 }
-`
+`, domain)
+}
 
-const testAccIdentityNotificationTopicConfig_update = `
+func testAccIdentityNotificationTopicConfig_update(domain, topicName string) string {
+	return fmt.Sprintf(`
 resource "aws_ses_identity_notification_topic" "test" {
   topic_arn         = aws_sns_topic.test.arn
   identity          = aws_ses_domain_identity.test.arn
@@ -157,15 +123,17 @@ resource "aws_ses_identity_notification_topic" "test" {
 }
 
 resource "aws_ses_domain_identity" "test" {
-  domain = "%s"
+  domain = %[1]q
 }
 
 resource "aws_sns_topic" "test" {
-  name = "%s"
+  name = %[2]q
 }
-`
+`, domain, topicName)
+}
 
-const testAccIdentityNotificationTopicConfig_headers = `
+func testAccIdentityNotificationTopicConfig_headers(domain, topicName string) string {
+	return fmt.Sprintf(`
 resource "aws_ses_identity_notification_topic" "test" {
   topic_arn                = aws_sns_topic.test.arn
   identity                 = aws_ses_domain_identity.test.arn
@@ -174,10 +142,11 @@ resource "aws_ses_identity_notification_topic" "test" {
 }
 
 resource "aws_ses_domain_identity" "test" {
-  domain = "%s"
+  domain = %[1]q
 }
 
 resource "aws_sns_topic" "test" {
-  name = "%s"
+  name = %[2]q
 }
-`
+`, domain, topicName)
+}

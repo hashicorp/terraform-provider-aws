@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` argument
+```
+
+```release-note:enhancement
+data-source/aws_dms_endpoint: Add `kinesis_settings.use_large_integer_value` attribute
+```

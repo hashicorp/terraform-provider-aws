@@ -1,32 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsDataProtectionPolicyDocumentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	logGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	logGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_basic(logGroupName, targetName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(
-						"data.aws_cloudwatch_log_data_protection_policy_document.test", "json",
+					acctest.CheckResourceAttrJSONNoDiff(
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
 						testAccDataProtectionPolicyDocumentDataSourceConfig_basic_expectedJSON(targetName)),
 				),
 			},
@@ -36,19 +38,19 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_basic(t *testing.T) {
 
 func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
 	ctx := acctest.Context(t)
-	logGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	logGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_empty(logGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(
-						"data.aws_cloudwatch_log_data_protection_policy_document.test", "json",
+					acctest.CheckResourceAttrJSONNoDiff(
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
 						testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON),
 				),
 			},
@@ -58,15 +60,15 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
 
 func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnBadOrderOfStatements(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnBadOrderOfStatements,
-				ExpectError: regexp.MustCompile(`the first policy statement must contain only the audit operation`),
+				ExpectError: regexache.MustCompile(`the first policy statement must contain only the audit operation`),
 			},
 		},
 	})
@@ -74,15 +76,38 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnBadOrderOfStatemen
 
 func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnNoOperation(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnNoOperation,
-				ExpectError: regexp.MustCompile(`the second policy statement must contain only the deidentify operation`),
+				ExpectError: regexache.MustCompile(`the second policy statement must contain only the deidentify operation`),
+			},
+		},
+	})
+}
+
+func TestAccLogsDataProtectionPolicyDocumentDataSource_customDataIdentifiers(t *testing.T) {
+	ctx := acctest.Context(t)
+	logGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers(logGroupName, targetName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff(
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
+						testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers_expectedJSON(targetName)),
+				),
 			},
 		},
 	})
@@ -169,9 +194,9 @@ resource "aws_kinesis_firehose_delivery_stream" "audit" {
   depends_on = [aws_iam_role_policy.firehose]
 
   name        = %[2]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.audit.arn
   }
@@ -323,6 +348,132 @@ data "aws_cloudwatch_log_data_protection_policy_document" "test" {
 }
 `,
 		logGroupName)
+}
+
+func testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers(logGroupName, targetName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_data_protection_policy" "test" {
+  log_group_name  = aws_cloudwatch_log_group.test.name
+  policy_document = data.aws_cloudwatch_log_data_protection_policy_document.test.json
+}
+
+resource "aws_cloudwatch_log_group" "audit" {
+  name = %[2]q
+}
+
+data "aws_cloudwatch_log_data_protection_policy_document" "test" {
+  description = "Test Document Description"
+  name        = "Test"
+  version     = "2021-06-01"
+
+  configuration {
+    custom_data_identifier {
+      name  = "CustomIdentifier1"
+      regex = "regex1"
+    }
+    custom_data_identifier {
+      name  = "CustomIdentifier2"
+      regex = "regex2"
+    }
+  }
+
+  statement {
+    sid = "Audit"
+
+    data_identifiers = [
+      "CustomIdentifier1",
+      "CustomIdentifier2",
+    ]
+
+    operation {
+      audit {
+        findings_destination {
+          cloudwatch_logs {
+            log_group = aws_cloudwatch_log_group.audit.name
+          }
+        }
+      }
+    }
+  }
+
+  statement {
+    sid = "Deidentify"
+
+    data_identifiers = [
+      "CustomIdentifier1",
+      "CustomIdentifier2",
+    ]
+
+    operation {
+      deidentify {
+        mask_config {}
+      }
+    }
+  }
+}
+`,
+		logGroupName, targetName)
+}
+
+func testAccDataProtectionPolicyDocumentDataSourceConfig_customDataIdentifiers_expectedJSON(name string) string {
+	// lintignore:AWSAT005
+	return fmt.Sprintf(`
+{
+  "Description": "Test Document Description",
+  "Name": "Test",
+  "Version": "2021-06-01",
+  "Configuration": {
+      "CustomDataIdentifier": [
+          {
+              "Name": "CustomIdentifier1",
+              "Regex": "regex1"
+          },
+          {
+              "Name": "CustomIdentifier2",
+              "Regex": "regex2"
+          }
+      ]
+  },
+  "Statement": [
+      {
+          "Sid": "Audit",
+          "DataIdentifier": [
+              "CustomIdentifier2",
+              "CustomIdentifier1"
+          ],
+          "Operation": {
+              "Audit": {
+                  "FindingsDestination": {
+                      "CloudWatchLogs": {
+                          "LogGroup": %[1]q
+                      }
+                  }
+              }
+          }
+      },
+      {
+          "Sid": "Deidentify",
+          "DataIdentifier": [
+              "CustomIdentifier2",
+              "CustomIdentifier1"
+          ],
+          "Operation": {
+              "Deidentify": {
+                  "MaskConfig": {}
+              }
+          }
+      }
+  ]
+}
+`, name)
 }
 
 // lintignore:AWSAT005

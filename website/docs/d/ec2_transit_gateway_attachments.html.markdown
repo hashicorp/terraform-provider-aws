@@ -14,7 +14,7 @@ Get information on EC2 Transit Gateway Attachments.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_attachments" "filtered" {
   filter {
     name   = "state"
@@ -28,15 +28,16 @@ data "aws_ec2_transit_gateway_attachments" "filtered" {
 }
 
 data "aws_ec2_transit_gateway_attachment" "unit" {
-  count = length(data.aws_ec2_transit_gateway_attachments.filtered.ids)
-  id    = data.aws_ec2_transit_gateway_attachments.filtered.ids[count.index]
+  count                         = length(data.aws_ec2_transit_gateway_attachments.filtered.ids)
+  transit_gateway_attachment_id = data.aws_ec2_transit_gateway_attachments.filtered.ids[count.index]
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 
 ### filter Argument Reference
@@ -46,7 +47,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_attachment][2] data source, searching by identifier.
 

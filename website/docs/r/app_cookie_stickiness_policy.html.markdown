@@ -35,8 +35,9 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the stickiness policy.
 * `load_balancer` - (Required) Name of load balancer to which the policy
   should be attached.
@@ -45,9 +46,9 @@ The following arguments are supported:
 balancer.
 * `cookie_name` - (Required) Application cookie whose lifetime the ELB's cookie should follow.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the policy.
 * `name` - Name of the stickiness policy.
@@ -57,8 +58,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Application cookie stickiness policies can be imported using the ELB name, port, and policy name separated by colons (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import application cookie stickiness policies using the ELB name, port, and policy name separated by colons (`:`). For example:
 
-```sh
-$ terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy
+```terraform
+import {
+  to = aws_app_cookie_stickiness_policy.example
+  id = "my-elb:80:my-policy"
+}
+```
+
+Using `terraform import`, import application cookie stickiness policies using the ELB name, port, and policy name separated by colons (`:`). For example:
+
+```console
+% terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy
 ```

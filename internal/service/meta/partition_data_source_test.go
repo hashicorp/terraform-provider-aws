@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
@@ -23,7 +26,7 @@ func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 				Config: testAccPartitionDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "partition", func(value string) error {
-						expected := acctest.Provider.Meta().(*conns.AWSClient).Partition
+						expected := acctest.Provider.Meta().(*conns.AWSClient).Partition(ctx)
 						if value != expected {
 							return fmt.Errorf("Incorrect Partition: expected %q, got %q", expected, value)
 						}
@@ -31,7 +34,7 @@ func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 						return nil
 					}),
 					resource.TestCheckResourceAttrWith(dataSourceName, "dns_suffix", func(value string) error {
-						expected := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix
+						expected := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix(ctx)
 						if value != expected {
 							return fmt.Errorf("Incorrect DNS Suffix: expected %q, got %q", expected, value)
 						}

@@ -167,19 +167,21 @@ The following arguments are required:
 * `data_set_id` - (Required, Forces new resource) Identifier for the data set.
 * `import_mode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `SPICE` and `DIRECT_QUERY`.
 * `name` - (Required) Display name for the dataset.
-* `physical_table_map` - (Required) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `column_groups` - (Optional) Groupings of columns that work together in certain Amazon QuickSight features. Currently, only geospatial hierarchy is supported. See [column_groups](#column_groups).
 * `column_level_permission_rules` - (Optional) A set of 1 or more definitions of a [ColumnLevelPermissionRule](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnLevelPermissionRule.html). See [column_level_permission_rules](#column_level_permission_rules).
 * `data_set_usage_configuration` - (Optional) The usage configuration to apply to child datasets that reference this dataset as a source. See [data_set_usage_configuration](#data_set_usage_configuration).
 * `field_folders` - (Optional) The folder that contains fields and nested subfolders for your dataset. See [field_folders](#field_folders).
 * `logical_table_map` - (Optional) Configures the combination and transformation of the data from the physical tables. Maximum of 1 entry. See [logical_table_map](#logical_table_map).
 * `permissions` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [permissions](#permissions).
+* `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `row_level_permission_data_set` - (Optional) The row-level security configuration for the data that you want to create. See [row_level_permission_data_set](#row_level_permission_data_set).
 * `row_level_permission_tag_configuration` - (Optional) The configuration of tags on a dataset to set row-level security. Row-level security tags are currently supported for anonymous embedding only. See [row_level_permission_tag_configuration](#row_level_permission_tag_configuration).
+* `refresh_properties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `import_mode` is set to `SPICE`. See [refresh_properties](#refresh_properties).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### physical_table_map
@@ -362,6 +364,24 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 * `tag_rules` - (Required) A set of rules associated with row-level security, such as the tag names and columns that they are assigned to. See [tag_rules](#tag_rules).
 * `status` - (Optional) The status of row-level security tags. If enabled, the status is `ENABLED`. If disabled, the status is `DISABLED`.
 
+### refresh_properties
+
+* `refresh_configuration` - (Required) The refresh configuration for the data set. See [refresh_configuration](#refresh_configuration).
+
+### refresh_configuration
+
+* `incremental_refresh` - (Required) The incremental refresh for the data set. See [incremental_refresh](#incremental_refresh).
+
+### incremental_refresh
+
+* `lookback_window` - (Required) The lookback window setup for an incremental refresh configuration. See [lookback_window](#lookback_window).
+
+### lookback_window
+
+* `column_name` - (Required) The name of the lookback window column.
+* `size` - (Required) The lookback window column size.
+* `size_unit` - (Required) The size unit that is used for the lookback window column. Valid values for this structure are `HOUR`, `DAY`, and `WEEK`.
+
 ### tag_rules
 
 * `column_name` - (Required) Column name that a tag key is assigned to.
@@ -369,18 +389,36 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 * `match_all_value` - (Optional) A string that you want to use to filter by all the values in a column in the dataset and don’t want to list the values one by one.
 * `tag_multi_value_delimiter` - (Optional) A string that you want to use to delimit the values when you pass the values at run time.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
+* `output_columns` - The final set of columns available for use in analyses and dashboards after all data preparation and transformation steps have been applied within the data set.  See [`output_columns` Block](#output_columns-block) below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+### `output_columns` Block
+
+The `output_columns` block has the following attributes.
+
+* `name` - The name of the column.
+* `description` - The description of the column.
+* `type` - The data type of the column.
 
 ## Import
 
-A QuickSight Data Set can be imported using the AWS account ID and data set ID separated by a comma (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Data Set using the AWS account ID and data set ID separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_data_set.example
+  id = "123456789012,example-id"
+}
 ```
-$ terraform import aws_quicksight_data_set.example 123456789012,example-id
+
+Using `terraform import`, import a QuickSight Data Set using the AWS account ID and data set ID separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```

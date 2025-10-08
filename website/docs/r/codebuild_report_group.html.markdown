@@ -59,8 +59,9 @@ resource "aws_codebuild_report_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of a Report Group.
 * `type` - (Required) The type of the Report Group. Valid value are `TEST` and `CODE_COVERAGE`.
 * `export_config` - (Required) Information about the destination where the raw data of this Report Group is exported. see [Export Config](#export-config) documented below.
@@ -81,9 +82,9 @@ The following arguments are supported:
 * `packaging` - (Optional) The type of build output artifact to create. Valid values are: `NONE` (default) and `ZIP`.
 * `path` - (Optional) The path to the exported report's raw data results.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of Report Group.
 * `arn` - The ARN of Report Group.
@@ -92,8 +93,38 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeBuild Report Group can be imported using the CodeBuild Report Group arn, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_codebuild_report_group.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:report-group/report-group-name"
+  }
+}
+
+resource "aws_codebuild_report_group" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild report group.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
+
+```terraform
+import {
+  to = aws_codebuild_report_group.example
+  id = "arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name"
+}
+```
+
+Using `terraform import`, import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
+
+```console
+% terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```

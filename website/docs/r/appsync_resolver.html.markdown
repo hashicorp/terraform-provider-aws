@@ -126,8 +126,9 @@ resource "aws_appsync_resolver" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API ID for the GraphQL API.
 * `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
 * `type` - (Required) Type name from the schema defined in the GraphQL API.
@@ -166,16 +167,25 @@ The following arguments are supported:
 * `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
 * `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN
 
 ## Import
 
-`aws_appsync_resolver` can be imported with their `api_id`, a hyphen, `type`, a hypen and `field` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
 
+```terraform
+import {
+  to = aws_appsync_resolver.example
+  id = "abcdef123456-exampleType-exampleField"
+}
 ```
-$ terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
+
+Using `terraform import`, import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
+
+```console
+% terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective_test
 
 import (
@@ -12,17 +15,27 @@ func TestAccDetective_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Graph": {
-			"basic":      testAccGraph_basic,
-			"disappears": testAccGraph_disappears,
-			"tags":       testAccGraph_tags,
+			acctest.CtBasic:      testAccGraph_basic,
+			acctest.CtDisappears: testAccGraph_disappears,
+			"tags":               testAccGraph_tags,
 		},
 		"InvitationAccepter": {
-			"basic": testAccInvitationAccepter_basic,
+			acctest.CtBasic: testAccInvitationAccepter_basic,
 		},
 		"Member": {
-			"basic":     testAccMember_basic,
-			"disappear": testAccMember_disappears,
-			"message":   testAccMember_message,
+			acctest.CtBasic:           testAccMember_basic,
+			"disappear":               testAccMember_disappears,
+			"message":                 testAccMember_message,
+			"organization_basic":      testAccMember_Organization_basic,
+			"organization_AutoEnable": testAccMember_Organization_AutoEnable,
+		},
+		"OrganizationAdminAccount": {
+			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
+			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
+			"MultiRegion":        testAccOrganizationAdminAccount_MultiRegion,
+		},
+		"OrganizationConfiguration": {
+			acctest.CtBasic: testAccOrganizationConfiguration_basic,
 		},
 	}
 

@@ -28,8 +28,9 @@ resource "aws_ssm_patch_baseline" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `baseline_id` - (Required) ID of the patch baseline.
   Can be an ID or an ARN.
   When specifying an AWS-provided patch baseline, must be the ARN.
@@ -49,22 +50,57 @@ The following arguments are required:
   `UBUNTU`, and
   `WINDOWS`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-The Systems Manager Default Patch Baseline can be imported using the patch baseline ID, patch baseline ARN, or the operating system value, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Systems Manager Default Patch Baseline using the patch baseline ID, patch baseline ARN, or the operating system value. For example:
 
-```
-$ terraform import aws_ssm_default_patch_baseline.example pb-1234567890abcdef1
+Using the patch baseline ID:
+
+```terraform
+import {
+  to = aws_ssm_default_patch_baseline.example
+  id = "pb-1234567890abcdef1"
+}
 ```
 
-```
-$ terraform import aws_ssm_default_patch_baseline.example arn:aws:ssm:us-west-2:123456789012:patchbaseline/pb-1234567890abcdef1
+Using the patch baseline ARN:
+
+```terraform
+import {
+  to = aws_ssm_default_patch_baseline.example
+  id = "arn:aws:ssm:us-west-2:123456789012:patchbaseline/pb-1234567890abcdef1"
+}
 ```
 
+Using the operating system value:
+
+```terraform
+import {
+  to = aws_ssm_default_patch_baseline.example
+  id = "CENTOS"
+}
 ```
-$ terraform import aws_ssm_default_patch_baseline.example CENTOS
+
+**Using `terraform import` to import** the Systems Manager Default Patch Baseline using the patch baseline ID, patch baseline ARN, or the operating system value. For example:
+
+Using the patch baseline ID:
+
+```console
+% terraform import aws_ssm_default_patch_baseline.example pb-1234567890abcdef1
+```
+
+Using the patch baseline ARN:
+
+```console
+% terraform import aws_ssm_default_patch_baseline.example arn:aws:ssm:us-west-2:123456789012:patchbaseline/pb-1234567890abcdef1
+```
+
+Using the operating system value:
+
+```console
+% terraform import aws_ssm_default_patch_baseline.example CENTOS
 ```

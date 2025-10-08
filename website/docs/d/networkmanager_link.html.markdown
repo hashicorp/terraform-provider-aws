@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_link"
 description: |-
-  Retrieve information about a link.
+  Provides details about an existing Network Manager link.
 ---
 
 # Data Source:  aws_networkmanager_link
 
-Retrieve information about a link.
+Provides details about an existing Network Manager link.
 
 ## Example Usage
 
@@ -21,12 +21,14 @@ data "aws_networkmanager_link" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `global_network_id` - (Required) ID of the Global Network of the link to retrieve.
 * `link_id` - (Required) ID of the specific link to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
 * `bandwidth` - Upload speed and download speed of the link as documented below

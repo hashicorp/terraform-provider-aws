@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codebuild_project: Fix unsetting `concurrent_build_limit`
+```

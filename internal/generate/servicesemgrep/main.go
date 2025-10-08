@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -6,18 +9,19 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	_ "embed"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
-	"regexp"
-	"sort"
+	"slices"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 //go:embed semgrep_header.tmpl
@@ -58,7 +62,6 @@ func main() {
 		filename        = `../../../.ci/.semgrep-service-name.yml`
 		filenameCAE     = `../../../.ci/.semgrep-caps-aws-ec2.yml`
 		filenameConfigs = `../../../.ci/.semgrep-configs.yml`
-		namesDataFile   = "../../../names/names_data.csv"
 		capsDataFile    = "../../../names/caps.csv"
 	)
 	g := common.NewGenerator()
@@ -76,7 +79,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(filenameCAE)
 
-	if err := d.WriteTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
+	if err := d.BufferTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
 		g.Fatalf("generating file (%s): %s", filenameCAE, err)
 	}
 
@@ -88,7 +91,7 @@ func main() {
 
 	d = g.NewUnformattedFileDestination(filenameConfigs)
 
-	if err := d.WriteBytes([]byte(configs)); err != nil {
+	if err := d.BufferBytes([]byte(configs)); err != nil {
 		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
 	}
 
@@ -98,88 +101,75 @@ func main() {
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // no header
+	for _, l := range data {
+		if l.Exclude() && !l.AllowedSubcategory() {
 			continue
 		}
 
-		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
-			continue
-		}
-
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
-
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
+		p := l.ProviderPackage()
 
 		rp := p
 
-		if l[names.ColSplitPackageRealPackage] != "" {
-			rp = l[names.ColSplitPackageRealPackage]
+		if l.SplitPackageRealPackage() != "" {
+			rp = l.SplitPackageRealPackage()
 		}
 
 		if _, err := os.Stat(fmt.Sprintf("../../service/%s", rp)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
-		if l[names.ColAliases] != "" {
-			for _, v := range strings.Split(l[names.ColAliases], ";") {
-				if strings.ToLower(v) == "es" {
-					continue // "es" is too short to usefully grep
-				}
-
-				if strings.ToLower(v) == "config" {
-					continue // "config" is too ubiquitous
-				}
-
-				sd := ServiceDatum{
-					ProviderPackage: rp,
-					ServiceAlias:    v,
-					LowerAlias:      strings.ToLower(v),
-					MainAlias:       false,
-				}
-
-				td.Services = append(td.Services, sd)
+		for _, v := range l.Aliases() {
+			if strings.ToLower(v) == "es" {
+				continue // "es" is too short to usefully grep
 			}
+
+			if strings.ToLower(v) == "config" {
+				continue // "config" is too ubiquitous
+			}
+
+			sd := ServiceDatum{
+				ProviderPackage: rp,
+				ServiceAlias:    v,
+				LowerAlias:      strings.ToLower(v),
+				MainAlias:       false,
+			}
+
+			td.Services = append(td.Services, sd)
 		}
 
 		sd := ServiceDatum{
 			ProviderPackage: rp,
-			ServiceAlias:    l[names.ColProviderNameUpper],
+			ServiceAlias:    l.ProviderNameUpper(),
 			LowerAlias:      strings.ToLower(p),
 			MainAlias:       true,
 		}
 
-		if l[names.ColFilePrefix] != "" {
-			sd.FilePrefix = l[names.ColFilePrefix]
+		if l.FilePrefix() != "" {
+			sd.FilePrefix = l.FilePrefix()
 		}
 
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		if td.Services[i].LowerAlias == td.Services[j].LowerAlias {
-			return len(td.Services[i].ServiceAlias) > len(td.Services[j].ServiceAlias)
-		}
-		return td.Services[i].LowerAlias < td.Services[j].LowerAlias
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Or(
+			cmp.Compare(a.LowerAlias, b.LowerAlias),
+			// Reverse order
+			cmp.Compare(b.ServiceAlias, a.ServiceAlias),
+		)
 	})
 
 	d = g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("servicesemgrep", tmpl, td); err != nil {
+	if err := d.BufferTemplate("servicesemgrep", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
@@ -222,11 +212,12 @@ func readBadCaps(capsDataFile string) ([]string, error) {
 		capsList = append(capsList, row[0])
 	}
 
-	sort.SliceStable(capsList, func(i, j int) bool {
-		if len(capsList[i]) == len(capsList[j]) {
-			return capsList[i] < capsList[j]
-		}
-		return len(capsList[j]) < len(capsList[i])
+	slices.SortStableFunc(capsList, func(a, b string) int {
+		return cmp.Or(
+			// Reverse length order
+			cmp.Compare(len(b), len(a)),
+			cmp.Compare(a, b),
+		)
 	})
 
 	var chunks [][]string
@@ -276,7 +267,7 @@ func breakUpBigFile(g *common.Generator, filename, header string) error {
 	var cfile string
 	passedChunk := false
 
-	re := regexp.MustCompile(`^  - id: `)
+	re := regexache.MustCompile(`^  - id: `)
 
 	for scanner.Scan() {
 		if l%(lines/semgrepConfigChunks) == 0 {

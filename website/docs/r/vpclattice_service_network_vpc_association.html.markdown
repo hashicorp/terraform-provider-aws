@@ -24,18 +24,18 @@ resource "aws_vpclattice_service_network_vpc_association" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_identifier` - (Required) The ID of the VPC.
 * `service_network_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network. You must use the ARN if the resources specified in the operation are in different accounts.
 The following arguments are optional:
-
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `security_group_ids` - (Optional) The IDs of the security groups.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Association.
 * `created_by` - The account that created the association.
@@ -52,8 +52,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Lattice Service Network VPC Association can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Service Network VPC Association using the `id`. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_service_network_vpc_association.example
+  id = "snsa-05e2474658a88f6ba"
+}
 ```
-$ terraform import aws_vpclattice_service_network_vpc_association.example snsa-05e2474658a88f6ba
+
+Using `terraform import`, import VPC Lattice Service Network VPC Association using the `id`. For example:
+
+```console
+% terraform import aws_vpclattice_service_network_vpc_association.example snsa-05e2474658a88f6ba
 ```

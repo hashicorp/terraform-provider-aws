@@ -1,12 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package duration
 
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/YakDriver/regexache"
 )
 
 var ErrSyntax = errors.New("invalid syntax")
@@ -28,7 +32,7 @@ func Parse(s string) (Duration, error) {
 		return Duration{}, ErrSyntax
 	}
 
-	re := regexp.MustCompile(pattern)
+	re := regexache.MustCompile(pattern)
 	match := re.FindStringSubmatch(s)
 	if match == nil {
 		return Duration{}, ErrSyntax
@@ -58,6 +62,26 @@ func Parse(s string) (Duration, error) {
 	}
 
 	return duration, nil
+}
+
+// NewFromTimeDuration converts a time.Duration to a duration.Duration.
+// Only the years and days fields are populated.
+func NewFromTimeDuration(t time.Duration) (result Duration) {
+	u := uint64(t)
+
+	const (
+		day  = uint64(24 * time.Hour)
+		year = 365 * day
+	)
+
+	if u >= year {
+		result.years = int(u / year)
+		u = u % year
+	}
+
+	result.days = int(u / day)
+
+	return result
 }
 
 func (d Duration) String() string {

@@ -1,41 +1,80 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package vpclattice
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_vpclattice_service", &resource.Sweeper{
-		Name: "aws_vpclattice_service",
-		F:    sweepServices,
-	})
-
-	resource.AddTestSweepers("aws_vpclattice_service_network", &resource.Sweeper{
-		Name: "aws_vpclattice_service_network",
-		F:    sweepServiceNetworks,
-		Dependencies: []string{
-			"aws_vpclattice_service",
-		},
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_vpclattice_resource_configuration", sweepResourceConfigurations, "aws_vpclattice_service_network_resource_association")
+	awsv2.Register("aws_vpclattice_resource_gateway", sweepResourceGateways, "aws_vpclattice_resource_configuration")
+	awsv2.Register("aws_vpclattice_service", sweepServices)
+	awsv2.Register("aws_vpclattice_service_network", sweepServiceNetworks, "aws_vpclattice_service")
+	awsv2.Register("aws_vpclattice_service_network_resource_association", sweepServiceNetworkResourceAssociations)
+	awsv2.Register("aws_vpclattice_target_group", sweepTargetGroups, "aws_vpclattice_target_group_attachment")
+	awsv2.Register("aws_vpclattice_target_group_attachment", sweepTargetGroupAttachments)
 }
 
-func sweepServices(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+func sweepResourceConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	input := &vpclattice.ListResourceConfigurationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := vpclattice.NewListResourceConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if aws.ToBool(v.AmazonManaged) {
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceConfigurationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
 	}
-	conn := client.(*conns.AWSClient).VPCLatticeClient()
+
+	return sweepResources, nil
+}
+
+func sweepResourceGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	input := &vpclattice.ListResourceGatewaysInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := vpclattice.NewListResourceGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceGatewayResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepServices(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
 	input := &vpclattice.ListServicesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -43,17 +82,12 @@ func sweepServices(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping VPC Lattice Service sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing VPC Lattice Services (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Items {
-			r := ResourceService()
+			r := resourceService()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 
@@ -61,22 +95,11 @@ func sweepServices(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping VPC Lattice Services (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepServiceNetworks(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).VPCLatticeClient()
+func sweepServiceNetworks(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
 	input := &vpclattice.ListServiceNetworksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -84,17 +107,12 @@ func sweepServiceNetworks(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping VPC Lattice Service Network sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing VPC Lattice Service Networks (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Items {
-			r := ResourceServiceNetwork()
+			r := resourceServiceNetwork()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 
@@ -102,11 +120,92 @@ func sweepServiceNetworks(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweepResources, nil
+}
 
-	if err != nil {
-		return fmt.Errorf("error sweeping VPC Lattice Service Networks (%s): %w", region, err)
+func sweepServiceNetworkResourceAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	input := &vpclattice.ListServiceNetworkResourceAssociationsInput{}
+	pages := vpclattice.NewListServiceNetworkResourceAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newServiceNetworkResourceAssociationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
 	}
 
-	return nil
+	return sweepResources, nil
+}
+
+func sweepTargetGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	input := &vpclattice.ListTargetGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := vpclattice.NewListTargetGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			r := resourceTargetGroup()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepTargetGroupAttachments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input vpclattice.ListTargetGroupsInput
+	pages := vpclattice.NewListTargetGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, targetGroup := range page.Items {
+			input := vpclattice.ListTargetsInput{
+				TargetGroupIdentifier: targetGroup.Id,
+			}
+			pages := vpclattice.NewListTargetsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, target := range page.Items {
+					r := resourceTargetGroupAttachment()
+					d := r.Data(nil)
+
+					d.SetId(targetGroupAttachmentCreateResourceID(aws.ToString(targetGroup.Id), aws.ToString(target.Id), aws.ToInt32(target.Port)))
+					d.Set("target_group_identifier", targetGroup.Id)
+					d.Set(names.AttrTarget, []any{flattenTargetSummary(&target)})
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
 }

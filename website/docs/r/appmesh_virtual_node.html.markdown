@@ -171,8 +171,9 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the virtual node. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual node. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
@@ -445,9 +446,9 @@ The `sds` object supports the following:
 
 * `secret_name` - (Required) Name of the secret for a virtual node's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the virtual node.
 * `arn` - ARN of the virtual node.
@@ -458,11 +459,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Mesh virtual nodes can be imported using `mesh_name` together with the virtual node's `name`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_virtual_node.serviceb1
+  id = "simpleapp/serviceBv1"
+}
 ```
-$ terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
+
+Using `terraform import`, import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`. For example:
+
+```console
+% terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
 ```
 
 [1]: /docs/providers/aws/index.html

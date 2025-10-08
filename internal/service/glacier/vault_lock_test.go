@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glacier_test
 
 import (
@@ -5,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glacier"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/glacier"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglacier "github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlacierVaultLock_basic(t *testing.T) {
@@ -24,7 +29,7 @@ func TestAccGlacierVaultLock_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultLockDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,10 +37,10 @@ func TestAccGlacierVaultLock_basic(t *testing.T) {
 				Config: testAccVaultLockConfig_complete(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
-					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "complete_lock", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, names.AttrName),
 				),
 			},
 			{
@@ -57,7 +62,7 @@ func TestAccGlacierVaultLock_completeLock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultLockDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,10 +70,10 @@ func TestAccGlacierVaultLock_completeLock(t *testing.T) {
 				Config: testAccVaultLockConfig_complete(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
-					resource.TestCheckResourceAttr(resourceName, "complete_lock", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "complete_lock", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, names.AttrName),
 				),
 			},
 			{
@@ -90,7 +95,7 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultLockDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,47 +103,48 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 				Config: testAccVaultLockConfig_policyOrder(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
-					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "complete_lock", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, names.AttrName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccVaultLockConfig_policyNewOrder(rName, false),
-				PlanOnly: true,
+				Config: testAccVaultLockConfig_policyNewOrder(rName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckVaultLockExists(ctx context.Context, resourceName string, getVaultLockOutput *glacier.GetVaultLockOutput) resource.TestCheckFunc {
+func testAccCheckVaultLockExists(ctx context.Context, n string, v *glacier.GetVaultLockOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn()
-
-		input := &glacier.GetVaultLockInput{
-			VaultName: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetVaultLockWithContext(ctx, input)
+		output, err := tfglacier.FindVaultLockByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading Glacier Vault Lock (%s): %s", rs.Primary.ID, err)
+			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("error reading Glacier Vault Lock (%s): empty response", rs.Primary.ID)
-		}
-
-		*getVaultLockOutput = *output
+		*v = *output
 
 		return nil
 	}
@@ -146,29 +152,24 @@ func testAccCheckVaultLockExists(ctx context.Context, resourceName string, getVa
 
 func testAccCheckVaultLockDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glacier_vault_lock" {
 				continue
 			}
 
-			input := &glacier.GetVaultLockInput{
-				VaultName: aws.String(rs.Primary.ID),
-			}
-			output, err := conn.GetVaultLockWithContext(ctx, input)
+			_, err := tfglacier.FindVaultLockByName(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading Glacier Vault Lock (%s): %s", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("Glacier Vault Lock (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Glacier Vault Lock %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -178,7 +179,7 @@ func testAccCheckVaultLockDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccVaultLockConfig_complete(rName string, completeLock bool) string {
 	return fmt.Sprintf(`
 resource "aws_glacier_vault" "test" {
-  name = %q
+  name = %[1]q
 }
 
 data "aws_caller_identity" "current" {}
@@ -205,12 +206,12 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_glacier_vault_lock" "test" {
-  complete_lock         = %t
-  ignore_deletion_error = %t
+  complete_lock         = %[2]t
+  ignore_deletion_error = %[2]t
   policy                = data.aws_iam_policy_document.test.json
   vault_name            = aws_glacier_vault.test.name
 }
-`, rName, completeLock, completeLock)
+`, rName, completeLock)
 }
 
 func testAccVaultLockConfig_policyOrder(rName string, completeLock bool) string {

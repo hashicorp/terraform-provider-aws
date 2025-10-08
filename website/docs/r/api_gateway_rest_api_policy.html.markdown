@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "test" {
     }
 
     actions   = ["execute-api:Invoke"]
-    resources = [aws_api_gateway_rest_api.test.execution_arn]
+    resources = ["${aws_api_gateway_rest_api.test.execution_arn}/*"]
 
     condition {
       test     = "IpAddress"
@@ -48,21 +48,31 @@ resource "aws_api_gateway_rest_api_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) ID of the REST API.
 * `policy` - (Required) JSON formatted policy document that controls access to the API Gateway. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the REST API
 
 ## Import
 
-`aws_api_gateway_rest_api_policy` can be imported by using the REST API ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_rest_api_policy` using the REST API ID. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_rest_api_policy.example
+  id = "12345abcde"
+}
 ```
-$ terraform import aws_api_gateway_rest_api_policy.example 12345abcde
+
+Using `terraform import`, import `aws_api_gateway_rest_api_policy` using the REST API ID. For example:
+
+```console
+% terraform import aws_api_gateway_rest_api_policy.example 12345abcde
 ```

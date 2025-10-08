@@ -31,15 +31,16 @@ data "aws_efs_file_system" "by_tag" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `file_system_id` - (Optional) ID that identifies the file system (e.g., fs-ccfc0d65).
 * `creation_token` - (Optional) Restricts the list to the file system with this creation token.
 * `tags` - (Optional) Restricts the list to the file system with these tags.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `availability_zone_name` - The Availability Zone name in which the file system's One Zone storage classes exist.
@@ -48,6 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 * `encrypted` - Whether EFS is encrypted.
 * `kms_key_id` - ARN for the KMS encryption key.
 * `lifecycle_policy` - File system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.
+* `name` - The value of the file system's `Name` tag.
 * `performance_mode` - File system performance mode.
 * `provisioned_throughput_in_mibps` - The throughput, measured in MiB/s, that you want to provision for the file system.
 * `tags` -A map of tags to assign to the file system.

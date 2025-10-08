@@ -33,8 +33,9 @@ data "aws_ec2_transit_gateway_peering_attachment" "attachment" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Peering Attachment.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
@@ -50,12 +51,13 @@ which take the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `peer_account_id` - Identifier of the peer AWS account
-* `peer_region` - Identifier of the peer AWS region
-* `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway
-* `transit_gateway_id` - Identifier of the local EC2 Transit Gateway
+* `arn` - ARN of the attachment.
+* `peer_account_id` - Identifier of the peer AWS account.
+* `peer_region` - Identifier of the peer AWS region.
+* `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway.
+* `transit_gateway_id` - Identifier of the local EC2 Transit Gateway.
 
 ## Timeouts
 

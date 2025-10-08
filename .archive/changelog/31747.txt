@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_redshiftserverless_workgroup: Additional supported values for `config_parameter.parameter_key`
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_workgroup: Change `config_parameter` from `TypeList` to `TypeSet` as order is not significant
+```
+
+```release-note:bug
+resource/aws_redshiftserverless_workgroup: Fix `ValidationException: Can't update multiple configurations at the same time` errors
+```

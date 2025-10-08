@@ -1,0 +1,19 @@
+```release-note:new-resource
+aws_eks_access_entry
+```
+
+```release-note:new-data-source
+aws_eks_access_entry
+```
+
+```release-note:new-resource
+aws_eks_access_policy_association
+```
+
+```release-note:enhancement
+resource/aws_eks_cluster: Add `access_config` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_eks_cluster: Add `access_config` attribute
+```

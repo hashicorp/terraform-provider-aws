@@ -15,7 +15,7 @@ These are the locations that can be specified when configuring [`aws_dx_connecti
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dx_location" "example" {
   location_code = "CS32A-24FL"
 }
@@ -23,11 +23,14 @@ data "aws_dx_location" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `location_code` - (Required) Code for the location to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `available_macsec_port_speeds` - The available MAC Security (MACsec) port speeds for the location.
 * `available_port_speeds` - The available port speeds for the location.

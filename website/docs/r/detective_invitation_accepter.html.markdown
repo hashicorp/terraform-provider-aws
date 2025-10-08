@@ -18,7 +18,7 @@ resource "aws_detective_graph" "primary" {}
 resource "aws_detective_member" "primary" {
   account_id    = "ACCOUNT ID"
   email_address = "EMAIL"
-  graph_arn     = aws_detective_graph.primary.id
+  graph_arn     = aws_detective_graph.primary.graph_arn
   message       = "Message of the invite"
 }
 
@@ -32,20 +32,30 @@ resource "aws_detective_invitation_accepter" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `graph_arn` - (Required) ARN of the behavior graph that the member account is accepting the invitation for.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier (ID) of the Detective invitation accepter.
 
 ## Import
 
-`aws_detective_invitation_accepter` can be imported using the graph ARN, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_invitation_accepter` using the graph ARN. For example:
 
+```terraform
+import {
+  to = aws_detective_invitation_accepter.example
+  id = "arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d"
+}
 ```
-$ terraform import aws_detective_invitation_accepter.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
+
+Using `terraform import`, import `aws_detective_invitation_accepter` using the graph ARN. For example:
+
+```console
+% terraform import aws_detective_invitation_accepter.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```

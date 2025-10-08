@@ -122,8 +122,9 @@ resource "aws_subnet" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
 * `password` - (Required) The password for the directory administrator or connector user.
 * `size` - (Optional) (For `SimpleAD` and `ADConnector` types) The size of the directory (`Small` or `Large` are accepted values). `Large` by default.
@@ -150,9 +151,9 @@ The following arguments are supported:
 * `subnet_ids` - (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs).
 * `vpc_id` - (Required) The identifier of the VPC that the directory is in.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
@@ -174,8 +175,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DirectoryService directories can be imported using the directory `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DirectoryService directories using the directory `id`. For example:
 
+```terraform
+import {
+  to = aws_directory_service_directory.sample
+  id = "d-926724cf57"
+}
 ```
-$ terraform import aws_directory_service_directory.sample d-926724cf57
+
+Using `terraform import`, import DirectoryService directories using the directory `id`. For example:
+
+```console
+% terraform import aws_directory_service_directory.sample d-926724cf57
 ```

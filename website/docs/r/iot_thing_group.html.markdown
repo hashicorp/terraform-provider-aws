@@ -40,6 +40,9 @@ resource "aws_iot_thing_group" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Thing Group.
 * `parent_group_name` - (Optional) The name of the parent Thing Group.
 * `properties` - (Optional) The Thing Group properties. Defined below.
@@ -54,9 +57,9 @@ resource "aws_iot_thing_group" "example" {
 
 * `attributes` - (Optional) Key-value map.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Thing Group.
 * `id` - The Thing Group ID.
@@ -64,8 +67,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IoT Things Groups can be imported using the name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Things Groups using the name. For example:
 
+```terraform
+import {
+  to = aws_iot_thing_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_iot_thing_group.example example
+
+Using `terraform import`, import IoT Things Groups using the name. For example:
+
+```console
+% terraform import aws_iot_thing_group.example example
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces_test
 
 import (
@@ -11,16 +14,17 @@ func TestAccWorkSpacesDataSource_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Bundle": {
-			"basic":                   testAccWorkspaceBundleDataSource_basic,
+			acctest.CtBasic:           testAccWorkspaceBundleDataSource_basic,
 			"bundleIDAndNameConflict": testAccWorkspaceBundleDataSource_bundleIDAndNameConflict,
 			"byOwnerName":             testAccWorkspaceBundleDataSource_byOwnerName,
+			"byOwnerNameMultiple":     testAccWorkspaceBundleDataSource_byOwnerNameMultiple,
 			"privateOwner":            testAccWorkspaceBundleDataSource_privateOwner,
 		},
 		"Directory": {
-			"basic": testAccDirectoryDataSource_basic,
+			acctest.CtBasic: testAccDirectoryDataSource_basic,
 		},
 		"Image": {
-			"basic": testAccImageDataSource_basic,
+			acctest.CtBasic: testAccImageDataSource_basic,
 		},
 		"Workspace": {
 			"byWorkspaceID":                     testAccWorkspaceDataSource_byWorkspaceID,

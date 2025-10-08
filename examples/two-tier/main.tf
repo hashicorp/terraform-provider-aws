@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
@@ -132,6 +135,11 @@ resource "aws_instance" "web" {
   # environment it's more common to have a separate private subnet for
   # backend instances.
   subnet_id = aws_subnet.default.id
+
+  # Force IMDSv2.
+  metadata_options {
+    http_tokens = "required"
+  }
 
   # We run a remote provisioner on the instance after creating it.
   # In this case, we just install nginx and start it. By default,

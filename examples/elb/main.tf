@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
@@ -169,7 +172,12 @@ resource "aws_instance" "web" {
   subnet_id              = aws_subnet.tf_test_subnet.id
   user_data              = file("userdata.sh")
 
-  #Instance tags
+  # Force IMDSv2.
+  metadata_options {
+    http_tokens = "required"
+  }
+
+  # Instance tags
 
   tags = {
     Name = "elb-example"

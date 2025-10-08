@@ -1,10 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
@@ -16,13 +20,18 @@ func TestValidEventSubscriptionName(t *testing.T) {
 		"Valid-Name1",
 	}
 	for _, v := range validNames {
-		_, errors := validEventSubscriptionName(v, "name")
+		_, errors := validEventSubscriptionName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid RDS Event Subscription Name: %q", v, errors)
 		}
 	}
 
 	invalidNames := []string{
+		"invalid_name",
+		"invalid-name-",
+		"-invalid-name",
+		"0invalid-name",
+		"invalid--name",
 		"Here is a name with: colon",
 		"and here is another * invalid name",
 		"also $ invalid",
@@ -35,9 +44,49 @@ func TestValidEventSubscriptionName(t *testing.T) {
 		strings.Repeat("W", 256),
 	}
 	for _, v := range invalidNames {
-		_, errors := validEventSubscriptionName(v, "name")
+		_, errors := validEventSubscriptionName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid RDS Event Subscription Name", v)
+		}
+	}
+}
+
+func TestValidEventSubscriptionNamePrefix(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"valid-name",
+		"valid02-name",
+		"Valid-Name1",
+		"valid-name-",
+	}
+	for _, v := range validNames {
+		_, errors := validEventSubscriptionNamePrefix(v, names.AttrNamePrefix)
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid RDS Event Subscription Name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"invalid_name",
+		"-invalid-name",
+		"0invalid-name",
+		"invalid--name",
+		"Here is a name with: colon",
+		"and here is another * invalid name",
+		"also $ invalid",
+		"This . is also %% invalid@!)+(",
+		"*",
+		"",
+		" ",
+		"_",
+		// length > 229
+		strings.Repeat("W", 230),
+	}
+	for _, v := range invalidNames {
+		_, errors := validEventSubscriptionNamePrefix(v, names.AttrNamePrefix)
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid RDS Event Subscription Name Prefix", v)
 		}
 	}
 }
@@ -121,6 +170,10 @@ func TestValidParamGroupName(t *testing.T) {
 		Value    string
 		ErrCount int
 	}{
+		{
+			Value:    "default.postgres9.6",
+			ErrCount: 0,
+		},
 		{
 			Value:    "tEsting123",
 			ErrCount: 1,

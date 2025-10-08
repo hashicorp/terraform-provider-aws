@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,7 +14,7 @@ import (
 )
 
 func resourceTableMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+	v int, is *terraform.InstanceState, meta any) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS DynamoDB Table State v0; migrating to v1")
@@ -29,7 +33,7 @@ func migrateStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, 
 	log.Printf("[DEBUG] DynamoDB Table Attributes before Migration: %#v", is.Attributes)
 
 	prefix := "global_secondary_index"
-	entity := ResourceTable()
+	entity := resourceTable()
 
 	// Read old keys
 	reader := &schema.MapFieldReader{
@@ -60,9 +64,7 @@ func migrateStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, 
 	if err := writer.WriteField([]string{prefix}, oldKeys); err != nil {
 		return is, err
 	}
-	for k, v := range writer.Map() {
-		is.Attributes[k] = v
-	}
+	maps.Copy(is.Attributes, writer.Map())
 
 	log.Printf("[DEBUG] DynamoDB Table Attributes after State Migration: %#v", is.Attributes)
 

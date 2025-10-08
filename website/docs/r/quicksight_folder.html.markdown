@@ -69,10 +69,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `folder_type` - (Optional) The type of folder. By default, it is `SHARED`. Valid values are: `SHARED`.
 * `parent_folder_arn` - (Optional) The Amazon Resource Name (ARN) for the parent folder. If not set, creates a root-level folder.
 * `permissions` - (Optional) A set of resource permissions on the folder. Maximum of 64 items. See [permissions](#permissions).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### permissions
@@ -80,9 +81,9 @@ The following arguments are optional:
 * `actions` - (Required) List of IAM actions to grant or revoke permissions on.
 * `principal` - (Required) ARN of the principal. See the [ResourcePermission documentation](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ResourcePermission.html) for the applicable ARN values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the folder.
 * `created_time` - The time that the folder was created.
@@ -102,8 +103,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight folder can be imported using the AWS account ID and folder ID name separated by a comma (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight folder using the AWS account ID and folder ID name separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_folder.example
+  id = "123456789012,example-id"
+}
 ```
-$ terraform import aws_quicksight_folder.example 123456789012,example-id
+
+Using `terraform import`, import a QuickSight folder using the AWS account ID and folder ID name separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_folder.example 123456789012,example-id
 ```

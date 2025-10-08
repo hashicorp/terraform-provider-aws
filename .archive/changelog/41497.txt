@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_delivery: Fix Provider produced inconsistent result error on `s3_delivery_configuration.suffix_path`
+```

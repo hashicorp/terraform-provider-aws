@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -5,16 +8,11 @@ import (
 )
 
 const (
-	propagationTimeout = 2 * time.Minute
+	organizationsPropagationTimeout = 1 * time.Minute // Organizations eventual consistency.
+	propagationTimeout              = 2 * time.Minute // IAM eventual consistency.
 )
 
 const (
-	ResNameAggregateAuthorization      = "Aggregate Authorization"
-	ResNameConfigurationAggregator     = "Configuration Aggregator"
-	ResNameConfigurationRecorderStatus = "Configuration Recorder Status"
-	ResNameConfigurationRecorder       = "Configuration Recorder"
-	ResNameDeliveryChannel             = "Delivery Channel"
-	ResNameOrganizationManagedRule     = "Organization Managed Rule"
-	ResNameOrganizationCustomRule      = "Organization Custom Rule"
-	ResNameRemediationConfiguration    = "Remediation Configuration"
+	defaultConfigurationRecorderName = "default"
+	defaultDeliveryChannelName       = "default"
 )

@@ -14,7 +14,7 @@ Provides an AppFlow flow resource.
 
 ```terraform
 resource "aws_s3_bucket" "example_source" {
-  bucket = "example_source"
+  bucket = "example-source"
 }
 
 data "aws_iam_policy_document" "example_source" {
@@ -33,8 +33,8 @@ data "aws_iam_policy_document" "example_source" {
     ]
 
     resources = [
-      "arn:aws:s3:::example_source",
-      "arn:aws:s3:::example_source/*",
+      "arn:aws:s3:::example-source",
+      "arn:aws:s3:::example-source/*",
     ]
   }
 }
@@ -51,31 +51,33 @@ resource "aws_s3_object" "example" {
 }
 
 resource "aws_s3_bucket" "example_destination" {
-  bucket = "example_destination"
+  bucket = "example-destination"
 }
 
 data "aws_iam_policy_document" "example_destination" {
-  sid    = "AllowAppFlowDestinationActions"
-  effect = "Allow"
+  statement {
+    sid    = "AllowAppFlowDestinationActions"
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["appflow.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["appflow.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:PutObject",
+      "s3:AbortMultipartUpload",
+      "s3:ListMultipartUploadParts",
+      "s3:ListBucketMultipartUploads",
+      "s3:GetBucketAcl",
+      "s3:PutObjectAcl",
+    ]
+
+    resources = [
+      "arn:aws:s3:::example-destination",
+      "arn:aws:s3:::example-destination/*",
+    ]
   }
-
-  actions = [
-    "s3:PutObject",
-    "s3:AbortMultipartUpload",
-    "s3:ListMultipartUploadParts",
-    "s3:ListBucketMultipartUploads",
-    "s3:GetBucketAcl",
-    "s3:PutObjectAcl",
-  ]
-
-  resources = [
-    "arn:aws:s3:::example_destination",
-    "arn:aws:s3:::example_destination/*",
-  ]
 }
 
 resource "aws_s3_bucket_policy" "example_destination" {
@@ -129,8 +131,9 @@ resource "aws_appflow_flow" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the flow.
 * `destination_flow_config` - (Required) A [Destination Flow Config](#destination-flow-config) that controls how Amazon AppFlow places data in the destination connector.
 * `source_flow_config` - (Required) The [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
@@ -139,7 +142,7 @@ The following arguments are supported:
 * `description` - (Optional) Description of the flow you want to create.
 * `kms_arn` - (Optional) ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `metadata_catalog_config` - (Optional) A [Catalog](#metadata-catalog-config) that determines the configuration that Amazon AppFlow uses when it catalogs the data that’s transferred by the associated flow. When Amazon AppFlow catalogs the data from a flow, it stores metadata in a data catalog.
 
 ### Destination Flow Config
 
@@ -209,6 +212,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `id_field_names` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `write_operation_type` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Destination Properties
 
@@ -245,11 +249,13 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### Aggregation Config
 
 * `aggregation_type` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
+* `target_file_size` - (Optional) The desired file size, in MB, for each output file that Amazon AppFlow writes to the flow destination. Integer value.
 
 ###### Prefix Config
 
 * `prefix_format` - (Optional) Determines the level of granularity that's included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
 * `prefix_type` - (Optional) Determines the format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
+* `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`
 
 ##### Zendesk Destination Properties
 
@@ -316,10 +322,15 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `object` - (Required) Object specified in the Salesforce flow source.
 * `enable_dynamic_field_update` - (Optional, boolean) Flag that enables dynamic fetching of new (recently added) fields in the Salesforce objects while running a flow.
 * `include_deleted_records` - (Optional, boolean) Whether Amazon AppFlow includes deleted files in the flow run.
+* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Source Properties
 
 * `object_path` - (Required) Object path specified in the SAPOData flow source.
+* `pagination_config` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance.
+    * `max_page_size` - (Optional) he maximum number of records that Amazon AppFlow receives in each page of the response from your SAP application.
+* `parallelism_config` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance.
+    * `max_parallelism` - (Optional) The maximum number of processes that Amazon AppFlow runs at the same time when it retrieves your data from your SAP application.
 
 ##### Veeva Source Properties
 
@@ -389,16 +400,61 @@ resource "aws_appflow_flow" "example" {
 }
 ```
 
-## Attributes Reference
+### Metadata Catalog Config
 
-In addition to all arguments above, the following attributes are exported:
+The `metadata_catalog_config` block only supports one attribute: `glue_data_catalog`, a block which in turn supports the following:
+
+* `database_name` - (Required) The name of an existing Glue database to store the metadata tables that Amazon AppFlow creates.
+* `role_arn` - (Required) The ARN of an IAM role that grants AppFlow the permissions it needs to create Data Catalog tables, databases, and partitions.
+* `table_prefix` - (Required) A naming prefix for each Data Catalog table that Amazon AppFlow creates
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Flow's ARN.
+* `flow_status` - The current status of the flow.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-AppFlow flows can be imported using the `arn`, e.g.:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_appflow_flow.example
+  identity = {
+    name = "example-flow"
+  }
+}
+
+resource "aws_appflow_flow" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the AppFlow flow.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `name`. For example:
+
+```terraform
+import {
+  to = aws_appflow_flow.example
+  id = "example-flow"
+}
+```
+
+Using `terraform import`, import AppFlow flows using the `name`. For example:
+
+```console
+% terraform import aws_appflow_flow.example example-flow
 ```

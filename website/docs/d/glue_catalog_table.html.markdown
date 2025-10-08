@@ -21,15 +21,18 @@ data "aws_glue_catalog_table" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the table.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides.
 * `catalog_id` - (Optional) ID of the Glue Catalog and database where the table metadata resides. If omitted, this defaults to the current AWS Account ID.
 * `query_as_of_time`- (Optional) The time as of when to read the table contents. If not set, the most recent transaction commit time will be used. Cannot be specified along with `transaction_id`. Specified in RFC 3339 format, e.g. `2006-01-02T15:04:05Z07:00`.
 * `transaction_id` - (Optional) The transaction ID at which to read the table contents.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Catalog ID, Database name and of the name table.
 * `arn` - The ARN of the Glue Table.
@@ -54,10 +57,12 @@ The following arguments are supported:
 
 * `comment` - Free-form text comment.
 * `name` - Name of the Partition Key.
+* `parameters` - Map of key-value pairs.
 * `type` - Datatype of data in the Partition Key.
 
 ### storage_descriptor
 
+* `additional_locations` - List of locations that point to the path where a Delta table is located
 * `bucket_columns` - List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - Whether the data in the table is compressed.
@@ -113,3 +118,4 @@ The following arguments are supported:
 * `catalog_id` - ID of the Data Catalog in which the table resides.
 * `database_name` - Name of the catalog database that contains the target table.
 * `name` - Name of the target table.
+* `region` - Region of the target table.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena_test
 
 import (
@@ -5,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAthenaDataCatalog_basic(t *testing.T) {
@@ -23,7 +25,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -31,20 +33,20 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 				Config: testAccDataCatalogConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("datacatalog/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
-					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("datacatalog/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 		},
 	})
@@ -57,7 +59,7 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,39 +82,39 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDataCatalogConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 			{
-				Config: testAccDataCatalogConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDataCatalogConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDataCatalogConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDataCatalogConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -126,7 +128,7 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,8 +136,8 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 				Config: testAccDataCatalogConfig_typeLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog using Lambda"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),   //lintignore:AWSAT003,AWSAT005
@@ -145,7 +147,7 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 		},
 	})
@@ -158,7 +160,7 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -166,8 +168,8 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 				Config: testAccDataCatalogConfig_typeHive(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Hive"),
-					resource.TestCheckResourceAttr(resourceName, "type", "HIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog using Hive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HIVE"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
 				),
@@ -176,7 +178,7 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 		},
 	})
@@ -189,7 +191,7 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -197,17 +199,17 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 				Config: testAccDataCatalogConfig_typeGlue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Glue"),
-					resource.TestCheckResourceAttr(resourceName, "type", "GLUE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog using Glue"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "GLUE"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.catalog-id", "123456789012"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.catalog-id", acctest.Ct12Digit),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 		},
 	})
@@ -220,7 +222,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -236,7 +238,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 			{
 				Config: testAccDataCatalogConfig_parametersUpdated(rName),
@@ -258,17 +260,9 @@ func testAccCheckDataCatalogExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Athena Data Catalog name is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
-
-		input := &athena.GetDataCatalogInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetDataCatalogWithContext(ctx, input)
+		_, err := tfathena.FindDataCatalogByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -276,20 +270,16 @@ func testAccCheckDataCatalogExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckDataCatalogDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_athena_data_catalog" {
 				continue
 			}
 
-			input := &athena.GetDataCatalogInput{
-				Name: aws.String(rs.Primary.ID),
-			}
+			_, err := tfathena.FindDataCatalogByName(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetDataCatalogWithContext(ctx, input)
-
-			if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "was not found") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -297,9 +287,7 @@ func testAccCheckDataCatalogDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			if output.DataCatalog != nil {
-				return fmt.Errorf("Athena Data Catalog (%s) found", rs.Primary.ID)
-			}
+			return fmt.Errorf("Athena Data Catalog %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_finspace_kx_cluster: `database.cache_configurations` argument is now optional
+```
+
+```release-note:bug
+resource/aws_finspace_kx_cluster: `database.cache_configurations.db_paths` argument is now optional
+```

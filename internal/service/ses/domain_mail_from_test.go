@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
@@ -5,12 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESDomainMailFrom_basic(t *testing.T) {
@@ -23,7 +28,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainMailFromDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -31,8 +36,8 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
-					resource.TestCheckResourceAttr(resourceName, "domain", domain),
+					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(awstypes.BehaviorOnMXFailureUseDefaultValue)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
 					resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain1),
 				),
 			},
@@ -40,8 +45,8 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
-					resource.TestCheckResourceAttr(resourceName, "domain", domain),
+					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(awstypes.BehaviorOnMXFailureUseDefaultValue)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
 					resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain2),
 				),
 			},
@@ -63,7 +68,7 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainMailFromDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +76,7 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					testAccCheckDomainMailFromDisappears(ctx, domain),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainMailFrom(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +93,7 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainMailFromDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,7 +101,7 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					testAccCheckDomainIdentityDisappears(ctx, domain),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,22 +116,22 @@ func TestAccSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainMailFromDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, ses.BehaviorOnMXFailureUseDefaultValue),
+				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, string(awstypes.BehaviorOnMXFailureUseDefaultValue)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
+					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(awstypes.BehaviorOnMXFailureUseDefaultValue)),
 				),
 			},
 			{
-				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, ses.BehaviorOnMXFailureRejectMessage),
+				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, string(awstypes.BehaviorOnMXFailureRejectMessage)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureRejectMessage),
+					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(awstypes.BehaviorOnMXFailureRejectMessage)),
 				),
 			},
 			{
@@ -142,85 +147,52 @@ func testAccCheckDomainMailFromExists(ctx context.Context, n string) resource.Te
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Domain Identity not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Domain Identity name not set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		_, err := tfses.FindIdentityMailFromDomainAttributesByIdentity(ctx, conn, rs.Primary.ID)
 
-		params := &ses.GetIdentityMailFromDomainAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
-			},
-		}
-
-		response, err := conn.GetIdentityMailFromDomainAttributesWithContext(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		if response.MailFromDomainAttributes[domain] == nil {
-			return fmt.Errorf("SES Domain MAIL FROM %s not found in AWS", domain)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccCheckDomainMailFromDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_domain_mail_from" {
 				continue
 			}
 
-			input := &ses.GetIdentityMailFromDomainAttributesInput{
-				Identities: []*string{aws.String(rs.Primary.ID)},
+			_, err := tfses.FindIdentityMailFromDomainAttributesByIdentity(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			out, err := conn.GetIdentityMailFromDomainAttributesWithContext(ctx, input)
 			if err != nil {
-				return fmt.Errorf("fetching MAIL FROM domain attributes: %s", err)
+				return err
 			}
-			if v, ok := out.MailFromDomainAttributes[rs.Primary.ID]; ok && v.MailFromDomain != nil && *v.MailFromDomain != "" {
-				return fmt.Errorf("MAIL FROM domain was not removed, found: %s", *v.MailFromDomain)
-			}
+
+			return fmt.Errorf("SES MAIL FROM Domain %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDomainMailFromDisappears(ctx context.Context, identity string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
-
-		input := &ses.SetIdentityMailFromDomainInput{
-			Identity:       aws.String(identity),
-			MailFromDomain: nil,
-		}
-
-		_, err := conn.SetIdentityMailFromDomainWithContext(ctx, input)
-
-		return err
-	}
-}
-
 func testAccDomainMailFromConfig_basic(domain, mailFromDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-  domain = "%s"
+  domain = %[1]q
 }
 
 resource "aws_ses_domain_mail_from" "test" {
   domain           = aws_ses_domain_identity.test.domain
-  mail_from_domain = "%s"
+  mail_from_domain = %[2]q
 }
 `, domain, mailFromDomain)
 }
@@ -228,11 +200,11 @@ resource "aws_ses_domain_mail_from" "test" {
 func testAccDomainMailFromConfig_behaviorOnMxFailure(domain, behaviorOnMxFailure string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-  domain = "%s"
+  domain = %[1]q
 }
 
 resource "aws_ses_domain_mail_from" "test" {
-  behavior_on_mx_failure = "%s"
+  behavior_on_mx_failure = %[2]q
   domain                 = aws_ses_domain_identity.test.domain
   mail_from_domain       = "bounce.${aws_ses_domain_identity.test.domain}"
 }

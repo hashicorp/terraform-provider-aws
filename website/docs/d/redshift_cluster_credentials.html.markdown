@@ -21,8 +21,9 @@ data "aws_redshift_cluster_credentials" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_create` - (Optional)  Create a database user with the name specified for the user named in `db_user` if one does not exist.
 * `cluster_identifier` - (Required) Unique identifier of the cluster that contains the database for which your are requesting credentials.
 * `db_name` - (Optional) Name of a database that DbUser is authorized to log on to. If `db_name` is not specified, `db_user` can log on to any existing database.
@@ -32,7 +33,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `db_password` - Temporary password that authorizes the user name returned by `db_user` to log on to the database `db_name`.
 * `expiration` - Date and time the password in `db_password` expires.

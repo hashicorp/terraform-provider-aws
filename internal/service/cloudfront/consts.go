@@ -1,15 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
-const (
-	StreamTypeKinesis = "Kinesis"
+type streamType string
 
-	ResNameDistribution         = "Distribution"
-	ResNamePublicKey            = "Public Key"
-	ResNameOriginAccessIdentity = "Origin Access Identity"
+const (
+	streamTypeKinesis streamType = "Kinesis"
 )
 
-func StreamType_Values() []string {
-	return []string{
-		StreamTypeKinesis,
+func (streamType) Values() []streamType {
+	return []streamType{
+		streamTypeKinesis,
 	}
 }
+
+const (
+	distributionStatusDeployed   = "Deployed"
+	distributionStatusInProgress = "InProgress"
+)
+
+const (
+	keyValueStoreStatusProvisioning = "PROVISIONING"
+	keyValueStoreStatusReady        = "READY"
+)
+
+const (
+	vpcOriginStatusDeployed  = "Deployed"
+	vpcOriginStatusDeploying = "Deploying"
+)

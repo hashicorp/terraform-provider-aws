@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appintegrations_data_integration: Correctly read `tags` into state
+```

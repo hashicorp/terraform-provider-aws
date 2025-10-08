@@ -3,45 +3,54 @@ package storagegateway
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/aws/aws-sdk-go/service/storagegateway/storagegatewayiface"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists storagegateway service tags.
+// listTags lists storagegateway service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn storagegatewayiface.StorageGatewayAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &storagegateway.ListTagsForResourceInput{
+func listTags(ctx context.Context, conn *storagegateway.Client, identifier string, optFns ...func(*storagegateway.Options)) (tftags.KeyValueTags, error) {
+	input := storagegateway.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	var output []awstypes.Tag
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+	pages := storagegateway.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), smarterr.NewError(err)
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists storagegateway service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).StorageGatewayConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).StorageGatewayClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil
@@ -49,12 +58,12 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns storagegateway service tags.
-func Tags(tags tftags.KeyValueTags) []*storagegateway.Tag {
-	result := make([]*storagegateway.Tag, 0, len(tags))
+// svcTags returns storagegateway service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &storagegateway.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -65,22 +74,22 @@ func Tags(tags tftags.KeyValueTags) []*storagegateway.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from storagegateway service tags.
-func KeyValueTags(ctx context.Context, tags []*storagegateway.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from storagegateway service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns storagegateway service tags from Context.
+// getTagsIn returns storagegateway service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*storagegateway.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -88,47 +97,49 @@ func GetTagsIn(ctx context.Context) []*storagegateway.Tag {
 	return nil
 }
 
-// SetTagsOut sets storagegateway service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*storagegateway.Tag) {
+// setTagsOut sets storagegateway service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates storagegateway service tags.
+// updateTags updates storagegateway service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn storagegatewayiface.StorageGatewayAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *storagegateway.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*storagegateway.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.StorageGateway)
 	if len(removedTags) > 0 {
-		input := &storagegateway.RemoveTagsFromResourceInput{
+		input := storagegateway.RemoveTagsFromResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
+		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.StorageGateway)
 	if len(updatedTags) > 0 {
-		input := &storagegateway.AddTagsToResourceInput{
+		input := storagegateway.AddTagsToResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToResourceWithContext(ctx, input)
+		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -138,5 +149,5 @@ func UpdateTags(ctx context.Context, conn storagegatewayiface.StorageGatewayAPI,
 // UpdateTags updates storagegateway service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).StorageGatewayConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).StorageGatewayClient(ctx), identifier, oldTags, newTags)
 }

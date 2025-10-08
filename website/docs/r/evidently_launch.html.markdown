@@ -10,6 +10,8 @@ description: |-
 
 Provides a CloudWatch Evidently Launch resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
 ## Example Usage
 
 ### Basic
@@ -255,8 +257,9 @@ resource "aws_evidently_launch" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the launch.
 * `groups` - (Required) One or up to five blocks that contain the feature and variations that are to be used for the launch. [Detailed below](#groups).
 * `metric_monitors` - (Optional) One or up to three blocks that define the metrics that will be used to monitor the launch performance. [Detailed below](#metric_monitors).
@@ -319,9 +322,9 @@ The `steps` block supports the following arguments:
 * `delete` - (Default `2m`)
 * `update` - (Default `2m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the launch.
 * `created_time` - The date and time that the launch is created.
@@ -342,14 +345,36 @@ The `execution` block supports the following attributes:
 
 ## Import
 
-CloudWatch Evidently Launch can be imported using the `name` of the launch and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`, e.g. with the `name` of the launch and `arn` of the project,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Evidently Launch using the `name` of the launch and `name` of the project or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
 
-```
-$ terraform import aws_evidently_launch.example exampleLaunchName:arn:aws:evidently:us-east-1:123456789012:project/exampleProjectName
+Import using the `name` of the launch and `name` of the project separated by a `:`:
+
+```terraform
+import {
+  to = aws_evidently_launch.example
+  id = "exampleLaunchName:exampleProjectName"
+}
 ```
 
-e.g. with the `name` of the launch and `name` of the project,
+Import using the `name` of the launch and `arn` of the project separated by a `:`:
 
+```terraform
+import {
+  to = aws_evidently_launch.example
+  id = "exampleLaunchName:arn:aws:evidently:us-east-1:123456789012:project/exampleProjectName"
+}
 ```
-$ terraform import aws_evidently_launch.example exampleLaunchName:exampleProjectName
+
+**Using `terraform import` to import** CloudWatch Evidently Launch using the `name` of the launch and `name` of the project or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
+
+Import using the `name` of the launch and `name` of the project separated by a `:`:
+
+```console
+% terraform import aws_evidently_launch.example exampleLaunchName:exampleProjectName
+```
+
+Import using the `name` of the launch and `arn` of the project separated by a `:`:
+
+```console
+% terraform import aws_evidently_launch.example exampleLaunchName:arn:aws:evidently:us-east-1:123456789012:project/exampleProjectName
 ```

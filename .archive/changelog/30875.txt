@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_networkmanager_core_network: Removed `policy_document` argument -- use `aws_networkmanager_core_network_policy_attachment` resource instead
+```
+
+```release-note:note
+resource/aws_networkmanager_core_network: Update configurations to use the `aws_networkmanager_core_network_policy_attachment` resource instead of the `policy_document` argument
+```

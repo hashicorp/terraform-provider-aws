@@ -22,14 +22,15 @@ data "aws_ecs_container_definition" "ecs-mongo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `task_definition` - (Required) ARN of the task definition which contains the container
 * `container_name` - (Required) Name of the container definition
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `image` - Docker image in use, including the digest
 * `image_digest` - Digest of the docker image in use

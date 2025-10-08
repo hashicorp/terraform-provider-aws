@@ -39,8 +39,6 @@ resource "aws_identitystore_user" "example" {
 
 ## Argument Reference
 
--> Unless specified otherwise, all fields can contain up to 1024 characters of free-form text.
-
 The following arguments are required:
 
 * `display_name` - (Required) The name that is typically displayed when the user is referenced.
@@ -50,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `addresses` - (Optional) Details about the user's address. At most 1 address is allowed. Detailed below.
 * `emails` - (Optional) Details about the user's email. At most 1 email is allowed. Detailed below.
 * `locale` - (Optional) The user's geographical region or location.
@@ -60,6 +59,8 @@ The following arguments are optional:
 * `timezone` - (Optional) The user's time zone.
 * `title` - (Optional) The user's title.
 * `user_type` - (Optional) The user type.
+
+-> Unless specified otherwise, all fields can contain up to 1024 characters of free-form text.
 
 ### addresses Configuration Block
 
@@ -87,6 +88,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `formatted` - (Optional) The name that is typically displayed when the name is shown for display.
 * `honorific_prefix` - (Optional) The honorific prefix of the user.
 * `honorific_suffix` - (Optional) The honorific suffix of the user.
@@ -98,9 +100,9 @@ The following arguments are optional:
 * `type` - (Optional) The type of phone number.
 * `value` - (Optional) The user's phone number.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `external_ids` - A list of identifiers issued to this resource by an external identity provider.
     * `id` - The identifier issued to this resource by an external identity provider.
@@ -109,8 +111,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-An Identity Store User can be imported using the combination `identity_store_id/user_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Identity Store User using the combination `identity_store_id/user_id`. For example:
 
+```terraform
+import {
+  to = aws_identitystore_user.example
+  id = "d-9c6705e95c/065212b4-9061-703b-5876-13a517ae2a7c"
+}
 ```
-$ terraform import aws_identitystore_user.example d-9c6705e95c/065212b4-9061-703b-5876-13a517ae2a7c
+
+Using `terraform import`, import an Identity Store User using the combination `identity_store_id/user_id`. For example:
+
+```console
+% terraform import aws_identitystore_user.example d-9c6705e95c/065212b4-9061-703b-5876-13a517ae2a7c
 ```

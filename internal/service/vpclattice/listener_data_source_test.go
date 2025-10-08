@@ -1,22 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCLatticeListenerDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpclattice_listener.test"
 
@@ -26,16 +25,16 @@ func TestAccVPCLatticeListenerDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerDataSourceConfig_fixedResponseHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(dataSourceName, "default_action.0.fixed_response.0.status_code", "404"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
 		},
@@ -44,10 +43,6 @@ func TestAccVPCLatticeListenerDataSource_basic(t *testing.T) {
 
 func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpclattice_listener.test_tags"
 	tag_name := "tag0"
@@ -59,14 +54,14 @@ func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerDataSourceConfig_one_tag(rName, tag_name, tag_value),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.tag0", "value0"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
 		},
@@ -75,13 +70,8 @@ func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 
 func TestAccVPCLatticeListenerDataSource_forwardMultiTargetGroupHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 	targetGroup1ResourceName := "aws_vpclattice_target_group.test1"
 	dataSourceName := "data.aws_vpclattice_listener.test_multi_target"
@@ -92,17 +82,17 @@ func TestAccVPCLatticeListenerDataSource_forwardMultiTargetGroupHTTP(t *testing.
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerDataSourceConfig_forwardMultiTargetGroupHTTP(rName, targetGroupName1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "default_action.0.forward.0.target_groups.0.weight", "80"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.0.target_groups.1.target_group_identifier", targetGroup1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.0.target_groups.1.target_group_identifier", targetGroup1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "default_action.0.forward.0.target_groups.1.weight", "20"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
 		},
@@ -177,7 +167,7 @@ data "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerDataSourceConfig_forwardMultiTargetGroupHTTP(rName string, targetGroupName1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test1" {
   name = %[2]q
   type = "INSTANCE"

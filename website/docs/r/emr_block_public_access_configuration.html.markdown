@@ -75,6 +75,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `permitted_public_security_group_rule_range` - (Optional) Configuration block for defining permitted public security group rule port ranges. Can be defined multiple times per resource. Only valid if `block_public_security_group_rules` is set to `true`.
 
 ### `permitted_public_security_group_rule_range`
@@ -84,14 +85,23 @@ This block is used to define a range of TCP ports that should form exceptions to
 * `min_range` - (Required) The first port in the range of TCP ports.
 * `max_range` - (Required) The final port in the range of TCP ports.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-The current EMR Block Public Access Configuration can be imported, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the current EMR Block Public Access Configuration. For example:
 
+```terraform
+import {
+  to = aws_emr_block_public_access_configuration.example
+  id = "current"
+}
 ```
-$ terraform import aws_emr_block_public_access_configuration.example current
+
+Using `terraform import`, import the current EMR Block Public Access Configuration. For example:
+
+```console
+% terraform import aws_emr_block_public_access_configuration.example current
 ```

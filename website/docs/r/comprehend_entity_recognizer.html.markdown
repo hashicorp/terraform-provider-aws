@@ -30,11 +30,11 @@ resource "aws_comprehend_entity_recognizer" "example" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Entity Recognizers.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) Name for the version of the Entity Recognizer.
@@ -89,7 +90,7 @@ The following arguments are optional:
 * `annotations` - (Optional) Specifies location of the document annotation data.
   See the [`annotations` Configuration Block](#annotations-configuration-block) section below.
   One of `annotations` or `entity_list` is required.
-* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
+* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
   Used if `data_format` is `AUGMENTED_MANIFEST`.
   See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `data_format` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
@@ -141,9 +142,9 @@ The following arguments are optional:
 * `security_group_ids` - (Required) List of security group IDs.
 * `subnets` - (Required) List of VPC subnets.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Entity Recognizer version.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
@@ -158,8 +159,38 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Comprehend Entity Recognizer can be imported using the ARN, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_comprehend_entity_recognizer.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+  }
+}
+
+resource "aws_comprehend_entity_recognizer" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Comprehend entity recognizer.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Entity Recognizer using the ARN. For example:
+
+```terraform
+import {
+  to = aws_comprehend_entity_recognizer.example
+  id = "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+}
+```
+
+Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For example:
+
+```console
+% terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```

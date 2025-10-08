@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
@@ -5,25 +8,26 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayMethod_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMethodDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,15 +40,16 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.header.Content-Type", "false"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.querystring.page", "true"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.header.Content-Type", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.querystring.page", acctest.CtTrue),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "operation_name", "request_validator_id"},
 			},
 			{
 				Config: testAccMethodConfig_update(rName),
@@ -55,7 +60,7 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.querystring.page", "false"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.querystring.page", acctest.CtFalse),
 				),
 			},
 		},
@@ -64,13 +69,13 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 
 func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMethodDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,10 +88,11 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"operation_name", "request_validator_id"},
 			},
 
 			{
@@ -103,13 +109,13 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 
 func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMethodDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,13 +150,13 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 
 func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMethodDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,10 +168,11 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "operation_name"},
 			},
 
 			{
@@ -181,13 +188,13 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 
 func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMethodDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -205,13 +212,13 @@ func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 
 func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMethodDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,10 +230,11 @@ func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "request_validator_id"},
 			},
 			{
 				Config: testAccMethodConfig_operationName(rName, "describeTest"),
@@ -239,20 +247,16 @@ func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 	})
 }
 
-func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.Method) resource.TestCheckFunc {
+func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.GetMethodOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Method ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
-
-		output, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
+		output, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
 		if err != nil {
 			return err
@@ -266,14 +270,14 @@ func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.Metho
 
 func testAccCheckMethodDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_method" {
 				continue
 			}
 
-			_, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
+			_, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -297,7 +301,7 @@ func testAccMethodImportStateIdFunc(resourceName string) resource.ImportStateIdF
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"]), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"]), nil
 	}
 }
 
@@ -372,7 +376,7 @@ resource "aws_lambda_function" "authorizer" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
 }
 
 resource "aws_api_gateway_authorizer" "test" {

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_provisioned_concurrency_config: The `function_name` argument now properly handles ARN values
+```

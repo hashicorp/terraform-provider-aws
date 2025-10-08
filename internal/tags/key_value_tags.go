@@ -1,17 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/url"
 	"reflect"
-	"regexp"
-	"sort"
+	"slices"
+	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
+	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,6 +26,26 @@ const (
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
+
+	// Environment variables with this prefix will be treated as a `default_tags` key value pair
+	//
+	// The environment variable name after this suffix will be treated as the tag key. The
+	// value of the variable will be treated as the tag value. Empty values are permitted.
+	DefaultTagsEnvVarPrefix = "TF_AWS_DEFAULT_TAGS_"
+
+	// Environment variable specifying a list of tag keys to be ignored
+	//
+	// Values read from this environment variable are merged with those specified in the
+	// provider configuration. When multiple keys are provided, the values are
+	// comma-separated.
+	IgnoreTagsKeysEnvVar = "TF_AWS_IGNORE_TAGS_KEYS"
+
+	// Environment variable specifying a list of tag key prefixes to be ignored
+	//
+	// Values read from this environment variable are merged with those specified in the
+	// provider configuration. When multiple key prefixes are provided, the values are
+	// comma-separated.
+	IgnoreTagsKeyPrefixesEnvVar = "TF_AWS_IGNORE_TAGS_KEY_PREFIXES"
 )
 
 // DefaultConfig contains tags to default across all resources.
@@ -169,7 +195,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	return result
 }
 
-// IgnoreAWS returns non-system tag keys.
+// IgnoreSystem returns non-system tag keys.
 // The ignored keys vary on the specified service.
 func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
 	switch serviceName {
@@ -274,48 +300,6 @@ func (tags KeyValueTags) Keys() []string {
 	return result
 }
 
-// ListofMap returns a list of flattened tags.
-// Compatible with setting Terraform state for strongly typed configuration blocks.
-func (tags KeyValueTags) ListofMap() []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(tags))
-
-	for k, v := range tags {
-		m := map[string]interface{}{
-			"key":   k,
-			"value": "",
-		}
-
-		if v == nil {
-			result = append(result, m)
-			continue
-		}
-
-		if v.Value != nil {
-			m["value"] = *v.Value
-		}
-
-		for k, v := range v.AdditionalBoolFields {
-			m[ToSnakeCase(k)] = false
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		for k, v := range v.AdditionalStringFields {
-			m[ToSnakeCase(k)] = ""
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		result = append(result, m)
-	}
-
-	return result
-}
-
 // Map returns tag keys mapped to their values.
 func (tags KeyValueTags) Map() map[string]string {
 	result := make(map[string]string, len(tags))
@@ -336,13 +320,9 @@ func (tags KeyValueTags) Map() map[string]string {
 func (tags KeyValueTags) Merge(mergeTags KeyValueTags) KeyValueTags {
 	result := make(KeyValueTags)
 
-	for k, v := range tags {
-		result[k] = v
-	}
+	maps.Copy(result, tags)
 
-	for k, v := range mergeTags {
-		result[k] = v
-	}
+	maps.Copy(result, mergeTags)
 
 	return result
 }
@@ -419,6 +399,28 @@ func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
 	return true
 }
 
+func (tags KeyValueTags) Difference(target KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if val, ok := target[k]; !ok || (v.ValueString() != val.ValueString()) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+func (tags KeyValueTags) HasZeroValue() bool {
+	for _, v := range tags {
+		if v.ValueString() == "" {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Equal returns whether or two sets of key-value tags are equal.
 func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	if tags == nil && other == nil {
@@ -445,6 +447,10 @@ func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	}
 
 	return true
+}
+
+func (tags KeyValueTags) DeepEqual(target KeyValueTags) bool {
+	return reflect.DeepEqual(tags, target)
 }
 
 // Hash returns a stable hash value.
@@ -490,7 +496,7 @@ func (tags KeyValueTags) String() string {
 	var builder strings.Builder
 
 	keys := tags.Keys()
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	builder.WriteString("map[")
 	for i, k := range keys {
@@ -528,7 +534,7 @@ func (tags KeyValueTags) URLQueryString() string {
 		}
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	var buf strings.Builder
 	for _, k := range keys {
@@ -549,7 +555,7 @@ func (tags KeyValueTags) URLQueryString() string {
 // map[string]string, map[string]*string, map[string]interface{}, []interface{}, and types.Map.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
 // When passed KeyValueTags or its underlying type implementation, returns itself.
-func New(ctx context.Context, i interface{}) KeyValueTags {
+func New(ctx context.Context, i any) KeyValueTags {
 	switch value := i.(type) {
 	case KeyValueTags:
 		return make(KeyValueTags).Merge(value)
@@ -559,7 +565,6 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			v := v // Prevent referencing issues
 			kvtm[k] = &TagData{Value: &v}
 		}
 
@@ -568,8 +573,6 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			v := v
-
 			if v == nil {
 				kvtm[k] = nil
 				continue
@@ -579,7 +582,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		}
 
 		return kvtm
-	case map[string]interface{}:
+	case map[string]any:
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
@@ -601,7 +604,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		}
 
 		return kvtm
-	case []interface{}:
+	case []any:
 		kvtm := make(KeyValueTags, len(value))
 
 		for _, v := range value {
@@ -610,7 +613,9 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(ctx, flex.ExpandFrameworkStringValueMap(ctx, value))
+		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
+	case Map:
+		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}
@@ -631,6 +636,14 @@ type TagData struct {
 
 	// Tag value.
 	Value *string
+}
+
+func (td *TagData) ValueString() string {
+	if td == nil || td.Value == nil {
+		return ""
+	}
+
+	return *td.Value
 }
 
 func (td *TagData) Equal(other *TagData) bool {
@@ -671,7 +684,7 @@ func (td *TagData) String() string {
 			additionalBoolField := fmt.Sprintf("%s:", k)
 
 			if v != nil {
-				additionalBoolField += fmt.Sprintf("%t", *v)
+				additionalBoolField += strconv.FormatBool(*v)
 			}
 
 			additionalBoolFields = append(additionalBoolFields, additionalBoolField)
@@ -703,12 +716,219 @@ func (td *TagData) String() string {
 	return fmt.Sprintf("TagData{%s}", strings.Join(fields, ", "))
 }
 
-// ToSnakeCase converts a string to snake case.
-//
-// For example, AWS Go SDK field names are in PascalCase,
-// while Terraform schema attribute names are in snake_case.
-func ToSnakeCase(str string) string {
-	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
-	return strings.ToLower(result)
+// schemaResourceData is an interface that implements functions from schema.ResourceData
+type schemaResourceData interface {
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
+}
+
+// tagSource is an enum that identifiers the source of the tag
+type tagSource int
+
+const (
+	configuration tagSource = iota
+	plan
+	state
+)
+
+// configTag contains the value and source of the incoming tag
+type configTag struct {
+	value  string
+	source tagSource
+}
+
+// GetAnyAttr traverses the cty.Value based on the attr string and returns the attribute.
+// It takes an additional function parameter to determine whether to return a set element.
+func GetAnyAttr(value cty.Value, attr string, shouldReturnSetElement func(string, cty.Value) bool) (cty.Value, error) {
+	// Base case: if attr is empty, return the current value
+	if attr == "" {
+		return value, nil
+	}
+
+	// Split the attr string into the first part and the rest
+	var part, rest string
+	if dotIndex := strings.Index(attr, "."); dotIndex != -1 {
+		part = attr[:dotIndex]
+		rest = attr[dotIndex+1:]
+	} else {
+		part = attr
+		rest = ""
+	}
+
+	// Handle indexed attribute
+	if strings.Contains(part, "[") && strings.Contains(part, "]") {
+		attrNameEnd := strings.Index(part, "[")
+		indexStart := attrNameEnd + 1
+		indexEnd := strings.Index(part, "]")
+
+		if attrNameEnd == -1 || indexEnd == -1 {
+			return cty.NilVal, fmt.Errorf("invalid indexed attribute format: %s", part)
+		}
+
+		attrName := part[:attrNameEnd]
+		indexStr := part[indexStart:indexEnd]
+
+		if !value.Type().HasAttribute(attrName) {
+			return cty.NilVal, fmt.Errorf("attribute %s not found", attrName)
+		}
+
+		value = value.GetAttr(attrName)
+
+		if value.Type().IsSetType() {
+			it := value.ElementIterator()
+			for it.Next() {
+				_, v := it.Element()
+				if shouldReturnSetElement(indexStr, v) {
+					return GetAnyAttr(v, rest, shouldReturnSetElement)
+				}
+			}
+			return cty.NilVal, fmt.Errorf("set element not found for attribute %s", attrName)
+		}
+
+		if !value.Type().IsListType() && !value.Type().IsTupleType() {
+			return cty.NilVal, fmt.Errorf("attribute %s is not a list, tuple, or set", attrName)
+		}
+
+		index, err := strconv.Atoi(indexStr)
+		if err != nil {
+			return cty.NilVal, fmt.Errorf("invalid index: %s", indexStr)
+		}
+
+		if index >= value.LengthInt() {
+			return cty.NilVal, fmt.Errorf("index %d out of range for attribute %s", index, attrName)
+		}
+
+		return GetAnyAttr(value.Index(cty.NumberIntVal(int64(index))), rest, shouldReturnSetElement)
+	}
+
+	// Handle regular attribute
+	if !value.Type().HasAttribute(part) {
+		return cty.NilVal, fmt.Errorf("attribute %s not found", part)
+	}
+
+	return GetAnyAttr(value.GetAttr(part), rest, shouldReturnSetElement)
+}
+
+// ResolveDuplicates resolves differences between incoming tags, defaultTags, and ignoreConfig
+func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, d schemaResourceData, tagsAttr string, setFunc func(string, cty.Value) bool) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	cf := d.GetRawConfig()
+	configExists := !cf.IsNull() && cf.IsKnown()
+
+	result := make(map[string]string)
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	configTags := make(map[string]configTag)
+	if configExists {
+		c, err := GetAnyAttr(cf, tagsAttr, setFunc)
+		if err != nil {
+			// in situations with imports and computed attributes where there's no
+			// matching config, return the tags unchanged
+			return tags
+		}
+
+		// if the config is null just return the incoming tags
+		// no duplicates to calculate
+		if c.IsNull() {
+			return t
+		}
+
+		if !c.IsNull() && c.IsKnown() {
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, configuration)
+		}
+	}
+
+	if pl := d.GetRawPlan(); !pl.IsNull() && pl.IsKnown() {
+		c, err := GetAnyAttr(pl, tagsAttr, setFunc)
+		if err != nil {
+			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
+		}
+		if !c.IsNull() && c.IsKnown() {
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, plan)
+		}
+	}
+
+	if st := d.GetRawState(); !st.IsNull() && st.IsKnown() {
+		c, err := GetAnyAttr(st, tagsAttr, setFunc)
+		if err != nil {
+			panic(fmt.Sprintf("failed to get attribute %s: %v", tagsAttr, err))
+		}
+		if !c.IsNull() {
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, state)
+		}
+	}
+
+	for k, v := range configTags {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == v.value {
+					// config does not exist during a refresh.
+					// set duplicate values from other sources for refresh diff calculation
+					if !configExists {
+						result[k] = v.value
+					} else {
+						if v.source == configuration {
+							result[k] = v.value
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
+}
+
+// ResolveDuplicatesFramework resolves differences between incoming tags, defaultTags, and ignoreConfig
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, tagsAll Map, diags *fwdiag.Diagnostics) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	if diags.HasError() {
+		return KeyValueTags{}
+	}
+
+	result := make(map[string]string, len(t))
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	for k, v := range tagsAll.Elements() {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				s, err := strconv.Unquote(v.String()) // TODO rework to use Framework Map.Equals() value
+
+				if err != nil {
+					diags.AddError(
+						"unable to normalize string",
+						"unable to normalize string default value",
+					)
+				}
+
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == s {
+					result[k] = s
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
+}
+
+func normalizeTagsFromRaw(m map[string]cty.Value, incoming map[string]configTag, source tagSource) {
+	for k, v := range m {
+		if !v.IsNull() {
+			if _, ok := incoming[k]; !ok {
+				incoming[k] = configTag{
+					value:  v.AsString(),
+					source: source,
+				}
+			}
+		}
+	}
 }

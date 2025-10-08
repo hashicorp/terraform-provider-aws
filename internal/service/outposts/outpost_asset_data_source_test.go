@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts_test
 
 import (
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOutpostsAssetDataSource_basic(t *testing.T) {
@@ -15,17 +18,17 @@ func TestAccOutpostsAssetDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostAssetDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "asset_id", regexp.MustCompile(`^(\w+)$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "outposts", regexache.MustCompile(`outpost/.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "asset_id", regexache.MustCompile(`^(\w+)$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "asset_type"),
-					resource.TestMatchResourceAttr(dataSourceName, "rack_elevation", regexp.MustCompile(`^[\S \n]+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "rack_id", regexp.MustCompile(`^[\S \n]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "rack_elevation", regexache.MustCompile(`^[\S \n]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "rack_id", regexache.MustCompile(`^[\S \n]+$`)),
 				),
 			},
 		},

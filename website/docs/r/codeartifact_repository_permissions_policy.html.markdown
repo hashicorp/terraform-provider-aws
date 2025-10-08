@@ -36,8 +36,8 @@ data "aws_iam_policy_document" "example" {
       identifiers = ["*"]
     }
 
-    actions   = ["codeartifact:CreateRepository"]
-    resources = [aws_codeartifact_domain.example.arn]
+    actions   = ["codeartifact:ReadFromRepository"]
+    resources = [aws_codeartifact_repository.example.arn]
   }
 }
 resource "aws_codeartifact_repository_permissions_policy" "example" {
@@ -49,25 +49,56 @@ resource "aws_codeartifact_repository_permissions_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository` - (Required) The name of the repository to set the resource policy on.
 * `domain` - (Required) The name of the domain on which to set the resource policy.
 * `policy_document` - (Required) A JSON policy string to be set as the access control resource policy on the provided domain.
 * `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
 * `policy_revision` - (Optional) The current revision of the resource policy to be set. This revision is used for optimistic locking, which prevents others from overwriting your changes to the domain's resource policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the resource associated with the resource policy.
 * `resource_arn` - The ARN of the resource associated with the resource policy.
 
 ## Import
 
-CodeArtifact Repository Permissions Policies can be imported using the CodeArtifact Repository ARN, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_codeartifact_repository_permissions_policy.example
+  identity = {
+    "arn" = "arn:aws:codeartifact:us-west-2:123456789012:repository/example-domain/example-repo"
+  }
+}
+
+resource "aws_codeartifact_repository_permissions_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_codeartifact_repository_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeArtifact repository.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Repository Permissions Policies using the CodeArtifact Repository ARN. For example:
+
+```terraform
+import {
+  to = aws_codeartifact_repository_permissions_policy.example
+  id = "arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763"
+}
+```
+
+Using `terraform import`, import CodeArtifact Repository Permissions Policies using the CodeArtifact Repository ARN. For example:
+
+```console
+% terraform import aws_codeartifact_repository_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```

@@ -1,0 +1,18 @@
+rules:
+  - id: struct-field-is-exported
+    languages: [go]
+    message: Prefer structField.IsExported() to structField.PkgPath == ""
+    pattern-either:
+      - pattern: $X.PkgPath == ""
+      - pattern: $X.PkgPath != ""
+    fix-regex:
+      regex: '(\w+)\.PkgPath\s*((!)|=)=\s*""'
+      replacement: '\3\1.IsExported()'
+    severity: WARNING
+
+  - id: reflect-typefor
+    languages: [go]
+    message: Prefer reflect.TypeFor[T]() to reflect.TypeOf((*T)(nil)).Elem()
+    pattern: reflect.TypeOf((*$TYPE)(nil)).Elem()
+    fix: reflect.TypeFor[$TYPE]()
+    severity: WARNING

@@ -1,31 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/fsx"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFSxBackup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,9 +37,9 @@ func TestAccFSxBackup_basic(t *testing.T) {
 				Config: testAccBackupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`backup/.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -49,15 +53,15 @@ func TestAccFSxBackup_basic(t *testing.T) {
 
 func TestAccFSxBackup_ontapBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	//FSX ONTAP Volume Names can't use dash only underscore
 	vName := strings.Replace(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_", -1)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,9 +69,9 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 				Config: testAccBackupConfig_ontapBasic(rName, vName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`backup/.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -81,13 +85,13 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 
 func TestAccFSxBackup_openzfsBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,9 +99,9 @@ func TestAccFSxBackup_openzfsBasic(t *testing.T) {
 				Config: testAccBackupConfig_openZFSBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`backup/.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -111,23 +115,24 @@ func TestAccFSxBackup_openzfsBasic(t *testing.T) {
 
 func TestAccFSxBackup_windowsBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupConfig_windowsBasic(rName),
+				Config: testAccBackupConfig_windowsBasic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`backup/.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -141,13 +146,13 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 
 func TestAccFSxBackup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -165,13 +170,13 @@ func TestAccFSxBackup_disappears(t *testing.T) {
 
 func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,22 +194,22 @@ func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 
 func TestAccFSxBackup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccBackupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -213,20 +218,20 @@ func TestAccFSxBackup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBackupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccBackupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccBackupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -235,21 +240,22 @@ func TestAccFSxBackup_tags(t *testing.T) {
 
 func TestAccFSxBackup_implicitTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var backup fsx.Backup
+	var backup awstypes.Backup
 	resourceName := "aws_fsx_backup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupConfig_implictTags("key1", "value1"),
+				Config: testAccBackupConfig_implicitTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -261,25 +267,22 @@ func TestAccFSxBackup_implicitTags(t *testing.T) {
 	})
 }
 
-func testAccCheckBackupExists(ctx context.Context, resourceName string, fs *fsx.Backup) resource.TestCheckFunc {
+func testAccCheckBackupExists(ctx context.Context, n string, v *awstypes.Backup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		output, err := tffsx.FindBackupByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("FSx Backup (%s) not found", rs.Primary.ID)
-		}
-
-		*fs = *output
+		*v = *output
 
 		return nil
 	}
@@ -287,7 +290,7 @@ func testAccCheckBackupExists(ctx context.Context, resourceName string, fs *fsx.
 
 func testAccCheckBackupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_backup" {
@@ -295,6 +298,7 @@ func testAccCheckBackupDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tffsx.FindBackupByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -305,35 +309,16 @@ func testAccCheckBackupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			return fmt.Errorf("FSx Backup %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccBackupBaseConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-}
-`)
-}
-
-func testAccBackupLustreBaseConfig(rName string) string {
-	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
+func testAccBackupConfig_baseLustre(rName string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
-  subnet_ids                  = [aws_subnet.test1.id]
+  subnet_ids                  = aws_subnet.test[*].id
   deployment_type             = "PERSISTENT_1"
   per_unit_storage_throughput = 50
 
@@ -344,14 +329,14 @@ resource "aws_fsx_lustre_file_system" "test" {
 `, rName))
 }
 
-func testAccBackupONTAPBaseConfig(rName string, vName string) string {
-	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
+func testAccBackupConfig_baseONTAP(rName string, vName string) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "MULTI_AZ_1"
-  throughput_capacity = 512
-  preferred_subnet_id = aws_subnet.test1.id
+  throughput_capacity = 128
+  preferred_subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -373,14 +358,14 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, vName))
 }
 
-func testAccBackupOpenzfsBaseConfig(rName string) string {
-	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
+func testAccBackupConfig_baseOpenZFS(rName string) string {
+	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
-  subnet_ids          = [aws_subnet.test1.id]
+  subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
-
+  skip_final_backup   = true
 
   tags = {
     Name = %[1]q
@@ -389,26 +374,14 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `, rName))
 }
 
-func testAccBackupWindowsBaseConfig(rName string) string {
-	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
-  edition  = "Standard"
-  name     = "corp.notexample.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-
-  vpc_settings {
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
-    vpc_id     = aws_vpc.test.id
-  }
-}
-
+func testAccBackupConfig_baseWindows(rName, domain string) string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id             = aws_directory_service_directory.test.id
   automatic_backup_retention_days = 0
   skip_final_backup               = true
   storage_capacity                = 32
-  subnet_ids                      = [aws_subnet.test1.id]
+  subnet_ids                      = [aws_subnet.test[0].id]
   throughput_capacity             = 8
 
   tags = {
@@ -419,7 +392,7 @@ resource "aws_fsx_windows_file_system" "test" {
 }
 
 func testAccBackupConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccBackupLustreBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseLustre(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 
@@ -431,7 +404,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_ontapBasic(rName string, vName string) string {
-	return acctest.ConfigCompose(testAccBackupONTAPBaseConfig(rName, vName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseONTAP(rName, vName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   volume_id = aws_fsx_ontap_volume.test.id
 
@@ -443,7 +416,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_openZFSBasic(rName string) string {
-	return acctest.ConfigCompose(testAccBackupOpenzfsBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseOpenZFS(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_openzfs_file_system.test.id
 
@@ -454,8 +427,8 @@ resource "aws_fsx_backup" "test" {
 `, rName))
 }
 
-func testAccBackupConfig_windowsBasic(rName string) string {
-	return acctest.ConfigCompose(testAccBackupWindowsBaseConfig(rName), fmt.Sprintf(`
+func testAccBackupConfig_windowsBasic(rName, domain string) string {
+	return acctest.ConfigCompose(testAccBackupConfig_baseWindows(rName, domain), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_windows_file_system.test.id
 
@@ -467,7 +440,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_tags1(rName string, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccBackupLustreBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseLustre(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 
@@ -479,7 +452,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_tags2(rName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccBackupLustreBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseLustre(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 
@@ -491,32 +464,26 @@ resource "aws_fsx_backup" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccBackupConfig_implictTags(tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-}
-
+func testAccBackupConfig_implicitTags(rName string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
-  subnet_ids                  = [aws_subnet.test1.id]
+  subnet_ids                  = aws_subnet.test[*].id
   deployment_type             = "PERSISTENT_1"
   per_unit_storage_throughput = 50
   copy_tags_to_backups        = true
 
   tags = {
-    %[1]q = %[2]q
+    Name = %[1]q
   }
 }
 
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
 }
-`, tagKey1, tagValue1))
+`, rName))
 }

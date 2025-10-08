@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package validators
 
 import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 type arnValidator struct{}
 
 func (validator arnValidator) Description(_ context.Context) string {
-	return "value must be a valid Amazon Resource Name"
+	return "An Amazon Resource Name"
 }
 
 func (validator arnValidator) MarkdownDescription(ctx context.Context) string {
@@ -24,10 +27,10 @@ func (validator arnValidator) ValidateString(ctx context.Context, request valida
 	}
 
 	if !arn.IsARN(request.ConfigValue.ValueString()) {
-		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
+		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			request.ConfigValue.ValueString(),
+			"value must be a valid ARN",
 		))
 		return
 	}

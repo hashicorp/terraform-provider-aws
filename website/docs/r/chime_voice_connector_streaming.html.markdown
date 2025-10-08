@@ -90,8 +90,9 @@ resource "aws_kinesis_stream" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `data_retention`  - (Required) The retention period, in hours, for the Amazon Kinesis data.
 * `disabled` - (Optional) When true, media streaming to Amazon Kinesis is turned off. Default: `false`
@@ -103,16 +104,25 @@ The following arguments are supported:
 * `disabled` - (Optional) When `true`, the media insights configuration is not enabled. Defaults to `false`.
 * `configuration_arn` - (Optional) The media insights configuration that will be invoked by the Voice Connector.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Chime Voice Connector ID.
 
 ## Import
 
-Chime Voice Connector Streaming can be imported using the `voice_connector_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chime Voice Connector Streaming using the `voice_connector_id`. For example:
 
+```terraform
+import {
+  to = aws_chime_voice_connector_streaming.default
+  id = "abcdef1ghij2klmno3pqr4"
+}
 ```
-$ terraform import aws_chime_voice_connector_streaming.default abcdef1ghij2klmno3pqr4
+
+Using `terraform import`, import Chime Voice Connector Streaming using the `voice_connector_id`. For example:
+
+```console
+% terraform import aws_chime_voice_connector_streaming.default abcdef1ghij2klmno3pqr4
 ```

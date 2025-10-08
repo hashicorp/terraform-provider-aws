@@ -27,14 +27,15 @@ data "aws_outposts_asset" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) Outpost ARN.
 * `asset_id` - (Required) ID of the asset.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `asset_type` - Type of the asset.
 * `host_id` - Host ID of the Dedicated Hosts on the asset, if a Dedicated Host is provisioned.

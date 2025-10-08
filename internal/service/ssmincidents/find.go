@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents
 
 import (
@@ -34,28 +37,4 @@ func FindResponsePlanByID(context context.Context, client *ssmincidents.Client, 
 	}
 
 	return output, nil
-}
-
-func FindReplicationSetByID(context context.Context, client *ssmincidents.Client, arn string) (*types.ReplicationSet, error) {
-	input := &ssmincidents.GetReplicationSetInput{
-		Arn: aws.String(arn),
-	}
-	output, err := client.GetReplicationSet(context, input)
-	if err != nil {
-		var notFoundError *types.ResourceNotFoundException
-		if errors.As(err, &notFoundError) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		return nil, err
-	}
-
-	if output == nil || output.ReplicationSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.ReplicationSet, nil
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix error when waiting for snapshot to be created
+```

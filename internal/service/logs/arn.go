@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -8,7 +11,7 @@ const (
 	logGroupARNWildcardSuffix = ":*"
 )
 
-// TrimLogGroupARNWildcardSuffix trims any wilcard suffix from a Log Group ARN.
-func TrimLogGroupARNWildcardSuffix(arn string) string {
+// trimLogGroupARNWildcardSuffix trims any wilcard suffix from a Log Group ARN.
+func trimLogGroupARNWildcardSuffix(arn string) string {
 	return strings.TrimSuffix(arn, logGroupARNWildcardSuffix)
 }

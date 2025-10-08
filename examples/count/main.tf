@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
@@ -42,6 +45,11 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "web" {
   instance_type = "t2.small"
   ami           = data.aws_ami.ubuntu.id
+
+  # Force IMDSv2.
+  metadata_options {
+    http_tokens = "required"
+  }
 
   # This will create 4 instances
   count = 4

@@ -1,22 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sns"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 /**
@@ -44,7 +47,7 @@ type testAccPlatformApplicationPlatform struct {
 func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType string) []*testAccPlatformApplicationPlatform {
 	platforms := make([]*testAccPlatformApplicationPlatform, 0, 2)
 
-	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" && allowedApnsAuthType == "certificate" {
+	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" && allowedApnsAuthType == names.AttrCertificate {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL set but missing APNS_SANDBOX_PRINCIPAL")
 		}
@@ -53,10 +56,10 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType
 			Name:         "APNS_SANDBOX",
 			Credential:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
 			Principal:    fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
-			ApnsAuthType: "certificate",
+			ApnsAuthType: names.AttrCertificate,
 		}
 		platforms = append(platforms, platform)
-	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" && allowedApnsAuthType == "certificate" {
+	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" && allowedApnsAuthType == names.AttrCertificate {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
@@ -65,7 +68,7 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType
 			Name:         "APNS_SANDBOX",
 			Credential:   strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
 			Principal:    strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
-			ApnsAuthType: "certificate",
+			ApnsAuthType: names.AttrCertificate,
 		}
 		platforms = append(platforms, platform)
 	} else if os.Getenv("APNS_SANDBOX_TOKEN_CREDENTIAL") != "" && allowedApnsAuthType == "token" {
@@ -96,7 +99,7 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType
 	return platforms
 }
 
-func TestDecodePlatformApplicationID(t *testing.T) {
+func TestParsePlatformApplicationResourceID(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {
@@ -151,7 +154,7 @@ func TestDecodePlatformApplicationID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		arn, name, platform, err := tfsns.DecodePlatformApplicationID(tc.Input)
+		arn, name, platform, err := tfsns.ParsePlatformApplicationResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -172,18 +175,13 @@ func TestDecodePlatformApplicationID(t *testing.T) {
 
 func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "GCM_API_KEY"
-	apiKey := os.Getenv(key)
-	if apiKey == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
 	resourceName := "aws_sns_platform_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -193,13 +191,13 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_delivery_failure_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_created_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_deleted_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_updated_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "failure_feedback_role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
 					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_role_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_sample_rate"),
@@ -217,18 +215,13 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 
 func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "GCM_API_KEY"
-	apiKey := os.Getenv(key)
-	if apiKey == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
 	resourceName := "aws_sns_platform_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -246,12 +239,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 
 func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "GCM_API_KEY"
-	apiKey := os.Getenv(key)
-	if apiKey == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
 	resourceName := "aws_sns_platform_application.test"
 	topic0ResourceName := "aws_sns_topic.test.0"
 	topic1ResourceName := "aws_sns_topic.test.1"
@@ -261,7 +249,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -271,15 +259,15 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic0ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic0ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role0ResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
-					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "25"),
 				),
 			},
@@ -295,15 +283,15 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic0ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic0ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role1ResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
-					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role0ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "50"),
 				),
 			},
@@ -313,7 +301,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 
 func TestAccSNSPlatformApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, names.AttrCertificate)
 	resourceName := "aws_sns_platform_application.test"
 
 	for _, platform := range platforms { //nolint:paralleltest
@@ -326,7 +314,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -334,8 +322,8 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 						Config: testAccPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckPlatformApplicationExists(ctx, resourceName),
-							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
-							resource.TestCheckResourceAttr(resourceName, "name", name),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
+							resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
 							platformPrincipalCheck,
@@ -355,7 +343,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 
 func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, names.AttrCertificate)
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []struct {
@@ -378,9 +366,9 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
-					resource.ParallelTest(t, resource.TestCase{
+					resource.Test(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+						ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -422,12 +410,16 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 	updatedApplePlatformBundleId := "com.bundle2.name2"
 
 	for _, platform := range platforms { //nolint:paralleltest
+		if platform.Name == "GCM" {
+			continue
+		}
+
 		name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -435,7 +427,7 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 						Config: testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name, platform, applePlatformTeamId, applePlatformBundleId),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckPlatformApplicationExists(ctx, resourceName),
-							resource.TestCheckResourceAttr(resourceName, "name", name),
+							resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_principal"),
@@ -470,11 +462,7 @@ func testAccCheckPlatformApplicationExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SNS Platform Application ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
 		_, err := tfsns.FindPlatformApplicationAttributesByARN(ctx, conn, rs.Primary.ID)
 
@@ -484,7 +472,7 @@ func testAccCheckPlatformApplicationExists(ctx context.Context, n string) resour
 
 func testAccCheckPlatformApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_platform_application" {
@@ -600,18 +588,18 @@ func testAccPlatformApplicationConfig_basic(name string, platform *testAccPlatfo
 	if platform.Principal == "" {
 		return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
 }
 `, name, platform.Name, platform.Credential)
 	}
 	return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  platform_principal  = %s
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  platform_principal  = %[4]s
 }
 `, name, platform.Name, platform.Credential, platform.Principal)
 }
@@ -620,20 +608,20 @@ func testAccPlatformApplicationConfig_basicAttribute(name string, platform *test
 	if platform.Principal == "" {
 		return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  %s                  = "%s"
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  %[4]s               = %[5]q
 }
 `, name, platform.Name, platform.Credential, attributeKey, attributeValue)
 	}
 	return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  platform_principal  = %s
-  %s                  = "%s"
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  platform_principal  = %[4]s
+  %[5]s               = %[6]q
 }
 `, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
 }
@@ -641,12 +629,12 @@ resource "aws_sns_platform_application" "test" {
 func testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name string, platform *testAccPlatformApplicationPlatform, applePlatformTeamId string, applePlatformBundleId string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                     = "%s"
-  platform                 = "%s"
-  platform_credential      = %s
-  platform_principal       = %s
-  apple_platform_team_id   = "%s"
-  apple_platform_bundle_id = "%s"
+  name                     = %[1]q
+  platform                 = %[2]q
+  platform_credential      = %[3]s
+  platform_principal       = %[4]s
+  apple_platform_team_id   = %[5]q
+  apple_platform_bundle_id = %[6]q
 }
 `, name, platform.Name, platform.Credential, platform.Principal, applePlatformTeamId, applePlatformBundleId)
 }

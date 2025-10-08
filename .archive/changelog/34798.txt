@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route53_resolver_endpoint: Add `resolver_endpoint_type` argument
+```
+
+```release-note:enhancement
+data-source/aws_route53_resolver_endpoint: Add `resolver_endpoint_type` attribute
+```

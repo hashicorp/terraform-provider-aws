@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_multiplex: Fix to properly handle read failures during delete operations which were previously ignored
+```

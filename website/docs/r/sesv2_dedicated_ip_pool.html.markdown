@@ -37,27 +37,29 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `scaling_mode` - (Optional) IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`. If omitted, the AWS API will default to a standard pool.
 * `tags` - (Optional) A map of tags to assign to the pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Dedicated IP Pool.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
-
 ## Import
 
-SESv2 (Simple Email V2) Dedicated IP Pool can be imported using the `pool_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Dedicated IP Pool using the `pool_name`. For example:
 
+```terraform
+import {
+  to = aws_sesv2_dedicated_ip_pool.example
+  id = "my-pool"
+}
 ```
-$ terraform import aws_sesv2_dedicated_ip_pool.example my-pool
+
+Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Pool using the `pool_name`. For example:
+
+```console
+% terraform import aws_sesv2_dedicated_ip_pool.example my-pool
 ```

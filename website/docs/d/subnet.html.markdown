@@ -23,7 +23,7 @@ data "aws_subnet" "selected" {
   id = var.subnet_id
 }
 
-resource "aws_security_group" "subnet" {
+resource "aws_security_group" "subnet_security_group" {
   vpc_id = data.aws_subnet.selected.vpc_id
 
   ingress {
@@ -50,10 +50,9 @@ data "aws_subnet" "selected" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available subnets in the current region. The given filters must match exactly one subnet whose data will be exported as attributes.
+This data source supports the following arguments:
 
-The following arguments are optional:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Optional) Availability zone where the subnet must reside.
 * `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet. This argument is not supported in all regions or partitions. If necessary, use `availability_zone` instead.
 * `cidr_block` - (Optional) CIDR block of the desired subnet.
@@ -74,9 +73,9 @@ The following arguments are required:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
 * `values` - (Required) Set of values that are accepted for the given field. A subnet will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the attributes above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the subnet.
 * `assign_ipv6_address_on_creation` - Whether an IPv6 address is assigned on creation.

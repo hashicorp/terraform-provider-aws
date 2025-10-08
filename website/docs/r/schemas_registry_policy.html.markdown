@@ -27,8 +27,8 @@ data "aws_iam_policy_document" "example" {
     }
     actions = ["schemas:*"]
     resources = [
-      "arn:aws:schemas:us-east-1:012345678901:registry/example",
-      "arn:aws:schemas:us-east-1:012345678901:schema/example*"
+      "arn:aws:schemas:us-east-1:123456789012:registry/example",
+      "arn:aws:schemas:us-east-1:123456789012:schema/example*"
     ]
   }
 }
@@ -41,14 +41,15 @@ resource "aws_schemas_registry_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registry_name` - (Required) Name of EventBridge Schema Registry
 * `policy` - (Required) Resource Policy for EventBridge Schema Registry
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -60,8 +61,17 @@ No additional attributes are exported.
 
 ## Import
 
-EventBridge Schema Registry Policy can be imported using the `registry_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Schema Registry Policy using the `registry_name`. For example:
 
+```terraform
+import {
+  to = aws_schemas_registry_policy.example
+  id = "example"
+}
 ```
-$ terraform import aws_schemas_registry_policy.example example
+
+Using `terraform import`, import EventBridge Schema Registry Policy using the `registry_name`. For example:
+
+```console
+% terraform import aws_schemas_registry_policy.example example
 ```

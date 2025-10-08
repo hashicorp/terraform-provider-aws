@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_instance: Fix default for `metadata_options.http_endpoint` argument.
+```
+
+```release-note:note
+resource/aws_instance: The `metadata_options.http_endpoint` argument now correctly defaults to `enabled`.
+```

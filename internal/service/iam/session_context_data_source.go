@@ -1,28 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
-	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_session_context")
-func DataSourceSessionContext() *schema.Resource {
+// @SDKDataSource("aws_iam_session_context", name="Session Context")
+func dataSourceSessionContext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSessionContextRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -47,19 +50,18 @@ func DataSourceSessionContext() *schema.Resource {
 	}
 }
 
-func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 
 	d.SetId(arn)
 
-	roleName := ""
-	sessionName := ""
+	var roleName, sessionName string
 	var err error
 
-	if roleName, sessionName = RoleNameSessionFromARN(arn); roleName == "" {
+	if roleName, sessionName = roleNameSessionFromARN(arn); roleName == "" {
 		d.Set("issuer_arn", arn)
 		d.Set("issuer_id", "")
 		d.Set("issuer_name", "")
@@ -68,27 +70,23 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	var role *iam.Role
+	var role *awstypes.Role
 
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
-		role, err = FindRoleByName(ctx, conn, roleName)
+		role, err = findRoleByName(ctx, conn, roleName)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		role, err = FindRoleByName(ctx, conn, roleName)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "unable to get role (%s): %s", roleName, err)
@@ -106,16 +104,16 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-// RoleNameSessionFromARN returns the role and session names in an ARN if any.
+// roleNameSessionFromARN returns the role and session names in an ARN if any.
 // Otherwise, it returns empty strings.
-func RoleNameSessionFromARN(rawARN string) (string, string) {
+func roleNameSessionFromARN(rawARN string) (string, string) {
 	parsedARN, err := arn.Parse(rawARN)
 
 	if err != nil {
 		return "", ""
 	}
 
-	reAssume := regexp.MustCompile(`^assumed-role/.{1,}/.{2,}`)
+	reAssume := regexache.MustCompile(`^assumed-role/.{1,}/.{2,}`)
 
 	if !reAssume.MatchString(parsedARN.Resource) || parsedARN.Service != "sts" {
 		return "", ""

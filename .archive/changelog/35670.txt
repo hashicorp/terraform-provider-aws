@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_dms_replication_config: Fix persistent change in `replication_settings`
+```
+```release-note:bug
+resource/aws_dms_replication_task: Fix persistent change in `replication_task_settings`
+```

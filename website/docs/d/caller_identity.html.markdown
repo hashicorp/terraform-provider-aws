@@ -32,9 +32,11 @@ output "caller_user" {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `account_id` - AWS Account ID number of the account that owns or contains the calling entity.
 * `arn` - ARN associated with the calling entity.

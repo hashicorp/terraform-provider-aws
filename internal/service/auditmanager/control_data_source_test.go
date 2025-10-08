@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -15,7 +18,7 @@ func TestAccAuditManagerControlDataSource_standard(t *testing.T) {
 	// Standard controls are managed by AWS and will exist in the account automatically
 	// once AuditManager is enabled.
 	ctx := acctest.Context(t)
-	name := "1. Risk Management"
+	name := "RA-3: Risk Assessment (FedRAMP-r4)"
 	dataSourceName := "data.aws_auditmanager_control.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -23,14 +26,14 @@ func TestAccAuditManagerControlDataSource_standard(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlDataSourceConfig_standard(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", name),
-					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "1"),
 				),
 			},
 		},
@@ -47,13 +50,13 @@ func TestAccAuditManagerControlDataSource_custom(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlDataSourceConfig_custom(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.0.source_set_up_option", string(types.SourceSetUpOptionProceduralControlsMapping)),

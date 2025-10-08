@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -12,8 +15,8 @@ func TestAccSSM_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"DefaultPatchBaseline": {
-			"basic":                testAccSSMDefaultPatchBaseline_basic,
-			"disappears":           testAccSSMDefaultPatchBaseline_disappears,
+			acctest.CtBasic:        testAccSSMDefaultPatchBaseline_basic,
+			acctest.CtDisappears:   testAccSSMDefaultPatchBaseline_disappears,
 			"otherOperatingSystem": testAccSSMDefaultPatchBaseline_otherOperatingSystem,
 			"patchBaselineARN":     testAccSSMDefaultPatchBaseline_patchBaselineARN,
 			"systemDefault":        testAccSSMDefaultPatchBaseline_systemDefault,

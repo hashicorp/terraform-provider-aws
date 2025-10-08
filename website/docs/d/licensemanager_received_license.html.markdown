@@ -22,9 +22,14 @@ data "aws_licensemanager_received_license" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `license_arn` - (Required) The ARN of the received license you want data for.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The received license ARN (Same as: `license_arn`).
 * `beneficiary` - Granted license beneficiary. This is in the form of the ARN of the root user of the account.

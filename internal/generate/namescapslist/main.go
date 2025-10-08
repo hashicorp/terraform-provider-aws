@@ -1,12 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -52,7 +56,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("namescapslist", header+"\n"+tmpl+"\n", td); err != nil {
+	if err := d.BufferTemplate("namescapslist", header+"\n"+tmpl+"\n", td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
@@ -88,11 +92,12 @@ func readBadCaps(filename string) ([]CapsDatum, error) {
 		})
 	}
 
-	sort.SliceStable(capsList, func(i, j int) bool {
-		if len(capsList[i].Wrong) == len(capsList[j].Wrong) {
-			return capsList[i].Wrong < capsList[j].Wrong
-		}
-		return len(capsList[j].Wrong) < len(capsList[i].Wrong)
+	slices.SortStableFunc(capsList, func(a, b CapsDatum) int {
+		return cmp.Or(
+			// Reverse length order
+			cmp.Compare(len(b.Wrong), len(a.Wrong)),
+			cmp.Compare(a.Wrong, b.Wrong),
+		)
 	})
 
 	onChunk := -1
@@ -105,11 +110,11 @@ func readBadCaps(filename string) ([]CapsDatum, error) {
 		capsList[i].Test = fmt.Sprintf(`%s%d`, "caps", onChunk)
 	}
 
-	sort.SliceStable(capsList, func(i, j int) bool {
-		if strings.EqualFold(capsList[i].Wrong, capsList[j].Wrong) {
-			return capsList[i].Wrong < capsList[j].Wrong
-		}
-		return strings.ToLower(capsList[i].Wrong) < strings.ToLower(capsList[j].Wrong)
+	slices.SortStableFunc(capsList, func(a, b CapsDatum) int {
+		return cmp.Or(
+			cmp.Compare(strings.ToLower(a.Wrong), strings.ToLower(b.Wrong)),
+			cmp.Compare(a.Wrong, b.Wrong),
+		)
 	})
 
 	return capsList, nil

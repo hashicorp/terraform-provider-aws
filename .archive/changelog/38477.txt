@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iam_role: Change from partial resource creation to resource creation failed if an `inline_policy` fails to create
+```

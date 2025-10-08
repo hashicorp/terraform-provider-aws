@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_batch_scheduling_policy: Fixes error where tags could not be updated
+```

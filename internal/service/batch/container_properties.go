@@ -1,46 +1,48 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
-	"bytes"
-	"encoding/json"
-	"log"
-	"sort"
+	"cmp"
+	"slices"
+	_ "unsafe" // Required for go:linkname
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	smithyjson "github.com/aws/smithy-go/encoding/json"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-type containerProperties batch.ContainerProperties
+const (
+	fargatePlatformVersionLatest = "LATEST"
+)
 
-func (cp *containerProperties) Reduce() error {
-	// Deal with Environment objects which may be re-ordered in the API
-	sort.Slice(cp.Environment, func(i, j int) bool {
-		return aws.StringValue(cp.Environment[i].Name) < aws.StringValue(cp.Environment[j].Name)
-	})
+type containerProperties awstypes.ContainerProperties
 
-	// Prevent difference of API response that adds an empty array when not configured during the request
+func (cp *containerProperties) reduce() {
+	cp.sortEnvironment()
+
+	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.Command) == 0 {
 		cp.Command = nil
 	}
 
-	// Remove environment variables with empty values
-	cp.Environment = tfslices.Filter(cp.Environment, func(kvp *batch.KeyValuePair) bool {
-		if kvp == nil {
-			return false
-		}
-		return aws.StringValue(kvp.Value) != ""
+	// Remove environment variables with empty values.
+	cp.Environment = tfslices.Filter(cp.Environment, func(kvp awstypes.KeyValuePair) bool {
+		return aws.ToString(kvp.Value) != ""
 	})
 
-	// Prevent difference of API response that adds an empty array when not configured during the request
+	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.Environment) == 0 {
 		cp.Environment = nil
 	}
 
-	// Prevent difference of API response that contains the default Fargate platform configuration
+	// Prevent difference of API response that contains the default Fargate platform configuration.
 	if cp.FargatePlatformConfiguration != nil {
-		if aws.StringValue(cp.FargatePlatformConfiguration.PlatformVersion) == "LATEST" {
+		if aws.ToString(cp.FargatePlatformConfiguration.PlatformVersion) == fargatePlatformVersionLatest {
 			cp.FargatePlatformConfiguration = nil
 		}
 	}
@@ -50,9 +52,9 @@ func (cp *containerProperties) Reduce() error {
 			cp.LinuxParameters.Devices = nil
 		}
 
-		for _, device := range cp.LinuxParameters.Devices {
+		for i, device := range cp.LinuxParameters.Devices {
 			if len(device.Permissions) == 0 {
-				device.Permissions = nil
+				cp.LinuxParameters.Devices[i].Permissions = nil
 			}
 		}
 
@@ -60,14 +62,14 @@ func (cp *containerProperties) Reduce() error {
 			cp.LinuxParameters.Tmpfs = nil
 		}
 
-		for _, tmpfs := range cp.LinuxParameters.Tmpfs {
+		for i, tmpfs := range cp.LinuxParameters.Tmpfs {
 			if len(tmpfs.MountOptions) == 0 {
-				tmpfs.MountOptions = nil
+				cp.LinuxParameters.Tmpfs[i].MountOptions = nil
 			}
 		}
 	}
 
-	// Prevent difference of API response that adds an empty array when not configured during the request
+	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if cp.LogConfiguration != nil {
 		if len(cp.LogConfiguration.Options) == 0 {
 			cp.LogConfiguration.Options = nil
@@ -78,36 +80,41 @@ func (cp *containerProperties) Reduce() error {
 		}
 	}
 
-	// Prevent difference of API response that adds an empty array when not configured during the request
+	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.MountPoints) == 0 {
 		cp.MountPoints = nil
 	}
 
-	// Prevent difference of API response that adds an empty array when not configured during the request
+	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.ResourceRequirements) == 0 {
 		cp.ResourceRequirements = nil
 	}
 
-	// Prevent difference of API response that adds an empty array when not configured during the request
+	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.Secrets) == 0 {
 		cp.Secrets = nil
 	}
 
-	// Prevent difference of API response that adds an empty array when not configured during the request
+	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.Ulimits) == 0 {
 		cp.Ulimits = nil
 	}
 
-	// Prevent difference of API response that adds an empty array when not configured during the request
+	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.Volumes) == 0 {
 		cp.Volumes = nil
 	}
-
-	return nil
 }
 
-// EquivalentContainerPropertiesJSON determines equality between two Batch ContainerProperties JSON strings
-func EquivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
+func (cp *containerProperties) sortEnvironment() {
+	// Deal with Environment objects which may be re-ordered in the API.
+	slices.SortFunc(cp.Environment, func(a, b awstypes.KeyValuePair) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
+	})
+}
+
+// equivalentContainerPropertiesJSON determines equality between two Batch ContainerProperties JSON strings
+func equivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
 	if str1 == "" {
 		str1 = "{}"
 	}
@@ -116,41 +123,60 @@ func EquivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
 		str2 = "{}"
 	}
 
-	var cp1, cp2 containerProperties
-
-	if err := json.Unmarshal([]byte(str1), &cp1); err != nil {
+	var cp1 containerProperties
+	err := tfjson.DecodeFromString(str1, &cp1)
+	if err != nil {
 		return false, err
 	}
-
-	if err := cp1.Reduce(); err != nil {
-		return false, err
-	}
-
-	canonicalJson1, err := jsonutil.BuildJSON(cp1)
-
+	cp1.reduce()
+	b1, err := tfjson.EncodeToBytes(cp1)
 	if err != nil {
 		return false, err
 	}
 
-	if err := json.Unmarshal([]byte(str2), &cp2); err != nil {
+	var cp2 containerProperties
+	err = tfjson.DecodeFromString(str2, &cp2)
+	if err != nil {
 		return false, err
 	}
-
-	if err := cp2.Reduce(); err != nil {
-		return false, err
-	}
-
-	canonicalJson2, err := jsonutil.BuildJSON(cp2)
-
+	cp2.reduce()
+	b2, err := tfjson.EncodeToBytes(cp2)
 	if err != nil {
 		return false, err
 	}
 
-	equal := bytes.Equal(canonicalJson1, canonicalJson2)
+	return tfjson.EqualBytes(b1, b2), nil
+}
 
-	if !equal {
-		log.Printf("[DEBUG] Canonical Batch Container Properties JSON are not equal.\nFirst: %s\nSecond: %s\n", canonicalJson1, canonicalJson2)
+func expandContainerProperties(tfString string) (*awstypes.ContainerProperties, error) {
+	apiObject := &awstypes.ContainerProperties{}
+
+	if err := tfjson.DecodeFromString(tfString, apiObject); err != nil {
+		return nil, err
 	}
 
-	return equal, nil
+	return apiObject, nil
+}
+
+// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
+// Reach down into the SDK and use the same serialization function that the SDK uses.
+//
+//go:linkname serializeContainerProperties github.com/aws/aws-sdk-go-v2/service/batch.awsRestjson1_serializeDocumentContainerProperties
+func serializeContainerProperties(v *awstypes.ContainerProperties, value smithyjson.Value) error
+
+func flattenContainerProperties(apiObject *awstypes.ContainerProperties) (string, error) {
+	if apiObject == nil {
+		return "", nil
+	}
+
+	(*containerProperties)(apiObject).sortEnvironment()
+
+	jsonEncoder := smithyjson.NewEncoder()
+	err := serializeContainerProperties(apiObject, jsonEncoder.Value)
+
+	if err != nil {
+		return "", err
+	}
+
+	return jsonEncoder.String(), nil
 }

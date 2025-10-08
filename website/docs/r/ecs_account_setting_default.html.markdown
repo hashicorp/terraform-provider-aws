@@ -16,6 +16,8 @@ Provides an ECS default account setting for a specific ECS Resource name within 
 
 ## Example Usage
 
+### Enable the long task ARN format
+
 ```terraform
 resource "aws_ecs_account_setting_default" "test" {
   name  = "taskLongArnFormat"
@@ -23,24 +25,42 @@ resource "aws_ecs_account_setting_default" "test" {
 }
 ```
 
+### Set the default log driver mode to non-blocking
+
+```terraform
+resource "aws_ecs_account_setting_default" "test" {
+  name  = "defaultLogDriverMode"
+  value = "non-blocking"
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `name` - (Required) Name of the account setting to set. Valid values are `serviceLongArnFormat`, `taskLongArnFormat`, `containerInstanceLongArnFormat`, `awsvpcTrunking` and `containerInsights`.
-* `value` - (Required) State of the setting. Valid values are `enabled` and `disabled`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the account setting to set.
+* `value` - (Required) State of the setting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the account setting.
 * `prinicpal_arn` - ARN that identifies the account setting.
 
 ## Import
 
-ECS Account Setting defaults can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Account Setting defaults using the `name`. For example:
 
+```terraform
+import {
+  to = aws_ecs_account_setting_default.example
+  id = "taskLongArnFormat"
+}
 ```
-$ terraform import aws_ecs_account_setting_default.example taskLongArnFormat
+
+Using `terraform import`, import ECS Account Setting defaults using the `name`. For example:
+
+```console
+% terraform import aws_ecs_account_setting_default.example taskLongArnFormat
 ```

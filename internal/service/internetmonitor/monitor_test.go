@@ -1,41 +1,46 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package internetmonitor_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/internetmonitor"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinternetmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_internetmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "internetmonitor", regexp.MustCompile(`monitor/.+$`)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMonitorExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "max_city_networks_to_monitor", "0"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_percentage_to_monitor", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -46,8 +51,114 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_status(rName, "INACTIVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
+					testAccCheckMonitorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccInternetMonitorMonitor_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_internetmonitor_monitor.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitorConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, t, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinternetmonitor.ResourceMonitor(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccInternetMonitorMonitor_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_internetmonitor_monitor.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMonitorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_internetmonitor_monitor.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitorConfig_healthEventsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", "50"),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.performance_score_threshold", "95"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMonitorConfig_healthEventsConfigUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", "75"),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.performance_score_threshold", "85"),
 				),
 			},
 		},
@@ -56,19 +167,19 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 
 func TestAccInternetMonitorMonitor_log(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_internetmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_log(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.0.bucket_name", rName),
@@ -83,86 +194,18 @@ func TestAccInternetMonitorMonitor_log(t *testing.T) {
 	})
 }
 
-func TestAccInternetMonitorMonitor_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_internetmonitor_monitor.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMonitorConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinternetmonitor.ResourceMonitor(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccInternetMonitorMonitor_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_internetmonitor_monitor.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMonitorConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccMonitorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccMonitorConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMonitorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorConn()
+		conn := acctest.ProviderMeta(ctx, t).InternetMonitorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_internetmonitor_monitor" {
 				continue
 			}
 
-			_, err := tfinternetmonitor.FindMonitor(ctx, conn, rs.Primary.ID)
+			_, err := tfinternetmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -170,27 +213,23 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("InternetMonitor Monitor %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Internet Monitor Monitor %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckMonitorExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckMonitorExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No InternetMonitor Monitor ID is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).InternetMonitorClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorConn()
-
-		_, err := tfinternetmonitor.FindMonitor(ctx, conn, rs.Primary.ID)
+		_, err := tfinternetmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -213,6 +252,33 @@ resource "aws_internetmonitor_monitor" "test" {
   status                        = %[2]q
 }
 `, rName, status)
+}
+
+func testAccMonitorConfig_healthEventsConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_internetmonitor_monitor" "test" {
+  monitor_name                 = %[1]q
+  max_city_networks_to_monitor = 2
+
+  health_events_config {
+    availability_score_threshold = 50
+  }
+}
+`, rName)
+}
+
+func testAccMonitorConfig_healthEventsConfigUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_internetmonitor_monitor" "test" {
+  monitor_name                 = %[1]q
+  max_city_networks_to_monitor = 2
+
+  health_events_config {
+    availability_score_threshold = 75
+    performance_score_threshold  = 85
+  }
+}
+`, rName)
 }
 
 func testAccMonitorConfig_log(rName string) string {

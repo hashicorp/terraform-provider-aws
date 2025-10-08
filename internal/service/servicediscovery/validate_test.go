@@ -1,8 +1,14 @@
-package servicediscovery
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package servicediscovery_test
 
 import (
 	"strings"
 	"testing"
+
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidNamespaceName(t *testing.T) {
@@ -18,7 +24,7 @@ func TestValidNamespaceName(t *testing.T) {
 		strings.Repeat("x", 1024),
 	}
 	for _, v := range validNames {
-		_, errors := validNamespaceName(v, "name")
+		_, errors := tfservicediscovery.ValidNamespaceName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid namespace name: %q", v, errors)
 		}
@@ -33,7 +39,7 @@ func TestValidNamespaceName(t *testing.T) {
 		strings.Repeat("x", 1025),
 	}
 	for _, v := range invalidNames {
-		_, errors := validNamespaceName(v, "name")
+		_, errors := tfservicediscovery.ValidNamespaceName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid namespace name", v)
 		}

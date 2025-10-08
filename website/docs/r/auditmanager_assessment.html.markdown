@@ -53,6 +53,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the assessment.
 * `tags` - (Optional) A map of tags to assign to the assessment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -79,9 +80,9 @@ The following arguments are optional:
 
 * `service_name` - (Required) Name of the Amazon Web Service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the assessment.
 * `id` - Unique identifier for the assessment.
@@ -90,8 +91,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Audit Manager Assessments can be imported using the assessment `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Audit Manager Assessments using the assessment `id`. For example:
 
+```terraform
+import {
+  to = aws_auditmanager_assessment.example
+  id = "abc123-de45"
+}
 ```
-$ terraform import aws_auditmanager_assessment.example abc123-de45
+
+Using `terraform import`, import Audit Manager Assessments using the assessment `id`. For example:
+
+```console
+% terraform import aws_auditmanager_assessment.example abc123-de45
 ```

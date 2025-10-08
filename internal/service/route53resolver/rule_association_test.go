@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver_test
 
 import (
@@ -5,20 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assn route53resolver.ResolverRuleAssociation
+	var assn awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
 	vpcResourceName := "aws_vpc.test"
 	ruleResourceName := "aws_route53_resolver_rule.test"
@@ -27,7 +31,7 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,9 +39,9 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 				Config: testAccRuleAssociationConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleAssociationExists(ctx, resourceName, &assn),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "resolver_rule_id", ruleResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_rule_id", ruleResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
 			},
 			{
@@ -51,14 +55,14 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 
 func TestAccRoute53ResolverRuleAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assn route53resolver.ResolverRuleAssociation
+	var assn awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +80,7 @@ func TestAccRoute53ResolverRuleAssociation_disappears(t *testing.T) {
 
 func TestAccRoute53ResolverRuleAssociation_Disappears_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assn route53resolver.ResolverRuleAssociation
+	var assn awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -84,7 +88,7 @@ func TestAccRoute53ResolverRuleAssociation_Disappears_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,7 +106,7 @@ func TestAccRoute53ResolverRuleAssociation_Disappears_vpc(t *testing.T) {
 
 func testAccCheckRuleAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_rule_association" {
@@ -126,7 +130,7 @@ func testAccCheckRuleAssociationDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckRuleAssociationExists(ctx context.Context, n string, v *route53resolver.ResolverRuleAssociation) resource.TestCheckFunc {
+func testAccCheckRuleAssociationExists(ctx context.Context, n string, v *awstypes.ResolverRuleAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -137,7 +141,7 @@ func testAccCheckRuleAssociationExists(ctx context.Context, n string, v *route53
 			return fmt.Errorf("No Route53 Resolver Rule Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		output, err := tfroute53resolver.FindResolverRuleAssociationByID(ctx, conn, rs.Primary.ID)
 

@@ -31,6 +31,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_log_settings` - (Optional) Settings for logging access in this stage.
 Use the [`aws_api_gateway_account`](/docs/providers/aws/r/api_gateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
 * `auto_deploy` - (Optional) Whether updates to an API automatically trigger a new deployment. Defaults to `false`. Applicable for HTTP APIs.
@@ -69,9 +70,9 @@ Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebS
 * `throttling_burst_limit` - (Optional) Throttling burst limit for the route.
 * `throttling_rate_limit` - (Optional) Throttling rate limit for the route.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Stage identifier.
 * `arn` - ARN of the stage.
@@ -84,10 +85,19 @@ See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigate
 
 ## Import
 
-`aws_apigatewayv2_stage` can be imported by using the API identifier and stage name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_stage` using the API identifier and stage name. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_stage.example
+  id = "aabbccddee/example-stage"
+}
 ```
-$ terraform import aws_apigatewayv2_stage.example aabbccddee/example-stage
+
+Using `terraform import`, import `aws_apigatewayv2_stage` using the API identifier and stage name. For example:
+
+```console
+% terraform import aws_apigatewayv2_stage.example aabbccddee/example-stage
 ```
 
 -> **Note:** The API Gateway managed stage created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.

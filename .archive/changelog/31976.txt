@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_elb: Recreate the resource if `subnets` is updated to an empty list
+```
+
+```release-note:enhancement
+resource/aws_elb: Add configurable Create and Update timeouts
+```

@@ -1,38 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs
 
 const (
-	FIFOQueueNameSuffix = ".fifo"
+	fifoQueueNameSuffix = ".fifo"
 )
 
 const (
-	DefaultQueueDelaySeconds                  = 0
-	DefaultQueueKMSDataKeyReusePeriodSeconds  = 300
-	DefaultQueueMaximumMessageSize            = 262_144 // 256 KiB.
-	DefaultQueueMessageRetentionPeriod        = 345_600 // 4 days.
-	DefaultQueueReceiveMessageWaitTimeSeconds = 0
-	DefaultQueueVisibilityTimeout             = 30
+	defaultQueueDelaySeconds                  = 0
+	defaultQueueKMSDataKeyReusePeriodSeconds  = 300
+	defaultQueueMaximumMessageSize            = 262_144 // 256 KiB.
+	defaultQueueMessageRetentionPeriod        = 345_600 // 4 days.
+	defaultQueueReceiveMessageWaitTimeSeconds = 0
+	defaultQueueVisibilityTimeout             = 30
 )
 
 const (
-	DeduplicationScopeMessageGroup = "messageGroup"
-	DeduplicationScopeQueue        = "queue"
+	deduplicationScopeMessageGroup = "messageGroup"
+	deduplicationScopeQueue        = "queue"
 )
 
-func DeduplicationScope_Values() []string {
+func deduplicationScope_Values() []string {
 	return []string{
-		DeduplicationScopeMessageGroup,
-		DeduplicationScopeQueue,
+		deduplicationScopeMessageGroup,
+		deduplicationScopeQueue,
 	}
 }
 
 const (
-	FIFOThroughputLimitPerMessageGroupID = "perMessageGroupId"
-	FIFOThroughputLimitPerQueue          = "perQueue"
+	fifoThroughputLimitPerMessageGroupID = "perMessageGroupId"
+	fifoThroughputLimitPerQueue          = "perQueue"
 )
 
-func FIFOThroughputLimit_Values() []string {
+func fifoThroughputLimit_Values() []string {
 	return []string{
-		FIFOThroughputLimitPerMessageGroupID,
-		FIFOThroughputLimitPerQueue,
+		fifoThroughputLimitPerMessageGroupID,
+		fifoThroughputLimitPerQueue,
 	}
 }
+
+const (
+	errCodeQueueDoesNotExist     = "AWS.SimpleQueueService.NonExistentQueue"
+	errCodeQueueDeletedRecently  = "AWS.SimpleQueueService.QueueDeletedRecently"
+	errCodeInvalidAttributeValue = "InvalidAttributeValue"
+)

@@ -1,0 +1,14 @@
+aws_dx_gateway
+aws_vpc_endpoint_service
+aws_vpc_peering_connection
+aws_ecr_lifecycle_policy_document
+aws_cloudwatch_log_data_protection_policy_document
+aws_arn
+aws_default_tags
+aws_ip_ranges
+aws_partition
+aws_regions
+aws_s3_account_public_access_block
+aws_servicequotas_templates
+aws_ssmincidents_replication_set
+aws_canonical_user_id

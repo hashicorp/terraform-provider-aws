@@ -28,13 +28,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `identity_store` - (Optional) User identity directory type. Defaults to `QUICKSIGHT`, the only current valid value.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Namespace.
 * `capacity_region` - Namespace AWS Region.
@@ -51,8 +52,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-QuickSight Namespace can be imported using the AWS account ID and namespace separated by commas (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Namespace using the AWS account ID and namespace separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_namespace.example
+  id = "123456789012,example"
+}
 ```
-$ terraform import aws_quicksight_namespace.example 123456789012,example
+
+Using `terraform import`, import QuickSight Namespace using the AWS account ID and namespace separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_namespace.example 123456789012,example
 ```

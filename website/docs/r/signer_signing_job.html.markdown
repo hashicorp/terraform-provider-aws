@@ -41,6 +41,9 @@ resource "aws_signer_signing_job" "build_signing_job" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `profile_name` - (Required) The name of the profile to initiate the signing operation.
 * `source` - (Required) The S3 bucket that contains the object to sign. See [Source](#source) below for details.
 * `destination` - (Required) The S3 bucket in which to save your signed object. See [Destination](#destination) below for details.
@@ -73,9 +76,9 @@ The configuration block supports the following arguments:
 * `bucket` - (Required) Name of the S3 bucket.
 * `prefix` - (Optional) An Amazon S3 object key prefix that you can use to limit signed objects keys to begin with the specified prefix.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `completed_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the signing job was completed.
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the signing job was created.
@@ -94,8 +97,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Signer signing jobs can be imported using the `job_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Signer signing jobs using the `job_id`. For example:
 
+```terraform
+import {
+  to = aws_signer_signing_job.test_signer_signing_job
+  id = "9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee"
+}
 ```
-$ terraform import aws_signer_signing_job.test_signer_signing_job 9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee
+
+Using `terraform import`, import Signer signing jobs using the `job_id`. For example:
+
+```console
+% terraform import aws_signer_signing_job.test_signer_signing_job 9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee
 ```

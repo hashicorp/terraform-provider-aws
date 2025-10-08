@@ -22,9 +22,13 @@ data "aws_organizations_organizational_units" "ou" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `parent_id` - (Required) Parent ID of the organizational unit.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `children` - List of child organizational units, which have the following attributes:
     * `arn` - ARN of the organizational unit

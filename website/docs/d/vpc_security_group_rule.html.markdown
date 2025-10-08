@@ -20,23 +20,24 @@ data "aws_vpc_security_group_rule" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `security_group_rule_id` - (Optional) ID of the security group rule to select.
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
 The arguments of this data source act as filters for querying the available
 security group rules. The given filters must match exactly one security group rule
 whose data will be exported as attributes.
 
-* `security_group_rule_id` - (Optional) ID of the security group rule to select.
-* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-
-### filter Configuration Block
-
-The following arguments are supported by the `filter` configuration block:
+### `filter`
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`DescribeSecurityGroupRules`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroupRules.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the security group rule.
 * `cidr_ipv4` - The destination IPv4 CIDR range.

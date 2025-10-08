@@ -33,12 +33,16 @@ resource "aws_elb" "elb" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name_prefix` - prefix of cert to filter by
 * `path_prefix` - prefix of path to filter by
 * `name` - exact name of the cert to lookup
 * `latest` - sort results by expiration date. returns the certificate with expiration date in furthest in the future.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` is set to the unique id of the IAM Server Certificate
 * `arn` is set to the ARN of the IAM Server Certificate
@@ -47,8 +51,3 @@ resource "aws_elb" "elb" {
 * `upload_date` is the date when the server certificate was uploaded
 * `certificate_body` is the public key certificate (PEM-encoded). This is useful when [configuring back-end instance authentication](http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-create-https-ssl-load-balancer.html) policy for load balancer
 * `certificate_chain` is the public key certificate chain (PEM-encoded) if exists, empty otherwise
-
-## Import
-
-The terraform import function will read in certificate body, certificate chain (if it exists), id, name, path, and arn.
-It will not retrieve the private key which is not available through the AWS API.

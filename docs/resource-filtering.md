@@ -1,3 +1,4 @@
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding Resource Filtering Support
 
 AWS provides server-side filtering across many services and resources, which can be used when listing resources of that type, for example in the implementation of a data source.
@@ -30,20 +31,21 @@ Add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `interna
 - In the resource schema, add `"filter": namevaluesfilters.Schema(),`
 - Implement the logic to build the list of filters:
 
-```go
-input := &ec2.DescribeInternetGatewaysInput{}
+=== "Terraform Plugin SDK V2"
+    ```go
+    input := ec2.DescribeInternetGatewaysInput{}
 
-// Filters based on attributes.
-filters := namevaluesfilters.New(map[string]string{
-	"internet-gateway-id": d.Get("internet_gateway_id").(string),
-})
-// Add filters based on keyvalue tags (N.B. Not applicable to all AWS services that support filtering)
-filters.Add(namevaluesfilters.EC2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
-// Add filters based on the custom filtering "filter" attribute.
-filters.Add(d.Get("filter").(*schema.Set))
+    // Filters based on attributes.
+    filters := namevaluesfilters.New(map[string]string{
+    	"internet-gateway-id": d.Get("internet_gateway_id").(string),
+    })
+    // Add filters based on key-value tags (N.B. Not applicable to all AWS services that support filtering)
+    filters.Add(namevaluesfilters.EC2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
+    // Add filters based on the custom filtering "filter" attribute.
+    filters.Add(d.Get("filter").(*schema.Set))
 
-input.Filters = filters.EC2Filters()
-```
+    input.Filters = filters.EC2Filters()
+    ```
 
 ## Resource Filtering Documentation Implementation
 

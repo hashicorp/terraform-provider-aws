@@ -1,25 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
-	SDKVersion          string
-	GoV1Package         string
-	GoV2Package         string
-	GoV2PackageOverride string
-	ProviderNameUpper   string
-	ClientTypeName      string
-	ProviderPackage     string
+	GoPackage         string
+	ProviderNameUpper string
 }
 
 type TemplateData struct {
@@ -28,69 +26,47 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename      = `awsclient_gen.go`
-		namesDataFile = "../../names/names_data.csv"
+		filename = `awsclient_gen.go`
 	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating internal/conns/%s", filename)
 
-	data, err := common.ReadAllCSVData(namesDataFile)
-
+	data, err := data.ReadAllServiceData()
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // skip header
+	for _, l := range data {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[names.ColExclude] != "" {
+		if l.NotImplemented() && !l.EndpointOnly() {
 			continue
 		}
 
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.IsClientSDKV1() {
 			continue
 		}
 
-		if l[names.ColClientSDKV1] != "" {
-			td.Services = append(td.Services, ServiceDatum{
-				ProviderNameUpper: l[names.ColProviderNameUpper],
-				SDKVersion:        "1",
-				GoV1Package:       l[names.ColGoV1Package],
-				GoV2Package:       l[names.ColGoV2Package],
-				ClientTypeName:    l[names.ColGoV1ClientTypeName],
-				ProviderPackage:   l[names.ColProviderPackageCorrect],
-			})
+		s := ServiceDatum{
+			ProviderNameUpper: l.ProviderNameUpper(),
+			GoPackage:         l.GoPackageName(),
 		}
-		if l[names.ColClientSDKV2] != "" {
-			sd := ServiceDatum{
-				ProviderNameUpper: l[names.ColProviderNameUpper],
-				SDKVersion:        "2",
-				GoV1Package:       l[names.ColGoV1Package],
-				GoV2Package:       l[names.ColGoV2Package],
-				ClientTypeName:    "Client",
-				ProviderPackage:   l[names.ColProviderPackageCorrect],
-			}
-			if l[names.ColClientSDKV1] != "" {
-				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`.
-				sd.GoV2PackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
-				sd.SDKVersion = "1,2"
-			}
-			td.Services = append(td.Services, sd)
-		}
+
+		td.Services = append(td.Services, s)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderNameUpper, b.ProviderNameUpper)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("awsclient", tmpl, td); err != nil {
+	if err := d.BufferTemplate("awsclient", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
@@ -99,5 +75,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string

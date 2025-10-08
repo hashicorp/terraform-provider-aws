@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMRolesDataSource_basic(t *testing.T) {
@@ -18,13 +21,13 @@ func TestAccIAMRolesDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "names.#", regexp.MustCompile("[^0].*$")),
+					resource.TestMatchResourceAttr(dataSourceName, "names.#", regexache.MustCompile("[^0].*$")),
 				),
 			},
 		},
@@ -39,7 +42,7 @@ func TestAccIAMRolesDataSource_nameRegex(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -62,7 +65,7 @@ func TestAccIAMRolesDataSource_pathPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +85,7 @@ func TestAccIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -105,7 +108,7 @@ func TestAccIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -125,7 +128,9 @@ data "aws_iam_roles" "test" {}
 
 func testAccRolesDataSourceConfig_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -138,7 +143,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -159,7 +164,9 @@ data "aws_iam_roles" "test" {
 
 func testAccRolesDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -172,7 +179,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -198,7 +205,9 @@ data "aws_iam_roles" "test" {
 
 func testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, rIndex string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -211,7 +220,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""

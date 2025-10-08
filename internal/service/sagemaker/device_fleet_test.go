@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -5,18 +8,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+
 	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,7 +29,7 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,12 +38,12 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("device-fleet/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "output_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_config.0.s3_output_location", fmt.Sprintf("s3://%s/prefix/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "enable_iot_role_alias", "false"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "enable_iot_role_alias", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iot_role_alias", ""),
 				),
 			},
@@ -52,6 +57,8 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_description(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+
 	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -59,7 +66,7 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +74,7 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 				Config: testAccDeviceFleetConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
@@ -79,7 +86,7 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 				Config: testAccDeviceFleetConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 		},
@@ -87,6 +94,8 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+
 	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -94,16 +103,16 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDeviceFleetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -112,20 +121,20 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFleetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeviceFleetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDeviceFleetConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDeviceFleetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -133,6 +142,8 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon Sagemaker Edge has been deprecated on April 26th, 2024")
+
 	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -140,7 +151,7 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,14 +169,14 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 
 func testAccCheckDeviceFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_device_fleet" {
 				continue
 			}
 
-			deviceFleet, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -174,9 +185,7 @@ func testAccCheckDeviceFleetDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			if aws.StringValue(deviceFleet.DeviceFleetName) == rs.Primary.ID {
-				return fmt.Errorf("sagemaker Device Fleet %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("sagemaker Device Fleet %q still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -194,7 +203,7 @@ func testAccCheckDeviceFleetExists(ctx context.Context, n string, device_fleet *
 			return fmt.Errorf("No sagmaker Device Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -211,11 +220,6 @@ func testAccDeviceFleetBaseConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 data "aws_partition" "current" {}

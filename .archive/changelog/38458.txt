@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sesv2_configuration_set_event_destination: Add `event_destination.event_bridge_destination` configuration block
+```

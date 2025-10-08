@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
@@ -5,19 +8,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDSDirectory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -28,7 +32,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,19 +41,19 @@ func TestAccDSDirectory_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
-					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
-					resource.TestCheckResourceAttr(resourceName, "size", "Small"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SimpleAD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "Small"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SimpleAD"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
@@ -60,7 +64,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -69,7 +73,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 
 func TestAccDSDirectory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -80,7 +84,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +102,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 
 func TestAccDSDirectory_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -109,16 +113,16 @@ func TestAccDSDirectory_tags(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfig_tags1(rName, domainName, "key1", "value1"),
+				Config: testAccDirectoryConfig_tags1(rName, domainName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -126,24 +130,24 @@ func TestAccDSDirectory_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 			{
-				Config: testAccDirectoryConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDirectoryConfig_tags2(rName, domainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDirectoryConfig_tags1(rName, domainName, "key2", "value2"),
+				Config: testAccDirectoryConfig_tags1(rName, domainName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -152,14 +156,14 @@ func TestAccDSDirectory_tags(t *testing.T) {
 
 func TestAccDSDirectory_microsoft(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -168,19 +172,19 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
-					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", "Enterprise"),
-					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
-					resource.TestCheckResourceAttr(resourceName, "size", "Large"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "MicrosoftAD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "Large"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "MicrosoftAD"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
@@ -191,7 +195,7 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -200,14 +204,14 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 
 func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -216,19 +220,19 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
-					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", "Standard"),
-					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
-					resource.TestCheckResourceAttr(resourceName, "size", "Small"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "MicrosoftAD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "Small"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "MicrosoftAD"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
@@ -239,7 +243,7 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -248,7 +252,7 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 
 func TestAccDSDirectory_connector(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -259,7 +263,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -268,23 +272,23 @@ func TestAccDSDirectory_connector(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
-					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "1"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "connect_settings.0.customer_dns_ips.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "connect_settings.0.customer_dns_ips.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.0.customer_username", "Administrator"),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainName),
 					resource.TestCheckResourceAttr(resourceName, "radius_settings.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
-					resource.TestCheckResourceAttr(resourceName, "size", "Small"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ADConnector"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "Small"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ADConnector"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "0"),
 				),
 			},
@@ -293,7 +297,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -302,7 +306,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 
 func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -314,7 +318,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -323,19 +327,19 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
-					resource.TestCheckResourceAttr(resourceName, "alias", alias),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, alias),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
-					resource.TestCheckResourceAttr(resourceName, "size", "Small"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SimpleAD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "Small"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SimpleAD"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
@@ -346,21 +350,21 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 			{
 				Config: testAccDirectoryConfig_sso(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "enable_sso", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccDirectoryConfig_ssoModified(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
 				),
 			},
 		},
@@ -369,14 +373,14 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 
 func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -385,19 +389,19 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
-					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", "Enterprise"),
-					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
-					resource.TestCheckResourceAttr(resourceName, "size", "Large"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "MicrosoftAD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "Large"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "MicrosoftAD"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
@@ -408,7 +412,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 			{
@@ -431,7 +435,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 
 func testAccCheckDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_directory" {
@@ -455,18 +459,14 @@ func testAccCheckDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDirectoryExists(ctx context.Context, n string, v *directoryservice.DirectoryDescription) resource.TestCheckFunc {
+func testAccCheckDirectoryExists(ctx context.Context, n string, v *awstypes.DirectoryDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Directory Service Directory ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		output, err := tfds.FindDirectoryByID(ctx, conn, rs.Primary.ID)
 

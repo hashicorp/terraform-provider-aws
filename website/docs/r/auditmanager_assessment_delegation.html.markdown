@@ -34,11 +34,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `comment` - (Optional) Comment describing the delegation request.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `delegation_id` - Unique identifier for the delegation.
 * `id` - Unique identifier for the resource. This is a comma-separated string containing `assessment_id`, `role_arn`, and `control_set_id`.
@@ -46,8 +47,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Audit Manager Assessment Delegation can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Audit Manager Assessment Delegation using the `id`. For example:
 
+```terraform
+import {
+  to = aws_auditmanager_assessment_delegation.example
+  id = "abcdef-123456,arn:aws:iam::123456789012:role/example,example"
+}
 ```
-$ terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::012345678901:role/example,example
+
+Using `terraform import`, import Audit Manager Assessment Delegation using the `id`. For example:
+
+```console
+% terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::123456789012:role/example,example
 ```

@@ -1,14 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serverlessrepo_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
@@ -18,23 +20,19 @@ func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDataSourceConfig_basic(appARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(datasourceName, "semantic_version"),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "required_capabilities.#"),
 				),
-			},
-			{
-				Config:      testAccApplicationDataSourceConfig_nonExistent(),
-				ExpectError: regexp.MustCompile(`error getting Serverless Application Repository application`),
 			},
 		},
 	})
@@ -52,14 +50,14 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDataSourceConfig_versioned(appARN, version1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version1),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
@@ -70,7 +68,7 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 				Config: testAccApplicationDataSourceConfig_versioned(appARN, version2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version2),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
@@ -78,10 +76,6 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
-			},
-			{
-				Config:      testAccApplicationDataSourceConfig_versionedNonExistent(appARN),
-				ExpectError: regexp.MustCompile(`error getting Serverless Application Repository application`),
 			},
 		},
 	})
@@ -109,20 +103,6 @@ data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres
 `, appARN)
 }
 
-func testAccApplicationDataSourceConfig_nonExistent() string {
-	return `
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
-data "aws_serverlessapplicationrepository_application" "no_such_function" {
-  application_id = "arn:${data.aws_partition.current.partition}:serverlessrepo:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:applications/ThisFunctionDoesNotExist"
-}
-`
-}
-
 func testAccApplicationDataSourceConfig_versioned(appARN, version string) string {
 	return fmt.Sprintf(`
 data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
@@ -130,13 +110,4 @@ data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres
   semantic_version = %[2]q
 }
 `, appARN, version)
-}
-
-func testAccApplicationDataSourceConfig_versionedNonExistent(appARN string) string {
-	return fmt.Sprintf(`
-data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
-  application_id   = %[1]q
-  semantic_version = "42.13.7"
-}
-`, appARN)
 }
