@@ -84,7 +84,7 @@ func resourceLaunchTemplate() *schema.Resource {
 									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+										ValidateFunc: verify.ValidKMSKeyID,
 									},
 									names.AttrSnapshotID: {
 										Type:     schema.TypeString,

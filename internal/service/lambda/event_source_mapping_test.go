@@ -1028,6 +1028,78 @@ func TestAccLambdaEventSourceMapping_mskWithEventSourceConfig(t *testing.T) {
 	})
 }
 
+func TestAccLambdaEventSourceMapping_mskWithEventSourceConfigSchemaRegistry(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v lambda.GetEventSourceMappingOutput
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckMSK(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID, "kafka"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_mskWithEventSourceConfigSchemaRegistryByConfluent(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.consumer_group_id", "amazon-managed-test-group-id"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.0.type", string(awstypes.KafkaSchemaRegistryAuthTypeBasicAuth)),
+					resource.TestCheckResourceAttrPair(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.0.uri", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.event_record_format", string(awstypes.SchemaRegistryEventRecordFormatJson)),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.schema_registry_uri", "https://test-schema-registry.com"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.*", map[string]string{
+						"attribute": string(awstypes.KafkaSchemaValidationAttributeKey),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.*", map[string]string{
+						"attribute": string(awstypes.KafkaSchemaValidationAttributeValue),
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_mskWithEventSourceConfigSchemaRegistryByGlue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.consumer_group_id", "amazon-managed-test-group-id"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.event_record_format", string(awstypes.SchemaRegistryEventRecordFormatJson)),
+					resource.TestCheckResourceAttrPair(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.schema_registry_uri", "aws_glue_registry.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.*", map[string]string{
+						"attribute": string(awstypes.KafkaSchemaValidationAttributeKey),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "amazon_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.*", map[string]string{
+						"attribute": string(awstypes.KafkaSchemaValidationAttributeValue),
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+		},
+	})
+}
+
 func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lambda.GetEventSourceMappingOutput
@@ -1113,6 +1185,79 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfigSchemaRegistry(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambda.GetEventSourceMappingOutput
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfigSchemaRegistryByConfluent(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.0.type", string(awstypes.KafkaSchemaRegistryAuthTypeBasicAuth)),
+					resource.TestCheckResourceAttrPair(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.0.uri", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.event_record_format", string(awstypes.SchemaRegistryEventRecordFormatJson)),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.schema_registry_uri", "https://test-schema-registry.com"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.*", map[string]string{
+						"attribute": string(awstypes.KafkaSchemaValidationAttributeKey),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.*", map[string]string{
+						"attribute": string(awstypes.KafkaSchemaValidationAttributeValue),
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfigSchemaRegistryByGlue(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.event_record_format", string(awstypes.SchemaRegistryEventRecordFormatJson)),
+					resource.TestCheckResourceAttrPair(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.schema_registry_uri", "aws_glue_registry.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.*", map[string]string{
+						"attribute": string(awstypes.KafkaSchemaValidationAttributeKey),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.schema_validation_config.*", map[string]string{
+						"attribute": string(awstypes.KafkaSchemaValidationAttributeValue),
+					}),
 				),
 			},
 			{
@@ -1923,7 +2068,9 @@ resource "aws_iam_policy" "test" {
         "ec2:DescribeVpcs",
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
-        "logs:PutLogEvents"
+        "logs:PutLogEvents",
+        "glue:GetRegistry",
+        "glue:GetSchemaVersion"
       ],
       "Resource": "*"
     }
@@ -2241,6 +2388,43 @@ resource "aws_docdb_cluster" "test" {
 `, rName))
 }
 
+func testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_registry" "test" {
+  registry_name = %[1]q
+}
+
+resource "aws_glue_schema" "test" {
+  schema_name   = %[1]q
+  registry_arn  = aws_glue_registry.test.arn
+  data_format   = "JSON"
+  compatibility = "NONE"
+  schema_definition = jsonencode(
+    {
+      "$id" : "https://example.com/person.schema.json",
+      "$schema" : "http://json-schema.org/draft-07/schema#",
+      "title" : "Person",
+      "type" : "object",
+      "properties" : {
+        "firstName" : {
+          "type" : "string",
+          "description" : "The person's first name."
+        },
+        "lastName" : {
+          "type" : "string",
+          "description" : "The person's last name."
+        },
+        "age" : {
+          "description" : "Age in years which must be equal to or greater than zero.",
+          "type" : "integer",
+          "minimum" : 0
+        }
+      }
+  })
+}
+`, rName)
+}
+
 func testAccEventSourceMappingConfig_sqsKMSKeyARN(rName, pattern string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -2550,7 +2734,7 @@ func testAccEventSourceMappingConfig_msk(rName, batchSize string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 2
 
   broker_node_group_info {
@@ -2587,7 +2771,7 @@ func testAccEventSourceMappingConfig_mskWithEventSourceConfig(rName, batchSize s
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 2
 
   broker_node_group_info {
@@ -2618,6 +2802,122 @@ resource "aws_lambda_event_source_mapping" "test" {
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, batchSize))
+}
+
+func testAccEventSourceMappingConfig_mskWithEventSourceConfigSchemaRegistryByConfluent(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.8.x"
+  number_of_broker_nodes = 2
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 7
+}
+
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = 100
+  event_source_arn  = aws_msk_cluster.test.arn
+  enabled           = true
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = "TRIM_HORIZON"
+
+  provisioned_poller_config {
+    maximum_pollers = 100
+    minimum_pollers = 1
+  }
+
+  amazon_managed_kafka_event_source_config {
+    consumer_group_id = "amazon-managed-test-group-id"
+    schema_registry_config {
+      access_config {
+        type = "BASIC_AUTH"
+        uri  = aws_secretsmanager_secret.test.arn
+      }
+      event_record_format = "JSON"
+      schema_registry_uri = "https://test-schema-registry.com"
+      schema_validation_config {
+        attribute = "KEY"
+      }
+      schema_validation_config {
+        attribute = "VALUE"
+      }
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`, rName))
+}
+
+func testAccEventSourceMappingConfig_mskWithEventSourceConfigSchemaRegistryByGlue(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEventSourceMappingConfig_kafkaBase(rName),
+		testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName),
+		fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.8.x"
+  number_of_broker_nodes = 2
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+}
+
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = 100
+  event_source_arn  = aws_msk_cluster.test.arn
+  enabled           = true
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = "TRIM_HORIZON"
+
+  provisioned_poller_config {
+    maximum_pollers = 100
+    minimum_pollers = 1
+  }
+
+  amazon_managed_kafka_event_source_config {
+    consumer_group_id = "amazon-managed-test-group-id"
+    schema_registry_config {
+      event_record_format = "JSON"
+      schema_registry_uri = aws_glue_registry.test.arn
+      schema_validation_config {
+        attribute = "KEY"
+      }
+      schema_validation_config {
+        attribute = "VALUE"
+      }
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`, rName))
 }
 
 func testAccEventSourceMappingConfig_selfManagedKafka(rName, batchSize, kafkaBootstrapServers string) string {
@@ -2692,6 +2992,117 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 }
 `, rName, batchSize, kafkaBootstrapServers))
+}
+
+func testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfigSchemaRegistryByConfluent(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 7
+}
+
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = 100
+  enabled           = false
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = "TRIM_HORIZON"
+
+  provisioned_poller_config {
+    maximum_pollers = 100
+    minimum_pollers = 1
+  }
+
+  self_managed_kafka_event_source_config {
+    consumer_group_id = "self-managed-test-group-id"
+    schema_registry_config {
+      access_config {
+        type = "BASIC_AUTH"
+        uri  = aws_secretsmanager_secret.test.arn
+      }
+      event_record_format = "JSON"
+      schema_registry_uri = "https://test-schema-registry.com"
+      schema_validation_config {
+        attribute = "KEY"
+      }
+      schema_validation_config {
+        attribute = "VALUE"
+      }
+    }
+  }
+
+  self_managed_event_source {
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = "test1:9092,test2:9092"
+    }
+  }
+
+  dynamic "source_access_configuration" {
+    for_each = aws_subnet.test[*].id
+    content {
+      type = "VPC_SUBNET"
+      uri  = "subnet:${source_access_configuration.value}"
+    }
+  }
+
+  source_access_configuration {
+    type = "VPC_SECURITY_GROUP"
+    uri  = aws_security_group.test.id
+  }
+}
+`, rName))
+}
+
+func testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfigSchemaRegistryByGlue(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEventSourceMappingConfig_kafkaBase(rName),
+		testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = 100
+  enabled           = false
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = "TRIM_HORIZON"
+
+  provisioned_poller_config {
+    maximum_pollers = 100
+    minimum_pollers = 1
+  }
+
+  self_managed_kafka_event_source_config {
+    consumer_group_id = "self-managed-test-group-id"
+    schema_registry_config {
+      event_record_format = "JSON"
+      schema_registry_uri = aws_glue_registry.test.arn
+      schema_validation_config {
+        attribute = "KEY"
+      }
+      schema_validation_config {
+        attribute = "VALUE"
+      }
+    }
+  }
+
+  self_managed_event_source {
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = "test1:9092,test2:9092"
+    }
+  }
+
+  dynamic "source_access_configuration" {
+    for_each = aws_subnet.test[*].id
+    content {
+      type = "VPC_SUBNET"
+      uri  = "subnet:${source_access_configuration.value}"
+    }
+  }
+
+  source_access_configuration {
+    type = "VPC_SECURITY_GROUP"
+    uri  = aws_security_group.test.id
+  }
+}
+`)
 }
 
 func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers string) string {

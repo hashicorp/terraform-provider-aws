@@ -5,6 +5,8 @@ package codebuild
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -131,65 +135,53 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		Message: "Build started, waiting for completion...",
 	})
 
-	// Poll for build completion
-	deadline := time.Now().Add(timeout)
-	pollInterval := 30 * time.Second
-	progressInterval := 2 * time.Minute
-	lastProgressUpdate := time.Now()
-
-	for {
-		select {
-		case <-ctx.Done():
-			resp.Diagnostics.AddError("Build monitoring cancelled", "Context was cancelled")
-			return
-		default:
+	// Poll for build completion using actionwait with backoff strategy
+	// Use backoff since builds can take a long time and status changes less frequently
+	// as the build progresses - start with frequent polling then back off
+	_, err = actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[*awstypes.Build], error) {
+		input := codebuild.BatchGetBuildsInput{Ids: []string{buildID}}
+		batch, berr := conn.BatchGetBuilds(ctx, &input)
+		if berr != nil {
+			return actionwait.FetchResult[*awstypes.Build]{}, berr
 		}
-
-		if time.Now().After(deadline) {
+		if len(batch.Builds) == 0 {
+			return actionwait.FetchResult[*awstypes.Build]{}, fmt.Errorf("build not found in BatchGetBuilds response")
+		}
+		b := batch.Builds[0]
+		return actionwait.FetchResult[*awstypes.Build]{Status: actionwait.Status(b.BuildStatus), Value: &b}, nil
+	}, actionwait.Options[*awstypes.Build]{
+		Timeout:          timeout,
+		Interval:         actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay()),
+		ProgressInterval: 2 * time.Minute,
+		SuccessStates:    []actionwait.Status{actionwait.Status(awstypes.StatusTypeSucceeded)},
+		TransitionalStates: []actionwait.Status{
+			actionwait.Status(awstypes.StatusTypeInProgress),
+		},
+		FailureStates: []actionwait.Status{
+			actionwait.Status(awstypes.StatusTypeFailed),
+			actionwait.Status(awstypes.StatusTypeFault),
+			actionwait.Status(awstypes.StatusTypeStopped),
+			actionwait.Status(awstypes.StatusTypeTimedOut),
+		},
+		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
+			resp.SendProgress(action.InvokeProgressEvent{Message: "Build currently in state: " + string(fr.Status)})
+		},
+	})
+	if err != nil {
+		var timeoutErr *actionwait.TimeoutError
+		var failureErr *actionwait.FailureStateError
+		var unexpectedErr *actionwait.UnexpectedStateError
+		if errors.As(err, &timeoutErr) {
 			resp.Diagnostics.AddError("Build timeout", "Build did not complete within the specified timeout")
-			return
+		} else if errors.As(err, &failureErr) {
+			resp.Diagnostics.AddError("Build failed", "Build completed with status: "+err.Error())
+		} else if errors.As(err, &unexpectedErr) {
+			resp.Diagnostics.AddError("Unexpected build status", err.Error())
+		} else {
+			resp.Diagnostics.AddError("Error waiting for build", err.Error())
 		}
-
-		input := codebuild.BatchGetBuildsInput{
-			Ids: []string{buildID},
-		}
-		batchGetBuildsOutput, err := conn.BatchGetBuilds(ctx, &input)
-		if err != nil {
-			resp.Diagnostics.AddError("Getting build status", err.Error())
-			return
-		}
-
-		if len(batchGetBuildsOutput.Builds) == 0 {
-			resp.Diagnostics.AddError("Build not found", "Build was not found in BatchGetBuilds response")
-			return
-		}
-
-		build := batchGetBuildsOutput.Builds[0]
-		status := build.BuildStatus
-
-		if time.Since(lastProgressUpdate) >= progressInterval {
-			resp.SendProgress(action.InvokeProgressEvent{
-				Message: "Build currently in state: " + string(status),
-			})
-			lastProgressUpdate = time.Now()
-		}
-
-		switch status {
-		case awstypes.StatusTypeSucceeded:
-			resp.SendProgress(action.InvokeProgressEvent{
-				Message: "Build completed successfully",
-			})
-			return
-		case awstypes.StatusTypeFailed, awstypes.StatusTypeFault, awstypes.StatusTypeStopped, awstypes.StatusTypeTimedOut:
-			resp.Diagnostics.AddError("Build failed", "Build completed with status: "+string(status))
-			return
-		case awstypes.StatusTypeInProgress:
-			// Continue polling
-		default:
-			resp.Diagnostics.AddError("Unexpected build status", "Received unexpected build status: "+string(status))
-			return
-		}
-
-		time.Sleep(pollInterval)
+		return
 	}
+
+	resp.SendProgress(action.InvokeProgressEvent{Message: "Build completed successfully"})
 }
