@@ -5,7 +5,6 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -13,23 +12,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var p1, p2 bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
+	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
 
@@ -46,28 +44,40 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 			{
 				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_key", "secret-value-1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "credential_provider_arn", "bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/.+`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "api_key_secret_arn", "secretsmanager", regexache.MustCompile(`secret:.+`)),
+					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
 				),
-			},
-			{
-				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p2),
-					resource.TestCheckResourceAttr(resourceName, "api_key", "secret-value-2"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "api_key_secret_arn", "secretsmanager", regexache.MustCompile(`secret:.+`)),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify:                    true,
-				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore:              []string{"api_key"},
+			},
+			{
+				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -75,11 +85,7 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var p1, p2 bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
+	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
 
@@ -96,28 +102,39 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 			{
 				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "write-only-api-key-123", 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_key_wo_version", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "credential_provider_arn", "bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/.+`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "api_key_secret_arn", "secretsmanager", regexache.MustCompile(`secret:.+`)),
+					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
 				),
-			},
-			{
-				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "updated-write-only-api-key-456", 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_key_wo_version", "2"),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/apikeycredentialprovider/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify:                    true,
-				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore:              []string{"api_key_wo", "api_key_wo_version"},
+			},
+			{
+				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "updated-write-only-api-key-456", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -125,10 +142,6 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
@@ -151,6 +164,9 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -169,43 +185,37 @@ func testAccCheckAPIKeyCredentialProviderDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			rName := rs.Primary.Attributes[names.AttrName]
-			_, err := tfbedrockagentcore.FindAPIKeyCredentialProviderByName(ctx, conn, rName)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAPIKeyCredentialProvider, rName, err)
+			_, err := tfbedrockagentcore.FindAPIKeyCredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameAPIKeyCredentialProvider, rName, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core API Key Credential Provider %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAPIKeyCredentialProviderExists(ctx context.Context, name string, apiKeyProvider *bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput) resource.TestCheckFunc {
+func testAccCheckAPIKeyCredentialProviderExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAPIKeyCredentialProvider, name, errors.New("not found"))
-		}
-
-		rName := rs.Primary.Attributes[names.AttrName]
-
-		if rName == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAPIKeyCredentialProvider, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindAPIKeyCredentialProviderByName(ctx, conn, rName)
+		resp, err := tfbedrockagentcore.FindAPIKeyCredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameAPIKeyCredentialProvider, rName, err)
+			return err
 		}
 
-		*apiKeyProvider = *resp
+		*v = *resp
 
 		return nil
 	}

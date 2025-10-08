@@ -58,6 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `credential_provider_arn` - ARN of the API Key credential provider.
 * `api_key_secret_arn` - ARN of the AWS Secrets Manager secret containing the API key.
+    * `secret_arn` - ARN of the secret in AWS Secrets Manager.
 
 ## Import
 
