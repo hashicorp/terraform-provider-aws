@@ -269,3 +269,96 @@ func (c mockClient) ValidateInContextRegionInPartition(ctx context.Context) erro
 func (c mockClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
 	panic("not implemented") //lintignore:R009
 }
+
+func TestIdentityIsFullyNull(t *testing.T) {
+	t.Parallel()
+
+	attributes := []inttypes.IdentityAttribute{
+		inttypes.StringIdentityAttribute("account_id", false),
+		inttypes.StringIdentityAttribute("region", false),
+		inttypes.StringIdentityAttribute("bucket", true),
+	}
+
+	testCases := map[string]struct {
+		identityValues map[string]string
+		expectNull     bool
+		description    string
+	}{
+		"all_null": {
+			identityValues: map[string]string{},
+			expectNull:     true,
+			description:    "All attributes null should return true",
+		},
+		"some_null": {
+			identityValues: map[string]string{
+				"account_id": "123456789012",
+				// region and bucket remain null
+			},
+			expectNull:  false,
+			description: "Some attributes set should return false",
+		},
+		"all_set": {
+			identityValues: map[string]string{
+				"account_id": "123456789012",
+				"region":     "us-west-2", // lintignore:AWSAT003
+				"bucket":     "test-bucket",
+			},
+			expectNull:  false,
+			description: "All attributes set should return false",
+		},
+		"empty_string_values": {
+			identityValues: map[string]string{
+				"account_id": "",
+				"region":     "",
+				"bucket":     "",
+			},
+			expectNull:  true,
+			description: "Empty string values should be treated as null",
+		},
+		"nil_identity": {
+			identityValues: nil, // This will result in nil identity
+			expectNull:     true,
+			description:    "Nil identity should return true",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			// Create identity schema
+			identitySchema := &identityschema.Schema{
+				Attributes: map[string]identityschema.Attribute{
+					"account_id": identityschema.StringAttribute{},
+					"region":     identityschema.StringAttribute{},
+					"bucket":     identityschema.StringAttribute{},
+				},
+			}
+
+			var identity *tfsdk.ResourceIdentity
+
+			// Handle nil identity case
+			if tc.identityValues == nil {
+				identity = nil
+			} else {
+				// Create identity with values
+				identity = emtpyIdentityFromSchema(ctx, identitySchema)
+				for attrName, value := range tc.identityValues {
+					if value != "" {
+						diags := identity.SetAttribute(ctx, path.Root(attrName), value)
+						if diags.HasError() {
+							t.Fatalf("unexpected error setting %s in identity: %s", attrName, fwdiag.DiagnosticsError(diags))
+						}
+					}
+				}
+			}
+
+			result := identityIsFullyNull(ctx, identity, attributes)
+			if result != tc.expectNull {
+				t.Errorf("%s: expected identityIsFullyNull to return %v, got %v",
+					tc.description, tc.expectNull, result)
+			}
+		})
+	}
+}
