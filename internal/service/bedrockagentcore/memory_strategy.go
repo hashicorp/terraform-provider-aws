@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,12 +31,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_memory_strategy", name="Memory Strategy")
 func newResourceMemoryStrategy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceMemoryStrategy{}
@@ -329,7 +329,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	out, err := findMemoryStrategyByID(ctx, conn, state.MemoryID.ValueString(), state.MemoryStrategyID.ValueString())
+	out, err := findMemoryStrategyByTwoPartKey(ctx, conn, state.MemoryID.ValueString(), state.MemoryStrategyID.ValueString())
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -510,43 +510,42 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 	}
 }
 
-func waitMemoryStrategyCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryId, strategyId string, timeout time.Duration) (*bedrockagentcorecontrol.GetMemoryOutput, error) {
+func waitMemoryStrategyCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryID, memoryStrategyID string, timeout time.Duration) (*awstypes.MemoryStrategy, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.MemoryStrategyStatusCreating),
 		Target:                    enum.Slice(awstypes.MemoryStrategyStatusActive),
-		Refresh:                   statusMemoryStrategy(ctx, conn, memoryId, strategyId),
+		Refresh:                   statusMemoryStrategy(conn, memoryID, memoryStrategyID),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetMemoryOutput); ok {
+	if out, ok := outputRaw.(*awstypes.MemoryStrategy); ok {
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func waitMemoryStrategyDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryId, strategyId string, timeout time.Duration) (*bedrockagentcorecontrol.GetMemoryOutput, error) {
+func waitMemoryStrategyDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryID, memoryStrategyID string, timeout time.Duration) (*awstypes.MemoryStrategy, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemoryStrategyStatusDeleting, awstypes.MemoryStrategyStatusActive),
 		Target:  []string{},
-		Refresh: statusMemoryStrategy(ctx, conn, memoryId, strategyId),
+		Refresh: statusMemoryStrategy(conn, memoryID, memoryStrategyID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetMemoryOutput); ok {
+	if out, ok := outputRaw.(*awstypes.MemoryStrategy); ok {
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func statusMemoryStrategy(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryId, strategyId string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findMemoryStrategyByID(ctx, conn, memoryId, strategyId)
+func statusMemoryStrategy(conn *bedrockagentcorecontrol.Client, memoryID, memoryStrategyID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findMemoryStrategyByTwoPartKey(ctx, conn, memoryID, memoryStrategyID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -559,35 +558,16 @@ func statusMemoryStrategy(ctx context.Context, conn *bedrockagentcorecontrol.Cli
 	}
 }
 
-func findMemoryStrategyByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryId, memoryStrategyId string) (*awstypes.MemoryStrategy, error) {
-	input := bedrockagentcorecontrol.GetMemoryInput{
-		MemoryId: aws.String(memoryId),
-	}
+func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryID, memoryStrategyID string) (*awstypes.MemoryStrategy, error) {
+	memory, err := findMemoryByID(ctx, conn, memoryID)
 
-	out, err := conn.GetMemory(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
-
-		return nil, smarterr.NewError(err)
+		return nil, err
 	}
 
-	if out != nil && out.Memory != nil {
-		for i := range out.Memory.Strategies {
-			s := &out.Memory.Strategies[i]
-			if s.StrategyId != nil && aws.ToString(s.StrategyId) == memoryStrategyId {
-				return s, nil
-			}
-		}
-	}
-	return nil, smarterr.NewError(&retry.NotFoundError{
-		LastError:   err,
-		LastRequest: &input,
-	})
+	return tfresource.AssertSingleValueResult(tfslices.Filter(memory.Strategies, func(v awstypes.MemoryStrategy) bool {
+		return aws.ToString(v.StrategyId) == memoryStrategyID
+	}))
 }
 
 type memoryStrategyResourceModel struct {

@@ -13,5 +13,5 @@ var (
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
 	FindMemoryByID                       = findMemoryByID
-	FindMemoryStrategyByID               = findMemoryStrategyByID
+	FindMemoryStrategyByID               = findMemoryStrategyByTwoPartKey
 )
