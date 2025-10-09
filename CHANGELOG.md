@@ -3,6 +3,11 @@
 FEATURES:
 
 * **New Action:** `aws_transcribe_start_transcription_job` ([#44445](https://github.com/hashicorp/terraform-provider-aws/issues/44445))
+* **New Data Source:** `aws_odb_cloud_autonomous_vm_clusters` ([#44336](https://github.com/hashicorp/terraform-provider-aws/issues/44336))
+* **New Data Source:** `aws_odb_cloud_exadata_infrastructures` ([#44336](https://github.com/hashicorp/terraform-provider-aws/issues/44336))
+* **New Data Source:** `aws_odb_cloud_vm_clusters` ([#44336](https://github.com/hashicorp/terraform-provider-aws/issues/44336))
+* **New Data Source:** `aws_odb_network_peering_connections` ([#44336](https://github.com/hashicorp/terraform-provider-aws/issues/44336))
+* **New Data Source:** `aws_odb_networks` ([#44336](https://github.com/hashicorp/terraform-provider-aws/issues/44336))
 * **New Resource:** `aws_prometheus_resource_policy` ([#44256](https://github.com/hashicorp/terraform-provider-aws/issues/44256))
 * **New Resource:** `aws_transfer_host_key` ([#44559](https://github.com/hashicorp/terraform-provider-aws/issues/44559))
 * **New Resource:** `aws_transfer_web_app` ([#42708](https://github.com/hashicorp/terraform-provider-aws/issues/42708))
@@ -10,6 +15,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_emrserverless_application: Add `scheduler_configuration` block ([#44589](https://github.com/hashicorp/terraform-provider-aws/issues/44589))
 * resource/aws_lambda_event_source_mapping: Add `schema_registry_config` configuration blocks to `amazon_managed_kafka_event_source_config` and `self_managed_kafka_event_source_config` blocks ([#44540](https://github.com/hashicorp/terraform-provider-aws/issues/44540))
 * resource/aws_ssmcontacts_contact: Add resource identity support ([#44548](https://github.com/hashicorp/terraform-provider-aws/issues/44548))
 * resource/aws_vpclattice_resource_gateway: Add `ipv4_addresses_per_eni` argument ([#44560](https://github.com/hashicorp/terraform-provider-aws/issues/44560))
@@ -31,6 +37,7 @@ BUG FIXES:
 * resource/aws_datazone_project: No longer returns error when already deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_dynamodb_table: Do not retry on `LimitExceededException` ([#44576](https://github.com/hashicorp/terraform-provider-aws/issues/44576))
 * resource/aws_launch_template: `kms_key_id` validation now accepts key ID, alias, and alias ARN in addition to key ARN ([#44505](https://github.com/hashicorp/terraform-provider-aws/issues/44505))
+* resource/aws_servicecatalog_portfolio_share: Add global mutex lock around create and delete operations to prevent `ThrottlingException` errors ([#24730](https://github.com/hashicorp/terraform-provider-aws/issues/24730))
 
 ## 6.15.0 (October 2, 2025)
 
