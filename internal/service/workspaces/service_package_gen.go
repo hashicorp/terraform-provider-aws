@@ -62,9 +62,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourcePool,
 			TypeName: "aws_workspaces_pool",
 			Name:     "Pool",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceWorkspace,
@@ -102,9 +103,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  ResourcePool,
 			TypeName: "aws_workspaces_pool",
 			Name:     "Pool",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceWorkspace,
