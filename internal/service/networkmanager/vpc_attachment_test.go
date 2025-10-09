@@ -70,7 +70,9 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.dns_support", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.security_group_referencing_support", acctest.CtTrue),
 							acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 							resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcResourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
@@ -136,7 +138,9 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.dns_support", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.security_group_referencing_support", acctest.CtTrue),
 							acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 							resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcResourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
@@ -465,6 +469,49 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 	}
 }
 
+func TestAccNetworkManagerVPCAttachment_attachmentOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.VpcAttachment
+	resourceName := "aws_networkmanager_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCAttachmentConfig_attachmentOptions(rName, false, true, false, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "options.0.dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "options.0.security_group_referencing_support", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccVPCAttachmentConfig_attachmentOptions(rName, true, false, true, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "options.0.dns_support", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "options.0.security_group_referencing_support", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckVPCAttachmentExists(ctx context.Context, n string, v *awstypes.VpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -567,8 +614,10 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   vpc_arn         = aws_vpc.test.arn
 
   options {
-    appliance_mode_support = %[3]t
-    ipv6_support           = %[4]t
+    appliance_mode_support             = %[3]t
+    dns_support                        = false
+    ipv6_support                       = %[4]t
+    security_group_referencing_support = false
   }
 }
 `, rName, nSubnets, applianceModeSupport, ipv6Support))
@@ -584,8 +633,10 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   vpc_arn         = aws_vpc.test.arn
 
   options {
-    appliance_mode_support = %[3]t
-    ipv6_support           = %[4]t
+    appliance_mode_support             = %[3]t
+    dns_support                        = false
+    ipv6_support                       = %[4]t
+    security_group_referencing_support = false
   }
 }
 
@@ -658,4 +709,23 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   }
 }
 `, rName, requireAcceptance))
+}
+
+func testAccVPCAttachmentConfig_attachmentOptions(rName string, applianceModeSupport, dnsSupport, ipv6Support, securityGroupReferencingSupport bool, requireAcceptance bool) string {
+	return acctest.ConfigCompose(
+		testAccVPCAttachmentConfig_base(rName, requireAcceptance),
+		fmt.Sprintf(`
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns     = aws_subnet.test[*].arn
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpc_arn         = aws_vpc.test.arn
+
+  options {
+    appliance_mode_support             = %[2]t
+    dns_support                        = %[3]t
+    ipv6_support                       = %[4]t
+    security_group_referencing_support = %[5]t
+  }
+}
+`, rName, applianceModeSupport, dnsSupport, ipv6Support, securityGroupReferencingSupport))
 }

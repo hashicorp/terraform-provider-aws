@@ -105,7 +105,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		timeout = 5 * time.Minute
 	)
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutSubscriptionFilter(ctx, input)
 		},
 		func(err error) (bool, error) {

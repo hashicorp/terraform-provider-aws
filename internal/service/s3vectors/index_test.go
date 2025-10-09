@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfs3vectors "github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -193,7 +193,7 @@ func testAccCheckIndexAddVector(ctx context.Context, n string, key string, value
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
 
-		metadata, err := json.SmithyDocumentFromString(fmt.Sprintf(`{"id": %[1]q}`, key), document.NewLazyDocument)
+		metadata, err := tfsmithy.DocumentFromJSONString(fmt.Sprintf(`{"id": %[1]q}`, key), document.NewLazyDocument)
 		if err != nil {
 			return err
 		}

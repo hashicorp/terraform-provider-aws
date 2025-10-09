@@ -122,6 +122,31 @@ The `status` configuration block supports the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_connect_phone_number.example
+  identity = {
+    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+resource "aws_connect_phone_number" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the connect phone number.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Phone Numbers using its `id`. For example:
 
 ```python
@@ -145,4 +170,4 @@ Using `terraform import`, import Amazon Connect Phone Numbers using its `id`. Fo
 % terraform import aws_connect_phone_number.example 12345678-abcd-1234-efgh-9876543210ab
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-731a4677bdc70b0e6a8e1e26a55ffaf27ea907368b48446a4dae53ea562afddc -->
+<!-- cache-key: cdktf-0.20.8 input-8bfb5a6187451f50aa6e45f8463710d5302c5bd8c6ed6aeac10527f55ab910eb -->

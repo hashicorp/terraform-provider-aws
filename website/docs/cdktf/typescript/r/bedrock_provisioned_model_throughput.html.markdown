@@ -64,6 +64,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrock_provisioned_model_throughput.example
+  identity = {
+    "arn" = "arn:aws:bedrock:us-west-2:123456789012:provisioned-model/a1b2c3d4567890ab"
+  }
+}
+
+resource "aws_bedrock_provisioned_model_throughput" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Bedrock provisioned model throughput.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Provisioned Throughput using the `provisionedModelArn`. For example:
 
 ```typescript
@@ -94,4 +115,4 @@ Using `terraform import`, import Provisioned Throughput using the `provisionedMo
 % terraform import aws_bedrock_provisioned_model_throughput.example arn:aws:bedrock:us-west-2:123456789012:provisioned-model/1y5n57gh5y2e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-40ebdc15f78fbeef79d58a6dd67f830f1a83bce550db2622f392ddd0664ebb45 -->
+<!-- cache-key: cdktf-0.20.8 input-59460a796f0193723e9b5cbb06cbf3329c061fd354e143d7ef40b8f1b2258b74 -->

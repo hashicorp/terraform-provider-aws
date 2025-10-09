@@ -456,8 +456,9 @@ func (r ResourceDatum) IdentityAttributes() []identityAttribute {
 }
 
 type identityAttribute struct {
-	name     string
-	Optional bool
+	name        string
+	Optional    bool
+	TestNotNull bool
 }
 
 func (i identityAttribute) Name() string {
@@ -640,6 +641,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						identityAttribute.Optional = b
+					}
+				}
+
+				if attr, ok := args.Keyword["testNotNull"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityAttribute.TestNotNull = b
 					}
 				}
 

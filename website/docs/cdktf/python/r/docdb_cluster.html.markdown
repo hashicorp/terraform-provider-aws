@@ -59,8 +59,9 @@ This resource supports the following arguments:
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
      `false`.
-* `availability_zones` - (Optional) A list of EC2 Availability Zones that
-  instances in the DB cluster can be created in.
+* `availability_zones` - (Optional) A list of EC2 Availability Zones that instances in the DB cluster can be created in.
+  DocumentDB automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.
+  We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
@@ -164,4 +165,4 @@ Using `terraform import`, import DocumentDB Clusters using the `cluster_identifi
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-37efe897f78db64cf197dad4f8b34010979e7300f4494a647093ee1c6dd88fc6 -->
+<!-- cache-key: cdktf-0.20.8 input-d4d855f6f5ea076c1e73f4ac383a4dc9a426c91b66c5bb3b193cc62d30d7986b -->

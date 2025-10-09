@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_launch_template: `kms_key_id` validation now accepts key ID, alias, and alias ARN in addition to key ARN
+```

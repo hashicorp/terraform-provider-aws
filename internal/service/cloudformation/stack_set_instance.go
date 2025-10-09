@@ -291,8 +291,8 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackSetInstance, id, err)
 	}
 
-	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
-		func() (*cloudformation.CreateStackInstancesOutput, error) {
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*cloudformation.CreateStackInstancesOutput, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
 			return conn.CreateStackInstances(ctx, input)

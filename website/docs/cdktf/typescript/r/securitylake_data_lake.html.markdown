@@ -154,6 +154,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securitylake_data_lake.example
+  identity = {
+    "arn" = "arn:aws:securitylake:us-east-1:123456789012:data-lake/default"
+  }
+}
+
+resource "aws_securitylake_data_lake" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Security Lake data lake.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards subscriptions using the standards subscription ARN. For example:
 
 ```typescript
@@ -184,4 +205,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securitylake_data_lake.example arn:aws:securitylake:eu-west-1:123456789012:data-lake/default
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f8bbdb74df3cf00c22b9f8eb17b420e77cd4c8a40f8f8f4e65d6f1c75f51131b -->
+<!-- cache-key: cdktf-0.20.8 input-46ddb9c87f487c415e1f8a5e55f8e32ab563a17cd86432cbf4dd53a352e86580 -->

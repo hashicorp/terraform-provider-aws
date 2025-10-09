@@ -22,8 +22,9 @@ func testAccEC2ImageBlockPublicAccess_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccEC2ImageBlockPublicAccess_Identity_Basic,
-		"ExistingResource": testAccEC2ImageBlockPublicAccess_Identity_ExistingResource,
+		acctest.CtBasic:             testAccEC2ImageBlockPublicAccess_Identity_Basic,
+		"ExistingResource":          testAccEC2ImageBlockPublicAccess_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccEC2ImageBlockPublicAccess_Identity_ExistingResource_NoRefresh_NoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -117,6 +118,43 @@ func testAccEC2ImageBlockPublicAccess_Identity_ExistingResource(t *testing.T) {
 						names.AttrAccountID: tfknownvalue.AccountID(),
 					}),
 				},
+			},
+		},
+	})
+}
+
+func testAccEC2ImageBlockPublicAccess_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_ec2_image_block_public_access.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ImageBlockPublicAccess/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ImageBlockPublicAccess/basic/"),
+				ConfigVariables:          config.Variables{},
 			},
 		},
 	})

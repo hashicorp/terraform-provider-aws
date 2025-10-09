@@ -75,6 +75,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_devicefarm_network_profile.example
+  identity = {
+    "arn" = "arn:aws:devicefarm:us-west-2:123456789012:networkprofile:4e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e"
+  }
+}
+
+resource "aws_devicefarm_network_profile" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Device Farm network profile.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Network Profiles using their ARN. For example:
 
 ```typescript
@@ -105,4 +126,4 @@ Using `terraform import`, import DeviceFarm Network Profiles using their ARN. Fo
 % terraform import aws_devicefarm_network_profile.example arn:aws:devicefarm:us-west-2:123456789012:networkprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-af90a2e96809560d7bcd092d9d9ba1a040ea8a4217265e37f1281228d01891c0 -->
+<!-- cache-key: cdktf-0.20.8 input-23928514f95c63c6d942007f5d298788ee4a957557273e60ae9f0f07d36b6377 -->

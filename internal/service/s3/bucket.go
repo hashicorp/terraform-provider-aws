@@ -1483,7 +1483,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.PutBucketReplication(ctx, input)
 				},
 				func(err error) (bool, error) {

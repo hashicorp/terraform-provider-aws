@@ -6,6 +6,7 @@ set -euo pipefail
 
 go test \
     ./internal/acctest/... \
+    ./internal/actionwait/... \
     ./internal/attrmap/... \
     ./internal/backoff/... \
     ./internal/conns/... \
@@ -32,6 +33,7 @@ go test \
     ./internal/semver/... \
     ./internal/slices/... \
     ./internal/smerr/... \
+    ./internal/smithy/... \
     ./internal/sweep/... \
     ./internal/tags/... \
     ./internal/tfresource/... \

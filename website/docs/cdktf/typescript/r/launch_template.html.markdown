@@ -462,7 +462,8 @@ The `placement` block supports the following:
 
 * `affinity` - (Optional) The affinity setting for an instance on a Dedicated Host.
 * `availabilityZone` - (Optional) The Availability Zone for the instance.
-* `groupName` - (Optional) The name of the placement group for the instance.
+* `groupId` - (Optional) The ID of the placement group for the instance. Conflicts with `groupName`.
+* `groupName` - (Optional) The name of the placement group for the instance. Conflicts with `groupId`.
 * `hostId` - (Optional) The ID of the Dedicated Host for the instance.
 * `hostResourceGroupArn` - (Optional) The ARN of the Host Resource Group in which to launch instances.
 * `spreadDomain` - (Optional) Reserved for future use.
@@ -523,4 +524,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8de4cf46e46088518884d5fe05988220743f7365fab7bb723d6646edd42e5bf5 -->
+<!-- cache-key: cdktf-0.20.8 input-92d9977f8d1c5bc9b3b0021fb0d5d2f7dce3e91c7a647d9c0095fd0667e0d85b -->

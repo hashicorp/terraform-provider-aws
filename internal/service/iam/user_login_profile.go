@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -90,9 +89,9 @@ const (
 	charSymbols = "!@#$%^&*()_+-=[]{}|'"
 )
 
-// GeneratePassword generates a random password of a given length, matching the
+// generatePassword generates a random password of a given length, matching the
 // most restrictive iam password policy.
-func GeneratePassword(length int) (string, error) {
+func generatePassword(length int) (string, error) {
 	const charset = charLower + charUpper + charNumbers + charSymbols
 
 	result := make([]byte, length)
@@ -118,7 +117,7 @@ func GeneratePassword(length int) (string, error) {
 			result[i] = charset[r.Int64()]
 		}
 
-		if !CheckPwdPolicy(result) {
+		if !checkPwdPolicy(result) {
 			continue
 		}
 
@@ -130,7 +129,7 @@ func GeneratePassword(length int) (string, error) {
 
 // Check the generated password contains all character classes listed in the
 // IAM password policy.
-func CheckPwdPolicy(pass []byte) bool {
+func checkPwdPolicy(pass []byte) bool {
 	return (bytes.ContainsAny(pass, charLower) &&
 		bytes.ContainsAny(pass, charNumbers) &&
 		bytes.ContainsAny(pass, charSymbols) &&
@@ -143,7 +142,7 @@ func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData,
 	username := d.Get("user").(string)
 
 	passwordLength := d.Get("password_length").(int)
-	initialPassword, err := GeneratePassword(passwordLength)
+	initialPassword, err := generatePassword(passwordLength)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM User Login Profile for %q: %s", username, err)
 	}
@@ -191,25 +190,21 @@ func resourceUserLoginProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	var output *iam.GetLoginProfileOutput
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = conn.GetLoginProfile(ctx, input)
 
 		if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.GetLoginProfile(ctx, input)
-	}
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
 		log.Printf("[WARN] IAM User Login Profile (%s) not found, removing from state", d.Id())
@@ -239,7 +234,7 @@ func resourceUserLoginProfileDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Deleting IAM User Login Profile (%s): %v", d.Id(), input)
 	// Handle IAM eventual consistency
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteLoginProfile(ctx, input)
 
 		var nse *awstypes.NoSuchEntityException
@@ -250,20 +245,15 @@ func resourceUserLoginProfileDelete(ctx context.Context, d *schema.ResourceData,
 		// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
 		var etu *awstypes.EntityTemporarilyUnmodifiableException
 		if tfawserr.ErrCodeEquals(err, etu.ErrorCode()) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	// Handle AWS Go SDK automatic retries
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteLoginProfile(ctx, input)
-	}
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags

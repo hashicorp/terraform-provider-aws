@@ -52,7 +52,7 @@ This resource supports the following arguments:
 * `originSnapshot` - (Optional) Specifies the configuration to use when creating the OpenZFS volume. See [`originSnapshot` Block](#origin_snapshot-block) below for details.
 * `storageCapacityQuotaGib`  - (Optional) The maximum amount of storage in gibibytes (GiB) that the volume can use from its parent.
 * `storageCapacityReservationGib`  - (Optional) The amount of storage in gibibytes (GiB) to reserve from the parent volume.
-* `userAndGroupQuotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum of 100 items. See [`userAndGroupQuotas` Block](#user_and_group_quotas-block) Below.
+* `userAndGroupQuotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum number of items defined by [FSx for OpenZFS Resource quota](https://docs.aws.amazon.com/fsx/latest/OpenZFSGuide/limits.html#limits-openzfs-resources-file-system). See [`userAndGroupQuotas` Block](#user_and_group_quotas-block) Below.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `nfsExports` Block
@@ -131,4 +131,4 @@ Using `terraform import`, import FSx Volumes using the `id`. For example:
 % terraform import aws_fsx_openzfs_volume.example fsvol-543ab12b1ca672f33
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-55c87607ec78f832844314764b468992568f0644f613cb30579404d62ec565fa -->
+<!-- cache-key: cdktf-0.20.8 input-4ed9b308a1c77c6a861d496e155f62f6f9b9984053889f6b2fe6c5f3636054d3 -->

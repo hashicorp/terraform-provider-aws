@@ -4,24 +4,19 @@
 package s3tables
 
 var (
-	NewResourceNamespace         = newNamespaceResource
-	NewResourceTable             = newTableResource
-	NewResourceTableBucket       = newTableBucketResource
-	NewResourceTableBucketPolicy = newTableBucketPolicyResource
-	ResourceTablePolicy          = newTablePolicyResource
+	ResourceNamespace         = newNamespaceResource
+	ResourceTable             = newTableResource
+	ResourceTableBucket       = newTableBucketResource
+	ResourceTableBucketPolicy = newTableBucketPolicyResource
+	ResourceTablePolicy       = newTablePolicyResource
 
-	FindNamespace           = findNamespace
-	FindTableByThreePartKey = findTableByThreePartKey
-	FindTableBucketByARN    = findTableBucketByARN
-	FindTableBucketPolicy   = findTableBucketPolicy
-	FindTablePolicy         = findTablePolicy
+	FindNamespaceByTwoPartKey     = findNamespaceByTwoPartKey
+	FindTableByThreePartKey       = findTableByThreePartKey
+	FindTableBucketByARN          = findTableBucketByARN
+	FindTableBucketPolicyByARN    = findTableBucketPolicyByARN
+	FindTablePolicyByThreePartKey = findTablePolicyByThreePartKey
 
 	TableIDFromTableARN = tableIDFromTableARN
-)
-
-const (
-	ResNameNamespace     = resNameNamespace
-	NamespaceIDSeparator = namespaceIDSeparator
 )
 
 type (

@@ -519,7 +519,7 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 		expectedPolicyText := fmt.Sprintf(expectedPolicyTemplate, acctest.AccountID(ctx), acctest.Partition(), bucketName)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(policy, expectedPolicyText)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("Error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",

@@ -36,9 +36,10 @@ This data source supports the following arguments:
 * `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instance_tags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
-* `filter` - (Optional) One or more name/value pairs to use as filters. There are
-several valid keys, for a full reference, check out
-[describe-instances in the AWS CLI reference][1].
+* `filter` - (Optional) One or more filters to apply to the search.
+  If multiple `filter` blocks are provided, they all must be true.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  See [`filter` Block](#filter-block) below.
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `get_user_data` - (Optional) Retrieve Base64 encoded User Data contents into the `user_data_base64` attribute. A SHA-1 hash of the User Data contents will always be present in the `user_data` attribute. Defaults to `false`.
 
@@ -47,6 +48,14 @@ several valid keys, for a full reference, check out
 ~> **NOTE:** If anything other than a single match is returned by the search,
 Terraform will fail. Ensure that your search is specific enough to return
 a single Instance ID only.
+
+### `filter` Block
+
+The `filter` block supports the following arguments:
+
+* `name` - (Required) Name of the filter.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+* `values` - (Required) One or more values to match.
 
 ## Attribute Reference
 
@@ -101,6 +110,7 @@ interpolation.
 * `outpost_arn` - ARN of the Outpost.
 * `password_data` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placement_group` - Placement group of the Instance.
+* `placement_group_id` - Placement group ID of the Instance.
 * `placement_partition_number` - Number of the partition the instance is in.
 * `private_dns` - Private DNS name assigned to the Instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `private_dns_name_options` - Options for the instance hostname.
