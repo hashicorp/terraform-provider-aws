@@ -5816,3 +5816,4 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, autoRetryLimit, rName, rBuildspec))
+}
