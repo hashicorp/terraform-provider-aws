@@ -301,7 +301,9 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s): %s", d.Id(), err)
 	}
 
-	diags = append(diags, resourceVPCFlatten(ctx, c, vpc, d)...)
+	if err := resourceVPCFlatten(ctx, c, vpc, d); err != nil {
+		diags = sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -652,9 +654,7 @@ func modifyVPCTenancy(ctx context.Context, conn *ec2.Client, vpcID string, v str
 	return nil
 }
 
-func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awstypes.Vpc, d *schema.ResourceData) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awstypes.Vpc, d *schema.ResourceData) error {
 	conn := client.EC2Client(ctx)
 	ownerID := aws.ToString(vpc.OwnerId)
 	d.Set(names.AttrARN, vpcARN(ctx, client, ownerID, d.Id()))
@@ -666,7 +666,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
 		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
 	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
+		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
@@ -674,7 +674,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
 		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
 	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
+		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
@@ -682,29 +682,26 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
 		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
 	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
 	}
 
 	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
+		return fmt.Errorf("reading EC2 VPC (%s) default NACL: %w", d.Id(), err)
 	} else {
 		d.Set("default_network_acl_id", v.NetworkAclId)
 	}
 
 	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
-		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
-		d.Set("default_route_table_id", nil)
-		d.Set("main_route_table_id", nil)
+		return fmt.Errorf("reading EC2 VPC (%s) main Route Table: %w", d.Id(), err)
 	} else {
 		d.Set("default_route_table_id", v.RouteTableId)
 		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
 	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
-		d.Set("default_security_group_id", nil)
+		return fmt.Errorf("reading EC2 VPC (%s) default Security Group: %w", d.Id(), err)
 	} else {
 		d.Set("default_security_group_id", v.GroupId)
 	}
@@ -750,7 +747,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 
 	setTagsOut(ctx, vpc.Tags)
 
-	return diags
+	return nil
 }
 
 func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) string {
@@ -871,8 +868,13 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 
 				rd := l.ResourceData()
 				rd.SetId(aws.ToString(vpc.VpcId))
-				result.Diagnostics.Append(translateDiags(resourceVPCFlatten(ctx, awsClient, &vpc, rd))...)
-				if result.Diagnostics.HasError() {
+				err := resourceVPCFlatten(ctx, awsClient, &vpc, rd)
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
 					yield(result)
 					return
 				}
