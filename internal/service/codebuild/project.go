@@ -129,7 +129,7 @@ func resourceProject() *schema.Resource {
 				Description: "Maximum number of additional automatic retries after a failed build. The default value is 0.",
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     0,
+				Computed:    true,
 			},
 			"badge_enabled": {
 				Type:     schema.TypeBool,
