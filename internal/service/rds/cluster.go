@@ -679,11 +679,24 @@ func resourceCluster() *schema.Resource {
 				if diff.Id() == "" {
 					return nil
 				}
+
+				engineType := diff.Get(names.AttrEngine).(string)
+				if !strings.HasPrefix(engineType, "aurora") {
+					return nil
+				}
+
 				// The control plane will always return an empty string if a cluster is created with a storage_type of aurora
 				old, new := diff.GetChange(names.AttrStorageType)
 
 				if new.(string) == "aurora" && old.(string) == "" {
 					if err := diff.SetNew(names.AttrStorageType, ""); err != nil {
+						return err
+					}
+					return nil
+				}
+
+				if new.(string) == "" && old.(string) != "" {
+					if err := diff.SetNew(names.AttrStorageType, "aurora"); err != nil {
 						return err
 					}
 					return nil
