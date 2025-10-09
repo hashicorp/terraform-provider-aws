@@ -142,70 +142,6 @@ func TestAccBedrockAgentCoreMemory_tags(t *testing.T) {
 	})
 }
 
-/*
-	func TestAccBedrockAgentCoreMemory_full(t *testing.T) {
-		ctx := acctest.Context(t)
-		var m1, m2, m3 awstypes.Memory
-		rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-		resourceName := "aws_bedrockagentcore_memory.test"
-
-		resource.ParallelTest(t, resource.TestCase{
-			PreCheck: func() {
-				acctest.PreCheck(ctx, t)
-				acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-				testAccPreCheckMemories(ctx, t)
-			},
-			ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-			CheckDestroy:             testAccCheckMemoryDestroy(ctx),
-			Steps: []resource.TestStep{
-				{
-					Config: testAccMemoryConfig(rName, "test description", 30, false, false),
-					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckMemoryExists(ctx, resourceName, &m1),
-					),
-					ConfigPlanChecks: resource.ConfigPlanChecks{
-						PreApply: []plancheck.PlanCheck{
-							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						},
-					},
-					ConfigStateChecks: []statecheck.StateCheck{
-						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/.+`))),
-						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-					},
-				},
-				{
-					ResourceName:      resourceName,
-					ImportState:       true,
-					ImportStateVerify: true,
-				},
-				{
-					Config: testAccMemoryConfig(rName, "updated test description", 10, true, false),
-					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckMemoryExists(ctx, resourceName, &m2),
-					),
-					ConfigPlanChecks: resource.ConfigPlanChecks{
-						PreApply: []plancheck.PlanCheck{
-							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						},
-					},
-				},
-				{
-					Config: testAccMemoryConfig(rName, "updated test description", 10, true, true),
-					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckMemoryExists(ctx, resourceName, &m3),
-					),
-					ConfigPlanChecks: resource.ConfigPlanChecks{
-						PreApply: []plancheck.PlanCheck{
-							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						},
-					},
-				},
-			},
-		})
-	}
-*/
 func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
@@ -237,6 +173,98 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.Memory
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_memory.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryConfig_description(rName, "desc1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc1")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMemoryConfig_description(rName, "desc2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc2")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.Memory
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_memory.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryConfig_memoryExecutionRole(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -302,7 +330,7 @@ func testAccPreCheckMemories(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccMemoryConfig_base(rName string) string {
+func testAccMemoryConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -336,16 +364,16 @@ resource "aws_kms_key" "test" {
 }
 
 func testAccMemoryConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccMemoryConfig_base(rName), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory" "test" {
   name                      = %[1]q
   event_expiry_duration     = 7
 }
-`, rName))
+`, rName)
 }
 
 func testAccMemoryConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccMemoryConfig_base(rName), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory" "test" {
   name                      = %[1]q
   event_expiry_duration     = 7
@@ -354,11 +382,11 @@ resource "aws_bedrockagentcore_memory" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tag1Key, tag1Value))
+`, rName, tag1Key, tag1Value)
 }
 
 func testAccMemoryConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccMemoryConfig_base(rName), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory" "test" {
   name                      = %[1]q
   event_expiry_duration     = 7
@@ -368,25 +396,25 @@ resource "aws_bedrockagentcore_memory" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccMemoryConfig(rName, description string, expiry int, withRole, withCmk bool) string {
-	role, cmk := "aws_iam_role.test.arn", "aws_kms_key.test.arn"
-	if !withRole {
-		role = "null"
-	}
-	if !withCmk {
-		cmk = "null"
-	}
-
-	return acctest.ConfigCompose(testAccMemoryConfig_base(rName), fmt.Sprintf(`
+func testAccMemoryConfig_description(rName, description string) string {
+	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory" "test" {
   name                      = %[1]q
+  event_expiry_duration     = 7
   description               = %[2]q
-  event_expiry_duration     = %[3]d
-  memory_execution_role_arn = %[4]s
-  encryption_key_arn        = %[5]s
 }
-`, rName, description, expiry, role, cmk))
+`, rName, description)
+}
+
+func testAccMemoryConfig_memoryExecutionRole(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory" "test" {
+  name                      = %[1]q
+  event_expiry_duration     = 7
+  memory_execution_role_arn = aws_iam_role.test.arn
+}
+`, rName))
 }
