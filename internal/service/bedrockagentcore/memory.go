@@ -39,7 +39,7 @@ import (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_memory", name="Memory")
-// @Tags(identifierAttribute="agent_runtime_arn")
+// @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
 func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &memoryResource{}
