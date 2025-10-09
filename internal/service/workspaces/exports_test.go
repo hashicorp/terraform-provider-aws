@@ -9,6 +9,7 @@ var (
 	ResourceDirectory       = resourceDirectory
 	ResourceIPGroup         = resourceIPGroup
 	ResourceWorkspace       = resourceWorkspace
+	ResourcePool            = newResourcePool
 
 	FindConnectionAliasByID = findConnectionAliasByID
 	FindDirectoryByID       = findDirectoryByID

@@ -26,9 +26,6 @@ func TestAccWorkSpacesDataSource_serial(t *testing.T) {
 		"Image": {
 			acctest.CtBasic: testAccImageDataSource_basic,
 		},
-		"Pool": {
-			acctest.CtBasic: testAccWorkSpacesPoolDataSource_basic,
-		},
 		"Workspace": {
 			"byWorkspaceID":                     testAccWorkspaceDataSource_byWorkspaceID,
 			"byDirectoryID_userName":            testAccWorkspaceDataSource_byDirectoryID_userName,

@@ -32,6 +32,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newResourcePool,
+			TypeName: "aws_workspaces_pool",
+			Name:     "Pool",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
@@ -57,14 +66,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_workspaces_image",
 			Name:     "Image",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
-			Factory:  dataSourcePool,
-			TypeName: "aws_workspaces_pool",
-			Name:     "Pool",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
 		},
 		{
 			Factory:  dataSourceWorkspace,
@@ -97,14 +98,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
-			Factory:  ResourcePool,
-			TypeName: "aws_workspaces_pool",
-			Name:     "Pool",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
 		},
 		{
 			Factory:  resourceWorkspace,

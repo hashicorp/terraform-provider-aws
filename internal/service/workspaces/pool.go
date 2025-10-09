@@ -5,386 +5,451 @@ package workspaces
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"errors"
 	"time"
 
+	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
-	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_workspaces_pool", name="Pool")
+// @FrameworkResource("aws_workspaces_pool", name="Pool")
 // @Tags(identifierAttribute="id")
-func ResourcePool() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourcePoolCreate,
-		ReadWithoutTimeout:   resourcePoolRead,
-		UpdateWithoutTimeout: resourcePoolUpdate,
-		DeleteWithoutTimeout: resourcePoolDelete,
+func newResourcePool(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourcePool{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
-		},
-
-		Schema: map[string]*schema.Schema{
-			"application_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrS3BucketName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"settings_group": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						names.AttrStatus: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(types.ApplicationSettingsStatusEnumEnabled, types.ApplicationSettingsStatusEnumDisabled), false),
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bundle_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"capacity": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_user_sessions": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timeout_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"disconnect_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 36000),
-						},
-						"idle_disconnect_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 36000),
-						},
-						"max_user_duration_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 432000),
-						},
-					},
-				},
-			},
-		},
-	}
+	return r, nil
 }
 
 const (
 	ResNamePool = "Pool"
 )
 
-func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
-
-	in := &workspaces.CreateWorkspacesPoolInput{
-		BundleId:    aws.String(d.Get("bundle_id").(string)),
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
-		DirectoryId: aws.String(d.Get("directory_id").(string)),
-		PoolName:    aws.String(d.Get(names.AttrName).(string)),
-		Tags:        getTagsIn(ctx),
-	}
-	if v, ok := d.GetOk("application_settings"); ok {
-		in.ApplicationSettings = expandApplicationSettings(v.([]any))
-	}
-	if v, ok := d.GetOk("capacity"); ok {
-		in.Capacity = &types.Capacity{
-			DesiredUserSessions: expandCapacity(v.([]any)).DesiredUserSessions,
-		}
-	}
-	if v, ok := d.GetOk("timeout_settings"); ok {
-		in.TimeoutSettings = expandTimeoutSettings(v.([]any))
-	}
-
-	out, err := conn.CreateWorkspacesPool(ctx, in)
-	if err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionCreating, ResNamePool, d.Get(names.AttrName).(string), err)
-	}
-
-	d.SetId(aws.ToString(out.WorkspacesPool.PoolId))
-
-	if _, err := waitPoolCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionCreating, ResNamePool, d.Get(names.AttrName).(string), err)
-	}
-
-	return append(diags, resourcePoolRead(ctx, d, meta)...)
+type resourcePool struct {
+	framework.ResourceWithModel[resourcePoolModel]
+	framework.WithImportByID
+	framework.WithTimeouts
 }
 
-func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
-
-	out, err := findPoolByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] WorkSpaces Pool (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	s := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"bundle_id": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^wsb-[0-9a-z]{8,63}$`),
+						"Bundle ID must be in the format 'wsb-xxxxxxxx' where 'xxxxxxxx' is a 8-63 character long string of lowercase letters and numbers",
+					),
+				},
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 255),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^[a-zA-Z0-9_./() -]+$`),
+						"Description must contain only alphanumeric characters, underscores, periods, forward slashes, parentheses, spaces, and hyphens",
+					),
+				},
+			},
+			"directory_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^(d-[0-9a-f]{8,63}$)|(wsd-[0-9a-z]{8,63}$)`),
+						"Directory ID must be in the format 'wsd-xxxxxxxx' where 'xxxxxxxx' is a 8-63 character long string of lowercase letters and numbers",
+					),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`),
+						"Name must start with an alphanumeric character and can only contain alphanumeric characters, underscores, periods, and hyphens",
+					),
+				},
+			},
+			"running_mode": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("AUTO_STOP", "ALWAYS_ON"),
+				},
+			},
+			names.AttrState: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"application_settings": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[applicationSettingsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(0),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrS3BucketName: schema.StringAttribute{
+							Computed: true,
+						},
+						"settings_group": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 64),
+								stringvalidator.RegexMatches(
+									regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
+									"Settings group must contain only alphanumeric characters, underscores, periods, and hyphens",
+								),
+							},
+						},
+						names.AttrStatus: schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+							Validators: []validator.String{
+								stringvalidator.OneOf(
+									string(awstypes.ApplicationSettingsStatusEnumEnabled),
+									string(awstypes.ApplicationSettingsStatusEnumDisabled),
+								),
+							},
+						},
+					},
+				},
+			},
+			"capacity": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[capacityModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"desired_user_sessions": schema.Int64Attribute{
+							Required: true,
+						},
+					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+			},
+			"timeout_settings": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[timeoutSettingsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(0),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"disconnect_timeout_in_seconds": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+							Validators: []validator.Int64{
+								int64validator.Between(60, 36000),
+							},
+						},
+						"idle_disconnect_timeout_in_seconds": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+							Validators: []validator.Int64{
+								int64validator.Between(0, 36000),
+							},
+						},
+						"max_user_duration_in_seconds": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+							Validators: []validator.Int64{
+								int64validator.Between(600, 432000),
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
-	if err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionReading, ResNamePool, d.Id(), err)
+	if s.Blocks == nil {
+		s.Blocks = make(map[string]schema.Block)
 	}
+	s.Blocks[names.AttrTimeouts] = timeouts.Block(ctx, timeouts.Opts{
+		Create: true,
+		Update: true,
+		Delete: true,
+	})
 
-	if err := d.Set("application_settings", flattenApplicationSettings(out.ApplicationSettings)); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionSetting, ResNamePool, d.Id(), err)
-	}
-	d.Set(names.AttrARN, out.PoolArn)
-	d.Set("bundle_id", out.BundleId)
-	if err := d.Set("capacity", flattenCapacity(out.CapacityStatus)); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionSetting, ResNamePool, d.Id(), err)
-	}
-	d.Set(names.AttrDescription, out.Description)
-	d.Set("directory_id", out.DirectoryId)
-	d.Set(names.AttrID, out.PoolId)
-	d.Set(names.AttrName, out.PoolName)
-	d.Set(names.AttrState, out.State)
-	if err := d.Set("timeout_settings", flattenTimeoutSettings(out.TimeoutSettings)); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionSetting, ResNamePool, d.Id(), err)
-	}
-
-	return diags
+	resp.Schema = s
 }
 
-func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
+func (r *resourcePool) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().WorkSpacesClient(ctx)
 
-	update := false     // whether we need to update the pool
-	shouldStop := false // Check if the pool needs to be stopped before updating
-	currentState := d.Get(names.AttrState).(string)
-
-	in := &workspaces.UpdateWorkspacesPoolInput{
-		PoolId: aws.String(d.Id()),
+	var plan resourcePoolModel
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if d.HasChange("bundle_id") {
-		shouldStop = true
-		in.BundleId = aws.String(d.Get("bundle_id").(string))
-		update = true
+	var input workspaces.CreateWorkspacesPoolInput
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Pool")))
+	if resp.Diagnostics.HasError() {
+		return
 	}
+	input.Tags = getTagsIn(ctx)
 
-	if d.HasChange("directory_id") {
-		shouldStop = true
-		in.DirectoryId = aws.String(d.Get("directory_id").(string))
-		update = true
-	}
-
-	if d.HasChange("application_settings") {
-		in.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]any))
-		update = true
-	}
-
-	if d.HasChange("capacity") {
-		in.Capacity.DesiredUserSessions = expandCapacity(d.Get("capacity").([]any)).DesiredUserSessions
-		update = true
-	}
-
-	if d.HasChange("timeout_settings") {
-		timeoutSettings := expandTimeoutSettings(d.Get("timeout_settings").([]any))
-
-		old, new := d.GetChange("timeout_settings")
-		oldSettings := old.([]any)
-		newSettings := new.([]any)
-
-		if len(oldSettings) > 0 && len(newSettings) > 0 {
-			oldMap := oldSettings[0].(map[string]any)
-			newMap := newSettings[0].(map[string]any)
-
-			oldVal, oldOk := oldMap["max_user_duration_in_seconds"].(int)
-			newVal, newOk := newMap["max_user_duration_in_seconds"].(int)
-
-			if oldOk && newOk && oldVal != newVal {
-				log.Printf("[DEBUG] max_user_duration_in_seconds changed from %d to %d", oldVal, newVal)
-				shouldStop = true
-			}
-		}
-
-		in.TimeoutSettings = timeoutSettings
-		update = true
-	}
-
-	if shouldStop && currentState != string(types.WorkspacesPoolStateStopped) {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), fmt.Errorf("pool must be stopped to apply changes"))
-	}
-
-	if !update {
-		return diags
-	}
-
-	log.Printf("[DEBUG] Updating WorkSpaces Pool (%s)", d.Id())
-	_, err := conn.UpdateWorkspacesPool(ctx, in)
+	out, err := conn.CreateWorkspacesPool(ctx, &input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		return
+	}
+	if out == nil || out.WorkspacesPool == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		return
 	}
 
-	if _, err := waitPoolUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), err)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.WorkspacesPool, &plan, flex.WithFieldNamePrefix("Pool")))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	return append(diags, resourcePoolRead(ctx, d, meta)...)
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = waitPoolCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
+func (r *resourcePool) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().WorkSpacesClient(ctx)
 
-	log.Printf("[DEBUG] Deleting WorkSpaces Pool (%s)", d.Id())
+	var state resourcePoolModel
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	pool, err := findPoolByID(ctx, conn, d.Id())
+	out, err := findPoolByID(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			return diags
-		}
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionReading, ResNamePool, d.Id(), err)
-	}
-	if pool.State != types.WorkspacesPoolStateStopped {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionUpdating, ResNamePool, d.Id(), fmt.Errorf("pool must be stopped to delete"))
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
 	}
 
-	input := &workspaces.TerminateWorkspacesPoolInput{
-		PoolId: aws.String(d.Id()),
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Pool")))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if _, err := conn.TerminateWorkspacesPool(ctx, input); err != nil {
-		if !tfresource.NotFound(err) {
-			return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionDeleting+" [2]", ResNamePool, d.Id(), err)
-		}
-		return diags
-	}
-
-	_, err = waitPoolDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil && !tfresource.NotFound(err) {
-		return create.AppendDiagError(diags, names.WorkSpaces, create.ErrActionDeleting+" [3]", ResNamePool, d.Id(), err)
-	}
-
-	return diags
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func waitPoolCreated(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*types.WorkspacesPool, error) {
+func (r *resourcePool) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().WorkSpacesClient(ctx)
+
+	var plan, state resourcePoolModel
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input workspaces.UpdateWorkspacesPoolInput
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Pool")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		out, err := conn.UpdateWorkspacesPool(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
+		if out == nil || out.WorkspacesPool == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			return
+		}
+
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.WorkspacesPool, &plan, flex.WithFieldNamePrefix("Pool")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	_, err := waitPoolUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *resourcePool) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().WorkSpacesClient(ctx)
+
+	var state resourcePoolModel
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := workspaces.TerminateWorkspacesPoolInput{
+		PoolId: state.ID.ValueStringPointer(),
+	}
+
+	_, err := conn.TerminateWorkspacesPool(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
+	}
+
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitPoolDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
+	}
+}
+
+const (
+	statusCreating = awstypes.WorkspacesPoolStateCreating
+	statusDeleting = awstypes.WorkspacesPoolStateDeleting
+	statusRunning  = awstypes.WorkspacesPoolStateRunning
+	statusStarting = awstypes.WorkspacesPoolStateStarting
+	statusStopped  = awstypes.WorkspacesPoolStateStopped
+	statusStopping = awstypes.WorkspacesPoolStateStopping
+	statusUpdating = awstypes.WorkspacesPoolStateUpdating
+)
+
+func waitPoolCreated(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.WorkspacesPool, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.WorkspacesPoolStateCreating),
-		Target:                    enum.Slice(types.WorkspacesPoolStateStopped),
+		Pending:                   enum.Slice(statusCreating, statusUpdating),
+		Target:                    enum.Slice(statusStopped, statusRunning, statusStarting),
 		Refresh:                   statusPool(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
+
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.WorkspacesPool); ok {
-		return out, err
+	if out, ok := outputRaw.(*awstypes.WorkspacesPool); ok {
+		return out, smarterr.NewError(err)
 	}
-	return nil, err
+
+	return nil, smarterr.NewError(err)
 }
 
-func waitPoolUpdated(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*types.WorkspacesPool, error) {
+func waitPoolUpdated(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.WorkspacesPool, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.WorkspacesPoolStateUpdating),
-		Target:                    enum.Slice(types.WorkspacesPoolStateStopped, types.WorkspacesPoolStateRunning),
+		Pending:                   enum.Slice(statusUpdating, statusCreating),
+		Target:                    enum.Slice(statusStopped, statusRunning, statusStarting),
 		Refresh:                   statusPool(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
+
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.WorkspacesPool); ok {
-		return out, err
+	if out, ok := outputRaw.(*awstypes.WorkspacesPool); ok {
+		return out, smarterr.NewError(err)
 	}
-	return nil, err
+
+	return nil, smarterr.NewError(err)
 }
 
-func waitPoolDeleted(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*types.WorkspacesPool, error) {
+func waitPoolDeleted(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.WorkspacesPool, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.WorkspacesPoolStateDeleting),
+		Pending: enum.Slice(statusDeleting, statusStopping),
 		Target:  []string{},
 		Refresh: statusPool(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if out, ok := outputRaw.(*types.WorkspacesPool); ok {
-		return out, err
+	if out, ok := outputRaw.(*awstypes.WorkspacesPool); ok {
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func statusPool(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
@@ -395,155 +460,88 @@ func statusPool(ctx context.Context, conn *workspaces.Client, id string) retry.S
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return out, string(out.State), nil
 	}
 }
 
-func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*types.WorkspacesPool, error) {
+func findPoolByID(ctx context.Context, conn *workspaces.Client, id string) (*awstypes.WorkspacesPool, error) {
 	input := &workspaces.DescribeWorkspacesPoolsInput{
 		PoolIds: []string{id},
 	}
 
-	output, err := conn.DescribeWorkspacesPools(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
+	out, err := conn.DescribeWorkspacesPools(ctx, input)
 	if err != nil {
-		return nil, err
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			})
+		}
+
+		return nil, smarterr.NewError(err)
 	}
 
-	if len(output.WorkspacesPools) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+	if out == nil || out.WorkspacesPools == nil || len(out.WorkspacesPools) == 0 {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
-	return &output.WorkspacesPools[0], nil
+	return &out.WorkspacesPools[0], nil
 }
 
-func findPoolByName(ctx context.Context, conn *workspaces.Client, name string) (*types.WorkspacesPool, error) {
+type resourcePoolModel struct {
+	framework.WithRegionModel
+	ApplicationSettings fwtypes.ListNestedObjectValueOf[applicationSettingsModel] `tfsdk:"application_settings"`
+	ARN                 types.String                                              `tfsdk:"arn"`
+	BundleId            types.String                                              `tfsdk:"bundle_id"`
+	Capacity            fwtypes.ListNestedObjectValueOf[capacityModel]            `tfsdk:"capacity"`
+	Description         types.String                                              `tfsdk:"description"`
+	DirectoryId         types.String                                              `tfsdk:"directory_id"`
+	ID                  types.String                                              `tfsdk:"id"`
+	Name                types.String                                              `tfsdk:"name"`
+	RunningMode         types.String                                              `tfsdk:"running_mode"`
+	State               types.String                                              `tfsdk:"state"`
+	Tags                tftags.Map                                                `tfsdk:"tags"`
+	TagsAll             tftags.Map                                                `tfsdk:"tags_all"`
+	TimeoutSettings     fwtypes.ListNestedObjectValueOf[timeoutSettingsModel]     `tfsdk:"timeout_settings"`
+	Timeouts            timeouts.Value                                            `tfsdk:"timeouts"`
+}
+
+type applicationSettingsModel struct {
+	S3BucketName  types.String `tfsdk:"s3_bucket_name"`
+	SettingsGroup types.String `tfsdk:"settings_group"`
+	Status        types.String `tfsdk:"status"`
+}
+
+type capacityModel struct {
+	DesiredUserSessions types.Int64 `tfsdk:"desired_user_sessions"`
+}
+
+type timeoutSettingsModel struct {
+	DisconnectTimeoutInSeconds     types.Int64 `tfsdk:"disconnect_timeout_in_seconds"`
+	IdleDisconnectTimeoutInSeconds types.Int64 `tfsdk:"idle_disconnect_timeout_in_seconds"`
+	MaxUserDurationInSeconds       types.Int64 `tfsdk:"max_user_duration_in_seconds"`
+}
+
+func sweepPools(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := &workspaces.DescribeWorkspacesPoolsInput{}
-	var result *types.WorkspacesPool
+	conn := client.WorkSpacesClient(ctx)
+	var sweepResources []sweep.Sweepable
 
 	output, err := conn.DescribeWorkspacesPools(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	for _, pool := range output.WorkspacesPools {
-		if aws.ToString(pool.PoolName) == name {
-			result = &pool
-			break
+	if output != nil && len(output.WorkspacesPools) > 0 {
+		for _, v := range output.WorkspacesPools {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePool, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.PoolId))),
+			)
 		}
 	}
 
-	if result == nil {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return result, nil
-}
-
-func expandApplicationSettings(tfList []any) *types.ApplicationSettingsRequest {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap := tfList[0].(map[string]any)
-	apiObject := &types.ApplicationSettingsRequest{}
-	if tfMap[names.AttrStatus] != "" {
-		apiObject.Status = types.ApplicationSettingsStatusEnum(tfMap[names.AttrStatus].(string))
-	}
-	if tfMap["settings_group"] != "" {
-		settingsGroup := tfMap["settings_group"].(string)
-		apiObject.SettingsGroup = &settingsGroup
-	}
-	return apiObject
-}
-
-func expandCapacity(tfList []any) *types.Capacity {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap := tfList[0].(map[string]any)
-	apiObject := &types.Capacity{}
-
-	if tfMap["desired_user_sessions"] != nil {
-		desiredUserSessions := int32(tfMap["desired_user_sessions"].(int))
-		apiObject.DesiredUserSessions = &desiredUserSessions
-	}
-	return apiObject
-}
-
-func expandTimeoutSettings(tfList []any) *types.TimeoutSettings {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap := tfList[0].(map[string]any)
-	apiObject := &types.TimeoutSettings{}
-
-	if tfMap["disconnect_timeout_in_seconds"] != 0 {
-		disconnectTimeoutInSeconds := int32(tfMap["disconnect_timeout_in_seconds"].(int))
-		apiObject.DisconnectTimeoutInSeconds = &disconnectTimeoutInSeconds
-	}
-	if tfMap["idle_disconnect_timeout_in_seconds"] != 0 {
-		idleDisconnectTimeoutInSeconds := int32(tfMap["idle_disconnect_timeout_in_seconds"].(int))
-		apiObject.IdleDisconnectTimeoutInSeconds = &idleDisconnectTimeoutInSeconds
-	}
-	if tfMap["max_user_duration_in_seconds"] != 0 {
-		maxUserDurationInSeconds := int32(tfMap["max_user_duration_in_seconds"].(int))
-		apiObject.MaxUserDurationInSeconds = &maxUserDurationInSeconds
-	}
-	return apiObject
-}
-
-func flattenApplicationSettings(apiObject *types.ApplicationSettingsResponse) []any {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]any{
-		names.AttrStatus: string(apiObject.Status),
-	}
-
-	if apiObject.S3BucketName != nil {
-		m[names.AttrS3BucketName] = aws.ToString(apiObject.S3BucketName)
-	}
-
-	if apiObject.SettingsGroup != nil {
-		m["settings_group"] = aws.ToString(apiObject.SettingsGroup)
-	}
-
-	return []any{m}
-}
-
-func flattenCapacity(apiObject *types.CapacityStatus) []any {
-	if apiObject == nil {
-		return nil
-	}
-	return []any{
-		map[string]any{
-			"desired_user_sessions": apiObject.DesiredUserSessions,
-		},
-	}
-}
-
-func flattenTimeoutSettings(apiObject *types.TimeoutSettings) []any {
-	if apiObject == nil {
-		return nil
-	}
-	return []any{
-		map[string]any{
-			"max_user_duration_in_seconds":       apiObject.MaxUserDurationInSeconds,
-			"disconnect_timeout_in_seconds":      apiObject.DisconnectTimeoutInSeconds,
-			"idle_disconnect_timeout_in_seconds": apiObject.IdleDisconnectTimeoutInSeconds,
-		},
-	}
+	return sweepResources, nil
 }

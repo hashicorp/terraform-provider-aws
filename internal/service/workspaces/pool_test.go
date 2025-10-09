@@ -12,9 +12,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
-	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,10 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccWorkSpacesPool_basic(t *testing.T) {
+func testAccPool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool workspaces.DescribeWorkspacesPoolsOutput
-
+	var pool awstypes.WorkspacesPool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
 	resourceBundleName := "data.aws_workspaces_bundle.standard"
@@ -37,9 +37,9 @@ func testAccWorkSpacesPool_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
-			testAccPreCheckPool(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpaces),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -47,14 +47,26 @@ func testAccWorkSpacesPool_basic(t *testing.T) {
 				Config: testAccPoolConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_settings.*", map[string]string{
+						names.AttrStatus: string(awstypes.ApplicationSettingsStatusEnumDisabled),
+					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "workspaces", regexache.MustCompile(`workspacespool/wspool-[0-9a-z]+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", resourceBundleName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.desired_user_sessions", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "capacity.*", map[string]string{
+						"desired_user_sessions": "1",
+					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", resourceDirectory, "directory_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "running_mode", string(awstypes.RunningModeAutoStop)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timeout_settings.*", map[string]string{
+						"disconnect_timeout_in_seconds":      "0",
+						"idle_disconnect_timeout_in_seconds": "0",
+						"max_user_duration_in_seconds":       "0",
+					}),
 				),
 			},
 			{
@@ -67,10 +79,13 @@ func testAccWorkSpacesPool_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkSpacesPool_disappears(t *testing.T) {
+func testAccPool_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-	var pool workspaces.DescribeWorkspacesPoolsOutput
+	var pool awstypes.WorkspacesPool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
 
@@ -78,9 +93,9 @@ func testAccWorkSpacesPool_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(workspaces.ServiceID))
-			testAccPreCheckPool(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpaces),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,9 +103,14 @@ func testAccWorkSpacesPool_disappears(t *testing.T) {
 				Config: testAccPoolConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourcePool(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourcePool, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -104,6 +124,7 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_workspaces_pool" {
 				continue
 			}
+
 			_, err := tfworkspaces.FindPoolByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
@@ -119,7 +140,7 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPoolExists(ctx context.Context, name string, pool *workspaces.DescribeWorkspacesPoolsOutput) resource.TestCheckFunc {
+func testAccCheckPoolExists(ctx context.Context, name string, pool *awstypes.WorkspacesPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -137,9 +158,7 @@ func testAccCheckPoolExists(ctx context.Context, name string, pool *workspaces.D
 			return create.Error(names.WorkSpaces, create.ErrActionCheckingExistence, tfworkspaces.ResNamePool, rs.Primary.ID, err)
 		}
 
-		*pool = workspaces.DescribeWorkspacesPoolsOutput{
-			WorkspacesPools: []types.WorkspacesPool{*resp},
-		}
+		*pool = *resp
 
 		return nil
 	}
@@ -162,7 +181,7 @@ func testAccPreCheckPool(ctx context.Context, t *testing.T) {
 
 func testAccPool_ApplicationSettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool workspaces.DescribeWorkspacesPoolsOutput
+	var pool awstypes.WorkspacesPool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -190,7 +209,7 @@ func testAccPool_ApplicationSettings(t *testing.T) {
 
 func testAccPool_TimeoutSettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool workspaces.DescribeWorkspacesPoolsOutput
+	var pool awstypes.WorkspacesPool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -219,7 +238,7 @@ func testAccPool_TimeoutSettings(t *testing.T) {
 
 func testAccPool_TimeoutSettings_MaxUserDurationInSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool workspaces.DescribeWorkspacesPoolsOutput
+	var pool awstypes.WorkspacesPool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_pool.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -320,6 +339,7 @@ resource "aws_workspaces_pool" "test" {
   description  = %[1]q
   directory_id = aws_workspaces_directory.test.directory_id
   name         = %[1]q
+	running_mode = "AUTO_STOP"
 }
 `, rName))
 }
@@ -340,6 +360,7 @@ resource "aws_workspaces_pool" "test" {
   description  = %[1]q
   directory_id = aws_workspaces_directory.test.directory_id
   name         = %[1]q
+	running_mode = "AUTO_STOP"
 }
 `, rName))
 }
@@ -356,6 +377,7 @@ resource "aws_workspaces_pool" "test" {
   description  = %[1]q
   directory_id = aws_workspaces_directory.test.directory_id
   name         = %[1]q
+	running_mode = "AUTO_STOP"
   timeout_settings {
     disconnect_timeout_in_seconds      = 2000
     idle_disconnect_timeout_in_seconds = 2000
@@ -377,6 +399,7 @@ resource "aws_workspaces_pool" "test" {
   description  = %[1]q
   directory_id = aws_workspaces_directory.test.directory_id
   name         = %[1]q
+	running_mode = "AUTO_STOP"
   timeout_settings {
     max_user_duration_in_seconds = 2000
   }
