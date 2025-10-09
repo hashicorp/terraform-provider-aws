@@ -366,8 +366,8 @@ resource "aws_kms_key" "test" {
 func testAccMemoryConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory" "test" {
-  name                      = %[1]q
-  event_expiry_duration     = 7
+  name                  = %[1]q
+  event_expiry_duration = 7
 }
 `, rName)
 }
@@ -375,8 +375,8 @@ resource "aws_bedrockagentcore_memory" "test" {
 func testAccMemoryConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory" "test" {
-  name                      = %[1]q
-  event_expiry_duration     = 7
+  name                  = %[1]q
+  event_expiry_duration = 7
 
   tags = {
     %[2]q = %[3]q
@@ -388,8 +388,8 @@ resource "aws_bedrockagentcore_memory" "test" {
 func testAccMemoryConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory" "test" {
-  name                      = %[1]q
-  event_expiry_duration     = 7
+  name                  = %[1]q
+  event_expiry_duration = 7
 
   tags = {
     %[2]q = %[3]q
@@ -402,9 +402,9 @@ resource "aws_bedrockagentcore_memory" "test" {
 func testAccMemoryConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory" "test" {
-  name                      = %[1]q
-  event_expiry_duration     = 7
-  description               = %[2]q
+  name                  = %[1]q
+  event_expiry_duration = 7
+  description           = %[2]q
 }
 `, rName, description)
 }
