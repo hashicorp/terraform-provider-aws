@@ -1,4 +1,4 @@
-## 6.16.0 (Unreleased)
+## 6.16.0 (October 9, 2025)
 
 FEATURES:
 
