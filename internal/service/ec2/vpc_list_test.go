@@ -5,7 +5,6 @@ package ec2_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -59,9 +58,6 @@ func TestAccVPC_List_Basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				PreConfig: func() {
-					time.Sleep(2 * time.Minute)
-				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_basic"),
@@ -129,9 +125,6 @@ func TestAccVPC_List_RegionOverride(t *testing.T) {
 
 			// Step 2: Query
 			{
-				PreConfig: func() {
-					time.Sleep(2 * time.Minute)
-				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_region_override/"),
@@ -209,9 +202,6 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 
 			// Step 2: Query
 			{
-				PreConfig: func() {
-					time.Sleep(2 * time.Minute)
-				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_filtered/"),
@@ -277,9 +267,6 @@ func TestAccVPC_List_DefaultVPC_Exclude(t *testing.T) {
 
 			// Step 2: Query
 			{
-				PreConfig: func() {
-					time.Sleep(2 * time.Minute)
-				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_exclude_default"),
@@ -338,9 +325,6 @@ func TestAccVPC_List_VPCIDs(t *testing.T) {
 
 			// Step 2: Query
 			{
-				PreConfig: func() {
-					time.Sleep(2 * time.Minute)
-				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_vpc_ids"),
@@ -417,9 +401,6 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 
 			// Step 2: Query
 			{
-				PreConfig: func() {
-					time.Sleep(2 * time.Minute)
-				},
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/VPC/list_filtered_vpc_ids/"),
