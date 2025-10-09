@@ -26,7 +26,7 @@ data "aws_odb_network_peering_connection" "example" {
 
 The following arguments are required:
 
-* `id` - (Required) The unique identifier of the Exadata infrastructure.
+* `id` - (Required) The unique identifier of the ODB network peering connection.
 
 The following arguments are optional:
 
@@ -40,7 +40,7 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the ODB network peering connection.
 * `status_reason` - Status of the ODB network peering connection.
 * `odb_network_arn` - ARN of the ODB network peering connection.
-* `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `arn` - The Amazon Resource Name (ARN) for the  ODB network peering connection.
 * `peer_network_arn` - ARN of the peer network peering connection.
 * `odb_peering_connection_type` - Type of the ODB peering connection.
 * `created_at` - Created time of the ODB network peering connection.

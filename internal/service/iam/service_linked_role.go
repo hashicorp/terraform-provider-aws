@@ -93,7 +93,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	serviceName := d.Get("aws_service_name").(string)
-	input := &iam.CreateServiceLinkedRoleInput{
+	input := iam.CreateServiceLinkedRoleInput{
 		AWSServiceName: aws.String(serviceName),
 	}
 
@@ -106,7 +106,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (*iam.CreateServiceLinkedRoleOutput, error) {
-		return conn.CreateServiceLinkedRole(ctx, input)
+		return conn.CreateServiceLinkedRole(ctx, &input)
 	}, "AccessDenied")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): %s", serviceName, err)
@@ -115,8 +115,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 	d.SetId(aws.ToString(output.Role.Arn))
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
-		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
-
+		_, roleName, _, err := serviceLinkedRoleParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -141,8 +140,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	serviceName, roleName, customSuffix, err := DecodeServiceLinkedRoleID(d.Id())
-
+	serviceName, roleName, customSuffix, err := serviceLinkedRoleParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -180,17 +178,16 @@ func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTagsAll, names.AttrTags) {
-		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
+		_, roleName, _, err := serviceLinkedRoleParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &iam.UpdateRoleInput{
+		input := iam.UpdateRoleInput{
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			RoleName:    aws.String(roleName),
 		}
-
-		_, err = conn.UpdateRole(ctx, input)
+		_, err = conn.UpdateRole(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Service Linked Role (%s): %s", d.Id(), err)
@@ -204,8 +201,7 @@ func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
-
+	_, roleName, _, err := serviceLinkedRoleParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -219,11 +215,10 @@ func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func deleteServiceLinkedRole(ctx context.Context, conn *iam.Client, roleName string) error {
-	input := &iam.DeleteServiceLinkedRoleInput{
+	input := iam.DeleteServiceLinkedRoleInput{
 		RoleName: aws.String(roleName),
 	}
-
-	output, err := conn.DeleteServiceLinkedRole(ctx, input)
+	output, err := conn.DeleteServiceLinkedRole(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil
@@ -234,7 +229,6 @@ func deleteServiceLinkedRole(ctx context.Context, conn *iam.Client, roleName str
 	}
 
 	deletionTaskID := aws.ToString(output.DeletionTaskId)
-
 	if deletionTaskID == "" {
 		return nil
 	}
@@ -315,26 +309,25 @@ func findServiceLinkedRoleDeletionStatusByID(ctx context.Context, conn *iam.Clie
 	return output, nil
 }
 
-func DecodeServiceLinkedRoleID(id string) (serviceName, roleName, customSuffix string, err error) {
-	idArn, err := arn.Parse(id)
-
+func serviceLinkedRoleParseResourceID(id string) (string, string, string, error) {
+	arn, err := arn.Parse(id)
 	if err != nil {
 		return "", "", "", err
 	}
 
-	resourceParts := strings.Split(idArn.Resource, "/")
-
+	resourceParts := strings.Split(arn.Resource, "/")
 	if len(resourceParts) != 4 {
-		return "", "", "", fmt.Errorf("expected IAM Service Role ARN (arn:PARTITION:iam::ACCOUNTID:role/aws-service-role/SERVICENAME/ROLENAME), received: %s", id)
+		return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected IAM Service Role ARN (arn:PARTITION:iam::ACCOUNTID:role/aws-service-role/SERVICENAME/ROLENAME)", id)
 	}
 
-	serviceName = resourceParts[2]
-	roleName = resourceParts[3]
+	serviceName := resourceParts[2]
+	roleName := resourceParts[3]
+	var customSuffix string
 
 	roleNameParts := strings.Split(roleName, "_")
 	if len(roleNameParts) == 2 {
 		customSuffix = roleNameParts[1]
 	}
 
-	return
+	return serviceName, roleName, customSuffix, nil
 }

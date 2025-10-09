@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"iter"
 	"log"
 	"maps"
 	"slices"
@@ -33,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
@@ -2930,77 +2928,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 	return opts, nil
 }
 
-func findInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
-	input := ec2.DescribeInstancesInput{
-		InstanceIds: []string{id},
-	}
-
-	output, err := findInstance(ctx, conn, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := output.State.Name; state == awstypes.InstanceStateNameTerminated {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: &input,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.InstanceId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: &input,
-		}
-	}
-
-	return output, nil
-}
-
-func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
-	var output []awstypes.Instance
-	for v, err := range listInstances(ctx, conn, input) {
-		if err != nil {
-			return nil, err
-		}
-		output = append(output, v)
-	}
-
-	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
-}
-
-// DescribeInstances is an "All-Or-Some" call.
-func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) iter.Seq2[awstypes.Instance, error] {
-	return func(yield func(awstypes.Instance, error) bool) {
-		pages := ec2.NewDescribeInstancesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-
-			if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
-				yield(awstypes.Instance{}, &retry.NotFoundError{
-					LastError:   err,
-					LastRequest: &input,
-				})
-				return
-			}
-
-			if err != nil {
-				yield(awstypes.Instance{}, err)
-				return
-			}
-
-			for _, v := range page.Reservations {
-				for _, instance := range v.Instances {
-					if !yield(instance, nil) {
-						return
-					}
-				}
-			}
-		}
-	}
-}
-
 // startInstance starts an EC2 instance and waits for the instance to start.
 func startInstance(ctx context.Context, conn *ec2.Client, id string, retry bool, timeout time.Duration) error {
 	var err error
@@ -3080,132 +3007,6 @@ func terminateInstance(ctx context.Context, conn *ec2.Client, id string, timeout
 	}
 
 	return nil
-}
-
-func waitInstanceCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceStateNamePending),
-		Target:     enum.Slice(awstypes.InstanceStateNameRunning),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			awstypes.InstanceStateNamePending,
-			awstypes.InstanceStateNameRunning,
-			awstypes.InstanceStateNameShuttingDown,
-			awstypes.InstanceStateNameStopping,
-			awstypes.InstanceStateNameStopped,
-		),
-		Target:     enum.Slice(awstypes.InstanceStateNameTerminated),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopping),
-		Target:     enum.Slice(awstypes.InstanceStateNameRunning, awstypes.InstanceStateNameStopped),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceStarted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopped),
-		Target:     enum.Slice(awstypes.InstanceStateNameRunning),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceStopped(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			awstypes.InstanceStateNamePending,
-			awstypes.InstanceStateNameRunning,
-			awstypes.InstanceStateNameShuttingDown,
-			awstypes.InstanceStateNameStopping,
-		),
-		Target:     enum.Slice(awstypes.InstanceStateNameStopped),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
 }
 
 func userDataHashSum(userData string) string {
@@ -3815,7 +3616,7 @@ func expandCapacityReservationSpecification(tfMap map[string]any) *awstypes.Capa
 		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
-	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]any))
 	}
 
@@ -4162,43 +3963,6 @@ func findInstanceLaunchTemplateVersion(ctx context.Context, conn *ec2.Client, id
 	return launchTemplateVersion, nil
 }
 
-func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplateSpecification *awstypes.LaunchTemplateSpecification) (*awstypes.ResponseLaunchTemplateData, error) {
-	input := ec2.DescribeLaunchTemplateVersionsInput{}
-
-	if v := aws.ToString(launchTemplateSpecification.LaunchTemplateId); v != "" {
-		input.LaunchTemplateId = aws.String(v)
-	} else if v := aws.ToString(launchTemplateSpecification.LaunchTemplateName); v != "" {
-		input.LaunchTemplateName = aws.String(v)
-	}
-
-	var latestVersion bool
-
-	if v := aws.ToString(launchTemplateSpecification.Version); v != "" {
-		switch v {
-		case launchTemplateVersionDefault:
-			input.Filters = newAttributeFilterList(map[string]string{
-				"is-default-version": "true",
-			})
-		case launchTemplateVersionLatest:
-			latestVersion = true
-		default:
-			input.Versions = []string{v}
-		}
-	}
-
-	output, err := findLaunchTemplateVersions(ctx, conn, &input)
-
-	if err != nil {
-		return nil, fmt.Errorf("reading EC2 Launch Template versions: %w", err)
-	}
-
-	if latestVersion {
-		return output[len(output)-1].LaunchTemplateData, nil
-	}
-
-	return output[0].LaunchTemplateData, nil
-}
-
 // findLaunchTemplateNameAndVersions returns the specified launch template's name, default version and latest version.
 func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.Client, id string) (string, string, string, error) {
 	lt, err := findLaunchTemplateByID(ctx, conn, id)
@@ -4207,31 +3971,7 @@ func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.Client, id
 		return "", "", "", err
 	}
 
-	return aws.ToString(lt.LaunchTemplateName), strconv.FormatInt(aws.ToInt64(lt.DefaultVersionNumber), 10), strconv.FormatInt(aws.ToInt64(lt.LatestVersionNumber), 10), nil
-}
-
-func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tagKey string) (string, error) {
-	input := ec2.DescribeTagsInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"resource-id": instanceID,
-			names.AttrKey: tagKey,
-		}),
-	}
-
-	output, err := conn.DescribeTags(ctx, &input)
-
-	if err != nil {
-		return "", err
-	}
-
-	switch count := len(output.Tags); count {
-	case 0:
-		return "", nil
-	case 1:
-		return aws.ToString(output.Tags[0].Value), nil
-	default:
-		return "", tfresource.NewTooManyResultsError(count, input)
-	}
+	return aws.ToString(lt.LaunchTemplateName), flex.Int64ToStringValue(lt.DefaultVersionNumber), flex.Int64ToStringValue(lt.LatestVersionNumber), nil
 }
 
 // isSnowballEdgeInstance returns whether or not the specified instance ID indicates an SBE instance.

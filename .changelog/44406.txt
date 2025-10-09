@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_dsql_cluster: Prevents error when optional attribute `deletion_protection_enabled` not set.
+```
+
+```release-note:enhancement
+resource/aws_dsql_cluster: Adds attribute `force_destroy`.
+```
