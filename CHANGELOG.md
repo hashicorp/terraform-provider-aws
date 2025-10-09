@@ -15,6 +15,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_codebuild_project: Add `auto_retry_limit` argument ([#40035](https://github.com/hashicorp/terraform-provider-aws/issues/40035))
 * resource/aws_emrserverless_application: Add `scheduler_configuration` block ([#44589](https://github.com/hashicorp/terraform-provider-aws/issues/44589))
 * resource/aws_lambda_event_source_mapping: Add `schema_registry_config` configuration blocks to `amazon_managed_kafka_event_source_config` and `self_managed_kafka_event_source_config` blocks ([#44540](https://github.com/hashicorp/terraform-provider-aws/issues/44540))
 * resource/aws_ssmcontacts_contact: Add resource identity support ([#44548](https://github.com/hashicorp/terraform-provider-aws/issues/44548))
@@ -36,6 +37,7 @@ BUG FIXES:
 * resource/aws_datazone_project: No longer ignores errors when deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_datazone_project: No longer returns error when already deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_dynamodb_table: Do not retry on `LimitExceededException` ([#44576](https://github.com/hashicorp/terraform-provider-aws/issues/44576))
+* resource/aws_ivschat_room: Set `maximum_message_rate_per_second` validation maximum to `100` ([#44572](https://github.com/hashicorp/terraform-provider-aws/issues/44572))
 * resource/aws_launch_template: `kms_key_id` validation now accepts key ID, alias, and alias ARN in addition to key ARN ([#44505](https://github.com/hashicorp/terraform-provider-aws/issues/44505))
 * resource/aws_servicecatalog_portfolio_share: Add global mutex lock around create and delete operations to prevent `ThrottlingException` errors ([#24730](https://github.com/hashicorp/terraform-provider-aws/issues/24730))
 
