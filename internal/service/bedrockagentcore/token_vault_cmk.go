@@ -66,7 +66,7 @@ func (r *tokenVaultCMKResource) Schema(ctx context.Context, request resource.Sch
 							CustomType: fwtypes.StringEnumType[awstypes.KeyType](),
 							Required:   true,
 						},
-						"kms_key_arn": schema.StringAttribute{
+						names.AttrKMSKeyARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 						},

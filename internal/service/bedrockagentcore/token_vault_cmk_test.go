@@ -52,8 +52,8 @@ func testAccTokenVaultCMK_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"key_type":    tfknownvalue.StringExact(awstypes.KeyTypeCustomerManagedKey),
-							"kms_key_arn": knownvalue.NotNull(),
+							"key_type":          tfknownvalue.StringExact(awstypes.KeyTypeCustomerManagedKey),
+							names.AttrKMSKeyARN: knownvalue.NotNull(),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_vault_id"), knownvalue.StringExact("default")),
@@ -79,8 +79,8 @@ func testAccTokenVaultCMK_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"key_type":    tfknownvalue.StringExact(awstypes.KeyTypeServiceManagedKey),
-							"kms_key_arn": knownvalue.Null(),
+							"key_type":          tfknownvalue.StringExact(awstypes.KeyTypeServiceManagedKey),
+							names.AttrKMSKeyARN: knownvalue.Null(),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_vault_id"), knownvalue.StringExact("default")),
