@@ -38,7 +38,7 @@ The `kms_configuration` block supports the following:
 * `key_type` - (Required) Type of KMS key. Valid values: `CustomerManagedKey`, `ServiceManagedKey`.
 * `kms_key_arn` - (Optional) ARN of the KMS key.
 
-# Attribute Reference
+## Attribute Reference
 
 This resource exports no additional attributes.
 
