@@ -12,9 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
@@ -41,24 +45,31 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "client_secret_arn"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.github.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.github.0.client_id", "test-client-id"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.github.0.client_secret", "test-client-secret"),
-					resource.TestCheckResourceAttrSet(resourceName, "config.0.github.0.oauth_discovery.0.authorization_server_metadata.0.issuer"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "credential_provider_arn", "bedrock-agentcore", regexache.MustCompile(`token-vault/default/oauth2credentialprovider/.+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("client_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/oauth2credentialprovider/.+`))),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify:                    true,
-				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"config.0.github.0.client_secret",
-					"config.0.github.0.client_id"},
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id",
+				},
 			},
 		},
 	})
@@ -88,6 +99,9 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -309,7 +323,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
 
   credential_provider_vendor = "GithubOauth2"
   oauth2_provider_config {
-    github {
+    github_oauth2_provider_config {
       client_id     = "test-client-id"
       client_secret = "test-client-secret"
     }
@@ -325,7 +339,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
 
   credential_provider_vendor = "CustomOauth2"
   oauth2_provider_config {
-    custom {
+    custom_oauth2_provider_config {
       client_id_wo                  = %[2]q
       client_secret_wo              = %[3]q
       client_credentials_wo_version = %[4]d
@@ -346,7 +360,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
 
   credential_provider_vendor = "CustomOauth2"
   oauth2_provider_config {
-    custom {
+    custom_oauth2_provider_config {
       client_id_wo                  = %[2]q
       client_secret_wo              = %[3]q
       client_credentials_wo_version = %[4]d
@@ -372,7 +386,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
 
   credential_provider_vendor = "CustomOauth2"
   oauth2_provider_config {
-    custom {
+    custom_oauth2_provider_config {
       client_id_wo                  = "full-test-client-id"
       client_secret_wo              = "full-test-client-secret"
       client_credentials_wo_version = 1

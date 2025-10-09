@@ -22,7 +22,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "github" {
 
   credential_provider_vendor = "GithubOauth2"
   oauth2_provider_config {
-    github {
+    github_oauth2_provider_config {
       client_id     = "your-github-client-id"
       client_secret = "your-github-client-secret"
     }
@@ -37,7 +37,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "auth0" {
   name = "auth0-oauth-provider"
 
   credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
+  custom_oauth2_provider_config {
     custom {
       client_id_wo                  = "auth0-client-id"
       client_secret_wo              = "auth0-client-secret"
@@ -59,7 +59,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 
   credential_provider_vendor = "CustomOauth2"
   oauth2_provider_config {
-    custom {
+    custom_oauth2_provider_config {
       client_id_wo                  = "keycloak-client-id"
       client_secret_wo              = "keycloak-client-secret"
       client_credentials_wo_version = 1
@@ -93,16 +93,16 @@ The following arguments are optional:
 
 The `oauth2_provider_config` block must contain exactly one of the following provider configurations:
 
-* `custom` - (Optional) Custom OAuth2 provider configuration. See [`custom`](#custom) below.
-* `github` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-microsoft-salesforce-slack) below.
-* `google` - (Optional) Google OAuth provider configuration. See [`google`](#github-google-microsoft-salesforce-slack) below.
-* `microsoft` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#github-google-microsoft-salesforce-slack) below.
-* `salesforce` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#github-google-microsoft-salesforce-slack) below.
-* `slack` - (Optional) Slack OAuth provider configuration. See [`slack`](#github-google-microsoft-salesforce-slack) below.
+* `custom_oauth2_provider_config` - (Optional) Custom OAuth2 provider configuration. See [`custom`](#custom) below.
+* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-microsoft-salesforce-slack) below.
+* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`google`](#github-google-microsoft-salesforce-slack) below.
+* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#github-google-microsoft-salesforce-slack) below.
+* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#github-google-microsoft-salesforce-slack) below.
+* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`slack`](#github-google-microsoft-salesforce-slack) below.
 
 ### `custom`
 
-The `custom` block supports the following:
+The `custom_oauth2_provider_config` block supports the following:
 
 **Standard Credentials (choose one pair):**
 
