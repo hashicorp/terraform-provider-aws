@@ -81,7 +81,7 @@ func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, v := range page.Memories {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceMemory, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newMemoryResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))),
 			)
 		}

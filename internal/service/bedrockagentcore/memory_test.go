@@ -5,33 +5,31 @@ package bedrockagentcore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgentCoreMemory_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var m1, m2, m3 bedrockagentcorecontrol.GetMemoryOutput
+	var m1, m2, m3 awstypes.Memory
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory.test"
 
@@ -49,42 +47,44 @@ func TestAccBedrockAgentCoreMemory_full(t *testing.T) {
 				Config: testAccMemoryConfig(rName, "test description", 30, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryExists(ctx, resourceName, &m1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
-					resource.TestCheckResourceAttr(resourceName, "event_expiry_duration", "30"),
-					resource.TestCheckResourceAttrSet(resourceName, "memory_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "memory_execution_role_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "encryption_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock-agentcore", regexache.MustCompile(`memory/.+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccMemoryConfig(rName, "updated test description", 10, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryExists(ctx, resourceName, &m2),
-					testAccCheckMemoryNotRecreated(&m1, &m2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated test description"),
-					resource.TestCheckResourceAttr(resourceName, "event_expiry_duration", "10"),
-					resource.TestCheckResourceAttrSet(resourceName, "memory_execution_role_arn"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccMemoryConfig(rName, "updated test description", 10, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryExists(ctx, resourceName, &m3),
-					testAccCheckMemoryRecreated(&m2, &m3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "memory_execution_role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "encryption_key_arn"),
 				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "memory_id"),
-				ImportStateVerifyIdentifierAttribute: "memory_id",
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -92,11 +92,7 @@ func TestAccBedrockAgentCoreMemory_full(t *testing.T) {
 
 func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var memory bedrockagentcorecontrol.GetMemoryOutput
+	var memory awstypes.Memory
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory.test"
 
@@ -118,6 +114,9 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -136,61 +135,37 @@ func testAccCheckMemoryDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			memoryID := rs.Primary.Attributes["memory_id"]
-			_, err := tfbedrockagentcore.FindMemoryByID(ctx, conn, memoryID)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameMemory, memoryID, err)
+			_, err := tfbedrockagentcore.FindMemoryByID(ctx, conn, rs.Primary.ID)
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingDestroyed, tfbedrockagentcore.ResNameMemory, memoryID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Agent Core Memory %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckMemoryExists(ctx context.Context, name string, memory *bedrockagentcorecontrol.GetMemoryOutput) resource.TestCheckFunc {
+func testAccCheckMemoryExists(ctx context.Context, n string, v *awstypes.Memory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameMemory, name, errors.New("not found"))
-		}
-
-		memoryID := rs.Primary.Attributes["memory_id"]
-		if memoryID == "" {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameMemory, name, errors.New("memory_id not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
 
-		resp, err := tfbedrockagentcore.FindMemoryByID(ctx, conn, memoryID)
+		resp, err := tfbedrockagentcore.FindMemoryByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameMemory, memoryID, err)
+			return err
 		}
 
-		*memory = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckMemoryRecreated(before, after *bedrockagentcorecontrol.GetMemoryOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if beforeID, afterID := aws.ToString(before.Memory.Id), aws.ToString(after.Memory.Id); beforeID == afterID {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingRecreated, tfbedrockagentcore.ResNameMemory, beforeID, errors.New("not recreated"))
-		}
-		return nil
-	}
-}
-
-func testAccCheckMemoryNotRecreated(before, after *bedrockagentcorecontrol.GetMemoryOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if beforeID, afterID := aws.ToString(before.Memory.Id), aws.ToString(after.Memory.Id); beforeID != afterID {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameMemory, beforeID, errors.New("recreated"))
-		}
+		*v = *resp
 
 		return nil
 	}

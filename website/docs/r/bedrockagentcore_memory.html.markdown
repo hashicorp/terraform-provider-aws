@@ -5,16 +5,6 @@ page_title: "AWS: aws_bedrockagentcore_memory"
 description: |-
   Manages an AWS Bedrock AgentCore Memory.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_bedrockagentcore_memory
 
@@ -82,7 +72,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the memory.
 * `encryption_key_arn` - (Optional) ARN of the KMS key used to encrypt the memory. If not provided, AWS managed encryption is used.
 * `memory_execution_role_arn` - (Optional) ARN of the IAM role that the memory service assumes to perform operations. Required when using custom memory strategies with model processing.
-* `client_token` - (Optional) Unique identifier for request idempotency. If not provided, one will be generated automatically.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -90,13 +80,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Memory.
 * `id` - Unique identifier of the Memory.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
-* `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import

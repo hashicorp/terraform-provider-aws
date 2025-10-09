@@ -8,118 +8,121 @@ import (
 	"errors"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagentcore_memory", name="Memory")
-func newResourceMemory(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceMemory{}
+// @Tags(identifierAttribute="agent_runtime_arn")
+// @Testing(tagsTest=false)
+func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &memoryResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameMemory = "Memory"
-)
-
-type resourceMemory struct {
+type memoryResource struct {
 	framework.ResourceWithModel[memoryResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourceMemory) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 4096),
+				},
 			},
 			"encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"event_expiry_duration": schema.Int32Attribute{
 				Required: true,
-			},
-			"memory_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+				Validators: []validator.Int32{
+					int32validator.Between(7, 365),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
 			"memory_execution_role_arn": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
 	}
 }
 
-func (r *resourceMemory) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *memoryResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data memoryResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan memoryResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	var input bedrockagentcorecontrol.CreateMemoryInput
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var input bedrockagentcorecontrol.CreateMemoryInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
 
 	var (
 		out *bedrockagentcorecontrol.CreateMemoryOutput
@@ -143,170 +146,157 @@ func (r *resourceMemory) Create(ctx context.Context, request resource.CreateRequ
 		return nil
 	})
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil || out.Memory == nil {
-		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &plan, fwflex.WithFieldNamePrefix("Memory")))
+	memoryID := aws.ToString(out.Memory.Id)
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &data, fwflex.WithFieldNamePrefix("Memory")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitMemoryCreated(ctx, conn, plan.MemoryID.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.MemoryID.String())
+	if _, err := waitMemoryCreated(ctx, conn, memoryID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
-func (r *resourceMemory) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state memoryResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+func (r *memoryResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data memoryResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findMemoryByID(ctx, conn, state.MemoryID.ValueString())
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	memoryID := fwflex.StringValueFromFramework(ctx, data.ID)
+	out, err := findMemoryByID(ctx, conn, memoryID)
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &state, fwflex.WithFieldNamePrefix("Memory")))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("Memory")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
-func (r *resourceMemory) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var plan, state memoryResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old memoryResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := fwflex.Diff(ctx, plan, state)
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
 	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
+		memoryID := fwflex.StringValueFromFramework(ctx, new.ID)
 		var input bedrockagentcorecontrol.UpdateMemoryInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateMemory(ctx, &input)
+		// Additional fields.
+		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.MemoryId = aws.String(memoryID)
+
+		_, err := conn.UpdateMemory(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.MemoryID.String())
-			return
-		}
-		if out == nil || out.Memory == nil {
-			smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.MemoryID.String())
-			return
-		}
-
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Memory, &plan, fwflex.WithFieldNamePrefix("Memory")))
-		if response.Diagnostics.HasError() {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 			return
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
-func (r *resourceMemory) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-
-	var state memoryResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+func (r *memoryResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data memoryResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	memoryID := fwflex.StringValueFromFramework(ctx, data.ID)
 	input := bedrockagentcorecontrol.DeleteMemoryInput{
-		MemoryId: state.MemoryID.ValueStringPointer(),
+		MemoryId: aws.String(memoryID),
 	}
-
 	_, err := conn.DeleteMemory(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitMemoryDeleted(ctx, conn, state.MemoryID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryID.String())
+	if _, err := waitMemoryDeleted(ctx, conn, memoryID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 		return
 	}
 }
 
-func (r *resourceMemory) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) { // nosemgrep:ci.semgrep.framework.with-import-by-id
-	resource.ImportStatePassthroughID(ctx, path.Root("memory_id"), request, response)
-}
-
-func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetMemoryOutput, error) {
+func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.MemoryStatusCreating),
 		Target:                    enum.Slice(awstypes.MemoryStatusActive),
-		Refresh:                   statusMemory(ctx, conn, id),
+		Refresh:                   statusMemory(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetMemoryOutput); ok {
+	if out, ok := outputRaw.(*awstypes.Memory); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*bedrockagentcorecontrol.GetMemoryOutput, error) {
+func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemoryStatusDeleting, awstypes.MemoryStatusActive),
 		Target:  []string{},
-		Refresh: statusMemory(ctx, conn, id),
+		Refresh: statusMemory(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetMemoryOutput); ok {
+	if out, ok := outputRaw.(*awstypes.Memory); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func statusMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMemory(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findMemoryByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -316,24 +306,29 @@ func statusMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, id 
 			return nil, "", smarterr.NewError(err)
 		}
 
-		return out, string(out.Memory.Status), nil
+		return out, string(out.Status), nil
 	}
 }
 
-func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*bedrockagentcorecontrol.GetMemoryOutput, error) {
+func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string) (*awstypes.Memory, error) {
 	input := bedrockagentcorecontrol.GetMemoryInput{
 		MemoryId: aws.String(id),
 	}
 
-	out, err := conn.GetMemory(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
+	return findMemory(ctx, conn, &input)
+}
 
+func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetMemoryInput) (*awstypes.Memory, error) {
+	out, err := conn.GetMemory(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
@@ -341,18 +336,19 @@ func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, i
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
-	return out, nil
+	return out.Memory, nil
 }
 
 type memoryResourceModel struct {
 	framework.WithRegionModel
-	ARN                    fwtypes.ARN    `tfsdk:"arn"`
-	ClientToken            types.String   `tfsdk:"client_token"`
+	ARN                    types.String   `tfsdk:"arn"`
 	Description            types.String   `tfsdk:"description"`
-	EncryptionKeyArn       fwtypes.ARN    `tfsdk:"encryption_key_arn"`
+	EncryptionKeyARN       fwtypes.ARN    `tfsdk:"encryption_key_arn"`
 	EventExpiryDuration    types.Int32    `tfsdk:"event_expiry_duration"`
-	MemoryID               types.String   `tfsdk:"memory_id"`
-	MemoryExecutionRoleArn types.String   `tfsdk:"memory_execution_role_arn"`
+	ID                     types.String   `tfsdk:"id"`
+	MemoryExecutionRoleARN fwtypes.ARN    `tfsdk:"memory_execution_role_arn"`
 	Name                   types.String   `tfsdk:"name"`
+	Tags                   tftags.Map     `tfsdk:"tags"`
+	TagsAll                tftags.Map     `tfsdk:"tags_all"`
 	Timeouts               timeouts.Value `tfsdk:"timeouts"`
 }
