@@ -113,7 +113,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testing.T) {
 	ctx := acctest.Context(t)
-	var oauth2credentialprovider1, oauth2credentialprovider2 bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
 
@@ -130,32 +130,34 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 			{
 				Config: testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, "auth0-client-id", "auth0-client-secret", 1, "https://dev-example.auth0.com/.well-known/openid-configuration"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_vendor", "CustomOauth2"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.client_credentials_wo_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.discovery_url", "https://dev-example.auth0.com/.well-known/openid-configuration"),
+					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify:                    true,
-				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"config.0.custom.0.client_id_wo",
-					"config.0.custom.0.client_secret_wo",
-					"config.0.custom.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
 				},
 			},
 			{
 				Config: testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, "updated-client-id", "updated-client-secret", 2, "https://company.okta.com/.well-known/openid-configuration"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider2),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.client_credentials_wo_version", "2"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.discovery_url", "https://company.okta.com/.well-known/openid-configuration"),
+					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -181,28 +183,21 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 				Config: testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, "keycloak-client-id", "keycloak-client-secret", 1, "https://auth.company.com/realms/production", "https://auth.company.com/realms/production/protocol/openid-connect/auth", "https://auth.company.com/realms/production/protocol/openid-connect/token", "code", "id_token"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_vendor", "CustomOauth2"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.client_credentials_wo_version", "1"),
-					resource.TestCheckNoResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.discovery_url"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.issuer", "https://auth.company.com/realms/production"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.authorization_endpoint", "https://auth.company.com/realms/production/protocol/openid-connect/auth"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.token_endpoint", "https://auth.company.com/realms/production/protocol/openid-connect/token"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.response_types.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.response_types.*", "code"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.response_types.*", "id_token"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify:                    true,
-				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"config.0.custom.0.client_id_wo",
-					"config.0.custom.0.client_secret_wo",
-					"config.0.custom.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
 				},
 			},
 		},
@@ -229,27 +224,21 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 				Config: testAccOAuth2CredentialProviderConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_vendor", "CustomOauth2"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.client_credentials_wo_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.issuer", "https://auth.example.com/realms/production"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.authorization_endpoint", "https://auth.example.com/realms/production/protocol/openid-connect/auth"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.token_endpoint", "https://auth.example.com/realms/production/protocol/openid-connect/token"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.response_types.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.response_types.*", "code"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "config.0.custom.0.oauth_discovery.0.authorization_server_metadata.0.response_types.*", "id_token"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify:                    true,
-				ImportStateId:                        rName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"config.0.custom.0.client_id_wo",
-					"config.0.custom.0.client_secret_wo",
-					"config.0.custom.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
 				},
 			},
 		},
