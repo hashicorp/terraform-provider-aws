@@ -164,7 +164,7 @@ func TestAccECRImagesDataSource_tagStatus(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "tag_status", "TAGGED"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "image_ids.#"),
 					// Verify all returned images have tags
-					testAccCheckECRImagesAllHaveTags(dataSourceName),
+					testAccCheckImagesAllHaveTags(dataSourceName),
 				),
 			},
 			{
@@ -205,7 +205,7 @@ data "aws_ecr_images" "test" {
 `, rName, maxResults)
 }
 
-func testAccCheckECRImagesAllHaveTags(resourceName string) resource.TestCheckFunc {
+func testAccCheckImagesAllHaveTags(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
