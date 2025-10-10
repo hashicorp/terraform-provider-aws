@@ -38,7 +38,7 @@ func (d *dataSourceGlobalCluster) Schema(ctx context.Context, request datasource
 			names.AttrDeletionProtection: schema.BoolAttribute{
 				Computed: true,
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrEngine: schema.StringAttribute{
@@ -87,6 +87,8 @@ func (d *dataSourceGlobalCluster) Read(ctx context.Context, request datasource.R
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	setTagsOut(ctx, output.TagList)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

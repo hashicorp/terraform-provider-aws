@@ -34,9 +34,9 @@ func TestAccRDSGlobalClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDeletionProtection, resourceName, names.AttrDeletionProtection),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
-					resource.TestCheckResourceAttrPair(dataSourceName, "identifier", resourceName, "global_cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIdentifier, resourceName, "global_cluster_identifier"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "members", resourceName, "global_cluster_members"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_id", resourceName, "global_cluster_resource_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, "global_cluster_resource_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageEncrypted, resourceName, names.AttrStorageEncrypted),
 				),
 			},
@@ -67,8 +67,8 @@ resource "aws_rds_cluster" "primary" {
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
   cluster_identifier        = "%[1]s-primary"
-  master_username     = "tfacctest"
-  master_password     = "avoid-plaintext-passwords"
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
   database_name             = "example_db"
   global_cluster_identifier = aws_rds_global_cluster.test.id
   skip_final_snapshot       = true
