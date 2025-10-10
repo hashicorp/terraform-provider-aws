@@ -31,7 +31,7 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_basic(rName),
+				Config: testAccApplicationConfig_basic(rName, "emr-6.6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
@@ -366,7 +366,7 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_basic(rName),
+				Config: testAccApplicationConfig_basic(rName, "emr-6.6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
@@ -448,6 +448,96 @@ func testAccCheckApplicationExists(ctx context.Context, t *testing.T, resourceNa
 	}
 }
 
+func TestAccEMRServerlessApplication_schedulerConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application types.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_schedulerConfiguration(rName, 10, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.max_concurrent_runs", "10"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_schedulerConfiguration(rName, 20, 120),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.max_concurrent_runs", "20"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "120"),
+				),
+			},
+			{ // When `scheduler_configuration` is removed,  scheduler configuration is disabled
+				Config: testAccApplicationConfig_basic(rName, "emr-7.1.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "0"),
+				),
+			},
+			{
+				// If both arguments are omitted and an empty block is specified for scheduler_config, defaults of 15 and 360 are used
+				Config: testAccApplicationConfig_schedulerConfigurationEmptyBlock(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.max_concurrent_runs", "15"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "360"),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_basic(rName, "emr-7.1.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "0"),
+				),
+			},
+			{
+				// If queue_timeout_minutes is omitted, default of 360 is used
+				Config: testAccApplicationConfig_schedulerConfigurationMaxConcurrentRuns(rName, 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.max_concurrent_runs", "30"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "360"),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_basic(rName, "emr-7.1.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "0"),
+				),
+			},
+			{
+				// If max_concurrent_runs is omitted, default of 15 is used
+				Config: testAccApplicationConfig_schedulerConfigurationQueueTimeoutMinutes(rName, 180),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.max_concurrent_runs", "15"),
+					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "180"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EMRServerlessClient(ctx)
@@ -473,14 +563,14 @@ func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.
 	}
 }
 
-func testAccApplicationConfig_basic(rName string) string {
+func testAccApplicationConfig_basic(rName, releaseLabel string) string {
 	return fmt.Sprintf(`
 resource "aws_emrserverless_application" "test" {
   name          = %[1]q
-  release_label = "emr-6.6.0"
+  release_label = %[2]q
   type          = "hive"
 }
-`, rName)
+`, rName, releaseLabel)
 }
 
 func testAccApplicationConfig_releaseLabel(rName string, rl string) string {
@@ -814,4 +904,55 @@ resource "aws_emrserverless_application" "test" {
   }
 }
 `, rName, selectedVersionResourceName, firstImageVersion, secondImageVersion), nil
+}
+
+func testAccApplicationConfig_schedulerConfiguration(rName string, maxConcurrentRuns, queueTimeoutMinutes int) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.1.0"
+  type          = "hive"
+  scheduler_configuration {
+    max_concurrent_runs   = %[2]d
+    queue_timeout_minutes = %[3]d
+  }
+}
+`, rName, maxConcurrentRuns, queueTimeoutMinutes)
+}
+
+func testAccApplicationConfig_schedulerConfigurationEmptyBlock(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.1.0"
+  type          = "hive"
+  scheduler_configuration {}
+}
+`, rName)
+}
+
+func testAccApplicationConfig_schedulerConfigurationMaxConcurrentRuns(rName string, maxConcurrentRuns int) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.1.0"
+  type          = "hive"
+  scheduler_configuration {
+    max_concurrent_runs = %[2]d
+  }
+}
+`, rName, maxConcurrentRuns)
+}
+
+func testAccApplicationConfig_schedulerConfigurationQueueTimeoutMinutes(rName string, queueTimeoutMinutes int) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.1.0"
+  type          = "hive"
+  scheduler_configuration {
+    queue_timeout_minutes = %[2]d
+  }
+}
+`, rName, queueTimeoutMinutes)
 }
