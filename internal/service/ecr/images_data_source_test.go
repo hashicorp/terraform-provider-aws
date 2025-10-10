@@ -102,6 +102,27 @@ data "aws_ecr_images" "test" {
 `, rName)
 }
 
+func TestAccECRImagesDataSource_describeImages(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_ecr_images.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagesDataSourceConfig_describeImages(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "describe_images", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECRImagesDataSource_maxResults(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -156,6 +177,19 @@ func TestAccECRImagesDataSource_tagStatus(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccImagesDataSourceConfig_describeImages(rName string, describeImages bool) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = %[1]q
+}
+
+data "aws_ecr_images" "test" {
+  repository_name   = aws_ecr_repository.test.name
+  describe_images   = %[2]t
+}
+`, rName, describeImages)
 }
 
 func testAccImagesDataSourceConfig_maxResults(rName string, maxResults int) string {

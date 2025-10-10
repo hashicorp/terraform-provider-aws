@@ -31,6 +31,11 @@ type imagesDataSource struct {
 func (d *imagesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"describe_images": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Whether to call DescribeImages API to get detailed image information",
+			},
+			"image_details": framework.DataSourceComputedListOfObjectAttribute[imageDetailsModel](ctx),
 			"image_ids": framework.DataSourceComputedListOfObjectAttribute[imagesIDsModel](ctx),
 			"max_results": schema.Int64Attribute{
 				Optional:    true,
@@ -92,7 +97,56 @@ func (d *imagesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
+	// If describe_images is true, call DescribeImages API
+	if !data.DescribeImages.IsNull() && data.DescribeImages.ValueBool() {
+		registryID := ""
+		if !data.RegistryID.IsNull() {
+			registryID = data.RegistryID.ValueString()
+		}
+
+		imageDetails, err := findImagesDetails(ctx, conn, data.RepositoryName.ValueString(), registryID, output)
+		if err != nil {
+			resp.Diagnostics.AddError("describing ECR Images", err.Error())
+			return
+		}
+
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, imageDetails, &data.ImageDetails)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func findImagesDetails(ctx context.Context, conn *ecr.Client, repositoryName, registryID string, imageIds []awstypes.ImageIdentifier) ([]awstypes.ImageDetail, error) {
+	var output []awstypes.ImageDetail
+
+	// DescribeImages has a limit of 100 images per request
+	const batchSize = 100
+	for i := 0; i < len(imageIds); i += batchSize {
+		end := i + batchSize
+		if end > len(imageIds) {
+			end = len(imageIds)
+		}
+
+		input := &ecr.DescribeImagesInput{
+			RepositoryName: &repositoryName,
+			ImageIds:       imageIds[i:end],
+		}
+		if registryID != "" {
+			input.RegistryId = &registryID
+		}
+
+		result, err := conn.DescribeImages(ctx, input)
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, result.ImageDetails...)
+	}
+
+	return output, nil
 }
 
 func findImages(ctx context.Context, conn *ecr.Client, input *ecr.ListImagesInput) ([]awstypes.ImageIdentifier, error) {
@@ -121,11 +175,22 @@ func findImages(ctx context.Context, conn *ecr.Client, input *ecr.ListImagesInpu
 
 type imagesDataSourceModel struct {
 	framework.WithRegionModel
+	DescribeImages types.Bool                                      `tfsdk:"describe_images"`
+	ImageDetails   fwtypes.ListNestedObjectValueOf[imageDetailsModel] `tfsdk:"image_details"`
 	ImageIDs       fwtypes.ListNestedObjectValueOf[imagesIDsModel] `tfsdk:"image_ids"`
 	MaxResults     types.Int64                                     `tfsdk:"max_results"`
 	RegistryID     types.String                                    `tfsdk:"registry_id"`
 	RepositoryName types.String                                    `tfsdk:"repository_name"`
 	TagStatus      types.String                                    `tfsdk:"tag_status"`
+}
+
+type imageDetailsModel struct {
+	ImageDigest      types.String                      `tfsdk:"image_digest"`
+	ImagePushedAt    types.String                      `tfsdk:"image_pushed_at"`
+	ImageSizeInBytes types.Int64                       `tfsdk:"image_size_in_bytes"`
+	ImageTags        fwtypes.ListValueOf[types.String] `tfsdk:"image_tags"`
+	RegistryID       types.String                      `tfsdk:"registry_id"`
+	RepositoryName   types.String                      `tfsdk:"repository_name"`
 }
 
 type imagesIDsModel struct {
