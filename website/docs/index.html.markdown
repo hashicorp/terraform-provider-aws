@@ -232,7 +232,39 @@ provider "aws" {
 ```ini
 [profile customprofile]
 credential_process = custom-process --username jdoe
+
 ```
+
+### Module-scoped User-Agent Information with `provider_meta`
+
+The AWS provider supports sending provider metadata via the [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta).
+This block allows module authors to provide additional information in the `User-Agent` header, scoped only to resources defined in a given module.
+
+For example, the following `terraform` block can be used to append additional User-Agent details.
+
+```terraform
+terraform {
+  required_providers {
+    awscc = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+
+  provider_meta "aws" {
+    user_agent = [
+      {
+        product_name    = "example-demo"
+        product_version = "0.0.1"
+        comment         = "a demo module"
+      },
+    ]
+  }
+}
+```
+
+Note that `provider_meta` is defined within the `terraform` block.
+The `provider` block is inherited from the root module.
 
 ## AWS Configuration Reference
 
@@ -301,10 +333,25 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 ## Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. E.g.,
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. 
+To provide additional information in the User-Agent headers, set the `TF_APPEND_USER_AGENT` environment variable, or use the `user_agent` block.
+
+When using the environment variable, the value will be directly appended to the User-Agent header.
+For example,
 
 ```console
 % export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```
+
+When using the `user_agent` block, the components will be parsed and appended to the User-Agent in the form `{product_name}/{product_version} ({comment})`.
+For example, the configuration below would append `example-demo/0.0.1 (a demo module)`.
+
+```terraform
+user_agent {
+  product_name    = "example-demo"
+  product_version = "0.0.1"
+  comment         = "a demo module"
+}
 ```
 
 ## Argument Reference

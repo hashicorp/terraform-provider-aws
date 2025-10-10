@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/metaschema"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -49,6 +50,7 @@ var (
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
 	_ provider.ProviderWithListResources      = &frameworkProvider{}
+	_ provider.ProviderWithMetaSchema         = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
@@ -339,7 +341,78 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 					},
 				},
 			},
+			"user_agent": schema.ListNestedBlock{
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"comment": schema.StringAttribute{
+							Optional:    true,
+							Description: "Comment describing any additional product details.",
+						},
+						"product_name": schema.StringAttribute{
+							Required:    true,
+							Description: "Product name.",
+						},
+						"product_version": schema.StringAttribute{
+							Optional:    true,
+							Description: "Product version. Optional, and should only be set when `product_name` is set.",
+						},
+					},
+				},
+			},
 		},
+	}
+}
+
+func (p *frameworkProvider) MetaSchema(ctx context.Context, req provider.MetaSchemaRequest, resp *provider.MetaSchemaResponse) {
+	resp.Schema = metaschema.Schema{
+		Attributes: map[string]metaschema.Attribute{
+			"user_agent": metaschema.ListNestedAttribute{
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+				Optional:    true,
+				NestedObject: metaschema.NestedAttributeObject{
+					Attributes: map[string]metaschema.Attribute{
+						"comment": schema.StringAttribute{
+							Description: "Comment describing any additional product details.",
+							Optional:    true,
+						},
+						"product_name": schema.StringAttribute{
+							Description: "Product name.",
+							Required:    true,
+						},
+						"product_version": schema.StringAttribute{
+							Description: "Product version. Optional, and should only be set when `product_name` is set.",
+							Optional:    true,
+						},
+					},
+				},
+			},
+		},
+
+		// TODO
+		// metaschema.Schema does not support a Blocks field. Can we mux this if we're on protocol V5?
+		//
+		// Blocks: map[string]schema.Block{
+		// 	"user_agent": schema.ListNestedBlock{
+		// 		Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+		// 		NestedObject: schema.NestedBlockObject{
+		// 			Attributes: map[string]schema.Attribute{
+		// 				"comment": schema.StringAttribute{
+		// 					Optional:    true,
+		// 					Description: "Comment describing any additional product details.",
+		// 				},
+		// 				"product_name": schema.StringAttribute{
+		// 					Required:    true,
+		// 					Description: "Product name.",
+		// 				},
+		// 				"product_version": schema.StringAttribute{
+		// 					Optional:    true,
+		// 					Description: "Product version. Optional, and should only be set when `product_name` is set.",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
 	}
 }
 
