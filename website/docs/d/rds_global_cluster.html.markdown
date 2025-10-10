@@ -43,7 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 * `engine_version` -   Version of the database engine for this Global Cluster.
 * `storage_encrypted` - Whether the DB cluster is encrypted.
 * `members` -  Set of objects containing Global Cluster members.
-  * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
-  * `is_writer` - Whether the member is the primary DB Cluster
+    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
+    * `is_writer` - Whether the member is the primary DB Cluster
 * `resource_id` - AWS Region-unique, immutable identifier for the global database cluster.
 * `tags` - A map of tags to assigned to the Global Cluster.
