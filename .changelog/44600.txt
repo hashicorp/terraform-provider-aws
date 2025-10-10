@@ -1,3 +1,0 @@
-```release-note:bug
-resource/odb: fixed documentation
-```
