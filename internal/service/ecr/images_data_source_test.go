@@ -239,19 +239,6 @@ data "aws_ecr_images" "test" {
 `, registryID, repositoryName, tagStatus)
 }
 
-func testAccImagesDataSourceConfig_tagStatus(rName, tagStatus string) string {
-	return fmt.Sprintf(`
-resource "aws_ecr_repository" "test" {
-  name = %[1]q
-}
-
-data "aws_ecr_images" "test" {
-  repository_name = aws_ecr_repository.test.name
-  tag_status      = %[2]q
-}
-`, rName, tagStatus)
-}
-
 func testAccImagesDataSourceConfig_registryID(registryID, repositoryName string) string {
 	return fmt.Sprintf(`
 data "aws_ecr_images" "test" {
