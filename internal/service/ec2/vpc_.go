@@ -20,6 +20,7 @@ import (
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -31,12 +32,15 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
@@ -832,6 +836,13 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 	awsClient := l.Meta()
 	conn := awsClient.EC2Client(ctx)
 
+	attributes := []attribute.KeyValue{
+		otelaws.RegionAttr(awsClient.Region(ctx)),
+	}
+	for _, attribute := range attributes {
+		ctx = tflog.SetField(ctx, string(attribute.Key), attribute.Value.AsInterface())
+	}
+
 	var query vpcListResourceModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
@@ -851,6 +862,8 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 		Values: []string{"false"},
 	})
 
+	tflog.Info(ctx, "Listing resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		pages := ec2.NewDescribeVpcsPaginator(conn, &input)
 		for pages.HasMorePages() {
@@ -862,12 +875,16 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 			}
 
 			for _, vpc := range page.Vpcs {
+				ctx := tflog.SetField(ctx, "tf_aws.resource_attribute.id", aws.ToString(vpc.VpcId))
+
 				result := request.NewListResult(ctx)
 
 				tags := keyValueTags(ctx, vpc.Tags)
 
 				rd := l.ResourceData()
 				rd.SetId(aws.ToString(vpc.VpcId))
+
+				tflog.Info(ctx, "Reading resource")
 				err := resourceVPCFlatten(ctx, awsClient, &vpc, rd)
 				if retry.NotFound(err) {
 					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
