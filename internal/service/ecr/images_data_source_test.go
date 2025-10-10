@@ -5,10 +5,12 @@ package ecr_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -146,7 +148,8 @@ func TestAccECRImagesDataSource_maxResults(t *testing.T) {
 
 func TestAccECRImagesDataSource_tagStatus(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	registryID := "137112412989"
+	repositoryName := "amazonlinux"
 	dataSourceName := "data.aws_ecr_images.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -155,24 +158,21 @@ func TestAccECRImagesDataSource_tagStatus(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagesDataSourceConfig_tagStatus(rName, "TAGGED"),
+				Config: testAccImagesDataSourceConfig_tagStatusPublic(registryID, repositoryName, "TAGGED"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, repositoryName),
 					resource.TestCheckResourceAttr(dataSourceName, "tag_status", "TAGGED"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "image_ids.#"),
+					// Verify all returned images have tags
+					testAccCheckECRImagesAllHaveTags(dataSourceName),
 				),
 			},
 			{
-				Config: testAccImagesDataSourceConfig_tagStatus(rName, "UNTAGGED"),
+				Config: testAccImagesDataSourceConfig_tagStatusPublic(registryID, repositoryName, "ANY"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "tag_status", "UNTAGGED"),
-				),
-			},
-			{
-				Config: testAccImagesDataSourceConfig_tagStatus(rName, "ANY"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, repositoryName),
 					resource.TestCheckResourceAttr(dataSourceName, "tag_status", "ANY"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "image_ids.#"),
 				),
 			},
 		},
@@ -203,6 +203,40 @@ data "aws_ecr_images" "test" {
   max_results     = %[2]d
 }
 `, rName, maxResults)
+}
+
+func testAccCheckECRImagesAllHaveTags(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		imageCount := rs.Primary.Attributes["image_ids.#"]
+		count, err := strconv.Atoi(imageCount)
+		if err != nil {
+			return err
+		}
+
+		for i := 0; i < count; i++ {
+			tagKey := fmt.Sprintf("image_ids.%d.image_tag", i)
+			if tag := rs.Primary.Attributes[tagKey]; tag == "" {
+				return fmt.Errorf("Image at index %d has no tag when TAGGED filter was used", i)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccImagesDataSourceConfig_tagStatusPublic(registryID, repositoryName, tagStatus string) string {
+	return fmt.Sprintf(`
+data "aws_ecr_images" "test" {
+  registry_id     = %[1]q
+  repository_name = %[2]q
+  tag_status      = %[3]q
+}
+`, registryID, repositoryName, tagStatus)
 }
 
 func testAccImagesDataSourceConfig_tagStatus(rName, tagStatus string) string {
