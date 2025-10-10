@@ -186,8 +186,8 @@ resource "aws_ecr_repository" "test" {
 }
 
 data "aws_ecr_images" "test" {
-  repository_name   = aws_ecr_repository.test.name
-  describe_images   = %[2]t
+  repository_name = aws_ecr_repository.test.name
+  describe_images = %[2]t
 }
 `, rName, describeImages)
 }
