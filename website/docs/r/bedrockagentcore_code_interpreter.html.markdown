@@ -49,7 +49,7 @@ resource "aws_bedrockagentcore_code_interpreter" "example" {
   description        = "Code interpreter with custom execution role"
   execution_role_arn = aws_iam_role.example.arn
 
-  network_configuration = {
+  network_configuration {
     network_mode = "SANDBOX"
   }
 }
