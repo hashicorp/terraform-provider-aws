@@ -20,6 +20,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_function", name="Function")
@@ -35,7 +36,7 @@ func resourceFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,7 +44,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -63,7 +64,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -78,7 +79,7 @@ func resourceFunction() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionRuntime](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,15 +87,15 @@ func resourceFunction() *schema.Resource {
 	}
 }
 
-func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	functionName := d.Get("name").(string)
+	functionName := d.Get(names.AttrName).(string)
 	input := &cloudfront.CreateFunctionInput{
 		FunctionCode: []byte(d.Get("code").(string)),
 		FunctionConfig: &awstypes.FunctionConfig{
-			Comment: aws.String(d.Get("comment").(string)),
+			Comment: aws.String(d.Get(names.AttrComment).(string)),
 			Runtime: awstypes.FunctionRuntime(d.Get("runtime").(string)),
 		},
 		Name: aws.String(functionName),
@@ -128,7 +129,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -144,20 +145,21 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) DEVELOPMENT stage: %s", d.Id(), err)
 	}
 
-	d.Set("arn", outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("comment", outputDF.FunctionSummary.FunctionConfig.Comment)
+	d.Set(names.AttrARN, outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
+	d.Set(names.AttrComment, outputDF.FunctionSummary.FunctionConfig.Comment)
 	d.Set("etag", outputDF.ETag)
 	if err := d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(outputDF.FunctionSummary.FunctionConfig.KeyValueStoreAssociations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting key_value_store_associations: %s", err)
 	}
-	d.Set("name", outputDF.FunctionSummary.Name)
+	d.Set(names.AttrName, outputDF.FunctionSummary.Name)
 	d.Set("runtime", outputDF.FunctionSummary.FunctionConfig.Runtime)
-	d.Set("status", outputDF.FunctionSummary.Status)
+	d.Set(names.AttrStatus, outputDF.FunctionSummary.Status)
 
-	outputGF, err := conn.GetFunction(ctx, &cloudfront.GetFunctionInput{
+	input := cloudfront.GetFunctionInput{
 		Name:  aws.String(d.Id()),
 		Stage: awstypes.FunctionStageDevelopment,
-	})
+	}
+	outputGF, err := conn.GetFunction(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) DEVELOPMENT stage code: %s", d.Id(), err)
@@ -178,16 +180,16 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	etag := d.Get("etag").(string)
 
-	if d.HasChanges("code", "comment", "key_value_store_associations", "runtime") {
+	if d.HasChanges("code", names.AttrComment, "key_value_store_associations", "runtime") {
 		input := &cloudfront.UpdateFunctionInput{
 			FunctionCode: []byte(d.Get("code").(string)),
 			FunctionConfig: &awstypes.FunctionConfig{
-				Comment: aws.String(d.Get("comment").(string)),
+				Comment: aws.String(d.Get(names.AttrComment).(string)),
 				Runtime: awstypes.FunctionRuntime(d.Get("runtime").(string)),
 			},
 			IfMatch: aws.String(etag),
@@ -223,15 +225,16 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFront Function: %s", d.Id())
-	_, err := conn.DeleteFunction(ctx, &cloudfront.DeleteFunctionInput{
+	input := cloudfront.DeleteFunctionInput{
 		IfMatch: aws.String(d.Get("etag").(string)),
 		Name:    aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFunction(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchFunctionExists](err) {
 		return diags
@@ -270,12 +273,12 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, name
 	return output, nil
 }
 
-func expandKeyValueStoreAssociations(tfList []interface{}) *awstypes.KeyValueStoreAssociations {
+func expandKeyValueStoreAssociations(tfList []any) *awstypes.KeyValueStoreAssociations {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	items := tfslices.ApplyToAll(tfList, func(v interface{}) awstypes.KeyValueStoreAssociation {
+	items := tfslices.ApplyToAll(tfList, func(v any) awstypes.KeyValueStoreAssociation {
 		return awstypes.KeyValueStoreAssociation{
 			KeyValueStoreARN: aws.String(v.(string)),
 		}

@@ -37,6 +37,7 @@ resource "aws_vpn_connection" "transit" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the gateway.
 * `filter` - (Optional) One or more [name-value pairs][dcg-filters] to filter by.
 
@@ -48,6 +49,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the customer gateway.
 * `bgp_asn` - Gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+* `bgp_asn_extended` - Gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
 * `certificate_arn` - ARN for the customer gateway certificate.
 * `device_name` - Name for the customer gateway device.
 * `ip_address` - IP address of the gateway's Internet-routable external interface.

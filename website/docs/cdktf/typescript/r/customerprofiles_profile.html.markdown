@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountNumber` - A unique account number that you have given to the customer.
 * `additionalInformation` - Any additional information relevant to the customer’s profile.
 * `address` - A block that specifies a generic address associated with the customer that is not mailing, shipping, or billing. [Documented below](#address).
@@ -140,4 +141,4 @@ Using `terraform import`, import Amazon Customer Profiles Profile using the reso
 % terraform import aws_customerprofiles_profile.example domain-name/5f2f473dfbe841eb8d05cfc2a4c926df
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8ad6d59612e9634afeca89733cb00849002233aaf02fcec05c1ddb4c1373ee09 -->
+<!-- cache-key: cdktf-0.20.8 input-af49128fcab4a3999a51c025c792660625107a528d4294a8e7bb1b914362a607 -->

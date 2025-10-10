@@ -33,6 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Concatenation of the catalog ID and connection name. For example, if your account ID is
 `123456789123` and the connection name is `conn` then the ID is `123456789123:conn`.
 
@@ -42,11 +45,13 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Glue Connection.
 * `catalog_id` - Catalog ID of the Glue Connection.
+* `athena_properties` - A map of connection properties specific to the Athena compute environment.
+* `connection_properties` - A map of connection properties.
 * `connection_type` - Type of Glue Connection.
-* `description` – Description of the connection.
-* `match_criteria` – A list of criteria that can be used in selecting this connection.
+* `description` - Description of the connection.
+* `match_criteria` - A list of criteria that can be used in selecting this connection.
 * `name` - Name of the Glue Connection.
 * `physical_connection_requirements` - A map of physical connection requirements, such as VPC and SecurityGroup.
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.20.1 input-c3a54c13f6d1584c4b355be148ce4f3063077b22c8de52485229079b8245ad9c -->
+<!-- cache-key: cdktf-0.20.8 input-484ae7bb977974c3e250f0cee5a9f7da276812263c14dc2591304690bb7e70b2 -->

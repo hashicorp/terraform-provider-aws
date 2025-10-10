@@ -28,6 +28,7 @@ resource "aws_directory_service_conditional_forwarder" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_id` - (Required) ID of directory.
 * `dns_ips` - (Required) A list of forwarder IP addresses.
 * `remote_domain_name` - (Required) The fully qualified domain name of the remote domain for which forwarders will be used.

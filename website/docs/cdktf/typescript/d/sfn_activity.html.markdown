@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Name that identifies the activity.
 * `arn` - (Optional) ARN that identifies the activity.
 
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN that identifies the activity.
 * `creationDate` - Date the activity was created.
 
-<!-- cache-key: cdktf-0.20.1 input-e2493cc090cc44214dfdcc458776424943b9df2b9c75318cd7718d0ef209f5e1 -->
+<!-- cache-key: cdktf-0.20.8 input-df253935e50b8adfc1992d59a02b1ae7dde44de3aa93f4b7f5899db93b2ecb77 -->

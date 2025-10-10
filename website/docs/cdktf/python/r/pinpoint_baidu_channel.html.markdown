@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
 * `api_key` - (Required) Platform credential API key from Baidu.
@@ -76,4 +77,4 @@ Using `terraform import`, import Pinpoint Baidu Channel using the `application-i
 % terraform import aws_pinpoint_baidu_channel.channel application-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0f0737a2ecf3441f3760954b544512dca7098ae0198bf9673837a1b43aafd321 -->
+<!-- cache-key: cdktf-0.20.8 input-a99dccc7b915d43994bb223192980bcd665ad0112309bf4dd82192fc34a2ad5d -->

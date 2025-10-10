@@ -28,8 +28,8 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         RedshiftDataShareAuthorization(self, "example",
-            consumer_identifier="012345678901",
-            data_share_arn="arn:aws:redshift:us-west-2:012345678901:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share"
+            consumer_identifier="123456789012",
+            data_share_arn="arn:aws:redshift:us-west-2:123456789012:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share"
         )
 ```
 
@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_writes` - (Optional) Whether to allow write operations for a datashare.
 
 ## Attribute Reference
@@ -68,13 +69,13 @@ from imports.aws.redshift_data_share_authorization import RedshiftDataShareAutho
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        RedshiftDataShareAuthorization.generate_config_for_import(self, "example", "arn:aws:redshift:us-west-2:012345678901:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,012345678901")
+        RedshiftDataShareAuthorization.generate_config_for_import(self, "example", "arn:aws:redshift:us-west-2:123456789012:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,123456789012")
 ```
 
 Using `terraform import`, import Redshift Data Share Authorization using the `id`. For example:
 
 ```console
-% terraform import aws_redshift_data_share_authorization.example arn:aws:redshift:us-west-2:012345678901:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,012345678901
+% terraform import aws_redshift_data_share_authorization.example arn:aws:redshift:us-west-2:123456789012:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dc3a17ac6bda6d7316c30a94de4347cba29e545e22910c9152a354a5526aa233 -->
+<!-- cache-key: cdktf-0.20.8 input-4e9bc75a1148a9db46c77c6ec1791a1de808ca37b868d6541f2d3ac67a92f642 -->

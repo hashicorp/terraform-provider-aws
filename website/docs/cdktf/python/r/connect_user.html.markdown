@@ -100,7 +100,8 @@ class MyConvertedCode(TerraformStack):
             identity_info=ConnectUserIdentityInfo(
                 email="example@example.com",
                 first_name="example",
-                last_name="example2"
+                last_name="example2",
+                secondary_email="secondary@example.com"
             ),
             instance_id=Token.as_string(aws_connect_instance_example.id),
             name="example",
@@ -180,6 +181,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_user_id` - (Optional) The identifier of the user account in the directory used for identity management. If Amazon Connect cannot access the directory, you can specify this identifier to authenticate users. If you include the identifier, we assume that Amazon Connect cannot access the directory. Otherwise, the identity information is used to authenticate users from your directory. This parameter is required if you are using an existing directory for identity management in Amazon Connect when Amazon Connect cannot access your directory to authenticate users. If you are using SAML for identity management and include this parameter, an error is returned.
 * `hierarchy_group_id` - (Optional) The identifier of the hierarchy group for the user.
 * `identity_info` - (Optional) A block that contains information about the identity of the user. Documented below.
@@ -197,6 +199,7 @@ A `identity_info` block supports the following arguments:
 * `email` - (Optional) The email address. If you are using SAML for identity management and include this parameter, an error is returned. Note that updates to the `email` is supported. From the [UpdateUserIdentityInfo API documentation](https://docs.aws.amazon.com/connect/latest/APIReference/API_UpdateUserIdentityInfo.html) it is strongly recommended to limit who has the ability to invoke `UpdateUserIdentityInfo`. Someone with that ability can change the login credentials of other users by changing their email address. This poses a security risk to your organization. They can change the email address of a user to the attacker's email address, and then reset the password through email. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
 * `first_name` - (Optional) The first name. This is required if you are using Amazon Connect or SAML for identity management. Minimum length of 1. Maximum length of 100.
 * `last_name` - (Optional) The last name. This is required if you are using Amazon Connect or SAML for identity management. Minimum length of 1. Maximum length of 100.
+* `secondary_email` - (Optional) The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
 
 A `phone_config` block supports the following arguments:
 
@@ -240,4 +243,4 @@ Using `terraform import`, import Amazon Connect Users using the `instance_id` an
 % terraform import aws_connect_user.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-637041caefd4e9ef7b93ae5320925ba1005510f5cbf4f83cc643caaa13039440 -->
+<!-- cache-key: cdktf-0.20.8 input-450166e96fd0495e63103a673855152b43b9ca59026adc4d76933a1766424564 -->

@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `as2Id` - (Required) The As2Id is the AS2 name as defined in the RFC 4130. For inbound ttransfers this is the AS2 From Header for the AS2 messages sent from the partner. For Outbound messages this is the AS2 To Header for the AS2 messages sent to the partner. his ID cannot include spaces.
 * `certificateIds` - (Optional) The list of certificate Ids from the imported certificate operation.
 * `profileType` - (Required) The profile type should be LOCAL or PARTNER.
@@ -92,4 +93,4 @@ Using `terraform import`, import Transfer AS2 Profile using the `profileId`. For
 % terraform import aws_transfer_profile.example p-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-16bf118d7f42726eb3b4479223e202a1b8630bdd949a41b0aec899a9608267bf -->
+<!-- cache-key: cdktf-0.20.8 input-46680ba890c6f22de1842110cb8fc9007903134982a9998ba4c5d741179e44a0 -->

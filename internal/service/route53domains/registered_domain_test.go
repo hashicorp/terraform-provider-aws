@@ -24,10 +24,10 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegisteredDomainConfig_tags1(domainName, "key1", "value1"),
+				Config: testAccRegisteredDomainConfig_tags1(domainName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -36,18 +36,18 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegisteredDomainConfig_tags2(domainName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRegisteredDomainConfig_tags2(domainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRegisteredDomainConfig_tags1(domainName, "key2", "value2"),
+				Config: testAccRegisteredDomainConfig_tags1(domainName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -68,13 +68,13 @@ func testAccRegisteredDomain_autoRenew(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_autoRenew(domainName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_renew", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_renew", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccRegisteredDomainConfig_autoRenew(domainName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_renew", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_renew", acctest.CtTrue),
 				),
 			},
 		},
@@ -221,19 +221,19 @@ func testAccRegisteredDomain_contactPrivacy(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_contactPrivacy(domainName, true, true, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "admin_privacy", "true"),
-					resource.TestCheckResourceAttr(resourceName, "billing_privacy", "true"),
-					resource.TestCheckResourceAttr(resourceName, "registrant_privacy", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tech_privacy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "admin_privacy", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "billing_privacy", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "registrant_privacy", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "tech_privacy", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccRegisteredDomainConfig_contactPrivacy(domainName, false, false, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "admin_privacy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "billing_privacy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "registrant_privacy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tech_privacy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "admin_privacy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "billing_privacy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "registrant_privacy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "tech_privacy", acctest.CtFalse),
 				),
 			},
 		},
@@ -294,13 +294,13 @@ func testAccRegisteredDomain_transferLock(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_transferLock(domainName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "transfer_lock", "false"),
+					resource.TestCheckResourceAttr(resourceName, "transfer_lock", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccRegisteredDomainConfig_transferLock(domainName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "transfer_lock", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transfer_lock", acctest.CtTrue),
 				),
 			},
 		},

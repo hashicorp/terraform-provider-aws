@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `database_insights_mode` argument
+```
+
+```release-note:enhancement
+data-source/aws_db_instance: Add `database_insights_mode` attribute
+```

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -42,7 +43,7 @@ func sweepDRTAccessLogBucketAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &shield.DescribeDRTAccessInput{}
 	conn := client.ShieldClient(ctx)
@@ -62,7 +63,7 @@ func sweepDRTAccessLogBucketAssociations(region string) error {
 	for _, v := range output.LogBucketList {
 		log.Printf("[INFO] Deleting Shield DRT Log Bucket Association: %s", v)
 		sweepResources = append(sweepResources, framework.NewSweepResource(newDRTAccessLogBucketAssociationResource, client,
-			framework.NewAttribute("id", v),
+			framework.NewAttribute(names.AttrID, v),
 		))
 	}
 
@@ -79,7 +80,7 @@ func sweepDRTAccessRoleARNAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &shield.DescribeDRTAccessInput{}
 	conn := client.ShieldClient(ctx)
@@ -99,7 +100,7 @@ func sweepDRTAccessRoleARNAssociations(region string) error {
 	if v := aws.ToString(output.RoleArn); v != "" {
 		log.Printf("[INFO] Deleting Shield DRT Role ARN Association: %s", v)
 		sweepResources = append(sweepResources, framework.NewSweepResource(newDRTAccessRoleARNAssociationResource, client,
-			framework.NewAttribute("id", client.AccountID),
+			framework.NewAttribute(names.AttrID, client.AccountID(ctx)),
 		))
 	}
 
@@ -116,7 +117,7 @@ func sweepProactiveEngagements(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &shield.DescribeSubscriptionInput{}
 	conn := client.ShieldClient(ctx)
@@ -136,7 +137,7 @@ func sweepProactiveEngagements(region string) error {
 	if output.Subscription.ProactiveEngagementStatus != "" {
 		log.Printf("[INFO] Deleting Shield Proactive Engagement")
 		sweepResources = append(sweepResources, framework.NewSweepResource(newProactiveEngagementResource, client,
-			framework.NewAttribute("id", client.AccountID),
+			framework.NewAttribute(names.AttrID, client.AccountID(ctx)),
 		))
 	}
 

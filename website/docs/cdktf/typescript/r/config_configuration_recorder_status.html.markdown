@@ -107,6 +107,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the recorder
 * `isEnabled` - (Required) Whether the configuration recorder should be enabled or disabled.
 
@@ -146,4 +147,4 @@ Using `terraform import`, import Configuration Recorder Status using the name of
 % terraform import aws_config_configuration_recorder_status.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-eff5be1ca06224bd56323b786df4a302b3a7bde4963a5efe48e7bee409360bcf -->
+<!-- cache-key: cdktf-0.20.8 input-e10ce580a3d6c7779187ec927d7673f838faf663b53dae772c5ec7c468c5f13c -->

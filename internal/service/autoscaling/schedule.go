@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
@@ -37,7 +38,7 @@ func resourceSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +78,7 @@ func resourceSchedule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -92,7 +93,7 @@ func resourceSchedule() *schema.Resource {
 	}
 }
 
-func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -112,7 +113,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Recurrence = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("start_time"); ok {
+	if v, ok := d.GetOk(names.AttrStartTime); ok {
 		v, _ := time.Parse(ScheduleTimeLayout, v.(string))
 
 		input.StartTime = aws.Time(v)
@@ -154,7 +155,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
-func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -170,7 +171,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", sa.ScheduledActionARN)
+	d.Set(names.AttrARN, sa.ScheduledActionARN)
 	d.Set("autoscaling_group_name", sa.AutoScalingGroupName)
 	if sa.DesiredCapacity == nil {
 		d.Set("desired_capacity", -1)
@@ -192,22 +193,23 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("recurrence", sa.Recurrence)
 	if sa.StartTime != nil {
-		d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
+		d.Set(names.AttrStartTime, sa.StartTime.Format(ScheduleTimeLayout))
 	}
 	d.Set("time_zone", sa.TimeZone)
 
 	return diags
 }
 
-func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Scheduled Action: %s", d.Id())
-	_, err := conn.DeleteScheduledAction(ctx, &autoscaling.DeleteScheduledActionInput{
+	input := autoscaling.DeleteScheduledActionInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		ScheduledActionName:  aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteScheduledAction(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
@@ -220,7 +222,7 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceScheduleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceScheduleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	splitId := strings.Split(d.Id(), "/")
 	if len(splitId) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'asg-name/action-name'", d.Id())
@@ -284,7 +286,7 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asg
 	return findSchedule(ctx, conn, input)
 }
 
-func validScheduleTimestamp(v interface{}, k string) (ws []string, errors []error) {
+func validScheduleTimestamp(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := time.Parse(ScheduleTimeLayout, value)
 	if err != nil {

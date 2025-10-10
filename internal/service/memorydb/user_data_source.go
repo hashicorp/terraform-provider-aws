@@ -6,17 +6,19 @@ package memorydb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_memorydb_user")
-func DataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_memorydb_user", name="User")
+// @Tags(identifierAttribute="arn")
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -25,7 +27,7 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +40,7 @@ func DataSourceUser() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -49,8 +51,8 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"user_name": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -58,48 +60,32 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	userName := d.Get("user_name").(string)
-
-	user, err := FindUserByName(ctx, conn, userName)
+	userName := d.Get(names.AttrUserName).(string)
+	user, err := findUserByName(ctx, conn, userName)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB User", err))
 	}
 
-	d.SetId(aws.StringValue(user.Name))
-
+	d.SetId(aws.ToString(user.Name))
 	d.Set("access_string", user.AccessString)
-	d.Set("arn", user.ARN)
-
+	d.Set(names.AttrARN, user.ARN)
 	if v := user.Authentication; v != nil {
-		authenticationMode := map[string]interface{}{
-			"password_count": aws.Int64Value(v.PasswordCount),
-			"type":           aws.StringValue(v.Type),
+		tfMap := map[string]any{
+			"password_count": aws.ToInt32(v.PasswordCount),
+			names.AttrType:   v.Type,
 		}
 
-		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "failed to set authentication_mode of MemoryDB User (%s): %s", d.Id(), err)
+		if err := d.Set("authentication_mode", []any{tfMap}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
-
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
-	d.Set("user_name", user.Name)
-
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB User (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	d.Set(names.AttrUserName, user.Name)
 
 	return diags
 }

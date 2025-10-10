@@ -59,6 +59,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the function.
 * `catalogId` - (Optional) ID of the Glue Catalog to create the function in. If omitted, this defaults to the AWS Account ID.
 * `databaseName` - (Required) The name of the Database to create the Function.
@@ -112,4 +113,4 @@ Using `terraform import`, import Glue User Defined Functions using the `catalog_
 % terraform import aws_glue_user_defined_function.func 123456789012:my_database:my_func
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-194cac21dea8d6e573aab71efbb8346e096eb5b0106430a43511971b8c50376b -->
+<!-- cache-key: cdktf-0.20.8 input-14cab8c08a98f805d7f15de8a6c8561d494d6a0f503d3a643eaaafaaece4aa17 -->

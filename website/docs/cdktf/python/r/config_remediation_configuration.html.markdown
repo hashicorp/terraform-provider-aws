@@ -80,6 +80,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `automatic` - (Optional) Remediation is triggered automatically if `true`.
 * `execution_controls` - (Optional) Configuration block for execution controls. See below.
 * `maximum_automatic_attempts` - (Optional) Maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
@@ -139,4 +140,4 @@ Using `terraform import`, import Remediation Configurations using the name confi
 % terraform import aws_config_remediation_configuration.this example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e4422e32c7a9b0e1b751fde0505405c8311a46abe23651a75ba503285c3a58bd -->
+<!-- cache-key: cdktf-0.20.8 input-5bd100c2f5c70a255a20efe1c6d83eb4ff8fe59af1552df79e8cbc01f6774af8 -->

@@ -39,7 +39,7 @@ func TestAccAutoScalingNotification_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "notifications.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_TERMINATE"),
-					resource.TestCheckResourceAttrSet(resourceName, "topic_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTopicARN),
 				),
 			},
 		},
@@ -117,7 +117,7 @@ func TestAccAutoScalingNotification_paginated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	var groups []string
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		groups = append(groups, fmt.Sprintf("%s-%d", rName, i))
 	}
 

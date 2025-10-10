@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_amazonses_verification_record",
       {
-        name: "_amazonses.${" + example.id + "}",
+        name: "_amazonses.${" + example.domain + "}",
         records: [example.verificationToken],
         ttl: Token.asNumber("600"),
         type: "TXT",
@@ -50,7 +50,7 @@ class MyConvertedCode extends TerraformStack {
     );
     new SesDomainIdentityVerification(this, "example_verification", {
       dependsOn: [exampleAmazonsesVerificationRecord],
-      domain: example.id,
+      domain: example.domain,
     });
   }
 }
@@ -61,6 +61,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain name of the SES domain identity to verify.
 
 ## Attribute Reference
@@ -76,4 +77,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `45m`)
 
-<!-- cache-key: cdktf-0.20.1 input-01264da5e2e5cedeff8b5da6bb3720236b99d8827e99483d8586f6e5626fdcb4 -->
+<!-- cache-key: cdktf-0.20.8 input-9fe3a20174811c0235d4b6d0722d8038b96343aa88ae77e6aa91b911e986abcb -->

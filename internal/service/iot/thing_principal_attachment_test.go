@@ -8,15 +8,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,6 +27,7 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	thingName := sdkacctest.RandomWithPrefix("tf-acc")
 	thingName2 := sdkacctest.RandomWithPrefix("tf-acc2")
+	resourceName := "aws_iot_thing_principal_attachment.att"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -36,7 +40,13 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingPrincipalAttachmentExists(ctx, "aws_iot_thing_principal_attachment.att"),
 					testAccCheckThingPrincipalAttachmentStatus(ctx, thingName, true, []string{"aws_iot_certificate.cert"}),
+					resource.TestCheckResourceAttr(resourceName, "thing_principal_type", string(awstypes.ThingPrincipalTypeNonExclusiveThing)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccThingPrincipalAttachmentConfig_update1(thingName, thingName2),
@@ -74,30 +84,84 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccIoTThingPrincipalAttachment_thingPrincipalType(t *testing.T) {
+	ctx := acctest.Context(t)
+	thingName := sdkacctest.RandomWithPrefix("tf-acc")
+	thingName2 := sdkacctest.RandomWithPrefix("tf-acc2")
+	resourceName := "aws_iot_thing_principal_attachment.att"
+	resourceThingName := "aws_iot_thing.thing"
+	resourceCertName := "aws_iot_certificate.cert"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThingPrincipalAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccThingPrincipalAttachmentConfig_thingPrincipalType(thingName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckThingPrincipalAttachmentExists(ctx, "aws_iot_thing_principal_attachment.att"),
+					testAccCheckThingPrincipalAttachmentStatus(ctx, thingName, true, []string{"aws_iot_certificate.cert"}),
+					resource.TestCheckResourceAttr(resourceName, "thing_principal_type", string(awstypes.ThingPrincipalTypeExclusiveThing)),
+					resource.TestCheckResourceAttrPair(resourceName, "thing", resourceThingName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, resourceCertName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// The first attachment is specified as EXCLUSIVE_THING.
+				// Try to attach the same principal to another Thing, which should fail
+				// because exclusive principals can only be attached to one thing.
+				Config:      testAccThingPrincipalAttachmentConfig_thingPrincipalTypeUpdate1(thingName, thingName2),
+				ExpectError: regexache.MustCompile(`InvalidRequestException: Principal already has an exclusive Thing attached to it`),
+			},
+			{
+				// Reset to one attachment with NON_EXCLUSIVE_THING.
+				Config: testAccThingPrincipalAttachmentConfig_thingPrincipalTypeUpdate2(thingName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckThingPrincipalAttachmentExists(ctx, "aws_iot_thing_principal_attachment.att"),
+					testAccCheckThingPrincipalAttachmentStatus(ctx, thingName, true, []string{"aws_iot_certificate.cert"}),
+					resource.TestCheckResourceAttr(resourceName, "thing_principal_type", string(awstypes.ThingPrincipalTypeNonExclusiveThing)),
+					resource.TestCheckResourceAttrPair(resourceName, "thing", resourceThingName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, resourceCertName, names.AttrARN),
+				),
+			},
+			{
+				// Try to attach the same principal to another Thing specifying EXCLUSIVE_THING,
+				// which should fail because the principal already has a non-exclusive attachment
+				// and exclusive attachments cannot coexist with any other attachments.
+				Config:      testAccThingPrincipalAttachmentConfig_thingPrincipalTypeUpdate3(thingName, thingName2),
+				ExpectError: regexache.MustCompile(`InvalidRequestException: Principal already has a Thing attached to it`),
+			},
+		},
+	})
+}
 
 func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing_principal_attachment" {
 				continue
 			}
 
-			principal := rs.Primary.Attributes["principal"]
-			thing := rs.Primary.Attributes["thing"]
+			_, err := tfiot.FindThingPrincipalAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing"], rs.Primary.Attributes[names.AttrPrincipal])
 
-			found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
-
-			if err != nil {
-				return fmt.Errorf("Error: Failed listing principals for thing (%s): %s", thing, err)
-			}
-
-			if !found {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes["id"])
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IoT Thing Principal Attachment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -111,31 +175,17 @@ func testAccCheckThingPrincipalAttachmentExists(ctx context.Context, n string) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No attachment")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
-		thing := rs.Primary.Attributes["thing"]
-		principal := rs.Primary.Attributes["principal"]
+		_, err := tfiot.FindThingPrincipalAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing"], rs.Primary.Attributes[names.AttrPrincipal])
 
-		found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
-
-		if err != nil {
-			return fmt.Errorf("Error: Failed listing principals for thing (%s), resource (%s): %s", thing, n, err)
-		}
-
-		if !found {
-			return fmt.Errorf("Error: Principal (%s) is not attached to thing (%s), resource (%s)", principal, thing, n)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName string, exists bool, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		principalARNs := make(map[string]string)
 
@@ -144,39 +194,39 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 			if !ok {
 				return fmt.Errorf("Not found: %s", p)
 			}
-			principalARNs[pr.Primary.Attributes["arn"]] = p
+			principalARNs[pr.Primary.Attributes[names.AttrARN]] = p
 		}
 
-		thing, err := conn.DescribeThingWithContext(ctx, &iot.DescribeThingInput{
+		_, err := conn.DescribeThing(ctx, &iot.DescribeThingInput{
 			ThingName: aws.String(thingName),
 		})
 
-		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			if exists {
 				return fmt.Errorf("Error: Thing (%s) exists, but expected to be removed", thingName)
 			} else {
 				return nil
 			}
 		} else if err != nil {
-			return fmt.Errorf("Error: cannot describe thing %s: %s", thingName, err)
+			return fmt.Errorf("Error: cannot describe thing %s: %w", thingName, err)
 		} else if !exists {
 			return fmt.Errorf("Error: Thing (%s) does not exist, but expected to be", thingName)
 		}
 
-		res, err := conn.ListThingPrincipalsWithContext(ctx, &iot.ListThingPrincipalsInput{
+		res, err := conn.ListThingPrincipals(ctx, &iot.ListThingPrincipalsInput{
 			ThingName: aws.String(thingName),
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error: Cannot list thing (%s) principals: %s", thingName, err)
+			return fmt.Errorf("Error: Cannot list thing (%s) principals: %w", thingName, err)
 		}
 
 		if len(res.Principals) != len(principalARNs) {
-			return fmt.Errorf("Error: Thing (%s) has wrong number of principals attached", thing)
+			return fmt.Errorf("Error: Thing (%s) has wrong number of principals attached", thingName)
 		}
 
 		for _, p := range res.Principals {
-			if principal, ok := principalARNs[aws.StringValue(p)]; !ok {
+			if principal, ok := principalARNs[p]; !ok {
 				return fmt.Errorf("Error: Principal %s is not attached to thing %s", principal, thingName)
 			}
 		}
@@ -296,4 +346,102 @@ resource "aws_iot_thing_principal_attachment" "att2" {
   principal = aws_iot_certificate.cert2.arn
 }
 `, thingName)
+}
+
+func testAccThingPrincipalAttachmentConfig_thingPrincipalType(thingName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_certificate" "cert" {
+  csr    = file("test-fixtures/iot-csr.pem")
+  active = true
+}
+
+resource "aws_iot_thing" "thing" {
+  name = "%s"
+}
+
+resource "aws_iot_thing_principal_attachment" "att" {
+  thing     = aws_iot_thing.thing.name
+  principal = aws_iot_certificate.cert.arn
+
+  thing_principal_type = "EXCLUSIVE_THING"
+}
+`, thingName)
+}
+
+func testAccThingPrincipalAttachmentConfig_thingPrincipalTypeUpdate1(thingName, thingName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_certificate" "cert" {
+  csr    = file("test-fixtures/iot-csr.pem")
+  active = true
+}
+
+resource "aws_iot_thing" "thing" {
+  name = %[1]q
+}
+
+resource "aws_iot_thing" "thing2" {
+  name = %[2]q
+}
+
+resource "aws_iot_thing_principal_attachment" "att" {
+  thing     = aws_iot_thing.thing.name
+  principal = aws_iot_certificate.cert.arn
+
+  thing_principal_type = "EXCLUSIVE_THING"
+}
+
+resource "aws_iot_thing_principal_attachment" "att2" {
+  thing     = aws_iot_thing.thing2.name
+  principal = aws_iot_certificate.cert.arn
+}
+`, thingName, thingName2)
+}
+
+func testAccThingPrincipalAttachmentConfig_thingPrincipalTypeUpdate2(thingName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_certificate" "cert" {
+  csr    = file("test-fixtures/iot-csr.pem")
+  active = true
+}
+
+resource "aws_iot_thing" "thing" {
+  name = "%s"
+}
+
+resource "aws_iot_thing_principal_attachment" "att" {
+  thing     = aws_iot_thing.thing.name
+  principal = aws_iot_certificate.cert.arn
+
+  thing_principal_type = "NON_EXCLUSIVE_THING"
+}
+`, thingName)
+}
+
+func testAccThingPrincipalAttachmentConfig_thingPrincipalTypeUpdate3(thingName, thingName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_certificate" "cert" {
+  csr    = file("test-fixtures/iot-csr.pem")
+  active = true
+}
+
+resource "aws_iot_thing" "thing" {
+  name = %[1]q
+}
+
+resource "aws_iot_thing" "thing2" {
+  name = %[2]q
+}
+
+resource "aws_iot_thing_principal_attachment" "att" {
+  thing     = aws_iot_thing.thing.name
+  principal = aws_iot_certificate.cert.arn
+}
+
+resource "aws_iot_thing_principal_attachment" "att2" {
+  thing     = aws_iot_thing.thing2.name
+  principal = aws_iot_certificate.cert.arn
+
+  thing_principal_type = "EXCLUSIVE_THING"
+}
+`, thingName, thingName2)
 }

@@ -6,12 +6,15 @@ package sqs
 import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_sqs_queue_redrive_policy")
+// @SDKResource("aws_sqs_queue_redrive_policy", name="Queue Redrive Policy")
+// @IdentityAttribute("queue_url")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(idAttrDuplicates="queue_url")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 func resourceQueueRedrivePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNameRedrivePolicy,
@@ -31,19 +34,7 @@ func resourceQueueRedrivePolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"redrive_policy": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			"redrive_policy": sdkv2.JSONDocumentSchemaRequired(),
 		},
 
 		CreateWithoutTimeout: h.Upsert,

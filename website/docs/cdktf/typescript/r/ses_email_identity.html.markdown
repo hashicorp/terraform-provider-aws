@@ -16,6 +16,7 @@ Provides an SES email identity resource
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `email` - (Required) The email address to assign to SES.
 
 ## Attribute Reference
@@ -78,4 +79,4 @@ Using `terraform import`, import SES email identities using the email address. F
 % terraform import aws_ses_email_identity.example email@example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9ee137609ad9cb08db52c9c4a87855644f4683c0869afce90196dedff75a0c90 -->
+<!-- cache-key: cdktf-0.20.8 input-c657196b383db6d668987a97f7e931091ccdd846314beb1f2ffa318bd36fc284 -->

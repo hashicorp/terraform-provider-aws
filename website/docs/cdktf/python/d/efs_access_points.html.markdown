@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `file_system_id` - (Required) EFS File System identifier.
 
 ## Attribute Reference
@@ -45,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - EFS File System identifier.
 * `ids` - Set of identifiers.
 
-<!-- cache-key: cdktf-0.20.1 input-6411c7528e305530b4e30c020a220acea9846dec4899a48198364c9069f2fbcd -->
+<!-- cache-key: cdktf-0.20.8 input-43583db3e45ac970a82f0cc3eeef4596ed3550ffa7b5bdc49240e99ec0c61394 -->

@@ -45,8 +45,9 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `data_catalog_encryption_settings` – (Required) The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
-* `catalog_id` – (Optional) The ID of the Data Catalog to set the security configuration for. If none is provided, the AWS account ID is used by default.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `data_catalog_encryption_settings` - (Required) The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
+* `catalog_id` - (Optional) The ID of the Data Catalog to set the security configuration for. If none is provided, the AWS account ID is used by default.
 
 ### data_catalog_encryption_settings
 
@@ -60,7 +61,7 @@ This resource supports the following arguments:
 
 ### encryption_at_rest
 
-* `catalog_encryption_mode` - (Required) The encryption-at-rest mode for encrypting Data Catalog data. Valid values are `DISABLED` and `SSE-KMS`.
+* `catalog_encryption_mode` - (Required) The encryption-at-rest mode for encrypting Data Catalog data. Valid values: `DISABLED`, `SSE-KMS`, `SSE-KMS-WITH-SERVICE-ROLE`.
 * `catalog_encryption_service_role` - (Optional) The ARN of the AWS IAM role used for accessing encrypted Data Catalog data.
 * `sse_aws_kms_key_id` - (Optional) The ARN of the AWS KMS key to use for encryption at rest.
 
@@ -95,4 +96,4 @@ Using `terraform import`, import Glue Data Catalog Encryption Settings using `CA
 % terraform import aws_glue_data_catalog_encryption_settings.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7d5c360e4b0d15c6a5c8a7a95cb1a9cb1346e51dc55d0d8e215fc4bed02f79ac -->
+<!-- cache-key: cdktf-0.20.8 input-d01c82d2729eb33d6bd59600250ac907b1f6960a12047174ab41f31f1a42e3d9 -->

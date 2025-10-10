@@ -117,6 +117,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serverId` - (Requirement) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `userName` - (Requirement) The name of the user account that is assigned to one or more servers.
 * `body` - (Requirement) The public key portion of an SSH key pair.
@@ -157,4 +158,4 @@ Using `terraform import`, import Transfer SSH Public Key using the `serverId` an
 % terraform import aws_transfer_ssh_key.bar s-12345678/test-username/key-12345
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b1d6cb5d993474a7ca2476432fffe3755b8615b3fd1b2007ce93984646f2bdbc -->
+<!-- cache-key: cdktf-0.20.8 input-fc572e0c01f250fcda1b8290f14ffc6a3252e61149f1383be8031c6d1327f31e -->

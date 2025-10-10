@@ -37,6 +37,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the VPC Connection.
 
 ## Attribute Reference
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `targetClusterArn` - The Amazon Resource Name (ARN) of the cluster.
 * `vpcId` - The VPC ID of the remote client.
 
-<!-- cache-key: cdktf-0.20.1 input-01122677f9ba30620563040b95b6c51a240e709b7fc3bc03683cde0b35bb7e29 -->
+<!-- cache-key: cdktf-0.20.8 input-511964be06d2f5b589d44d770735acaef69641725c089b06a1aef58df4585f99 -->

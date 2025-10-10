@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         RedshiftDataShareConsumerAssociation(self, "example",
             associate_entire_account=True,
-            data_share_arn="arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
+            data_share_arn="arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
         )
 ```
 
@@ -49,7 +49,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         RedshiftDataShareConsumerAssociation(self, "example",
             consumer_region="us-west-2",
-            data_share_arn="arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
+            data_share_arn="arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example"
         )
 ```
 
@@ -61,6 +61,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_writes` - (Optional) Whether to allow write operations for a datashare.
 * `associate_entire_account` - (Optional) Whether the datashare is associated with the entire account. Conflicts with `consumer_arn` and `consumer_region`.
 * `consumer_arn` - (Optional) Amazon Resource Name (ARN) of the consumer that is associated with the datashare. Conflicts with `associate_entire_account` and `consumer_region`.
@@ -90,13 +91,13 @@ from imports.aws.redshift_data_share_consumer_association import RedshiftDataSha
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        RedshiftDataShareConsumerAssociation.generate_config_for_import(self, "example", "arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2")
+        RedshiftDataShareConsumerAssociation.generate_config_for_import(self, "example", "arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2")
 ```
 
 Using `terraform import`, import Redshift Data Share Consumer Association using the `id`. For example:
 
 ```console
-% terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:012345678901:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
+% terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c33946aa25940255e66f441f2fbc61c5d7177e0f8ab3a902439c289ff8337aa8 -->
+<!-- cache-key: cdktf-0.20.8 input-ef35d51e49dcf0cb93b7acf6a396fd4ef87677b89cfcd302e13aabbd61a2be6b -->

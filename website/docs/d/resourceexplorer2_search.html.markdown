@@ -28,6 +28,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `view_arn` - (Optional) Specifies the Amazon resource name (ARN) of the view to use for the query. If you don't specify a value for this parameter, then the operation automatically uses the default view for the AWS Region in which you called this operation. If the Region either doesn't have a default view or if you don't have permission to use the default view, then the operation fails with a `401 Unauthorized` exception.
 
 ## Attribute Reference
@@ -48,12 +49,12 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - Amazon resource name of resource.
 * `last_reported_at` - Date and time that Resource Explorer last queried this resource and updated the index with the latest information about the resource.
 * `owning_account_id` - Amazon Web Services account that owns the resource.
-* `resource_property` - Structure with additional type-specific details about the resource.  See [`resource_property`](#resource_property-attribute-reference) below.
+* `properties` - Structure with additional type-specific details about the resource.  See [`properties`](#properties-attribute-reference) below.
 * `region` - Amazon Web Services Region in which the resource was created and exists.
 * `resource_type` - Type of the resource.
 * `service` - Amazon Web Service that owns the resource and is responsible for creating and updating it.
 
-### `resource_property` Attribute Reference
+### `properties` Attribute Reference
 
 * `data` - Details about this property. The content of this field is a JSON object that varies based on the resource type.
 * `last_reported_at` - The date and time that the information about this resource property was last updated.

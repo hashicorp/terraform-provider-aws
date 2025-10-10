@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

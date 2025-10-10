@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccEC2KeyPair_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -41,18 +41,18 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 				Config: testAccKeyPairConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("key-pair/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", fmt.Sprintf("key-pair/%s", rName)),
 					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexache.MustCompile(`[0-9a-f]{2}(:[0-9a-f]{2}){15}`)),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 		},
 	})
@@ -60,7 +60,7 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 
 func TestAccEC2KeyPair_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -76,34 +76,34 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyPairConfig_tags1(rName, publicKey, "key1", "value1"),
+				Config: testAccKeyPairConfig_tags1(rName, publicKey, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 			{
-				Config: testAccKeyPairConfig_tags2(rName, publicKey, "key1", "value1updated", "key2", "value2"),
+				Config: testAccKeyPairConfig_tags2(rName, publicKey, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccKeyPairConfig_tags1(rName, publicKey, "key2", "value2"),
+				Config: testAccKeyPairConfig_tags1(rName, publicKey, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 
 func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -138,7 +138,7 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 		},
 	})
@@ -146,7 +146,7 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 
 func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -172,7 +172,7 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 		},
 	})
@@ -180,7 +180,7 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 
 func TestAccEC2KeyPair_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -233,7 +233,7 @@ func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKeyPairExists(ctx context.Context, n string, v *types.KeyPairInfo) resource.TestCheckFunc {
+func testAccCheckKeyPairExists(ctx context.Context, n string, v *awstypes.KeyPairInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

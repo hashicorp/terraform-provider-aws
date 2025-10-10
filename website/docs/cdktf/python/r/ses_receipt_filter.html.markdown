@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the filter
 * `cidr` - (Required) The IP address or address range to filter, in CIDR notation
 * `policy` - (Required) Block or Allow
@@ -73,4 +74,4 @@ Using `terraform import`, import SES Receipt Filter using their `name`. For exam
 % terraform import aws_ses_receipt_filter.test some-filter
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8c7377efc81dac65453231c48c63abd93967d88ece4a6461b108dcb4049f1c6b -->
+<!-- cache-key: cdktf-0.20.8 input-48c3f7575e147ed9b42a3b5fa1d9cdb485e9f550dc7379b068bffcc5272dcbe5 -->

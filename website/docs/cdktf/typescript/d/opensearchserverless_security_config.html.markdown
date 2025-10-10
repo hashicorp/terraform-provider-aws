@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) The unique identifier of the security configuration.
 
 ## Attribute Reference
@@ -62,4 +63,4 @@ SAML options for the security configuration.
 * `sessionTimeout` - Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.
 * `userAttribute` - User attribute for this SAML integration.
 
-<!-- cache-key: cdktf-0.20.1 input-8187974261e12b138d3a7e197de7ca26b20f843eafab8ec86b4f5a9e972ddaa6 -->
+<!-- cache-key: cdktf-0.20.8 input-b97a4ef3a7dca46beeb304480114db3fde8b825351d2c4b29c614a72088ac190 -->

@@ -65,7 +65,7 @@ class MyConvertedCode(TerraformStack):
         data_aws_region_current.override_logical_id("current")
         aws_shield_protection_example = ShieldProtection(self, "example_5",
             name="example-protection",
-            resource_arn="arn:${" + data_aws_partition_current.partition + "}:ec2:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:eip-allocation/${" + example.id + "}"
+            resource_arn="arn:${" + data_aws_partition_current.partition + "}:ec2:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:eip-allocation/${" + example.id + "}"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_shield_protection_example.override_logical_id("example")
@@ -116,4 +116,4 @@ Using `terraform import`, import Shield protection health check association reso
 % terraform import aws_shield_protection_health_check_association.example ff9592dc-22f3-4e88-afa1-7b29fde9669a+arn:aws:route53:::healthcheck/3742b175-edb9-46bc-9359-f53e3b794b1b
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-478a1032d8fe5c2226eef877393c56223519392521f48d921b8d7bf25f16a9aa -->
+<!-- cache-key: cdktf-0.20.8 input-16f261af7ff807b113db8eec057a3d4cbe3688cedd47211bd238ce552043ac99 -->

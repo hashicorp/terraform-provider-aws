@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -37,7 +36,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexache.MustCompile(`token/github`)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", "token/github"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -46,7 +45,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexache.MustCompile(`token/github_enterprise`)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", "token/github_enterprise"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB_ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -55,7 +54,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"token", "user_name"},
+				ImportStateVerifyIgnore: []string{"token", names.AttrUserName},
 			},
 		},
 	})
@@ -77,8 +76,8 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basicAuth(token, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexache.MustCompile(`token/bitbucket`)),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", "token/bitbucket"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user1"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "BITBUCKET"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "BASIC_AUTH"),
 				),
@@ -87,14 +86,14 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basicAuth(token, "user2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user2"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"token", "user_name"},
+				ImportStateVerifyIgnore: []string{"token", names.AttrUserName},
 			},
 		},
 	})
@@ -127,8 +126,8 @@ func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
 func testAccPreCheckSourceCredentialsForServerType(ctx context.Context, t *testing.T, serverType types.ServerType) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
 
-	input := &codebuild.ListSourceCredentialsInput{}
-	output, err := tfcodebuild.FindSourceCredentials(ctx, conn, input, func(v *types.SourceCredentialsInfo) bool {
+	input := codebuild.ListSourceCredentialsInput{}
+	output, err := tfcodebuild.FindSourceCredentials(ctx, conn, &input, func(v *types.SourceCredentialsInfo) bool {
 		return v.ServerType == serverType
 	})
 
@@ -143,6 +142,10 @@ func testAccPreCheckSourceCredentialsForServerType(ctx context.Context, t *testi
 	if len(output) == 0 {
 		t.Skipf("skipping acceptance testing: Source Credentials (%s) not found", serverType)
 	}
+}
+
+func testAccPreCheckSourceCredentialsForServerTypeGithub(ctx context.Context, t *testing.T) {
+	testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 }
 
 func testAccCheckSourceCredentialDestroy(ctx context.Context) resource.TestCheckFunc {

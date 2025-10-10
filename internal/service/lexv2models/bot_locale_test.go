@@ -5,7 +5,6 @@ package lexv2models_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +22,6 @@ import (
 
 func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var botlocale lexmodelsv2.DescribeBotLocaleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot_locale.test"
@@ -44,7 +41,7 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 				Config: testAccBotLocaleConfig_basic(rName, "en_US", 0.7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
-					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", "DRAFT"),
 					resource.TestCheckResourceAttr(resourceName, "locale_id", "en_US"),
 					resource.TestCheckResourceAttr(resourceName, "n_lu_intent_confidence_threshold", "0.7"),
@@ -61,7 +58,6 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 
 func TestAccLexV2ModelsBotLocale_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var botlocale lexmodelsv2.DescribeBotLocaleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot_locale.test"
@@ -90,7 +86,6 @@ func TestAccLexV2ModelsBotLocale_disappears(t *testing.T) {
 
 func TestAccLexV2ModelsBotLocale_voiceSettings(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var botlocale lexmodelsv2.DescribeBotLocaleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot_locale.test"
@@ -112,8 +107,8 @@ func TestAccLexV2ModelsBotLocale_voiceSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "voice_settings.*", map[string]string{
-						"voice_id": voiceID,
-						"engine":   string(types.VoiceEngineStandard),
+						"voice_id":       voiceID,
+						names.AttrEngine: string(types.VoiceEngineStandard),
 					}),
 				),
 			},
@@ -135,7 +130,8 @@ func testAccCheckBotLocaleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tflexv2models.FindBotLocaleByID(ctx, conn, rs.Primary.ID)
+			_, err := tflexv2models.FindBotLocaleByThreePartKey(ctx, conn, rs.Primary.Attributes["locale_id"], rs.Primary.Attributes["bot_id"], rs.Primary.Attributes["bot_version"])
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -144,39 +140,37 @@ func testAccCheckBotLocaleDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return create.Error(names.LexV2Models, create.ErrActionCheckingDestroyed, tflexv2models.ResNameBotLocale, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Lex v2 Bot Locale %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckBotLocaleExists(ctx context.Context, name string, botlocale *lexmodelsv2.DescribeBotLocaleOutput) resource.TestCheckFunc {
+func testAccCheckBotLocaleExists(ctx context.Context, n string, v *lexmodelsv2.DescribeBotLocaleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameBotLocale, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameBotLocale, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
-		resp, err := tflexv2models.FindBotLocaleByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tflexv2models.FindBotLocaleByThreePartKey(ctx, conn, rs.Primary.Attributes["locale_id"], rs.Primary.Attributes["bot_id"], rs.Primary.Attributes["bot_version"])
+
 		if err != nil {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tflexv2models.ResNameBotLocale, rs.Primary.ID, err)
+			return err
 		}
 
-		*botlocale = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccBotLocaleConfigBase(rName string) string {
+func testAccBotLocaleConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
@@ -191,7 +185,7 @@ resource "aws_lexv2models_bot" "test" {
 
 func testAccBotLocaleConfig_basic(rName, localeID string, thres float64) string {
 	return acctest.ConfigCompose(
-		testAccBotLocaleConfigBase(rName),
+		testAccBotLocaleConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot_locale" "test" {
   locale_id                        = %[1]q
@@ -204,7 +198,7 @@ resource "aws_lexv2models_bot_locale" "test" {
 
 func testAccBotLocaleConfig_voiceSettings(rName, voiceID, engine string) string {
 	return acctest.ConfigCompose(
-		testAccBotLocaleConfigBase(rName),
+		testAccBotLocaleConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot_locale" "test" {
   locale_id                        = "en_US"

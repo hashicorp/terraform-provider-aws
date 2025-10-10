@@ -20,7 +20,10 @@ var (
 )
 
 var (
-	// MapOfStringType is a custom type used for defining a Map of strings.
+	// MapOfMapOfStringType is a custom type used for defining a map[string]map[string]string.
+	MapOfMapOfStringType = mapTypeOf[MapOfString]{basetypes.MapType{ElemType: MapOfStringType}}
+
+	// MapOfStringType is a custom type used for defining a map[string]string.
 	MapOfStringType = mapTypeOf[basetypes.StringValue]{basetypes.MapType{ElemType: basetypes.StringType{}}}
 )
 
@@ -99,6 +102,11 @@ func (t mapTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 type MapValueOf[T attr.Value] struct {
 	basetypes.MapValue
 }
+
+type (
+	MapOfMapOfString = MapValueOf[MapOfString]
+	MapOfString      = MapValueOf[basetypes.StringValue]
+)
 
 func (v MapValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(MapValueOf[T])

@@ -91,10 +91,9 @@ resource "aws_api_gateway_usage_plan" "example" {
 
 ## Argument Reference
 
-The API Gateway Usage Plan argument layout is a structure composed of several sub-resources - these resources are laid out below.
+This resource supports the following arguments:
 
-### Top-Level Arguments
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the usage plan.
 * `description` - (Optional) Description of a usage plan.
 * `api_stages` - (Optional) Associated [API stages](#api-stages-arguments) of the usage plan.

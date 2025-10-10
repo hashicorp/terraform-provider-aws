@@ -37,11 +37,11 @@ func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", apiGatewayApiKeyResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, apiGatewayApiKeyResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "value"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrValue),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, v *apigateway
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
+		output, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes[names.AttrKeyID])
 
 		if err != nil {
 			return err
@@ -138,7 +138,7 @@ func testAccCheckUsagePlanKeyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
+			_, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes[names.AttrKeyID])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -214,7 +214,12 @@ resource "aws_api_gateway_deployment" "test" {
 
   description = "This is a test"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "test"
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "test"
+  deployment_id = aws_api_gateway_deployment.test.id
 }
 `, rName)
 }
@@ -232,7 +237,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
   }
 }
 
@@ -259,7 +264,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
   }
 }
 

@@ -38,26 +38,26 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `filter` - (Optional) Custom filter block as described below.
+* `id` - (Optional) Id of the specific Local Gateway to retrieve.
+* `state` - (Optional) Current state of the desired Local Gateway.
+  Can be either `"pending"` or `"available"`.
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
+  a pair on the desired Local Gateway.
+
 The arguments of this data source act as filters for querying the available
 Local Gateways in the current region. The given filters must match exactly one
 Local Gateway whose data will be exported as attributes.
 
-* `filter` - (Optional) Custom filter block as described below.
+### `filter`
 
-* `id` - (Optional) Id of the specific Local Gateway to retrieve.
-
-* `state` - (Optional) Current state of the desired Local Gateway.
-  Can be either `"pending"` or `"available"`.
-
-* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
-  a pair on the desired Local Gateway.
-
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLocalGateways.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A Local Gateway will be selected if any one of the given values matches.
 
@@ -80,4 +80,4 @@ The following attributes are additionally exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-e9224792e92736687e2ac8179a6512547c5aaa4078c6bb91db11fd714268b0ee -->
+<!-- cache-key: cdktf-0.20.8 input-2ffa068d73e670d8d8ed36270fe6a9439e64bb15d1979e39b31372245469fa7e -->

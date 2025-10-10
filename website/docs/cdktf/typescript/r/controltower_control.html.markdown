@@ -44,8 +44,14 @@ class MyConvertedCode extends TerraformStack {
       {
         controlIdentifier:
           "arn:aws:controltower:${" +
-          current.name +
+          current.region +
           "}::control/AWS-GR_EC2_VOLUME_INUSE_CHECK",
+        parameters: [
+          {
+            key: "AllowedRegions",
+            value: Token.asString(Fn.jsonencode(["us-east-1"])),
+          },
+        ],
         targetIdentifier: Token.asString(
           Fn.lookupNested(
             "${[ for x in ${" +
@@ -65,15 +71,26 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
 * `controlIdentifier` - (Required) The ARN of the control. Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail.
 * `targetIdentifier` - (Required) The ARN of the organizational unit.
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `parameters` - (Optional) Parameter values which are specified to configure the control when you enable it. See [Parameters](#parameters) for more details.
+
+### Parameters
+
+* `key` - (Required) The name of the parameter.
+* `value` - (Required) The value of the parameter.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the EnabledControl resource.
 * `id` - The ARN of the organizational unit.
 
 ## Import
@@ -108,4 +125,4 @@ Using `terraform import`, import Control Tower Controls using their `organizatio
 % terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-542aa41221af63c248afa6f1f14005c7167d5839e1e53ee461a2747d1b0be787 -->
+<!-- cache-key: cdktf-0.20.8 input-99f2dc97ffce7147a933e420c5b996d742c6d4b37110b3de09ef8f78c33f86a0 -->

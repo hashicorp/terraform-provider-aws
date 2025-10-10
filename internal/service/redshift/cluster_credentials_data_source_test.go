@@ -26,7 +26,7 @@ func TestAccRedshiftClusterCredentialsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusterCredentialsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrSet(dataSourceName, "db_password"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
 				),
@@ -43,7 +43,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "testdb"
   master_username     = "foo"
   master_password     = "Password1"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }

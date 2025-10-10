@@ -38,7 +38,7 @@ func TestAccAPIGatewayV2Route_basic(t *testing.T) {
 				Config: testAccRouteConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -47,7 +47,7 @@ func TestAccAPIGatewayV2Route_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -103,17 +103,17 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 				Config: testAccRouteConfig_authorizer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeCustom)),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", authorizerResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", authorizerResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -126,7 +126,7 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 				Config: testAccRouteConfig_authorizerUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeAwsIam)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
@@ -136,7 +136,7 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 		},
@@ -160,17 +160,17 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 				Config: testAccRouteConfig_jwtAuthorization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeJwt)),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", "aws_apigatewayv2_authorizer.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", "aws_apigatewayv2_authorizer.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "GET /test"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -183,17 +183,17 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 				Config: testAccRouteConfig_jwtAuthorizationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeJwt)),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", "aws_apigatewayv2_authorizer.another", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", "aws_apigatewayv2_authorizer.another", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "GET /test"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 		},
@@ -219,17 +219,17 @@ func TestAccAPIGatewayV2Route_model(t *testing.T) {
 				Config: testAccRouteConfig_model(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", "action"),
+					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", names.AttrAction),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "request_models.test", modelResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "request_models.test", modelResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -259,7 +259,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 				Config: testAccRouteConfig_requestParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -268,18 +268,18 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "request_parameter.*", map[string]string{
 						"request_parameter_key": "route.request.header.authorization",
-						"required":              "true",
+						"required":              acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
 				Config: testAccRouteConfig_requestParametersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -288,15 +288,15 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "request_parameter.*", map[string]string{
 						"request_parameter_key": "route.request.header.authorization",
-						"required":              "false",
+						"required":              acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "request_parameter.*", map[string]string{
 						"request_parameter_key": "route.request.querystring.authToken",
-						"required":              "true",
+						"required":              acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -309,7 +309,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 				Config: testAccRouteConfig_noRequestParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -318,7 +318,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 		},
@@ -342,7 +342,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 				Config: testAccRouteConfig_simpleAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -351,14 +351,14 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", "$default"),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
 				Config: testAccRouteConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -367,14 +367,14 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
 				Config: testAccRouteConfig_simpleAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -383,7 +383,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", "$default"),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -414,7 +414,7 @@ func TestAccAPIGatewayV2Route_target(t *testing.T) {
 				Config: testAccRouteConfig_target(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -453,7 +453,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 				Config: testAccRouteConfig_key(rName, "GET /path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -462,14 +462,14 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "GET /path"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
 				Config: testAccRouteConfig_key(rName, "POST /new/path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -478,7 +478,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "POST /new/path"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -557,7 +557,7 @@ func testAccCheckRouteTarget(resourceName, integrationResourceName string) resou
 			return fmt.Errorf("Not Found: %s", integrationResourceName)
 		}
 
-		return resource.TestCheckResourceAttr(resourceName, "target", fmt.Sprintf("integrations/%s", rs.Primary.ID))(s)
+		return resource.TestCheckResourceAttr(resourceName, names.AttrTarget, fmt.Sprintf("integrations/%s", rs.Primary.ID))(s)
 	}
 }
 

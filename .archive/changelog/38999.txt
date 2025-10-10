@@ -1,0 +1,3 @@
+```release-note:note
+provider: Updates to Go 1.23. We do not expect this change to impact most users. For macOS, Go 1.23 requires macOS 11 Big Sur or later; support for previous versions has been discontinued. 
+```

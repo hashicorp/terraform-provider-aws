@@ -56,7 +56,7 @@ class MyConvertedCode extends TerraformStack {
           Version: "2012-10-17",
         })
       ),
-      sinkIdentifier: example.id,
+      sinkIdentifier: example.arn,
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsOamSinkPolicyExample.overrideLogicalId("example");
@@ -67,8 +67,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sinkIdentifier` - (Required) ARN of the sink to attach this policy to.
 * `policy` - (Required) JSON policy to use. If you are updating an existing policy, the entire existing policy is replaced by what you specify here.
 
@@ -118,4 +119,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Sink Po
 % terraform import aws_oam_sink_policy.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-037a8f8dc069aa1440effe505f18867c58c5234b21b04bc16839e7f70855a4b1 -->
+<!-- cache-key: cdktf-0.20.8 input-635047ecb0bee030848333fa731b1b23dc6eadc4b938f2e2546ffb5f8cdf0948 -->

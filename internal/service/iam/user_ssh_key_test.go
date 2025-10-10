@@ -40,7 +40,7 @@ func TestAccIAMUserSSHKey_basic(t *testing.T) {
 				Config: testAccUserSSHKeyConfig_encoding(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserSSHKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccIAMUserSSHKey_pemEncoding(t *testing.T) {
 				Config: testAccSSHKeyConfig_pemEncoding(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserSSHKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 				),
 			},
 			{
@@ -120,7 +120,7 @@ func testAccCheckUserSSHKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfiam.FindSSHPublicKeyByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["encoding"], rs.Primary.Attributes["username"])
+			_, err := tfiam.FindSSHPublicKeyByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["encoding"], rs.Primary.Attributes[names.AttrUsername])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -150,7 +150,7 @@ func testAccCheckUserSSHKeyExists(ctx context.Context, n string, v *awstypes.SSH
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		output, err := tfiam.FindSSHPublicKeyByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["encoding"], rs.Primary.Attributes["username"])
+		output, err := tfiam.FindSSHPublicKeyByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["encoding"], rs.Primary.Attributes[names.AttrUsername])
 
 		if err != nil {
 			return err
@@ -169,7 +169,7 @@ func testAccUserSSHKeyImportStateIdFunc(resourceName string) resource.ImportStat
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		username := rs.Primary.Attributes["username"]
+		username := rs.Primary.Attributes[names.AttrUsername]
 		sshPublicKeyId := rs.Primary.Attributes["ssh_public_key_id"]
 		encoding := rs.Primary.Attributes["encoding"]
 

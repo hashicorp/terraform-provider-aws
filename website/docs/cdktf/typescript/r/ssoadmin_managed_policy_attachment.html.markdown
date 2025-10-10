@@ -80,51 +80,53 @@ import { SsoadminPermissionSet } from "./.gen/providers/aws/ssoadmin-permission-
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    const example = new IdentitystoreGroup(this, "example", {
-      description: "Admin Group",
-      displayName: "Admin",
-      identityStoreId: Token.asString(
-        Fn.lookupNested(Fn.tolist(ssoInstance.identityStoreIds), ["0"])
-      ),
-    });
-    const dataAwsSsoadminInstancesExample = new DataAwsSsoadminInstances(
+    const example = new DataAwsSsoadminInstances(this, "example", {});
+    const awsIdentitystoreGroupExample = new IdentitystoreGroup(
       this,
       "example_1",
-      {}
+      {
+        description: "Admin Group",
+        displayName: "Admin",
+        identityStoreId: Token.asString(
+          Fn.lookupNested(Fn.tolist(example.identityStoreIds), ["0"])
+        ),
+      }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
-    dataAwsSsoadminInstancesExample.overrideLogicalId("example");
+    awsIdentitystoreGroupExample.overrideLogicalId("example");
     const awsSsoadminPermissionSetExample = new SsoadminPermissionSet(
       this,
       "example_2",
       {
         instanceArn: Token.asString(
-          Fn.lookupNested(Fn.tolist(dataAwsSsoadminInstancesExample.arns), [
-            "0",
-          ])
+          Fn.lookupNested(Fn.tolist(example.arns), ["0"])
         ),
         name: "Example",
       }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsSsoadminPermissionSetExample.overrideLogicalId("example");
-    new SsoadminAccountAssignment(this, "account_assignment", {
-      instanceArn: Token.asString(
-        Fn.lookupNested(Fn.tolist(dataAwsSsoadminInstancesExample.arns), ["0"])
-      ),
-      permissionSetArn: Token.asString(awsSsoadminPermissionSetExample.arn),
-      principalId: example.groupId,
-      principalType: "GROUP",
-      targetId: "123456789012",
-      targetType: "AWS_ACCOUNT",
-    });
+    const awsSsoadminAccountAssignmentExample = new SsoadminAccountAssignment(
+      this,
+      "example_3",
+      {
+        instanceArn: Token.asString(
+          Fn.lookupNested(Fn.tolist(example.arns), ["0"])
+        ),
+        permissionSetArn: Token.asString(awsSsoadminPermissionSetExample.arn),
+        principalId: Token.asString(awsIdentitystoreGroupExample.groupId),
+        principalType: "GROUP",
+        targetId: "123456789012",
+        targetType: "AWS_ACCOUNT",
+      }
+    );
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsSsoadminAccountAssignmentExample.overrideLogicalId("example");
     const awsSsoadminManagedPolicyAttachmentExample =
       new SsoadminManagedPolicyAttachment(this, "example_4", {
         dependsOn: [awsSsoadminAccountAssignmentExample],
         instanceArn: Token.asString(
-          Fn.lookupNested(Fn.tolist(dataAwsSsoadminInstancesExample.arns), [
-            "0",
-          ])
+          Fn.lookupNested(Fn.tolist(example.arns), ["0"])
         ),
         managedPolicyArn: "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup",
         permissionSetArn: Token.asString(awsSsoadminPermissionSetExample.arn),
@@ -140,6 +142,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `managedPolicyArn` - (Required, Forces new resource) The IAM managed policy Amazon Resource Name (ARN) to be attached to the Permission Set.
 * `permissionSetArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
@@ -190,4 +193,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `manag
 % terraform import aws_ssoadmin_managed_policy_attachment.example arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3ae613164e2898519a779fb074c082ba87ada44375e8a7216ec430c9fd989cda -->
+<!-- cache-key: cdktf-0.20.8 input-22ab452e559c9003212c9c84a47ba7abfd335478f450f25924d4aec42f8d95fb -->

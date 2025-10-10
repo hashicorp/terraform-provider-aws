@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_db_proxy_default_target_group", name="DB Proxy Default Target Group")
@@ -42,7 +43,7 @@ func resourceProxyDefaultTargetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +96,7 @@ func resourceProxyDefaultTargetGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,7 +104,7 @@ func resourceProxyDefaultTargetGroup() *schema.Resource {
 	}
 }
 
-func resourceProxyDefaultTargetGroupPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyDefaultTargetGroupPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -113,8 +114,8 @@ func resourceProxyDefaultTargetGroupPut(ctx context.Context, d *schema.ResourceD
 		TargetGroupName: aws.String("default"),
 	}
 
-	if v, ok := d.GetOk("connection_pool_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ConnectionPoolConfig = expandConnectionPoolConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("connection_pool_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ConnectionPoolConfig = expandConnectionPoolConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.ModifyDBProxyTargetGroup(ctx, input)
@@ -137,7 +138,7 @@ func resourceProxyDefaultTargetGroupPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceProxyDefaultTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -153,16 +154,16 @@ func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Default Target Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", tg.TargetGroupArn)
+	d.Set(names.AttrARN, tg.TargetGroupArn)
 	if tg.ConnectionPoolConfig != nil {
-		if err := d.Set("connection_pool_config", []interface{}{flattenConnectionPoolConfigurationInfo(tg.ConnectionPoolConfig)}); err != nil {
+		if err := d.Set("connection_pool_config", []any{flattenConnectionPoolConfigurationInfo(tg.ConnectionPoolConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_pool_config: %s", err)
 		}
 	} else {
 		d.Set("connection_pool_config", nil)
 	}
 	d.Set("db_proxy_name", tg.DBProxyName)
-	d.Set("name", tg.TargetGroupName)
+	d.Set(names.AttrName, tg.TargetGroupName)
 
 	return diags
 }
@@ -216,7 +217,7 @@ func findDBProxyTargetGroups(ctx context.Context, conn *rds.Client, input *rds.D
 }
 
 func statusDefaultDBProxyTargetGroup(ctx context.Context, conn *rds.Client, dbProxyName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDefaultDBProxyTargetGroupByDBProxyName(ctx, conn, dbProxyName)
 
 		if tfresource.NotFound(err) {
@@ -248,7 +249,7 @@ func waitDefaultDBProxyTargetGroupAvailable(ctx context.Context, conn *rds.Clien
 	return nil, err
 }
 
-func expandConnectionPoolConfiguration(tfMap map[string]interface{}) *types.ConnectionPoolConfiguration {
+func expandConnectionPoolConfiguration(tfMap map[string]any) *types.ConnectionPoolConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -270,12 +271,12 @@ func expandConnectionPoolConfiguration(tfMap map[string]interface{}) *types.Conn
 	return apiObject
 }
 
-func flattenConnectionPoolConfigurationInfo(apiObject *types.ConnectionPoolConfigurationInfo) map[string]interface{} {
+func flattenConnectionPoolConfigurationInfo(apiObject *types.ConnectionPoolConfigurationInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["connection_borrow_timeout"] = aws.ToInt32(apiObject.ConnectionBorrowTimeout)
 	tfMap["init_query"] = aws.ToString(apiObject.InitQuery)

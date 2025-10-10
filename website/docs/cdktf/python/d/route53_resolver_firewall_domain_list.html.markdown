@@ -37,9 +37,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_domain_list_id` - (Required) The ID of the domain list.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the firewall domain list.
 * `creation_time` - The date and time that the domain list was created, in Unix time format and Coordinated Universal Time (UTC).
@@ -51,4 +56,4 @@ The following attribute is additionally exported:
 * `status` - The status of the domain list.
 * `status_message` - Additional information about the status of the list, if available.
 
-<!-- cache-key: cdktf-0.20.1 input-35c900f0c4e3cc253efbb2bda21a0b76720a28ec58c6061e8c2afed4134cbbea -->
+<!-- cache-key: cdktf-0.20.8 input-2b32c327d614311c68addd754473031c060dbb2b4ce2de02f40dec464c5c96b2 -->

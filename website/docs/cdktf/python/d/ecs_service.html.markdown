@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_name` - (Required) Name of the ECS Service
 * `cluster_arn` - (Required) ARN of the ECS Cluster
 
@@ -47,8 +48,28 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the ECS Service
 * `desired_count` - Number of tasks for the ECS Service
 * `launch_type` - Launch type for the ECS Service
+* `load_balancer` - Load balancers for the ECS Service. See [`load_balancer` Block](#load_balancer-block) for details.
 * `scheduling_strategy` - Scheduling strategy for the ECS Service
 * `task_definition` - Family for the latest ACTIVE revision or full ARN of the task definition.
 * `tags` - Resource tags.
 
-<!-- cache-key: cdktf-0.20.1 input-342c81cf26422fd2c4195d60a2096623c39f08ed2e906f31b634d44bbdc3ee9c -->
+### `load_balancer` Block
+
+The `load_balancer` block exports the following attributes:
+
+* `advanced_configuration` - Settings for Blue/Green deployment. See [`advanced_configuration` Block](#advanced_configuration-block) for details.
+* `container_name` - Name of the container to associate with the load balancer.
+* `container_port` - Port on the container to associate with the load balancer.
+* `elb_name` - Name of the load balancer.
+* `target_group_arn` - ARN of the target group to associate with the load balancer.
+
+### `advanced_configuration` Block
+
+The `advanced_configuration` block exports the following attributes:
+
+* `alternate_target_group_arn` - ARN of the alternate target group to use for Blue/Green deployments.
+* `production_listener_rule` - ARN of the listener rule that routes production traffic.
+* `role_arn` - ARN of the IAM role that allows ECS to manage the target groups.
+* `test_listener_rule` - ARN of the listener rule that routes test traffic.
+
+<!-- cache-key: cdktf-0.20.8 input-a70bbb1a38c9b2974394dea73f8c9d75c00699f38008f9f5c14be54f730b4ec7 -->

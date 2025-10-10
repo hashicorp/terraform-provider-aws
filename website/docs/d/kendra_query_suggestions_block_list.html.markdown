@@ -12,7 +12,7 @@ Provides details about a specific Amazon Kendra block list used for query sugges
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_kendra_query_suggestions_block_list" "example" {
   index_id                        = "12345678-1234-1234-1234-123456789123"
   query_suggestions_block_list_id = "87654321-1234-4321-4321-321987654321"
@@ -23,6 +23,7 @@ data "aws_kendra_query_suggestions_block_list" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `index_id` - (Required) Identifier of the index that contains the block list.
 * `query_suggestions_block_list_id` - (Required) Identifier of the block list.
 

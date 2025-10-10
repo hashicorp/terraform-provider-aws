@@ -84,6 +84,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The cache policy ARN.
 * `etag` - Current version of the cache policy.
 * `id` - Identifier for the cache policy.
 

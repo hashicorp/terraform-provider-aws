@@ -24,12 +24,12 @@ data "aws_route53_traffic_policy_document" "example" {
   endpoint {
     id    = "my_elb"
     type  = "elastic-load-balancer"
-    value = "elb-111111.${data.aws_region.current.name}.elb.amazonaws.com"
+    value = "elb-111111.${data.aws_region.current.region}.elb.amazonaws.com"
   }
   endpoint {
     id     = "site_down_banner"
     type   = "s3-website"
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
     value  = "www.example.com"
   }
 
@@ -152,7 +152,7 @@ The following arguments are optional:
 ### `endpoint`
 
 * `id` - (Required) ID of an endpoint you want to assign.
-* `type` - (Optional) Type of the endpoint. Valid values are `value` , `cloudfront` , `elastic-load-balancer`, `s3-website`
+* `type` - (Optional) Type of the endpoint. Valid values are `value`, `cloudfront`, `elastic-load-balancer`, `s3-website`, `application-load-balancer`, `network-load-balancer` and `elastic-beanstalk`
 * `region` - (Optional) To route traffic to an Amazon S3 bucket that is configured as a website endpoint, specify the region in which you created the bucket for `region`.
 * `value` - (Optional) Value of the `type`.
 

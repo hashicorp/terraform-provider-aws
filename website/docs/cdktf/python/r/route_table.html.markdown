@@ -169,6 +169,7 @@ The target could then be updated again back to `local`.
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Required) The VPC ID.
 * `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
@@ -222,6 +223,32 @@ attribute once the route resource is created.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route_table.example
+  identity = {
+    id = "rtb-4e616f6d69"
+  }
+}
+
+resource "aws_route_table" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the routing table.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route Tables using the route table `id`. For example:
 
 ```python
@@ -245,4 +272,4 @@ Using `terraform import`, import Route Tables using the route table `id`. For ex
 % terraform import aws_route_table.public_rt rtb-4e616f6d69
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d300bb2babcdde7f3a257080c421d049a58a89200afecf3485288c3ad0d30c6d -->
+<!-- cache-key: cdktf-0.20.8 input-769bbdab5afd29d8c9925635bbb3cf43c34cbc6f91e98b69dab3af677aabb13e -->

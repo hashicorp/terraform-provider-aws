@@ -140,9 +140,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `awsAccountId` - (Optional, Forces new resource) AWS account ID.
+* `awsAccountId` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `definition` - (Optional) A detailed template definition. Only one of `definition` or `sourceEntity` should be configured. See [definition](#definition).
 * `permissions` - (Optional) A set of resource permissions on the template. Maximum of 64 items. See [permissions](#permissions).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sourceEntity` - (Optional) The entity that you are using as a source when you create the template (analysis or template). Only one of `definition` or `sourceEntity` should be configured. See [source_entity](#source_entity).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -233,4 +234,4 @@ Using `terraform import`, import a QuickSight Template using the AWS account ID 
 % terraform import aws_quicksight_template.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-684fee6425d01e2059464d789630cbb0f5fd11eece6c679b299e9511a988d107 -->
+<!-- cache-key: cdktf-0.20.8 input-b4d573c1772c97fc2b867f99a53ec26f486c71055dcc9ec069f5094138a21171 -->

@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `encoding` - (Required) Specifies the public key encoding format to use in the response. To retrieve the public key in ssh-rsa format, use `SSH`. To retrieve the public key in PEM format, use `PEM`.
 * `sshPublicKeyId` - (Required) Unique identifier for the SSH public key.
 * `username` - (Required) Name of the IAM user associated with the SSH public key.
@@ -50,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `publicKey` - SSH public key.
 * `status` - Status of the SSH public key. Active means that the key can be used for authentication with an CodeCommit repository. Inactive means that the key cannot be used.
 
-<!-- cache-key: cdktf-0.20.1 input-4ee22ff1f5e0f080cab2c8697a1be23a25df9c75fdd5dc34b8ea78d65f92f801 -->
+<!-- cache-key: cdktf-0.20.8 input-b3bb385ed9000e142a318b6a470d9b6823bb831bd56ff3f724392c10b6254f8a -->

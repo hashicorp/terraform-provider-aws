@@ -6,8 +6,8 @@ package oam
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_oam_links")
+// @SDKDataSource("aws_oam_links", name="Links")
 func DataSourceLinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinksRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -34,10 +34,11 @@ const (
 	DSNameLinks = "Links Data Source"
 )
 
-func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
-	listLinksInput := &oam.ListLinksInput{}
 
+	listLinksInput := &oam.ListLinksInput{}
 	paginator := oam.NewListLinksPaginator(conn, listLinksInput)
 	var arns []string
 
@@ -45,16 +46,16 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
-			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameLinks, "", err)
+			return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameLinks, "", err)
 		}
 
 		for _, listLinksItem := range page.Items {
-			arns = append(arns, aws.StringValue(listLinksItem.Arn))
+			arns = append(arns, aws.ToString(listLinksItem.Arn))
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, arns)
 
 	return nil
 }

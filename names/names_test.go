@@ -8,102 +8,11 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"slices"
 	"testing"
+
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
-
-func TestDNSSuffixForPartition(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "empty",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "China",
-			input:    ChinaPartitionID,
-			expected: "amazonaws.com.cn",
-		},
-		{
-			name:     "GovCloud",
-			input:    USGovCloudPartitionID,
-			expected: "amazonaws.com",
-		},
-		{
-			name:     "standard",
-			input:    StandardPartitionID,
-			expected: "amazonaws.com",
-		},
-		{
-			name:     "default",
-			input:    "custom",
-			expected: "amazonaws.com",
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got, want := DNSSuffixForPartition(testCase.input), testCase.expected; got != want {
-				t.Errorf("got: %s, expected: %s", got, want)
-			}
-		})
-	}
-}
-
-func TestIsOptInRegion(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{
-			name:     "empty",
-			input:    "",
-			expected: false,
-		},
-		{
-			name:     "China",
-			input:    CNNorth1RegionID,
-			expected: false,
-		},
-		{
-			name:     "GovCloud",
-			input:    USGovWest1RegionID,
-			expected: false,
-		},
-		{
-			name:     "standard opt-in",
-			input:    CAWest1RegionID,
-			expected: true,
-		},
-		{
-			name:     "standard not opt-in",
-			input:    CACentral1RegionID,
-			expected: false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got, want := IsOptInRegion(testCase.input), testCase.expected; got != want {
-				t.Errorf("got: %t, expected: %t", got, want)
-			}
-		})
-	}
-}
 
 func TestPartitionForRegion(t *testing.T) {
 	t.Parallel()
@@ -120,79 +29,31 @@ func TestPartitionForRegion(t *testing.T) {
 		},
 		{
 			name:     "China",
-			input:    CNNorth1RegionID,
-			expected: ChinaPartitionID,
+			input:    endpoints.CnNorth1RegionID,
+			expected: endpoints.AwsCnPartitionID,
 		},
 		{
 			name:     "GovCloud",
-			input:    USGovWest1RegionID,
-			expected: USGovCloudPartitionID,
+			input:    endpoints.UsGovWest1RegionID,
+			expected: endpoints.AwsUsGovPartitionID,
 		},
 		{
 			name:     "standard",
-			input:    USWest2RegionID,
-			expected: StandardPartitionID,
+			input:    endpoints.UsWest2RegionID,
+			expected: endpoints.AwsPartitionID,
 		},
 		{
 			name:     "default",
 			input:    "custom",
-			expected: StandardPartitionID,
+			expected: endpoints.AwsPartitionID,
 		},
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := PartitionForRegion(testCase.input), testCase.expected; got != want {
-				t.Errorf("got: %s, expected: %s", got, want)
-			}
-		})
-	}
-}
-
-func TestReverseDNS(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "empty",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "amazonaws.com",
-			input:    "amazonaws.com",
-			expected: "com.amazonaws",
-		},
-		{
-			name:     "amazonaws.com.cn",
-			input:    "amazonaws.com.cn",
-			expected: "cn.com.amazonaws",
-		},
-		{
-			name:     "sc2s.sgov.gov",
-			input:    "sc2s.sgov.gov",
-			expected: "gov.sgov.sc2s",
-		},
-		{
-			name:     "c2s.ic.gov",
-			input:    "c2s.ic.gov",
-			expected: "gov.ic.c2s",
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got, want := ReverseDNS(testCase.input), testCase.expected; got != want {
+			if got, want := PartitionForRegion(testCase.input).ID(), testCase.expected; got != want {
 				t.Errorf("got: %s, expected: %s", got, want)
 			}
 		})
@@ -229,7 +90,6 @@ func TestProviderPackageForAlias(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -391,7 +251,6 @@ func TestServicesForDirectories(t *testing.T) {
 	}
 
 	for _, testCase := range ProviderPackages() {
-		testCase := testCase
 		t.Run(testCase, func(t *testing.T) {
 			t.Parallel()
 
@@ -401,11 +260,8 @@ func TestServicesForDirectories(t *testing.T) {
 			}
 
 			if _, err := os.Stat(fmt.Sprintf("%s/../internal/service/%s", wd, testCase)); errors.Is(err, fs.ErrNotExist) {
-				for _, service := range nonExisting {
-					if service == testCase {
-						t.Skipf("skipping %s because not yet implemented", testCase)
-						break
-					}
+				if slices.Contains(nonExisting, testCase) {
+					t.Skipf("skipping %s because not yet implemented", testCase)
 				}
 				t.Errorf("expected %s/../internal/service/%s to exist %s", wd, testCase, err)
 			}
@@ -449,7 +305,6 @@ func TestProviderNameUpper(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
@@ -512,143 +367,10 @@ func TestFullHumanFriendly(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
 			got, err := FullHumanFriendly(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-func TestAWSGoV1Package(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "same as AWS",
-			Input:    CloudTrail,
-			Expected: CloudTrail,
-			Error:    false,
-		},
-		{
-			TestName: "different from AWS",
-			Input:    Transcribe,
-			Expected: "transcribeservice",
-			Error:    false,
-		},
-		{
-			TestName: "different from AWS 2",
-			Input:    RBin,
-			Expected: "recyclebin",
-			Error:    false,
-		},
-		{
-			TestName: "doesnotexist",
-			Input:    "doesnotexist",
-			Expected: "",
-			Error:    true,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			got, err := AWSGoV1Package(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-func TestAWSGoV1ClientName(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: Elasticsearch,
-			Input:    Elasticsearch,
-			Expected: "ElasticsearchService",
-			Error:    false,
-		},
-		{
-			TestName: Deploy,
-			Input:    Deploy,
-			Expected: "CodeDeploy",
-			Error:    false,
-		},
-		{
-			TestName: RUM,
-			Input:    RUM,
-			Expected: "CloudWatchRUM",
-			Error:    false,
-		},
-		{
-			TestName: CloudControl,
-			Input:    CloudControl,
-			Expected: "CloudControlApi",
-			Error:    false,
-		},
-		{
-			TestName: "doesnotexist",
-			Input:    "doesnotexist",
-			Expected: "",
-			Error:    true,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			got, err := AWSGoV1ClientTypeName(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)

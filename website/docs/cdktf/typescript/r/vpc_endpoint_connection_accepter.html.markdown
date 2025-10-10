@@ -64,6 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpcEndpointId` - (Required) AWS VPC Endpoint ID.
 * `vpcEndpointServiceId` - (Required) AWS VPC Endpoint Service ID.
 
@@ -106,4 +107,4 @@ Using `terraform import`, import VPC Endpoint Services using ID of the connectio
 % terraform import aws_vpc_endpoint_connection_accepter.foo vpce-svc-0f97a19d3fa8220bc_vpce-010601a6db371e263
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-34b764c039bd7ffaa91905d63054f3f94f3c9291f5e1d627a203fd2af7e505b7 -->
+<!-- cache-key: cdktf-0.20.8 input-a29fbeaff05a65733608f1d6e5adb3c7512b9404dd1557b45818fa2b4eb5e2b4 -->

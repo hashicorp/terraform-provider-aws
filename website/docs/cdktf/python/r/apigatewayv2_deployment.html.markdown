@@ -84,6 +84,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `description` - (Optional) Description for the deployment resource. Must be less than or equal to 1024 characters in length.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
@@ -122,4 +123,4 @@ Using `terraform import`, import `aws_apigatewayv2_deployment` using the API ide
 
 The `triggers` argument cannot be imported.
 
-<!-- cache-key: cdktf-0.20.1 input-6f168dfabc70a225ecc775cc6a4b2adaf3369f7cedadbfe8329709220731be58 -->
+<!-- cache-key: cdktf-0.20.8 input-c7450fa8c59e1a68ada8776a1a5bec2daa0f662e44c8964a62d6583102b52e81 -->

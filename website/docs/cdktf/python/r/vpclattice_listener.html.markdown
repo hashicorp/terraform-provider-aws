@@ -157,10 +157,11 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `default_action` - (Required) Default action block for the default listener rule. Default action blocks are defined below.
 * `name` - (Required, Forces new resource) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `port` - (Optional, Forces new resource) Listener port. You can specify a value from 1 to 65535. If `port` is not specified and `protocol` is HTTP, the value will default to 80. If `port` is not specified and `protocol` is HTTPS, the value will default to 443.
-* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP` or `HTTPS`
+* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP`, `HTTPS` or `TLS_PASSTHROUGH`
 * `service_arn` - (Optional) Amazon Resource Name (ARN) of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
 * `service_identifier` - (Optional) ID of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
 -> **NOTE:** You must specify one of the following arguments: `service_arn` or `service_identifier`.
@@ -229,4 +230,4 @@ Using `terraform import`, import VPC Lattice Listener using the `listener_id` of
 % terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-30b06ae48c24856c6518209e02f75d55700f5368998f22e96c0fb3c67ef9e186 -->
+<!-- cache-key: cdktf-0.20.8 input-9057798d51220c999fb536bbfc000271439b84cc183ae0218f32b71feeebfe03 -->

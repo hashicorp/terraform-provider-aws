@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `key_arn` - (Required, ForceNew) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use to encrypt the EBS volume.
 
 ## Attribute Reference
@@ -73,4 +74,4 @@ Using `terraform import`, import the EBS default KMS CMK using the KMS key ARN. 
 % terraform import aws_ebs_default_kms_key.example arn:aws:kms:us-east-1:123456789012:key/abcd-1234
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1b6624f3132e4695fc32d40d7c90ec4c11690a7b3a4758236262f116dc876595 -->
+<!-- cache-key: cdktf-0.20.8 input-758d7f1f69907ac945ecc4652d00c83509112014c5890bf2cd0c56c954694e74 -->

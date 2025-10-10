@@ -119,6 +119,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cloudformation` - (Optional) A collection of AWS CloudFormation stacks. See [`cloudformation`](#cloudformation-argument-reference) below for additional details.
 * `tags` - (Optional) AWS tags used to filter the resources in the resource collection. See [`tags`](#tags-argument-reference) below for additional details.
 
@@ -162,4 +163,4 @@ Using `terraform import`, import DevOps Guru Resource Collection using the `id`.
 % terraform import aws_devopsguru_resource_collection.example AWS_CLOUD_FORMATION
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7b71ab1fba71e5418420de9b6ab49a43391e2bbc6e144abc7dec133dc5e88796 -->
+<!-- cache-key: cdktf-0.20.8 input-42cdaeaaacee729b1f2b0a40486edc7fac1bb42ef413d7699ff5f41647baf948 -->

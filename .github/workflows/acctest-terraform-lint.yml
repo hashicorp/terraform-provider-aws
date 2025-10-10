@@ -1,4 +1,4 @@
-name: Acceptance Test Linting
+name: Acceptance Test Directory Linting
 on:
   push:
     branches:
@@ -8,54 +8,50 @@ on:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
       - .ci/.tflint.hcl
-      - .ci/scripts/validate-terraform.sh
       - .ci/tools/go.mod
       - go.sum
-      - 'internal/service/**/*_test.go'
+      - 'internal/service/**/*.tf'
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
 
 jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
-      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 
-      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
-
-      - run: |
-          find ./internal/service -type f -name '*_test.go' \
-            | sort -u \
-            | xargs -I {} terrafmt diff --check --fmtcompat {}
+      - run: terraform fmt -recursive -check
 
   tflint:
-    name: Validate Acceptance Tests
-    runs-on: [custom, linux, xl]
-    strategy:
-      matrix:
-        path: ['[a-f]', '[g-z]']
-    env:
-      TEST_FILES_PARTITION: '\./internal/service/${{ matrix.path }}.*/.*_test\.go'
+    name: Validate Acceptance Test Terraform
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
-      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         name: Cache plugin dir
         continue-on-error: true
         timeout-minutes: 2
@@ -63,12 +59,11 @@ jobs:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
-      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
       - run: tflint --config .ci/.tflint.hcl --init
 
-      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} | wc -l | xargs )"
       - run: |
-          find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
-            | .ci/scripts/validate-terraform.sh
+          # tflint always resolves config flies relative to the working directory when using --recursive
+          TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
+          tflint --config  "${TFLINT_CONFIG}" --chdir=./internal/service --recursive

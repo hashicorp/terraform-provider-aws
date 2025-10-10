@@ -86,6 +86,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `window_id` - (Required) The Id of the maintenance window to register the target with.
 * `name` - (Optional) The name of the maintenance window target.
 * `description` - (Optional) The description of the maintenance window target.
@@ -101,6 +102,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the maintenance window target.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window_target.example
+  identity = {
+    window_id = "mw-0c50858d01EXAMPLE"
+    id        = "23639a0b-ddbc-4bca-9e72-78d96EXAMPLE"
+  }
+}
+
+resource "aws_ssm_maintenance_window_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `window_id` - (String) ID of the maintenance window.
+* `id` - (String) ID of the maintenance window target.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Maintenance Window targets using `WINDOW_ID/WINDOW_TARGET_ID`. For example:
 
@@ -125,4 +154,4 @@ Using `terraform import`, import SSM Maintenance Window targets using `WINDOW_ID
 % terraform import aws_ssm_maintenance_window_target.example mw-0c50858d01EXAMPLE/23639a0b-ddbc-4bca-9e72-78d96EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-23b182db6aa7bfeef9866d68456e0abddd9b0255898371206b63dfe63dfee54e -->
+<!-- cache-key: cdktf-0.20.8 input-3a90a45f7edeb19456221d335d09db0b291cc3bb88ba2933bed5c8358ec69b15 -->

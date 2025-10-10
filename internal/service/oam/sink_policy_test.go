@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
+func testAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -47,8 +47,8 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
-					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_oam_sink.test", names.AttrARN),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
 	"Version": "2012-10-17",
@@ -67,11 +67,11 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 		}
     }]
 }
-					`, acctest.Partition(), acctest.AccountID()))
+					`, acctest.Partition(), acctest.AccountID(ctx)))
 						return err
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", names.AttrID),
 				),
 			},
 			{
@@ -83,7 +83,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
+func testAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -106,8 +106,8 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
-					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/.+$`)),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
 	"Version": "2012-10-17",
@@ -126,19 +126,19 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 		}
     }]
 }
-					`, acctest.Partition(), acctest.AccountID()))
+					`, acctest.Partition(), acctest.AccountID(ctx)))
 						return err
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", names.AttrID),
 				),
 			},
 			{
 				Config: testAccSinkPolicyConfigUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
-					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
+					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", names.AttrID),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
 	"Version": "2012-10-17",
@@ -154,7 +154,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 		}
     }]
 }
-					`, acctest.Partition(), acctest.AccountID()))
+					`, acctest.Partition(), acctest.AccountID(ctx)))
 						return err
 					}),
 				),
@@ -233,7 +233,7 @@ resource "aws_oam_sink" "test" {
 }
 
 resource "aws_oam_sink_policy" "test" {
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -266,7 +266,7 @@ resource "aws_oam_sink" "test" {
 }
 
 resource "aws_oam_sink_policy" "test" {
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_synthetics_group_association", name="Group Association")
@@ -45,7 +46,7 @@ func ResourceGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,12 +55,12 @@ func ResourceGroupAssociation() *schema.Resource {
 	}
 }
 
-func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	canaryArn := d.Get("canary_arn").(string)
-	groupName := d.Get("group_name").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
 
 	in := &synthetics.AssociateResourceInput{
 		ResourceArn:     aws.String(canaryArn),
@@ -81,14 +82,14 @@ func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceGroupAssociationRead(ctx, d, meta)...)
 }
 
-func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	canaryArn, groupName, err := GroupAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	group, err := FindAssociatedGroup(ctx, conn, canaryArn, groupName)
@@ -96,7 +97,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Synthetics Group Association between canary (%s) and group (%s) not found, removing from state", canaryArn, groupName)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -106,12 +107,12 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("canary_arn", canaryArn)
 	d.Set("group_arn", group.Arn)
 	d.Set("group_id", group.Id)
-	d.Set("group_name", group.Name)
+	d.Set(names.AttrGroupName, group.Name)
 
 	return diags
 }
 
-func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
@@ -120,7 +121,7 @@ func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData,
 	canaryArn, groupName, err := GroupAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	in := &synthetics.DisassociateResourceInput{

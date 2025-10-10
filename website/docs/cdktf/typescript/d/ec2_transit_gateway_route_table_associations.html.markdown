@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
@@ -64,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `ids` - Set of Transit Gateway Route Table Association identifiers.
 
-<!-- cache-key: cdktf-0.20.1 input-bfa58264f45212830b07dd741569d6e94ca91a2bd3663b4e9cf46da0d1431ddd -->
+<!-- cache-key: cdktf-0.20.8 input-0d8545735f68c29d0f80165db04f0d6b9bdfce9de27658f4eec0e70fc19d56fb -->

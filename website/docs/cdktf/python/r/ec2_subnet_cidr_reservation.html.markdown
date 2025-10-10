@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Required) The CIDR block for the reservation.
 * `reservation_type` - (Required) The type of reservation to create. Valid values: `explicit`, `prefix`
 * `subnet_id` - (Required) The ID of the subnet to create the reservation for.
@@ -74,4 +75,4 @@ Using `terraform import`, import Existing CIDR reservations using `SUBNET_ID:RES
 % terraform import aws_ec2_subnet_cidr_reservation.example subnet-01llsxvsxabqiymcz:scr-4mnvz6wb7otksjcs9
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fc461a33a61b61090347c3aebed74b1fbf423338d6a3082dc4e7dd5963cc132c -->
+<!-- cache-key: cdktf-0.20.8 input-403161cf681a16b2464933b07cecc3eb3e0246031e953026947f33a454b9b1c1 -->

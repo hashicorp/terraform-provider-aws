@@ -5,7 +5,6 @@ package iam
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -16,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_instance_profiles", name="Instance Profiles")
@@ -24,12 +25,12 @@ func dataSourceInstanceProfiles() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstanceProfilesRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -48,9 +49,8 @@ func dataSourceInstanceProfiles() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	roleName := d.Get("role_name").(string)
@@ -60,29 +60,29 @@ func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profiles for Role (%s): %s", roleName, err)
 	}
 
-	var arns, names, paths []string
+	var arns, nms, paths []string
 
 	for _, v := range instanceProfiles {
 		arns = append(arns, aws.ToString(v.Arn))
-		names = append(names, aws.ToString(v.InstanceProfileName))
+		nms = append(nms, aws.ToString(v.InstanceProfileName))
 		paths = append(paths, aws.ToString(v.Path))
 	}
 
 	d.SetId(roleName)
-	d.Set("arns", arns)
-	d.Set("names", names)
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrNames, nms)
 	d.Set("paths", paths)
 
 	return diags
 }
 
 func findInstanceProfilesForRole(ctx context.Context, conn *iam.Client, roleName string) ([]awstypes.InstanceProfile, error) {
-	input := &iam.ListInstanceProfilesForRoleInput{
+	input := iam.ListInstanceProfilesForRoleInput{
 		RoleName: aws.String(roleName),
 	}
 	var output []awstypes.InstanceProfile
 
-	pages := iam.NewListInstanceProfilesForRolePaginator(conn, input)
+	pages := iam.NewListInstanceProfilesForRolePaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -98,7 +98,7 @@ func findInstanceProfilesForRole(ctx context.Context, conn *iam.Client, roleName
 		}
 
 		for _, v := range page.InstanceProfiles {
-			if !reflect.ValueOf(v).IsZero() {
+			if p := &v; !inttypes.IsZero(p) {
 				output = append(output, v)
 			}
 		}

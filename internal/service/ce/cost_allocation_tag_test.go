@@ -24,7 +24,7 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 	rName := "Tag01"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostAllocationTagDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -34,8 +34,8 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			},
 			{
@@ -48,16 +48,16 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			}, {
 				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			},
 		},
@@ -71,7 +71,7 @@ func TestAccCECostAllocationTag_disappears(t *testing.T) {
 	rName := "Tag02"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCostAllocationTagDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),

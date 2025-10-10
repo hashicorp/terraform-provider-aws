@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `pool_name` - (Required) Name of the dedicated IP pool.
 
 ## Attribute Reference
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `warmup_percentage` - Indicates how complete the dedicated IP warm-up process is. When this value equals `1`, the address has completed the warm-up process and is ready for use.
 * `warmup_status` - The warm-up status of a dedicated IP address. Valid values: `IN_PROGRESS`, `DONE`.
 
-<!-- cache-key: cdktf-0.20.1 input-85f32989660a929d8bc2374a2bb39ccd95b65ab0f91d1df95fd4ec734bc35496 -->
+<!-- cache-key: cdktf-0.20.8 input-1059708a63964f1a189fe9c52a0f07f34a069779b2a5e0411121cea305c43b45 -->

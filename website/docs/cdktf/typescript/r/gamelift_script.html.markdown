@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the script
 * `storageLocation` - (Optional) Information indicating where your game script files are stored. See below.
 * `version` - (Optional) Version that is associated with this script.
@@ -94,4 +95,4 @@ Using `terraform import`, import GameLift Scripts using the ID. For example:
 % terraform import aws_gamelift_script.example <script-id>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ea65675a0727f9e5f10a03be30cedabffe531a0a9407f9d714cbdeca2fce29dc -->
+<!-- cache-key: cdktf-0.20.8 input-8107f4dfb4ea87372171e45696ec69f7279b8df9588635e80eda2a6a186c0980 -->

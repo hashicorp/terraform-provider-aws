@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `registry_name` – (Required) The Name of the registry.
-* `description` – (Optional) A description of the registry.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `registry_name` - (Required) The Name of the registry.
+* `description` - (Optional) A description of the registry.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -48,6 +49,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_glue_registry.example
+  identity = {
+    "arn" = "arn:aws:glue:us-west-2:123456789012:registry/example"
+  }
+}
+
+resource "aws_glue_registry" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Glue registry.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Registries using `arn`. For example:
 
@@ -72,4 +94,4 @@ Using `terraform import`, import Glue Registries using `arn`. For example:
 % terraform import aws_glue_registry.example arn:aws:glue:us-west-2:123456789012:registry/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ca7291533ababa19fd90f315f11beb8ec44905df2527d1937679132938c2cddd -->
+<!-- cache-key: cdktf-0.20.8 input-01a2abc6abd9370e61b70abfc23d689a3421c84727272702d718f364140d1f47 -->

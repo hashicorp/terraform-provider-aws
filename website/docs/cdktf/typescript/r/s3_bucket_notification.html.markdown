@@ -12,7 +12,7 @@ description: |-
 
 Manages a S3 Bucket Notification Configuration. For additional information, see the [Configuring S3 Event Notifications section in the Amazon S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 
-~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. See the example "Trigger multiple Lambda functions" for an option.
+~> **NOTE:** S3 Buckets only support a single notification configuration resource. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. This resource will overwrite any existing event notifications configured for the S3 bucket it's associated with. See the example "Trigger multiple Lambda functions" for an option of how to configure multiple triggers within this resource.
 
 -> This resource cannot be used with S3 directory buckets.
 
@@ -189,7 +189,7 @@ class MyConvertedCode extends TerraformStack {
       functionName: "example_lambda_name",
       handler: "exports.example",
       role: iamForLambda.arn,
-      runtime: "go1.x",
+      runtime: "nodejs20.x",
     });
     const allowBucket = new LambdaPermission(this, "allow_bucket", {
       action: "lambda:InvokeFunction",
@@ -260,7 +260,7 @@ class MyConvertedCode extends TerraformStack {
       functionName: "example_lambda_name1",
       handler: "exports.example",
       role: iamForLambda.arn,
-      runtime: "go1.x",
+      runtime: "nodejs20.x",
     });
     const func2 = new LambdaFunction(this, "func2", {
       filename: "your-function2.zip",
@@ -432,6 +432,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications. Defaults to `false`.
 * `lambdaFunction` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.
@@ -497,4 +498,4 @@ Using `terraform import`, import S3 bucket notification using the `bucket`. For 
 % terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5357aa38fd9b204541e907ee176be4b2983ad672823349cbe4ac358b8982320b -->
+<!-- cache-key: cdktf-0.20.8 input-2ec3bfdddd9338b3258eb0dbb514981f8f3970bb90c8f38e1111afac1b412fda -->

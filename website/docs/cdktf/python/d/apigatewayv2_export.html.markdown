@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `specification` - (Required) Version of the API specification to use. `OAS30`, for OpenAPI 3.0, is the only supported value.
 * `output_type` - (Required) Output type of the exported definition file. Valid values are `JSON` and `YAML`.
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - API identifier.
 * `body` - ID of the API.
 
-<!-- cache-key: cdktf-0.20.1 input-6480a64e749693f83cf73592ca35d58ca5a49b6e975099c338b5341415898a74 -->
+<!-- cache-key: cdktf-0.20.8 input-dbf7bc0698ebb63fadc2f51104034579ded79be567ced66ab72f836f382dc8ef -->

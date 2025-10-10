@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `transit_gateway_attachment_id` - (Optional) ID of the attachment.
 
@@ -65,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `transit_gateway_id` - ID of the transit gateway.
 * `transit_gateway_owner_id` - The ID of the AWS account that owns the transit gateway.
 
-<!-- cache-key: cdktf-0.20.1 input-855174ba9f5d7c6a547c955bd66cf3e3934a1b368d1480c66e0d166837fd5797 -->
+<!-- cache-key: cdktf-0.20.8 input-9ae85c734630382578ccf6b14b1e9557233d2203f18e7cad0f2223ce61cdcfea -->

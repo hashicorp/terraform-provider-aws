@@ -57,7 +57,7 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name to identify the Group Membership
 * `users` - (Required) A list of IAM User names to associate with the Group
-* `group` – (Required) The IAM Group name to attach the list of `users` to
+* `group` - (Required) The IAM Group name to attach the list of `users` to
 
 ## Attribute Reference
 
@@ -65,10 +65,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `name` - The name to identify the Group Membership
 * `users` - list of IAM User names
-* `group` – IAM Group name
+* `group` - IAM Group name
 
 [1]: /docs/providers/aws/r/iam_group.html
 [2]: /docs/providers/aws/r/iam_user.html
 [3]: /docs/providers/aws/r/iam_user_group_membership.html
 
-<!-- cache-key: cdktf-0.20.1 input-a689283d8ede46a18e142c30b3c6d291ef7cbbe1e20ccd369bd2df00bb2f1499 -->
+<!-- cache-key: cdktf-0.20.8 input-b38f59aab53e5ac527dbfb6b023c9c0ef4527d9518a1b323cbaca210a173570a -->

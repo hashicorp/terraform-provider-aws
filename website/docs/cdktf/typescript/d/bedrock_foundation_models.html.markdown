@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_foundation_models"
 description: |-
@@ -58,8 +58,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are optional:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `byCustomizationType` - (Optional) Customization type to filter on. Valid values are `FINE_TUNING`.
 * `byInferenceType` - (Optional) Inference type to filter on. Valid values are `ON_DEMAND` and `PROVISIONED`.
 * `byOutputModality` - (Optional) Output modality to filter on. Valid values are `TEXT`, `IMAGE`, and `EMBEDDING`.
@@ -84,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerName` - Model provider name.
 * `responseStreamingSupported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.1 input-6460f3b0b18394205440301a3c70d60b4b02252dc7a9f84d403f0e812f7a5da5 -->
+<!-- cache-key: cdktf-0.20.8 input-cc41af445188096537d13b36d8378917c5fa2cdac4e03a4dc71f1f48fa65401a -->

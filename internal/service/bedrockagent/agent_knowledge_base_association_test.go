@@ -57,7 +57,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test desc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test desc"),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test desc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test desc"),
 				),
 			},
 			{
@@ -120,7 +120,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test desc2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test desc2"),
 				),
 			},
 		},
@@ -222,7 +222,7 @@ func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, n stri
 func testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, embeddingModel, description, state string) string {
 	return acctest.ConfigCompose(
 		testAccAgentConfig_basic(rName, agentModel, description),
-		testAccKnowledgeBaseConfig_basicRDS(rName, embeddingModel),
+		testAccKnowledgeBaseConfig_basicRDS(rName, embeddingModel, ""),
 		fmt.Sprintf(`
 resource "aws_bedrockagent_agent_knowledge_base_association" "test" {
   agent_id             = aws_bedrockagent_agent.test.id

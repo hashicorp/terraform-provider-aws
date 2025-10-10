@@ -6,18 +6,20 @@ package tfresource
 import (
 	"errors"
 	"fmt"
+	"iter"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 type EmptyResultError struct {
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrEmptyResult = &EmptyResultError{}
 
-func NewEmptyResultError(lastRequest interface{}) error {
+func NewEmptyResultError(lastRequest any) error {
 	return &EmptyResultError{
 		LastRequest: lastRequest,
 	}
@@ -32,7 +34,7 @@ func (e *EmptyResultError) Is(err error) bool {
 	return ok
 }
 
-func (e *EmptyResultError) As(target interface{}) bool {
+func (e *EmptyResultError) As(target any) bool {
 	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
@@ -48,12 +50,12 @@ func (e *EmptyResultError) As(target interface{}) bool {
 
 type TooManyResultsError struct {
 	Count       int
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrTooManyResults = &TooManyResultsError{}
 
-func NewTooManyResultsError(count int, lastRequest interface{}) error {
+func NewTooManyResultsError(count int, lastRequest any) error {
 	return &TooManyResultsError{
 		Count:       count,
 		LastRequest: lastRequest,
@@ -69,7 +71,7 @@ func (e *TooManyResultsError) Is(err error) bool {
 	return ok
 }
 
-func (e *TooManyResultsError) As(target interface{}) bool {
+func (e *TooManyResultsError) As(target any) bool {
 	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
@@ -96,20 +98,30 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 	return fmt.Errorf("reading %s: %w", resourceType, err)
 }
 
-// FoundFunc is function that returns false if the specified value causes a `NotFound` error to be returned.
-type FoundFunc[T any] func(*T) bool
+// foundFunc is function that returns false if the specified value causes a `NotFound` error to be returned.
+type foundFunc[T any] tfslices.Predicate[*T]
 
-// AssertSinglePtrResult returns the single non-nil pointer value in the specified slice.
+// AssertMaybeSingleValueResult returns the single non-nil value in the specified slice, or `None` if the slice is empty.
 // Returns a `NotFound` error otherwise.
-// If any of the specified functions return false for the value, a `NotFound` error is returned.
-func AssertSinglePtrResult[T any](a []*T, fs ...FoundFunc[T]) (*T, error) {
+func AssertMaybeSingleValueResult[T any](a []T) (option.Option[T], error) {
+	if l := len(a); l == 0 {
+		return option.None[T](), nil
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	}
+
+	return option.Some(a[0]), nil
+}
+
+// AssertSingleValueResult returns a pointer to the single value in the specified slice of values.
+// Returns a `NotFound` error otherwise.
+func AssertSingleValueResult[T any](a []T, fs ...foundFunc[T]) (*T, error) {
 	if l := len(a); l == 0 {
 		return nil, NewEmptyResultError(nil)
 	} else if l > 1 {
 		return nil, NewTooManyResultsError(l, nil)
-	} else if v := a[0]; v == nil {
-		return nil, NewEmptyResultError(nil)
 	} else {
+		v := &a[0]
 		for _, f := range fs {
 			if !f(v) {
 				return nil, NewEmptyResultError(nil)
@@ -119,28 +131,41 @@ func AssertSinglePtrResult[T any](a []*T, fs ...FoundFunc[T]) (*T, error) {
 	}
 }
 
-// AssertMaybeSinglePtrResult returns the single non-nil pointer value in the specified slice, or `None` if the slice is empty.
-// Returns a `NotFound` error otherwise.
-func AssertMaybeSinglePtrResult[T any](a []*T) (option.Option[*T], error) {
-	if l := len(a); l == 0 {
-		return option.None[*T](), nil
-	} else if l > 1 {
-		return nil, NewTooManyResultsError(l, nil)
-	} else if a[0] == nil {
-		return nil, NewEmptyResultError(nil)
-	}
-	return option.Some(a[0]), nil
-}
+// AssertSingleValueResultIterErr returns either a pointer to the single value in the iterator or the error value from the iterator.
+// If there are not exactly one value, returns a `NotFound` error.
+func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
+	next, stop := iter.Pull2(i)
+	defer stop()
 
-// AssertSingleValueResult returns a pointer to the single value in the specified slice of values.
-// Returns a `NotFound` error otherwise.
-func AssertSingleValueResult[T any](a []T) (*T, error) {
-	if l := len(a); l == 0 {
+	v, err, ok := next()
+	if !ok {
 		return nil, NewEmptyResultError(nil)
-	} else if l > 1 {
-		return nil, NewTooManyResultsError(l, nil)
 	}
-	return &a[0], nil
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err, ok = next()
+	if !ok {
+		return &v, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	n := 2
+	for {
+		_, err, ok = next()
+		if !ok {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		n++
+	}
+	return nil, NewTooManyResultsError(n, nil)
 }
 
 // AssertFirstValueResult returns a pointer to the first value in the specified slice of values.

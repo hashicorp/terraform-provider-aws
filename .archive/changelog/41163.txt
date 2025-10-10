@@ -1,0 +1,6 @@
+```release-note:note
+resource/aws_macie2_invitation_accepter: Maintainers are unable to acceptance test the regression fix included in this release. This patch is best effort, and we ask for community help in assessing the change.
+```
+```release-note:bug
+resource/aws_macie2_invitation_accepter: Properly set `invitation_id` when calling the `AcceptInvitation` API
+```

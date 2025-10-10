@@ -21,14 +21,15 @@ resource "aws_detective_graph" "example" {
 
 resource "aws_detective_organization_configuration" "example" {
   auto_enable = true
-  graph_arn   = aws_detective_graph.example.id
+  graph_arn   = aws_detective_graph.example.graph_arn
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_enable` - (Required) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s Detective delegated administrator and Detective is enabled in that AWS Region.
 * `graph_arn` - (Required) ARN of the behavior graph.
 
@@ -40,17 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_organization_admin_account` using the Detective Graph ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_organization_admin_account` using the behavior graph ARN. For example:
 
 ```terraform
 import {
   to = aws_detective_organization_configuration.example
-  id = "00b00fd5aecc0ab60a708659477e9617"
+  id = "arn:aws:detective:us-east-1:123456789012:graph:00b00fd5aecc0ab60a708659477e9617"
 }
 ```
 
-Using `terraform import`, import `aws_detective_organization_admin_account` using the Detective Graph ID. For example:
+Using `terraform import`, import `aws_detective_organization_admin_account` using the behavior graph ARN. For example:
 
 ```console
-% terraform import aws_detective_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
+% terraform import aws_detective_organization_configuration.example arn:aws:detective:us-east-1:123456789012:graph:00b00fd5aecc0ab60a708659477e9617
 ```

@@ -8,23 +8,25 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_backup_vault_lock_configuration")
-func ResourceVaultLockConfiguration() *schema.Resource {
+// @SDKResource("aws_backup_vault_lock_configuration", name="Vault Lock Configuration")
+func resourceVaultLockConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultLockConfigurationCreate,
 		ReadWithoutTimeout:   resourceVaultLockConfigurationRead,
 		DeleteWithoutTimeout: resourceVaultLockConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -60,9 +62,9 @@ func ResourceVaultLockConfiguration() *schema.Resource {
 	}
 }
 
-func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	name := d.Get("backup_vault_name").(string)
 	input := &backup.PutBackupVaultLockConfigurationInput{
@@ -81,7 +83,7 @@ func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.Resourc
 		input.MinRetentionDays = aws.Int64(int64(v.(int)))
 	}
 
-	_, err := conn.PutBackupVaultLockConfigurationWithContext(ctx, input)
+	_, err := conn.PutBackupVaultLockConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Backup Vault Lock Configuration (%s): %s", name, err)
@@ -92,11 +94,11 @@ func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceVaultLockConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	output, err := FindVaultByName(ctx, conn, d.Id())
+	output, err := findBackupVaultByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Lock Configuration (%s) not found, removing from state", d.Id())
@@ -116,16 +118,17 @@ func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Lock Configuration: %s", d.Id())
-	_, err := conn.DeleteBackupVaultLockConfigurationWithContext(ctx, &backup.DeleteBackupVaultLockConfigurationInput{
+	input := backup.DeleteBackupVaultLockConfigurationInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVaultLockConfiguration(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 

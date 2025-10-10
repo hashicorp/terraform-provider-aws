@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_networkfirewall_tls_inspection_configuration
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_logging_configuration: Add plan-time validation of `firewall_arn`
+```

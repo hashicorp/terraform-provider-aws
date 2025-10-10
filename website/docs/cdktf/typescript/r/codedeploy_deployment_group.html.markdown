@@ -246,6 +246,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appName` - (Required) The name of the application.
 * `deploymentGroupName` - (Required) The name of the deployment group.
 * `serviceRoleArn` - (Required) The service role ARN that allows deployments.
@@ -262,13 +263,14 @@ This resource supports the following arguments:
 * `onPremisesInstanceTagFilter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `triggerConfiguration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
 * `outdatedInstancesStrategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `UPDATE` and `IGNORE`. Defaults to `UPDATE`.
+* `terminationHookEnabled` - (Optional)  Indicates whether the deployment group was configured to have CodeDeploy install a termination hook into an Auto Scaling group.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
 
 You can configure a deployment to stop when a **CloudWatch** alarm detects that a metric has fallen below or exceeded a defined threshold. `alarmConfiguration` supports the following:
 
-* `alarms` - (Optional) A list of alarms configured for the deployment group. _A maximum of 10 alarms can be added to a deployment group_.
+* `alarms` - (Optional) A list of alarms configured for the deployment group.
 * `enabled` - (Optional) Indicates whether the alarm configuration is enabled. This option is useful when you want to temporarily deactivate alarm monitoring for a deployment group without having to add the same alarms again later.
 * `ignorePollAlarmFailure` - (Optional) Indicates whether a deployment should continue if information about the current state of alarms cannot be retrieved from CloudWatch. The default value is `false`.
     * `true`: The deployment will proceed even if alarm status information can't be retrieved.
@@ -451,4 +453,4 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `appName`, a
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
 
-<!-- cache-key: cdktf-0.20.1 input-5e030adb78af16cbd2b9d795ba427fe21289613e6f4a6a7fcdd3fb270bcf4d76 -->
+<!-- cache-key: cdktf-0.20.8 input-b95f2ffdb6bf1c58ec579a49a6c4f4ec0aafb6eeece92f0ea2781e5743bc9a2a -->

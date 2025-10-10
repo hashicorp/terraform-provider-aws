@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +30,11 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx for NetApp ONTAP File System")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @WrappedImport(false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxOntapOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importStateIdFunc="testAccLocationFSxONTAPImportStateID")
 func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxONTAPFileSystemCreate,
@@ -38,28 +43,30 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 		DeleteWithoutTimeout: resourceLocationFSxONTAPFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxSVMArn", d.Id())
 				}
 
-				DSArn := idParts[0]
+				locationARN := idParts[0]
 				FSxArn := idParts[1]
 
+				if err := importer.RegionalARNValue(ctx, d, names.AttrARN, locationARN); err != nil {
+					return nil, err
+				}
 				d.Set("fsx_filesystem_arn", FSxArn)
-				d.SetId(DSArn)
 
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +74,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -89,7 +96,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
+												names.AttrVersion: {
 													Type:         schema.TypeString,
 													Default:      awstypes.NfsVersionNfs3,
 													Optional:     true,
@@ -110,7 +117,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"domain": {
+									names.AttrDomain: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -123,7 +130,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
+												names.AttrVersion: {
 													Type:     schema.TypeString,
 													Default:  awstypes.SmbVersionAutomatic,
 													Optional: true,
@@ -138,7 +145,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 											},
 										},
 									},
-									"password": {
+									names.AttrPassword: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -183,22 +190,20 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationFSxONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationFSxONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationFsxOntapInput{
-		Protocol:                 expandProtocol(d.Get("protocol").([]interface{})),
+		Protocol:                 expandProtocol(d.Get(names.AttrProtocol).([]any)),
 		SecurityGroupArns:        flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		StorageVirtualMachineArn: aws.String(d.Get("storage_virtual_machine_arn").(string)),
 		Tags:                     getTagsIn(ctx),
@@ -219,7 +224,7 @@ func resourceLocationFSxONTAPFileSystemCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceLocationFSxONTAPFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -241,8 +246,8 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.LocationArn)
-	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrARN, output.LocationArn)
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", output.FsxFilesystemArn)
 	// SMB Password is not returned from the API.
 	if output.Protocol != nil && output.Protocol.SMB != nil && aws.ToString(output.Protocol.SMB.Password) == "" {
@@ -250,18 +255,18 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 			output.Protocol.SMB.Password = aws.String(smbPassword)
 		}
 	}
-	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
+	if err := d.Set(names.AttrProtocol, flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
 	}
 	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("storage_virtual_machine_arn", output.StorageVirtualMachineArn)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }
 
-func resourceLocationFSxONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationFSxONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -269,7 +274,7 @@ func resourceLocationFSxONTAPFileSystemUpdate(ctx context.Context, d *schema.Res
 	return append(diags, resourceLocationFSxONTAPFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLocationFSxONTAPFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationFSxONTAPFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 

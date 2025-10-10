@@ -78,6 +78,9 @@ resource "aws_iam_role_policy" "mypolicy" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule.
 * `description` - (Optional) The description of the rule.
 * `enabled` - (Required) Specifies whether the rule is enabled.
@@ -95,6 +98,7 @@ The `cloudwatch_alarm` object takes the following arguments:
 
 The `cloudwatch_logs` object takes the following arguments:
 
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to CloudWatch via a batch call.
 * `log_group_name` - (Required) The CloudWatch log group name.
 * `role_arn` - (Required) The IAM role ARN that allows access to the CloudWatch alarm.
 

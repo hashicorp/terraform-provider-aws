@@ -21,8 +21,8 @@ func TestAccECRScanningConfiguration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":  testAccRegistryScanningConfiguration_basic,
-		"update": testAccRegistryScanningConfiguration_update,
+		acctest.CtBasic: testAccRegistryScanningConfiguration_basic,
+		"update":        testAccRegistryScanningConfiguration_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -43,8 +43,8 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},
@@ -72,14 +72,14 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_oneRule(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "SCAN_ON_PUSH",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.repository_filter.*", map[string]string{
-						"filter":      "example",
-						"filter_type": "WILDCARD",
+						names.AttrFilter: "example",
+						"filter_type":    "WILDCARD",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
@@ -93,20 +93,20 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_twoRules(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "CONTINUOUS_SCAN",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.repository_filter.*", map[string]string{
-						"filter":      "example",
-						"filter_type": "WILDCARD",
+						names.AttrFilter: "example",
+						"filter_type":    "WILDCARD",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "SCAN_ON_PUSH",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.repository_filter.*", map[string]string{
-						"filter":      "*",
-						"filter_type": "WILDCARD",
+						names.AttrFilter: "*",
+						"filter_type":    "WILDCARD",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "ENHANCED"),
 				),
@@ -115,8 +115,8 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},

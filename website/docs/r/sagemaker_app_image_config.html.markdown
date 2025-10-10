@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_app_image_config"
 description: |-
-  Provides a SageMaker App Image Config resource.
+  Provides a SageMaker AI App Image Config resource.
 ---
 
 # Resource: aws_sagemaker_app_image_config
 
-Provides a SageMaker App Image Config resource.
+Provides a SageMaker AI App Image Config resource.
 
 ## Example Usage
 
@@ -23,6 +23,16 @@ resource "aws_sagemaker_app_image_config" "test" {
       name = "example"
     }
   }
+}
+```
+
+### Using Code Editor with empty configuration
+
+```terraform
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = "example"
+
+  code_editor_app_image_config {}
 }
 ```
 
@@ -46,11 +56,14 @@ resource "aws_sagemaker_app_image_config" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_image_config_name` - (Required) The name of the App Image Config.
-* `code_editor_app_image_config` - (Optional) The CodeEditorAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in Code Editor. See [Code Editor App Image Config](#code-editor-app-image-config) details below.
-* `jupyter_lab_image_config` - (Optional) The JupyterLabAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in JupyterLab. See [Jupyter Lab Image Config](#jupyter-lab-image-config) details below.
-* `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
+* `code_editor_app_image_config` - (Optional) The CodeEditorAppImageConfig. See [Code Editor App Image Config](#code-editor-app-image-config) details below.
+* `jupyter_lab_image_config` - (Optional) The JupyterLabAppImageConfig. See [Jupyter Lab Image Config](#jupyter-lab-image-config) details below.
+* `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker AI image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** Exactly one of `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` must be configured. Empty blocks (e.g., `code_editor_app_image_config {}`) are valid configurations.
 
 ### Code Editor App Image Config
 
@@ -96,7 +109,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker App Image Configs using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI App Image Configs using the `name`. For example:
 
 ```terraform
 import {
@@ -105,7 +118,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker App Image Configs using the `name`. For example:
+Using `terraform import`, import SageMaker AI App Image Configs using the `name`. For example:
 
 ```console
 % terraform import aws_sagemaker_app_image_config.example example

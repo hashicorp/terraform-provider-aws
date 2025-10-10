@@ -40,12 +40,12 @@ class MyConvertedCode(TerraformStack):
             local_domain_info=OpensearchOutboundConnectionLocalDomainInfo(
                 domain_name=local_domain.domain_name,
                 owner_id=Token.as_string(current.account_id),
-                region=Token.as_string(data_aws_region_current.name)
+                region=Token.as_string(data_aws_region_current.region)
             ),
             remote_domain_info=OpensearchOutboundConnectionRemoteDomainInfo(
                 domain_name=remote_domain.domain_name,
                 owner_id=Token.as_string(current.account_id),
-                region=Token.as_string(data_aws_region_current.name)
+                region=Token.as_string(data_aws_region_current.region)
             )
         )
         aws_opensearch_inbound_connection_accepter_foo =
@@ -60,6 +60,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connection_id` - (Required, Forces new resource) Specifies the ID of the connection to accept.
 
 ## Attribute Reference
@@ -101,4 +102,4 @@ Using `terraform import`, import AWS Opensearch Inbound Connection Accepters usi
 % terraform import aws_opensearch_inbound_connection_accepter.foo connection-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-55e95b97c434786498b87477ae28b40538814eb9c17d405e3c6f2aa8f4d59ff6 -->
+<!-- cache-key: cdktf-0.20.8 input-ea073ccc4e0c13183147632de8f383c5cff4ffca40482b5ba4a681a3f4d8ef31 -->

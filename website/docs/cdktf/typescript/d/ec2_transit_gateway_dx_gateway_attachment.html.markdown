@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transitGatewayId` - (Optional) Identifier of the EC2 Transit Gateway.
 * `dxGatewayId` - (Optional) Identifier of the Direct Connect Gateway.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
@@ -57,8 +58,9 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
-* `tags` - Key-value tags for the EC2 Transit Gateway Attachment
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier,
+* `tags` - Key-value tags for the EC2 Transit Gateway Attachment.
 
 ## Timeouts
 
@@ -66,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-b7236cdedf33b2a2beaa76c047f8a0d2b5a1cc86432e1675ff18f61961098d3d -->
+<!-- cache-key: cdktf-0.20.8 input-32e8f05f560de19b69e0833ee702bd40022383139ab2cbb23a4f6f12e7e80391 -->

@@ -80,14 +80,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-Required arguments:
+The following arguments are required:
 
 * `globalTableArn` - (Required) ARN of the _main_ or global table which this resource will replicate.
 
-Optional arguments:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `kmsKeyArn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
-* `pointInTimeRecovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
+* `deletionProtectionEnabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the table replica.
+* `pointInTimeRecovery` - (Optional) Whether to enable Point In Time Recovery for the table replica. Default is `false`.
 * `tableClassOverride` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`. If not used, the table replica will use the same class as the global table.
 * `tags` - (Optional) Map of tags to populate on the created table. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -143,4 +145,4 @@ Using `terraform import`, import DynamoDB table replicas using the `table-name:m
 % terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-825c94d582679fcb249521e58e00123dba670a7f2f1b962c70bbd04b4762d01d -->
+<!-- cache-key: cdktf-0.20.8 input-2bd54a095e0c9e3e17d78ac35ddaab469bc8af424f0966b983b6eb918f983a80 -->

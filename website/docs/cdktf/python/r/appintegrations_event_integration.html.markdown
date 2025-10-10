@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the Event Integration.
 * `eventbridge_bus` - (Required) EventBridge bus.
 * `event_filter` - (Required) Block that defines the configuration information for the event filter. The Event Filter block is documented below.
@@ -86,4 +87,4 @@ Using `terraform import`, import Amazon AppIntegrations Event Integrations using
 % terraform import aws_appintegrations_event_integration.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8b79c762f6b5fb4efdf9be46519afb95e300098781375353c9e9d4ad128687a6 -->
+<!-- cache-key: cdktf-0.20.8 input-0fdf260acaa3a5527f6d31c47d627e18fc82e84fb520648ea551d1759994aff4 -->

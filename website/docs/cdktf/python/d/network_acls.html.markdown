@@ -86,19 +86,20 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `vpc_id` - (Optional) VPC ID that you want to filter from.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `vpc_id` - (Optional) VPC ID that you want to filter from.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired network ACLs.
-
 * `filter` - (Optional) Custom filter block as described below.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkAcls.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC will be selected if any one of the given values matches.
 
@@ -115,4 +116,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-9e00033620073e117ff35c3a96437d5e582bff32daaefd9214f39ae3299dcbdb -->
+<!-- cache-key: cdktf-0.20.8 input-f9d580c136f03083792430b41ba5cc1a7d4091d60bf6a6531bf9d11d922dec7c -->

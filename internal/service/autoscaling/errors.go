@@ -15,3 +15,8 @@ var (
 	errCodeResourceInUseFault             = (*awstypes.ResourceInUseFault)(nil).ErrorCode()
 	errCodeScalingActivityInProgressFault = (*awstypes.ScalingActivityInProgressFault)(nil).ErrorCode()
 )
+
+const (
+	errCodeOperationError = "operation error"
+	errCodeUpdateASG      = "UpdateAutoScalingGroup"
+)

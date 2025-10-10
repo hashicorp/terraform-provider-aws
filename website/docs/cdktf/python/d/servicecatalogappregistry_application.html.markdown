@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Application identifier.
 
 ## Attribute Reference
@@ -47,5 +48,6 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN (Amazon Resource Name) of the application.
 * `description` - Description of the application.
 * `name` - Name of the application.
+* `tags` - A map of tags assigned to the Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-<!-- cache-key: cdktf-0.20.1 input-75cbbaecdeee27c857c1ee36fbb9ce5c75b84633b90c483d1b2c5c9db9db58e2 -->
+<!-- cache-key: cdktf-0.20.8 input-877263c109c14b327ad0130e26e2eb86ae347a9fcb6b01c4f44d58c555e17f3a -->

@@ -5,9 +5,15 @@ package lakeformation
 
 // exports used for testing only.
 var (
-	ResourceDataCellsFilter = newResourceDataCellsFilter
-	ResourceResourceLFTag   = newResourceResourceLFTag
+	ResourceDataCellsFilter = newDataCellsFilterResource
+	ResourceLFTagExpression = newLFTagExpressionResource
+	ResourceResourceLFTag   = newResourceLFTagResource
+	ResourceOptIn           = newOptInResource
 
 	FindDataCellsFilterByID = findDataCellsFilterByID
-	FindResourceLFTagByID   = findResourceLFTagByID
+	FindLFTagExpression     = findLFTagExpression
+	LFTagParseResourceID    = lfTagParseResourceID
+	FindOptInByID           = findOptInByID
+
+	ValidPrincipal = validPrincipal
 )

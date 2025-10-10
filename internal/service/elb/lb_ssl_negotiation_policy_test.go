@@ -10,6 +10,7 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,6 +62,11 @@ func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
@@ -68,10 +74,22 @@ func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			{
-				Config:   testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
-				PlanOnly: true,
+				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -104,7 +122,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 
 func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_ssl_negotiation_policy" {
@@ -112,7 +130,6 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.Tes
 			}
 
 			lbName, lbPort, policyName, err := tfelb.SSLNegotiationPolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -141,17 +158,12 @@ func testAccCheckLBSSLNegotiationPolicy(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic SSL Negotiation Policy ID is set")
-		}
-
 		lbName, lbPort, policyName, err := tfelb.SSLNegotiationPolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		_, err = tfelb.FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
@@ -165,6 +177,10 @@ resource "aws_iam_server_certificate" "test" {
   name             = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_elb" "test" {
@@ -230,6 +246,10 @@ resource "aws_iam_server_certificate" "test" {
   name_prefix      = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_elb" "test" {

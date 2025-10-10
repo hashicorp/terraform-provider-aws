@@ -37,7 +37,7 @@ func TestAccRoute53CIDRLocation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "name", locationName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, locationName),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "name", locationName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, locationName),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.2.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.5.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "name", locationName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, locationName),
 				),
 			},
 		},
@@ -128,20 +128,14 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 
 func testAccCheckCIDRLocationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_cidr_location" {
 				continue
 			}
 
-			collectionID, name, err := tfroute53.CIDRLocationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, collectionID, name)
+			_, err := tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr_collection_id"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -165,19 +159,9 @@ func testAccCheckCIDRLocationExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 CIDR Collection ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		collectionID, name, err := tfroute53.CIDRLocationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
-
-		_, err = tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, collectionID, name)
+		_, err := tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr_collection_id"], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

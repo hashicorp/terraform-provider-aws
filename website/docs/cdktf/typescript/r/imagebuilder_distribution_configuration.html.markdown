@@ -62,6 +62,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the distribution configuration.
 * `tags` - (Optional) Key-value map of resource tags for the distribution configuration. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -73,16 +74,20 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amiDistributionConfiguration` - (Optional) Configuration block with Amazon Machine Image (AMI) distribution settings. Detailed below.
 * `containerDistributionConfiguration` - (Optional) Configuration block with container distribution settings. Detailed below.
 * `fastLaunchConfiguration` - (Optional) Set of Windows faster-launching configurations to use for AMI distribution. Detailed below.
 * `launchTemplateConfiguration` - (Optional) Set of launch template configuration settings that apply to image distribution. Detailed below.
 * `licenseConfigurationArns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
+* `s3ExportConfiguration` - (Optional) Configuration block with S3 export settings. Detailed below.
+* `ssmParameterConfiguration` - (Optional) Configuration block with SSM parameter configuration to use as AMI id output. Detailed below.
 
 ### ami_distribution_configuration
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amiTags` - (Optional) Key-value map of tags to apply to the distributed AMI.
 * `description` - (Optional) Description to apply to the distributed AMI.
 * `kmsKeyId` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key to encrypt the distributed AMI.
@@ -94,6 +99,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `organizationArns` - (Optional) Set of AWS Organization ARNs to assign.
 * `organizationalUnitArns` - (Optional) Set of AWS Organizational Unit ARNs to assign.
 * `userGroups` - (Optional) Set of EC2 launch permission user groups to assign. Use `all` to distribute a public AMI.
@@ -134,6 +140,19 @@ The following arguments are optional:
 * `accountId` - The account ID that this configuration applies to.
 * `launchTemplateId` - (Required) The ID of the Amazon EC2 launch template to use.
 
+### s3_export_configuration
+
+* `diskImageFormat` - (Required) The disk image format of the exported image (`RAW`, `VHD`, or `VMDK`)
+* `roleName` - (Required) The name of the IAM role to use for exporting.
+* `s3Bucket` - (Required) The name of the S3 bucket to store the exported image in. The bucket needs to exist before the export configuration is created.
+* `s3Prefix` - (Optional) The prefix for the exported image.
+
+### ssm_parameter_configuration
+
+* `parameterName` - (Required) Name of the SSM parameter that will store the AMI ID after distribution.
+* `amiAccountId` - (Optional) AWS account ID that will own the parameter in the given region. This account must be specified as a target account in the distribution settings.
+* `dataType` - (Optional) Data type of the SSM parameter. Valid values are `text` and `aws:ec2:image`. AWS recommends using `aws:ec2:image`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -144,6 +163,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_distribution_configuration.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example"
+  }
+}
+
+resource "aws_imagebuilder_distribution_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder distribution configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_distribution_configurations` resources using the Amazon Resource Name (ARN). For example:
 
@@ -175,4 +215,4 @@ Using `terraform import`, import `aws_imagebuilder_distribution_configurations` 
 % terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6d8db82ff70fd71c294a27408592fa6427acf20679476b6f735995d9df579444 -->
+<!-- cache-key: cdktf-0.20.8 input-e11706e9e4f1b2900b2e5f0234388d677f24ddfe5481d482f37b4ab88a94ac55 -->

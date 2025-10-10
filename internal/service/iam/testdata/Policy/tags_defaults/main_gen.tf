@@ -19,30 +19,31 @@ resource "aws_iam_policy" "test" {
         "ec2:Describe*"
       ],
       "Effect": "Allow",
-      "Resource": "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     }
   ]
 }
 EOF
 
-  tags = var.tags
+  tags = var.resource_tags
 }
 
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
-
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
-variable "tags" {
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)
-  nullable = false
+  nullable = true
 }
-
 
 variable "provider_tags" {
   type     = map(string)

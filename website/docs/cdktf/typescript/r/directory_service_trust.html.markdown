@@ -144,6 +144,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `conditionalForwarderIpAddrs` - (Optional) Set of IPv4 addresses for the DNS server associated with the remote Directory.
   Can contain between 1 and 4 values.
 * `deleteAssociatedConditionalForwarder` - (Optional) Whether to delete the conditional forwarder when deleting the Trust relationship.
@@ -206,4 +207,4 @@ Using `terraform import`, import the Trust relationship using the directory ID a
 % terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-66aa03e6601035df60798595ea8787d00d4683201307e38bda224131aa72224e -->
+<!-- cache-key: cdktf-0.20.8 input-a84fa3478d31e664bc6de90fcb15e1f70e1dc8a620d40e47ec97192d2e80c3dd -->

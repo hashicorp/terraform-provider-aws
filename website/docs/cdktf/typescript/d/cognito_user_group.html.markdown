@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the user group.
 * `userPoolId` - (Required) User pool the client belongs to.
 
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `precedence` - Precedence of the user group.
 * `roleArn` - ARN of the IAM role to be associated with the user group.
 
-<!-- cache-key: cdktf-0.20.1 input-27df73fb237762edc7cf45b6bd3efdbad132db982d809d1c48656693e1ae599d -->
+<!-- cache-key: cdktf-0.20.8 input-9aa4114bc7ce6e38f134a77416811f65513ced0ce6e9ff9e38419e72676c6a6d -->

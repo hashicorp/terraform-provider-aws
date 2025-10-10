@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,14 +38,12 @@ func ResourceRepository() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +71,7 @@ func ResourceRepository() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -101,7 +98,7 @@ func ResourceRepository() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -110,7 +107,7 @@ func ResourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,17 +121,17 @@ func ResourceRepository() *schema.Resource {
 	}
 }
 
-func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
 	input := ecrpublic.CreateRepositoryInput{
-		RepositoryName: aws.String(d.Get("repository_name").(string)),
+		RepositoryName: aws.String(d.Get(names.AttrRepositoryName).(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CatalogData = expandRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("catalog_data"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CatalogData = expandRepositoryCatalogData(v.([]any)[0].(map[string]any))
 	}
 
 	out, err := conn.CreateRepository(ctx, &input)
@@ -155,7 +152,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -166,21 +163,17 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	var err error
-	err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		out, err = conn.DescribeRepositories(ctx, input)
 		if d.IsNewResource() && errs.IsA[*awstypes.RepositoryNotFoundException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeRepositories(ctx, input)
-	}
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 		log.Printf("[WARN] ECR Public Repository (%s) not found, removing from state", d.Id())
@@ -198,15 +191,15 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	repository := out.Repositories[0]
 
-	d.Set("repository_name", d.Id())
+	d.Set(names.AttrRepositoryName, d.Id())
 	d.Set("registry_id", repository.RegistryId)
-	d.Set("arn", repository.RepositoryArn)
+	d.Set(names.AttrARN, repository.RepositoryArn)
 	d.Set("repository_uri", repository.RepositoryUri)
 
-	if v, ok := d.GetOk("force_destroy"); ok {
-		d.Set("force_destroy", v.(bool))
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
+		d.Set(names.AttrForceDestroy, v.(bool))
 	} else {
-		d.Set("force_destroy", false)
+		d.Set(names.AttrForceDestroy, false)
 	}
 
 	var catalogOut *ecrpublic.GetRepositoryCatalogDataOutput
@@ -223,13 +216,13 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if catalogOut != nil {
 		flatCatalogData := flattenRepositoryCatalogData(catalogOut)
-		if catalogData, ok := d.GetOk("catalog_data"); ok && len(catalogData.([]interface{})) > 0 && catalogData.([]interface{})[0] != nil {
-			catalogDataMap := catalogData.([]interface{})[0].(map[string]interface{})
+		if catalogData, ok := d.GetOk("catalog_data"); ok && len(catalogData.([]any)) > 0 && catalogData.([]any)[0] != nil {
+			catalogDataMap := catalogData.([]any)[0].(map[string]any)
 			if v, ok := catalogDataMap["logo_image_blob"].(string); ok && len(v) > 0 {
 				flatCatalogData["logo_image_blob"] = v
 			}
 		}
-		d.Set("catalog_data", []interface{}{flatCatalogData})
+		d.Set("catalog_data", []any{flatCatalogData})
 	} else {
 		d.Set("catalog_data", nil)
 	}
@@ -237,7 +230,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -246,7 +239,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	}
 
-	if v, ok := d.GetOk("force_destroy"); ok {
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		force := v.(bool)
 		deleteInput.Force = aws.ToBool(&force)
 	}
@@ -265,21 +258,17 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ecrpublic.DescribeRepositoriesInput{
 		RepositoryNames: []string{d.Id()},
 	}
-	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+	err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
 		_, err = conn.DescribeRepositories(ctx, input)
 		if err != nil {
 			if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
-		return retry.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
+		return tfresource.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeRepositories(ctx, input)
-	}
 
 	if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 		return diags
@@ -289,12 +278,12 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting ECR Public repository: %s", err)
 	}
 
-	log.Printf("[DEBUG] repository %q deleted.", d.Get("repository_name").(string))
+	log.Printf("[DEBUG] repository %q deleted.", d.Get(names.AttrRepositoryName).(string))
 
 	return diags
 }
 
-func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -307,14 +296,14 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]interface{} {
+func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
 	catalogData := apiObject.CatalogData
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := catalogData.AboutText; v != nil {
 		tfMap["about_text"] = aws.ToString(v)
@@ -325,7 +314,7 @@ func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataO
 	}
 
 	if v := catalogData.Description; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	if v := catalogData.OperatingSystems; v != nil {
@@ -339,7 +328,7 @@ func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataO
 	return tfMap
 }
 
-func expandRepositoryCatalogData(tfMap map[string]interface{}) *awstypes.RepositoryCatalogDataInput {
+func expandRepositoryCatalogData(tfMap map[string]any) *awstypes.RepositoryCatalogDataInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -358,7 +347,7 @@ func expandRepositoryCatalogData(tfMap map[string]interface{}) *awstypes.Reposit
 		repositoryCatalogDataInput.Architectures = architectures
 	}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		repositoryCatalogDataInput.Description = aws.String(v)
 	}
 
@@ -383,17 +372,17 @@ func expandRepositoryCatalogData(tfMap map[string]interface{}) *awstypes.Reposit
 
 func resourceRepositoryUpdateCatalogData(ctx context.Context, conn *ecrpublic.Client, d *schema.ResourceData) error {
 	if d.HasChange("catalog_data") {
-		if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("catalog_data"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input := ecrpublic.PutRepositoryCatalogDataInput{
 				RepositoryName: aws.String(d.Id()),
 				RegistryId:     aws.String(d.Get("registry_id").(string)),
-				CatalogData:    expandRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{})),
+				CatalogData:    expandRepositoryCatalogData(v.([]any)[0].(map[string]any)),
 			}
 
 			_, err := conn.PutRepositoryCatalogData(ctx, &input)
 
 			if err != nil {
-				return fmt.Errorf("updating catalog data for repository(%s): %s", d.Id(), err)
+				return fmt.Errorf("updating catalog data for repository (%s): %w", d.Id(), err)
 			}
 		}
 	}

@@ -41,29 +41,32 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `local_gateway_route_table_id` - (Optional) Local Gateway Route Table Id assigned to desired local gateway route table
+* `local_gateway_id` - (Optional) ID of the specific local gateway route table to retrieve.
+* `outpost_arn` - (Optional) ARN of the Outpost the local gateway route table is associated with.
+* `state` - (Optional) State of the local gateway route table.
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
+  a pair on the desired local gateway route table.
+
 The arguments of this data source act as filters for querying the available
 Local Gateway Route Tables in the current region. The given filters must match exactly one
 Local Gateway Route Table whose data will be exported as attributes.
 
-* `local_gateway_route_table_id` - (Optional) Local Gateway Route Table Id assigned to desired local gateway route table
+### `filter`
 
-* `local_gateway_id` - (Optional) ID of the specific local gateway route table to retrieve.
-
-* `outpost_arn` - (Optional) ARN of the Outpost the local gateway route table is associated with.
-
-* `state` - (Optional) State of the local gateway route table.
-
-* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
-  a pair on the desired local gateway route table.
-
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLocalGatewayRouteTables.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A local gateway route table will be selected if any one of the given values matches.
+
+## Attribute Reference
+
+This data source exports no additional attributes.
 
 ## Timeouts
 
@@ -71,4 +74,4 @@ which take the following arguments:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-659f40a3728960d4574b77039ecbc60a549c25ba6a774b2467023fef557a755a -->
+<!-- cache-key: cdktf-0.20.8 input-aec63c509d7516fff2a964f60b545804f123aa49eb5919b812b762841b87e940 -->

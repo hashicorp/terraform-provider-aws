@@ -23,8 +23,8 @@ func TestAccECRRegistryPolicy_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccRegistryPolicy_basic,
-		"disappears": testAccRegistryPolicy_disappears,
+		acctest.CtBasic:      testAccRegistryPolicy_basic,
+		acctest.CtDisappears: testAccRegistryPolicy_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -45,8 +45,8 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"ecr:ReplicateImage".+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:ReplicateImage".+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 			{
@@ -58,9 +58,9 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_updated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"ecr:ReplicateImage".+`)),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"ecr:CreateRepository".+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:ReplicateImage".+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:CreateRepository".+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 		},
@@ -156,7 +156,7 @@ resource "aws_ecr_registry_policy" "test" {
           "AWS" : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         },
         "Action" : "ecr:ReplicateImage",
-        "Resource" : "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*",
+        "Resource" : "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/*",
       }
     ]
   })
@@ -187,7 +187,7 @@ resource "aws_ecr_registry_policy" "test" {
           "ecr:CreateRepository"
         ],
         "Resource" : [
-          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*"
+          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/*"
         ]
       }
     ]

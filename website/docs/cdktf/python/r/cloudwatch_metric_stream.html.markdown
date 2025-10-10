@@ -180,6 +180,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exclude_filter` - (Optional) List of exclusive metric filters. If you specify this parameter, the stream sends metrics from all metric namespaces except for the namespaces and the conditional metric names that you specify here. If you don't specify metric names or provide empty metric names whole metric namespace is excluded. Conflicts with `include_filter`.
 * `include_filter` - (Optional) List of inclusive metric filters. If you specify this parameter, the stream sends only the conditional metric names from the metric namespaces that you specify here. If you don't specify metric names or provide empty metric names whole metric namespace is included. Conflicts with `exclude_filter`.
 * `name` - (Optional, Forces new resource) Friendly name of the metric stream. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
@@ -245,4 +246,4 @@ Using `terraform import`, import CloudWatch metric streams using the `name`. For
 % terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-121a06fbc0a0d82902da37567ec20331be6d9cd3454597870b725279796adcfa -->
+<!-- cache-key: cdktf-0.20.8 input-618ce26d1ecccfdb9a817853b5a47dc9cf17e10040e3184418625e9df20a078b -->

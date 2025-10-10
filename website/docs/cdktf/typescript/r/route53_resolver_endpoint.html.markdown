@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
       ],
       name: "foo",
       protocols: ["Do53", "DoH"],
+      resolverEndpointType: "IPV4",
       securityGroupIds: [sg1.id, sg2.id],
       tags: {
         Environment: "Prod",
@@ -53,30 +54,33 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `direction` - (Required) The direction of DNS queries to or from the Route 53 Resolver endpoint.
-Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
-or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).
-* `ipAddress` - (Required) The subnets and IP addresses in your VPC that you want DNS queries to pass through on the way from your VPCs
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `direction` - (Required) Direction of DNS queries to or from the Route 53 Resolver endpoint.
+Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC), `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC) or `INBOUND_DELEGATION` (resolver delegates queries to Route 53 private hosted zones from your network).
+* `ipAddress` - (Required) Subnets and IP addresses in your VPC that you want DNS queries to pass through on the way from your VPCs
 to your network (for outbound endpoints) or on the way from your network to your VPCs (for inbound endpoints). Described below.
-* `securityGroupIds` - (Required) The ID of one or more security groups that you want to use to control access to this VPC.
-* `name` - (Optional) The friendly name of the Route 53 Resolver endpoint.
-* `protocols` - (Optional) The protocols you want to use for the Route 53 Resolver endpoint. Valid values: `DoH`, `Do53`, `DoH-FIPS`.
-* `resolverEndpointType` - (Optional) The Route 53 Resolver endpoint IP address type. Valid values: `IPV4`, `IPV6`, `DUALSTACK`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Optional) Friendly name of the Route 53 Resolver endpoint.
+* `protocols` - (Optional) Protocols you want to use for the Route 53 Resolver endpoint.
+Valid values are `DoH`, `Do53`, or `DoH-FIPS`.
+* `resolverEndpointType` - (Optional) Endpoint IP type. This endpoint type is applied to all IP addresses.
+Valid values are `IPV6`,`IPV4` or `DUALSTACK` (both IPv4 and IPv6).
+* `securityGroupIds` - (Required) ID of one or more security groups that you want to use to control access to this VPC.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `ipAddress` object supports the following:
 
-* `subnetId` - (Required) The ID of the subnet that contains the IP address.
-* `ip` - (Optional) The IP address in the subnet that you want to use for DNS queries.
+* `ip` - (Optional) IPv4 address in the subnet that you want to use for DNS queries.
+* `ipv6` - (Optional) IPv6 address in the subnet that you want to use for DNS queries.
+* `subnetId` - (Required) ID of the subnet that contains the IP address.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the Route 53 Resolver endpoint.
-* `arn` - The ARN of the Route 53 Resolver endpoint.
-* `hostVpcId` - The ID of the VPC that you want to create the resolver endpoint in.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the Route 53 Resolver endpoint.
+* `hostVpcId` - ID of the VPC that you want to create the resolver endpoint in.
+* `id` - ID of the Route 53 Resolver endpoint.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -118,4 +122,4 @@ Using `terraform import`, import  Route 53 Resolver endpoints using the Route 53
 % terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d16b5e2ba810a77d3d32db28510ceffb1040876e82538c1d20fa2809d01203a1 -->
+<!-- cache-key: cdktf-0.20.8 input-07650d4d641c681b17b728b035c2674e46bfd0ae433fd97d6b1b4109562c1c6c -->

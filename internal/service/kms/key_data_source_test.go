@@ -27,13 +27,13 @@ func TestAccKMSKeyDataSource_byKeyARN(t *testing.T) {
 			{
 				Config: testAccKeyDataSourceConfig_byKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAWSAccountID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "is_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, "is_enabled"),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration_model", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "key_manager", "CUSTOMER"),
 					resource.TestCheckResourceAttr(dataSourceName, "key_state", "Enabled"),
@@ -62,13 +62,13 @@ func TestAccKMSKeyDataSource_byKeyID(t *testing.T) {
 			{
 				Config: testAccKeyDataSourceConfig_byKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAWSAccountID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "is_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, "is_enabled"),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration_model", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "key_manager", "CUSTOMER"),
 					resource.TestCheckResourceAttr(dataSourceName, "key_state", "Enabled"),
@@ -97,13 +97,13 @@ func TestAccKMSKeyDataSource_byAliasARN(t *testing.T) {
 			{
 				Config: testAccKeyDataSourceConfig_byAliasARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAWSAccountID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "is_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, "is_enabled"),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration_model", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "key_manager", "CUSTOMER"),
 					resource.TestCheckResourceAttr(dataSourceName, "key_state", "Enabled"),
@@ -132,15 +132,15 @@ func TestAccKMSKeyDataSource_byAliasID(t *testing.T) {
 			{
 				Config: testAccKeyDataSourceConfig_byAliasID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttr(dataSourceName, "cloud_hsm_cluster_id", ""),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckResourceAttr(dataSourceName, "custom_key_store_id", ""),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "is_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, "is_enabled"),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration_model", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "key_manager", "CUSTOMER"),
 					resource.TestCheckResourceAttr(dataSourceName, "key_spec", "SYMMETRIC_DEFAULT"),
@@ -172,13 +172,13 @@ func TestAccKMSKeyDataSource_grantToken(t *testing.T) {
 			{
 				Config: testAccKeyDataSourceConfig_grantToken(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAWSAccountID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "is_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, "is_enabled"),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration_model", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "key_manager", "CUSTOMER"),
 					resource.TestCheckResourceAttr(dataSourceName, "key_state", "Enabled"),
@@ -207,13 +207,13 @@ func TestAccKMSKeyDataSource_multiRegionConfigurationByARN(t *testing.T) {
 			{
 				Config: testAccKeyDataSourceConfig_multiRegionByARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAWSAccountID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "is_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, "is_enabled"),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration_model", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "key_manager", "CUSTOMER"),
 					resource.TestCheckResourceAttr(dataSourceName, "key_state", "Enabled"),
@@ -222,7 +222,7 @@ func TestAccKMSKeyDataSource_multiRegionConfigurationByARN(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.0.multi_region_key_type", "PRIMARY"),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.0.primary_key.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "multi_region_configuration.0.primary_key.0.arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_region_configuration.0.primary_key.0.arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.0.primary_key.0.region", acctest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.0.replica_keys.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "origin", "AWS_KMS"),
@@ -247,13 +247,13 @@ func TestAccKMSKeyDataSource_multiRegionConfigurationByID(t *testing.T) {
 			{
 				Config: testAccKeyDataSourceConfig_multiRegionByID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrAWSAccountID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enabled", resourceName, "is_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, "is_enabled"),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration_model", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "key_manager", "CUSTOMER"),
 					resource.TestCheckResourceAttr(dataSourceName, "key_state", "Enabled"),
@@ -262,7 +262,7 @@ func TestAccKMSKeyDataSource_multiRegionConfigurationByID(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.0.multi_region_key_type", "PRIMARY"),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.0.primary_key.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "multi_region_configuration.0.primary_key.0.arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_region_configuration.0.primary_key.0.arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.0.primary_key.0.region", acctest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "multi_region_configuration.0.replica_keys.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "origin", "AWS_KMS"),
@@ -278,6 +278,7 @@ func testAccKeyDataSourceConfig_byKeyARN(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_kms_key" "test" {
@@ -291,6 +292,7 @@ func testAccKeyDataSourceConfig_byKeyID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_kms_key" "test" {
@@ -304,6 +306,7 @@ func testAccKeyDataSourceConfig_byAliasARN(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -322,6 +325,7 @@ func testAccKeyDataSourceConfig_byAliasID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -356,6 +360,7 @@ func testAccKeyDataSourceConfig_multiRegionByARN(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   multi_region            = true
 }
 
@@ -370,6 +375,7 @@ func testAccKeyDataSourceConfig_multiRegionByID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   multi_region            = true
 }
 

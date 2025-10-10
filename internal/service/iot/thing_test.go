@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,12 +36,13 @@ func TestAccIoTThing_basic(t *testing.T) {
 				Config: testAccThingConfig_basic(thingName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingExists(ctx, resourceName, &thing),
-					resource.TestCheckResourceAttr(resourceName, "name", thingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, thingName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "thing/{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_client_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 				),
 			},
 			{
@@ -71,15 +72,15 @@ func TestAccIoTThing_full(t *testing.T) {
 				Config: testAccThingConfig_full(thingName, typeName, "42"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingExists(ctx, resourceName, &thing),
-					resource.TestCheckResourceAttr(resourceName, "name", thingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, thingName),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", typeName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.One", "11111"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.Two", "TwoTwo"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.Answer", "42"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "thing/{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_client_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
 			{
@@ -91,27 +92,27 @@ func TestAccIoTThing_full(t *testing.T) {
 				Config: testAccThingConfig_full(thingName, typeName, "differentOne"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingExists(ctx, resourceName, &thing),
-					resource.TestCheckResourceAttr(resourceName, "name", thingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, thingName),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", typeName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.One", "11111"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.Two", "TwoTwo"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.Answer", "differentOne"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "thing/{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_client_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
 			{ // Remove thing type association
-				Config: testAccThingConfig_basic(thingName),
+				Config: testAccThingConfig_fullUpdated(thingName, typeName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingExists(ctx, resourceName, &thing),
-					resource.TestCheckResourceAttr(resourceName, "name", thingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, thingName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "thing/{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_client_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
 		},
@@ -129,7 +130,7 @@ func testAccCheckThingExists(ctx context.Context, n string, v *iot.DescribeThing
 			return fmt.Errorf("No IoT Thing ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		output, err := tfiot.FindThingByName(ctx, conn, rs.Primary.ID)
 
@@ -145,7 +146,7 @@ func testAccCheckThingExists(ctx context.Context, n string, v *iot.DescribeThing
 
 func testAccCheckThingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing" {
@@ -195,4 +196,16 @@ resource "aws_iot_thing_type" "test" {
   name = "%s"
 }
 `, thingName, answer, typeName)
+}
+
+func testAccThingConfig_fullUpdated(thingName, typeName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_thing" "test" {
+  name = %[1]q
+}
+
+resource "aws_iot_thing_type" "test" {
+  name = %[2]q
+}
+`, thingName, typeName)
 }

@@ -37,8 +37,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clientId` - (Required) Client Id of the user pool.
 * `userPoolId` - (Required) User pool the client belongs to.
 
@@ -61,6 +62,7 @@ This data source exports the following attributes in addition to the arguments a
 * `logoutUrls` - (Optional) List of allowed logout URLs for the identity providers.
 * `preventUserExistenceErrors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `ENABLED` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `LEGACY`, those APIs will return a `UserNotFoundException` exception if the user does not exist in the user pool.
 * `readAttributes` - (Optional) List of user pool attributes the application client can read from.
+* `refreshTokenRotation` - (Optional) A block that specifies the configuration of refresh token rotation. [Detailed below](#refresh_token_rotation).
 * `refreshTokenValidity` - (Optional) Time limit in days refresh tokens are valid for.
 * `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `providerName` attribute of `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `tokenValidityUnits` - (Optional) Configuration block for units in which the validity times are represented in. [Detailed below](#token_validity_units).
@@ -76,6 +78,11 @@ Either `applicationArn` or `applicationId` is required.
 * `roleArn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `applicationArn`.
 * `userDataShared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
 
+### refresh_token_rotation
+
+* `feature` - (Required) The state of refresh token rotation for the current app client. Valid values are `ENABLED` or `DISABLED`.
+* `retryGracePeriodSeconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
+
 ### token_validity_units
 
 Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `days`.
@@ -84,4 +91,4 @@ Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `
 * `idToken` - (Optional) Time unit in for the value in `idTokenValidity`, defaults to `hours`.
 * `refreshToken` - (Optional) Time unit in for the value in `refreshTokenValidity`, defaults to `days`.
 
-<!-- cache-key: cdktf-0.20.1 input-804400abfbd53cd25621680ec5f1657976bea849d7c8272f9f3b774f5cc1e05b -->
+<!-- cache-key: cdktf-0.20.8 input-a77c3f0618b50a7a9868f6e814abe3c30876a0e8581bc9a4883523863cdc1dda -->

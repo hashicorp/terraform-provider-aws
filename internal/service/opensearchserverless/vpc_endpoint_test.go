@@ -5,7 +5,6 @@ package opensearchserverless_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -142,6 +140,15 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccVPCEndpointConfig_multiple_securityGroups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint3),
+					testAccCheckVPCEndpointNotRecreated(&vpcendpoint2, &vpcendpoint3),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+				),
+			},
+			{
 				Config: testAccVPCEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint3),
@@ -195,7 +202,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_opensearchserverless_vpc_endpointa" {
+			if rs.Type != "aws_opensearchserverless_vpc_endpoint" {
 				continue
 			}
 
@@ -209,32 +216,29 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameVPCEndpoint, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("OpenSearch Serverless VPC Endpoint %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckVPCEndpointExists(ctx context.Context, name string, vpcendpoint *types.VpcEndpointDetail) resource.TestCheckFunc {
+func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *types.VpcEndpointDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameVPCEndpoint, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameVPCEndpoint, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		resp, err := tfopensearchserverless.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfopensearchserverless.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameVPCEndpoint, rs.Primary.ID, err)
+			return err
 		}
 
-		*vpcendpoint = *resp
+		*v = *output
 
 		return nil
 	}
@@ -258,7 +262,7 @@ func testAccPreCheckVPCEndpoint(ctx context.Context, t *testing.T) {
 func testAccCheckVPCEndpointNotRecreated(before, after *types.VpcEndpointDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingNotRecreated, tfopensearchserverless.ResNameVPCEndpoint, before, errors.New("recreated"))
+			return fmt.Errorf("OpenSearch Serverless VPC Endpoint %s recreated", before)
 		}
 
 		return nil
@@ -312,11 +316,13 @@ resource "aws_security_group" "test" {
 func testAccVPCEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_networkingBase(rName, 2),
+		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
-  name       = %[1]q
-  subnet_ids = [aws_subnet.test[0].id]
-  vpc_id     = aws_vpc.test.id
+  name               = %[1]q
+  subnet_ids         = [aws_subnet.test[0].id]
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test[0].id]
 }
 `, rName))
 }
@@ -324,11 +330,13 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
 func testAccVPCEndpointConfig_multiple_subnets(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_networkingBase(rName, 2),
+		testAccVPCEndpointConfig_securityGroupBase(rName, 1),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-  vpc_id     = aws_vpc.test.id
+  name               = %[1]q
+  subnet_ids         = aws_subnet.test[*].id
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test[0].id]
 }
 `, rName))
 }
@@ -339,10 +347,9 @@ func testAccVPCEndpointConfig_multiple_securityGroups(rName string) string {
 		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-  vpc_id     = aws_vpc.test.id
-
+  name               = %[1]q
+  subnet_ids         = aws_subnet.test[*].id
+  vpc_id             = aws_vpc.test.id
   security_group_ids = aws_security_group.test[*].id
 }
 `, rName))
@@ -354,10 +361,9 @@ func testAccVPCEndpointConfig_single_securityGroup(rName string) string {
 		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-  vpc_id     = aws_vpc.test.id
-
+  name               = %[1]q
+  subnet_ids         = aws_subnet.test[*].id
+  vpc_id             = aws_vpc.test.id
   security_group_ids = [aws_security_group.test[0].id]
 }
 `, rName))

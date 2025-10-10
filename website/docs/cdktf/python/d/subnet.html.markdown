@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
         selected = DataAwsSubnet(self, "selected",
             id=subnet_id.string_value
         )
-        SecurityGroup(self, "subnet",
+        SecurityGroup(self, "subnet_security_group",
             ingress=[SecurityGroupIngress(
                 cidr_blocks=[Token.as_string(selected.cidr_block)],
                 from_port=80,
@@ -76,10 +76,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available subnets in the current region. The given filters must match exactly one subnet whose data will be exported as attributes.
+This data source supports the following arguments:
 
-The following arguments are optional:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Optional) Availability zone where the subnet must reside.
 * `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet. This argument is not supported in all regions or partitions. If necessary, use `availability_zone` instead.
 * `cidr_block` - (Optional) CIDR block of the desired subnet.
@@ -126,4 +125,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-4038416b655586cab52609dedf5c41d129209560a5619712772e26a29f2bcdfb -->
+<!-- cache-key: cdktf-0.20.8 input-7532498fe39c531c4d9f5a3ece74559330e24b6afbf0b036fd4f01dfc5dd0591 -->

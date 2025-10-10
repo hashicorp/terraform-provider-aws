@@ -14,20 +14,18 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
-//go:embed function.tmpl
+//go:embed function.gtpl
 var functionTmpl string
 
-//go:embed functiontest.tmpl
+//go:embed functiontest.gtpl
 var functionTestTmpl string
 
-//go:embed websitedoc.tmpl
+//go:embed websitedoc.gtpl
 var websiteTmpl string
-
-var snakeCaseRegex = regexache.MustCompile(`[a-z0-9_]*`)
 
 type TemplateData struct {
 	Function        string
@@ -46,7 +44,9 @@ func Create(name, snakeName, description string, comments, force bool) error {
 		return fmt.Errorf("snake name should be all lower case with underscores, if needed (e.g., arn_build)")
 	}
 
-	snakeName = convert.ToSnakeCase(name, snakeName)
+	if snakeName == "" {
+		snakeName = names.ToSnakeCase(name)
+	}
 
 	templateData := TemplateData{
 		Function:        name,

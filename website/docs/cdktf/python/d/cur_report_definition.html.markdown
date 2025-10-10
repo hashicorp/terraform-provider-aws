@@ -55,5 +55,6 @@ This data source exports the following attributes in addition to the arguments a
 * `additional_artifacts` - A list of additional artifacts.
 * `refresh_closed_reports` - If true reports are updated after they have been finalized.
 * `report_versioning` - Overwrite the previous version of each report or to deliver the report in addition to the previous versions.
+* `tags` - Map of key-value pairs assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-7c41a2bcbec1b1838d1888c217040322a9f0e0110b3b20e4772db0809292f796 -->
+<!-- cache-key: cdktf-0.20.8 input-4224417bb21b0d569bd05d00fbe069e29258b03ee3c79a467f1ccf767c71fc19 -->

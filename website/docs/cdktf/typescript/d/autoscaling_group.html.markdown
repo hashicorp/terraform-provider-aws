@@ -36,12 +36,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - Specify the exact name of the desired autoscaling group.
 
 ## Attribute Reference
 
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Auto Scaling group.
 * `availabilityZones` - One or more Availability Zones for the group.
@@ -96,6 +98,7 @@ interpolation.
                 * `instanceGenerations` - List of instance generation names.
                 * `localStorage` - Indicates whether instance types with instance store volumes are included, excluded, or required.
                 * `localStorageTypes` - List of local storage type names.
+                * `maxSpotPriceAsPercentageOfOptimalOnDemandPrice` - Price protection threshold for Spot Instances.
                 * `memoryGibPerVcpu` - List of objects describing the minimum and maximum amount of memory (GiB) per vCPU.
                     * `min` - Minimum.
                     * `max` - Maximum.
@@ -147,4 +150,7 @@ interpolation.
     * `poolState` - Instance state to transition to after the lifecycle actions are complete.
 * `warmPoolSize` - Current size of the warm pool.
 
-<!-- cache-key: cdktf-0.20.1 input-26572cc32b6838affc843d4557992ced62698f925facebdb8877cf21be04699b -->
+~> **NOTE:** Some values are not always set and may not be available for
+interpolation.
+
+<!-- cache-key: cdktf-0.20.8 input-91278adf952c3e3c5f7f081457dc99442d94a60d9685ee8bc56f075034179bef -->

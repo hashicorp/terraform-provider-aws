@@ -87,6 +87,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `country_code` - (Required, Forces new resource) The ISO country code. For a list of Valid values, refer to [PhoneNumberCountryCode](https://docs.aws.amazon.com/connect/latest/APIReference/API_SearchAvailablePhoneNumbers.html#connect-SearchAvailablePhoneNumbers-request-PhoneNumberCountryCode).
 * `description` - (Optional, Forces new resource) The description of the phone number.
 * `prefix` - (Optional, Forces new resource) The prefix of the phone number that is used to filter available phone numbers. If provided, it must contain `+` as part of the country code. Do not specify this argument when importing the resource.
@@ -121,6 +122,31 @@ The `status` configuration block supports the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_connect_phone_number.example
+  identity = {
+    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+resource "aws_connect_phone_number" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the connect phone number.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Phone Numbers using its `id`. For example:
 
 ```python
@@ -144,4 +170,4 @@ Using `terraform import`, import Amazon Connect Phone Numbers using its `id`. Fo
 % terraform import aws_connect_phone_number.example 12345678-abcd-1234-efgh-9876543210ab
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3709bbd75b47ca64869527df48be54e1acf135a3093efdda6d797cfbc24ebba1 -->
+<!-- cache-key: cdktf-0.20.8 input-8bfb5a6187451f50aa6e45f8463710d5302c5bd8c6ed6aeac10527f55ab910eb -->

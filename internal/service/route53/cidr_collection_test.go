@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/route53"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccRoute53CIDRCollection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53.CollectionSummary
+	var v awstypes.CollectionSummary
 	resourceName := "aws_route53_cidr_collection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,8 +36,8 @@ func TestAccRoute53CIDRCollection_basic(t *testing.T) {
 				Config: testAccCIDRCollection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCIDRCollectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile(`cidrcollection/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile(`cidrcollection/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -51,7 +51,7 @@ func TestAccRoute53CIDRCollection_basic(t *testing.T) {
 
 func TestAccRoute53CIDRCollection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53.CollectionSummary
+	var v awstypes.CollectionSummary
 	resourceName := "aws_route53_cidr_collection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -75,7 +75,7 @@ func TestAccRoute53CIDRCollection_disappears(t *testing.T) {
 
 func testAccCheckCIDRCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_cidr_collection" {
@@ -99,18 +99,14 @@ func testAccCheckCIDRCollectionDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckCIDRCollectionExists(ctx context.Context, n string, v *route53.CollectionSummary) resource.TestCheckFunc {
+func testAccCheckCIDRCollectionExists(ctx context.Context, n string, v *awstypes.CollectionSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 CIDR Collection ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
 		output, err := tfroute53.FindCIDRCollectionByID(ctx, conn, rs.Primary.ID)
 

@@ -63,6 +63,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone_name` - (Optional) the AWS Availability Zone in which to create the file system. Used to create a file system that uses One Zone storage classes. See [user guide](https://docs.aws.amazon.com/efs/latest/ug/availability-durability.html) for more information.
 * `creation_token` - (Optional) A unique name (a maximum of 64 characters are allowed)
 used as reference when creating the Elastic File System to ensure idempotent file
@@ -140,4 +141,4 @@ Using `terraform import`, import the EFS file systems using the `id`. For exampl
 % terraform import aws_efs_file_system.foo fs-6fa144c6
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-35f476348ba0bdc4dd62987811446b842eed38778ea173869a63b6489650184a -->
+<!-- cache-key: cdktf-0.20.8 input-cc0446410355181dc8b5e86e7b216e7463f0ba0d2502ff4ff46e064bf41516c9 -->

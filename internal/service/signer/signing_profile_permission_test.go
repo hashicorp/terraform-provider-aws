@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
@@ -38,7 +39,7 @@ func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningProfilePermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "signer:StartSigningJob"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "signer:StartSigningJob"),
 					resource.TestCheckResourceAttr(resourceName, "profile_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "statement_id_prefix", ""),
@@ -163,14 +164,14 @@ func TestAccSignerSigningProfilePermission_getSigningProfile(t *testing.T) {
 				Config: testAccSigningProfilePermissionConfig_getSP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfilePermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "signer:GetSigningProfile"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "signer:GetSigningProfile"),
 				),
 			},
 			{
 				Config: testAccSigningProfilePermissionConfig_revokeSignature(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfilePermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "signer:RevokeSignature"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "signer:RevokeSignature"),
 				),
 			},
 		},

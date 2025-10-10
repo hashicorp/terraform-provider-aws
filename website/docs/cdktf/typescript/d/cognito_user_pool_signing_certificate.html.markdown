@@ -36,6 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `userPoolId` - (Required) Cognito user pool ID.
 
 ## Attribute Reference
@@ -44,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `certificate` - Certificate string
 
-<!-- cache-key: cdktf-0.20.1 input-841008061a82572c40fa11d3c10bc7dfd40e9bb58c679fe5f8e62188a7dcffb2 -->
+<!-- cache-key: cdktf-0.20.8 input-852a5b2d94fe98ae1b3a3ea0dc49af6134310c0e527f940d496eb35f4c0a964a -->

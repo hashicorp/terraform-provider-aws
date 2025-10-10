@@ -72,6 +72,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the document.
 * `attachmentsSource` - (Optional) One or more configuration blocks describing attachments sources to a version of a document. See [`attachmentsSource` block](#attachments_source-block) below for details.
 * `content` - (Required) The content for the SSM document in JSON or YAML format. The content of the document must not exceed 64KB. This quota also includes the content specified for input parameters at runtime. We recommend storing the contents for your new document in an external JSON or YAML file and referencing the file in a command.
@@ -132,6 +133,32 @@ The `parameter` configuration block provides the following attributes:
 * `type` - The type of parameter. Valid values: `String`, `StringList`.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_document.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_ssm_document" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the SSM document.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Documents using the name. For example:
 
@@ -195,4 +222,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dbc191d1faac6db26e158b39a17e8a60353096e90d91fef1e8889d9c8c6538b0 -->
+<!-- cache-key: cdktf-0.20.8 input-e0a2f8c9d60533427c6a38164043028aebb48217ebcb1bd5aed1192cbb922307 -->

@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -64,19 +65,29 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_basic(principal1, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", tfevents.DefaultEventBusName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccPermissionConfig_basic(principal2, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -84,8 +95,15 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccPermissionConfig_defaultBusName(principal2, statementID),
-				PlanOnly: true,
+				Config: testAccPermissionConfig_defaultBusName(principal2, statementID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -109,9 +127,9 @@ func TestAccEventsPermission_eventBusName(t *testing.T) {
 				Config: testAccPermissionConfig_eventBusName(principal1, busName, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 				),
@@ -157,7 +175,7 @@ func TestAccEventsPermission_action(t *testing.T) {
 				Config: testAccPermissionConfig_action("events:PutEvents", principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 				),
 			},
 			{
@@ -228,7 +246,7 @@ func TestAccEventsPermission_multiple(t *testing.T) {
 				Config: testAccPermissionConfig_basic(principal1, statementID1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName1),
-					resource.TestCheckResourceAttr(resourceName1, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName1, "statement_id", statementID1),
 				),
 			},
@@ -237,9 +255,9 @@ func TestAccEventsPermission_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName1),
 					testAccCheckPermissionExists(ctx, resourceName2),
-					resource.TestCheckResourceAttr(resourceName1, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName1, "statement_id", statementID1),
-					resource.TestCheckResourceAttr(resourceName2, "principal", principal2),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrPrincipal, principal2),
 					resource.TestCheckResourceAttr(resourceName2, "statement_id", statementID2),
 				),
 			},

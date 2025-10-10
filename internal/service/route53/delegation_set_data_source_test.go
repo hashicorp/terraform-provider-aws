@@ -28,7 +28,7 @@ func TestAccRoute53DelegationSetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDelegationSetDataSourceConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name_servers.#", resourceName, "name_servers.#"),
 					resource.TestMatchResourceAttr("data.aws_route53_delegation_set.dset", "caller_reference", regexache.MustCompile("DynDNS(.*)")),
 				),

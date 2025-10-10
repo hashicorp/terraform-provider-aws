@@ -16,7 +16,7 @@ import (
 )
 
 func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		var permissions []awstypes.PrincipalResourcePermissions
 
 		pages := lakeformation.NewListPermissionsPaginator(conn, input)

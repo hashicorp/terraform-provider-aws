@@ -74,6 +74,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `externalId` - (Required) The SID of a group in the directory connected to the Transfer Server (e.g., `S-1-1-12-1234567890-123456789-1234567890-1234`)
 * `serverId` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `homeDirectory` - (Optional) The landing directory (folder) for a user when they log in to the server using their SFTP client.  It should begin with a `/`.  The first item in the path is the name of the home bucket (accessible as `${Transfer:HomeBucket}` in the policy) and the rest is the home directory (accessible as `${Transfer:HomeDirectory}` in the policy). For example, `/example-bucket-1234/username` would set the home bucket to `example-bucket-1234` and the home directory to `username`.
@@ -132,4 +133,4 @@ Using `terraform import`, import Transfer Accesses using the `serverId` and `ext
 % terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-27853b9acff5960bf03ca886682c7af40e4ac45eda5ee2c17ded312b63e3c898 -->
+<!-- cache-key: cdktf-0.20.8 input-47e8deff688873d8376ed18677ab8e0794d4fbe01cffa54b64436757cabda375 -->

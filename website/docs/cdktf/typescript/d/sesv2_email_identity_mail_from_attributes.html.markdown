@@ -47,8 +47,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `emailIdentity` - (Required) The name of the email identity.
 
 ## Attribute Reference
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `behaviorOnMxFailure` - The action to take if the required MX record isn't found when you send an email. Valid values: `USE_DEFAULT_VALUE`, `REJECT_MESSAGE`.
 * `mailFromDomain` - The custom MAIL FROM domain that you want the verified identity to use.
 
-<!-- cache-key: cdktf-0.20.1 input-f06a941b8e525f3b2704cada8b06a7094de35a609eb45fe1ddea9ebc9ad88ae8 -->
+<!-- cache-key: cdktf-0.20.8 input-76282cef5bf2d9f0b7900768c2240e5927279f81fa6d7d1b32a638897fae2bea -->

@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_archive", name="Archive")
@@ -35,11 +37,11 @@ func resourceArchive() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
@@ -48,7 +50,7 @@ func resourceArchive() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateEventPatternValue(),
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v.(string))
 					return json
 				},
@@ -59,7 +61,15 @@ func resourceArchive() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 2048),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
+				),
+			},
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -73,17 +83,17 @@ func resourceArchive() *schema.Resource {
 	}
 }
 
-func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &eventbridge.CreateArchiveInput{
 		ArchiveName:    aws.String(name),
 		EventSourceArn: aws.String(d.Get("event_source_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -94,6 +104,10 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		input.EventPattern = aws.String(v)
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
@@ -111,7 +125,7 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceArchiveRead(ctx, d, meta)...)
 }
 
-func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -127,25 +141,26 @@ func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Archive (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ArchiveArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.ArchiveArn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("event_pattern", output.EventPattern)
 	d.Set("event_source_arn", output.EventSourceArn)
-	d.Set("name", output.ArchiveName)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
+	d.Set(names.AttrName, output.ArchiveName)
 	d.Set("retention_days", output.RetentionDays)
 
 	return diags
 }
 
-func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	input := &eventbridge.UpdateArchiveInput{
-		ArchiveName: aws.String(d.Get("name").(string)),
+		ArchiveName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -156,6 +171,10 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		input.EventPattern = aws.String(v)
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
@@ -171,7 +190,7 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceArchiveRead(ctx, d, meta)...)
 }
 
-func resourceArchiveDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 

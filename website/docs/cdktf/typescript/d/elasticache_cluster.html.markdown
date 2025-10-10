@@ -38,33 +38,34 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `clusterId` – (Required) Group identifier.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `clusterId` - (Required) Group identifier.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `nodeType` – The cluster node type.
-* `numCacheNodes` – The number of cache nodes that the cache cluster has.
-* `engine` – Name of the cache engine.
-* `engineVersion` – Version number of the cache engine.
+* `nodeType` - The cluster node type.
+* `numCacheNodes` - The number of cache nodes that the cache cluster has.
+* `engine` - Name of the cache engine.
+* `engineVersion` - Version number of the cache engine.
 * `ipDiscovery` - The IP version advertised in the discovery protocol.
 * `networkType` - The IP versions for cache cluster connections.
-* `subnetGroupName` – Name of the subnet group associated to the cache cluster.
-* `securityGroupIds` – List VPC security groups associated with the cache cluster.
-* `parameterGroupName` – Name of the parameter group associated with this cache cluster.
+* `subnetGroupName` - Name of the subnet group associated to the cache cluster.
+* `securityGroupIds` - List VPC security groups associated with the cache cluster.
+* `parameterGroupName` - Name of the parameter group associated with this cache cluster.
 * `replicationGroupId` - The replication group to which this cache cluster belongs.
 * `logDeliveryConfiguration` - Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) delivery settings.
-* `maintenanceWindow` – Specifies the weekly time range for when maintenance
+* `maintenanceWindow` - Specifies the weekly time range for when maintenance
 on the cache cluster is performed.
 * `snapshotWindow` - Daily time range (in UTC) during which ElastiCache will
 begin taking a daily snapshot of the cache cluster.
 * `snapshotRetentionLimit` - The number of days for which ElastiCache will
 retain automatic cache cluster snapshots before deleting them.
 * `availabilityZone` - Availability Zone for the cache cluster.
-* `notificationTopicArn` – An ARN of an
+* `notificationTopicArn` - An ARN of an
 SNS topic that ElastiCache notifications get sent to.
-* `port` – The port number on which each of the cache nodes will
+* `port` - The port number on which each of the cache nodes will
 accept connections.
 * `configurationEndpoint` - (Memcached only) Configuration endpoint to allow host discovery.
 * `clusterAddress` - (Memcached only) DNS name of the cache cluster without the port appended.
@@ -73,4 +74,4 @@ accept connections.
    Referenceable e.g., as `${data.aws_elasticache_cluster.bar.cache_nodes.0.address}`
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.20.1 input-1e3ac11eb5023a5844f4de255a62edd6fa79961694900996bd0798736ae27445 -->
+<!-- cache-key: cdktf-0.20.8 input-d49d6dd4f3d693b8f6d23e880a4113873d384422ebf5b02df72f32cfcee87e2d -->

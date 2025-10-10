@@ -38,10 +38,10 @@ func TestAccIAMSigningCertificate_basic(t *testing.T) {
 				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_body"),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
 			{
@@ -84,14 +84,14 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 				Config: testAccSigningCertificateConfig_status(rName, "Active", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 				),
 			},
 			{
 				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
 		},
@@ -126,29 +126,22 @@ func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSigningCertificateExists(ctx context.Context, n string, cred *awstypes.SigningCertificate) resource.TestCheckFunc {
+func testAccCheckSigningCertificateExists(ctx context.Context, n string, v *awstypes.SigningCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Server Cert ID is set")
-		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		certId, userName, err := tfiam.DecodeSigningCertificateId(rs.Primary.ID)
+		output, err := tfiam.FindSigningCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["certificate_id"])
+
 		if err != nil {
 			return err
 		}
 
-		output, err := tfiam.FindSigningCertificate(ctx, conn, userName, certId)
-		if err != nil {
-			return err
-		}
-
-		*cred = *output
+		*v = *output
 
 		return nil
 	}
@@ -163,19 +156,14 @@ func testAccCheckSigningCertificateDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			certId, userName, err := tfiam.DecodeSigningCertificateId(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			output, err := tfiam.FindSigningCertificate(ctx, conn, userName, certId)
+			output, err := tfiam.FindSigningCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["certificate_id"])
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if output != nil {
-				return fmt.Errorf("IAM Service Specific Credential (%s) still exists", rs.Primary.ID)
+				return fmt.Errorf("IAM Signing Certificate (%s) still exists", rs.Primary.ID)
 			}
 		}
 

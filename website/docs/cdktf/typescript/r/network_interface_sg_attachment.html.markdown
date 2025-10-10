@@ -115,6 +115,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `securityGroupId` - (Required) The ID of the security group.
 * `networkInterfaceId` - (Required) The ID of the network interface to attach to.
 
@@ -162,4 +165,4 @@ Using `terraform import`, import Network Interface Security Group attachments us
 % terraform import aws_network_interface_sg_attachment.sg_attachment eni-1234567890abcdef0_sg-1234567890abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0320c62534ccc3510c781ee7478886cd1645618e9047560ebb40061c84f69576 -->
+<!-- cache-key: cdktf-0.20.8 input-772cec8fa7bce58dc3886b91e7d707bdc634e87fac542aa55f01879918a401dc -->

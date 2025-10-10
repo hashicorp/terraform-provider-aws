@@ -55,6 +55,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacityProviderStrategy` - (Optional) Set of capacity provider strategies to use for the cluster. See below.
 * `clientToken` - (Optional) An identifier that you provide to ensure the idempotency of the request. It must be unique and is case sensitive. Up to 64 characters are allowed. The valid characters are characters in the range of 33-126, inclusive. For more information, see [Ensuring idempotency](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html).
 * `desiredCount` - (Optional) Number of instantiations of the specified task to place on your cluster. You can specify up to 10 tasks for each call.
@@ -91,7 +92,6 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 * `containerOverrides` - (Optional) One or more container overrides that are sent to a task. See below.
 * `cpu` - (Optional) The CPU override for the task.
 * `executionRoleArn` - (Optional) Amazon Resource Name (ARN) of the task execution role override for the task.
-* `inferenceAcceleratorOverrides` - (Optional) Elastic Inference accelerator override for the task. See below.
 * `memory` - (Optional) The memory override for the task.
 * `taskRoleArn` - (Optional) Amazon Resource Name (ARN) of the role that containers in this task can assume.
 
@@ -112,13 +112,8 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 
 ### resource_requirements
 
-* `type` - (Required) The type of resource to assign to a container. Valid values are `GPU` or `InferenceAccelerator`.
-* `value` - (Required) The value for the specified resource type. If the `GPU` type is used, the value is the number of physical GPUs the Amazon ECS container agent reserves for the container. The number of GPUs that's reserved for all containers in a task can't exceed the number of available GPUs on the container instance that the task is launched on. If the `InferenceAccelerator` type is used, the value matches the `deviceName` for an InferenceAccelerator specified in a task definition.
-
-### inference_accelerator_overrides
-
-* `deviceName` - (Optional) The Elastic Inference accelerator device name to override for the task. This parameter must match a deviceName specified in the task definition.
-* `deviceType` - (Optional) The Elastic Inference accelerator type to use.
+* `type` - (Required) The type of resource to assign to a container. Valid values are `GPU`.
+* `value` - (Required) The value for the specified resource type. If the `GPU` type is used, the value is the number of physical GPUs the Amazon ECS container agent reserves for the container. The number of GPUs that's reserved for all containers in a task can't exceed the number of available GPUs on the container instance that the task is launched on.
 
 ### placement_constraints
 
@@ -139,4 +134,4 @@ This data source exports the following attributes in addition to the arguments a
 * `taskArns` - A list of the provisioned task ARNs.
 * `id` - The unique identifier, which is a comma-delimited string joining the `cluster` and `taskDefinition` attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-e4a4f9cc9f61093c0b25b3b6303b804642909347d59647c613ab6248c6e8f762 -->
+<!-- cache-key: cdktf-0.20.8 input-9ca88f84578ebd38bb619d9593b369baffd3a73ae5972f8c311de0eb5ce4b163 -->

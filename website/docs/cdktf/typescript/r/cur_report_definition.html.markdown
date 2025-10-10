@@ -35,6 +35,7 @@ class MyConvertedCode extends TerraformStack {
       format: "textORcsv",
       reportName: "example-cur-report-definition",
       s3Bucket: "example-bucket-name",
+      s3Prefix: "example-cur-report",
       s3Region: "us-east-1",
       timeUnit: "HOURLY",
     });
@@ -51,19 +52,21 @@ This resource supports the following arguments:
 * `timeUnit` - (Required) The frequency on which report data are measured and displayed.  Valid values are: `DAILY`, `HOURLY`, `MONTHLY`.
 * `format` - (Required) Format for report. Valid values are: `textORcsv`, `Parquet`. If `Parquet` is used, then Compression must also be `Parquet`.
 * `compression` - (Required) Compression format for report. Valid values are: `GZIP`, `ZIP`, `Parquet`. If `Parquet` is used, then format must also be `Parquet`.
-* `additionalSchemaElements` - (Required) A list of schema elements. Valid values are: `RESOURCES`, `SPLIT_COST_ALLOCATION_DATA`.
+* `additionalSchemaElements` - (Required) A list of schema elements. Valid values are: `RESOURCES`, `SPLIT_COST_ALLOCATION_DATA`, `MANUAL_DISCOUNT_COMPATIBILITY`.
 * `s3Bucket` - (Required) Name of the existing S3 bucket to hold generated reports.
-* `s3Prefix` - (Optional) Report path prefix. Limited to 256 characters.
+* `s3Prefix` - (Required) Report path prefix. Limited to 256 characters. May be empty (`""`) but the resource can then not be modified via the AWS Console.
 * `s3Region` - (Required) Region of the existing S3 bucket to hold generated reports.
 * `additionalArtifacts` - (Required) A list of additional artifacts. Valid values are: `REDSHIFT`, `QUICKSIGHT`, `ATHENA`. When ATHENA exists within additional_artifacts, no other artifact type can be declared and report_versioning must be `OVERWRITE_REPORT`.
 * `refreshClosedReports` - (Optional) Set to true to update your reports after they have been finalized if AWS detects charges related to previous months.
 * `reportVersioning` - (Optional) Overwrite the previous version of each report or to deliver the report in addition to the previous versions. Valid values are: `CREATE_NEW_REPORT` and `OVERWRITE_REPORT`.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the cur report.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -97,4 +100,4 @@ Using `terraform import`, import Report Definitions using the `reportName`. For 
 % terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-067985956199063abed34d5456679d542c82c7fd1e66853cbcc4c311a08d07b2 -->
+<!-- cache-key: cdktf-0.20.8 input-1eba72f39b2f566c6e8ef2061849784196491b47db907c32d221ba587e61febd -->

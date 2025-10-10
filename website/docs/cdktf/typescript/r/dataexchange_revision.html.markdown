@@ -36,6 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dataSetId` - (Required) The dataset id.
 * `comment` - (Required) An optional comment about the revision.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -81,4 +84,4 @@ Using `terraform import`, import DataExchange Revisions using their `data-set-id
 % terraform import aws_dataexchange_revision.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1dff294cf3af4fd0944cbd190d7f06ffbbea96e953f96933b6e5b54e4c8fdcd1 -->
+<!-- cache-key: cdktf-0.20.8 input-fe68c2a5d2bc6ada2fdf896c4ff898f2acba6e83e96fbf53f9e760db83677a51 -->

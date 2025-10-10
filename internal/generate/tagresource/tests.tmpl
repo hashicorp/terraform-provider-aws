@@ -30,7 +30,7 @@ func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = tf{{ .ServicePackage }}.{{ .GetTagFunc }}(ctx, conn, identifier, key)
+			_, err = tf{{ .ServicePackage }}.{{ .GetTagFunc | FirstUpper }}(ctx, conn, identifier, key)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -61,7 +61,7 @@ func testAccCheckTagExists(ctx context.Context, n string) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Client(ctx)
 
-		_, err = tf{{ .ServicePackage }}.{{ .GetTagFunc }}(ctx, conn, identifier, key)
+		_, err = tf{{ .ServicePackage }}.{{ .GetTagFunc | FirstUpper }}(ctx, conn, identifier, key)
 
 		return err
 	}

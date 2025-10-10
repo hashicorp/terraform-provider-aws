@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_pool: Fixes error when `schema` has empty `string_attribute_constraints` or `number_attribute_constraints`
+```

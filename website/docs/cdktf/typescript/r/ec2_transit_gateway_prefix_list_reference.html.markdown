@@ -77,6 +77,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `blackhole` - (Optional) Indicates whether to drop traffic that matches the Prefix List. Defaults to `false`.
 * `transitGatewayAttachmentId` - (Optional) Identifier of EC2 Transit Gateway Attachment.
 
@@ -118,4 +119,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_prefix_list_reference`
 % terraform import aws_ec2_transit_gateway_prefix_list_reference.example tgw-rtb-12345678_pl-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-32c5c00eacc9b022003008b236983d6790e2080f489aa235567510a3cf34f745 -->
+<!-- cache-key: cdktf-0.20.8 input-83f93ebdc3da2de25635fe6b368e9383c35784883f9a62b66425c11213c8b6e1 -->

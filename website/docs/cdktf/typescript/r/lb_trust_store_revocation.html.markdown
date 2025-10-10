@@ -54,6 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `trustStoreArn` - (Required) Trust Store ARN.
 * `revocationsS3Bucket` - (Required) S3 Bucket name holding the client certificate CA bundle.
 * `revocationsS3Key` - (Required) S3 object key holding the client certificate CA bundle.
@@ -98,4 +99,4 @@ Using `terraform import`, import Trust Store Revocations using their ARN. For ex
 % terraform import aws_lb_trust_store_revocation.example arn:aws:elasticloadbalancing:us-west-2:187416307283:truststore/my-trust-store/20cfe21448b66314,6
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ef6cd189328aa527ddf421defe54c23909195f7b8fd370d9f8f1d391547a633e -->
+<!-- cache-key: cdktf-0.20.8 input-87626557def331686220f5bb2d86227cc7f06914bcd3056af822642f25096c80 -->

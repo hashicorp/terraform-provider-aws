@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_foundation_model"
 description: |-
@@ -40,9 +40,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument are required:
+This data source supports the following arguments:
 
-* `model_id` – (Required) Model identifier.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `model_id` - (Required) Model identifier.
 
 ## Attribute Reference
 
@@ -57,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `provider_name` - Model provider name.
 * `response_streaming_supported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.1 input-6ca1c6ae02f6bf6eaa998eb031be9be04ad923c654a4f003585ee4d02856b78b -->
+<!-- cache-key: cdktf-0.20.8 input-a67af68ab2d739928980a3a40e7ff283ddbc049ff3b090f23bdfa033811a21b2 -->

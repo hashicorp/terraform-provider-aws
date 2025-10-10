@@ -59,6 +59,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connectionId` - (Required) The ID of the connection.
 * `lagId` - (Required) The ID of the LAG with which to associate the connection.
 
@@ -66,4 +67,4 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-96feeae586392eb0efd53cf41e2bf1f425927ad87299e1068630c2fe6ba0f85c -->
+<!-- cache-key: cdktf-0.20.8 input-4201fd1c2b34a716679ea5c0b7b7531527f3d472a129dfe84addfc38af15289d -->

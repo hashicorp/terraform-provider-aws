@@ -50,6 +50,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) - The name of the configured table.
 * `description` - (Optional) - A description for the configured table.
 * `analysisMethod` - (Required) - The analysis method for the configured table. The only valid value is currently `DIRECT_QUERY`.
@@ -77,6 +78,32 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `1m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cleanrooms_configured_table.example
+  identity = {
+    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+
+resource "aws_cleanrooms_configured_table" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the cleanrooms configured table.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cleanrooms_configured_table` using the `id`. For example:
 
@@ -108,4 +135,4 @@ Using `terraform import`, import `aws_cleanrooms_configured_table` using the `id
 % terraform import aws_cleanrooms_configured_table.table 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-453a78d0a031324d090ad2bc765ccc4d2f1ec41c65c0d162ac12a0a01d1fb07d -->
+<!-- cache-key: cdktf-0.20.8 input-8c4b1714996a90f7879df1beefac566f16a841ace009547f2c98bff0917700cd -->

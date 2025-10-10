@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -52,7 +51,7 @@ func resourceUserGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceUserGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -69,7 +68,7 @@ func resourceUserGroupMembershipCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceUserGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -82,7 +81,7 @@ func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData
 
 	var gl []string
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		err := listGroupsForUserPages(ctx, conn, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
@@ -98,31 +97,15 @@ func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData
 		})
 
 		if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		err = listGroupsForUserPages(ctx, conn, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, group := range page.Groups {
-				if groups.Contains(aws.ToString(group.GroupName)) {
-					gl = append(gl, aws.ToString(group.GroupName))
-				}
-			}
-
-			return !lastPage
-		})
-	}
 
 	var nse *awstypes.NoSuchEntityException
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, nse.ErrorCode()) {
@@ -142,7 +125,7 @@ func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceUserGroupMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -174,7 +157,7 @@ func resourceUserGroupMembershipUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceUserGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	user := d.Get("user").(string)
@@ -232,7 +215,7 @@ func removeUserFromGroup(ctx context.Context, conn *iam.Client, user, group stri
 	return nil
 }
 
-func resourceUserGroupMembershipImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserGroupMembershipImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) < 2 {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user-name>/<group-name1>/...", d.Id())

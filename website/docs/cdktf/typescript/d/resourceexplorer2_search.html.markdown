@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `viewArn` - (Optional) Specifies the Amazon resource name (ARN) of the view to use for the query. If you don't specify a value for this parameter, then the operation automatically uses the default view for the AWS Region in which you called this operation. If the Region either doesn't have a default view or if you don't have permission to use the default view, then the operation fails with a `401 Unauthorized` exception.
 
 ## Attribute Reference
@@ -57,22 +58,22 @@ This data source exports the following attributes in addition to the arguments a
 ### `resourceCount` Attribute Reference
 
 * `complete` - Indicates whether the TotalResources value represents an exhaustive count of search results. If True, it indicates that the search was exhaustive. Every resource that matches the query was counted. If False, then the search reached the limit of 1,000 matching results, and stopped counting.
-* `totalResources` - Number of resources that match the search query. This value can't exceed 1,000. If there are more than 1,000 resources that match the query, then only 1,000 are counted and the Complete field is set to false. We recommend that you refine your query to return a smaller number of results.
+* `total_resources` - Number of resources that match the search query. This value can't exceed 1,000. If there are more than 1,000 resources that match the query, then only 1,000 are counted and the Complete field is set to false. We recommend that you refine your query to return a smaller number of results.
 
 ### `resources` Attribute Reference
 
 * `arn` - Amazon resource name of resource.
-* `lastReportedAt` - Date and time that Resource Explorer last queried this resource and updated the index with the latest information about the resource.
+* `last_reported_at` - Date and time that Resource Explorer last queried this resource and updated the index with the latest information about the resource.
 * `owningAccountId` - Amazon Web Services account that owns the resource.
-* `resourceProperty` - Structure with additional type-specific details about the resource.  See [`resourceProperty`](#resource_property-attribute-reference) below.
+* `properties` - Structure with additional type-specific details about the resource.  See [`properties`](#properties-attribute-reference) below.
 * `region` - Amazon Web Services Region in which the resource was created and exists.
 * `resourceType` - Type of the resource.
 * `service` - Amazon Web Service that owns the resource and is responsible for creating and updating it.
 
-### `resourceProperty` Attribute Reference
+### `properties` Attribute Reference
 
 * `data` - Details about this property. The content of this field is a JSON object that varies based on the resource type.
-* `lastReportedAt` - The date and time that the information about this resource property was last updated.
+* `last_reported_at` - The date and time that the information about this resource property was last updated.
 * `name` - Name of this property of the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-cc1f3f318c0b3ff0f6a8fca9faab80288c443e768409cbd5f127cabc668e0151 -->
+<!-- cache-key: cdktf-0.20.8 input-2c369c9b1cf45dd53e11473c0e18399b546381b87dec863f8f3da7a8c0213209 -->

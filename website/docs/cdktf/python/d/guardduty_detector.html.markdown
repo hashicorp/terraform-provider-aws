@@ -31,12 +31,16 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the detector.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the detector.
 * `features` - Current configuration of the detector features.
     * `additional_configuration` - Additional feature configuration.
         * `name` - The name of the additional configuration.
@@ -46,5 +50,6 @@ This data source exports the following attributes in addition to the arguments a
 * `finding_publishing_frequency` - The frequency of notifications sent about subsequent finding occurrences.
 * `service_role_arn` - Service-linked role that grants GuardDuty access to the resources in the AWS account.
 * `status` - Current status of the detector.
+* `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-07755259e17c1389ef594d13cf31fa96fecc80102f8edf0b3ec9e035aef6985e -->
+<!-- cache-key: cdktf-0.20.8 input-07552c1d6ed0fc516ba559ff1e6f9f0cf11a273b5542cc8436a77376281c4533 -->

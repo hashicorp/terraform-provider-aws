@@ -120,8 +120,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `contact_id` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
 - `stage` - (Required) One or more configuration blocks for specifying a list of stages that the escalation plan or engagement plan uses to engage contacts and contact methods. See [Stage](#stage) below for more details.
 
@@ -190,4 +191,4 @@ Using `terraform import`, import SSM Contact Plan using the Contact ARN. For exa
 % terraform import aws_ssmcontacts_plan.example {ARNValue}
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ebafc47434cea7da059f684803495b00c4efdbcf05a67a147647049af89fafc1 -->
+<!-- cache-key: cdktf-0.20.8 input-117c0d48846439e6acc558aad1b900604b23401f09e0984932ce67db1fdb864a -->

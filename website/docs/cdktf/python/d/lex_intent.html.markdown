@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the intent. The name is case sensitive.
 * `version` - (Optional) Version of the intent.
 
@@ -56,4 +57,4 @@ intent on. To find the signature for an intent, see
 in the Alexa Skills Kit.
 * `version` - Version of the bot.
 
-<!-- cache-key: cdktf-0.20.1 input-394febf4c4d3edc4f0f324ec428dd4c71cb4d4a42df62b636f04fd735f6f2cf7 -->
+<!-- cache-key: cdktf-0.20.8 input-eddd63b695285c13fbb3925ce4ab3850fec4d125af3236d90c4a53f169fb4759 -->

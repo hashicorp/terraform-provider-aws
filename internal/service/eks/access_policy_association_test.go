@@ -43,7 +43,7 @@ func TestAccEKSAccessPolicyAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "associated_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterName),
 					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),
@@ -130,7 +130,7 @@ func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			_, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
+			_, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -156,7 +156,7 @@ func testAccCheckAccessPolicyAssociationExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
-		output, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
+		output, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
 
 		if err != nil {
 			return err
@@ -172,6 +172,10 @@ func testAccAccessPolicyAssociationConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -182,7 +186,7 @@ resource "aws_iam_role" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.eks.name}"
       },
       "Action": "sts:AssumeRole"
     }

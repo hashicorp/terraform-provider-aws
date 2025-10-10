@@ -36,7 +36,7 @@ func TestAccSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexache.MustCompile("s3:ListAllMyBuckets")),
 					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexache.MustCompile("s3:GetBucketLocation")),
 				),
@@ -144,7 +144,7 @@ func testAccCheckPermissionSetInlinePolicyDestroy(ctx context.Context) resource.
 				return err
 			}
 
-			_, err = tfssoadmin.FindPermissionSetInlinePolicy(ctx, conn, permissionSetARN, instanceARN)
+			_, err = tfssoadmin.FindPermissionSetInlinePolicyByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -175,7 +175,7 @@ func testAccCheckPermissionSetInlinePolicyExists(ctx context.Context, n string) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		_, err = tfssoadmin.FindPermissionSetInlinePolicy(ctx, conn, permissionSetARN, instanceARN)
+		_, err = tfssoadmin.FindPermissionSetInlinePolicyByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 		return err
 	}

@@ -49,10 +49,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available Route Table in the current region. The given filters must match exactly one Route Table whose data will be exported as attributes.
+This data source supports the following arguments:
 
-The following arguments are optional:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block. Detailed below.
 * `gatewayId` - (Optional) ID of an Internet Gateway or Virtual Private Gateway which is connected to the Route Table (not exported if not passed as a parameter).
 * `routeTableId` - (Optional) ID of the specific Route Table to retrieve.
@@ -118,4 +117,4 @@ Associations are also exported with the following attributes:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-e02f8a1af89557e3d4f7912192d3d91ac681003bf0f578fd465030e054563a1e -->
+<!-- cache-key: cdktf-0.20.8 input-10fa7549077abd94ba920230143f0baa4a3029b2684a8478f830ebb4222e8c1c -->

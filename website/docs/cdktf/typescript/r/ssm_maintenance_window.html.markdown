@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the maintenance window.
 * `schedule` - (Required) The schedule of the Maintenance Window in the form of a [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html).
 * `cutoff` - (Required) The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution.
@@ -50,7 +51,7 @@ This resource supports the following arguments:
 * `enabled` - (Optional) Whether the maintenance window is enabled. Default: `true`.
 * `endDate` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to no longer run the maintenance window.
 * `scheduleTimezone` - (Optional) Timezone for schedule in [Internet Assigned Numbers Authority (IANA) Time Zone Database format](https://www.iana.org/time-zones). For example: `America/Los_Angeles`, `etc/UTC`, or `Asia/Seoul`.
-* `scheduleOffset` - (Optional) The number of days to wait after the date and time specified by a CRON expression before running the maintenance window.
+* `scheduleOffset` - (Optional) The number of days to wait after the date and time specified by a CRON expression before running the maintenance window. Valid range is `1` to `6`.
 * `startDate` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to begin the maintenance window.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -62,6 +63,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window.example
+  identity = {
+    id = "mw-0123456789"
+  }
+}
+
+resource "aws_ssm_maintenance_window" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the maintenance window.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
@@ -79,7 +106,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     SsmMaintenanceWindow.generateConfigForImport(
       this,
-      "importedWindow",
+      "example",
       "mw-0123456789"
     );
   }
@@ -90,7 +117,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
 ```console
-% terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
+% terraform import aws_ssm_maintenance_window.example mw-0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-07f87819be5fb27d9bf208fabda5d907108534ce8f73af29e7515be2e194f293 -->
+<!-- cache-key: cdktf-0.20.8 input-9e83810a75b33423a7768988cc21c809ea25322601fb5a1bc1fdfcbd1143eb16 -->

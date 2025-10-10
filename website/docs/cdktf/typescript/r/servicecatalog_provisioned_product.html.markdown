@@ -63,6 +63,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `acceptLanguage` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `ignoreErrors` - (Optional) _Only applies to deleting._ If set to `true`, AWS Service Catalog stops managing the specified provisioned product even if it cannot delete the underlying resources. The default value is `false`.
 * `notificationArns` - (Optional) Passed to CloudFormation. The SNS topic ARNs to which to publish stack-related events.
@@ -72,24 +73,24 @@ The following arguments are optional:
 * `productName` - (Optional) Name of the product. You must provide `productId` or `productName`, but not both.
 * `provisioningArtifactId` - (Optional) Identifier of the provisioning artifact. For example, `pa-4abcdjnxjj6ne`. You must provide the `provisioningArtifactId` or `provisioningArtifactName`, but not both.
 * `provisioningArtifactName` - (Optional) Name of the provisioning artifact. You must provide the `provisioningArtifactId` or `provisioningArtifactName`, but not both.
-* `provisioningParameters` - (Optional) Configuration block with parameters specified by the administrator that are required for provisioning the product. See details below.
+* `provisioningParameters` - (Optional) Configuration block with parameters specified by the administrator that are required for provisioning the product. See [`provisioningParameters` Block](#provisioning_parameters-block) for details.
 * `retainPhysicalResources` - (Optional) _Only applies to deleting._ Whether to delete the Service Catalog provisioned product but leave the CloudFormation stack, stack set, or the underlying resources of the deleted provisioned product. The default value is `false`.
-* `stackSetProvisioningPreferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See details below.
+* `stackSetProvisioningPreferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See [`stackSetProvisioningPreferences` Block](#stack_set_provisioning_preferences-block) for details.
 * `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### provisioning_parameters
+### `provisioningParameters` Block
 
-This argument supports the following arguments:
+The `provisioningParameters` configuration block supports the following arguments:
 
 * `key` - (Required) Parameter key.
 * `usePreviousValue` - (Optional) Whether to ignore `value` and keep the previous parameter value. Ignored when initially provisioning a product.
 * `value` - (Optional) Parameter value.
 
-### stack_set_provisioning_preferences
+### `stackSetProvisioningPreferences` Block
 
 All of the `stackSetProvisioningPreferences` are only applicable to a `CFN_STACKSET` provisioned product type.
 
-This argument supports the following arguments:
+The `stackSetProvisioningPreferences` configuration block supports the following arguments:
 
 * `accounts` - (Optional) One or more AWS accounts that will have access to the provisioned product. The AWS accounts specified should be within the list of accounts in the STACKSET constraint. To get the list of accounts in the STACKSET constraint, use the `aws_servicecatalog_provisioning_parameters` data source. If no values are specified, the default value is all accounts from the STACKSET constraint.
 * `failureToleranceCount` - (Optional) Number of accounts, per region, for which this operation can fail before AWS Service Catalog stops the operation in that region. If the operation is stopped in a region, AWS Service Catalog doesn't attempt the operation in any subsequent regions. You must specify either `failureToleranceCount` or `failureTolerancePercentage`, but not both. The default value is 0 if no value is specified.
@@ -168,4 +169,4 @@ Using `terraform import`, import `aws_servicecatalog_provisioned_product` using 
 % terraform import aws_servicecatalog_provisioned_product.example pp-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-edd3b705e95bac2e25f2eb97a79b3f04705398287d665fe5f005143d89f697e6 -->
+<!-- cache-key: cdktf-0.20.8 input-0b311642f0be29892e91f334a977aa7cf155a2256b202733fe766aa8320d39ba -->

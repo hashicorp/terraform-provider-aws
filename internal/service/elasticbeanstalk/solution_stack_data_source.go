@@ -14,35 +14,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elastic_beanstalk_solution_stack")
-func DataSourceSolutionStack() *schema.Resource {
+// @SDKDataSource("aws_elastic_beanstalk_solution_stack", name="Solution Stack")
+func dataSourceSolutionStack() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSolutionStackRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrMostRecent: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name_regex": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"most_recent": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			// Computed values.
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
-// dataSourceSolutionStackRead performs the API lookup.
-func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -74,7 +73,7 @@ func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, me
 		// Query returned single result.
 		solutionStack = filteredSolutionStacks[0]
 	} else {
-		recent := d.Get("most_recent").(bool)
+		recent := d.Get(names.AttrMostRecent).(bool)
 		log.Printf("[DEBUG] aws_elastic_beanstalk_solution_stack - multiple results found and `most_recent` is set to: %t", recent)
 		if recent {
 			solutionStack = mostRecentSolutionStack(filteredSolutionStacks)
@@ -85,7 +84,7 @@ func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(solutionStack)
-	d.Set("name", solutionStack)
+	d.Set(names.AttrName, solutionStack)
 
 	return diags
 }

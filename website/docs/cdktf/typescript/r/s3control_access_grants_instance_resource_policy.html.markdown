@@ -49,6 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Optional) The AWS account ID for the S3 Access Grants instance. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `policy` - (Optional) The policy document.
 
@@ -88,4 +89,4 @@ Using `terraform import`, import S3 Access Grants instance resource policies usi
 % terraform import aws_s3control_access_grants_instance_resource_policy.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5fc8f9b74ea6f1b84355cc86c632e105d4e2b0bf42fdaa38f1076a0043630327 -->
+<!-- cache-key: cdktf-0.20.8 input-ca2c313d278581bd29e5dff0ad51d2d7fc779780d661634979ab358fdf7800ba -->

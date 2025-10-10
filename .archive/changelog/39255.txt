@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Adds support for IAM role chaining. The provider attribute `assume_role` now accepts multiple elements.
+```

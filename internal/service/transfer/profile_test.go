@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,14 +21,14 @@ import (
 
 func TestAccTransferProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedProfile
+	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -39,12 +39,13 @@ func TestAccTransferProfile_basic(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "profile/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "profile_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "profile_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -58,7 +59,7 @@ func TestAccTransferProfile_basic(t *testing.T) {
 
 func TestAccTransferProfile_certificateIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedProfile
+	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
@@ -67,7 +68,7 @@ func TestAccTransferProfile_certificateIDs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -92,14 +93,14 @@ func TestAccTransferProfile_certificateIDs(t *testing.T) {
 
 func TestAccTransferProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedProfile
+	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -120,14 +121,14 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 
 func TestAccTransferProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedProfile
+	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -135,11 +136,11 @@ func TestAccTransferProfile_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfileConfig_tags1(rName, "key1", "value1"),
+				Config: testAccProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -148,27 +149,27 @@ func TestAccTransferProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccProfileConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccProfileConfig_tags1(rName, "key2", "value2"),
+				Config: testAccProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.DescribedProfile) resource.TestCheckFunc {
+func testAccCheckProfileExists(ctx context.Context, n string, v *awstypes.DescribedProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -179,7 +180,7 @@ func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.Descri
 			return fmt.Errorf("No Transfer Profile ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		output, err := tftransfer.FindProfileByID(ctx, conn, rs.Primary.ID)
 
@@ -195,7 +196,7 @@ func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.Descri
 
 func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_profile" {

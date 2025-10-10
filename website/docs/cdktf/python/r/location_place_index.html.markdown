@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data_source_configuration` - (Optional) Configuration block with the data storage option chosen for requesting Places. Detailed below.
 * `description` - (Optional) The optional description for the place index resource.
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -49,6 +50,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `intended_use` - (Optional) Specifies how the results of an operation will be stored by the caller. Valid values: `SingleUse`, `Storage`. Default: `SingleUse`.
 
 ## Attribute Reference
@@ -85,4 +87,4 @@ Using `terraform import`, import `aws_location_place_index` resources using the 
 % terraform import aws_location_place_index.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-394c1ee28ef77e64cf06721c4fa5a97e00829ed4736062d9087e7923bfc8ee3a -->
+<!-- cache-key: cdktf-0.20.8 input-834c11eeca36fc928277421b760b3e79d19dcf5a14bf279b5d2b259c9f3e635d -->

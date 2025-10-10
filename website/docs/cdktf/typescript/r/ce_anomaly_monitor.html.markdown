@@ -79,7 +79,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the monitor.
 * `monitorType` - (Required) The possible type values. Valid values: `DIMENSIONAL` | `CUSTOM`.
@@ -96,6 +96,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ce_anomaly_monitor.example
+  identity = {
+    "arn" = "arn:aws:ce::123456789012:anomalymonitor/12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_ce_anomaly_monitor" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Cost Explorer anomaly monitor.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_anomaly_monitor` using the `id`. For example:
 
@@ -127,4 +148,4 @@ Using `terraform import`, import `aws_ce_anomaly_monitor` using the `id`. For ex
 % terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1578f36961ed88a11a17f0c1c8745d16387472eae9e80de6c376da2f0ebcc68e -->
+<!-- cache-key: cdktf-0.20.8 input-81fdf954fd8b094a73054639aa5e2642507953e7d2a5aef52847a225fd7d3bf5 -->

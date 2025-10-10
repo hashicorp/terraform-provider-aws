@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
@@ -67,7 +66,7 @@ func sweepAggregateAuthorizations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ConfigServiceClient(ctx)
 	input := &configservice.DescribeAggregationAuthorizationsInput{}
@@ -108,7 +107,7 @@ func sweepConfigRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ConfigServiceClient(ctx)
 	input := &configservice.DescribeConfigRulesInput{}
@@ -156,7 +155,7 @@ func sweepConfigurationAggregators(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ConfigServiceClient(ctx)
 	input := &configservice.DescribeConfigurationAggregatorsInput{}
@@ -198,12 +197,12 @@ type configurationRecorderSweeper struct {
 	name   string
 }
 
-func (s *configurationRecorderSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (s *configurationRecorderSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	r := resourceConfigurationRecorderStatus()
 	d := r.Data(nil)
 	d.SetId(s.name)
 
-	if err := sdk.NewSweepResource(r, d, s.client).Delete(ctx, timeout, optFns...); err != nil {
+	if err := sdk.NewSweepResource(r, d, s.client).Delete(ctx, optFns...); err != nil {
 		return err
 	}
 
@@ -211,14 +210,14 @@ func (s *configurationRecorderSweeper) Delete(ctx context.Context, timeout time.
 	d = r.Data(nil)
 	d.SetId(s.name)
 
-	return sdk.NewSweepResource(r, d, s.client).Delete(ctx, timeout, optFns...)
+	return sdk.NewSweepResource(r, d, s.client).Delete(ctx, optFns...)
 }
 
 func sweepConfigurationRecorder(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ConfigServiceClient(ctx)
 	input := &configservice.DescribeConfigurationRecordersInput{}
@@ -252,7 +251,7 @@ func sweepConformancePacks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ConfigServiceClient(ctx)
 	input := &configservice.DescribeConformancePacksInput{}
@@ -293,7 +292,7 @@ func sweepDeliveryChannels(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ConfigServiceClient(ctx)
 	input := &configservice.DescribeDeliveryChannelsInput{}
@@ -331,7 +330,7 @@ func sweepRemediationConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ConfigServiceClient(ctx)
 	input := &configservice.DescribeConfigRulesInput{}

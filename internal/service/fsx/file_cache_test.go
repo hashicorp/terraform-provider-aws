@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,9 +26,9 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
-			"basic":      testAccFileCache_basic,
-			"disappears": testAccFileCache_disappears,
-			"kms_key_id": testAccFileCache_kmsKeyID,
+			acctest.CtBasic:      testAccFileCache_basic,
+			acctest.CtDisappears: testAccFileCache_disappears,
+			"kms_key_id":         testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association_multiple":      testAccFileCache_dataRepositoryAssociation_multiple,
 			"data_repository_association_nfs":           testAccFileCache_dataRepositoryAssociation_nfs,
@@ -47,14 +47,14 @@ func testAccFileCache_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.FileCache
+	var filecache awstypes.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,11 +64,11 @@ func testAccFileCache_basic(t *testing.T) {
 				Config: testAccFileCacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-cache/fc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-cache/fc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type", "LUSTRE"),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type_version", "2.12"),
-					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`fc-.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key\/.+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`fc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key\/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.deployment_type", "CACHE_1"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.storage_capacity", "2400"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.per_unit_storage_throughput", "1000"),
@@ -93,14 +93,14 @@ func testAccFileCache_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.FileCache
+	var filecache awstypes.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -126,21 +126,21 @@ func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1 fsx.FileCache
+	var filecache1 awstypes.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.tags.%", "2"),
 				),
 			},
@@ -160,12 +160,12 @@ func testAccFileCache_dataRepositoryAssociation_multiple(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.FileCache
+	var filecache awstypes.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
@@ -193,12 +193,12 @@ func testAccFileCache_dataRepositoryAssociation_nfs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.FileCache
+	var filecache awstypes.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
@@ -230,12 +230,12 @@ func testAccFileCache_dataRepositoryAssociation_s3(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.FileCache
+	var filecache awstypes.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
@@ -265,14 +265,14 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1, filecache2 fsx.FileCache
+	var filecache1, filecache2 awstypes.FileCache
 	kmsKeyResourceName1 := "aws_kms_key.test1"
 	kmsKeyResourceName2 := "aws_kms_key.test2"
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
@@ -281,7 +281,7 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 				Config: testAccFileCacheConfig_kmsKeyID1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName1, names.AttrARN),
 				),
 			},
 			{
@@ -295,7 +295,7 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache2),
 					testAccCheckFileCacheRecreated(&filecache1, &filecache2),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName2, names.AttrARN),
 				),
 			},
 			{
@@ -314,12 +314,12 @@ func testAccFileCache_securityGroupID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1 fsx.FileCache
+	var filecache1 awstypes.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
@@ -335,7 +335,7 @@ func testAccFileCache_securityGroupID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations", "security_group_ids"},
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations", names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -347,22 +347,22 @@ func testAccFileCache_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1, filecache2 fsx.FileCache
+	var filecache1, filecache2 awstypes.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileCacheConfig_tags1(rName, "key1", "value1"),
+				Config: testAccFileCacheConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -372,13 +372,13 @@ func testAccFileCache_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
 			},
 			{
-				Config: testAccFileCacheConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFileCacheConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache2),
 					testAccCheckFileCacheNotRecreated(&filecache1, &filecache2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -393,7 +393,7 @@ func testAccFileCache_tags(t *testing.T) {
 
 func testAccCheckFileCacheDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_file_cache" {
@@ -417,14 +417,14 @@ func testAccCheckFileCacheDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFileCacheExists(ctx context.Context, n string, v *fsx.FileCache) resource.TestCheckFunc {
+func testAccCheckFileCacheExists(ctx context.Context, n string, v *awstypes.FileCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		output, err := tffsx.FindFileCacheByID(ctx, conn, rs.Primary.ID)
 
@@ -438,20 +438,20 @@ func testAccCheckFileCacheExists(ctx context.Context, n string, v *fsx.FileCache
 	}
 }
 
-func testAccCheckFileCacheNotRecreated(i, j *fsx.FileCache) resource.TestCheckFunc {
+func testAccCheckFileCacheNotRecreated(i, j *awstypes.FileCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.FileCacheId) != aws.StringValue(j.FileCacheId) {
-			return fmt.Errorf("FSx File System (%s) recreated", aws.StringValue(i.FileCacheId))
+		if aws.ToString(i.FileCacheId) != aws.ToString(j.FileCacheId) {
+			return fmt.Errorf("FSx File System (%s) recreated", aws.ToString(i.FileCacheId))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFileCacheRecreated(i, j *fsx.FileCache) resource.TestCheckFunc {
+func testAccCheckFileCacheRecreated(i, j *awstypes.FileCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.FileCacheId) == aws.StringValue(j.FileCacheId) {
-			return fmt.Errorf("FSx File System (%s) not recreated", aws.StringValue(i.FileCacheId))
+		if aws.ToString(i.FileCacheId) == aws.ToString(j.FileCacheId) {
+			return fmt.Errorf("FSx File System (%s) not recreated", aws.ToString(i.FileCacheId))
 		}
 
 		return nil
@@ -631,6 +631,7 @@ func testAccFileCacheConfig_kmsKeyID1(rName string) string {
 resource "aws_kms_key" "test1" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_file_cache" "test" {
@@ -658,6 +659,7 @@ func testAccFileCacheConfig_kmsKeyID2(rName string) string {
 resource "aws_kms_key" "test2" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_file_cache" "test" {

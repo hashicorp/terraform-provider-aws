@@ -56,6 +56,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The display name of a backup plan.
 * `rule` - (Required) A rule object that specifies a scheduled task that is used to back up a selection of resources.
 * `advancedBackupSetting` - (Optional) An object that specifies backup options for each resource type.
@@ -68,6 +69,7 @@ This resource supports the following arguments:
 * `ruleName` - (Required) An display name for a backup rule.
 * `targetVaultName` - (Required) The name of a logical container where backups are stored.
 * `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
+* `scheduleExpressionTimezone` - (Optional) The timezone in which the schedule expression is set. Default value: `"Etc/UTC"`.
 * `enableContinuousBackup` - (Optional) Enable continuous backups for supported resources.
 * `startWindow` - (Optional) The amount of time in minutes before beginning a backup.
 * `completionWindow` - (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error.
@@ -81,7 +83,7 @@ This resource supports the following arguments:
 
 * `coldStorageAfter` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
 * `deleteAfter` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `coldStorageAfter`.
-* `opt_in_to_archive_for_supported_resources` - (Optional) This setting will instruct your backup plan to transition supported resources to archive (cold) storage tier in accordance with your lifecycle settings.
+* `optInToArchiveForSupportedResources` - (Optional) This setting will instruct your backup plan to transition supported resources to archive (cold) storage tier in accordance with your lifecycle settings.
 
 ### Copy Action Arguments
 
@@ -134,4 +136,4 @@ Using `terraform import`, import Backup Plan using the `id`. For example:
 % terraform import aws_backup_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ae01c9fb9e7affc0382314ccec1c65f4cc4f130b5e941d660e20c92e9b5312b9 -->
+<!-- cache-key: cdktf-0.20.8 input-9c7e3e4c6a45a8200e713e04f6087a89faf7edbe3ca3bb94731bd01df14fe659 -->

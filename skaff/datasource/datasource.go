@@ -15,19 +15,20 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
-//go:embed datasource.tmpl
+//go:embed datasource.gtpl
 var datasourceTmpl string
 
-//go:embed datasourcefw.tmpl
+//go:embed datasourcefw.gtpl
 var datasourceFrameworkTmpl string
 
-//go:embed datasourcetest.tmpl
+//go:embed datasourcetest.gtpl
 var datasourceTestTmpl string
 
-//go:embed websitedoc.tmpl
+//go:embed websitedoc.gtpl
 var websiteTmpl string
 
 type TemplateData struct {
@@ -37,17 +38,17 @@ type TemplateData struct {
 	IncludeComments      bool
 	IncludeTags          bool
 	HumanFriendlyService string
+	SDKPackage           string
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	AWSGoSDKV2           bool
 	PluginFramework      bool
 	HumanDataSourceName  string
 	ProviderResourceName string
 }
 
-func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
+func Create(dsName, snakeName string, comments, force, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -67,35 +68,27 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = convert.ToSnakeCase(dsName, snakeName)
-
-	s, err := names.ProviderNameUpper(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting service connection name: %w", err)
+	if snakeName == "" {
+		snakeName = names.ToSnakeCase(dsName)
 	}
 
-	sn, err := names.FullHumanFriendly(servicePackage)
+	service, err := data.LookupService(servicePackage)
 	if err != nil {
-		return fmt.Errorf("error getting AWS service name: %w", err)
-	}
-
-	hf, err := names.HumanFriendly(servicePackage)
-	if err != nil {
-		return fmt.Errorf("error getting human-friendly name: %w", err)
+		return fmt.Errorf("error looking up service package data for %q: %w", servicePackage, err)
 	}
 
 	templateData := TemplateData{
 		DataSource:           dsName,
 		DataSourceLower:      strings.ToLower(dsName),
 		DataSourceSnake:      snakeName,
-		HumanFriendlyService: hf,
+		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
 		IncludeTags:          tags,
+		SDKPackage:           service.GoV2Package(),
 		ServicePackage:       servicePackage,
-		Service:              s,
-		ServiceLower:         strings.ToLower(s),
-		AWSServiceName:       sn,
-		AWSGoSDKV2:           v2,
+		Service:              service.ProviderNameUpper(),
+		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
+		AWSServiceName:       service.FullHumanFriendly(),
 		PluginFramework:      pluginFramework,
 		HumanDataSourceName:  convert.ToHumanResName(dsName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),

@@ -45,6 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exclusive_end_time` - (Optional) The exclusive date and time that specifies when the stream ends. If you don't define this parameter, the stream runs indefinitely until you cancel it. It must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"2019-06-13T21:36:34Z"`.
 * `inclusive_start_time` - (Required) The inclusive start date and time from which to start streaming journal data. This parameter must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"2019-06-13T21:36:34Z"`.  This cannot be in the future and must be before `exclusive_end_time`.  If you provide a value that is before the ledger's `CreationDateTime`, QLDB effectively defaults it to the ledger's `CreationDateTime`.
 * `kinesis_configuration` - (Required) The configuration settings of the Kinesis Data Streams destination for your stream request. Documented below.
@@ -75,4 +76,4 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `8m`)
 - `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.1 input-35ccfcf2d29f7f918b217c8f22a5948a35ed05cac3acbaacc55e0a1fd3e71f2a -->
+<!-- cache-key: cdktf-0.20.8 input-22652413fb06605ab8bb83c32f0a3be3e6cfb84c9b0cdeb3a2cd1cbd53e8eafe -->

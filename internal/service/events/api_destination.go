@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_api_destination", name="API Destination")
@@ -36,7 +37,7 @@ func resourceAPIDestination() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +46,7 @@ func resourceAPIDestination() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
@@ -65,7 +66,7 @@ func resourceAPIDestination() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 				Default:      300,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -78,18 +79,18 @@ func resourceAPIDestination() *schema.Resource {
 	}
 }
 
-func resourceAPIDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &eventbridge.CreateApiDestinationInput{
 		ConnectionArn: aws.String(d.Get("connection_arn").(string)),
 		HttpMethod:    types.ApiDestinationHttpMethod(d.Get("http_method").(string)),
 		Name:          aws.String(name),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -112,7 +113,7 @@ func resourceAPIDestinationCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceAPIDestinationRead(ctx, d, meta)...)
 }
 
-func resourceAPIDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -128,18 +129,18 @@ func resourceAPIDestinationRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge API Destination (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ApiDestinationArn)
+	d.Set(names.AttrARN, output.ApiDestinationArn)
 	d.Set("connection_arn", output.ConnectionArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("http_method", output.HttpMethod)
 	d.Set("invocation_endpoint", output.InvocationEndpoint)
 	d.Set("invocation_rate_limit_per_second", output.InvocationRateLimitPerSecond)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }
 
-func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -149,7 +150,7 @@ func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, m
 		Name:          aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -170,7 +171,7 @@ func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceAPIDestinationRead(ctx, d, meta)...)
 }
 
-func resourceAPIDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 

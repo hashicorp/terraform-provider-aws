@@ -130,16 +130,17 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` – (Required) The name you assign to this ML Transform. It must be unique in your account.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) The name you assign to this ML Transform. It must be unique in your account.
 * `inputRecordTables` - (Required)  A list of AWS Glue table definitions used by the transform. see [Input Record Tables](#input_record_tables).
 * `parameters` - (Required) The algorithmic parameters that are specific to the transform type used. Conditionally dependent on the transform type. see [Parameters](#parameters).
-* `roleArn` – (Required) The ARN of the IAM role associated with this ML Transform.
-* `description` – (Optional) Description of the ML Transform.
+* `roleArn` - (Required) The ARN of the IAM role associated with this ML Transform.
+* `description` - (Optional) Description of the ML Transform.
 * `glueVersion` - (Optional) The version of glue to use, for example "1.0". For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
-* `maxCapacity` – (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `maxCapacity` is a mutually exclusive option with `numberOfWorkers` and `workerType`.
-* `maxRetries` – (Optional) The maximum number of times to retry this ML Transform if it fails.
+* `maxCapacity` - (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `maxCapacity` is a mutually exclusive option with `numberOfWorkers` and `workerType`.
+* `maxRetries` - (Optional) The maximum number of times to retry this ML Transform if it fails.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout` – (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
+* `timeout` - (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
 * `workerType` - (Optional) The type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `Standard`, `G.1X`, or `G.2X`. Required with `numberOfWorkers`.
 * `numberOfWorkers` - (Optional) The number of workers of a defined `workerType` that are allocated when an ML Transform runs. Required with `workerType`.
 
@@ -209,4 +210,4 @@ Using `terraform import`, import Glue ML Transforms using `id`. For example:
 % terraform import aws_glue_ml_transform.example tfm-c2cafbe83b1c575f49eaca9939220e2fcd58e2d5
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-295ef64caa0ed9cd96476b3d72c04967e7f94dc142182bf5b2175f9cde26f649 -->
+<!-- cache-key: cdktf-0.20.8 input-c396eb72711d1262e1cfa9ec64341b2455331b0790b6af3b515fed373b2728c5 -->

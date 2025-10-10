@@ -40,7 +40,7 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the connection.
-* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps and 10Gbps. Case sensitive.
+* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps, and 25Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Hosted Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/hosted_connection.html).
 * `connection_id` - (Required) The ID of the interconnect or LAG.
 * `owner_account_id` - (Required) The ID of the AWS account of the customer for the connection.
 * `vlan` - (Required) The dedicated VLAN provisioned to the hosted connection.
@@ -49,16 +49,17 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the connection.
-* `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
-* `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
 * `aws_device` - The Direct Connect endpoint on which the physical connection terminates.
-* `state` - The state of the connection. Possible values include: ordering, requested, pending, available, down, deleting, deleted, rejected, unknown. See [AllocateHostedConnection](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_AllocateHostedConnection.html) for a description of each connection state.
+* `connection_region` - The AWS Region where the connection is located.
+* `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
+* `id` - The ID of the hosted connection.
+* `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
 * `lag_id` - The ID of the LAG.
 * `loa_issue_time` - The time of the most recent call to [DescribeLoa](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLoa.html) for this connection.
 * `location` - The location of the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `provider_name` - The name of the service provider associated with the connection.
-* `region` - The AWS Region where the connection is located.
+* `region` - (**Deprecated**) The AWS Region where the connection is located. Use `connection_region` instead.
+* `state` - The state of the connection. Possible values include: ordering, requested, pending, available, down, deleting, deleted, rejected, unknown. See [AllocateHostedConnection](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_AllocateHostedConnection.html) for a description of each connection state.
 
-<!-- cache-key: cdktf-0.20.1 input-97bc5655cc271850c8ea111d0eeb9833b2352964ab1dc9e68ab175109b7b9dee -->
+<!-- cache-key: cdktf-0.20.8 input-2d6676e81c286e9f18a46f5c9f17d9067020a2e4aebf08a7bdaeeb5206fb02c0 -->

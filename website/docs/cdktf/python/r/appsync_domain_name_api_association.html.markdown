@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API ID.
 * `domain_name` - (Required) Appsync domain name.
 
@@ -70,4 +71,4 @@ Using `terraform import`, import `aws_appsync_domain_name_api_association` using
 % terraform import aws_appsync_domain_name_api_association.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-20f8e537078df27312c2183f4ab0c0158ba5ec522ac3da6fb70fd599dad00b8f -->
+<!-- cache-key: cdktf-0.20.8 input-4e8588d76182255bcff421aca4608b817c07176145a6765123b16f6d3d83c94f -->

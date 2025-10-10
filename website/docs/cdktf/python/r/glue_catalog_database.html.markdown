@@ -61,6 +61,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID.
 * `create_table_default_permission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission`](#create_table_default_permission) below.
 * `description` - (Optional) Description of the database.
@@ -124,4 +125,4 @@ Using `terraform import`, import Glue Catalog Databases using the `catalog_id:na
 % terraform import aws_glue_catalog_database.database 123456789012:my_database
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f6ddbf330fc96789770c14c13d7df90a799c7886bd2a946dc50aba50cacf3d3c -->
+<!-- cache-key: cdktf-0.20.8 input-9c2ad7d2e483a46360d58dbf4b5c6e98440340b09ab216ffc56623eb1b3ab138 -->

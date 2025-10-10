@@ -1,0 +1,3 @@
+```release-note:bug
+service/transitgateway: Fix resource Read pagination regression causing `NotFound` errors
+```

@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,9 +40,9 @@ func TestAccGlueSchema_basic(t *testing.T) {
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("schema/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("schema/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "schema_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "data_format", "AVRO"),
 					resource.TestCheckResourceAttr(resourceName, "schema_checkpoint", "1"),
@@ -48,8 +50,8 @@ func TestAccGlueSchema_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_name", registryResourceName, "registry_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "registry_arn", registryResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "registry_arn", registryResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -138,14 +140,14 @@ func TestAccGlueSchema_description(t *testing.T) {
 				Config: testAccSchemaConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccSchemaConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
 			{
@@ -206,11 +208,11 @@ func TestAccGlueSchema_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSchemaConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -219,20 +221,20 @@ func TestAccGlueSchema_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSchemaConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSchemaConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSchemaConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSchemaConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -330,9 +332,9 @@ func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 }
 
 func testAccPreCheckSchema(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-	_, err := conn.ListRegistriesWithContext(ctx, &glue.ListRegistriesInput{})
+	_, err := conn.ListRegistries(ctx, &glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Schemas return InternalFailure
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
@@ -355,7 +357,7 @@ func testAccCheckSchemaExists(ctx context.Context, resourceName string, schema *
 			return fmt.Errorf("No Glue Schema ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		output, err := tfglue.FindSchemaByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -365,7 +367,7 @@ func testAccCheckSchemaExists(ctx context.Context, resourceName string, schema *
 			return fmt.Errorf("Glue Schema (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.SchemaArn) == rs.Primary.ID {
+		if aws.ToString(output.SchemaArn) == rs.Primary.ID {
 			*schema = *output
 			return nil
 		}
@@ -381,15 +383,15 @@ func testAccCheckSchemaDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 			output, err := tfglue.FindSchemaByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
 					return nil
 				}
 			}
 
-			if output != nil && aws.StringValue(output.SchemaArn) == rs.Primary.ID {
+			if output != nil && aws.ToString(output.SchemaArn) == rs.Primary.ID {
 				return fmt.Errorf("Glue Schema %s still exists", rs.Primary.ID)
 			}
 

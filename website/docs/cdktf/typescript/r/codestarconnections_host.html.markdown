@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the host to be created. The name must be unique in the calling AWS account.
 * `providerEndpoint` - (Required) The endpoint of the infrastructure to be represented by the host after it is created.
 * `providerType` - (Required) The name of the external provider where your third-party code repository is configured.
@@ -63,6 +64,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - The CodeStar Host status. Possible values are `PENDING`, `AVAILABLE`, `VPC_CONFIG_DELETING`, `VPC_CONFIG_INITIALIZING`, and `VPC_CONFIG_FAILED_INITIALIZATION`.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codestarconnections_host.example
+  identity = {
+    "arn" = "arn:aws:codestar-connections:us-west-2:123456789012:host/example-host-id"
+  }
+}
+
+resource "aws_codestarconnections_host" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeStar connections host.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeStar Host using the ARN. For example:
 
@@ -94,4 +116,4 @@ Using `terraform import`, import CodeStar Host using the ARN. For example:
 % terraform import aws_codestarconnections_host.example-host arn:aws:codestar-connections:us-west-1:0123456789:host/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-deb204f04b1d3b40e9230a8529e261bf3e35a0ba36cd5b092788c3a247d424f1 -->
+<!-- cache-key: cdktf-0.20.8 input-607d2ec2200f28937b3835b87c16ecf017c2c2176e75d45e087a4a8524bf40c7 -->

@@ -76,10 +76,12 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `activeDirectoryConfiguration` - (Optional) Configuration block that Amazon FSx uses to join the FSx ONTAP Storage Virtual Machine(SVM) to your Microsoft Active Directory (AD) directory. Detailed below.
 * `fileSystemId` - (Required) The ID of the Amazon FSx ONTAP File System that this SVM will be created on.
 * `name` - (Required) The name of the SVM. You can use a maximum of 47 alphanumeric characters, plus the underscore (_) special character.
 * `rootVolumeSecurityStyle` - (Optional) Specifies the root volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`. All volumes created under this SVM will inherit the root security style unless the security style is specified on the volume. Default value is `UNIX`.
+* `svmAdminPassword` - (Optional) Specifies the password to use when logging on to the SVM using a secure shell (SSH) connection to the SVM's management endpoint. Doing so enables you to manage the SVM using the NetApp ONTAP CLI or REST API. If you do not specify a password, you can still use the file system's fsxadmin user to manage the SVM.
 * `tags` - (Optional) A map of tags to assign to the storage virtual machine. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### active_directory_configuration
@@ -194,4 +196,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-74ebf93c5246fec0a83d413f672feb2cd78262f5765744a5bca89505730e563b -->
+<!-- cache-key: cdktf-0.20.8 input-62226a366aa4059478844de8b20992dfb9f3e8d6f45e664a51438118c541486a -->

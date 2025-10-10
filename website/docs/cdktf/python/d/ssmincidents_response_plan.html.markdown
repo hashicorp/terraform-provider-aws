@@ -37,8 +37,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) The Amazon Resource Name (ARN) of the response plan.
 
 ## Attribute Reference
@@ -87,4 +88,4 @@ The `integration` configuration block exports the following attributes:
         * `service_id` - The ID of the PagerDuty service that the response plan associates with an incident when it launches.
         * `secret_id` - The ID of the AWS Secrets Manager secret that stores your PagerDuty key &mdash; either a General Access REST API Key or User Token REST API Key &mdash; and other user credentials.
 
-<!-- cache-key: cdktf-0.20.1 input-53143826544758b79c896d3903f1f26c1fb9c78df0ebb1d8a86f77ef47ffac71 -->
+<!-- cache-key: cdktf-0.20.8 input-7bf13e26b07b339ff8d14fed7007ba293c3d9ddda94cd1beae8905ed4283f5ab -->

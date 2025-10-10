@@ -96,6 +96,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `attributes` - (Optional) A map that contains user attributes and attribute values to be set for the user.
 * `client_metadata` - (Optional) A map of custom key-value pairs that you can provide as input for any custom workflows that user creation triggers. Amazon Cognito does not store the `client_metadata` value. This data is available only to Lambda triggers that are assigned to a user pool to support custom workflows. If your user pool configuration does not include triggers, the ClientMetadata parameter serves no purpose. For more information, see [Customizing User Pool Workflows with Lambda Triggers](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html).
 * `desired_delivery_mediums` - (Optional) A list of mediums to the welcome message will be sent through. Allowed values are `EMAIL` and `SMS`. If it's provided, make sure you have also specified `email` attribute for the `EMAIL` medium and `phone_number` for the `SMS`. More than one value can be specified. Amazon Cognito does not store the `desired_delivery_mediums` value. Defaults to `["SMS"]`.
@@ -141,4 +142,4 @@ Using `terraform import`, import Cognito User using the `user_pool_id`/`name` at
 % terraform import aws_cognito_user.user us-east-1_vG78M4goG/user
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b603092428c63c12332d47bff8ea434c3f148dcd1ba3a4fb846409da827bc678 -->
+<!-- cache-key: cdktf-0.20.8 input-a4d1fbe2f11e4acc561f8eb940ec6dc9648ce6e79772f67781b255ff049e145c -->

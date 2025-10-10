@@ -120,8 +120,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `permissionSetArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
 * `permissionsBoundary` - (Required, Forces new resource) The permissions boundary policy. See below.
@@ -185,4 +186,4 @@ Using `terraform import`, import SSO Admin Permissions Boundary Attachments usin
 % terraform import aws_ssoadmin_permissions_boundary_attachment.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b18b40e74ac6a4c483e12a6c4261d755ba4289cd16e5a156898b6ed4b6af7691 -->
+<!-- cache-key: cdktf-0.20.8 input-795d4026458169c309e6340185e45462d2477849cefabc9397b883edcf2dbee8 -->

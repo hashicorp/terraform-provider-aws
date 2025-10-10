@@ -6,10 +6,11 @@ package tfresource
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 )
 
 func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
@@ -79,7 +80,6 @@ func TestEmptyResultErrorIs(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -160,7 +160,6 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -173,72 +172,124 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 	}
 }
 
-func TestAssertSinglePtrResult(t *testing.T) {
+func TestAssertSingleValueResult(t *testing.T) {
 	t.Parallel()
 
-	type x struct {
-		A int
-	}
-
-	x1 := &x{A: 1}
-	x2 := &x{A: 2}
-	testCases := []struct {
-		name   string
-		input  []*x
-		fs     []FoundFunc[x]
-		output *x
-		err    bool
+	testCases := map[string]struct {
+		input         []int
+		expectedValue int
+		expectedError error
 	}{
-		{
-			name: "nil input",
-			err:  true,
+		"empty slice": {
+			input:         []int{},
+			expectedError: NewEmptyResultError(nil),
 		},
-		{
-			name:  "empty input",
-			input: []*x{},
-			err:   true,
+		"single element": {
+			input:         []int{42},
+			expectedValue: 42,
 		},
-		{
-			name:  "single nil input",
-			input: []*x{nil},
-			err:   true,
-		},
-		{
-			name:   "single non-nil input",
-			input:  []*x{x1},
-			output: x1,
-		},
-		{
-			name:  "multiple inputs",
-			input: []*x{x1, x2},
-			err:   true,
-		},
-		{
-			name:   "single non-nil input, with found",
-			input:  []*x{x1},
-			fs:     []FoundFunc[x]{func(v *x) bool { return v.A == 1 }},
-			output: x1,
-		},
-		{
-			name:  "single non-nil input, with not found",
-			input: []*x{x1},
-			fs:    []FoundFunc[x]{func(v *x) bool { return v.A == 2 }},
-			err:   true,
+		"multiple elements": {
+			input:         []int{42, 43},
+			expectedError: NewTooManyResultsError(2, nil),
 		},
 	}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			output, err := AssertSinglePtrResult(testCase.input, testCase.fs...)
-			if got, want := err != nil, testCase.err; got != want {
-				t.Fatalf("AssertSinglePtrResult err %t, want %t", got, want)
+			result, err := AssertSingleValueResult(testCase.input)
+
+			if testCase.expectedError != nil {
+				if err == nil {
+					t.Errorf("expected error: %v, got nil", testCase.expectedError)
+				} else if err.Error() != testCase.expectedError.Error() {
+					t.Errorf("expected error: %v, got %v", testCase.expectedError, err)
+				}
+			} else if err != nil {
+				t.Errorf("unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(output, testCase.output); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+
+			if result == nil {
+				if testCase.expectedError == nil {
+					t.Errorf("expected %d, got nil", testCase.expectedValue)
+				}
+				return
+			} else if *result != testCase.expectedValue {
+				t.Errorf("expected %d, got %d", testCase.expectedValue, *result)
 			}
 		})
+	}
+}
+
+func TestAssertSingleValueResultIterErr(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input         iter.Seq2[int, error]
+		expectedValue int
+		expectedError error
+	}{
+		"empty slice": {
+			input:         tfiter.Null2[int, error](),
+			expectedError: NewEmptyResultError(nil),
+		},
+		"single element": {
+			input:         valuesWithErrors([]int{42}),
+			expectedValue: 42,
+		},
+		"multiple elements": {
+			input:         valuesWithErrors([]int{42, 43}),
+			expectedError: NewTooManyResultsError(2, nil),
+		},
+		"with error": {
+			input:         valueError(errors.New("test error")),
+			expectedError: errors.New("test error"),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := AssertSingleValueResultIterErr(testCase.input)
+
+			if testCase.expectedError != nil {
+				if err == nil {
+					t.Errorf("expected error: %v, got nil", testCase.expectedError)
+				} else if err.Error() != testCase.expectedError.Error() {
+					t.Errorf("expected error: %v, got %v", testCase.expectedError, err)
+				}
+			} else if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if result == nil {
+				if testCase.expectedError == nil {
+					t.Errorf("expected %d, got nil", testCase.expectedValue)
+				}
+				return
+			} else if *result != testCase.expectedValue {
+				t.Errorf("expected %d, got %d", testCase.expectedValue, *result)
+			}
+		})
+	}
+}
+
+func valuesWithErrors(values []int) iter.Seq2[int, error] {
+	return func(yield func(int, error) bool) {
+		for _, v := range values {
+			if !yield(v, nil) {
+				break
+			}
+		}
+	}
+}
+
+func valueError(err error) iter.Seq2[int, error] {
+	return func(yield func(int, error) bool) {
+		if !yield(0, err) {
+			return
+		}
 	}
 }

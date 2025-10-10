@@ -42,6 +42,7 @@ resource "aws_apigatewayv2_authorizer" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `authorizer_type` - (Required) Authorizer type. Valid values: `JWT`, `REQUEST`.
 Specify `REQUEST` for a Lambda function using incoming request parameters.
@@ -75,6 +76,12 @@ The `jwt_configuration` object supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Authorizer identifier.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `delete` - (Default `30m`)
 
 ## Import
 

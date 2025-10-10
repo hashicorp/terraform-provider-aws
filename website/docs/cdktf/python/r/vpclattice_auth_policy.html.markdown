@@ -59,8 +59,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_identifier` - (Required) The ID or Amazon Resource Name (ARN) of the service network or service for which the policy is created.
 * `policy` - (Required) The auth policy. The policy string in JSON must not contain newlines or blank lines.
 
@@ -105,4 +106,4 @@ Using `terraform import`, import VPC Lattice Auth Policy using the `id`. For exa
 % terraform import aws_vpclattice_auth_policy.example abcd-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfefd578bb50996b82ce55ca4ba5163180bcda5a652c6847303282acbdb1d91d -->
+<!-- cache-key: cdktf-0.20.8 input-e26764dc99aef4dd5a3908810415fa1f75d98d6504f0e7db5bd279139a979891 -->

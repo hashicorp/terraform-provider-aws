@@ -249,7 +249,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `accountId` - (Optional) The unique identifier for the AWS account in which the anomaly subscription ought to be created.
 * `frequency` - (Required) The frequency that anomaly reports are sent. Valid Values: `DAILY` | `IMMEDIATE` | `WEEKLY`.
@@ -266,8 +266,8 @@ The following arguments are required:
 * `and` - (Optional) Return results that match both [Dimension](#dimension) objects.
 * `costCategory` - (Optional) Configuration block for the filter that's based on  values. See [Cost Category](#cost-category) below.
 * `dimension` - (Optional) Configuration block for the specific [Dimension](#dimension) to use for.
-* `not` - (Optional) Return results that match both [Dimension](#dimension) object.
-* `or` - (Optional) Return results that match both [Dimension](#dimension) object.
+* `not` - (Optional) Return results that do not match the [Dimension](#dimension) object.
+* `or` - (Optional) Return results that match either [Dimension](#dimension) object.
 * `tags` - (Optional) Configuration block for the specific Tag to use for. See [Tags](#tags) below.
 
 ### Cost Category
@@ -297,6 +297,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ce_anomaly_subscription.example
+  identity = {
+    "arn" = "arn:aws:ce::123456789012:anomalysubscription/12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_ce_anomaly_subscription" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Cost Explorer anomaly subscription.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_anomaly_subscription` using the `id`. For example:
 
@@ -328,4 +349,4 @@ Using `terraform import`, import `aws_ce_anomaly_subscription` using the `id`. F
 % terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2104ba4f8073cdd07506ce63a6f6f442efb8b20273edbd90f98ba5dd9cbef5cf -->
+<!-- cache-key: cdktf-0.20.8 input-8ebdbbbe8f94c0259259a58d449cf7fa63a9809639b663d306898521f3f3603c -->

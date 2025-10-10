@@ -77,6 +77,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessPolicy` - (Required) The access rules you want to configure. These rules replace any existing rules. See the [AWS documentation](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-access.html) for details.
 * `domainName` - (Required) The CloudSearch domain name the policy applies to.
 
@@ -123,4 +124,4 @@ Using `terraform import`, import CloudSearch domain service access policies usin
 % terraform import aws_cloudsearch_domain_service_access_policy.example example-domain
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c2ebea6afae4e24a2fd5837f7a4fbdb9c6667ec6f7293e498314a0c3b1c43e87 -->
+<!-- cache-key: cdktf-0.20.8 input-e43d9604374b83dedbb1e8743791f521b22e82eb8b3550df6f034e4a51e156f1 -->

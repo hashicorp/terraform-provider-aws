@@ -68,6 +68,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `samlOptions` - (Optional) The SAML authentication options for an AWS Elasticsearch Domain.
 
 ### saml_options
@@ -123,4 +124,4 @@ Using `terraform import`, import Elasticsearch domains using the `domainName`. F
 % terraform import aws_elasticsearch_domain_saml_options.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-65d51b7512d651dc02ab5c3e4dec870cf5f9710ffdd2fa0237566b35396e143c -->
+<!-- cache-key: cdktf-0.20.8 input-cec75046e058ee7a4e585f5f83ccab6fc30b664e1b2dc01fdbe4cef49dca6dcf -->

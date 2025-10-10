@@ -29,7 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new AuditmanagerFrameworkShare(this, "example", {
-      destinationAccount: "012345678901",
+      destinationAccount: "123456789012",
       destinationRegion: "us-east-1",
       frameworkId: Token.asString(awsAuditmanagerFrameworkExample.id),
     });
@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `comment` - (Optional) Comment from the sender about the share request.
 
 ## Attribute Reference
@@ -89,4 +90,4 @@ Using `terraform import`, import Audit Manager Framework Share using the `id`. F
 % terraform import aws_auditmanager_framework_share.example abcdef-123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-14d7a2ed97dee3206ec0e19704aeaa2d131932ec24b406ef4fff013eeb7c1aba -->
+<!-- cache-key: cdktf-0.20.8 input-02ac8c1b6c93f0768497e9f6f6e9bd504ebfff8a5ee0abaa1a16e3ea709b3f80 -->

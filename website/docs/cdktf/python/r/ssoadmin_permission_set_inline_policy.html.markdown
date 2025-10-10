@@ -69,6 +69,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `inline_policy` - (Required) The IAM inline policy to attach to a Permission Set.
 * `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
@@ -111,4 +112,4 @@ Using `terraform import`, import SSO Permission Set Inline Policies using the `p
 % terraform import aws_ssoadmin_permission_set_inline_policy.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-95b8d64fe066ee16ba01d7244ac2fba2a6e51ee42f865a1ca5ad7f4d7b3ef82b -->
+<!-- cache-key: cdktf-0.20.8 input-9d568eefae6ec48ca027ed9251548f57b9623feef95d16d3b487cfbdf3f06ef3 -->

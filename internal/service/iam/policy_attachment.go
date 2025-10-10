@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -22,7 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_policy_attachment", name="Policy Attachment")
@@ -40,7 +41,7 @@ func resourcePolicyAttachment() *schema.Resource {
 				Elem:         &schema.Schema{Type: schema.TypeString},
 				AtLeastOneOf: []string{"groups", "roles", "users"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -68,7 +69,7 @@ func resourcePolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -92,12 +93,12 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(d.Get(names.AttrName).(string))
 
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -121,7 +122,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -142,7 +143,7 @@ func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -274,10 +275,10 @@ func detachPolicyFromUsers(ctx context.Context, conn *iam.Client, users []string
 }
 
 func findEntitiesForPolicyByARN(ctx context.Context, conn *iam.Client, arn string) ([]string, []string, []string, error) {
-	input := &iam.ListEntitiesForPolicyInput{
+	input := iam.ListEntitiesForPolicyInput{
 		PolicyArn: aws.String(arn),
 	}
-	groups, roles, users, err := findEntitiesForPolicy(ctx, conn, input)
+	groups, roles, users, err := findEntitiesForPolicy(ctx, conn, &input)
 
 	if err != nil {
 		return nil, nil, nil, err
@@ -315,17 +316,17 @@ func findEntitiesForPolicy(ctx context.Context, conn *iam.Client, input *iam.Lis
 		}
 
 		for _, v := range page.PolicyGroups {
-			if !reflect.ValueOf(v).IsZero() {
+			if p := &v; !inttypes.IsZero(p) {
 				groups = append(groups, v)
 			}
 		}
 		for _, v := range page.PolicyRoles {
-			if !reflect.ValueOf(v).IsZero() {
+			if p := &v; !inttypes.IsZero(p) {
 				roles = append(roles, v)
 			}
 		}
 		for _, v := range page.PolicyUsers {
-			if !reflect.ValueOf(v).IsZero() {
+			if p := &v; !inttypes.IsZero(p) {
 				users = append(users, v)
 			}
 		}

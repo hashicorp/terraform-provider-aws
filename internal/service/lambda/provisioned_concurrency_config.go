@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_provisioned_concurrency_config", name="Provisioned Concurrency Config")
@@ -68,7 +69,7 @@ func resourceProvisionedConcurrencyConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -81,22 +82,23 @@ const (
 	provisionedConcurrencyConfigResourceIDPartCount = 2
 )
 
-func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{functionName, qualifier}, provisionedConcurrencyConfigResourceIDPartCount, true))
+	id, err := flex.FlattenResourceId([]string{functionName, qualifier}, provisionedConcurrencyConfigResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	input := &lambda.PutProvisionedConcurrencyConfigInput{
 		FunctionName:                    aws.String(functionName),
 		ProvisionedConcurrentExecutions: aws.Int32(int32(d.Get("provisioned_concurrent_executions").(int))),
 		Qualifier:                       aws.String(qualifier),
 	}
 
-	_, err := conn.PutProvisionedConcurrencyConfig(ctx, input)
-
-	if err != nil {
+	if _, err := conn.PutProvisionedConcurrencyConfig(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lambda Provisioned Concurrency Config (%s): %s", id, err)
 	}
 
@@ -109,7 +111,7 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceProvisionedConcurrencyConfigRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -139,7 +141,7 @@ func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -169,7 +171,7 @@ func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.R
 	return append(diags, resourceProvisionedConcurrencyConfigRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -180,7 +182,7 @@ func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.R
 
 	functionName, qualifier := parts[0], parts[1]
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Provisioned Concurrency Config %q", d.Id())
 		return diags
 	}
@@ -233,7 +235,7 @@ func findProvisionedConcurrencyConfigByTwoPartKey(ctx context.Context, conn *lam
 }
 
 func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, functionName, qualifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
 		if tfresource.NotFound(err) {

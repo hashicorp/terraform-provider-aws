@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -26,7 +27,7 @@ func sweepRotations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.SSMContactsClient(ctx)
 	input := &ssmcontacts.ListRotationsInput{}
@@ -49,8 +50,8 @@ func sweepRotations(region string) error {
 			id := aws.ToString(v.RotationArn)
 
 			log.Printf("[INFO] Deleting SSMContacts Rotation: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceRotation, client,
-				framework.NewAttribute("id", id),
+			sweepResources = append(sweepResources, framework.NewSweepResource(newRotationResource, client,
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}

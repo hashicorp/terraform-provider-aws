@@ -9,10 +9,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,8 +25,8 @@ import (
 // IPv4 to Internet Gateway.
 func TestAccVPCRoute_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
-	var routeTable ec2.RouteTable
+	var route awstypes.Route
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
 	rtResourceName := "aws_route_table.test"
@@ -50,16 +51,16 @@ func TestAccVPCRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -75,7 +76,7 @@ func TestAccVPCRoute_basic(t *testing.T) {
 
 func TestAccVPCRoute_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	destinationCidr := "10.3.0.0/16"
@@ -100,7 +101,7 @@ func TestAccVPCRoute_disappears(t *testing.T) {
 
 func TestAccVPCRoute_Disappears_routeTable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	rtResourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -126,7 +127,7 @@ func TestAccVPCRoute_Disappears_routeTable(t *testing.T) {
 
 func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -147,19 +148,24 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "egress_only_gateway_id", eoigwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -169,8 +175,15 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 			},
 			{
 				// Verify that expanded form of the destination CIDR causes no diff.
-				Config:   testAccVPCRouteConfig_ipv6EgressOnlyInternetGateway(rName, "::0/0"),
-				PlanOnly: true,
+				Config: testAccVPCRouteConfig_ipv6EgressOnlyInternetGateway(rName, "::0/0"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -178,7 +191,7 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 
 func TestAccVPCRoute_ipv6ToInternetGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -200,16 +213,16 @@ func TestAccVPCRoute_ipv6ToInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -225,7 +238,7 @@ func TestAccVPCRoute_ipv6ToInternetGateway(t *testing.T) {
 
 func TestAccVPCRoute_ipv6ToInstance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -248,15 +261,15 @@ func TestAccVPCRoute_ipv6ToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -272,7 +285,7 @@ func TestAccVPCRoute_ipv6ToInstance(t *testing.T) {
 
 func TestAccVPCRoute_IPv6ToNetworkInterface_unattached(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -295,15 +308,15 @@ func TestAccVPCRoute_IPv6ToNetworkInterface_unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateBlackhole)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -319,7 +332,7 @@ func TestAccVPCRoute_IPv6ToNetworkInterface_unattached(t *testing.T) {
 
 func TestAccVPCRoute_ipv6ToVPCPeeringConnection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -342,16 +355,16 @@ func TestAccVPCRoute_ipv6ToVPCPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
 				),
 			},
 			{
@@ -366,7 +379,7 @@ func TestAccVPCRoute_ipv6ToVPCPeeringConnection(t *testing.T) {
 
 func TestAccVPCRoute_ipv6ToVPNGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -388,16 +401,16 @@ func TestAccVPCRoute_ipv6ToVPNGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -413,7 +426,7 @@ func TestAccVPCRoute_ipv6ToVPNGateway(t *testing.T) {
 
 func TestAccVPCRoute_ipv4ToVPNGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -435,16 +448,16 @@ func TestAccVPCRoute_ipv4ToVPNGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -460,7 +473,7 @@ func TestAccVPCRoute_ipv4ToVPNGateway(t *testing.T) {
 
 func TestAccVPCRoute_ipv4ToInstance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -483,15 +496,15 @@ func TestAccVPCRoute_ipv4ToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -507,7 +520,7 @@ func TestAccVPCRoute_ipv4ToInstance(t *testing.T) {
 
 func TestAccVPCRoute_IPv4ToNetworkInterface_unattached(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -530,15 +543,15 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateBlackhole)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -554,7 +567,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_unattached(t *testing.T) {
 
 func TestAccVPCRoute_IPv4ToNetworkInterface_attached(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
 	instanceResourceName := "aws_instance.test"
@@ -578,15 +591,15 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -602,7 +615,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_attached(t *testing.T) {
 
 func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	eni1ResourceName := "aws_network_interface.test1"
 	eni2ResourceName := "aws_network_interface.test2"
@@ -627,15 +640,15 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eni1ResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eni1ResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -650,15 +663,15 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eni2ResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eni2ResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -674,7 +687,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 
 func TestAccVPCRoute_ipv4ToVPCPeeringConnection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -697,16 +710,16 @@ func TestAccVPCRoute_ipv4ToVPCPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
 				),
 			},
 			{
@@ -721,7 +734,7 @@ func TestAccVPCRoute_ipv4ToVPCPeeringConnection(t *testing.T) {
 
 func TestAccVPCRoute_ipv4ToNatGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	ngwResourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -744,15 +757,15 @@ func TestAccVPCRoute_ipv4ToNatGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -768,7 +781,7 @@ func TestAccVPCRoute_ipv4ToNatGateway(t *testing.T) {
 
 func TestAccVPCRoute_ipv6ToNatGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	ngwResourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -791,15 +804,15 @@ func TestAccVPCRoute_ipv6ToNatGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -815,8 +828,8 @@ func TestAccVPCRoute_ipv6ToNatGateway(t *testing.T) {
 
 func TestAccVPCRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
-	var routeTable ec2.RouteTable
+	var route awstypes.Route
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_route.test"
 	rtResourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -851,7 +864,7 @@ func TestAccVPCRoute_ipv4ToTransitGateway(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -874,15 +887,15 @@ func TestAccVPCRoute_ipv4ToTransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, tgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -902,7 +915,7 @@ func TestAccVPCRoute_ipv6ToTransitGateway(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -925,15 +938,15 @@ func TestAccVPCRoute_ipv6ToTransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, tgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -949,7 +962,7 @@ func TestAccVPCRoute_ipv6ToTransitGateway(t *testing.T) {
 
 func TestAccVPCRoute_ipv4ToCarrierGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	cgwResourceName := "aws_ec2_carrier_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -965,22 +978,22 @@ func TestAccVPCRoute_ipv4ToCarrierGateway(t *testing.T) {
 				Config: testAccVPCRouteConfig_ipv4CarrierGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &route),
-					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", cgwResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", cgwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -996,7 +1009,7 @@ func TestAccVPCRoute_ipv4ToCarrierGateway(t *testing.T) {
 
 func TestAccVPCRoute_ipv4ToLocalGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1019,15 +1032,15 @@ func TestAccVPCRoute_ipv4ToLocalGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1043,7 +1056,7 @@ func TestAccVPCRoute_ipv4ToLocalGateway(t *testing.T) {
 
 func TestAccVPCRoute_ipv6ToLocalGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1066,15 +1079,15 @@ func TestAccVPCRoute_ipv6ToLocalGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1090,7 +1103,7 @@ func TestAccVPCRoute_ipv6ToLocalGateway(t *testing.T) {
 
 func TestAccVPCRoute_conditionalCIDRBlock(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	destinationCidr := "10.2.0.0/16"
@@ -1134,7 +1147,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -1148,7 +1161,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckELBv2GatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID, "elasticloadbalancing"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1162,16 +1175,16 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1185,16 +1198,16 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1209,20 +1222,20 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
 			{
-				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, names.AttrNetworkInterfaceID, eniResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1232,21 +1245,21 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateBlackhole)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
 			{
-				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "transit_gateway_id", tgwResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, names.AttrTransitGatewayID, tgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1256,20 +1269,20 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, tgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
 			{
-				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "vpc_endpoint_id", vpcEndpointResourceName),
+				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, names.AttrVPCEndpointID, vpcEndpointResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1279,15 +1292,15 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCEndpointID, vpcEndpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1302,16 +1315,16 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
 				),
 			},
 			{
@@ -1330,7 +1343,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -1356,16 +1369,16 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1379,16 +1392,16 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1401,22 +1414,22 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "egress_only_gateway_id", eoigwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
 			{
-				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
+				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, names.AttrNetworkInterfaceID, eniResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
@@ -1426,15 +1439,15 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateBlackhole)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1449,16 +1462,16 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
 				),
 			},
 			{
@@ -1477,7 +1490,7 @@ func TestAccVPCRoute_ipv4ToVPCEndpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var route ec2.Route
+	var route awstypes.Route
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
@@ -1485,7 +1498,7 @@ func TestAccVPCRoute_ipv4ToVPCEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckELBv2GatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID, "elasticloadbalancing"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1500,15 +1513,15 @@ func TestAccVPCRoute_ipv4ToVPCEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCEndpointID, vpcEndpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1528,7 +1541,7 @@ func TestAccVPCRoute_ipv6ToVPCEndpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var route ec2.Route
+	var route awstypes.Route
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
@@ -1536,7 +1549,7 @@ func TestAccVPCRoute_ipv6ToVPCEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckELBv2GatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID, "elasticloadbalancing"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1551,15 +1564,15 @@ func TestAccVPCRoute_ipv6ToVPCEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCEndpointID, vpcEndpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1575,8 +1588,8 @@ func TestAccVPCRoute_ipv6ToVPCEndpoint(t *testing.T) {
 
 func TestAccVPCRoute_localRouteCreateError(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
-	var vpc ec2.Vpc
+	var routeTable awstypes.RouteTable
+	var vpc awstypes.Vpc
 	rtResourceName := "aws_route_table.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1606,8 +1619,8 @@ func TestAccVPCRoute_localRouteCreateError(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/11455.
 func TestAccVPCRoute_localRouteImport(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
-	var vpc ec2.Vpc
+	var routeTable awstypes.RouteTable
+	var vpc awstypes.Vpc
 	resourceName := "aws_route.test"
 	rtResourceName := "aws_route_table.test"
 	vpcResourceName := "aws_vpc.test"
@@ -1631,9 +1644,9 @@ func TestAccVPCRoute_localRouteImport(t *testing.T) {
 				Config:       testAccVPCRouteConfig_ipv4Local(rName),
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateIdFunc: func(rt *ec2.RouteTable, v *ec2.Vpc) resource.ImportStateIdFunc {
+				ImportStateIdFunc: func(rt *awstypes.RouteTable, v *awstypes.Vpc) resource.ImportStateIdFunc {
 					return func(s *terraform.State) (string, error) {
-						return fmt.Sprintf("%s_%s", aws.StringValue(rt.RouteTableId), aws.StringValue(v.CidrBlock)), nil
+						return fmt.Sprintf("%s_%s", aws.ToString(rt.RouteTableId), aws.ToString(v.CidrBlock)), nil
 					}
 				}(&routeTable, &vpc),
 				// Don't verify the state as the local route isn't actually in the pre-import state.
@@ -1647,8 +1660,8 @@ func TestAccVPCRoute_localRouteImport(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/21350.
 func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
-	var vpc ec2.Vpc
+	var routeTable awstypes.RouteTable
+	var vpc awstypes.Vpc
 	resourceName := "aws_route.test"
 	rtResourceName := "aws_route_table.test"
 	vpcResourceName := "aws_vpc.test"
@@ -1673,9 +1686,9 @@ func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 				Config:       testAccVPCRouteConfig_ipv4Local(rName),
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateIdFunc: func(rt *ec2.RouteTable, v *ec2.Vpc) resource.ImportStateIdFunc {
+				ImportStateIdFunc: func(rt *awstypes.RouteTable, v *awstypes.Vpc) resource.ImportStateIdFunc {
 					return func(s *terraform.State) (string, error) {
-						return fmt.Sprintf("%s_%s", aws.StringValue(rt.RouteTableId), aws.StringValue(v.CidrBlock)), nil
+						return fmt.Sprintf("%s_%s", aws.ToString(rt.RouteTableId), aws.ToString(v.CidrBlock)), nil
 					}
 				}(&routeTable, &vpc),
 				ImportStatePersist: true,
@@ -1690,7 +1703,7 @@ func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
 				),
 			},
 			{
@@ -1708,7 +1721,7 @@ func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 
 func TestAccVPCRoute_prefixListToInternetGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -1728,18 +1741,18 @@ func TestAccVPCRoute_prefixListToInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1755,7 +1768,7 @@ func TestAccVPCRoute_prefixListToInternetGateway(t *testing.T) {
 
 func TestAccVPCRoute_prefixListToVPNGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -1775,18 +1788,18 @@ func TestAccVPCRoute_prefixListToVPNGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1802,7 +1815,7 @@ func TestAccVPCRoute_prefixListToVPNGateway(t *testing.T) {
 
 func TestAccVPCRoute_prefixListToInstance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -1822,18 +1835,18 @@ func TestAccVPCRoute_prefixListToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1849,7 +1862,7 @@ func TestAccVPCRoute_prefixListToInstance(t *testing.T) {
 
 func TestAccVPCRoute_PrefixListToNetworkInterface_unattached(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -1869,18 +1882,18 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateBlackhole)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1896,7 +1909,7 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_unattached(t *testing.T) {
 
 func TestAccVPCRoute_PrefixListToNetworkInterface_attached(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
 	instanceResourceName := "aws_instance.test"
@@ -1917,18 +1930,18 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1944,7 +1957,7 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_attached(t *testing.T) {
 
 func TestAccVPCRoute_prefixListToVPCPeeringConnection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -1964,19 +1977,19 @@ func TestAccVPCRoute_prefixListToVPCPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
 				),
 			},
 			{
@@ -1991,7 +2004,7 @@ func TestAccVPCRoute_prefixListToVPCPeeringConnection(t *testing.T) {
 
 func TestAccVPCRoute_prefixListToNatGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	ngwResourceName := "aws_nat_gateway.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -2011,18 +2024,18 @@ func TestAccVPCRoute_prefixListToNatGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -2042,7 +2055,7 @@ func TestAccVPCRoute_prefixListToTransitGateway(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -2062,18 +2075,18 @@ func TestAccVPCRoute_prefixListToTransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, tgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -2089,7 +2102,7 @@ func TestAccVPCRoute_prefixListToTransitGateway(t *testing.T) {
 
 func TestAccVPCRoute_prefixListToCarrierGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	cgwResourceName := "aws_ec2_carrier_gateway.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -2109,22 +2122,22 @@ func TestAccVPCRoute_prefixListToCarrierGateway(t *testing.T) {
 				Config: testAccVPCRouteConfig_prefixListCarrierGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &route),
-					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", cgwResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", cgwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -2140,7 +2153,7 @@ func TestAccVPCRoute_prefixListToCarrierGateway(t *testing.T) {
 
 func TestAccVPCRoute_prefixListToLocalGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -2164,18 +2177,18 @@ func TestAccVPCRoute_prefixListToLocalGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -2191,7 +2204,7 @@ func TestAccVPCRoute_prefixListToLocalGateway(t *testing.T) {
 
 func TestAccVPCRoute_prefixListToEgressOnlyInternetGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
+	var route awstypes.Route
 	resourceName := "aws_route.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -2211,18 +2224,18 @@ func TestAccVPCRoute_prefixListToEgressOnlyInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "egress_only_gateway_id", eoigwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNetworkInterfaceID, ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", string(awstypes.RouteOriginCreateRoute)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.RouteStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -2255,7 +2268,7 @@ func TestAccVPCRoute_duplicate(t *testing.T) {
 	})
 }
 
-func testAccCheckRouteExists(ctx context.Context, n string, v *ec2.Route) resource.TestCheckFunc {
+func testAccCheckRouteExists(ctx context.Context, n string, v *awstypes.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2266,9 +2279,9 @@ func testAccCheckRouteExists(ctx context.Context, n string, v *ec2.Route) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		var route *ec2.Route
+		var route *awstypes.Route
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
 			route, err = tfec2.FindRouteByIPv4Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
@@ -2295,7 +2308,7 @@ func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 			var err error
 			if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
@@ -2679,7 +2692,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id          = aws_vpc.test.id
-  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name    = "com.amazonaws.${data.aws_region.current.region}.s3"
   route_table_ids = [aws_route_table.test.id]
 }
 `, rName)

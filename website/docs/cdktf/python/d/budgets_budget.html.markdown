@@ -49,6 +49,7 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `auto_adjust_data` - Object containing [AutoAdjustData] which determines the budget amount for an auto-adjusting budget.
+* `billing_view_arn` - ARN of the billing view.
 * `budget_exceeded` - Boolean indicating whether this budget has been exceeded.
 * `budget_limit` - The total amount of cost, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans coverage that you want to track with your budget. Contains object [Spend](#spend).
 * `budget_type` - Whether this budget tracks monetary cost or usage.
@@ -57,6 +58,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cost_types` - Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `notification` - Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
 * `planned_limit` - Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `tags` - Map of tags assigned to the resource.
 * `time_period_end` - The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `time_period_start` - The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
 * `time_unit` - The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
@@ -146,4 +148,4 @@ Valid keys for `planned_limit` parameter.
 * `amount` - The cost or usage amount that's associated with a budget forecast, actual spend, or budget threshold. Length Constraints: Minimum length of `1`. Maximum length of `2147483647`.
 * `unit` - The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP. Length Constraints: Minimum length of `1`. Maximum length of `2147483647`.
 
-<!-- cache-key: cdktf-0.20.1 input-b7c31c3ad39479e59da06d0c3fe09f56627948373042fa6519f4be932fdc9787 -->
+<!-- cache-key: cdktf-0.20.8 input-5276c8e5d2d7f13cff062e088a33c395fd719130e42804c1edb2beaff7647c62 -->

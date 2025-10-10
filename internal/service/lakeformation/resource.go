@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lakeformation_resource", name="Resource")
@@ -29,7 +30,7 @@ func ResourceResource() *schema.Resource {
 		DeleteWithoutTimeout: resourceResourceDelete,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -45,7 +46,7 @@ func ResourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -63,15 +64,21 @@ func ResourceResource() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"with_privileged_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
-func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	resourceARN := d.Get("arn").(string)
+	resourceARN := d.Get(names.AttrARN).(string)
 	input := &lakeformation.RegisterResourceInput{
 		ResourceArn: aws.String(resourceARN),
 	}
@@ -80,7 +87,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.HybridAccessEnabled = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	} else {
 		input.UseServiceLinkedRole = aws.Bool(true)
@@ -92,6 +99,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("with_federation"); ok {
 		input.WithFederation = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("with_privileged_access"); ok {
+		input.WithPrivilegedAccess = v.(bool)
 	}
 
 	_, err := conn.RegisterResource(ctx, input)
@@ -107,7 +118,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
-func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -123,18 +134,19 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Lake Formation Resource (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
+	d.Set(names.AttrARN, d.Id())
 	d.Set("hybrid_access_enabled", resource.HybridAccessEnabled)
 	if v := resource.LastModified; v != nil { // output not including last modified currently
 		d.Set("last_modified", v.Format(time.RFC3339))
 	}
-	d.Set("role_arn", resource.RoleArn)
+	d.Set(names.AttrRoleARN, resource.RoleArn)
 	d.Set("with_federation", resource.WithFederation)
+	d.Set("with_privileged_access", resource.WithPrivilegedAccess)
 
 	return diags
 }
 
-func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 

@@ -54,6 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the stickiness policy.
 * `loadBalancer` - (Required) The load balancer to which the policy
   should be attached.
@@ -73,4 +74,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `lbPort` - The load balancer port to which the policy is applied.
 * `cookieExpirationPeriod` - The time period after which the session cookie is considered stale, expressed in seconds.
 
-<!-- cache-key: cdktf-0.20.1 input-fab95ad5bcc2bdeffcc1f3be4d3e7e2ca90c885f10678f8fbce6e3f28c5c37b3 -->
+<!-- cache-key: cdktf-0.20.8 input-d638009f7c029a079b861184055cfc5cbead4e7243716af93ac00abb11b1bc08 -->

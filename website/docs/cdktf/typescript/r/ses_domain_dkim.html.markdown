@@ -18,6 +18,7 @@ Domain ownership needs to be confirmed first using [ses_domain_identity Resource
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) Verified domain name to generate DKIM tokens for.
 
 ## Attribute Reference
@@ -114,4 +115,4 @@ Using `terraform import`, import DKIM tokens using the `domain` attribute. For e
 % terraform import aws_ses_domain_dkim.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-39725dfa611ba6cca577c30709217ceb82a4f67575d3367fd44ba5c674ea4983 -->
+<!-- cache-key: cdktf-0.20.8 input-fee76e467c60fd1c150d551cda9421dfbeb986a7b4f02ff213b6695ea7c30b0c -->

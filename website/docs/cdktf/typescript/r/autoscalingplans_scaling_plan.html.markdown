@@ -172,6 +172,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the scaling plan. Names cannot contain vertical bars, colons, or forward slashes.
 * `applicationSource` - (Required) CloudFormation stack or set of tags. You can create one scaling plan per application source.
 * `scalingInstruction` - (Required) Scaling instructions. More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_ScalingInstruction.html).
@@ -287,4 +288,4 @@ Using `terraform import`, import Auto Scaling scaling plans using the `name`. Fo
 % terraform import aws_autoscalingplans_scaling_plan.example MyScale1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f67f35037f518287955e616d7a36d30ef67c9f228d87872a4d2e00fce74eaaef -->
+<!-- cache-key: cdktf-0.20.8 input-cedda17a99f134921a180744a974ceb5257f7117b43c45cdba5a6c1c9cab4b30 -->

@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content` - (Required) The content of the approval rule template. Maximum of 3000 characters.
 * `name` - (Required) The name for the approval rule template. Maximum of 100 characters.
 * `description` - (Optional) The description of the approval rule template. Maximum of 1000 characters.
@@ -87,4 +88,4 @@ Using `terraform import`, import CodeCommit approval rule templates using the `n
 % terraform import aws_codecommit_approval_rule_template.imported ExistingApprovalRuleTemplateName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7214ebc6881ab8b5f086e92ff1f7e4c9d9a74e5ba4ce12face913b9951a3a79e -->
+<!-- cache-key: cdktf-0.20.8 input-37ef264846e31327ccdc5994480d66b97549fb4859890a7afbacb4bb4aa2f38f -->

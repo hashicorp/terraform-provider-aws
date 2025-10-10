@@ -30,7 +30,7 @@ resource "aws_kms_key" "test_key" {
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
 
-  server_side_encryption_configuration {
+  sse_configuration {
     kms_key_arn = aws_kms_key.test_key.arn
   }
 }
@@ -44,10 +44,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the verified access group.
 * `policy_document` - (Optional) The policy document that is associated with this resource.
 * `sse_configuration` - (Optional) Configuration block to use KMS keys for server-side encryption.
-    * `cmk_enabled` - (Optional) Boolean flag to indicate that the CMK should be used.
+    * `customer_managed_key_enabled` - (Optional) Boolean flag to indicate that the CMK should be used.
     * `kms_key_arn` - (Optional) ARN of the KMS key to use.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

@@ -23,7 +23,7 @@ func TestAccECRLifecyclePolicyDocumentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "json"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrJSON),
 				),
 			},
 		},

@@ -57,7 +57,7 @@ class MyConvertedCode extends TerraformStack {
     const current = new DataAwsRegion(this, "current", {});
     const example = new VpcEndpoint(this, "example", {
       securityGroupIds: [Token.asString(awsSecurityGroupExample.id)],
-      serviceName: "com.amazonaws.${" + current.name + "}.datasync",
+      serviceName: "com.amazonaws.${" + current.region + "}.datasync",
       subnetIds: [Token.asString(awsSubnetExample.id)],
       vpcEndpointType: "Interface",
       vpcId: Token.asString(awsVpcExample.id),
@@ -94,6 +94,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the DataSync Agent.
 * `activationKey` - (Optional) DataSync Agent activation key during resource creation. Conflicts with `ipAddress`. If an `ipAddress` is provided instead, Terraform will retrieve the `activationKey` as part of the resource creation.
 * `ipAddress` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activationKey`. DataSync Agent must be accessible on port 80 from where Terraform is running.
@@ -118,6 +119,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_agent.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:agent/agent-12345678901234567"
+  }
+}
+
+resource "aws_datasync_agent" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync agent.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_agent` using the DataSync Agent Amazon Resource Name (ARN). For example:
 
@@ -149,4 +171,4 @@ Using `terraform import`, import `aws_datasync_agent` using the DataSync Agent A
 % terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0acba5dd129383087553f49e6f95af67ac05fa502cb2be0e9157f77f225a5cfa -->
+<!-- cache-key: cdktf-0.20.8 input-17ddc91d96f5a4f1b3e60a9450bcb9d581aa1a9c2c0046e5e8f26ed9eac7bb87 -->

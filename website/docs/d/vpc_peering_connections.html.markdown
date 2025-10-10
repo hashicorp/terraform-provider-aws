@@ -34,25 +34,27 @@ data "aws_vpc_peering_connection" "pc" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC peering connections.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
-
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired VPC Peering Connection.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+The arguments of this data source act as filters for querying the available VPC peering connections.
+
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcPeeringConnections.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Peering Connection will be selected if any one of the given values matches.
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` are also exported as result attributes.
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - IDs of the VPC Peering Connections.

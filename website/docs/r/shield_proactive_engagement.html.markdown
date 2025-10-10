@@ -16,8 +16,26 @@ Proactive engagement authorizes the Shield Response Team (SRT) to use email and 
 ### Basic Usage
 
 ```terraform
+resource "aws_shield_proactive_engagement" "example" {
+  enabled = true
+
+  emergency_contact {
+    contact_notes = "Notes"
+    email_address = "contact1@example.com"
+    phone_number  = "+12358132134"
+  }
+
+  emergency_contact {
+    contact_notes = "Notes 2"
+    email_address = "contact2@example.com"
+    phone_number  = "+12358132134"
+  }
+
+  depends_on = [aws_shield_drt_access_role_arn_association.example]
+}
+
 resource "aws_iam_role" "example" {
-  name = var.aws_shield_drt_access_role_arn
+  name = "example-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -42,28 +60,10 @@ resource "aws_shield_drt_access_role_arn_association" "example" {
   role_arn = aws_iam_role.example.arn
 }
 
-resource "aws_shield_protection_group" "test" {
+resource "aws_shield_protection_group" "example" {
   protection_group_id = "example"
   aggregation         = "MAX"
   pattern             = "ALL"
-}
-
-resource "aws_shield_proactive_engagement" "test" {
-  enabled = true
-
-  emergency_contact {
-    contact_notes = "Notes"
-    email_address = "test@company.com"
-    phone_number  = "+12358132134"
-  }
-
-  emergency_contact {
-    contact_notes = "Notes 2"
-    email_address = "test2@company.com"
-    phone_number  = "+12358132134"
-  }
-
-  depends_on = [aws_shield_drt_access_role_arn_association.test]
 }
 ```
 
@@ -75,6 +75,8 @@ The following arguments are required:
 * `emergency_contact` - (Required) One or more emergency contacts. You must provide at least one phone number in the emergency contact list. See [`emergency_contacts`](#emergency_contacts).
 
 ### emergency_contacts
+
+~> **Note:** The contacts that you provide here replace any contacts that were already configured within AWS. While `phone_number` is marked as optional, to enable proactive engagement, the contact list must include at least one phone number. If a phone number is not already configured within AWS, one must be provided in order to prevent errors.
 
 * `contact_notes` - (Optional) Additional notes regarding the contact.
 * `email_address` - (Required) A valid email address that will be used for this contact.

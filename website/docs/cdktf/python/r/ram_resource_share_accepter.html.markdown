@@ -64,6 +64,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `share_arn` - (Required) The ARN of the resource share.
 
 ## Attribute Reference
@@ -103,4 +104,4 @@ Using `terraform import`, import resource share accepters using the resource sha
 % terraform import aws_ram_resource_share_accepter.example arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-20035f07d897cc355e9d9455de1abcd873b5f6ec8141f34f4260f32e299d71a7 -->
+<!-- cache-key: cdktf-0.20.8 input-41c3e1715222408c517edfa9e19dc0cccc7e7cffb8a0a4e93e6e0d875a027dc4 -->

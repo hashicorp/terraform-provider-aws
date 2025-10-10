@@ -89,6 +89,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Optional) The AWS account ID for the account that owns the Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `name` - (Required) The name of the Object Lambda Access Point.
 * `policy` - (Required) The Object Lambda Access Point resource policy document.
@@ -132,4 +133,4 @@ Using `terraform import`, import Object Lambda Access Point policies using the `
 % terraform import aws_s3control_object_lambda_access_point_policy.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5b9c13a7dd0a431d893638258adc51525d5b10d18a0ee8ec93b51bafe8ccf083 -->
+<!-- cache-key: cdktf-0.20.8 input-a36fb9dd4ec39c19d3d515d38f4252c1a8c7065d0c694219f84e91dac801697c -->

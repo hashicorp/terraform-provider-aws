@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the configuration.
 
 ## Attribute Reference
@@ -47,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `kafka_versions` - List of Apache Kafka versions which can use this configuration.
 * `server_properties` - Contents of the server.properties file.
 
-<!-- cache-key: cdktf-0.20.1 input-a4d86b249f9d4af6d96814d6f29e2a202f807b86ac9fffd8815b7aa4931e1636 -->
+<!-- cache-key: cdktf-0.20.8 input-ba0449f863ed6e1f377bdaf49be87dbd499ffe68c5a35f1a343aadfa390a02ce -->

@@ -45,6 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsRegion` - (Optional) The AWS Region in which the Amazon Chime Voice Connector is created. Default value: `us-east-1`
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -84,4 +85,4 @@ Using `terraform import`, import Configuration Recorder using the name. For exam
 % terraform import aws_chime_voice_connector.test example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-57d9ed8368462a0a6c75d0f398c65a29c78ba9f2b52b59eeb50b3be795890ccd -->
+<!-- cache-key: cdktf-0.20.8 input-2099a8d3981a68b4177cfe411c0fd1c6674abd89ee1b29269703ea94fef95b2d -->

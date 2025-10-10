@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -47,7 +48,7 @@ func sweepAPIs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetApisInput{}
@@ -91,7 +92,7 @@ func sweepAPIMappings(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayV2Client(ctx)
 	var sweeperErrs *multierror.Error
@@ -118,7 +119,7 @@ func sweepAPIMappings(region string) error {
 					r := resourceAPIMapping()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(v.ApiMappingId))
-					d.Set("domain_name", domainName)
+					d.Set(names.AttrDomainName, domainName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -160,7 +161,7 @@ func sweepDomainNames(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetDomainNamesInput{}
@@ -204,7 +205,7 @@ func sweepVPCLinks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetVpcLinksInput{}

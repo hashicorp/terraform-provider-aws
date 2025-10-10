@@ -94,10 +94,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `folder_type` - (Optional) The type of folder. By default, it is `SHARED`. Valid values are: `SHARED`.
 * `parent_folder_arn` - (Optional) The Amazon Resource Name (ARN) for the parent folder. If not set, creates a root-level folder.
 * `permissions` - (Optional) A set of resource permissions on the folder. Maximum of 64 items. See [permissions](#permissions).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### permissions
@@ -150,4 +151,4 @@ Using `terraform import`, import a QuickSight folder using the AWS account ID an
 % terraform import aws_quicksight_folder.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfe67ec1b66703fe4dec29123039432b9ff61c08d31438163738103ae03db233 -->
+<!-- cache-key: cdktf-0.20.8 input-bf3c6eb37f6b25ff2a45c257f61afd775aecf910328f716e770c33b530673b2f -->

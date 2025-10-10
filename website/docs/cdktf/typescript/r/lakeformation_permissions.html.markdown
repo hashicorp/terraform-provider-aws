@@ -131,6 +131,21 @@ The resulting permissions depend on whether the table had `IAMAllowedPrincipals`
 | ---- | ---- |
 | `SELECT` column wildcard (i.e., all columns) | `SELECT` on `"event"` (as expected) |
 
+## `ALLIAMPrincipals` group
+
+AllIAMPrincipals is a pseudo-entity group that acts like a Lake Formation principal. The group includes all IAMs in the account that is defined.
+
+resource "aws_lakeformation_permissions" "example" {
+  permissions = ["SELECT"]
+  principal   = "123456789012:IAMPrincipals"
+
+  table_with_columns {
+    database_name = aws_glue_catalog_table.example.database_name
+    name          = aws_glue_catalog_table.example.name
+    column_names  = ["event"]
+  }
+}
+
 ## Using Lake Formation Permissions
 
 Lake Formation grants implicit permissions to data lake administrators, database creators, and table creators. These implicit permissions cannot be revoked _per se_. If this resource reads implicit permissions, it will attempt to revoke them, which causes an error when the resource is destroyed.
@@ -234,8 +249,8 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `permissions` – (Required) List of permissions granted to the principal. Valid values may include `ALL`, `ALTER`, `ASSOCIATE`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
-* `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals include `IAM_ALLOWED_PRINCIPALS` (see [Default Behavior and `IAMAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `permissions` - (Required) List of permissions granted to the principal. Valid values may include `ALL`, `ALTER`, `ASSOCIATE`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `principal` - (Required) Principal to be granted the permissions on the resource. Supported principals include `IAM_ALLOWED_PRINCIPALS` (see [Default Behavior and `IAMAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, Federated Users, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 
 ~> **NOTE:** We highly recommend that the `principal` _NOT_ be a Lake Formation administrator (granted using `aws_lakeformation_data_lake_settings`). The entity (e.g., IAM role) running Terraform will most likely need to be a Lake Formation administrator. As such, the entity will have implicit permissions and does not need permissions granted through this resource.
 
@@ -252,7 +267,8 @@ One of the following is required:
 
 The following arguments are optional:
 
-* `catalogId` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `catalogId` - (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
 * `permissionsWithGrantOption` - (Optional) Subset of `permissions` which the principal can pass.
 
 ### data_cells_filter
@@ -266,7 +282,7 @@ The following arguments are optional:
 
 The following argument is required:
 
-* `arn` – (Required) Amazon Resource Name (ARN) that uniquely identifies the data location resource.
+* `arn` - (Required) Amazon Resource Name (ARN) that uniquely identifies the data location resource.
 
 The following argument is optional:
 
@@ -276,7 +292,7 @@ The following argument is optional:
 
 The following argument is required:
 
-* `name` – (Required) Name of the database resource. Unique to the Data Catalog.
+* `name` - (Required) Name of the database resource. Unique to the Data Catalog.
 
 The following argument is optional:
 
@@ -286,7 +302,7 @@ The following argument is optional:
 
 The following arguments are required:
 
-* `key` – (Required) The key-name for the tag.
+* `key` - (Required) The key-name for the tag.
 * `values` - (Required) A list of possible values an attribute can take.
 
 The following argument is optional:
@@ -297,7 +313,7 @@ The following argument is optional:
 
 The following arguments are required:
 
-* `resourceType` – (Required) The resource type for which the tag policy applies. Valid values are `DATABASE` and `TABLE`.
+* `resourceType` - (Required) The resource type for which the tag policy applies. Valid values are `DATABASE` and `TABLE`.
 * `expression` - (Required) A list of tag conditions that apply to the resource's tag policy. Configuration block for tag conditions that apply to the policy. See [`expression`](#expression) below.
 
 The following argument is optional:
@@ -306,19 +322,20 @@ The following argument is optional:
 
 #### expression
 
-* `key` – (Required) The key-name of an LF-Tag.
+* `key` - (Required) The key-name of an LF-Tag.
 * `values` - (Required) A list of possible values of an LF-Tag.
 
 ### table
 
 The following argument is required:
 
-* `databaseName` – (Required) Name of the database for the table. Unique to a Data Catalog.
+* `databaseName` - (Required) Name of the database for the table. Unique to a Data Catalog.
 * `name` - (Required, at least one of `name` or `wildcard`) Name of the table.
 * `wildcard` - (Required, at least one of `name` or `wildcard`) Whether to use a wildcard representing every table under a database. Defaults to `false`.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalogId` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 
 ### table_with_columns
@@ -326,12 +343,13 @@ The following arguments are optional:
 The following arguments are required:
 
 * `columnNames` - (Required, at least one of `columnNames` or `wildcard`) Set of column names for the table.
-* `databaseName` – (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
-* `name` – (Required) Name of the table resource.
+* `databaseName` - (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
+* `name` - (Required) Name of the table resource.
 * `wildcard` - (Required, at least one of `columnNames` or `wildcard`) Whether to use a column wildcard. If `excludedColumnNames` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalogId` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 * `excludedColumnNames` - (Optional) Set of column names for the table to exclude. If `excludedColumnNames` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
@@ -339,4 +357,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-5c0a207897d25881935b64503ff30f4b662505e097086bf925a9adce1a9584b7 -->
+<!-- cache-key: cdktf-0.20.8 input-2c405703dee16bf8c7ac2afec5d33511359006715bb0227e7fbad5c59234beaf -->

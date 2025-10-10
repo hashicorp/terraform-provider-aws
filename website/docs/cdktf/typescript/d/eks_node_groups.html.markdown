@@ -55,6 +55,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterName` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -64,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Cluster name.
 * `names` - Set of all node group names in an EKS Cluster.
 
-<!-- cache-key: cdktf-0.20.1 input-247b947784562fdc28bdbed2be700b3594988bb4a6202ca8641a02a2b58e0633 -->
+<!-- cache-key: cdktf-0.20.8 input-1136fbab30b88ade12edf9db9de86f04a687aa007ce4883f29f49bba1d5e8ab7 -->

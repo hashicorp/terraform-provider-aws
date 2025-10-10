@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Optional) The AWS account ID of the S3 Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `name` - (Required) The name of the Multi-Region Access Point.
 
@@ -69,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `bucket_account_id` - The AWS account ID that owns the bucket.
 * `region` - The name of the region.
 
-<!-- cache-key: cdktf-0.20.1 input-4b2d4507f55425b893c6a7909b5f48feef1f322a3ab4bf8683d78ca9a96619fb -->
+<!-- cache-key: cdktf-0.20.8 input-d7a966180bd4aae5bfcdd62e0f7437f28abd990433f84452a8d9f03a7e4aa511 -->

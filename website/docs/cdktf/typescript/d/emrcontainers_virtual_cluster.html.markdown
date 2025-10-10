@@ -42,6 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `virtualClusterId` - (Required) ID of the cluster.
 
 ## Attribute Reference
@@ -61,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - Status of the EKS cluster. One of `RUNNING`, `TERMINATING`, `TERMINATED`, `ARRESTED`.
 * `tags` - Key-value mapping of resource tags.
 
-<!-- cache-key: cdktf-0.20.1 input-b68b876212554fb1c28230029578a838320e08a00b6bc270b81195566fe1902f -->
+<!-- cache-key: cdktf-0.20.8 input-493ee07bc735014de653e26defab56c8d780c161054096685641402620f6eae1 -->

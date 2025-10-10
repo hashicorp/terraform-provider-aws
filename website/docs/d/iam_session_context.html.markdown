@@ -36,11 +36,15 @@ data "aws_iam_session_context" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN for an assumed role.
 
 ~> If `arn` is a non-role ARN, Terraform gives no error and `issuer_arn` will be equal to the `arn` value. For STS assumed-role ARNs, Terraform gives an error if the identified IAM role does not exist.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 ~> With the exception of `issuer_arn`, the attributes will not be populated unless the `arn` corresponds to an STS assumed role.
 

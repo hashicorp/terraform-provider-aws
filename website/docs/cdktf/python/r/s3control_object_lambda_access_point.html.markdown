@@ -62,6 +62,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Optional) The AWS account ID for the owner of the bucket for which you want to create an Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `configuration` - (Required) A configuration block containing details about the Object Lambda Access Point. See [Configuration](#configuration) below for more details.
 * `name` - (Required) The name for this Object Lambda Access Point.
@@ -128,4 +129,4 @@ Using `terraform import`, import Object Lambda Access Points using the `account_
 % terraform import aws_s3control_object_lambda_access_point.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1722496a257bb581d51080c0ab0b09b859a573051013001e69e87f94d3f99bed -->
+<!-- cache-key: cdktf-0.20.8 input-e1233eb06044af40a935d07991479e5e2832b2cabc69489bd028cfdda1fb8777 -->

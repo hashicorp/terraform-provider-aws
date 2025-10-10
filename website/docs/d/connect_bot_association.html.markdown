@@ -27,6 +27,7 @@ data "aws_connect_bot_association" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) Identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 * `lex_bot` - (Required) Configuration information of an Amazon Lex (V1) bot. Detailed below.
 
@@ -36,3 +37,7 @@ The `lex_bot` configuration block supports the following:
 
 * `name` - (Required) Name of the Amazon Lex (V1) bot.
 * `lex_region` - (Optional) Region that the Amazon Lex (V1) bot was created in.
+
+## Attribute Reference
+
+This data source exports no additional attributes.

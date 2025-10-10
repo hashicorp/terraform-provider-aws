@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 
 ## Attribute Reference
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Constraint status.
 * `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `RESOURCE_UPDATE`, `STACKSET`, and `TEMPLATE`.
 
-<!-- cache-key: cdktf-0.20.1 input-da418dc5c6998e476df08abac67c17c4dc70e9bf30247effbc012c2e90dbc9b3 -->
+<!-- cache-key: cdktf-0.20.8 input-330fb418b155e8b8f5f440e413a8548cff47e02a7e53b306565887eab1e65aa3 -->

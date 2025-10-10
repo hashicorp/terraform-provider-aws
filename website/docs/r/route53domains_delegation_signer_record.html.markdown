@@ -106,7 +106,7 @@ resource "aws_route53domains_delegation_signer_record" "example" {
 
 ## Argument Reference
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) The name of the domain that will have its parent DNS zone updated with the Delegation Signer record.
 * `signing_attributes` - (Required) The information about a key, including the algorithm, public key-value, and flags.

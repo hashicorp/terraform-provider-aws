@@ -20,7 +20,7 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 variable "distribution_id" {
-  type        = "string"
+  type        = string
   description = "The Cloudfront Distribution on which to enable the Application Layer Automatic Response."
 }
 

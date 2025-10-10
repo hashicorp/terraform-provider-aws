@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) ID of the application.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. By default, it is set to `true`.
 * `sender_id` - (Optional) Identifier of the sender for your messages.
@@ -74,4 +75,4 @@ Using `terraform import`, import the Pinpoint SMS Channel using the `application
 % terraform import aws_pinpoint_sms_channel.sms application-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ea56c3123c88d22610a676fad9316e38ebe652689672bf9c9b82ddae2c457e61 -->
+<!-- cache-key: cdktf-0.20.8 input-491d3b19fe68457a19880412f9eb4378152d25ec5c74ebb18871480befa2ad7d -->

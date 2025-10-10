@@ -55,8 +55,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Amazon Resource Name (ARN) of the bucket.
 * `policy` - (Required) JSON string of the resource policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
@@ -98,4 +99,4 @@ Using `terraform import`, import S3 Control Bucket Policies using the Amazon Res
 % terraform import aws_s3control_bucket_policy.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-476caf1030f6a6d008cc6514d741ddf15b7e806dd275bf24bf545b7689e2f554 -->
+<!-- cache-key: cdktf-0.20.8 input-5de3e537e685dccd5a2cf77ebfb7889c8fc036f863ea9a0f131ae7ad70dc189a -->

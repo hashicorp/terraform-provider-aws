@@ -35,8 +35,8 @@ func TestAccIAMGroupPolicy_basic(t *testing.T) {
 				Config: testAccGroupPolicyConfig_basic(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
@@ -88,8 +88,8 @@ func TestAccIAMGroupPolicy_nameGenerated(t *testing.T) {
 				Config: testAccGroupPolicyConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -117,8 +117,8 @@ func TestAccIAMGroupPolicy_namePrefix(t *testing.T) {
 				Config: testAccGroupPolicyConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccIAMGroupPolicy_unknownsInPolicy(t *testing.T) {
 				Config: testAccGroupPolicyConfig_unknowns(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -174,16 +174,16 @@ func TestAccIAMGroupPolicy_update(t *testing.T) {
 				Config: testAccGroupPolicyConfig_basic(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
 				Config: testAccGroupPolicyConfig_basic(rName, "ec2:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 		},
@@ -199,12 +199,7 @@ func testAccCheckGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			groupName, policyName, err := tfiam.GroupPolicyParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+			_, err := tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["group"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -228,14 +223,9 @@ func testAccCheckGroupPolicyExists(ctx context.Context, n string, v *string) res
 			return fmt.Errorf("Not Found: %s", n)
 		}
 
-		groupName, policyName, err := tfiam.GroupPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		output, err := tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+		output, err := tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["group"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err

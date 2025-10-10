@@ -83,14 +83,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active for device authentication.
 * `allow_auto_registration` - (Required)  Boolean flag to indicate if the certificate should be active for device regisration.
 * `ca_certificate_pem` - (Required)  PEM encoded CA certificate.
-* `certificate_mode` - (Optional)  The certificate mode in which the CA will be registered. Valida values: `DEFAULT` and `SNI_ONLY`. Default: `DEFAULT`.
+* `certificate_mode` - (Optional)  The certificate mode in which the CA will be registered. Valid values: `DEFAULT` and `SNI_ONLY`. Default: `DEFAULT`.
 * `registration_config` - (Optional) Information about the registration configuration. See below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `verification_certificate_pem` - (Optional) PEM encoded verification certificate containing the common name of a registration code. Review
-  [CreateVerificationCSR](https://docs.aws.amazon.com/iot/latest/developerguide/register-CA-cert.html). Reuired if `certificate_mode` is `DEFAULT`.
+  [CreateVerificationCSR](https://docs.aws.amazon.com/iot/latest/developerguide/register-CA-cert.html). Required if `certificate_mode` is `DEFAULT`.
 
 ### registration_config
 
@@ -111,4 +114,4 @@ This resource exports the following attributes in addition to the arguments abov
     * `not_after` - The certificate is not valid after this date.
     * `not_before` - The certificate is not valid before this date.
 
-<!-- cache-key: cdktf-0.20.1 input-c5fc1f0a710ef5472f25b8e9639aa2a5bb22ff79e04926030c3f0710b353cd73 -->
+<!-- cache-key: cdktf-0.20.8 input-d9d94ddbb7c9cff4b87c2136f3ca6826f5db72a823c908a5b6f31fd619962ed8 -->

@@ -29,7 +29,7 @@ func validIntegrationContentHandling() schema.SchemaValidateDiagFunc {
 	return enum.Validate[types.ContentHandlingStrategy]()
 }
 
-func validUsagePlanQuotaSettings(v map[string]interface{}) (errors []error) {
+func validUsagePlanQuotaSettings(v map[string]any) (errors []error) {
 	period := v["period"].(string)
 	offset := v["offset"].(int)
 

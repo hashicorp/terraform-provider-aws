@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -25,7 +26,7 @@ func sweepStreams(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.KinesisClient(ctx)
 	input := &kinesis.ListStreamsInput{}
@@ -49,7 +50,7 @@ func sweepStreams(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.StreamARN))
 			d.Set("enforce_consumer_deletion", true)
-			d.Set("name", v.StreamName)
+			d.Set(names.AttrName, v.StreamName)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

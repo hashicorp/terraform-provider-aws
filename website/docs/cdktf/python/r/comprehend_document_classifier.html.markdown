@@ -41,7 +41,7 @@ class MyConvertedCode(TerraformStack):
             data_access_role_arn=Token.as_string(aws_iam_role_example.arn),
             depends_on=[aws_iam_role_policy_example],
             input_data_config=ComprehendDocumentClassifierInputDataConfig(
-                s3_uri="s3://${" + test.bucket + "}/${" + documents.id + "}"
+                s3_uri="s3://${" + test.bucket + "}/${" + documents.key + "}"
             ),
             language_code="en",
             name="example"
@@ -63,6 +63,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mode` - (Optional, Default: `MULTI_CLASS`) The document classification mode.
   One of `MULTI_CLASS` or `MULTI_LABEL`.
   `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
@@ -89,7 +90,7 @@ The following arguments are optional:
 
 ### `input_data_config` Configuration Block
 
-* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
+* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
   Used if `data_format` is `AUGMENTED_MANIFEST`.
   See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `data_format` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
@@ -142,6 +143,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_comprehend_document_classifier.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:document-classifier/example"
+  }
+}
+
+resource "aws_comprehend_document_classifier" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Comprehend document classifier.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Document Classifier using the ARN. For example:
 
 ```python
@@ -165,4 +187,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->
+<!-- cache-key: cdktf-0.20.8 input-317ec230d3232bb1b1affc53203bb287102dc692e0069be2b2d526135393945d -->

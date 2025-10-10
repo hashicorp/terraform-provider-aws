@@ -93,6 +93,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A textual description for the workflow.
 * `onExceptionSteps` - (Optional) Specifies the steps (actions) to take if errors are encountered during execution of the workflow. See Workflow Steps below.
 * `steps` - (Required) Specifies the details for the steps that are in the specified workflow. See Workflow Steps below.
@@ -196,4 +197,4 @@ Using `terraform import`, import Transfer Workflows using the `worflow_id`. For 
 % terraform import aws_transfer_workflow.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cd26b4eb2c7b6d9241f3db734757f36018a8ddd76361c4116bc6c49c94847364 -->
+<!-- cache-key: cdktf-0.20.8 input-b008d880951790407be7399f7869c7e833a170b1aa78f02c96cf109a6096c38d -->

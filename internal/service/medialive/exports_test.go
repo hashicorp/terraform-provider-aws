@@ -4,4 +4,17 @@
 package medialive
 
 // Exports for use in tests only.
-var ResourceMultiplexProgram = newResourceMultiplexProgram
+var (
+	ResourceChannel            = resourceChannel
+	ResourceInput              = resourceInput
+	ResourceInputSecurityGroup = resourceInputSecurityGroup
+	ResourceMultiplex          = resourceMultiplex
+	ResourceMultiplexProgram   = newMultiplexProgramResource
+
+	FindChannelByID            = findChannelByID
+	FindInputByID              = findInputByID
+	FindInputSecurityGroupByID = findInputSecurityGroupByID
+	FindMultiplexByID          = findMultiplexByID
+	FindMultiplexProgramByID   = findMultiplexProgramByID
+	ParseMultiplexProgramID    = parseMultiplexProgramID
+)

@@ -71,6 +71,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `assign_ipv6_address_on_creation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
     assigned an IPv6 address. Default is `false`
@@ -113,6 +114,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_subnet.example
+  identity = {
+    id = "subnet-9d4a7b6c"
+  }
+}
+
+resource "aws_subnet" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the subnet.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import subnets using the subnet `id`. For example:
 
 ```python
@@ -127,13 +154,13 @@ from imports.aws.subnet import Subnet
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        Subnet.generate_config_for_import(self, "publicSubnet", "subnet-9d4a7b6c")
+        Subnet.generate_config_for_import(self, "example", "subnet-9d4a7b6c")
 ```
 
 Using `terraform import`, import subnets using the subnet `id`. For example:
 
 ```console
-% terraform import aws_subnet.public_subnet subnet-9d4a7b6c
+% terraform import aws_subnet.example subnet-9d4a7b6c
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-800b4894a44d3fb10c7ed4e02828a98cc6bb1ba25ee4607e803d5cddf8afc2ed -->
+<!-- cache-key: cdktf-0.20.8 input-dc085c9cec6e08e13d26c17e7c9c153184fd5656755b6df1e0c35dc902f59899 -->

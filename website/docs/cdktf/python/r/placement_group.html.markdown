@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the placement group.
 * `partition_count` - (Optional) The number of partitions to create in the
   placement group.  Can only be specified when the `strategy` is set to
@@ -80,4 +81,4 @@ Using `terraform import`, import placement groups using the `name`. For example:
 % terraform import aws_placement_group.prod_pg production-placement-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2db42e50344643d73d88a7291c495c78556f7f0f63349d8e602e23a0b1bdb180 -->
+<!-- cache-key: cdktf-0.20.8 input-ca48e39a7a163374cad4018d8ebb8be5dadfb7e3ee4223f8f29938cfd7668443 -->

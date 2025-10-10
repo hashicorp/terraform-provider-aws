@@ -76,6 +76,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterIdentifier` - (Optional) The cluster identifier. This parameter is required when connecting to a cluster and authenticating using either Secrets Manager or temporary credentials.
 * `dbUser` - (Optional) The database user name.
 * `secretArn` - (Optional) The name or ARN of the secret that enables access to the database.
@@ -117,4 +118,4 @@ Using `terraform import`, import Redshift Data Statements using the `id`. For ex
 % terraform import aws_redshiftdata_statement.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-890483d136320a7936958ee447618d785135e348982c003fa40f68a3e28cefbc -->
+<!-- cache-key: cdktf-0.20.8 input-71e049a9690f8b2ebf5e29a7b62ac881ff0245b1dda5ae2bfc2d112ff9008d86 -->

@@ -283,17 +283,17 @@ resource "aws_s3_object" "object7" {
 }
 
 func testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt int) string {
-	return testAccBucketObjectsDataSourceConfig_resources(randInt) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketObjectsDataSourceConfig_resources(randInt), fmt.Sprintf(`
 resource "aws_s3_access_point" "test" {
   bucket = aws_s3_bucket.objects_bucket.bucket
   name   = "tf-objects-test-access-point-%[1]d"
 }
-`, randInt)
+`, randInt))
 }
 
 func testAccBucketObjectsDataSourceConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "aws_s3_objects" "yesh" {
   bucket    = aws_s3_bucket.objects_bucket.id
@@ -304,13 +304,13 @@ data "aws_s3_objects" "yesh" {
 }
 
 func testAccBucketObjectsDataSourceConfig_basicViaAccessPoint(randInt int) string {
-	return testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt) + `
+	return acctest.ConfigCompose(testAccBucketObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt), `
 data "aws_s3_objects" "yesh" {
   bucket    = aws_s3_access_point.test.arn
   prefix    = "arch/navajo/"
   delimiter = "/"
 }
-`
+`)
 }
 
 func testAccBucketObjectsDataSourceConfig_all(randInt int) string {

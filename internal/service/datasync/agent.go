@@ -23,27 +23,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_datasync_agent", name="Agent")
-// @Tags(identifierAttribute="id")
-func ResourceAgent() *schema.Resource {
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeAgentOutput")
+// @Testing(importIgnore="activation_key;ip_address", plannableImportAction="Replace")
+// @Testing(preCheck="testAccPreCheck")
+func resourceAgent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgentCreate,
 		ReadWithoutTimeout:   resourceAgentRead,
 		UpdateWithoutTimeout: resourceAgentUpdate,
 		DeleteWithoutTimeout: resourceAgentDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,9 +54,9 @@ func ResourceAgent() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_link_endpoint", "ip_address"},
+				ConflictsWith: []string{"private_link_endpoint", names.AttrIPAddress},
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -68,7 +70,7 @@ func ResourceAgent() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"activation_key"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -86,23 +88,21 @@ func ResourceAgent() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	activationKey := d.Get("activation_key").(string)
-	agentIpAddress := d.Get("ip_address").(string)
+	agentIpAddress := d.Get(names.AttrIPAddress).(string)
 
 	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {
@@ -116,7 +116,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			},
 			Timeout: time.Second * 10,
 		}
-		region := meta.(*conns.AWSClient).Region
+		region := meta.(*conns.AWSClient).Region(ctx)
 
 		var requestURL string
 		if v, ok := d.GetOk("private_link_endpoint"); ok {
@@ -131,44 +131,40 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		var response *http.Response
-		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 			response, err = client.Do(request)
 
 			if errs.IsA[net.Error](err) {
-				return retry.RetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return tfresource.RetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return tfresource.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if response == nil {
-				return retry.NonRetryableError(fmt.Errorf("no response for activation key request"))
+				return tfresource.NonRetryableError(fmt.Errorf("no response for activation key request"))
 			}
 
 			log.Printf("[DEBUG] Received HTTP response: %#v", response)
 			if expected := http.StatusFound; expected != response.StatusCode {
-				return retry.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
+				return tfresource.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
 			}
 
 			redirectURL, err := response.Location()
 			if err != nil {
-				return retry.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
+				return tfresource.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
 			}
 
 			if errorType := redirectURL.Query().Get("errorType"); errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
 				errMessage := fmt.Errorf("during activation: %s", errorType)
-				return retry.RetryableError(errMessage)
+				return tfresource.RetryableError(errMessage)
 			}
 
 			activationKey = redirectURL.Query().Get("activationKey")
 
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			return sdkdiag.AppendErrorf(diags, "timeout retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
@@ -179,12 +175,12 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	input := &datasync.CreateAgentInput{
+	input := datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.AgentName = aws.String(v.(string))
 	}
 
@@ -196,11 +192,11 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.SubnetArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCEndpointID); ok {
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateAgent(ctx, input)
+	output, err := conn.CreateAgent(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Agent: %s", err)
@@ -208,8 +204,8 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(output.AgentArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindAgentByARN(ctx, conn, d.Id())
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return findAgentByARN(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -219,11 +215,11 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
-func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	output, err := FindAgentByARN(ctx, conn, d.Id())
+	output, err := findAgentByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Agent (%s) not found, removing from state", d.Id())
@@ -235,34 +231,34 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Agent (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.AgentArn)
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, output.AgentArn)
+	d.Set(names.AttrName, output.Name)
 	if plc := output.PrivateLinkConfig; plc != nil {
 		d.Set("private_link_endpoint", plc.PrivateLinkEndpoint)
 		d.Set("security_group_arns", flex.FlattenStringValueList(plc.SecurityGroupArns))
 		d.Set("subnet_arns", flex.FlattenStringValueList(plc.SubnetArns))
-		d.Set("vpc_endpoint_id", plc.VpcEndpointId)
+		d.Set(names.AttrVPCEndpointID, plc.VpcEndpointId)
 	} else {
 		d.Set("private_link_endpoint", "")
 		d.Set("security_group_arns", nil)
 		d.Set("subnet_arns", nil)
-		d.Set("vpc_endpoint_id", "")
+		d.Set(names.AttrVPCEndpointID, "")
 	}
 
 	return diags
 }
 
-func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChange("name") {
-		input := &datasync.UpdateAgentInput{
+	if d.HasChange(names.AttrName) {
+		input := datasync.UpdateAgentInput{
 			AgentArn: aws.String(d.Id()),
-			Name:     aws.String(d.Get("name").(string)),
+			Name:     aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		_, err := conn.UpdateAgent(ctx, input)
+		_, err := conn.UpdateAgent(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Agent (%s): %s", d.Id(), err)
@@ -272,14 +268,20 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
-func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
-	_, err := conn.DeleteAgent(ctx, &datasync.DeleteAgentInput{
+	input := datasync.DeleteAgentInput{
 		AgentArn: aws.String(d.Id()),
-	})
+	}
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteAgent(ctx, &input)
+	}, "in-use by these location(s)")
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags
@@ -292,12 +294,12 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindAgentByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeAgentOutput, error) {
-	input := &datasync.DescribeAgentInput{
+func findAgentByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeAgentOutput, error) {
+	input := datasync.DescribeAgentInput{
 		AgentArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeAgent(ctx, input)
+	output, err := conn.DescribeAgent(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return nil, &retry.NotFoundError{

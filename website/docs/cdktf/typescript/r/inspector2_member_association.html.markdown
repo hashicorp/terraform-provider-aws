@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following argument is required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Required) ID of the account to associate
 
 ## Attribute Reference
@@ -82,4 +83,4 @@ Using `terraform import`, import Amazon Inspector Member Association using the `
 % terraform import aws_inspector2_member_association.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-82d5942e4f4d61c9c5edbed4e78715cf0ac4b5f18beb3ce13b9684e5cadbbf9d -->
+<!-- cache-key: cdktf-0.20.8 input-a873c432129e30cb106b43910686a9ae07123e5c6420f2f48391dc8c62c97240 -->

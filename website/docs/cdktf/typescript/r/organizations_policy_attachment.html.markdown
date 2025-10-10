@@ -99,6 +99,33 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_policy_attachment.example
+  identity = {
+    policy_id = "p-12345678"
+    target_id = "123456789012"
+  }
+}
+
+resource "aws_organizations_policy_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `policyId` (String) Organizations policy ID.
+* `targetId` (String) Organizations target ID (account, OU, or root).
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_policy_attachment` using the target ID and policy ID. For example:
 
 With an account target:
@@ -117,7 +144,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     OrganizationsPolicyAttachment.generateConfigForImport(
       this,
-      "account",
+      "example",
       "123456789012:p-12345678"
     );
   }
@@ -130,7 +157,7 @@ Using `terraform import`, import `aws_organizations_policy_attachment` using the
 With an account target:
 
 ```console
-% terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678
+% terraform import aws_organizations_policy_attachment.example 123456789012:p-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3828ee0215ac304d4e2eeebab26c79536b060060799e87c63d57f977fbfbfab6 -->
+<!-- cache-key: cdktf-0.20.8 input-366ec2a94c057a4a005e912cb7f42bfdac408f87e13e228c54092db9711fd973 -->

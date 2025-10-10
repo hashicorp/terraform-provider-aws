@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfrontkeyvaluestore_keys_exclusive: Batch update operations to stay under the Key Value Store Service Quota. The `max_batch_size` argument can be used to override the default value of `50` items.
+```

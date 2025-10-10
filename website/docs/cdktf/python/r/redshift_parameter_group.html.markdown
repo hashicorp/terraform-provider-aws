@@ -47,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Redshift parameter group.
 * `family` - (Required) The family of the Redshift parameter group.
 * `description` - (Optional) The description of the Redshift parameter group. Defaults to "Managed by Terraform".
@@ -93,4 +94,4 @@ Using `terraform import`, import Redshift Parameter Groups using the `name`. For
 % terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8fbf52bda44476ea1fcc81df655088804c5cc233d70ed33ebca6dd6caf8a3a7a -->
+<!-- cache-key: cdktf-0.20.8 input-2784390729c784abaf29312495200771ed2834e5b7752197cdaf4cda98f2f581 -->

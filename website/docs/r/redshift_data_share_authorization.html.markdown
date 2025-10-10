@@ -15,8 +15,8 @@ Terraform resource for managing an AWS Redshift Data Share Authorization.
 
 ```terraform
 resource "aws_redshift_data_share_authorization" "example" {
-  consumer_identifier = "012345678901"
-  data_share_arn      = "arn:aws:redshift:us-west-2:012345678901:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share"
+  consumer_identifier = "123456789012"
+  data_share_arn      = "arn:aws:redshift:us-west-2:123456789012:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share"
 }
 ```
 
@@ -29,6 +29,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_writes` - (Optional) Whether to allow write operations for a datashare.
 
 ## Attribute Reference
@@ -46,12 +47,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_redshift_data_share_authorization.example
-  id = "arn:aws:redshift:us-west-2:012345678901:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,012345678901"
+  id = "arn:aws:redshift:us-west-2:123456789012:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,123456789012"
 }
 ```
 
 Using `terraform import`, import Redshift Data Share Authorization using the `id`. For example:
 
 ```console
-% terraform import aws_redshift_data_share_authorization.example arn:aws:redshift:us-west-2:012345678901:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,012345678901
+% terraform import aws_redshift_data_share_authorization.example arn:aws:redshift:us-west-2:123456789012:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,123456789012
 ```

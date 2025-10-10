@@ -45,12 +45,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-~> **NOTE:** Either `subnetId` or `availabilityZone` must be specified.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterId` - (Required) The ID of Cloud HSM v2 cluster to which HSM will be added.
 * `subnetId` - (Optional) The ID of subnet in which HSM module will be located. Conflicts with `availabilityZone`.
 * `availabilityZone` - (Optional) The IDs of AZ in which HSM module will be located. Conflicts with `subnetId`.
 * `ipAddress` - (Optional) The IP address of HSM module. Must be within the CIDR of selected subnet.
+
+~> **NOTE:** Either `subnetId` or `availabilityZone` must be specified.
 
 ## Attribute Reference
 
@@ -92,4 +93,4 @@ Using `terraform import`, import HSM modules using their HSM ID. For example:
 % terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b2e37695762fb364be3f6f2f816de9e94b8a2df9afc85641ce60b5c3da254207 -->
+<!-- cache-key: cdktf-0.20.8 input-572a9027ae01a1de3829f957f39c0400bbaa82237f0d5fd233109ab85161e103 -->

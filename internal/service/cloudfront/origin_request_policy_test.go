@@ -31,9 +31,10 @@ func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "origin-request-policy/{id}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "0"),
@@ -41,7 +42,7 @@ func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "headers_config.0.header_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", "0"),
@@ -95,7 +96,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 				Config: testAccOriginRequestPolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.#", "1"),
@@ -106,7 +107,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.0.items.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "headers_config.0.headers.0.items.*", "test1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "headers_config.0.headers.0.items.*", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.0.items.#", "3"),
@@ -124,7 +125,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 				Config: testAccOriginRequestPolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.#", "2"),
@@ -135,7 +136,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.0.items.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "headers_config.0.headers.0.items.*", "CloudFront-Viewer-City"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "all"),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", "0"),
 				),

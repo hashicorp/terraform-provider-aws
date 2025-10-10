@@ -26,13 +26,13 @@ func sweepCertificateAuthorities(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	input := &acmpca.ListCertificateAuthoritiesInput{}
 	conn := client.ACMPCAClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	paginator := acmpca.NewListCertificateAuthoritiesPaginator(conn, input)
+	input := acmpca.ListCertificateAuthoritiesInput{}
+	paginator := acmpca.NewListCertificateAuthoritiesPaginator(conn, &input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 
@@ -56,7 +56,7 @@ func sweepCertificateAuthorities(region string) error {
 			r := resourceCertificateAuthority()
 			d := r.Data(nil)
 			d.SetId(arn)
-			d.Set("permanent_deletion_time_in_days", 7) //nolint:gomnd
+			d.Set("permanent_deletion_time_in_days", 7) //nolint:mnd // 7 days is the default value
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

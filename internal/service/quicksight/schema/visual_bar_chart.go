@@ -4,11 +4,11 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func barCharVisualSchema() *schema.Schema {
@@ -19,8 +19,8 @@ func barCharVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id": idSchema(),
-				"actions":   visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"visual_id":       idSchema(),
+				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -28,7 +28,7 @@ func barCharVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"bars_arrangement":               stringOptionalComputedSchema(validation.StringInSlice(quicksight.BarsArrangement_Values(), false)),
+							"bars_arrangement":               stringEnumSchema[awstypes.BarsArrangement](attrOptionalComputed),
 							"category_axis":                  axisDisplayOptionsSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"category_label_options":         chartAxisLabelOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_label_options":            chartAxisLabelOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -51,7 +51,7 @@ func barCharVisualSchema() *schema.Schema {
 													"category":        dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"colors":          dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"small_multiples": dimensionFieldSchema(1),                          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":          measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													names.AttrValues:  measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -59,9 +59,9 @@ func barCharVisualSchema() *schema.Schema {
 								},
 							},
 							"legend":                  legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"orientation":             stringOptionalComputedSchema(validation.StringInSlice(quicksight.BarChartOrientation_Values(), false)),
-							"reference_lines":         referenceLineSchema(referenceLinesMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
-							"small_multiples_options": smallMultiplesOptionsSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
+							"orientation":             stringEnumSchema[awstypes.BarChartOrientation](attrOptionalComputed),
+							"reference_lines":         referenceLineSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
+							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
@@ -70,12 +70,12 @@ func barCharVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_items_limit":                itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":                       fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
-										"color_items_limit":                   itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"color_sort":                          fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
-										"small_multiples_limit_configuration": itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"small_multiples_sort":                fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"category_items_limit":                itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"category_sort":                       fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"color_items_limit":                   itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"color_sort":                          fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"small_multiples_limit_configuration": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"small_multiples_sort":                fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
@@ -94,195 +94,195 @@ func barCharVisualSchema() *schema.Schema {
 	}
 }
 
-func expandBarChartVisual(tfList []interface{}) *quicksight.BarChartVisual {
+func expandBarChartVisual(tfList []any) *awstypes.BarChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	visual := &quicksight.BarChartVisual{}
+	apiObject := &awstypes.BarChartVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
-		visual.VisualId = aws.String(v)
+		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
-		visual.Actions = expandVisualCustomActions(v)
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
+		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
-		visual.ChartConfiguration = expandBarChartConfiguration(v)
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ChartConfiguration = expandBarChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
-		visual.ColumnHierarchies = expandColumnHierarchies(v)
+	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
-		visual.Subtitle = expandVisualSubtitleLabelOptions(v)
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
+		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
-		visual.Title = expandVisualTitleLabelOptions(v)
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
+		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
-	return visual
+	return apiObject
 }
 
-func expandBarChartConfiguration(tfList []interface{}) *quicksight.BarChartConfiguration {
+func expandBarChartConfiguration(tfList []any) *awstypes.BarChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.BarChartConfiguration{}
+	apiObject := &awstypes.BarChartConfiguration{}
 
 	if v, ok := tfMap["bars_arrangement"].(string); ok && v != "" {
-		config.BarsArrangement = aws.String(v)
+		apiObject.BarsArrangement = awstypes.BarsArrangement(v)
 	}
 	if v, ok := tfMap["orientation"].(string); ok && v != "" {
-		config.Orientation = aws.String(v)
+		apiObject.Orientation = awstypes.BarChartOrientation(v)
 	}
-	if v, ok := tfMap["category_axis"].([]interface{}); ok && len(v) > 0 {
-		config.CategoryAxis = expandAxisDisplayOptions(v)
+	if v, ok := tfMap["category_axis"].([]any); ok && len(v) > 0 {
+		apiObject.CategoryAxis = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["category_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.CategoryLabelOptions = expandChartAxisLabelOptions(v)
+	if v, ok := tfMap["category_label_options"].([]any); ok && len(v) > 0 {
+		apiObject.CategoryLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["color_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.ColorLabelOptions = expandChartAxisLabelOptions(v)
+	if v, ok := tfMap["color_label_options"].([]any); ok && len(v) > 0 {
+		apiObject.ColorLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["contribution_analysis_defaults"].([]interface{}); ok && len(v) > 0 {
-		config.ContributionAnalysisDefaults = expandContributionAnalysisDefaults(v)
+	if v, ok := tfMap["contribution_analysis_defaults"].([]any); ok && len(v) > 0 {
+		apiObject.ContributionAnalysisDefaults = expandContributionAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
-		config.DataLabels = expandDataLabelOptions(v)
+	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
+		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.FieldWells = expandBarChartFieldWells(v)
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.FieldWells = expandBarChartFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
-		config.Legend = expandLegendOptions(v)
+	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
+		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["reference_lines"].([]interface{}); ok && len(v) > 0 {
-		config.ReferenceLines = expandReferenceLines(v)
+	if v, ok := tfMap["reference_lines"].([]any); ok && len(v) > 0 {
+		apiObject.ReferenceLines = expandReferenceLines(v)
 	}
-	if v, ok := tfMap["small_multiples_options"].([]interface{}); ok && len(v) > 0 {
-		config.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
+	if v, ok := tfMap["small_multiples_options"].([]any); ok && len(v) > 0 {
+		apiObject.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.SortConfiguration = expandBarChartSortConfiguration(v)
+	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.SortConfiguration = expandBarChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
-		config.Tooltip = expandTooltipOptions(v)
+	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
+		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["value_axis"].([]interface{}); ok && len(v) > 0 {
-		config.ValueAxis = expandAxisDisplayOptions(v)
+	if v, ok := tfMap["value_axis"].([]any); ok && len(v) > 0 {
+		apiObject.ValueAxis = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["value_label_options"].([]interface{}); ok && len(v) > 0 {
-		config.ValueLabelOptions = expandChartAxisLabelOptions(v)
+	if v, ok := tfMap["value_label_options"].([]any); ok && len(v) > 0 {
+		apiObject.ValueLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
-		config.VisualPalette = expandVisualPalette(v)
+	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
+		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandBarChartFieldWells(tfList []interface{}) *quicksight.BarChartFieldWells {
+func expandBarChartFieldWells(tfList []any) *awstypes.BarChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.BarChartFieldWells{}
+	apiObject := &awstypes.BarChartFieldWells{}
 
-	if v, ok := tfMap["bar_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
-		config.BarChartAggregatedFieldWells = expandBarChartAggregatedFieldWells(v)
+	if v, ok := tfMap["bar_chart_aggregated_field_wells"].([]any); ok && len(v) > 0 {
+		apiObject.BarChartAggregatedFieldWells = expandBarChartAggregatedFieldWells(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandBarChartAggregatedFieldWells(tfList []interface{}) *quicksight.BarChartAggregatedFieldWells {
+func expandBarChartAggregatedFieldWells(tfList []any) *awstypes.BarChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.BarChartAggregatedFieldWells{}
+	apiObject := &awstypes.BarChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
-		config.Category = expandDimensionFields(v)
+	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
+		apiObject.Category = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
-		config.Colors = expandDimensionFields(v)
+	if v, ok := tfMap["colors"].([]any); ok && len(v) > 0 {
+		apiObject.Colors = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["small_multiples"].([]interface{}); ok && len(v) > 0 {
-		config.SmallMultiples = expandDimensionFields(v)
+	if v, ok := tfMap["small_multiples"].([]any); ok && len(v) > 0 {
+		apiObject.SmallMultiples = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
-		config.Values = expandMeasureFields(v)
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
+		apiObject.Values = expandMeasureFields(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandBarChartSortConfiguration(tfList []interface{}) *quicksight.BarChartSortConfiguration {
+func expandBarChartSortConfiguration(tfList []any) *awstypes.BarChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.BarChartSortConfiguration{}
+	apiObject := &awstypes.BarChartSortConfiguration{}
 
-	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
-		config.CategoryItemsLimit = expandItemsLimitConfiguration(v)
+	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
+		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
-		config.CategorySort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
+		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
-	if v, ok := tfMap["color_items_limit"].([]interface{}); ok && len(v) > 0 {
-		config.ColorItemsLimit = expandItemsLimitConfiguration(v)
+	if v, ok := tfMap["color_items_limit"].([]any); ok && len(v) > 0 {
+		apiObject.ColorItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["color_sort"].([]interface{}); ok && len(v) > 0 {
-		config.ColorSort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap["color_sort"].([]any); ok && len(v) > 0 {
+		apiObject.ColorSort = expandFieldSortOptionsList(v)
 	}
-	if v, ok := tfMap["small_multiples_limit_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.SmallMultiplesLimitConfiguration = expandItemsLimitConfiguration(v)
+	if v, ok := tfMap["small_multiples_limit_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.SmallMultiplesLimitConfiguration = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["small_multiples_sort"].([]interface{}); ok && len(v) > 0 {
-		config.SmallMultiplesSort = expandFieldSortOptionsList(v)
+	if v, ok := tfMap["small_multiples_sort"].([]any); ok && len(v) > 0 {
+		apiObject.SmallMultiplesSort = expandFieldSortOptionsList(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func flattenBarChartVisual(apiObject *quicksight.BarChartVisual) []interface{} {
+func flattenBarChartVisual(apiObject *awstypes.BarChartVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+	tfMap := map[string]any{
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
 		tfMap["chart_configuration"] = flattenBarChartConfiguration(apiObject.ChartConfiguration)
@@ -297,18 +297,17 @@ func flattenBarChartVisual(apiObject *quicksight.BarChartVisual) []interface{} {
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBarChartConfiguration(apiObject *quicksight.BarChartConfiguration) []interface{} {
+func flattenBarChartConfiguration(apiObject *awstypes.BarChartConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.BarsArrangement != nil {
-		tfMap["bars_arrangement"] = aws.StringValue(apiObject.BarsArrangement)
-	}
+	tfMap := map[string]any{}
+
+	tfMap["bars_arrangement"] = apiObject.BarsArrangement
 	if apiObject.CategoryAxis != nil {
 		tfMap["category_axis"] = flattenAxisDisplayOptions(apiObject.CategoryAxis)
 	}
@@ -330,9 +329,7 @@ func flattenBarChartConfiguration(apiObject *quicksight.BarChartConfiguration) [
 	if apiObject.Legend != nil {
 		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
 	}
-	if apiObject.Orientation != nil {
-		tfMap["orientation"] = aws.StringValue(apiObject.Orientation)
-	}
+	tfMap["orientation"] = apiObject.Orientation
 	if apiObject.ReferenceLines != nil {
 		tfMap["reference_lines"] = flattenReferenceLine(apiObject.ReferenceLines)
 	}
@@ -355,28 +352,30 @@ func flattenBarChartConfiguration(apiObject *quicksight.BarChartConfiguration) [
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBarChartFieldWells(apiObject *quicksight.BarChartFieldWells) []interface{} {
+func flattenBarChartFieldWells(apiObject *awstypes.BarChartFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.BarChartAggregatedFieldWells != nil {
 		tfMap["bar_chart_aggregated_field_wells"] = flattenBarChartAggregatedFieldWells(apiObject.BarChartAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBarChartAggregatedFieldWells(apiObject *quicksight.BarChartAggregatedFieldWells) []interface{} {
+func flattenBarChartAggregatedFieldWells(apiObject *awstypes.BarChartAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.Category != nil {
 		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
@@ -387,18 +386,19 @@ func flattenBarChartAggregatedFieldWells(apiObject *quicksight.BarChartAggregate
 		tfMap["small_multiples"] = flattenDimensionFields(apiObject.SmallMultiples)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenBarChartSortConfiguration(apiObject *quicksight.BarChartSortConfiguration) []interface{} {
+func flattenBarChartSortConfiguration(apiObject *awstypes.BarChartSortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.CategoryItemsLimit != nil {
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
 	}
@@ -418,42 +418,39 @@ func flattenBarChartSortConfiguration(apiObject *quicksight.BarChartSortConfigur
 		tfMap["small_multiples_sort"] = flattenFieldSortOptions(apiObject.SmallMultiplesSort)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenItemsLimitConfiguration(apiObject *quicksight.ItemsLimitConfiguration) []interface{} {
+func flattenItemsLimitConfiguration(apiObject *awstypes.ItemsLimitConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.ItemsLimit != nil {
-		tfMap["items_limit"] = aws.Int64Value(apiObject.ItemsLimit)
-	}
-	if apiObject.OtherCategories != nil {
-		tfMap["other_categories"] = aws.StringValue(apiObject.OtherCategories)
-	}
+	tfMap := map[string]any{}
 
-	return []interface{}{tfMap}
+	if apiObject.ItemsLimit != nil {
+		tfMap["items_limit"] = aws.ToInt64(apiObject.ItemsLimit)
+	}
+	tfMap["other_categories"] = apiObject.OtherCategories
+
+	return []any{tfMap}
 }
 
-func flattenFieldSortOptions(apiObject []*quicksight.FieldSortOptions) []interface{} {
-	if len(apiObject) == 0 {
+func flattenFieldSortOptions(apiObjects []awstypes.FieldSortOptions) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
+	var tfList []any
 
-		tfMap := map[string]interface{}{}
-		if config.ColumnSort != nil {
-			tfMap["column_sort"] = flattenColumnSort(config.ColumnSort)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.ColumnSort != nil {
+			tfMap["column_sort"] = flattenColumnSort(apiObject.ColumnSort)
 		}
-		if config.FieldSort != nil {
-			tfMap["field_sort"] = flattenFieldSort(config.FieldSort)
+		if apiObject.FieldSort != nil {
+			tfMap["field_sort"] = flattenFieldSort(apiObject.FieldSort)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -462,15 +459,14 @@ func flattenFieldSortOptions(apiObject []*quicksight.FieldSortOptions) []interfa
 	return tfList
 }
 
-func flattenColumnSort(apiObject *quicksight.ColumnSort) []interface{} {
+func flattenColumnSort(apiObject *awstypes.ColumnSort) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.Direction != nil {
-		tfMap["direction"] = aws.StringValue(apiObject.Direction)
-	}
+	tfMap := map[string]any{}
+
+	tfMap["direction"] = apiObject.Direction
 	if apiObject.SortBy != nil {
 		tfMap["sort_by"] = flattenColumnIdentifier(apiObject.SortBy)
 	}
@@ -478,21 +474,20 @@ func flattenColumnSort(apiObject *quicksight.ColumnSort) []interface{} {
 		tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFieldSort(apiObject *quicksight.FieldSort) []interface{} {
+func flattenFieldSort(apiObject *awstypes.FieldSort) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.Direction != nil {
-		tfMap["direction"] = aws.StringValue(apiObject.Direction)
-	}
+	tfMap := map[string]any{}
+
+	tfMap["direction"] = apiObject.Direction
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

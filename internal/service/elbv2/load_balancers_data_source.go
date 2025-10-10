@@ -6,28 +6,30 @@ package elbv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lbs")
-func DataSourceLoadBalancers() *schema.Resource {
+// @SDKDataSource("aws_lbs", name="Load Balancers")
+func dataSourceLoadBalancers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancersRead,
+
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
@@ -36,27 +38,27 @@ const (
 	DSNameLoadBalancers = "Load Balancers Data Source"
 )
 
-func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	results, err := findLoadBalancers(ctx, conn, &elbv2.DescribeLoadBalancersInput{})
+	results, err := findLoadBalancers(ctx, conn, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
 	}
 
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	if len(tagsToMatch) > 0 {
-		var loadBalancers []*elbv2.LoadBalancer
+		var loadBalancers []awstypes.LoadBalancer
 
 		for _, loadBalancer := range results {
-			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
+			arn := aws.ToString(loadBalancer.LoadBalancerArn)
 			tags, err := listTags(ctx, conn, arn)
 
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+			if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
 				continue
 			}
 
@@ -75,11 +77,11 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 
 	var loadBalancerARNs []string
 	for _, lb := range results {
-		loadBalancerARNs = append(loadBalancerARNs, aws.StringValue(lb.LoadBalancerArn))
+		loadBalancerARNs = append(loadBalancerARNs, aws.ToString(lb.LoadBalancerArn))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", loadBalancerARNs)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, loadBalancerARNs)
 
 	return diags
 }

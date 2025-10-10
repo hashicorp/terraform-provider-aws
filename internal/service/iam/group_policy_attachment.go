@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -52,7 +52,7 @@ func resourceGroupPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -69,7 +69,7 @@ func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceGroupPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -78,7 +78,7 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", group, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findAttachedGroupPolicyByTwoPartKey(ctx, conn, group, policyARN)
 	}, d.IsNewResource())
 
@@ -95,7 +95,7 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <group-name>/<policy_arn>", d.Id())
@@ -124,7 +124,7 @@ func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.Resource
 
 func attachPolicyToGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AttachGroupPolicy(ctx, &iam.AttachGroupPolicyInput{
 			GroupName: aws.String(group),
 			PolicyArn: aws.String(policyARN),
@@ -140,7 +140,7 @@ func attachPolicyToGroup(ctx context.Context, conn *iam.Client, group, policyARN
 
 func detachPolicyFromGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DetachGroupPolicy(ctx, &iam.DetachGroupPolicyInput{
 			GroupName: aws.String(group),
 			PolicyArn: aws.String(policyARN),
@@ -159,16 +159,16 @@ func detachPolicyFromGroup(ctx context.Context, conn *iam.Client, group, policyA
 }
 
 func findAttachedGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupName, policyARN string) (*awstypes.AttachedPolicy, error) {
-	input := &iam.ListAttachedGroupPoliciesInput{
+	input := iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
 
-	return findAttachedGroupPolicy(ctx, conn, input, func(v awstypes.AttachedPolicy) bool {
+	return findAttachedGroupPolicy(ctx, conn, &input, func(v *awstypes.AttachedPolicy) bool {
 		return aws.ToString(v.PolicyArn) == policyARN
 	})
 }
 
-func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
+func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
 	output, err := findAttachedGroupPolicies(ctx, conn, input, filter)
 
 	if err != nil {
@@ -178,7 +178,7 @@ func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.L
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
+func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
 	var output []awstypes.AttachedPolicy
 
 	pages := iam.NewListAttachedGroupPoliciesPaginator(conn, input)
@@ -197,7 +197,7 @@ func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam
 		}
 
 		for _, v := range page.AttachedPolicies {
-			if !reflect.ValueOf(v).IsZero() && filter(v) {
+			if p := &v; !inttypes.IsZero(p) && filter(p) {
 				output = append(output, v)
 			}
 		}

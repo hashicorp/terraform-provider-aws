@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `email_identity` - (Required) The verified email identity.
 * `behavior_on_mx_failure` - (Optional) The action to take if the required MX record isn't found when you send an email. Valid values: `USE_DEFAULT_VALUE`, `REJECT_MESSAGE`.
 * `mail_from_domain` - (Optional) The custom MAIL FROM domain that you want the verified identity to use. Required if `behavior_on_mx_failure` is `REJECT_MESSAGE`.
@@ -79,4 +80,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Mail Fro
 % terraform import aws_sesv2_email_identity_mail_from_attributes.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3a9a88db16593e085c12ffe4c38e264061edc67814a816a38867c84c36efd10f -->
+<!-- cache-key: cdktf-0.20.8 input-db440ebacf80e2f9f7ecac10652b562257c0bdab594728096bb5218f07826898 -->

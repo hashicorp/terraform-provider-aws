@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The Name of the grant.
 * `allowedOperations` - (Required) A list of the allowed operations for the grant. This is a subset of the allowed operations on the license.
 * `licenseArn` - (Required) The ARN of the license to grant.
@@ -96,4 +97,4 @@ Using `terraform import`, import `aws_licensemanager_grant` using the grant arn.
 % terraform import aws_licensemanager_grant.test arn:aws:license-manager::123456789011:grant:g-01d313393d9e443d8664cc054db1e089
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-419b075350bd4a341920e7dd03004f5baac3d5ff8e519534de15249f89df44ab -->
+<!-- cache-key: cdktf-0.20.8 input-07c829059b677b74a44430d7072c3782fd0e223b6cc57c06c083c4b50d802b47 -->

@@ -158,13 +158,23 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `maxCapacity` - (Required) Max capacity of the scalable target.
 * `minCapacity` - (Required) Min capacity of the scalable target.
 * `resourceId` - (Required) Resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `roleArn` - (Optional) ARN of the IAM role that allows Application AutoScaling to modify your scalable target on your behalf. This defaults to an IAM Service-Linked Role for most services and custom IAM Roles are ignored by the API for those namespaces. See the [AWS Application Auto Scaling documentation](https://docs.aws.amazon.com/autoscaling/application/userguide/security_iam_service-with-iam.html#security_iam_service-with-iam-roles) for more information about how this service interacts with IAM.
 * `scalableDimension` - (Required) Scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `serviceNamespace` - (Required) AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
+* `suspendedState` - (Optional) Specifies whether the scaling activities for a scalable target are in a suspended state.
 * `tags` - (Optional) Map of tags to assign to the scalable target. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### suspended_state
+
+The `suspendedState` configuration block supports the following arguments:
+
+* `dynamicScalingInSuspended` (Optional) Whether scale in by a target tracking scaling policy or a step scaling policy is suspended. Default is `false`.
+* `dynamicScalingOutSuspended` (Optional) Whether scale out by a target tracking scaling policy or a step scaling policy is suspended. Default is `false`.
+* `scheduledScalingSuspended` (Optional) Whether scheduled scaling is suspended. Default is `false`.
 
 ## Attribute Reference
 
@@ -205,4 +215,4 @@ Using `terraform import`, import Application AutoScaling Target using the `servi
 % terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cff841bc1572dc29970ebd87553eae1d8c7762f0125b027829e17184e7104fdf -->
+<!-- cache-key: cdktf-0.20.8 input-473a597bdb986febf8648ba44e6dd84b03e54a5e943b13b4614cfe734972bddb -->

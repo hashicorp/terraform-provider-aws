@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the backup vault.
 
 ## Attribute Reference
@@ -49,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `recoveryPoints` - Number of recovery points that are stored in a backup vault.
 * `tags` - Metadata that you can assign to help organize the resources that you create.
 
-<!-- cache-key: cdktf-0.20.1 input-75bcf13abdcd543599d4af41c0a3cd4883e1f1ea69bf45b112f8908ac5682ba7 -->
+<!-- cache-key: cdktf-0.20.8 input-d07c5523f5042c3e67194f0d02df0b76d1d808c82ba575776619e0d71ecfbce3 -->

@@ -16,12 +16,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_cors_configuration", name="Bucket CORS Configuration")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("expected_bucket_owner", optional="true")
+// @ImportIDHandler("resourceImportID")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(importIgnore="cors_rule.0.max_age_seconds")
+// @Testing(plannableImportAction="NoOp")
 func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
@@ -29,18 +37,14 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketCorsConfigurationUpdate,
 		DeleteWithoutTimeout: resourceBucketCorsConfigurationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -72,7 +76,7 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -88,11 +92,15 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 	}
 }
 
-func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketCorsInput{
 		Bucket: aws.String(bucket),
 		CORSConfiguration: &types.CORSConfiguration{
@@ -103,7 +111,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketCors(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -112,28 +120,33 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) CORS Configuration: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) CORS Configuration: %s", bucket, err)
 	}
 
-	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findCORSRules(ctx, conn, bucket, expectedBucketOwner)
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket CORS Configuration (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket CORS Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBucketCorsConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketCorsConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	corsRules, err := findCORSRules(ctx, conn, bucket, expectedBucketOwner)
@@ -141,28 +154,33 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket CORS Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if err := d.Set("cors_rule", flattenCORSRules(corsRules)); err != nil {
-		return diag.Errorf("setting cors_rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting cors_rule: %s", err)
 	}
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 
-	return nil
+	return diags
 }
 
-func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.PutBucketCorsInput{
@@ -178,18 +196,23 @@ func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.Resour
 	_, err = conn.PutBucketCors(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
 	}
 
-	return resourceBucketCorsConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketCorsConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.DeleteBucketCorsInput{
@@ -202,22 +225,22 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 	_, err = conn.DeleteBucketCors(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchCORSConfiguration) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findCORSRules(ctx, conn, bucket, expectedBucketOwner)
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket CORS Configuration (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket CORS Configuration (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.CORSRule, error) {
@@ -248,7 +271,7 @@ func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	return output.CORSRules, nil
 }
 
-func expandCORSRules(l []interface{}) []types.CORSRule {
+func expandCORSRules(l []any) []types.CORSRule {
 	if len(l) == 0 {
 		return nil
 	}
@@ -256,7 +279,7 @@ func expandCORSRules(l []interface{}) []types.CORSRule {
 	var rules []types.CORSRule
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -279,7 +302,7 @@ func expandCORSRules(l []interface{}) []types.CORSRule {
 			rule.ExposeHeaders = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := tfMap["id"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 			rule.ID = aws.String(v)
 		}
 
@@ -293,11 +316,11 @@ func expandCORSRules(l []interface{}) []types.CORSRule {
 	return rules
 }
 
-func flattenCORSRules(rules []types.CORSRule) []interface{} {
-	var results []interface{}
+func flattenCORSRules(rules []types.CORSRule) []any {
+	var results []any
 
 	for _, rule := range rules {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"max_age_seconds": rule.MaxAgeSeconds,
 		}
 
@@ -318,7 +341,7 @@ func flattenCORSRules(rules []types.CORSRule) []interface{} {
 		}
 
 		if rule.ID != nil {
-			m["id"] = aws.ToString(rule.ID)
+			m[names.AttrID] = aws.ToString(rule.ID)
 		}
 
 		results = append(results, m)

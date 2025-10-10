@@ -55,6 +55,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -89,4 +90,4 @@ Using `terraform import`, import `aws_ec2_local_gateway_route_table_vpc_associat
 % terraform import aws_ec2_local_gateway_route_table_vpc_association.example lgw-vpc-assoc-1234567890abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4f905dac47ee96e216b29234377003c85028f4754efe49a90ad2269ba720a64 -->
+<!-- cache-key: cdktf-0.20.8 input-0301b76e9157053d1f450a1f1f7e3179921684542fdf38e0809d71fc2a557be8 -->

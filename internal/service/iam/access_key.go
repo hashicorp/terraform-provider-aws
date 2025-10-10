@@ -9,7 +9,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log"
-	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,7 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_access_key", name="Access Key")
@@ -39,7 +39,7 @@ func resourceAccessKey() *schema.Resource {
 			// ListAccessKeys requires UserName field in certain scenarios:
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 				input := &iam.GetAccessKeyLastUsedInput{
@@ -94,7 +94,7 @@ func resourceAccessKey() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.StatusTypeActive,
@@ -109,7 +109,7 @@ func resourceAccessKey() *schema.Resource {
 	}
 }
 
-func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "CreateAccessKey response did not contain a Secret Access Key as expected")
 	}
 
-	sesSMTPPasswordV4, err := sesSMTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
+	sesSMTPPasswordV4, err := sesSMTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region(ctx))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}
@@ -161,7 +161,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("ses_smtp_password_v4", sesSMTPPasswordV4)
 	}
 
-	if v, ok := d.GetOk("status"); ok && v.(string) == string(awstypes.StatusTypeInactive) {
+	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) == string(awstypes.StatusTypeInactive) {
 		input := &iam.UpdateAccessKeyInput{
 			AccessKeyId: aws.String(d.Id()),
 			Status:      awstypes.StatusTypeInactive,
@@ -187,7 +187,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -211,7 +211,7 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("create_date", nil)
 	}
 
-	d.Set("status", key.Status)
+	d.Set(names.AttrStatus, key.Status)
 	d.Set("user", key.UserName)
 
 	return diags
@@ -226,15 +226,15 @@ func resourceAccessKeyReadResult(d *schema.ResourceData, key *awstypes.AccessKey
 		d.Set("create_date", nil)
 	}
 
-	d.Set("status", key.Status)
+	d.Set(names.AttrStatus, key.Status)
 	d.Set("user", key.UserName)
 }
 
-func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChange("status") {
+	if d.HasChange(names.AttrStatus) {
 		if err := resourceAccessKeyStatusUpdate(ctx, conn, d); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Access Key (%s): %s", d.Id(), err)
 		}
@@ -243,15 +243,16 @@ func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceAccessKeyRead(ctx, d, meta)...)
 }
 
-func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Key: %s", d.Id())
-	_, err := conn.DeleteAccessKey(ctx, &iam.DeleteAccessKeyInput{
+	input := iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
-	})
+	}
+	_, err := conn.DeleteAccessKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
@@ -267,7 +268,7 @@ func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 func resourceAccessKeyStatusUpdate(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
 	request := &iam.UpdateAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
-		Status:      awstypes.StatusType(d.Get("status").(string)),
+		Status:      awstypes.StatusType(d.Get(names.AttrStatus).(string)),
 		UserName:    aws.String(d.Get("user").(string)),
 	}
 
@@ -280,7 +281,7 @@ func findAccessKeyByTwoPartKey(ctx context.Context, conn *iam.Client, username, 
 		UserName: aws.String(username),
 	}
 
-	return findAccessKey(ctx, conn, input, func(v awstypes.AccessKeyMetadata) bool {
+	return findAccessKey(ctx, conn, input, func(v *awstypes.AccessKeyMetadata) bool {
 		return aws.ToString(v.AccessKeyId) == id
 	})
 }
@@ -290,10 +291,10 @@ func findAccessKeysByUser(ctx context.Context, conn *iam.Client, username string
 		UserName: aws.String(username),
 	}
 
-	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[awstypes.AccessKeyMetadata]())
+	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[*awstypes.AccessKeyMetadata]())
 }
 
-func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[awstypes.AccessKeyMetadata]) (*awstypes.AccessKeyMetadata, error) {
+func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*awstypes.AccessKeyMetadata]) (*awstypes.AccessKeyMetadata, error) {
 	output, err := findAccessKeys(ctx, conn, input, filter)
 
 	if err != nil {
@@ -303,7 +304,7 @@ func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessK
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[awstypes.AccessKeyMetadata]) ([]awstypes.AccessKeyMetadata, error) {
+func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*awstypes.AccessKeyMetadata]) ([]awstypes.AccessKeyMetadata, error) {
 	var output []awstypes.AccessKeyMetadata
 
 	pages := iam.NewListAccessKeysPaginator(conn, input)
@@ -322,7 +323,7 @@ func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccess
 		}
 
 		for _, v := range page.AccessKeyMetadata {
-			if !reflect.ValueOf(v).IsZero() && filter(v) {
+			if p := &v; !inttypes.IsZero(p) && filter(p) {
 				output = append(output, v)
 			}
 		}
@@ -370,5 +371,5 @@ func sesSMTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	versionedSig := make([]byte, 0, len(rawSig)+1)
 	versionedSig = append(versionedSig, version)
 	versionedSig = append(versionedSig, rawSig...)
-	return itypes.Base64Encode(versionedSig), nil
+	return inttypes.Base64Encode(versionedSig), nil
 }

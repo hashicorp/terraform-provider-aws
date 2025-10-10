@@ -54,10 +54,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `definition` - (Optional) The application definition for this application. You can specify either inline JSON or an S3 bucket location.
 * `kmsKeyId` - (Optional) KMS Key to use for the Application.
 * `roleArn` - (Optional) ARN of role for application to use to access AWS resources.
-* `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## definition
 
@@ -65,6 +66,7 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content` - (Optional) JSON application definition. Either this or `s3Location` must be specified.
 * `s3Location` - (Optional) Location of the application definition in S3. Either this or `content` must be specified.
 
@@ -117,4 +119,4 @@ Using `terraform import`, import Mainframe Modernization Application using the `
 % terraform import aws_m2_application.example 01234567890abcdef012345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ddb16327f2eaaa47be10c43e85650dde04a49e529a9252df384a9aec58e628d0 -->
+<!-- cache-key: cdktf-0.20.8 input-ab2ddeb826d81c70d23e126281742f6efd431de27411bfd2d5111ab77d0abcf2 -->

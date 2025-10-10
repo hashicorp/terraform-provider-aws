@@ -106,6 +106,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.
 * `includedObjectVersions` - (Required) Object versions to include in the inventory list. Valid values: `All`, `Current`.
@@ -180,4 +181,4 @@ Using `terraform import`, import S3 bucket inventory configurations using `bucke
 % terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7d1e90a844051e5e30d6a5c0cc0bbee4238f18060d9e27dd09d5d4e45f30958c -->
+<!-- cache-key: cdktf-0.20.8 input-499f31ef13749d25d44eeae505cdd0f9a631b462702e522a4fe5109fce2e31b0 -->

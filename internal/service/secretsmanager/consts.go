@@ -8,5 +8,5 @@ import (
 )
 
 const (
-	PropagationTimeout = 2 * time.Minute
+	propagationTimeout = 2 * time.Minute
 )

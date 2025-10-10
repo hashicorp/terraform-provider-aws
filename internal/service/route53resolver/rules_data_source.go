@@ -7,17 +7,21 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_resolver_rules")
-func DataSourceRules() *schema.Resource {
+// @SDKDataSource("aws_route53_resolver_rules", name="Rules")
+func dataSourceRules() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesRead,
 
@@ -27,7 +31,7 @@ func DataSourceRules() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.Any(
@@ -46,56 +50,58 @@ func DataSourceRules() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"rule_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(route53resolver.RuleTypeOption_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
 			},
 			"share_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(route53resolver.ShareStatus_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ShareStatus](),
 			},
 		},
 	}
 }
 
-func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
+func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	input := &route53resolver.ListResolverRulesInput{}
 	var ruleIDs []*string
 
-	err := conn.ListResolverRulesPagesWithContext(ctx, input, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
+	pages := route53resolver.NewListResolverRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Rules: %s", err)
+		}
+
 		for _, rule := range page.ResolverRules {
-			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.StringValue(rule.Name)) {
+			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.ToString(rule.Name)) {
 				continue
 			}
-			if v, ok := d.GetOk("owner_id"); ok && aws.StringValue(rule.OwnerId) != v.(string) {
+			if v, ok := d.GetOk(names.AttrOwnerID); ok && aws.ToString(rule.OwnerId) != v.(string) {
 				continue
 			}
-			if v, ok := d.GetOk("resolver_endpoint_id"); ok && aws.StringValue(rule.ResolverEndpointId) != v.(string) {
+			if v, ok := d.GetOk("resolver_endpoint_id"); ok && aws.ToString(rule.ResolverEndpointId) != v.(string) {
 				continue
 			}
-			if v, ok := d.GetOk("rule_type"); ok && aws.StringValue(rule.RuleType) != v.(string) {
+			if v, ok := d.GetOk("rule_type"); ok && string(rule.RuleType) != v.(string) {
 				continue
 			}
-			if v, ok := d.GetOk("share_status"); ok && aws.StringValue(rule.ShareStatus) != v.(string) {
+			if v, ok := d.GetOk("share_status"); ok && string(rule.ShareStatus) != v.(string) {
 				continue
 			}
 
 			ruleIDs = append(ruleIDs, rule.Id)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return diag.Errorf("listing Route53 Resolver Rules: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
-	d.Set("resolver_rule_ids", aws.StringValueSlice(ruleIDs))
+	d.Set("resolver_rule_ids", aws.ToStringSlice(ruleIDs))
 
-	return nil
+	return diags
 }

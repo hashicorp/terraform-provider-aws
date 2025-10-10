@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) The name of the neptune subnet group. If omitted, Terraform will assign a random, unique name.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) The description of the neptune subnet group. Defaults to "Managed by Terraform".
@@ -88,4 +89,4 @@ Using `terraform import`, import Neptune Subnet groups using the `name`. For exa
 % terraform import aws_neptune_subnet_group.default production-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-53e6d83abbeef75d682c8e96e0c61b5253d9fcdeb05d7a8efb0eea6a96d2b5d2 -->
+<!-- cache-key: cdktf-0.20.8 input-91e018fe635edfe4ae1b70317d0eb3e09d2c7b550e5b6c76db495a735046ac2c -->

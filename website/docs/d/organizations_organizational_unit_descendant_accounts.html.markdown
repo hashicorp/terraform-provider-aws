@@ -22,6 +22,8 @@ data "aws_organizations_organizational_unit_descendant_accounts" "accounts" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `parent_id` - (Required) The parent ID of the accounts.
 
 ## Attribute Reference

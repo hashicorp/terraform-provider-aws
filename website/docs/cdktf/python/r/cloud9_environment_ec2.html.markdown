@@ -108,15 +108,14 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the environment.
 * `instance_type` - (Required) The type of instance to connect to the environment, e.g., `t2.micro`.
 * `image_id` - (Required) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
-    * `amazonlinux-1-x86_64`
     * `amazonlinux-2-x86_64`
     * `amazonlinux-2023-x86_64`
     * `ubuntu-18.04-x86_64`
     * `ubuntu-22.04-x86_64`
-    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64`
@@ -137,4 +136,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - The type of the environment (e.g., `ssh` or `ec2`).
 
-<!-- cache-key: cdktf-0.20.1 input-0be6df5cef8a430f287883ab12bb10a284a2fdea28cb4d94bc8569901fcc42d6 -->
+<!-- cache-key: cdktf-0.20.8 input-ce0b830510ee642d37cdce16200104f8b4e81b55f37b9d8f815c04640abd56da -->

@@ -13,12 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_resource", name="Resource")
@@ -30,7 +32,7 @@ func resourceResource() *schema.Resource {
 		DeleteWithoutTimeout: resourceResourceDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID", d.Id())
@@ -48,7 +50,7 @@ func resourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,20 +64,26 @@ func resourceResource() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.All(
+			customdiff.ComputedIf(names.AttrPath, func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("path_part")
+			}),
+		),
 	}
 }
 
-func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.CreateResourceInput{
+	input := apigateway.CreateResourceInput{
 		ParentId:  aws.String(d.Get("parent_id").(string)),
 		PathPart:  aws.String(d.Get("path_part").(string)),
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	}
 
-	output, err := conn.CreateResource(ctx, input)
+	output, err := conn.CreateResource(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Resource: %s", err)
@@ -86,7 +94,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
-func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -104,7 +112,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("parent_id", resource.ParentId)
 	d.Set("path_part", resource.PathPart)
-	d.Set("path", resource.Path)
+	d.Set(names.AttrPath, resource.Path)
 
 	return diags
 }
@@ -129,17 +137,17 @@ func resourceResourceUpdateOperations(d *schema.ResourceData) []types.PatchOpera
 	return operations
 }
 
-func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.UpdateResourceInput{
+	input := apigateway.UpdateResourceInput{
 		ResourceId:      aws.String(d.Id()),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 		PatchOperations: resourceResourceUpdateOperations(d),
 	}
 
-	_, err := conn.UpdateResource(ctx, input)
+	_, err := conn.UpdateResource(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Resource (%s): %s", d.Id(), err)
@@ -148,15 +156,16 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
-func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Resource: %s", d.Id())
-	_, err := conn.DeleteResource(ctx, &apigateway.DeleteResourceInput{
+	input := apigateway.DeleteResourceInput{
 		ResourceId: aws.String(d.Id()),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-	})
+	}
+	_, err := conn.DeleteResource(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -170,12 +179,12 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func findResourceByTwoPartKey(ctx context.Context, conn *apigateway.Client, resourceID, apiID string) (*apigateway.GetResourceOutput, error) {
-	input := &apigateway.GetResourceInput{
+	input := apigateway.GetResourceInput{
 		ResourceId: aws.String(resourceID),
 		RestApiId:  aws.String(apiID),
 	}
 
-	output, err := conn.GetResource(ctx, input)
+	output, err := conn.GetResource(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

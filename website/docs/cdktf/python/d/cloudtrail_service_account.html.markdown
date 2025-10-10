@@ -13,7 +13,7 @@ description: |-
 Use this data source to get the Account ID of the [AWS CloudTrail Service Account](http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html)
 in a given region for the purpose of allowing CloudTrail to store trail data in S3.
 
-~> **Note:** AWS documentation [states that](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html#troubleshooting-s3-bucket-policy) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
+~> **Warning:** This data source is deprecated. The AWS documentation [states that](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html#troubleshooting-s3-bucket-policy) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
 
 ## Example Usage
 
@@ -71,14 +71,15 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `region` - (Optional) Name of the region whose AWS CloudTrail account ID is desired.
-Defaults to the region from the AWS provider configuration.
+This data source supports the following arguments:
+
+* `region` - (Optional) Name of the Region whose AWS CloudTrail account ID is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the AWS CloudTrail service account in the selected region.
-* `arn` - ARN of the AWS CloudTrail service account in the selected region.
+* `id` - ID of the AWS CloudTrail service account in the selected Region.
+* `arn` - ARN of the AWS CloudTrail service account in the selected Region.
 
-<!-- cache-key: cdktf-0.20.1 input-3998e4f635a042ba272505edd7920f0a7d81b9494779e6ebad66cb92fc74ee17 -->
+<!-- cache-key: cdktf-0.20.8 input-7d03bf056d83d24ff4a8e8c0186dc2c6012fafd4991666a1b6ca9425a8ef7a52 -->

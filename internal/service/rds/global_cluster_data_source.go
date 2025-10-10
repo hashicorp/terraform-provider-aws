@@ -6,15 +6,11 @@ package rds
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_rds_global_cluster")
+// @SDKDataSource("aws_rds_global_cluster", name="Global Cluster")
 func DataSourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGlobalClusterRead,
@@ -82,61 +78,61 @@ func DataSourceGlobalCluster() *schema.Resource {
 
 func dataSourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
-
-	globalClusterIdentifier := d.Get("global_cluster_identifier").(string)
-
-	resp, err := conn.DescribeGlobalClusters(&rds.DescribeGlobalClustersInput{
-		GlobalClusterIdentifier: aws.String(globalClusterIdentifier)})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): %s", globalClusterIdentifier, err)
-	}
-
-	if resp == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): empty response", globalClusterIdentifier)
-	}
-
-	var globalCluster *rds.GlobalCluster
-	for _, c := range resp.GlobalClusters {
-		if aws.StringValue(c.GlobalClusterIdentifier) == globalClusterIdentifier {
-			globalCluster = c
-			break
-		}
-	}
-
-	if globalCluster == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): cluster not found", globalClusterIdentifier)
-	}
-
-	d.SetId(aws.StringValue(globalCluster.GlobalClusterIdentifier))
-
-	d.Set("arn", globalCluster.GlobalClusterArn)
-	d.Set("database_name", globalCluster.DatabaseName)
-	d.Set("deletion_protection", globalCluster.DeletionProtection)
-	d.Set("engine", globalCluster.Engine)
-	d.Set("engine_version", globalCluster.EngineVersion)
-	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-
-	var gcmList []interface{}
-	for _, gcm := range globalCluster.GlobalClusterMembers {
-		gcmMap := map[string]interface{}{
-			"db_cluster_arn": aws.StringValue(gcm.DBClusterArn),
-			"is_writer":      aws.BoolValue(gcm.IsWriter),
-		}
-
-		gcmList = append(gcmList, gcmMap)
-	}
-	if err := d.Set("global_cluster_members", gcmList); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
-	}
-
-	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
-	}
-
-	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
-	d.Set("storage_encrypted", globalCluster.StorageEncrypted)
-
+	//conn := meta.(*conns.AWSClient).RDSClient(ctx)
+	//
+	//globalClusterIdentifier := d.Get("global_cluster_identifier").(string)
+	//
+	//resp, err := conn.DescribeGlobalClusters(&rds.DescribeGlobalClustersInput{
+	//	GlobalClusterIdentifier: aws.String(globalClusterIdentifier)})
+	//
+	//if err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): %s", globalClusterIdentifier, err)
+	//}
+	//
+	//if resp == nil {
+	//	return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): empty response", globalClusterIdentifier)
+	//}
+	//
+	//var globalCluster *rds.GlobalCluster
+	//for _, c := range resp.GlobalClusters {
+	//	if aws.StringValue(c.GlobalClusterIdentifier) == globalClusterIdentifier {
+	//		globalCluster = c
+	//		break
+	//	}
+	//}
+	//
+	//if globalCluster == nil {
+	//	return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): cluster not found", globalClusterIdentifier)
+	//}
+	//
+	//d.SetId(aws.StringValue(globalCluster.GlobalClusterIdentifier))
+	//
+	//d.Set("arn", globalCluster.GlobalClusterArn)
+	//d.Set("database_name", globalCluster.DatabaseName)
+	//d.Set("deletion_protection", globalCluster.DeletionProtection)
+	//d.Set("engine", globalCluster.Engine)
+	//d.Set("engine_version", globalCluster.EngineVersion)
+	//d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+	//
+	//var gcmList []interface{}
+	//for _, gcm := range globalCluster.GlobalClusterMembers {
+	//	gcmMap := map[string]interface{}{
+	//		"db_cluster_arn": aws.StringValue(gcm.DBClusterArn),
+	//		"is_writer":      aws.BoolValue(gcm.IsWriter),
+	//	}
+	//
+	//	gcmList = append(gcmList, gcmMap)
+	//}
+	//if err := d.Set("global_cluster_members", gcmList); err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
+	//}
+	//
+	////if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
+	////	return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
+	////}
+	//
+	//d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
+	//d.Set("storage_encrypted", globalCluster.StorageEncrypted)
+	//
 	return diags
 }

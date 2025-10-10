@@ -70,6 +70,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `group_ids` - (Optional) The AWS SSO group ids to be assigned the role given in `role`.
 * `user_ids` - (Optional) The AWS SSO user ids to be assigned the role given in `role`.
 
@@ -77,4 +78,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-4d21bedd686a943999565d73b09e0fb7f400801629b70dba191f5a85e621bf6f -->
+<!-- cache-key: cdktf-0.20.8 input-5b06e72283ef77bce79ee9c2b7225305957afdbf661d6044cd72e3aa2e896a75 -->

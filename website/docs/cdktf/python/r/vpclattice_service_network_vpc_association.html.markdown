@@ -37,12 +37,12 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_identifier` - (Required) The ID of the VPC.
 * `service_network_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network. You must use the ARN if the resources specified in the operation are in different accounts.
 The following arguments are optional:
-
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `security_group_ids` - (Optional) The IDs of the security groups.
 
@@ -88,4 +88,4 @@ Using `terraform import`, import VPC Lattice Service Network VPC Association usi
 % terraform import aws_vpclattice_service_network_vpc_association.example snsa-05e2474658a88f6ba
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7c8b2edfc9c8f937c0cca70fd647384595bc839a9f7ba74d190e7819a13b08d8 -->
+<!-- cache-key: cdktf-0.20.8 input-99510012adb56ebe8ba2cca4d1808d936fb1657147ed8ddabb0229090f6f483d -->

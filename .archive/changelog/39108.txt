@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_rolesanywhere_profile: Mark `role_arns` as Optional and send an empty list if unconfigured
+```
+
+```release-note:enhancement
+resource/aws_rolesanywhere_trust_anchor: Add `notification_settings` argument
+```

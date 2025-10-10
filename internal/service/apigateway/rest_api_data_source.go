@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_api_gateway_rest_api", name="REST API")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRestAPIRead,
@@ -32,7 +33,7 @@ func dataSourceRestAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +42,7 @@ func dataSourceRestAPI() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,6 +51,10 @@ func dataSourceRestAPI() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -71,11 +76,11 @@ func dataSourceRestAPI() *schema.Resource {
 				Type:     nullable.TypeNullableInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,14 +93,14 @@ func dataSourceRestAPI() *schema.Resource {
 	}
 }
 
-func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name")
-	inputGRAs := &apigateway.GetRestApisInput{}
+	name := d.Get(names.AttrName)
 
-	match, err := findRestAPI(ctx, conn, inputGRAs, func(v *types.RestApi) bool {
+	inputGRAs := apigateway.GetRestApisInput{}
+	match, err := findRestAPI(ctx, conn, &inputGRAs, func(v *types.RestApi) bool {
 		return aws.ToString(v.Name) == name
 	})
 
@@ -105,25 +110,24 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(match.Id))
 	d.Set("api_key_source", match.ApiKeySource)
-	d.Set("arn", apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", match.BinaryMediaTypes)
-	d.Set("description", match.Description)
+	d.Set(names.AttrDescription, match.Description)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if match.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", nil)
 	} else {
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(match.MinimumCompressionSize)), 10))
 	}
-	d.Set("policy", match.Policy)
+	d.Set(names.AttrPolicy, match.Policy)
 
-	inputGRs := &apigateway.GetResourcesInput{
+	inputGRs := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
 	}
-
-	rootResource, err := findResource(ctx, conn, inputGRs, func(v *types.Resource) bool {
+	rootResource, err := findResource(ctx, conn, &inputGRs, func(v *types.Resource) bool {
 		return aws.ToString(v.Path) == "/"
 	})
 

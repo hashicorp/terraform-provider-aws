@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `location` - (Required) Location of the targeted API entity of the to-be-created documentation part. See below.
 * `properties` - (Required) Content map of API-specific key-value pairs describing the targeted API entity. The map must be encoded as a JSON string, e.g., "{ \"description\": \"The API does ...\" }". Only Swagger-compliant key-value pairs can be exported and, hence, published.
 * `rest_api_id` - (Required) ID of the associated Rest API
@@ -96,4 +97,4 @@ Using `terraform import`, import API Gateway documentation_parts using `REST-API
 % terraform import aws_api_gateway_documentation_part.example 5i4e1ko720/3oyy3t
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-93006cef8f4099ce7b8423d2d22b0e24f5bef35342f3992a61358ae48aaf185d -->
+<!-- cache-key: cdktf-0.20.8 input-e9f35f4ceb5c39c0743a3285291eaab08b7d04495449456bdd643301406326f6 -->

@@ -73,6 +73,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` - (Required) The 12-digit AWS account ID that you are permitting to put events to your default event bus. Specify `*` to permit any account to put events to your default event bus, optionally limited by `condition`.
 * `statementId` - (Required) An identifier string for the external account that you are granting permissions to.
 * `action` - (Optional) The action that you are enabling the other account to perform. Defaults to `events:PutEvents`.
@@ -124,4 +125,4 @@ Using `terraform import`, import EventBridge permissions using the `event_bus_na
 % terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-61e6e8cd01bf17093c7daf47be3dce1db556b13575a6c0f84dd9556644d63f94 -->
+<!-- cache-key: cdktf-0.20.8 input-1a60e8484e8fddc511f483719c3e9559a0525f0280fef4e230579e305ab914e6 -->

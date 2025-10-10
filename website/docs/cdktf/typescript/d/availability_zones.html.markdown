@@ -117,6 +117,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allAvailabilityZones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `excludeNames` - (Optional) List of Availability Zone names to exclude.
@@ -150,4 +151,4 @@ Note that the indexes of Availability Zone names and IDs correspond.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-4fb56543535b24bb1a7db337e55d8060de419403eb0a490892cf3a3900602758 -->
+<!-- cache-key: cdktf-0.20.8 input-628c142a814108607652a94543d706d2a1e83f8c6473253396fb421a52061874 -->

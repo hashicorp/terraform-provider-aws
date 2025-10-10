@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Custom Log Source.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_custom_log_source`. Use a `depends_on` statement.
+
 ## Example Usage
 
 ### Basic Usage
@@ -41,6 +43,7 @@ class MyConvertedCode(TerraformStack):
                 ]
             )
             ],
+            depends_on=[aws_securitylake_data_lake_example],
             event_classes=["FILE_ACTIVITY"],
             source_name="example-name",
             source_version="1.0"
@@ -51,14 +54,17 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration` - (Required) The configuration for the third-party custom source.
     * `crawler_configuration` - (Required) The configuration for the Glue Crawler for the third-party custom source.
         * `role_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role to be used by the AWS Glue crawler.
     * `provider_identity` - (Required) The identity of the log provider for the third-party custom source.
         * `external_id` - (Required) The external ID used to estalish trust relationship with the AWS identity.
         * `principal` - (Required) The AWS identity principal.
-* `event_classes` - (Required) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
-* `source_name` - (Required) Specify the name for a third-party custom source. This must be a Regionally unique value.
+* `event_classes` - (Optional) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
+* `source_name` - (Required) Specify the name for a third-party custom source.
+  This must be a Regionally unique value.
+  Has a maximum length of 20.
 * `source_version` - (Optional) Specify the source version for the third-party custom source, to limit log collection to a specific version of custom data source.
 
 ## Attribute Reference
@@ -98,4 +104,4 @@ Using `terraform import`, import Custom log sources using the source name. For e
 % terraform import aws_securitylake_custom_log_source.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bdb52023589de4d31122cd46341ede7c69c309abe20aa5a3742b45830460065a -->
+<!-- cache-key: cdktf-0.20.8 input-9c50acd5144c36e9f75a2a9244059b6a5445fddf18b179c57a4aa62e47427f2c -->

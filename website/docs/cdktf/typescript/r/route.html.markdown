@@ -16,6 +16,8 @@ Provides a resource to create a routing table entry (a route) in a VPC routing t
 
 ~> **NOTE on `gatewayId` attribute:** The AWS API is very forgiving with the resource ID passed in the `gatewayId` attribute. For example an `aws_route` resource can be created with an [`aws_nat_gateway`](nat_gateway.html) or [`aws_egress_only_internet_gateway`](egress_only_internet_gateway.html) ID specified for the `gatewayId` attribute. Specifying anything other than an [`aws_internet_gateway`](internet_gateway.html) or [`aws_vpn_gateway`](vpn_gateway.html) ID will lead to Terraform reporting a permanent diff between your configuration and recorded state, as the AWS API returns the more-specific attribute. If you are experiencing constant diffs with an `aws_route` resource, the first thing to check is that the correct attribute is being specified.
 
+~> **NOTE on combining `vpcEndpointId` and `destinationPrefixListId` attributes:** To associate a Gateway VPC Endpoint (such as S3) with destination prefix list, use the [`aws_vpc_endpoint_route_table_association`](vpc_endpoint_route_table_association.html) resource instead.
+
 ## Example Usage
 
 ```typescript
@@ -77,6 +79,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `routeTableId` - (Required) The ID of the routing table.
 
 One of the following destination arguments must be supplied:
@@ -121,6 +124,46 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route.example
+  identity = {
+    route_table_id         = "rtb-656C65616E6F72"
+    destination_cidr_block = "10.42.0.0/16"
+
+    ### OR by IPv6 CIDR block
+    # destination_ipv6_cidr_block = "10.42.0.0/16"
+
+    ### OR by prefix list ID
+    # destination_prefix_list_id = "pl-0570a1d2d725c16be"
+  }
+}
+
+resource "aws_route" "example" {
+  route_table_id            = "rtb-656C65616E6F72"
+  destination_cidr_block    = "10.42.0.0/16"
+  vpc_peering_connection_id = "pcx-45ff3dc1"
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `routeTableId` - (String) ID of the route table.
+
+#### Optional
+
+~> Exactly one of of `destinationCidrBlock`, `destinationIpv6CidrBlock`, or `destinationPrefixListId` is required.
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `destinationCidrBlock` - (String) Destination IPv4 CIDR block.
+* `destinationIpv6CidrBlock` - (String) Destination IPv6 CIDR block.
+* `destinationPrefixListId` - (String) Destination IPv6 CIDR block.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual routes using `ROUTETABLEID_DESTINATION`. Import [local routes](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html#RouteTables) using the VPC's IPv4 or IPv6 CIDR blocks. For example:
 
@@ -216,4 +259,4 @@ Import a route in route table `rtb-656C65616E6F72` with a managed prefix list de
 % terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-acd7ced5ea391aca7fec001fb7ccca36d5b1b371d3a058994f80e01a34a00681 -->
+<!-- cache-key: cdktf-0.20.8 input-6e597064f8322377831f0a1c1582ccc078a91a1c6cc4dba5afc38b14c68420ce -->

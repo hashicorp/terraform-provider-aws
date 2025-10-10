@@ -14,15 +14,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codeartifact_domain_permissions_policy", name="Domain Permissions Policy")
+// @ArnIdentity("resource_arn")
+// @V60SDKv2Fix
+// @Testing(serialize=true)
 func resourceDomainPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainPermissionsPolicyPut,
@@ -30,12 +34,8 @@ func resourceDomainPermissionsPolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceDomainPermissionsPolicyRead,
 		DeleteWithoutTimeout: resourceDomainPermissionsPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -46,23 +46,13 @@ func resourceDomainPermissionsPolicy() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"policy_document": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"policy_document": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"policy_revision": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +60,7 @@ func resourceDomainPermissionsPolicy() *schema.Resource {
 	}
 }
 
-func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -80,7 +70,7 @@ func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceD
 	}
 
 	input := &codeartifact.PutDomainPermissionsPolicyInput{
-		Domain:         aws.String(d.Get("domain").(string)),
+		Domain:         aws.String(d.Get(names.AttrDomain).(string)),
 		PolicyDocument: aws.String(policy),
 	}
 
@@ -105,7 +95,7 @@ func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceDomainPermissionsPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -126,10 +116,10 @@ func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Domain Permissions Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("domain", domainName)
+	d.Set(names.AttrDomain, domainName)
 	d.Set("domain_owner", owner)
 	d.Set("policy_revision", policy.Revision)
-	d.Set("resource_arn", policy.ResourceArn)
+	d.Set(names.AttrResourceARN, policy.ResourceArn)
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(policy.Document))
 	if err != nil {
@@ -146,7 +136,7 @@ func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceDomainPermissionsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPermissionsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -156,10 +146,11 @@ func resourceDomainPermissionsPolicyDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain Permissions Policy: %s", d.Id())
-	_, err = conn.DeleteDomainPermissionsPolicy(ctx, &codeartifact.DeleteDomainPermissionsPolicyInput{
+	input := codeartifact.DeleteDomainPermissionsPolicyInput{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(owner),
-	})
+	}
+	_, err = conn.DeleteDomainPermissionsPolicy(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

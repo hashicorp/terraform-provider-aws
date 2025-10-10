@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudfront_origin_access_identity", name="Origin Access Identity")
@@ -19,6 +20,10 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOriginAccessIdentityRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -27,7 +32,7 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +44,7 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -51,11 +56,11 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 	}
 }
 
-func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	id := d.Get("id").(string)
+	id := d.Get(names.AttrID).(string)
 	output, err := findOriginAccessIdentityByID(ctx, conn, id)
 
 	if err != nil {
@@ -64,11 +69,12 @@ func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceD
 
 	apiObject := output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig
 	d.SetId(aws.ToString(output.CloudFrontOriginAccessIdentity.Id))
+	d.Set(names.AttrARN, originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
-	d.Set("iam_arn", originAccessIdentityARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("iam_arn", originAccessIdentityIAMUserARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 
 	return diags

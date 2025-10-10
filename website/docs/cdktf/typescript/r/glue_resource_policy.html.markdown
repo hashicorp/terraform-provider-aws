@@ -54,7 +54,7 @@ class MyConvertedCode extends TerraformStack {
               "arn:${" +
                 dataAwsPartitionCurrent.partition +
                 "}:glue:${" +
-                dataAwsRegionCurrent.name +
+                dataAwsRegionCurrent.region +
                 "}:${" +
                 current.accountId +
                 "}:*",
@@ -75,7 +75,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `policy` – (Required) The policy to be applied to the aws glue data catalog.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `policy` - (Required) The policy to be applied to the aws glue data catalog.
 * `enableHybrid` - (Optional) Indicates that you are using both methods to grant cross-account. Valid values are `TRUE` and `FALSE`. Note the terraform will not perform drift detetction on this field as its not return on read.
 
 ## Attribute Reference
@@ -110,4 +111,4 @@ Using `terraform import`, import Glue Resource Policy using the account ID. For 
 % terraform import aws_glue_resource_policy.Test 12356789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-505ce1c4e38c338e6ee96c4f345643e93eb421593db3b74a6669f3f253de8617 -->
+<!-- cache-key: cdktf-0.20.8 input-59ae7721f0f74bdc7663a33840a02391e5932f89203b77cf2ba10ebdb5a919d2 -->

@@ -62,6 +62,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The default name of the registered managed instance.
 * `description` - (Optional) The description of the resource that you want to register.
 * `expiration_date` - (Optional) UTC timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) by which this activation request should expire. The default value is 24 hours from resource creation time. Terraform will only perform drift detection of its value when present in a configuration.
@@ -111,4 +112,4 @@ Using `terraform import`, import AWS SSM Activation using the `id`. For example:
 
 -> **Note:** The `activation_code` attribute cannot be imported.
 
-<!-- cache-key: cdktf-0.20.1 input-e0dcbe52e67919de9e8b8b10107faae656e18b0e36f4833aba51256613ff37fd -->
+<!-- cache-key: cdktf-0.20.8 input-3570ef814ba76cd332b22d4a5eb0ce52c7c8b5c1c4de5fdd3b89c1aa81991c5e -->

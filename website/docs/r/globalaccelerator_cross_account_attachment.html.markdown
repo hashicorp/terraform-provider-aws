@@ -44,6 +44,7 @@ The following arguments are optional:
 
 * `principals` - (Optional) List of AWS account IDs that are allowed to associate resources with the accelerator.
 * `resource` - (Optional) List of resources to be associated with the accelerator.
+    * `cidr_block` - (Optional) IP address range, in CIDR format, that is specified as resource.
     * `endpoint_id` - (Optional) The endpoint ID for the endpoint that is specified as a AWS resource.
     * `region` - (Optional) The AWS Region where a shared endpoint resource is located.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -68,7 +69,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator Cross Account Attachment using the `example_id_arg`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_cross_account_attachment.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:attachment/1234abcd-abcd-1234-abcd-1234abcdefgh"
+  }
+}
+
+resource "aws_globalaccelerator_cross_account_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator cross-account attachment.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator Cross Account Attachment using the `arn`. For example:
 
 ```terraform
 import {
@@ -77,7 +99,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Global Accelerator Cross Account Attachment using the `example_id_arg`. For example:
+Using `terraform import`, import Global Accelerator Cross Account Attachment using the `arn`. For example:
 
 ```console
 % terraform import aws_globalaccelerator_cross_account_attachment.example arn:aws:globalaccelerator::012345678910:attachment/01234567-abcd-8910-efgh-123456789012

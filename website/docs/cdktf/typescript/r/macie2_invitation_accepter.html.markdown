@@ -61,6 +61,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `administratorAccountId` - (Required) The AWS account ID for the account that sent the invitation.
 
 ## Attribute Reference
@@ -102,4 +103,4 @@ Using `terraform import`, import `aws_macie2_invitation_accepter` using the admi
 % terraform import aws_macie2_invitation_accepter.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-189b2215e9d38a524f24ee8ee99ac1bcf4754aa1be8a0ae0ca9033c2648b9b3d -->
+<!-- cache-key: cdktf-0.20.8 input-3b60fad90bcd6af977c8ab32c8a0ed5a7c08a2c31333ad26544684ec2b81e88e -->

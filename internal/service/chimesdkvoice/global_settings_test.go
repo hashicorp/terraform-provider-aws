@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,9 +26,9 @@ func TestAccChimeSDKVoiceGlobalSettings_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccGlobalSettings_basic,
-		"disappears": testAccGlobalSettings_disappears,
-		"update":     testAccGlobalSettings_update,
+		acctest.CtBasic:      testAccGlobalSettings_basic,
+		acctest.CtDisappears: testAccGlobalSettings_disappears,
+		"update":             testAccGlobalSettings_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -49,7 +49,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID) // run test in us-east-1 only since eventual consistency causes intermittent failures in other regions.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) // run test in us-east-1 only since eventual consistency causes intermittent failures in other regions.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -102,7 +102,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 			// Note: due to eventual consistency, the read after update can occasionally
@@ -111,7 +111,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 		},
@@ -131,11 +131,11 @@ func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFu
 			const retryTimeout = 10 * time.Second
 			response := &chimesdkvoice.GetGlobalSettingsOutput{}
 
-			err := tfresource.Retry(ctx, retryTimeout, func() *retry.RetryError {
+			err := tfresource.Retry(ctx, retryTimeout, func(ctx context.Context) *tfresource.RetryError {
 				var err error
 				response, err = conn.GetGlobalSettings(ctx, input)
 				if err == nil && response.VoiceConnector.CdrBucket != nil {
-					return retry.RetryableError(errors.New("error Chime Voice Connector Global settings still exists"))
+					return tfresource.RetryableError(errors.New("error Chime Voice Connector Global settings still exists"))
 				}
 				return nil
 			})

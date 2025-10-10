@@ -27,7 +27,6 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := "false"
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
@@ -41,14 +40,14 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
+					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
@@ -104,7 +103,6 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := "false"
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
@@ -118,7 +116,7 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceRemediationConfiguration(), resourceName),
@@ -135,12 +133,10 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 	var updated types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := "false"
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
 	rErrorPct := sdkacctest.RandIntRange(1, 100)
-	uAutomatic := "true"
 	uAttempts := sdkacctest.RandIntRange(1, 25)
 	uSeconds := sdkacctest.RandIntRange(1, 2678000)
 	uExecPct := sdkacctest.RandIntRange(1, 100)
@@ -155,11 +151,11 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_basic(rName, originalSseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(rName, originalSseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", originalSseAlgorithm),
-					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
+					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
@@ -170,12 +166,12 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRemediationConfigurationConfig_basic(rName, updatedSseAlgorithm, uAttempts, uSeconds, uExecPct, uErrorPct, uAutomatic),
+				Config: testAccRemediationConfigurationConfig_basic(rName, updatedSseAlgorithm, uAttempts, uSeconds, uExecPct, uErrorPct, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &updated),
 					testAccCheckRemediationConfigurationNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", updatedSseAlgorithm),
-					resource.TestCheckResourceAttr(resourceName, "automatic", uAutomatic),
+					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(uAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(uSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
@@ -194,7 +190,6 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := "false"
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
@@ -208,13 +203,13 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig_values(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_values(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
+					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),

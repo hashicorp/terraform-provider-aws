@@ -12,7 +12,7 @@ description: |-
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 
-!> **WARNING:** The use of launch configurations is discouraged in favour of launch templates. Read more in the [AWS EC2 Documentation](https://docs.aws.amazon.com/autoscaling/ec2/userguide/launch-configurations.html).
+!> **WARNING:** The use of launch configurations is discouraged in favor of launch templates. Read more in the [AWS EC2 Documentation](https://docs.aws.amazon.com/autoscaling/ec2/userguide/launch-configurations.html).
 
 -> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `name_prefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
 
@@ -171,6 +171,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
@@ -280,4 +281,4 @@ Using `terraform import`, import launch configurations using the `name`. For exa
 % terraform import aws_launch_configuration.as_conf terraform-lg-123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1afc8a9c3b0aae557f61ece671e34889248cace0f6b278c49774c6baa830fa60 -->
+<!-- cache-key: cdktf-0.20.8 input-e73ad149973e4851c81d0fff4f78023682773f577bbd1dab372a1174fbf6f60a -->

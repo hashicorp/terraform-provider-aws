@@ -27,15 +27,19 @@ func dataSourceDistribution() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arn": {
+			"anycast_ip_list_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrDomainName: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -43,11 +47,11 @@ func dataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -59,24 +63,25 @@ func dataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"web_acl_id": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
+			"web_acl_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.CloudFrontClient(ctx)
 
-	id := d.Get("id").(string)
+	id := d.Get(names.AttrID).(string)
 	output, err := findDistributionByID(ctx, conn, id)
 
 	if err != nil {
@@ -86,17 +91,18 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.ToString(output.Distribution.Id))
 	distribution := output.Distribution
 	distributionConfig := distribution.DistributionConfig
-	if aliases := distributionConfig.Aliases; aliases != nil {
-		d.Set("aliases", aliases.Items)
+	if v := distributionConfig.Aliases; v != nil {
+		d.Set("aliases", v.Items)
 	}
-	d.Set("arn", distribution.ARN)
-	d.Set("domain_name", distribution.DomainName)
-	d.Set("enabled", distributionConfig.Enabled)
+	d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
+	d.Set(names.AttrARN, distribution.ARN)
+	d.Set(names.AttrDomainName, distribution.DomainName)
+	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, c.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
-	d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
-	d.Set("status", distribution.Status)
+	d.Set("last_modified_time", distribution.LastModifiedTime.String())
+	d.Set(names.AttrStatus, distribution.Status)
 	d.Set("web_acl_id", distributionConfig.WebACLId)
 
 	return diags

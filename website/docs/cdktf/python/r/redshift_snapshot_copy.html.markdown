@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `manual_snapshot_retention_period` - (Optional) Number of days to retain newly copied snapshots in the destination AWS Region after they are copied from the source AWS Region. If the value is `-1`, the manual snapshot is retained indefinitely.
 * `retention_period` - (Optional) Number of days to retain automated snapshots in the destination region after they are copied from the source region.
 * `snapshot_copy_grant_name` - (Optional) Name of the snapshot copy grant to use when snapshots of an AWS KMS-encrypted cluster are copied to the destination region.
@@ -77,4 +78,4 @@ Using `terraform import`, import Redshift Snapshot Copy using the `id`. For exam
 % terraform import aws_redshift_snapshot_copy.example cluster-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1dff7706ee2b35f7be957abe90c7084c9f3efd26e47065e0ac3bdd3ab9677bbf -->
+<!-- cache-key: cdktf-0.20.8 input-5022ebd17699476da5c635465027ce55738e2c47576972f5dd5c3b5933b9e6e1 -->

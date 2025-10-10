@@ -12,6 +12,8 @@ description: |-
 
 Provides a Terraform resource for managing a Contacts Rotation in AWS Systems Manager Incident Manager.
 
+~> **NOTE:** A rotation implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `depends_on` argument for the Terraform Contact Resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -156,8 +158,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** A rotation implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `depends_on` argument for the Terraform Contact Resource.
-
 The following arguments are required:
 
 * `contact_ids` - (Required) Amazon Resource Names (ARNs) of the contacts to add to the rotation. The order in which you list the contacts is their shift order in the rotation schedule.
@@ -167,6 +167,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start_time` - (Optional) The date and time, in RFC 3339 format, that the rotation goes into effect.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -218,6 +219,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssmcontacts_rotation.example
+  identity = {
+    "arn" = "arn:aws:ssm-contacts:us-east-1:123456789012:rotation/example-rotation"
+  }
+}
+
+resource "aws_ssmcontacts_rotation" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SSM Contacts rotation.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSMContacts Rotation using the `arn`. For example:
 
 ```python
@@ -241,4 +263,4 @@ Using `terraform import`, import CodeGuru Profiler Profiling Group using the `ar
 % terraform import aws_ssmcontacts_rotation.example arn:aws:ssm-contacts:us-east-1:012345678910:rotation/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7d1ce08106ca5a606920f9f95d80d05f4f5697a18f454ea743a0ba03973284d4 -->
+<!-- cache-key: cdktf-0.20.8 input-1b964f8a5559cf795714322d3ee63647490b3155c39beb6bd8ca8fe9bc7c7b68 -->
