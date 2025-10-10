@@ -5,14 +5,18 @@ package rds
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_rds_global_cluster", name="Global Cluster")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDataSourceGlobalCluster(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceGlobalCluster{}, nil
 }
@@ -21,60 +25,43 @@ type dataSourceGlobalCluster struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
-func (d *dataSourceGlobalCluster) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_rds_global_cluster"
-}
-
 // Schema returns the schema for this data source.
 func (d *dataSourceGlobalCluster) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDatabaseName: schema.StringAttribute{
 				Computed: true,
 			},
-			"database_name": schema.StringAttribute{
+			names.AttrDeletionProtection: schema.BoolAttribute{
 				Computed: true,
 			},
-			"deletion_protection": schema.BoolAttribute{
+			names.AttrEngine: schema.StringAttribute{
 				Computed: true,
 			},
-			"engine": schema.StringAttribute{
+			names.AttrEngineVersion: schema.StringAttribute{
 				Computed: true,
 			},
-			"engine_version": schema.StringAttribute{
+			names.AttrForceDestroy: schema.BoolAttribute{
 				Computed: true,
 			},
-			"force_destroy": schema.BoolAttribute{
-				Computed: true,
-			},
-			"identifier": schema.StringAttribute{
+			names.AttrIdentifier: schema.StringAttribute{
 				Required: true,
 			},
-			"members": schema.SetAttribute{
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"db_cluster_arn": types.StringType,
-						"is_writer":      types.BoolType,
-					},
-				},
-				Computed: true,
+			"members": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[globalClusterMembersModel](ctx),
+				Computed:   true,
 			},
-			"resource_id": schema.StringAttribute{
+			names.AttrResourceID: schema.StringAttribute{
 				Computed: true,
-			},
-			"region": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).",
 			},
 			"source_db_cluster_identifier": schema.StringAttribute{
 				Computed: true,
 			},
-			"storage_encrypted": schema.BoolAttribute{
+			names.AttrStorageEncrypted: schema.BoolAttribute{
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -94,16 +81,22 @@ func (d *dataSourceGlobalCluster) Read(ctx context.Context, request datasource.R
 
 type dataSourceGlobalClusterData struct {
 	framework.WithRegionModel
-	ARN                       types.String `tfsdk:"arn"`
-	DatabaseName              types.String `tfsdk:"database_name"`
-	DeletionProtection        types.Bool   `tfsdk:"deletion_protection"`
-	Engine                    types.String `tfsdk:"engine"`
-	EngineVersion             types.String `tfsdk:"engine_version"`
-	ForceDestroy              types.Bool   `tfsdk:"force_destroy"`
-	GlobalClusterIdentifier   types.String `tfsdk:"identifier"`
-	GlobalClusterMembers      types.Set    `tfsdk:"members"`
-	GlobalClusterResourceID   types.String `tfsdk:"esource_id"`
-	Region                    types.String `tfsdk:"region"`
-	SourceDbClusterIdentifier types.String `tfsdk:"source_db_cluster_identifier"`
-	StorageEncrypted          types.Bool   `tfsdk:"storage_encrypted"`
+	ARN                       types.String                                               `tfsdk:"arn"`
+	DatabaseName              types.String                                               `tfsdk:"database_name"`
+	DeletionProtection        types.Bool                                                 `tfsdk:"deletion_protection"`
+	Engine                    types.String                                               `tfsdk:"engine"`
+	EngineVersion             types.String                                               `tfsdk:"engine_version"`
+	ForceDestroy              types.Bool                                                 `tfsdk:"force_destroy"`
+	GlobalClusterIdentifier   types.String                                               `tfsdk:"identifier"`
+	GlobalClusterMembers      fwtypes.ListNestedObjectValueOf[globalClusterMembersModel] `tfsdk:"members"`
+	GlobalClusterResourceID   types.String                                               `tfsdk:"esource_id"`
+	Region                    types.String                                               `tfsdk:"region"`
+	SourceDbClusterIdentifier types.String                                               `tfsdk:"source_db_cluster_identifier"`
+	StorageEncrypted          types.Bool                                                 `tfsdk:"storage_encrypted"`
+	Tags                      tftags.Map                                                 `tfsdk:"tags"`
+}
+
+type globalClusterMembersModel struct {
+	DBClusterARN types.String `tfsdk:"db_cluster_arn"`
+	IsWriter     types.Bool   `tfsdk:"is_writer"`
 }
