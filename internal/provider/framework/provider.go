@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/metaschema"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -49,6 +50,7 @@ var (
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
 	_ provider.ProviderWithListResources      = &frameworkProvider{}
+	_ provider.ProviderWithMetaSchema         = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
@@ -223,6 +225,11 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "Resolve an endpoint with FIPS capability",
 			},
+			"user_agent": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"assume_role": schema.ListNestedBlock{
@@ -346,6 +353,18 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 						},
 					},
 				},
+			},
+		},
+	}
+}
+
+func (p *frameworkProvider) MetaSchema(ctx context.Context, req provider.MetaSchemaRequest, resp *provider.MetaSchemaResponse) {
+	resp.Schema = metaschema.Schema{
+		Attributes: map[string]metaschema.Attribute{
+			"user_agent": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
 			},
 		},
 	}
