@@ -19,7 +19,7 @@ resource "aws_bedrockagentcore_browser" "example" {
   name        = "example-browser"
   description = "Browser for web data extraction"
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 }
@@ -53,7 +53,7 @@ resource "aws_bedrockagentcore_browser" "example" {
   description        = "Browser with recording enabled"
   execution_role_arn = aws_iam_role.example.arn
 
-  network_configuration = {
+  network_configuration {
     network_mode = "PUBLIC"
   }
 
