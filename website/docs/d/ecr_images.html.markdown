@@ -64,7 +64,7 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registry_id` - (Optional) ID of the Registry where the repository resides.
 * `repository_name` - (Required) Name of the ECR Repository.
-* `tag_status` - (Optional) Filter images by tag status. Valid values: `TAGGED`, `UNTAGGED`, `ANY`. Defaults to `ANY`.
+* `tag_status` - (Optional) Filter images by tag status. Valid values: `TAGGED`, `UNTAGGED`, `ANY`.
 * `max_results` - (Optional) Maximum number of images to return.
 * `describe_images` - (Optional) Whether to call DescribeImages API to get detailed image information. Defaults to `false`.
 
