@@ -36,7 +36,7 @@ func (d *imagesDataSource) Schema(ctx context.Context, request datasource.Schema
 				Description: "Whether to call DescribeImages API to get detailed image information",
 			},
 			"image_details": framework.DataSourceComputedListOfObjectAttribute[imageDetailsModel](ctx),
-			"image_ids": framework.DataSourceComputedListOfObjectAttribute[imagesIDsModel](ctx),
+			"image_ids":     framework.DataSourceComputedListOfObjectAttribute[imagesIDsModel](ctx),
 			"max_results": schema.Int64Attribute{
 				Optional:    true,
 				Description: "Maximum number of images to return",
@@ -175,13 +175,13 @@ func findImages(ctx context.Context, conn *ecr.Client, input *ecr.ListImagesInpu
 
 type imagesDataSourceModel struct {
 	framework.WithRegionModel
-	DescribeImages types.Bool                                      `tfsdk:"describe_images"`
+	DescribeImages types.Bool                                         `tfsdk:"describe_images"`
 	ImageDetails   fwtypes.ListNestedObjectValueOf[imageDetailsModel] `tfsdk:"image_details"`
-	ImageIDs       fwtypes.ListNestedObjectValueOf[imagesIDsModel] `tfsdk:"image_ids"`
-	MaxResults     types.Int64                                     `tfsdk:"max_results"`
-	RegistryID     types.String                                    `tfsdk:"registry_id"`
-	RepositoryName types.String                                    `tfsdk:"repository_name"`
-	TagStatus      types.String                                    `tfsdk:"tag_status"`
+	ImageIDs       fwtypes.ListNestedObjectValueOf[imagesIDsModel]    `tfsdk:"image_ids"`
+	MaxResults     types.Int64                                        `tfsdk:"max_results"`
+	RegistryID     types.String                                       `tfsdk:"registry_id"`
+	RepositoryName types.String                                       `tfsdk:"repository_name"`
+	TagStatus      types.String                                       `tfsdk:"tag_status"`
 }
 
 type imageDetailsModel struct {
