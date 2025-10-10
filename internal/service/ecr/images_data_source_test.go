@@ -118,7 +118,7 @@ func TestAccECRImagesDataSource_describeImages(t *testing.T) {
 				Config: testAccImagesDataSourceConfig_describeImages(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "describe_images", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "describe_images", acctest.CtTrue),
 				),
 			},
 		},
