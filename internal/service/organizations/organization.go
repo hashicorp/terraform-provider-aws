@@ -71,11 +71,24 @@ func resourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -138,11 +151,24 @@ func resourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -582,11 +608,14 @@ func flattenAccounts(apiObjects []awstypes.Account) []any {
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]any{
-			names.AttrARN:    aws.ToString(apiObject.Arn),
-			names.AttrEmail:  aws.ToString(apiObject.Email),
-			names.AttrID:     aws.ToString(apiObject.Id),
-			names.AttrName:   aws.ToString(apiObject.Name),
-			names.AttrStatus: apiObject.Status,
+			names.AttrARN:      aws.ToString(apiObject.Arn),
+			names.AttrEmail:    aws.ToString(apiObject.Email),
+			names.AttrID:       aws.ToString(apiObject.Id),
+			"joined_method":    apiObject.JoinedMethod,
+			"joined_timestamp": aws.ToTime(apiObject.JoinedTimestamp).Format(time.RFC3339),
+			names.AttrName:     aws.ToString(apiObject.Name),
+			names.AttrStatus:   apiObject.Status,
+			names.AttrState:    apiObject.State,
 		})
 	}
 
