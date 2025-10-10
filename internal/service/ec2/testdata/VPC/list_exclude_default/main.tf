@@ -7,6 +7,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_vpc" "default" {
   default = true
 }
