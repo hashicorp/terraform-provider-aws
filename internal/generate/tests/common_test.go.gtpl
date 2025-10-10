@@ -37,7 +37,12 @@
 {{- end }}
 
 {{ define "baseTestname" -}}
-{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
+{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end -}}
+{{- if and (eq .ResourceProviderNameUpper "VPC") (eq .Name "VPC") -}}
+VPC
+{{- else -}}
+{{ .ResourceProviderNameUpper }}{{ .Name }}
+{{- end -}}
 {{- end }}
 
 {{ define "Test" -}}

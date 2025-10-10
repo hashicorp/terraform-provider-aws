@@ -213,7 +213,7 @@ func resourceRole() *schema.Resource {
 }
 
 // @SDKListResource("aws_iam_role")
-func instanceResourceAsListResource() inttypes.ListResourceForSDK {
+func roleResourceAsListResource() inttypes.ListResourceForSDK {
 	l := roleListResource{}
 	l.SetResourceSchema(resourceRole())
 
