@@ -155,6 +155,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  DataSourceGlobalCluster,
+			TypeName: "aws_rds_global_cluster",
+			Name:     "Global Cluster",
+		},
+		{
 			Factory:  dataSourceOrderableInstance,
 			TypeName: "aws_rds_orderable_db_instance",
 			Name:     "Orderable DB Instance",
