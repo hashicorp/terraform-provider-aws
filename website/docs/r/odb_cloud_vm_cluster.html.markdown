@@ -18,13 +18,13 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 
 ```terraform
 resource "aws_odb_cloud_vm_cluster" "with_minimum_parameter" {
-  display_name                    = "my-exa-infra"
-  cloud_exadata_infrastructure_id = "exa_gjrmtxl4qk"
+  display_name                    = "my_vm_cluster"
+  cloud_exadata_infrastructure_id = "<aws_odb_cloud_exadata_infrastructure_id>"
   cpu_core_count                  = 6
   gi_version                      = "23.0.0.0"
   hostname_prefix                 = "apollo12"
   ssh_public_keys                 = ["public-ssh-key"]
-  odb_network_id                  = "odbnet_3l9st3litg"
+  odb_network_id                  = "<aws_odb_network_id>"
   is_local_backup_enabled         = true
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
@@ -41,13 +41,13 @@ resource "aws_odb_cloud_vm_cluster" "with_minimum_parameter" {
 
 
 resource "aws_odb_cloud_vm_cluster" "with_all_parameters" {
-  display_name                    = "my-vmc"
-  cloud_exadata_infrastructure_id = "exa_gjrmtxl4qk"
+  display_name                    = "my_vm_cluster"
+  cloud_exadata_infrastructure_id = "<aws_odb_cloud_exadata_infrastructure_id>"
   cpu_core_count                  = 6
   gi_version                      = "23.0.0.0"
   hostname_prefix                 = "apollo12"
   ssh_public_keys                 = ["my-ssh-key"]
-  odb_network_id                  = "odbnet_3l9st3litg"
+  odb_network_id                  = "<aws_odb_network_id>"
   is_local_backup_enabled         = true
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
