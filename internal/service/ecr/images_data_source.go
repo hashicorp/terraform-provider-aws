@@ -125,10 +125,7 @@ func findImagesDetails(ctx context.Context, conn *ecr.Client, repositoryName, re
 	// DescribeImages has a limit of 100 images per request
 	const batchSize = 100
 	for i := 0; i < len(imageIds); i += batchSize {
-		end := i + batchSize
-		if end > len(imageIds) {
-			end = len(imageIds)
-		}
+		end := min(i+batchSize, len(imageIds))
 
 		input := &ecr.DescribeImagesInput{
 			RepositoryName: &repositoryName,
