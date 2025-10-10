@@ -218,7 +218,7 @@ func testAccCheckImagesAllHaveTags(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		for i := 0; i < count; i++ {
+		for i := range count {
 			tagKey := fmt.Sprintf("image_ids.%d.image_tag", i)
 			if tag := rs.Primary.Attributes[tagKey]; tag == "" {
 				return fmt.Errorf("Image at index %d has no tag when TAGGED filter was used", i)
