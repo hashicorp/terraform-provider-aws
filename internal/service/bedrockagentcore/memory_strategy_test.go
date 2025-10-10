@@ -26,8 +26,7 @@ import (
 )
 
 var memoryConfig = func(rName string) string {
-	//return testAccMemoryConfig(rName, names.AttrDescription, 30, true, true)
-	return "" // TODO
+	return testAccMemoryConfig_basic(rName)
 }
 
 func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {

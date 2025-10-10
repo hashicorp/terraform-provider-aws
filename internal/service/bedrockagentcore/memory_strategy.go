@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -66,12 +67,6 @@ type resourceMemoryStrategy struct {
 func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"client_token": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -275,7 +270,8 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 	}
 
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
-		MemoryId: plan.MemoryID.ValueStringPointer(),
+		ClientToken: aws.String(sdkid.UniqueId()),
+		MemoryId:    plan.MemoryID.ValueStringPointer(),
 		MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 			AddMemoryStrategies: []awstypes.MemoryStrategyInput{strategyInput},
 		},
@@ -372,7 +368,8 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 		}
 
 		input := bedrockagentcorecontrol.UpdateMemoryInput{
-			MemoryId: plan.MemoryID.ValueStringPointer(),
+			ClientToken: aws.String(sdkid.UniqueId()),
+			MemoryId:    plan.MemoryID.ValueStringPointer(),
 			MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 				ModifyMemoryStrategies: []awstypes.ModifyMemoryStrategyInput{strategyInput},
 			},
@@ -418,7 +415,8 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 	}
 
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
-		MemoryId: state.MemoryID.ValueStringPointer(),
+		ClientToken: aws.String(sdkid.UniqueId()),
+		MemoryId:    state.MemoryID.ValueStringPointer(),
 		MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 			DeleteMemoryStrategies: []awstypes.DeleteMemoryStrategyInput{
 				{
@@ -572,7 +570,6 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	ClientToken      types.String                                              `tfsdk:"client_token"`
 	Configuration    fwtypes.ListNestedObjectValueOf[CustomConfigurationModel] `tfsdk:"configuration"`
 	Description      types.String                                              `tfsdk:"description"`
 	MemoryStrategyID types.String                                              `tfsdk:"memory_strategy_id"`
