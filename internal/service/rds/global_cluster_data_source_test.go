@@ -116,7 +116,7 @@ resource "aws_rds_cluster_instance" "secondary" {
 }
 
 data "aws_rds_global_cluster" "test" {
-  global_cluster_identifier = aws_rds_global_cluster.test.global_cluster_identifier
+  identifier = aws_rds_global_cluster.test.global_cluster_identifier
 }
 `, rName))
 }
