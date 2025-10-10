@@ -40,3 +40,7 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `gi_versions` - Information about a specific version of Oracle Grid Infrastructure (GI) software that can be installed on a VM cluster.
+
+### gi_versions
+
+* `version` - The GI software version.
