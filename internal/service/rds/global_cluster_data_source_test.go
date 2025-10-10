@@ -46,16 +46,6 @@ func TestAccRDSGlobalClusterDataSource_basic(t *testing.T) {
 
 func testAccGlobalClusterDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-locals {
-  alternate_region = %[2]q
-}
-
-data "aws_region" "alternate" {
-  region = local.alternate_region
-}
-
-data "aws_region" "current" {}
-
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
   engine                    = "aurora-postgresql"
@@ -63,64 +53,8 @@ resource "aws_rds_global_cluster" "test" {
   database_name             = "example_db"
 }
 
-resource "aws_rds_cluster" "primary" {
-  engine                    = aws_rds_global_cluster.test.engine
-  engine_version            = aws_rds_global_cluster.test.engine_version
-  cluster_identifier        = "%[1]s-primary"
-  master_username           = "tfacctest"
-  master_password           = "avoid-plaintext-passwords"
-  database_name             = "example_db"
-  global_cluster_identifier = aws_rds_global_cluster.test.id
-  skip_final_snapshot       = true
-
-  depends_on = [
-    aws_rds_global_cluster.test
-  ]
-}
-
-resource "aws_rds_cluster_instance" "primary" {
-  identifier         = "%[1]s-primary"
-  cluster_identifier = aws_rds_cluster.primary.id
-  instance_class     = "db.r5.large"
-  engine             = aws_rds_global_cluster.test.engine
-  engine_version     = aws_rds_global_cluster.test.engine_version
-
-  depends_on = [
-    aws_rds_cluster.primary
-  ]
-}
-
-resource "aws_rds_cluster" "secondary" {
-  region = local.alternate_region
-
-  engine                        = aws_rds_global_cluster.test.engine
-  engine_version                = aws_rds_global_cluster.test.engine_version
-  cluster_identifier            = "%[1]s-secondary"
-  global_cluster_identifier     = aws_rds_global_cluster.test.id
-  replication_source_identifier = aws_rds_cluster.primary.arn
-  source_region                 = data.aws_region.alternate.region
-  skip_final_snapshot           = true
-  depends_on = [
-    aws_rds_cluster_instance.primary
-  ]
-}
-
-resource "aws_rds_cluster_instance" "secondary" {
-  region = local.alternate_region
-
-  identifier         = "%[1]s-secondary"
-  cluster_identifier = aws_rds_cluster.secondary.id
-  instance_class     = "db.r5.large"
-  engine             = aws_rds_global_cluster.test.engine
-  engine_version     = aws_rds_global_cluster.test.engine_version
-
-  depends_on = [
-    aws_rds_cluster.secondary
-  ]
-}
-
 data "aws_rds_global_cluster" "test" {
   identifier = aws_rds_global_cluster.test.global_cluster_identifier
 }
-`, rName, acctest.AlternateRegion())
+`, rName)
 }

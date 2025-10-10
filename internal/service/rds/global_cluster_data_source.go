@@ -20,7 +20,7 @@ import (
 // @FrameworkDataSource("aws_rds_global_cluster", name="Global Cluster")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func newDataSourceGlobalCluster(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceGlobalCluster(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceGlobalCluster{}, nil
 }
 
@@ -28,7 +28,7 @@ type dataSourceGlobalCluster struct {
 	framework.DataSourceWithModel[dataSourceGlobalClusterData]
 }
 
-func (d *dataSourceGlobalCluster) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *dataSourceGlobalCluster) Schema(ctx context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -72,7 +72,7 @@ func (d *dataSourceGlobalCluster) Read(ctx context.Context, request datasource.R
 	var data dataSourceGlobalClusterData
 	conn := d.Meta().RDSClient(ctx)
 
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
