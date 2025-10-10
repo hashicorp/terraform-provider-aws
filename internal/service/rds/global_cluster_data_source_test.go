@@ -35,9 +35,9 @@ func TestAccRDSGlobalClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDeletionProtection, resourceName, names.AttrDeletionProtection),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
-					resource.TestCheckResourceAttrPair(dataSourceName, "global_cluster_identifier", resourceName, "global_cluster_identifier"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "global_cluster_members", resourceName, "global_cluster_members"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "global_cluster_resource_id", resourceName, "global_cluster_resource_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "identifier", resourceName, "global_cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "members", resourceName, "global_cluster_members"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "resource_id", resourceName, "global_cluster_resource_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageEncrypted, resourceName, names.AttrStorageEncrypted),
 				),
 			},
@@ -55,7 +55,7 @@ data "aws_region" "alternate" {
 
 data "aws_region" "current" {}
 resource "aws_rds_global_cluster" "test" {
-  global_cluster_identifier = "%[1]s"
+  global_cluster_identifier = %[1]q
   engine                    = "aurora-postgresql"
   engine_version            = "15.5"
   database_name             = "example_db"
@@ -64,9 +64,9 @@ resource "aws_rds_global_cluster" "test" {
 resource "aws_rds_cluster" "primary" {
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
-  cluster_identifier        = "test-primary-cluster"
-  master_username           = "username"
-  master_password           = "somepass123"
+  cluster_identifier        = "%[1]s-primary"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
   database_name             = "example_db"
   global_cluster_identifier = aws_rds_global_cluster.test.id
   skip_final_snapshot       = true
@@ -77,7 +77,7 @@ resource "aws_rds_cluster" "primary" {
 }
 
 resource "aws_rds_cluster_instance" "primary" {
-  identifier         = "test-primary-cluster-instance"
+  identifier         = "%[1]s-primary"
   cluster_identifier = aws_rds_cluster.primary.id
   instance_class     = "db.r5.large"
   engine             = aws_rds_global_cluster.test.engine
@@ -92,7 +92,7 @@ resource "aws_rds_cluster" "secondary" {
   provider                      = "awsalternate"
   engine                        = aws_rds_global_cluster.test.engine
   engine_version                = aws_rds_global_cluster.test.engine_version
-  cluster_identifier            = "test-secondary-cluster"
+  cluster_identifier            = "%[1]s-secondary"
   global_cluster_identifier     = aws_rds_global_cluster.test.id
   replication_source_identifier = aws_rds_cluster.primary.arn
   source_region                 = data.aws_region.alternate.name
@@ -104,7 +104,7 @@ resource "aws_rds_cluster" "secondary" {
 
 resource "aws_rds_cluster_instance" "secondary" {
   provider           = "awsalternate"
-  identifier         = "test-secondary-cluster-instance"
+  identifier         = "%[1]s-secondary"
   cluster_identifier = aws_rds_cluster.secondary.id
   instance_class     = "db.r5.large"
   engine             = aws_rds_global_cluster.test.engine

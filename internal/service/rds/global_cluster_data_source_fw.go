@@ -25,7 +25,7 @@ func newDataSourceGlobalCluster(context.Context) (datasource.DataSourceWithConfi
 }
 
 type dataSourceGlobalCluster struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[dataSourceGlobalClusterData]
 }
 
 func (d *dataSourceGlobalCluster) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -101,8 +101,7 @@ type dataSourceGlobalClusterData struct {
 	ForceDestroy              types.Bool                                                 `tfsdk:"force_destroy"`
 	GlobalClusterIdentifier   types.String                                               `tfsdk:"identifier"`
 	GlobalClusterMembers      fwtypes.ListNestedObjectValueOf[globalClusterMembersModel] `tfsdk:"members"`
-	GlobalClusterResourceID   types.String                                               `tfsdk:"esource_id"`
-	Region                    types.String                                               `tfsdk:"region"`
+	GlobalClusterResourceID   types.String                                               `tfsdk:"resource_id"`
 	SourceDbClusterIdentifier types.String                                               `tfsdk:"source_db_cluster_identifier"`
 	StorageEncrypted          types.Bool                                                 `tfsdk:"storage_encrypted"`
 	Tags                      tftags.Map                                                 `tfsdk:"tags"`
