@@ -1,5 +1,9 @@
 ## 6.17.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_ec2_transit_gateway_route_table_propagation.test: Fix bug causing `inconsistent final plan` errors ([#44542](https://github.com/hashicorp/terraform-provider-aws/issues/44542))
+
 ## 6.16.0 (October 9, 2025)
 
 FEATURES:
