@@ -25,6 +25,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Cluster Parameter Group",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newDataSourceGlobalCluster,
+			TypeName: "aws_rds_global_cluster",
+			Name:     "Global Cluster",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
@@ -152,12 +158,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceEngineVersion,
 			TypeName: "aws_rds_engine_version",
 			Name:     "Engine Version",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
-			Factory:  DataSourceGlobalCluster,
-			TypeName: "aws_rds_global_cluster",
-			Name:     "Global Cluster",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
