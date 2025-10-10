@@ -26,7 +26,9 @@ func TestAccVPCSubnet_List_Basic(t *testing.T) {
 	resourceName2 := "aws_subnet.test[1]"
 	resourceName3 := "aws_subnet.test[2]"
 
-	var id1, id2, id3 string
+	id1 := tfstatecheck.StateValue()
+	id2 := tfstatecheck.StateValue()
+	id3 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -40,14 +42,14 @@ func TestAccVPCSubnet_List_Basic(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/list_basic/"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("aws_subnet.test.0", names.AttrID, getter(&id1)),
-					resource.TestCheckResourceAttrWith("aws_subnet.test.1", names.AttrID, getter(&id2)),
-					resource.TestCheckResourceAttrWith("aws_subnet.test.2", names.AttrID, getter(&id3)),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "subnet/{id}"),
+
+					id2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "subnet/{id}"),
+
+					id3.GetStateValue(resourceName3, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName3, tfjsonpath.New(names.AttrARN), "ec2", "subnet/{id}"),
 				},
 			},
@@ -61,19 +63,19 @@ func TestAccVPCSubnet_List_Basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+						names.AttrID:        id1.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+						names.AttrID:        id2.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id3)),
+						names.AttrID:        id3.Value(),
 					}),
 				},
 			},
@@ -88,7 +90,9 @@ func TestAccVPCSubnet_List_RegionOverride(t *testing.T) {
 	resourceName2 := "aws_subnet.test[1]"
 	resourceName3 := "aws_subnet.test[2]"
 
-	var id1, id2, id3 string
+	id1 := tfstatecheck.StateValue()
+	id2 := tfstatecheck.StateValue()
+	id3 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -105,14 +109,14 @@ func TestAccVPCSubnet_List_RegionOverride(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("aws_subnet.test.0", names.AttrID, getter(&id1)),
-					resource.TestCheckResourceAttrWith("aws_subnet.test.1", names.AttrID, getter(&id2)),
-					resource.TestCheckResourceAttrWith("aws_subnet.test.2", names.AttrID, getter(&id3)),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "subnet/{id}"),
+
+					id2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "subnet/{id}"),
+
+					id3.GetStateValue(resourceName3, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName3, tfjsonpath.New(names.AttrARN), "ec2", "subnet/{id}"),
 				},
 			},
@@ -129,19 +133,19 @@ func TestAccVPCSubnet_List_RegionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+						names.AttrID:        id1.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+						names.AttrID:        id2.Value(),
 					}),
 
 					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id3)),
+						names.AttrID:        id3.Value(),
 					}),
 				},
 			},
