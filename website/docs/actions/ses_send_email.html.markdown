@@ -169,6 +169,7 @@ This action supports the following arguments:
 * `cc_addresses` - (Optional) List of email addresses for the CC: field of the message. Recipients in this list will receive the email and their addresses will be visible to all recipients.
 * `html_body` - (Optional) Message body in HTML format. Either `text_body` or `html_body` (or both) must be specified. HTML content allows for rich formatting including links, images, and styling.
 * `reply_to_addresses` - (Optional) List of reply-to email addresses for the message. If the recipient replies to the message, each reply-to address will receive the reply. If not specified, replies will go to the source address.
+* `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `return_path` - (Optional) Email address that bounces and complaints will be forwarded to when feedback forwarding is enabled. This is useful for handling delivery failures and spam complaints.
 * `source` - (Required) Email address that is sending the email. This address must be either individually verified with Amazon SES, or from a domain that has been verified with Amazon SES.
 * `subject` - (Required) Subject of the message: A short summary of the content, which will appear in the recipient's inbox.
