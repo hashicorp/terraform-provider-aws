@@ -3,129 +3,113 @@
 
 package rds
 
-//// @SDKDataSource("aws_rds_global_cluster", name="Global Cluster")
-//func DataSourceGlobalCluster() *schema.Resource {
-//	return &schema.Resource{
-//		ReadWithoutTimeout: dataSourceGlobalClusterRead,
-//
-//		Schema: map[string]*schema.Schema{
-//			"arn": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"database_name": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"deletion_protection": {
-//				Type:     schema.TypeBool,
-//				Computed: true,
-//			},
-//			"engine": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"engine_version": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"force_destroy": {
-//				Type:     schema.TypeBool,
-//				Computed: true,
-//			},
-//			"global_cluster_identifier": {
-//				Type:     schema.TypeString,
-//				Required: true,
-//			},
-//			"global_cluster_members": {
-//				Type:     schema.TypeSet,
-//				Computed: true,
-//				Elem: &schema.Resource{
-//					Schema: map[string]*schema.Schema{
-//						"db_cluster_arn": {
-//							Type:     schema.TypeString,
-//							Computed: true,
-//						},
-//						"is_writer": {
-//							Type:     schema.TypeBool,
-//							Computed: true,
-//						},
-//					},
-//				},
-//			},
-//			"global_cluster_resource_id": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"source_db_cluster_identifier": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"storage_encrypted": {
-//				Type:     schema.TypeBool,
-//				Computed: true,
-//			},
-//		},
-//	}
-//}
-//
-//func dataSourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	//conn := meta.(*conns.AWSClient).RDSClient(ctx)
-//	//
-//	//globalClusterIdentifier := d.Get("global_cluster_identifier").(string)
-//	//
-//	//resp, err := conn.DescribeGlobalClusters(&rds.DescribeGlobalClustersInput{
-//	//	GlobalClusterIdentifier: aws.String(globalClusterIdentifier)})
-//	//
-//	//if err != nil {
-//	//	return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): %s", globalClusterIdentifier, err)
-//	//}
-//	//
-//	//if resp == nil {
-//	//	return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): empty response", globalClusterIdentifier)
-//	//}
-//	//
-//	//var globalCluster *rds.GlobalCluster
-//	//for _, c := range resp.GlobalClusters {
-//	//	if aws.StringValue(c.GlobalClusterIdentifier) == globalClusterIdentifier {
-//	//		globalCluster = c
-//	//		break
-//	//	}
-//	//}
-//	//
-//	//if globalCluster == nil {
-//	//	return sdkdiag.AppendErrorf(diags, "reading Global RDS Cluster (%s): cluster not found", globalClusterIdentifier)
-//	//}
-//	//
-//	//d.SetId(aws.StringValue(globalCluster.GlobalClusterIdentifier))
-//	//
-//	//d.Set("arn", globalCluster.GlobalClusterArn)
-//	//d.Set("database_name", globalCluster.DatabaseName)
-//	//d.Set("deletion_protection", globalCluster.DeletionProtection)
-//	//d.Set("engine", globalCluster.Engine)
-//	//d.Set("engine_version", globalCluster.EngineVersion)
-//	//d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-//	//
-//	//var gcmList []interface{}
-//	//for _, gcm := range globalCluster.GlobalClusterMembers {
-//	//	gcmMap := map[string]interface{}{
-//	//		"db_cluster_arn": aws.StringValue(gcm.DBClusterArn),
-//	//		"is_writer":      aws.BoolValue(gcm.IsWriter),
-//	//	}
-//	//
-//	//	gcmList = append(gcmList, gcmMap)
-//	//}
-//	//if err := d.Set("global_cluster_members", gcmList); err != nil {
-//	//	return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
-//	//}
-//	//
-//	////if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
-//	////	return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
-//	////}
-//	//
-//	//d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
-//	//d.Set("storage_encrypted", globalCluster.StorageEncrypted)
-//	//
-//	return diags
-//}
+import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkDataSource("aws_rds_global_cluster", name="Global Cluster")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+func newDataSourceGlobalCluster(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceGlobalCluster{}, nil
+}
+
+type dataSourceGlobalCluster struct {
+	framework.DataSourceWithModel[dataSourceGlobalClusterData]
+}
+
+func (d *dataSourceGlobalCluster) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDatabaseName: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrDeletionProtection: schema.BoolAttribute{
+				Computed: true,
+			},
+			names.AttrEndpoint: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrEngine: schema.StringAttribute{
+				Computed: true,
+			},
+			"engine_lifecycle_support": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrEngineVersion: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrIdentifier: schema.StringAttribute{
+				Required: true,
+			},
+			"members": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[globalClusterMembersModel](ctx),
+				Computed:   true,
+			},
+			names.AttrResourceID: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrStorageEncrypted: schema.BoolAttribute{
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+		},
+	}
+}
+
+func (d *dataSourceGlobalCluster) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceGlobalClusterData
+	conn := d.Meta().RDSClient(ctx)
+
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := findGlobalClusterByID(ctx, conn, data.Identifier.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
+		return
+	}
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("GlobalCluster")))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	setTagsOut(ctx, output.TagList)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type dataSourceGlobalClusterData struct {
+	framework.WithRegionModel
+	ARN                    types.String                                               `tfsdk:"arn"`
+	DatabaseName           types.String                                               `tfsdk:"database_name"`
+	DeletionProtection     types.Bool                                                 `tfsdk:"deletion_protection"`
+	Endpoint               types.String                                               `tfsdk:"endpoint"`
+	Engine                 types.String                                               `tfsdk:"engine"`
+	EngineVersion          types.String                                               `tfsdk:"engine_version"`
+	EngineLifecycleSupport types.String                                               `tfsdk:"engine_lifecycle_support"`
+	Identifier             types.String                                               `tfsdk:"identifier"`
+	Members                fwtypes.ListNestedObjectValueOf[globalClusterMembersModel] `tfsdk:"members"`
+	ResourceID             types.String                                               `tfsdk:"resource_id"`
+	StorageEncrypted       types.Bool                                                 `tfsdk:"storage_encrypted"`
+	Tags                   tftags.Map                                                 `tfsdk:"tags"`
+}
+
+type globalClusterMembersModel struct {
+	DBClusterARN types.String `tfsdk:"db_cluster_arn"`
+	IsWriter     types.Bool   `tfsdk:"is_writer"`
+}
