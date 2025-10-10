@@ -80,7 +80,7 @@ resource "aws_bedrockagentcore_gateway" "example" {
 The following arguments are required:
 
 * `authorizer_configuration` - (Required) Configuration for request authorization. See [`authorizer_configuration`](#authorizer_configuration) below.
-* `authorizer_type` - (Required) Type of authorizer to use. Valid values: `CUSTOM_JWT`.
+* `authorizer_type` - (Required) Type of authorizer to use. Valid values: `CUSTOM_JWT`, `AWS_IAM`.
 * `name` - (Required) Name of the gateway.
 * `protocol_type` - (Required) Protocol type for the gateway. Valid values: `MCP`.
 * `role_arn` - (Required) ARN of the IAM role that the gateway assumes to access AWS services.
