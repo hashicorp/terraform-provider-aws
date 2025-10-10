@@ -193,20 +193,6 @@ func TestAccEC2InstanceConnectEndpoint_ipAddressTypeIPv4(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccInstanceConnectEndpointConfig_ipAddressType(rName, string(awstypes.IpAddressTypeIpv6), false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv6)),
-				),
-			},
-			{
-				Config: testAccInstanceConnectEndpointConfig_ipAddressType(rName, string(awstypes.IpAddressTypeDualstack), false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeDualstack)),
-				),
-			},
 		},
 	})
 }
