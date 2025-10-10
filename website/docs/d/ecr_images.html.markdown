@@ -35,6 +35,15 @@ data "aws_ecr_images" "tagged_only" {
 }
 ```
 
+### Limit Results
+
+```terraform
+data "aws_ecr_images" "limited" {
+  repository_name = "my-repository"
+  max_results     = 10
+}
+```
+
 ## Argument Reference
 
 This data source supports the following arguments:
@@ -43,6 +52,7 @@ This data source supports the following arguments:
 * `registry_id` - (Optional) ID of the Registry where the repository resides.
 * `repository_name` - (Required) Name of the ECR Repository.
 * `tag_status` - (Optional) Filter images by tag status. Valid values: `TAGGED`, `UNTAGGED`, `ANY`. Defaults to `ANY`.
+* `max_results` - (Optional) Maximum number of images to return.
 
 ## Attribute Reference
 

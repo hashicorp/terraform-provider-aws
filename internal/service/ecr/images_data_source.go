@@ -32,6 +32,10 @@ func (d *imagesDataSource) Schema(ctx context.Context, request datasource.Schema
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"image_ids": framework.DataSourceComputedListOfObjectAttribute[imagesIDsModel](ctx),
+			"max_results": schema.Int64Attribute{
+				Optional:    true,
+				Description: "Maximum number of images to return",
+			},
 			"registry_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "ID of the registry (AWS account ID)",
@@ -69,6 +73,12 @@ func (d *imagesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		input.Filter = &awstypes.ListImagesFilter{
 			TagStatus: tagStatus,
 		}
+	}
+
+	// Set max results if provided
+	if !data.MaxResults.IsNull() && !data.MaxResults.IsUnknown() {
+		maxResults := int32(data.MaxResults.ValueInt64())
+		input.MaxResults = &maxResults
 	}
 
 	output, err := findImages(ctx, conn, &input)
@@ -112,6 +122,7 @@ func findImages(ctx context.Context, conn *ecr.Client, input *ecr.ListImagesInpu
 type imagesDataSourceModel struct {
 	framework.WithRegionModel
 	ImageIDs       fwtypes.ListNestedObjectValueOf[imagesIDsModel] `tfsdk:"image_ids"`
+	MaxResults     types.Int64                                     `tfsdk:"max_results"`
 	RegistryID     types.String                                    `tfsdk:"registry_id"`
 	RepositoryName types.String                                    `tfsdk:"repository_name"`
 	TagStatus      types.String                                    `tfsdk:"tag_status"`
