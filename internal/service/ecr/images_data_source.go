@@ -40,6 +40,10 @@ func (d *imagesDataSource) Schema(ctx context.Context, request datasource.Schema
 				Required:    true,
 				Description: "Name of the repository",
 			},
+			"tag_status": schema.StringAttribute{
+				Optional:    true,
+				Description: "Filter images by tag status. Valid values: TAGGED, UNTAGGED, ANY",
+			},
 		},
 	}
 }
@@ -57,6 +61,14 @@ func (d *imagesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	resp.Diagnostics.Append(fwflex.Expand(ctx, &data, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Set tag status filter if provided
+	if !data.TagStatus.IsNull() && !data.TagStatus.IsUnknown() {
+		tagStatus := awstypes.TagStatus(data.TagStatus.ValueString())
+		input.Filter = &awstypes.ListImagesFilter{
+			TagStatus: tagStatus,
+		}
 	}
 
 	output, err := findImages(ctx, conn, &input)
@@ -102,6 +114,7 @@ type imagesDataSourceModel struct {
 	ImageIDs       fwtypes.ListNestedObjectValueOf[imagesIDsModel] `tfsdk:"image_ids"`
 	RegistryID     types.String                                    `tfsdk:"registry_id"`
 	RepositoryName types.String                                    `tfsdk:"repository_name"`
+	TagStatus      types.String                                    `tfsdk:"tag_status"`
 }
 
 type imagesIDsModel struct {

@@ -102,6 +102,54 @@ data "aws_ecr_images" "test" {
 `, rName)
 }
 
+func TestAccECRImagesDataSource_tagStatus(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_ecr_images.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagesDataSourceConfig_tagStatus(rName, "TAGGED"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "tag_status", "TAGGED"),
+				),
+			},
+			{
+				Config: testAccImagesDataSourceConfig_tagStatus(rName, "UNTAGGED"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "tag_status", "UNTAGGED"),
+				),
+			},
+			{
+				Config: testAccImagesDataSourceConfig_tagStatus(rName, "ANY"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "tag_status", "ANY"),
+				),
+			},
+		},
+	})
+}
+
+func testAccImagesDataSourceConfig_tagStatus(rName, tagStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = %[1]q
+}
+
+data "aws_ecr_images" "test" {
+  repository_name = aws_ecr_repository.test.name
+  tag_status      = %[2]q
+}
+`, rName, tagStatus)
+}
+
 func testAccImagesDataSourceConfig_registryID(registryID, repositoryName string) string {
 	return fmt.Sprintf(`
 data "aws_ecr_images" "test" {

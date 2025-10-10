@@ -26,6 +26,15 @@ output "image_tags" {
 }
 ```
 
+### Filter by Tag Status
+
+```terraform
+data "aws_ecr_images" "tagged_only" {
+  repository_name = "my-repository"
+  tag_status      = "TAGGED"
+}
+```
+
 ## Argument Reference
 
 This data source supports the following arguments:
@@ -33,6 +42,7 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registry_id` - (Optional) ID of the Registry where the repository resides.
 * `repository_name` - (Required) Name of the ECR Repository.
+* `tag_status` - (Optional) Filter images by tag status. Valid values: `TAGGED`, `UNTAGGED`, `ANY`. Defaults to `ANY`.
 
 ## Attribute Reference
 
