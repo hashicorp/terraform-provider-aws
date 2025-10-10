@@ -443,7 +443,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsGroup_basic$$|^TestAccLogsGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -470,7 +470,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsGroup_basic$$|^TestAccLogsGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 33-$$tot_fails )) ; \
