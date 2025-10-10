@@ -1,0 +1,71 @@
+---
+subcategory: "EC2 (Elastic Compute Cloud)"
+layout: "aws"
+page_title: "AWS: aws_ec2_vpn_connection"
+description: |-
+  Provides details about an AWS EC2 (Elastic Compute Cloud) VPN Connection.
+---
+
+# Data Source: aws_ec2_vpn_connection
+
+Provides details about an AWS EC2 (Elastic Compute Cloud) VPN Connection.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+data "aws_ec2_vpn_connection" "example" {
+    filter {
+        name   = "customer-gateway-id"
+        values = ["cgw-1234567890"]
+    }
+}
+
+output "vpn_connection_id" {
+  value = aws_ec2_vpn_connection.example.vpn_connection_id 
+}
+```
+
+```terraform
+data "aws_ec2_vpn_connection" "example" {
+    vpn_connection_id = ""
+}
+
+output "gateway_association_state" {
+  value = aws_ec2_vpn_connection.example.gateway_association_state
+}
+```
+## Argument Reference
+
+The following arguments are optional, either of the arguments should be present:
+
+* `vpn_connection_id` - (Optional) Identifier of the EC2 VPN Connection.
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
+### filter Configuration Block
+
+The `filter` configuration block supports the following arguments:
+
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeVPNConnections API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpnConnections.html).
+* `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `category` - Category of the VPN connection. A value of VPN indicates an AWS VPN connection. A value of VPN-Classic indicates an AWS Classic VPN connection.
+* `core_network_arn` - ARN of the core network.
+* `core_network_attachment_arn` - ARN of the core network attachment.
+* `customer_gateway_configuration` - Configuration information for the VPN connection's customer gateway (in the native XML format).
+* `customer_gateway_id` - ID of the customer gateway at your end of the VPN connection.
+* `gateway_association_state` - Current state of the gateway association.
+* `pre_shared_key_arn` - (ARN) of the Secrets Manager secret storing the pre-shared key(s) for the VPN connection.
+* `state` - Current state of the VPN connection.
+* `transit_gateway_id` - ID of a transit gateway associated with the VPN connection.
+* `type` - Type of VPN connection. Currently the only supported type is ipsec.1.
+* `vpn_gateway_id` - ID of a virtual private gateway associated with the VPN connection.
+* `id` - EC2 VPN Connection identifier.
+* `tags` - Tags associated to the VPN Connection.
+* `routes` - List of static routes associated with the VPN connection.
+* `vgw_telemetries` - List of objects containing information about the VPN tunnel.
