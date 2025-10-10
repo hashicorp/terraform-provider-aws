@@ -39,10 +39,11 @@ type AWSClient struct {
 	partition                 endpoints.Partition
 	servicePackages           map[string]ServicePackage
 	s3ExpressClient           *s3.Client
-	s3UsePathStyle            bool   // From provider configuration.
-	s3USEast1RegionalEndpoint string // From provider configuration.
-	stsRegion                 string // From provider configuration.
-	terraformVersion          string // From provider configuration.
+	s3UsePathStyle            bool                // From provider configuration.
+	s3USEast1RegionalEndpoint string              // From provider configuration.
+	sqsWaitTimes              *SQSWaitTimesConfig // From provider configuration.
+	stsRegion                 string              // From provider configuration.
+	terraformVersion          string              // From provider configuration.
 }
 
 func (c *AWSClient) SetServicePackages(_ context.Context, servicePackages map[string]ServicePackage) {
@@ -411,4 +412,9 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 	}
 
 	return client, nil
+}
+
+// SQSWaitTimes returns the SQS wait times configuration
+func (c *AWSClient) SQSWaitTimes() *SQSWaitTimesConfig {
+	return c.sqsWaitTimes
 }
