@@ -22,10 +22,9 @@ func TestAccRDSGlobalClusterDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.ConfigMultipleRegionProvider(2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterDataSourceConfig_basic(rName),
@@ -46,14 +45,17 @@ func TestAccRDSGlobalClusterDataSource_basic(t *testing.T) {
 }
 
 func testAccGlobalClusterDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
-
+	return fmt.Sprintf(`
+locals {
+  alternate_region = %[2]q
+}
 
 data "aws_region" "alternate" {
-  provider = "awsalternate"
+  region = local.alternate_region
 }
 
 data "aws_region" "current" {}
+
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
   engine                    = "aurora-postgresql"
@@ -89,13 +91,14 @@ resource "aws_rds_cluster_instance" "primary" {
 }
 
 resource "aws_rds_cluster" "secondary" {
-  provider                      = "awsalternate"
+  region = local.alternate_region
+
   engine                        = aws_rds_global_cluster.test.engine
   engine_version                = aws_rds_global_cluster.test.engine_version
   cluster_identifier            = "%[1]s-secondary"
   global_cluster_identifier     = aws_rds_global_cluster.test.id
   replication_source_identifier = aws_rds_cluster.primary.arn
-  source_region                 = data.aws_region.alternate.name
+  source_region                 = data.aws_region.alternate.region
   skip_final_snapshot           = true
   depends_on = [
     aws_rds_cluster_instance.primary
@@ -103,7 +106,8 @@ resource "aws_rds_cluster" "secondary" {
 }
 
 resource "aws_rds_cluster_instance" "secondary" {
-  provider           = "awsalternate"
+  region = local.alternate_region
+
   identifier         = "%[1]s-secondary"
   cluster_identifier = aws_rds_cluster.secondary.id
   instance_class     = "db.r5.large"
@@ -118,5 +122,5 @@ resource "aws_rds_cluster_instance" "secondary" {
 data "aws_rds_global_cluster" "test" {
   identifier = aws_rds_global_cluster.test.global_cluster_identifier
 }
-`, rName))
+`, rName, acctest.AlternateRegion())
 }

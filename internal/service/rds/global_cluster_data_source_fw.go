@@ -38,13 +38,16 @@ func (d *dataSourceGlobalCluster) Schema(ctx context.Context, request datasource
 			names.AttrDeletionProtection: schema.BoolAttribute{
 				Computed: true,
 			},
+			"endpoint": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrEngine: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrEngineVersion: schema.StringAttribute{
+			"engine_lifecycle_support": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrForceDestroy: schema.BoolAttribute{
+			names.AttrEngineVersion: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrIdentifier: schema.StringAttribute{
@@ -55,9 +58,6 @@ func (d *dataSourceGlobalCluster) Schema(ctx context.Context, request datasource
 				Computed:   true,
 			},
 			names.AttrResourceID: schema.StringAttribute{
-				Computed: true,
-			},
-			"source_db_cluster_identifier": schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrStorageEncrypted: schema.BoolAttribute{
@@ -77,13 +77,13 @@ func (d *dataSourceGlobalCluster) Read(ctx context.Context, request datasource.R
 		return
 	}
 
-	output, err := findGlobalClusterByID(ctx, conn, data.GlobalClusterIdentifier.ValueString())
+	output, err := findGlobalClusterByID(ctx, conn, data.Identifier.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.GlobalClusterIdentifier.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Expand(ctx, data, &output))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("GlobalCluster")))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -93,18 +93,18 @@ func (d *dataSourceGlobalCluster) Read(ctx context.Context, request datasource.R
 
 type dataSourceGlobalClusterData struct {
 	framework.WithRegionModel
-	ARN                       types.String                                               `tfsdk:"arn"`
-	DatabaseName              types.String                                               `tfsdk:"database_name"`
-	DeletionProtection        types.Bool                                                 `tfsdk:"deletion_protection"`
-	Engine                    types.String                                               `tfsdk:"engine"`
-	EngineVersion             types.String                                               `tfsdk:"engine_version"`
-	ForceDestroy              types.Bool                                                 `tfsdk:"force_destroy"`
-	GlobalClusterIdentifier   types.String                                               `tfsdk:"identifier"`
-	GlobalClusterMembers      fwtypes.ListNestedObjectValueOf[globalClusterMembersModel] `tfsdk:"members"`
-	GlobalClusterResourceID   types.String                                               `tfsdk:"resource_id"`
-	SourceDbClusterIdentifier types.String                                               `tfsdk:"source_db_cluster_identifier"`
-	StorageEncrypted          types.Bool                                                 `tfsdk:"storage_encrypted"`
-	Tags                      tftags.Map                                                 `tfsdk:"tags"`
+	ARN                    types.String                                               `tfsdk:"arn"`
+	DatabaseName           types.String                                               `tfsdk:"database_name"`
+	DeletionProtection     types.Bool                                                 `tfsdk:"deletion_protection"`
+	Endpoint               types.String                                               `tfsdk:"endpoint"`
+	Engine                 types.String                                               `tfsdk:"engine"`
+	EngineVersion          types.String                                               `tfsdk:"engine_version"`
+	EngineLifecycleSupport types.String                                               `tfsdk:"engine_lifecycle_support"`
+	Identifier             types.String                                               `tfsdk:"identifier"`
+	Members                fwtypes.ListNestedObjectValueOf[globalClusterMembersModel] `tfsdk:"members"`
+	ResourceID             types.String                                               `tfsdk:"resource_id"`
+	StorageEncrypted       types.Bool                                                 `tfsdk:"storage_encrypted"`
+	Tags                   tftags.Map                                                 `tfsdk:"tags"`
 }
 
 type globalClusterMembersModel struct {
