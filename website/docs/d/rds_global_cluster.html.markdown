@@ -15,8 +15,8 @@ Terraform data source for managing an AWS RDS (Relational Database) Global Clust
 ### Basic Usage
 
 ```terraform
-data "aws_rds_global_cluster" "example" { 
-  identifier = aws_rds_global_cluster.example.global_cluster_identifier
+data "aws_rds_global_cluster" "example" {
+  identifier = aws_rds_global_cluster.test.global_cluster_identifier
 }
 ```
 
