@@ -564,6 +564,40 @@ func resourceDomain() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"identity_center_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled_api_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"identity_center_instance_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateFunc:     verify.ValidARN,
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+						"roles_key": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RolesKeyIdCOption](),
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+						"subject_key": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SubjectKeyIdCOption](),
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+					},
+				},
+			},
 			names.AttrIPAddressType: {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -718,6 +752,14 @@ func resourceDomain() *schema.Resource {
 			},
 		},
 	}
+}
+
+func suppressDiffIfIdentityCenterOptionsDisabled(_, _, _ string, d *schema.ResourceData) bool {
+	// `!ok` means the attribute is not set, or the attribute is set to false
+	if _, ok := d.GetOk("identity_center_options.0.enabled_api_access"); !ok {
+		return true
+	}
+	return false
 }
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -906,6 +948,27 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
+	if v, ok := d.GetOk("identity_center_options"); ok {
+		input := opensearch.UpdateDomainConfigInput{
+			IdentityCenterOptions: expandIdentityCenterOptions(v.([]any)),
+			DomainName:            aws.String(name),
+		}
+
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
+				return conn.UpdateDomainConfig(ctx, &input)
+			},
+			domainErrorRetryable,
+		)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
+		}
+
+		if err := waitForDomainUpdate(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) update: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
@@ -989,6 +1052,11 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
 	}
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	if ds.IdentityCenterOptions != nil {
+		if err := d.Set("identity_center_options", flattenIdentityCenterOptions(ds.IdentityCenterOptions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting identity_center_options: %s", err)
+		}
+	}
 	d.Set(names.AttrIPAddressType, ds.IPAddressType)
 	// Remove any disabled log types that aren't in state.
 	var inStateLogTypes []string
@@ -1154,6 +1222,15 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 				s := options[0].(map[string]any)
 				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+			}
+		}
+
+		if d.HasChange("identity_center_options") {
+			if v, ok := d.GetOk("identity_center_options"); ok && len(v.([]any)) > 0 {
+				input.IdentityCenterOptions = expandIdentityCenterOptions(d.Get("identity_center_options").([]any))
+			} else {
+				// Identity Center Options is disabled when empty object is provided.
+				input.IdentityCenterOptions = &awstypes.IdentityCenterOptionsInput{}
 			}
 		}
 
