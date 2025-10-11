@@ -169,7 +169,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccOrganizationConfig_basic(rAlias string) string {
 	return fmt.Sprintf(`
 resource "aws_workmail_organization" "test" {
-  alias			          = %[1]q
+  alias = %[1]q
 }
 `, rAlias)
 }

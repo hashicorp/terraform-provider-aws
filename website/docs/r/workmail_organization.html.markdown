@@ -24,6 +24,7 @@ resource "aws_workmail_organization" "example" {
 
 The following arguments are required:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias` - (Required) A unique alias for the organisation.
 
 ## Attribute Reference
@@ -32,7 +33,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Organization.
 
-The resource has additional options, which are not supported yet. 
+The resource has additional options, which are not supported yet.
 
 ## Timeouts
 
