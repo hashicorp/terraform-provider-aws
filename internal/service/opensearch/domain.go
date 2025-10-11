@@ -755,7 +755,8 @@ func resourceDomain() *schema.Resource {
 }
 
 func suppressDiffIfIdentityCenterOptionsDisabled(_, _, _ string, d *schema.ResourceData) bool {
-	if v, ok := d.GetOk("identity_center_options.0.enabled_api_access"); (ok && !v.(bool)) || !ok {
+	// `!ok` means the attribute is not set, or the attribute is set to false
+	if _, ok := d.GetOk("identity_center_options.0.enabled_api_access"); !ok {
 		return true
 	}
 	return false
