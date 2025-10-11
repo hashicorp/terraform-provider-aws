@@ -94,7 +94,7 @@ func resourceLaunchTemplate() *schema.Resource {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									"volume_initialization_rate": {
 										Type:         schema.TypeInt,
