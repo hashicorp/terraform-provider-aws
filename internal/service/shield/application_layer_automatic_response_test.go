@@ -159,7 +159,7 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols = [
         "TLSv1",
         "TLSv1.1",
-        "TLSv1.2",
+        "TLSv1.2_2021",
       ]
     }
     # This is a fake origin and it's set to this name to indicate that.
