@@ -6827,7 +6827,6 @@ service "rdsdata" {
   provider_package_correct = "rdsdata"
   doc_prefix               = ["rdsdata_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "pi" {

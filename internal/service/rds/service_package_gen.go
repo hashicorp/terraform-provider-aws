@@ -161,6 +161,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  dataSourceQuery,
+			TypeName: "aws_rdsdata_query",
+			Name:     "Query",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  dataSourceReservedOffering,
 			TypeName: "aws_rds_reserved_instance_offering",
 			Name:     "Reserved Instance Offering",
