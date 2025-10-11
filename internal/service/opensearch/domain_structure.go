@@ -438,7 +438,7 @@ func getMasterUserOptions(d *schema.ResourceData) []any {
 }
 
 func expandIdentityCenterOptions(tfList []any) *awstypes.IdentityCenterOptionsInput {
-	if tfList == nil || len(tfList) == 0 {
+	if len(tfList) == 0 {
 		return nil
 	}
 
