@@ -4517,16 +4517,16 @@ resource "aws_opensearch_domain" "test" {
   }
 
   encrypt_at_rest {
-   enabled = true
+    enabled = true
   }
 
   node_to_node_encryption {
-   enabled = true
+    enabled = true
   }
 
   domain_endpoint_options {
-   enforce_https       = true
-   tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 
   identity_center_options {
@@ -4566,16 +4566,16 @@ resource "aws_opensearch_domain" "test" {
   }
 
   encrypt_at_rest {
-   enabled = true
+    enabled = true
   }
 
   node_to_node_encryption {
-   enabled = true
+    enabled = true
   }
 
   domain_endpoint_options {
-   enforce_https       = true
-   tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 
   identity_center_options {
@@ -4613,16 +4613,16 @@ resource "aws_opensearch_domain" "test" {
   }
 
   encrypt_at_rest {
-   enabled = true
+    enabled = true
   }
 
   node_to_node_encryption {
-   enabled = true
+    enabled = true
   }
 
   domain_endpoint_options {
-   enforce_https       = true
-   tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 
   identity_center_options {
@@ -4659,16 +4659,16 @@ resource "aws_opensearch_domain" "test" {
   }
 
   encrypt_at_rest {
-   enabled = true
+    enabled = true
   }
 
   node_to_node_encryption {
-   enabled = true
+    enabled = true
   }
 
   domain_endpoint_options {
-   enforce_https       = true
-   tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 }
 `, rName)
