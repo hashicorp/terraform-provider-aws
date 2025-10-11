@@ -44,6 +44,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` - Unique identifier of odb network peering connection.
 * `status` - Status of the ODB network peering connection.
 * `status_reason` - The reason for the current status of the ODB peering connection.
 * `odb_network_arn` - ARN of the ODB network peering connection.

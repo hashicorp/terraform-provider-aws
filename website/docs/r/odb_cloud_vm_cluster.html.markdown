@@ -101,6 +101,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` - Unique identifier of vm cluster.
 * `arn` - The Amazon Resource Name (ARN) for the cloud vm cluster.
 * `disk_redundancy` - The type of redundancy for the VM cluster: NORMAL (2-way) or HIGH (3-way).
 * `AttrDomain` - The domain name associated with the VM cluster.
