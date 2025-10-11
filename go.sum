@@ -285,8 +285,8 @@ github.com/aws/aws-sdk-go-v2/service/healthlake v1.35.5 h1:FP9XMTzx31mocJLJjPJEp
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.35.5/go.mod h1:kVyA+EB5+V1zoCKEd7DR2isRChxswqaafB3kFl5eM0Q=
 github.com/aws/aws-sdk-go-v2/service/iam v1.47.7 h1:0EDAdmMTzsgXl++8a0JZ+Yx0/dOqT8o/EONknxlQK94=
 github.com/aws/aws-sdk-go-v2/service/iam v1.47.7/go.mod h1:NkNbn/8/mFrPUq0Kg6EM6c0+GaTLG+aPzXxwB7RF5xo=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.32.6 h1:yJG8OLDpUK/U/BDClI+McQi5zzcIxV+kf1q2WxjWzNo=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.32.6/go.mod h1:4xOhHo77B1qfs09L1DJq5luMO2cSILnc+8UkLvzvtHw=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.32.7 h1:k6s7ZccfZzFfRcko46b+wpiTihVSFb8oAM3zwRTNso0=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.32.7/go.mod h1:4xOhHo77B1qfs09L1DJq5luMO2cSILnc+8UkLvzvtHw=
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.0 h1:F3LuF59HfxqQqWA8lrjZmRwvScpfc6pvkrzHwFZwryA=
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.0/go.mod h1:B44b3XYDjkYgLbEpyTWrK+0k8+N1PZoBO8PdJUF4Cn4=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.30.5 h1:a9Yl3PlsRSiOlfg7qCpAPTnL/yhfsEFrPuyMjnnmUkA=
@@ -423,8 +423,8 @@ github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.6 h1:kLTYFvi4+nsETUZpwqPcVV
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.6/go.mod h1:XxU8fY4XHMpkvrCDaylvGiaz1PSU1nntX3XasTEomDQ=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.30.6 h1:5FBEiFjL83odCokDLGauL1g5Noiapq8jRsqKN2/YaF8=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.30.6/go.mod h1:FZR8mKbaQK8xEyQmtZKEPYj6Rxgi3iLKFi7MutHzYNI=
-github.com/aws/aws-sdk-go-v2/service/quicksight v1.94.4 h1:NYaNLjesQC14fZR15t25Wws4znd0NsuvZfUWJAtaYA8=
-github.com/aws/aws-sdk-go-v2/service/quicksight v1.94.4/go.mod h1:aJPu5hqpBhcV4gXqbAuZhBiIZ+dXHrvJ176qTPADa2A=
+github.com/aws/aws-sdk-go-v2/service/quicksight v1.95.0 h1:h4UqFZgvghZXPeP95J1bDDW/+51Ge/JwXge+fhFkXqw=
+github.com/aws/aws-sdk-go-v2/service/quicksight v1.95.0/go.mod h1:aJPu5hqpBhcV4gXqbAuZhBiIZ+dXHrvJ176qTPADa2A=
 github.com/aws/aws-sdk-go-v2/service/ram v1.34.6 h1:S/BivEPJDOKDEaLQuodznRu/9VscK2n24Oi464ySkao=
 github.com/aws/aws-sdk-go-v2/service/ram v1.34.6/go.mod h1:IjW9GK9av7d2rdmmi3uze2erokbWAxUtMwDc1YOj+9M=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.26.6 h1:wKVcl95mVcHW1rJMsf5SsA9T2zrfOmC5WyDrqpFVnVE=
@@ -553,8 +553,8 @@ github.com/aws/aws-sdk-go-v2/service/waf v1.30.5 h1:JUQsG3CPBtXGGdAril5Fois4wiFE
 github.com/aws/aws-sdk-go-v2/service/waf v1.30.5/go.mod h1:sRusTwVAJQtNy6vsrAHGXtd2WIgBGusW2waE6Kgc/So=
 github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.6 h1:DqojtTvnVwuylF6Ru08okb9UGNrq3qc67mZ8Gpz9sVk=
 github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.6/go.mod h1:uo8gzm2uqf+gYYa2blt1ITjIl59iTzOznUGaajPfT+g=
-github.com/aws/aws-sdk-go-v2/service/wafv2 v1.67.7 h1:inakpEsI7NPyC3VP2EbPA4gFcCnaFNu0JNQ01s0u5nE=
-github.com/aws/aws-sdk-go-v2/service/wafv2 v1.67.7/go.mod h1:maJyEaarDIirG/MA0EYIxWc1ctk4sbc4+cEUVCIgorI=
+github.com/aws/aws-sdk-go-v2/service/wafv2 v1.68.0 h1:BUhKcwhfjDIUSA2+J9LLm+C2Z2tcBwFvRpEQAfuWlT4=
+github.com/aws/aws-sdk-go-v2/service/wafv2 v1.68.0/go.mod h1:maJyEaarDIirG/MA0EYIxWc1ctk4sbc4+cEUVCIgorI=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.6 h1:0vFMsxhs4763afIR7366ricWl+w1sVOeroRkMOV9BGA=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.6/go.mod h1:zmHAn01szsTI7D4u2qgUs0CMklmz2af4EU12bDOWZrM=
 github.com/aws/aws-sdk-go-v2/service/workmail v1.36.4 h1:hVmkAUyvH4OZkiW0HmNYYeDjVL7jyj3kCN/3r6nPiW4=

@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.64.3
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/iam v1.47.7
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.32.6
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.6
@@ -201,7 +201,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.30.6
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.94.4
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/rds v1.108.1
@@ -265,7 +265,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.6
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.67.7
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.63.6
