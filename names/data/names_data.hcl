@@ -6815,7 +6815,8 @@ service "rdsdata" {
   }
 
   endpoint_info {
-    endpoint_api_call = "ExecuteStatement"
+    endpoint_api_call   = "ExecuteStatement"
+    endpoint_api_params = "ResourceArn: aws.String(\"arn:\" + acctest.Partition() + \":rds:\" + acctest.Region() + \":\" + acctest.Ct12Digit + \":cluster:test\"),\n\t\tSecretArn: aws.String(\"arn:\" + acctest.Partition() + \":secretsmanager:\" + acctest.Region() + \":\" + acctest.Ct12Digit + \":secret:test\"),\n\t\tSql: aws.String(\"SELECT 1\")"
   }
 
   names {
