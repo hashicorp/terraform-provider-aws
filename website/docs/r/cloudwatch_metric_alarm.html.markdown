@@ -12,6 +12,8 @@ Provides a CloudWatch Metric Alarm resource.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar5"
@@ -27,7 +29,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 }
 ```
 
-## Example in Conjunction with Scaling Policies
+### With Scaling Policies
 
 ```terraform
 resource "aws_autoscaling_policy" "bat" {
@@ -57,7 +59,7 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
 }
 ```
 
-## Example with a metrics math expression
+### With a Metrics Math Expression
 
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "foobar" {
@@ -143,7 +145,7 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
 }
 ```
 
-## Example with a Metrics Insights query
+### With a Metrics Insights Query
 
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "example" {
@@ -172,7 +174,7 @@ resource "aws_cloudwatch_metric_alarm" "example" {
 }
 ```
 
-## Example of monitoring Healthy Hosts on NLB using Target Group and NLB
+### Monitoring Healthy NLB Hosts with Target Group and NLB
 
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
@@ -196,7 +198,7 @@ resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
 ```
 
 ~> **NOTE:**  You cannot create a metric alarm consisting of both `statistic` and `extended_statistic` parameters.
-You must choose one or the other
+You must choose one or the other.
 
 ## Argument Reference
 
@@ -219,7 +221,7 @@ This resource supports the following arguments:
 * `actions_enabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
 * `alarm_actions` - (Optional) The list of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an Amazon Resource Name (ARN).
 * `alarm_description` - (Optional) The description for the alarm.
-* `datapoints_to_alarm` - (Optional) The number of datapoints that must be breaching to trigger the alarm.
+* `datapoints_to_alarm` - (Optional) The number of data points that must be breaching to trigger the alarm.
 * `dimensions` - (Optional) The dimensions for the alarm's associated metric.  For the list of available dimensions see the AWS documentation [here](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `insufficient_data_actions` - (Optional) The list of actions to execute when this alarm transitions into an INSUFFICIENT_DATA state from any other state. Each action is specified as an Amazon Resource Name (ARN).
 * `ok_actions` - (Optional) The list of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an Amazon Resource Name (ARN).
