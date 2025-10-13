@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VpnConnectionDataSource_basic(t *testing.T) {
+func TestAccEC2VPNConnectionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -28,7 +28,7 @@ func TestAccEC2VpnConnectionDataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpnConnectionDataSourceConfig_byId(rName, rBgpAsn),
+				Config: testAccVPNConnectionDataSourceConfig_byId(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpn_connection_id", resourceName, names.AttrID),
@@ -46,7 +46,7 @@ func TestAccEC2VpnConnectionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VpnConnectionDataSource_byFilter(t *testing.T) {
+func TestAccEC2VPNConnectionDataSource_byFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -60,7 +60,7 @@ func TestAccEC2VpnConnectionDataSource_byFilter(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpnConnectionDataSourceConfig_byFilter(rName, rBgpAsn),
+				Config: testAccVPNConnectionDataSourceConfig_byFilter(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpn_connection_id", resourceName, names.AttrID),
@@ -75,7 +75,7 @@ func TestAccEC2VpnConnectionDataSource_byFilter(t *testing.T) {
 	})
 }
 
-func TestAccEC2VpnConnectionDataSource_nonExistentId(t *testing.T) {
+func TestAccEC2VPNConnectionDataSource_nonExistentId(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -84,14 +84,14 @@ func TestAccEC2VpnConnectionDataSource_nonExistentId(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVpnConnectionDataSourceConfig_nonExistentId(),
+				Config:      testAccVPNConnectionDataSourceConfig_nonExistentId(),
 				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 		},
 	})
 }
 
-func TestAccEC2VpnConnectionDataSource_noInput(t *testing.T) {
+func TestAccEC2VPNConnectionDataSource_noInput(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -100,14 +100,14 @@ func TestAccEC2VpnConnectionDataSource_noInput(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVpnConnectionDataSourceConfig_noInput(),
-				ExpectError: regexache.MustCompile(`Missing input`),
+				Config:      testAccVPNConnectionDataSourceConfig_noInput(),
+				ExpectError: regexache.MustCompile(`missing input`),
 			},
 		},
 	})
 }
 
-func testAccVpnConnectionDataSourceConfig_byId(rName string, rBgpAsn int) string {
+func testAccVPNConnectionDataSourceConfig_byId(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -139,7 +139,7 @@ data "aws_ec2_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccVpnConnectionDataSourceConfig_byFilter(rName string, rBgpAsn int) string {
+func testAccVPNConnectionDataSourceConfig_byFilter(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -179,7 +179,7 @@ data "aws_ec2_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccVpnConnectionDataSourceConfig_nonExistentId() string {
+func testAccVPNConnectionDataSourceConfig_nonExistentId() string {
 	return `
 data "aws_ec2_vpn_connection" "test" {
   vpn_connection_id = "vpn-12345678901234567"
@@ -187,7 +187,7 @@ data "aws_ec2_vpn_connection" "test" {
 `
 }
 
-func testAccVpnConnectionDataSourceConfig_noInput() string {
+func testAccVPNConnectionDataSourceConfig_noInput() string {
 	return `
 data "aws_ec2_vpn_connection" "test" {
   # No vpn_connection_id or filter specified

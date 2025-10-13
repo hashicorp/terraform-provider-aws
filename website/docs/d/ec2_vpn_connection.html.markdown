@@ -36,9 +36,10 @@ output "gateway_association_state" {
   value = aws_ec2_vpn_connection.example.gateway_association_state
 }
 ```
+
 ## Argument Reference
 
-The following arguments are optional, either of the arguments should be present:
+This data source supports the following arguments:
 
 * `vpn_connection_id` - (Optional) Identifier of the EC2 VPN Connection.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.

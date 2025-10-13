@@ -68,7 +68,7 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 				CustomType: fwtypes.StringEnumType[awstypes.VpnState](),
 				Computed:   true,
 			},
-			"transit_gateway_id": schema.StringAttribute{
+			names.AttrTransitGatewayID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrType: schema.StringAttribute{
@@ -89,16 +89,15 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 }
 
 func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
 	conn := d.Meta().EC2Client(ctx)
-
+	
 	var data dataSourceVPNConnectionModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &ec2.DescribeVpnConnectionsInput{
+	input := ec2.DescribeVpnConnectionsInput{
 		Filters:          newCustomFilterListFramework(ctx, data.Filters),
 		VpnConnectionIds: []string{data.VpnConnectionId.ValueString()},
 	}
@@ -114,11 +113,11 @@ func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	if input.Filters == nil && input.VpnConnectionIds == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("Missing input"), smerr.ID)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("missing input"), smerr.ID)
 		return
 	}
 
-	out, err := findVPNConnection(ctx, conn, input)
+	out, err := findVPNConnection(ctx, conn, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
 		return
