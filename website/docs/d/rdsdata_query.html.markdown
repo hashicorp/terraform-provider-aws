@@ -3,12 +3,14 @@ subcategory: "RDS Data"
 layout: "aws"
 page_title: "AWS: aws_rdsdata_query"
 description: |-
-  Executes SQL queries against RDS Aurora Serverless clusters using the RDS Data API.
+  Executes SQL queries against RDS clusters using the RDS Data API.
 ---
 
 # Data Source: aws_rdsdata_query
 
-Executes SQL queries against RDS Aurora Serverless clusters using the RDS Data API. This data source allows you to run SQL statements and retrieve results in JSON format.
+Executes SQL queries against RDS clusters using the RDS Data API. This data source allows you to run SQL statements and retrieve results in JSON format.
+
+~> **Note:** This data source is ideal for SELECT queries that need to be executed multiple times during Terraform operations. For one-time operations like DDL statements, INSERT, UPDATE, or DELETE operations, consider using the [`aws_rdsdata_query` resource](/docs/providers/aws/r/rdsdata_query.html) instead.
 
 ## Example Usage
 
