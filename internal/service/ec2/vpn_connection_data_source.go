@@ -90,7 +90,6 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 
 func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EC2Client(ctx)
-	
 	var data dataSourceVPNConnectionModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {

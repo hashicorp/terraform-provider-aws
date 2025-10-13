@@ -16,20 +16,20 @@ Provides details about an AWS EC2 (Elastic Compute Cloud) VPN Connection.
 
 ```terraform
 data "aws_ec2_vpn_connection" "example" {
-    filter {
-        name   = "customer-gateway-id"
-        values = ["cgw-1234567890"]
-    }
+  filter {
+    name   = "customer-gateway-id"
+    values = ["cgw-1234567890"]
+  }
 }
 
 output "vpn_connection_id" {
-  value = aws_ec2_vpn_connection.example.vpn_connection_id 
+  value = aws_ec2_vpn_connection.example.vpn_connection_id
 }
 ```
 
 ```terraform
 data "aws_ec2_vpn_connection" "example" {
-    vpn_connection_id = ""
+  vpn_connection_id = ""
 }
 
 output "gateway_association_state" {
