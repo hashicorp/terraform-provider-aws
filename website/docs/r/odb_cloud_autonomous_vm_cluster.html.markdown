@@ -105,6 +105,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Unique identifier of autonomous vm cluster.
 * `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
 * `autonomous_data_storage_percentage` - The progress of the current operation on the Autonomous VM cluster, as a percentage.
 * `available_autonomous_data_storage_size_in_tbs` - The available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.
