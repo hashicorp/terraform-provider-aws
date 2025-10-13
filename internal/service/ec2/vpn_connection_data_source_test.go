@@ -17,7 +17,7 @@ import (
 func TestAccEC2VPNConnectionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := sdkacctest.RandIntRange(65501, 65534)
 	dataSourceName := "data.aws_ec2_vpn_connection.test"
 	resourceName := "aws_vpn_connection.test"
 
@@ -49,7 +49,7 @@ func TestAccEC2VPNConnectionDataSource_basic(t *testing.T) {
 func TestAccEC2VPNConnectionDataSource_byFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := sdkacctest.RandIntRange(65501, 65534)
 	dataSourceName := "data.aws_ec2_vpn_connection.test"
 	resourceName := "aws_vpn_connection.test"
 
@@ -101,7 +101,7 @@ func TestAccEC2VPNConnectionDataSource_noInput(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPNConnectionDataSourceConfig_noInput(),
-				ExpectError: regexache.MustCompile(`missing input`),
+				ExpectError: regexache.MustCompile(`Missing Attribute Configuration`),
 			},
 		},
 	})

@@ -5,14 +5,15 @@ package ec2
 
 import (
 	"context"
-	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -38,10 +39,6 @@ type dataSourceVPNConnection struct {
 func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"vpn_connection_id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
 			"category": schema.StringAttribute{
 				Computed: true,
 			},
@@ -61,26 +58,30 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 				CustomType: fwtypes.StringEnumType[awstypes.GatewayAssociationState](),
 				Computed:   true,
 			},
+			names.AttrID: framework.IDAttribute(),
 			"pre_shared_key_arn": schema.StringAttribute{
 				Computed: true,
 			},
+			"routes": framework.DataSourceComputedListOfObjectAttribute[routeModel](ctx),
 			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.VpnState](),
 				Computed:   true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrTransitGatewayID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrType: schema.StringAttribute{
 				Computed: true,
 			},
+			"vgw_telemetries": framework.DataSourceComputedListOfObjectAttribute[vgwTelemetryModel](ctx),
+			"vpn_connection_id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			"vpn_gateway_id": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID:      framework.IDAttribute(),
-			names.AttrTags:    tftags.TagsAttributeComputedOnly(),
-			"routes":          framework.DataSourceComputedListOfObjectAttribute[routeModel](ctx),
-			"vgw_telemetries": framework.DataSourceComputedListOfObjectAttribute[vgwTelemetryModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrFilter: customFiltersBlock(ctx),
@@ -96,24 +97,11 @@ func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	input := ec2.DescribeVpnConnectionsInput{
-		Filters:          newCustomFilterListFramework(ctx, data.Filters),
-		VpnConnectionIds: []string{data.VpnConnectionId.ValueString()},
-	}
+	input := ec2.DescribeVpnConnectionsInput{}
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, data, &input, flex.WithIgnoredFieldNamesAppend("VpnConnectionId")), smerr.ID)
 
-	if len(input.Filters) == 0 {
-		// Don't send an empty filters list; the EC2 API won't accept it.
-		input.Filters = nil
-	}
-
-	if input.VpnConnectionIds[0] == "" {
-		// Don't send an empty ID; the EC2 API won't accept it.
-		input.VpnConnectionIds = nil
-	}
-
-	if input.Filters == nil && input.VpnConnectionIds == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("missing input"), smerr.ID)
-		return
+	if !data.VpnConnectionId.IsNull() && !data.VpnConnectionId.IsUnknown() {
+		input.VpnConnectionIds = []string{data.VpnConnectionId.ValueString()}
 	}
 
 	out, err := findVPNConnection(ctx, conn, &input)
@@ -128,6 +116,15 @@ func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadR
 	}
 	data.ID = types.StringValue(aws.ToString(out.VpnConnectionId))
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.VpnConnectionId.String())
+}
+
+func (d *dataSourceVPNConnection) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.AtLeastOneOf(
+			path.MatchRoot("vpn_connection_id"),
+			path.MatchRoot(names.AttrFilter),
+		),
+	}
 }
 
 type dataSourceVPNConnectionModel struct {

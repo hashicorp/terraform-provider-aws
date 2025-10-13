@@ -23,17 +23,19 @@ data "aws_ec2_vpn_connection" "example" {
 }
 
 output "vpn_connection_id" {
-  value = aws_ec2_vpn_connection.example.vpn_connection_id
+  value = data.aws_ec2_vpn_connection.example.vpn_connection_id
 }
 ```
 
+### Find by VPN Connection ID
+
 ```terraform
 data "aws_ec2_vpn_connection" "example" {
-  vpn_connection_id = ""
+  vpn_connection_id = "vpn-abcd1234567890"
 }
 
 output "gateway_association_state" {
-  value = aws_ec2_vpn_connection.example.gateway_association_state
+  value = data.aws_ec2_vpn_connection.example.gateway_association_state
 }
 ```
 
@@ -43,8 +45,9 @@ This data source supports the following arguments:
 
 * `vpn_connection_id` - (Optional) Identifier of the EC2 VPN Connection.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### filter Configuration Block
+### Filter Configuration Block
 
 The `filter` configuration block supports the following arguments:
 
