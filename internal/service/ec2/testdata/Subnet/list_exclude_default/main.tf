@@ -12,6 +12,7 @@ data "aws_vpc" "default" {
   default = true
 }
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_subnets" "defaults" {
   filter {
     name   = "default-for-az"
