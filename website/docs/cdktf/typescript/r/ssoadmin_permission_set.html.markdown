@@ -55,6 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the Permission Set.
 * `instanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `name` - (Required, Forces new resource) The name of the Permission Set.
@@ -109,4 +110,4 @@ Using `terraform import`, import SSO Permission Sets using the `arn` and `instan
 % terraform import aws_ssoadmin_permission_set.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2c1f2076ed612356260a73ee4a57bd14c4cf5a5dd7d59da0d248e8cda59c8f43 -->
+<!-- cache-key: cdktf-0.20.8 input-569551b2248bb3747c06a3cc41db242c3f95fda98912b5fb0f5b10ca0c59d307 -->

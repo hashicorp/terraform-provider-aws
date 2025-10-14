@@ -226,7 +226,7 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("default_iam_role_arn", output.DefaultIamRoleArn)
 	d.Set("iam_roles", flattenNamespaceIAMRoles(output.IamRoles))
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
-	d.Set("log_exports", flex.FlattenStringyValueSet[awstypes.LogExport](output.LogExports))
+	d.Set("log_exports", output.LogExports)
 	d.Set("namespace_id", output.NamespaceId)
 	d.Set("namespace_name", output.NamespaceName)
 
@@ -303,8 +303,8 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, namespaceDeletedTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, namespaceDeletedTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteNamespace(ctx, &redshiftserverless.DeleteNamespaceInput{
 				NamespaceName: aws.String(d.Id()),
 			})

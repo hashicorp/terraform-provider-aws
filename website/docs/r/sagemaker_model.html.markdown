@@ -48,6 +48,7 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primary_container` - (Optional) The primary docker image containing inference code that is used when the model is deployed for predictions.  If not specified, the `container` argument is required. Fields are documented below.
 * `execution_role_arn` - (Required) A role that SageMaker AI can assume to access model artifacts and docker images for deployment.

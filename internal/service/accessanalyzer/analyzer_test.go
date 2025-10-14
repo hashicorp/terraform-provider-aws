@@ -108,7 +108,66 @@ func testAccAnalyzer_typeOrganization(t *testing.T) {
 	})
 }
 
-func testAccAnalyzer_configuration(t *testing.T) {
+func testAccAnalyzer_accountInternalAccess(t *testing.T) {
+	ctx := acctest.Context(t)
+	var analyzer types.AnalyzerSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_accessanalyzer_analyzer.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyzerConfig_accountInternalAccess_resourceARNs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ACCOUNT_INTERNAL_ACCESS"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.account_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_arns.0", s3BucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_types.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAnalyzerConfig_accountInternalAccess_resourceTypes(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ACCOUNT_INTERNAL_ACCESS"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.account_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_types.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_types.0", "AWS::S3::Bucket"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_types.1", "AWS::RDS::DBSnapshot"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_types.2", "AWS::DynamoDB::Table"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAnalyzer_accountUnusedAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -121,12 +180,83 @@ func testAccAnalyzer_configuration(t *testing.T) {
 		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerConfig_configuration(rName),
+				Config: testAccAnalyzerConfig_accountUnusedAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ACCOUNT_UNUSED_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAnalyzer_organizationInternalAccess(t *testing.T) {
+	ctx := acctest.Context(t)
+	var analyzer types.AnalyzerSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_accessanalyzer_analyzer.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyzerConfig_organizationInternalAccess_resourceARNs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ORGANIZATION_INTERNAL_ACCESS"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.account_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_arns.0", s3BucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_types.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAnalyzerConfig_organizationInternalAccess_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ORGANIZATION_INTERNAL_ACCESS"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.account_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.account_ids.0", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_arns.0", s3BucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.0.resource_types.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.1.account_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.1.resource_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.1.resource_types.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.1.resource_types.0", "AWS::S3::Bucket"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.1.resource_types.1", "AWS::RDS::DBSnapshot"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.0.analysis_rule.0.inclusion.1.resource_types.2", "AWS::DynamoDB::Table"),
 				),
 			},
 			{
@@ -158,7 +288,7 @@ func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
 				Config: testAccAnalyzerConfig_organizationUnusedAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ORGANIZATION_UNUSED_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.#", "1"),
@@ -302,7 +432,54 @@ resource "aws_accessanalyzer_analyzer" "test" {
 `, rName)
 }
 
-func testAccAnalyzerConfig_configuration(rName string) string {
+func testAccAnalyzerConfig_accountInternalAccess_resourceARNs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = %[1]q
+  type          = "ACCOUNT_INTERNAL_ACCESS"
+
+  configuration {
+    internal_access {
+      analysis_rule {
+        inclusion {
+          resource_arns = [aws_s3_bucket.test.arn]
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAnalyzerConfig_accountInternalAccess_resourceTypes(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = %[1]q
+  type          = "ACCOUNT_INTERNAL_ACCESS"
+
+  configuration {
+    internal_access {
+      analysis_rule {
+        inclusion {
+          resource_types = [
+            "AWS::S3::Bucket",
+            "AWS::RDS::DBSnapshot",
+            "AWS::DynamoDB::Table",
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAnalyzerConfig_accountUnusedAccess(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
@@ -311,6 +488,81 @@ resource "aws_accessanalyzer_analyzer" "test" {
   configuration {
     unused_access {
       unused_access_age = 180
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAnalyzerConfig_organizationInternalAccess_resourceARNs(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["access-analyzer.${data.aws_partition.current.dns_suffix}"]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_accessanalyzer_analyzer" "test" {
+  depends_on = [aws_organizations_organization.test]
+
+  analyzer_name = %[1]q
+  type          = "ORGANIZATION_INTERNAL_ACCESS"
+
+  configuration {
+    internal_access {
+      analysis_rule {
+        inclusion {
+          account_ids   = [data.aws_caller_identity.current.account_id]
+          resource_arns = [aws_s3_bucket.test.arn]
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAnalyzerConfig_organizationInternalAccess_multiple(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["access-analyzer.${data.aws_partition.current.dns_suffix}"]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_accessanalyzer_analyzer" "test" {
+  depends_on = [aws_organizations_organization.test]
+
+  analyzer_name = %[1]q
+  type          = "ORGANIZATION_INTERNAL_ACCESS"
+
+  configuration {
+    internal_access {
+      analysis_rule {
+        inclusion {
+          account_ids   = [data.aws_caller_identity.current.account_id]
+          resource_arns = [aws_s3_bucket.test.arn]
+        }
+        inclusion {
+          resource_types = [
+            "AWS::S3::Bucket",
+            "AWS::RDS::DBSnapshot",
+            "AWS::DynamoDB::Table",
+          ]
+        }
+      }
     }
   }
 }

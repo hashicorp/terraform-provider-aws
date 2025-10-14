@@ -18,13 +18,15 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Analyzer": {
-			acctest.CtBasic:            testAccAnalyzer_basic,
-			"configuration":            testAccAnalyzer_configuration,
-			"organizationUnusedAccess": testAccAnalyzer_organizationUnusedAccess,
-			acctest.CtDisappears:       testAccAnalyzer_disappears,
-			"tags":                     testAccAccessAnalyzerAnalyzer_tagsSerial,
-			"type_Organization":        testAccAnalyzer_typeOrganization,
-			"upgradeV5_95_0":           testAccAnalyzer_upgradeV5_95_0,
+			acctest.CtBasic:              testAccAnalyzer_basic,
+			"accountInternalAccess":      testAccAnalyzer_accountInternalAccess,
+			"accountUnusedAccess":        testAccAnalyzer_accountUnusedAccess,
+			"organizationInternalAccess": testAccAnalyzer_organizationInternalAccess,
+			"organizationUnusedAccess":   testAccAnalyzer_organizationUnusedAccess,
+			acctest.CtDisappears:         testAccAnalyzer_disappears,
+			"tags":                       testAccAccessAnalyzerAnalyzer_tagsSerial,
+			"type_Organization":          testAccAnalyzer_typeOrganization,
+			"upgradeV5_95_0":             testAccAnalyzer_upgradeV5_95_0,
 		},
 		"ArchiveRule": {
 			acctest.CtBasic:      testAccAnalyzerArchiveRule_basic,

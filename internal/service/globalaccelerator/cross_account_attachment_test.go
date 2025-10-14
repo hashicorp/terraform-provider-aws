@@ -63,6 +63,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"

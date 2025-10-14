@@ -25,6 +25,7 @@ resource "aws_apprunner_custom_domain_association" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
 * `enable_www_subdomain` (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
 * `service_arn` - (Required) ARN of the App Runner service.

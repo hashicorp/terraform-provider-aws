@@ -240,7 +240,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `
@@ -251,7 +251,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test ipam"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `
@@ -268,10 +268,10 @@ data "aws_region" "alternate" {
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
   operating_regions {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `)
@@ -284,7 +284,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
   tags = {
     %[1]q = %[2]q
@@ -300,7 +300,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
   tags = {
     %[1]q = %[2]q

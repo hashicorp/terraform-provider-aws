@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
 * `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
@@ -91,4 +92,4 @@ Using `terraform import`, import `aws_db_cluster_snapshot` using the cluster sna
 % terraform import aws_db_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2d79729594e2ee44aedd9fc92ffa463a6de54138756327a15a1ba8e2ad7a7bc0 -->
+<!-- cache-key: cdktf-0.20.8 input-9b121296b7abc787ae46486660faad88c4d64778084a17936aaf1c7e849f5ad4 -->

@@ -17,6 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1485,6 +1486,11 @@ func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.target_group_arn", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -1493,9 +1499,15 @@ func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 						VersionConstraint: "5.36.0",
 					},
 				},
-				Config:             testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -4279,7 +4291,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_lb_listener_rule" "error" {
-  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
+  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.region}:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
   priority     = 100
 
   action {
@@ -4513,7 +4525,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
+  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.region}:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
   priority     = 100
 
   action {

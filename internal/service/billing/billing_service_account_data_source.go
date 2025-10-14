@@ -23,7 +23,7 @@ func newServiceAccountDataSource(context.Context) (datasource.DataSourceWithConf
 }
 
 type billingServiceAccountDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[billingServiceAccountDataSourceModel]
 }
 
 func (d *billingServiceAccountDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

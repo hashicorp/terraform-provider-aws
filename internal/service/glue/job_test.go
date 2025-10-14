@@ -12,7 +12,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
@@ -702,36 +706,71 @@ func TestAccGlueJob_workerType(t *testing.T) {
 				Config: testAccJobConfig_workerType(rName, "Standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", "Standard"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_type"), knownvalue.StringExact("Standard")),
+				},
 			},
 			{
 				Config: testAccJobConfig_workerType(rName, "G.1X"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.1X"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_type"), knownvalue.StringExact("G.1X")),
+				},
 			},
 			{
 				Config: testAccJobConfig_workerType(rName, "G.2X"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.2X"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_type"), knownvalue.StringExact("G.2X")),
+				},
 			},
 			{
 				Config: testAccJobConfig_workerType(rName, "G.4X"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.4X"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_type"), knownvalue.StringExact("G.4X")),
+				},
 			},
 			{
-				Config: testAccJobConfig_workerType(rName, "G.8X"),
+				Config: testAccJobConfig_workerType(rName, "R.1X"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.8X"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_type"), knownvalue.StringExact("R.1X")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -912,6 +951,64 @@ func TestAccGlueJob_sourceControlDetails(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.provider", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.branch", "test-branch"),
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.last_commit_id", "test-commit-id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueJob_jobMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job awstypes.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_jobMode(rName, "NOTEBOOK"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "execution_class", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "job_mode", "NOTEBOOK"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobConfig_jobMode(rName, "VISUAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "execution_class", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "job_mode", "VISUAL"),
 				),
 			},
 		},
@@ -1442,4 +1539,21 @@ resource "aws_glue_job" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, repo))
+}
+
+func testAccJobConfig_jobMode(rName, jobMode string) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  max_capacity = 10
+  name         = %[1]q
+  role_arn     = aws_iam_role.test.arn
+  job_mode     = %[2]q
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, jobMode))
 }

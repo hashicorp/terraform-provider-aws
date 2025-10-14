@@ -402,6 +402,7 @@ func testAccWorkflowConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_imagebuilder_workflow" "test" {

@@ -105,7 +105,7 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 
 	networkInterfaceID := d.Get(names.AttrNetworkInterfaceID).(string)
 	sgID := d.Get("security_group_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, maxDuration(ec2PropagationTimeout, d.Timeout(schema.TimeoutRead)), func() (any, error) {
+	groupIdentifier, err := tfresource.RetryWhenNewResourceNotFound(ctx, max(ec2PropagationTimeout, d.Timeout(schema.TimeoutRead)), func(ctx context.Context) (*awstypes.GroupIdentifier, error) {
 		return findNetworkInterfaceSecurityGroup(ctx, conn, networkInterfaceID, sgID)
 	}, d.IsNewResource())
 
@@ -119,20 +119,10 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s) Security Group (%s) Attachment: %s", networkInterfaceID, sgID, err)
 	}
 
-	groupIdentifier := outputRaw.(*awstypes.GroupIdentifier)
-
 	d.Set(names.AttrNetworkInterfaceID, networkInterfaceID)
 	d.Set("security_group_id", groupIdentifier.GroupId)
 
 	return diags
-}
-
-func maxDuration(a, b time.Duration) time.Duration {
-	if a >= b {
-		return a
-	}
-
-	return b
 }
 
 func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

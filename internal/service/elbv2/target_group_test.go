@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1260,6 +1261,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1288,9 +1290,13 @@ func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 				ExpectError: regexache.MustCompile("You cannot enable stickiness on target groups with the TLS protocol"),
 			},
 			{
-				Config:             testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false, "round_robin"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false, "round_robin"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 		},
 	})
@@ -3716,7 +3722,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 					Config:          testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
 					PreCheck:        preCheck,
 					PostCheck:       postCheck,
-				}.Steps(),
+				}.Steps(resourceName),
 			})
 		})
 	}
@@ -3788,7 +3794,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -3840,7 +3846,7 @@ func TestAccELBV2TargetGroup_Lambda_vpc_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 				resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""), // Should be Null
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -3906,7 +3912,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol_MigrateV0(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 						resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, ""), // Should be Null
 					),
-				}.Steps(),
+				}.Steps(resourceName),
 			})
 		})
 	}
@@ -3960,7 +3966,7 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -4012,7 +4018,7 @@ func TestAccELBV2TargetGroup_Lambda_port_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 				resource.TestCheckResourceAttr(resourceName, names.AttrPort, "0"), // Should be Null
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -4088,7 +4094,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "35"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -4203,6 +4209,11 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				)
+				step.ConfigPlanChecks = resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				}
 			} else {
 				t.Fatal("invalid test case, one of invalidHealthCheckProtocol or warning must be set")
 			}
@@ -4217,8 +4228,15 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 							VersionConstraint: "5.26.0",
 						},
 					},
-					Config:   config,
-					PlanOnly: true,
+					Config: config,
+					ConfigPlanChecks: resource.ConfigPlanChecks{
+						PreApply: []plancheck.PlanCheck{
+							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						},
+						PostApplyPostRefresh: []plancheck.PlanCheck{
+							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						},
+					},
 				})
 			}
 
@@ -4332,7 +4350,7 @@ type testAccMigrateTest struct {
 	PostCheck resource.TestCheckFunc
 }
 
-func (t testAccMigrateTest) Steps() []resource.TestStep {
+func (t testAccMigrateTest) Steps(resourceName string) []resource.TestStep {
 	return []resource.TestStep{
 		{
 			ExternalProviders: map[string]resource.ExternalProvider{
@@ -4343,6 +4361,11 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 			},
 			Config: t.Config,
 			Check:  t.PreCheck,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+				},
+			},
 		},
 		{
 			ExternalProviders: map[string]resource.ExternalProvider{
@@ -4351,8 +4374,15 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 					VersionConstraint: t.NextVersion,
 				},
 			},
-			Config:   t.Config,
-			PlanOnly: true,
+			Config: t.Config,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+				},
+			},
 		},
 		{
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

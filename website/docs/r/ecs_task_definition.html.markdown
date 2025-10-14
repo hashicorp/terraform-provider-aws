@@ -156,7 +156,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 ```
 
-### Example Using `container_definitions` and `inference_accelerator`
+### Example Using `container_definitions`
 
 ```terraform
 resource "aws_ecs_task_definition" "test" {
@@ -179,21 +179,10 @@ resource "aws_ecs_task_definition" "test" {
         "containerPort": 80,
         "hostPort": 8080
       }
-    ],
-        "resourceRequirements":[
-            {
-                "type":"InferenceAccelerator",
-                "value":"device_1"
-            }
-        ]
+    ]
   }
 ]
 TASK_DEFINITION
-
-  inference_accelerator {
-    device_name = "device_1"
-    device_type = "eia1.medium"
-  }
 }
 ```
 
@@ -234,12 +223,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cpu` - (Optional) Number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `enable_fault_injection` - (Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
-
-    **Note:** Fault injection only works with tasks using the `awsvpc` or `host` network modes. Fault injection isn't available on Windows.
 * `execution_role_arn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
-* `inference_accelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipc_mode` - (Optional) IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
 * `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - (Optional) Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
@@ -256,6 +243,8 @@ The following arguments are optional:
 * `volume` - (Optional) Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
 
 ~> **NOTE:** Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g., `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g., `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
+
+~> **Note:** Fault injection only works with tasks using the `awsvpc` or `host` network modes. Fault injection isn't available on Windows.
 
 ### volume
 
@@ -324,11 +313,6 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 ### ephemeral_storage
 
 * `size_in_gib` - (Required) The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
-
-### inference_accelerator
-
-* `device_name` - (Required) Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
-* `device_type` - (Required) Elastic Inference accelerator type to use.
 
 ## Attribute Reference
 

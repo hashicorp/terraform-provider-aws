@@ -227,7 +227,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Creating Glue ML Transform: %+v", input)
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateMLTransform(ctx, input)
 	}, "Unable to assume role")
 

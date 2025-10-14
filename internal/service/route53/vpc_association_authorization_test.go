@@ -285,7 +285,7 @@ func testAccVPCAssociationAuthorizationConfig_crossRegion(rName string) string {
 resource "aws_route53_vpc_association_authorization" "test" {
   zone_id    = aws_route53_zone.test.id
   vpc_id     = aws_vpc.alternate.id
-  vpc_region = data.aws_region.alternate.name
+  vpc_region = data.aws_region.alternate.region
 }
 
 resource "aws_vpc" "alternate" {

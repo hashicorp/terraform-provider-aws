@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 )
 
-func getAppsPages(ctx context.Context, conn *pinpoint.Client, input *pinpoint.GetAppsInput, fn func(*pinpoint.GetAppsOutput, bool) bool) error {
+func getAppsPages(ctx context.Context, conn *pinpoint.Client, input *pinpoint.GetAppsInput, fn func(*pinpoint.GetAppsOutput, bool) bool, optFns ...func(*pinpoint.Options)) error {
 	for {
-		output, err := conn.GetApps(ctx, input)
+		output, err := conn.GetApps(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

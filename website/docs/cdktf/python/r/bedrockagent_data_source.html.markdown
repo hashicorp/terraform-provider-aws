@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data_deletion_policy` - (Optional) Data deletion policy for a data source. Valid values: `RETAIN`, `DELETE`.
 * `description` - (Optional) Description of the data source.
 * `server_side_encryption_configuration` - (Optional) Details about the configuration of the server-side encryption. See [`server_side_encryption_configuration` block](#server_side_encryption_configuration-block) for details.
@@ -351,4 +352,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 [3]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html
 [4]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_WebDataSourceConfiguration.html
 
-<!-- cache-key: cdktf-0.20.8 input-8735cd3209d10a61a6e9e799f9a96689af7344ae0ff43695a5c3231b797af616 -->
+<!-- cache-key: cdktf-0.20.8 input-6c5d65619f26f4664cb0988d2b1b6935663c952fb48ce89395b8908c00666e96 -->

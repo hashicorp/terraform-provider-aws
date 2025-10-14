@@ -29,21 +29,11 @@ func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context, planModi
 
 // ResourceOptionalComputedListOfObjectsAttribute returns a new schema.ListAttribute for objects of the specified type.
 // The list is Optional+Computed.
-func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, listNestedObjectOptions []fwtypes.ListNestedObjectOfOption[T], planModifiers ...planmodifier.List) schema.ListAttribute {
-	return resourceListOfObjectsAttribute(ctx, true, true, sizeAtMost, listNestedObjectOptions, planModifiers...)
-}
-
-// ResourceOptionalListOfObjectsAttribute returns a new schema.ListAttribute for objects of the specified type.
-// The list is Optional.
-func ResourceOptionalListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, listNestedObjectOptions []fwtypes.ListNestedObjectOfOption[T], planModifiers ...planmodifier.List) schema.ListAttribute {
-	return resourceListOfObjectsAttribute(ctx, true, false, sizeAtMost, listNestedObjectOptions, planModifiers...)
-}
-
-func resourceListOfObjectsAttribute[T any](ctx context.Context, optional, computed bool, sizeAtMost int, listNestedObjectOptions []fwtypes.ListNestedObjectOfOption[T], planModifiers ...planmodifier.List) schema.ListAttribute {
+func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, nestedObjectOptions []fwtypes.NestedObjectOfOption[T], planModifiers ...planmodifier.List) schema.ListAttribute {
 	return schema.ListAttribute{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf(ctx, listNestedObjectOptions...),
-		Optional:      optional,
-		Computed:      computed,
+		CustomType:    fwtypes.NewListNestedObjectTypeOf(ctx, nestedObjectOptions...),
+		Optional:      true,
+		Computed:      true,
 		PlanModifiers: planModifiers,
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(sizeAtMost),

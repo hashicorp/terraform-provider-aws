@@ -117,7 +117,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Message = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InternalServerException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InternalServerException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateMembers(ctx, input)
 	})
 

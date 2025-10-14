@@ -463,6 +463,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additional_info` - (Optional) JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `applications` - (Optional) A case-insensitive list of applications for Amazon EMR to install and configure when launching the cluster. For a list of applications available for each Amazon EMR release version, see the [Amazon EMR Release Guide](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-release-components.html).
 * `autoscaling_role` - (Optional) IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
@@ -505,6 +506,7 @@ class MyConvertedCode(TerraformStack):
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created.
 * `master_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `master_instance_group` configuration blocks are set. Detailed below.
 * `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
+* `os_release_label` - (Optional) Amazon Linux release for all nodes in a cluster launch RunJobFlow request. If not specified, Amazon EMR uses the latest validated Amazon Linux release for cluster launch.
 * `placement_group_config` - (Optional) The specified placement group configuration for an Amazon EMR cluster.
 * `scale_down_behavior` - (Optional) Way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
 * `security_configuration` - (Optional) Security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater.
@@ -514,6 +516,8 @@ class MyConvertedCode(TerraformStack):
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `unhealthy_node_replacement` - (Optional) Whether whether Amazon EMR should gracefully replace core nodes that have degraded within the cluster. Default value is `false`.
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
+
+   **NOTE:** As per the [Amazon EMR API Reference](https://docs.aws.amazon.com/emr/latest/APIReference/API_RunJobFlow.html#EMR-RunJobFlow-request-VisibleToAllUsers), this argument is no longer supported. Do not set this argument, particularly to `false`, as it would lead to perpetual differences.
 
 ### bootstrap_action
 
@@ -681,7 +685,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `release_label` - Release label for the Amazon EMR release.
 * `service_role` - IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `visible_to_all_users` - Indicates whether the job flow is visible to all IAM users of the AWS account associated with the job flow.
 
 ## Import
 
@@ -733,4 +736,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ec7619312ade932d91657636d6ffdcecad348a6adb2eb6bbfed46294dd2f51dc -->
+<!-- cache-key: cdktf-0.20.8 input-90852b52eabd9d589f9a9d6ed5eb5e30d5d6b1fa7161b288cea83118f5a64c75 -->

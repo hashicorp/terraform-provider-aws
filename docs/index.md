@@ -33,6 +33,7 @@ Follow the guide for your contribution type and refer to the Development Referen
 | [Resource Name Generation](resource-name-generation.md) | Allow a resource to either fully, or partially, generate its own resource names. This can be useful in cases where the resource name uniquely identifies the resource and it needs to be recreated. It can also be used when a name is required, but the specific name is not important. |
 | [Tagging Support](resource-tagging.md) | Many AWS resources allow assigning metadata via tags. However, frequently AWS services are launched without tagging support so this will often need to be added later. |
 | [Import Support](add-import-support.md) | Adding import support allows `terraform import` to be run targeting an existing unmanaged resource and pulling its configuration into Terraform state. Typically import support is added during initial resource implementation but in some cases this will need to be added later. |
+| [Enhanced Region Support](enhanced-region-support.md) | Most AWS resources are Regional – they are created and exist in a single AWS Region. By default Regional resources have a top-level `region` argument that allows the Region to be configured. |
 | [Documentation Changes](documentation-changes.md)| The provider documentation is displayed on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) and is sourced and refreshed from the provider repository during the release process. |
 
 ### 4. Write Tests

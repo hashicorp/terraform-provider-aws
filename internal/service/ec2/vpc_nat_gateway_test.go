@@ -281,6 +281,66 @@ func TestAccVPCNATGateway_secondaryAllocationIDs(t *testing.T) {
 	})
 }
 
+func TestAccVPCNATGateway_addSecondaryAllocationIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway awstypes.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	eipResourceName := "aws_eip.secondary"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryAllocationIDs(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secondary_allocation_ids.*", eipResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryAllocationIDs(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccVPCNATGateway_secondaryPrivateIPAddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var natGateway awstypes.NatGateway
@@ -691,7 +751,7 @@ resource "aws_eip" "secondary" {
 resource "aws_nat_gateway" "test" {
   allocation_id            = aws_eip.test.id
   subnet_id                = aws_subnet.public.id
-  secondary_allocation_ids = %[2]t ? [aws_eip.secondary.id] : null
+  secondary_allocation_ids = %[2]t ? [aws_eip.secondary.id] : []
 
   tags = {
     Name = %[1]q
@@ -731,8 +791,8 @@ resource "aws_eip" "secondary" {
 resource "aws_nat_gateway" "test" {
   allocation_id                  = aws_eip.test.id
   subnet_id                      = aws_subnet.private.id
-  secondary_allocation_ids       = %[2]t ? [aws_eip.secondary.id] : null
-  secondary_private_ip_addresses = %[2]t ? ["10.0.1.5"] : null
+  secondary_allocation_ids       = %[2]t ? [aws_eip.secondary.id] : []
+  secondary_private_ip_addresses = %[2]t ? ["10.0.1.5"] : []
 
   tags = {
     Name = %[1]q

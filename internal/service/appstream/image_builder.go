@@ -232,7 +232,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.VpcConfig = expandImageBuilderVPCConfig(v.([]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRoleException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRoleException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateImageBuilder(ctx, &input)
 	}, "encountered an error because your IAM role")
 

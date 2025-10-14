@@ -41,6 +41,7 @@ resource "aws_mskconnect_custom_plugin" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the custom plugin..
 * `content_type` - (Required, Forces new resource) The type of the plugin file. Allowed values are `ZIP` and `JAR`.
 * `description` - (Optional, Forces new resource) A summary description of the custom plugin.

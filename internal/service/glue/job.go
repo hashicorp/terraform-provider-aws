@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -114,6 +115,12 @@ func resourceJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"job_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.JobMode](),
 			},
 			"job_run_queuing_enabled": {
 				Type:     schema.TypeBool,
@@ -229,11 +236,11 @@ func resourceJob() *schema.Resource {
 				Optional: true,
 			},
 			"worker_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ConflictsWith:    []string{names.AttrMaxCapacity},
-				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{names.AttrMaxCapacity},
+				ValidateFunc:  validation.StringInSlice(workerType_Values(), false),
 			},
 		},
 	}
@@ -275,6 +282,10 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if v, ok := d.GetOk("glue_version"); ok {
 		input.GlueVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("job_mode"); ok {
+		input.JobMode = awstypes.JobMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
@@ -369,6 +380,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
+	d.Set("job_mode", job.JobMode)
 	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
 	d.Set("maintenance_window", job.MaintenanceWindow)
 	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
@@ -424,6 +436,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 		if v, ok := d.GetOk("glue_version"); ok {
 			jobUpdate.GlueVersion = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("job_mode"); ok {
+			jobUpdate.JobMode = awstypes.JobMode(v.(string))
 		}
 
 		if v, ok := d.GetOk("job_run_queuing_enabled"); ok {
@@ -671,4 +687,8 @@ func flattenSourceControlDetails(sourceControlDetails *awstypes.SourceControlDet
 	}
 
 	return []map[string]any{m}
+}
+
+func workerType_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.WorkerType](), "G.12X", "G.16X", "R.1X", "R.2X", "R.4X", "R.8X")
 }

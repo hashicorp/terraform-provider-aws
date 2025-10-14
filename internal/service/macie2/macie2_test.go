@@ -22,6 +22,7 @@ func TestAccMacie2_serial(t *testing.T) {
 		},
 		"ClassificationExportConfiguration": {
 			acctest.CtBasic: testAccClassificationExportConfiguration_basic,
+			"Identity":      testAccMacie2ClassificationExportConfiguration_IdentitySerial,
 		},
 		"ClassificationJob": {
 			acctest.CtBasic:      testAccClassificationJob_basic,

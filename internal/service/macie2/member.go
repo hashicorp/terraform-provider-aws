@@ -117,7 +117,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		Tags: getTagsIn(ctx),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateMember(ctx, &input)
 	}, errCodeClientError)
 
@@ -250,7 +250,7 @@ func inviteMember(ctx context.Context, conn *macie2.Client, d *schema.ResourceDa
 		input.Message = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateInvitations(ctx, &input)
 	}, errCodeClientError)
 
@@ -265,7 +265,7 @@ func inviteMember(ctx context.Context, conn *macie2.Client, d *schema.ResourceDa
 	}
 
 	if _, err := waitMemberInvited(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Macie Member (%s) invite: %s", d.Id(), err)
+		return fmt.Errorf("waiting for Macie Member (%s) invite: %w", d.Id(), err)
 	}
 
 	return nil

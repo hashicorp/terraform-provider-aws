@@ -68,6 +68,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primaryContainer` - (Optional) The primary docker image containing inference code that is used when the model is deployed for predictions.  If not specified, the `container` argument is required. Fields are documented below.
 * `executionRoleArn` - (Required) A role that SageMaker AI can assume to access model artifacts and docker images for deployment.
@@ -159,4 +160,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_model.test_model model-foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-938728c5c6369d96007736bf67ca3492035ec4e4c538babd1d1a99b4c1876013 -->
+<!-- cache-key: cdktf-0.20.8 input-e3d2687c607c4792d9975683114dddc505abfabc17a233ac69e1bf2aa41ccae2 -->

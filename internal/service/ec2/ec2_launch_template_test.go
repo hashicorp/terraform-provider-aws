@@ -13,8 +13,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -47,7 +52,6 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "hibernation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "0"),
@@ -327,43 +331,6 @@ func TestAccEC2LaunchTemplate_ebsOptimized(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2LaunchTemplate_elasticInferenceAccelerator(t *testing.T) {
-	ctx := acctest.Context(t)
-	var template1 awstypes.LaunchTemplate
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_launch_template.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, "eia1.medium"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template1),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.medium"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, "eia1.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template1),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.large"),
 				),
 			},
 		},
@@ -1225,6 +1192,75 @@ func TestAccEC2LaunchTemplate_associateCarrierIPAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_Placement_groupID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_placementGroupID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.group_name", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_Placement_groupNameToGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_placementGroupName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_name"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.group_id", ""),
+				),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_placementGroupID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.group_name", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -3332,6 +3368,123 @@ func TestAccEC2LaunchTemplate_updateDefaultVersion(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_upgradeFromV5(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccLaunchTemplateConfig_name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_gpu_specifications"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_inference_accelerator"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccLaunchTemplateConfig_name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("elastic_gpu_specifications")),
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("elastic_inference_accelerator")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_upgradeFromV5PlanRefreshFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckLaunchTemplateDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccLaunchTemplateConfig_name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_gpu_specifications"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_inference_accelerator"), knownvalue.ListSizeExact(0)),
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccLaunchTemplateConfig_name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("elastic_gpu_specifications")),
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("elastic_inference_accelerator")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckLaunchTemplateExists(ctx context.Context, n string, v *awstypes.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -3591,18 +3744,6 @@ resource "aws_launch_template" "test" {
   name          = %[2]q
 }
 `, ebsOptimized, rName)
-}
-
-func testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, elasticInferenceAcceleratorType string) string {
-	return fmt.Sprintf(`
-resource "aws_launch_template" "test" {
-  name = %[1]q
-
-  elastic_inference_accelerator {
-    type = %[2]q
-  }
-}
-`, rName, elasticInferenceAcceleratorType)
 }
 
 func testAccLaunchTemplateConfig_data(rName string) string {
@@ -4164,6 +4305,40 @@ resource "aws_launch_template" "test" {
       udp_stream_timeout      = 60
       udp_timeout             = 30
     }
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_placementGroupID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  placement {
+    group_id = aws_placement_group.test.placement_group_id
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_placementGroupName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  placement {
+    group_name = aws_placement_group.test.name
   }
 }
 `, rName)

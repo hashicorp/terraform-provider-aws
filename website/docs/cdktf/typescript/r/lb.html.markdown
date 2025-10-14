@@ -152,12 +152,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** Please note that internal LBs can only use `ipv4` as the `ipAddressType`. You can only change to `dualstack` `ipAddressType` if the selected subnets are IPv6 enabled.
-
-~> **NOTE:** Please note that one of either `subnets` or `subnetMapping` is required.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessLogs` - (Optional) Access Logs block. See below.
 * `connectionLogs` - (Optional) Connection Logs block. See below. Only valid for Load Balancers of type `application`.
 * `clientKeepAlive` - (Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds.
@@ -178,14 +175,20 @@ This resource supports the following arguments:
 * `ipAddressType` - (Optional) Type of IP addresses used by the subnets for your load balancer. The possible values depend upon the load balancer type: `ipv4` (all load balancer types), `dualstack` (all load balancer types), and `dualstack-without-public-ipv4` (type `application` only).
 * `ipamPools` (Optional). The IPAM pools to use with the load balancer.  Only valid for Load Balancers of type `application`. See [ipam_pools](#ipam_pools) for more information.
 * `loadBalancerType` - (Optional) Type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
+* `minimumLoadBalancerCapacity` - (Optional) Minimum capacity for a load balancer. Only valid for Load Balancers of type `application` or `network`.
 * `name` - (Optional) Name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified, Terraform will autogenerate a name beginning with `tf-lb`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `securityGroups` - (Optional) List of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
 * `preserveHostHeader` - (Optional) Whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to `false`.
+* `secondaryIpsAutoAssignedPerSubnet` - (Optional) The number of secondary IP addresses to configure for your load balancer nodes. Only valid for Load Balancers of type `network`. The valid range is 0-7. When decreased, this will force a recreation of the resource. Default: `0`.
 * `subnetMapping` - (Optional) Subnet mapping block. See below. For Load Balancers of type `network` subnet mappings can only be added.
 * `subnets` - (Optional) List of subnet IDs to attach to the LB. For Load Balancers of type `network` subnets can only be added (see [Availability Zones](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#availability-zones)), deleting a subnet for load balancers of type `network` will force a recreation of the resource.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xffHeaderProcessingMode` - (Optional) Determines how the load balancer modifies the `X-Forwarded-For` header in the HTTP request before sending the request to the target. The possible values are `append`, `preserve`, and `remove`. Only valid for Load Balancers of type `application`. The default is `append`.
+
+~> **NOTE:** Please note that internal LBs can only use `ipv4` as the `ipAddressType`. You can only change to `dualstack` `ipAddressType` if the selected subnets are IPv6 enabled.
+
+~> **NOTE:** Please note that one of either `subnets` or `subnetMapping` is required.
 
 ### access_logs
 
@@ -203,6 +206,10 @@ This resource supports the following arguments:
 
 * `ipv4IpamPoolId` - (Required) The ID of the IPv4 IPAM pool.
 
+### minimum_load_balancer_capacity
+
+* `capacityUnits` - (Required) The number of capacity units.
+
 ### subnet_mapping
 
 * `subnetId` - (Required) ID of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
@@ -214,10 +221,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the load balancer (matches `id`).
+* `arn` - ARN of the load balancer.
 * `arnSuffix` - ARN suffix for use with CloudWatch Metrics.
 * `dnsName` - DNS name of the load balancer.
-* `id` - ARN of the load balancer (matches `arn`).
 * `subnet_mapping.*.outpost_id` - ID of the Outpost containing the load balancer.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `zoneId` - Canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
@@ -231,6 +237,27 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lb.example
+  identity = {
+    "arn" = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+  }
+}
+
+resource "aws_lb" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the load balancer.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import LBs using their ARN. For example:
 
@@ -262,4 +289,4 @@ Using `terraform import`, import LBs using their ARN. For example:
 % terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-64b470489d8da264aa59172ace8f0bd132c644e4a3ef3893d27a3cec2d5e6a48 -->
+<!-- cache-key: cdktf-0.20.8 input-80575d39126e332a829ef7957d9fa14578860b32c27733db7e7e98c7eb900b39 -->

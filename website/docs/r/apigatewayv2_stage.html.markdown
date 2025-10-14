@@ -31,6 +31,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_log_settings` - (Optional) Settings for logging access in this stage.
 Use the [`aws_api_gateway_account`](/docs/providers/aws/r/api_gateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
 * `auto_deploy` - (Optional) Whether updates to an API automatically trigger a new deployment. Defaults to `false`. Applicable for HTTP APIs.

@@ -5,7 +5,13 @@ package notifications
 
 // Exports for use in tests only.
 var (
-	ResourceNotificationHub = newNotificationHubResource
+	ResourceChannelAssociation        = newChannelAssociationResource
+	ResourceEventRule                 = newEventRuleResource
+	ResourceNotificationConfiguration = newNotificationConfigurationResource
+	ResourceNotificationHub           = newNotificationHubResource
 
-	FindNotificationHubByRegion = findNotificationHubByRegion
+	FindChannelAssociationByTwoPartKey = findChannelAssociationByTwoPartKey
+	FindEventRuleByARN                 = findEventRuleByARN
+	FindNotificationConfigurationByARN = findNotificationConfigurationByARN
+	FindNotificationHubByRegion        = findNotificationHubByRegion
 )

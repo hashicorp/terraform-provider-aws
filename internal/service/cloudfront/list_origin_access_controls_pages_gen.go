@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
-func listOriginAccessControlsPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListOriginAccessControlsInput, fn func(*cloudfront.ListOriginAccessControlsOutput, bool) bool) error {
+func listOriginAccessControlsPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListOriginAccessControlsInput, fn func(*cloudfront.ListOriginAccessControlsOutput, bool) bool, optFns ...func(*cloudfront.Options)) error {
 	for {
-		output, err := conn.ListOriginAccessControls(ctx, input)
+		output, err := conn.ListOriginAccessControls(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

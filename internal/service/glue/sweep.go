@@ -18,7 +18,10 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_glue_catalog_database", sweepCatalogDatabases)
+	awsv2.Register("aws_glue_catalog_database", sweepCatalogDatabases,
+		"aws_datazone_environment",
+	)
+
 	awsv2.Register("aws_glue_classifier", sweepClassifiers)
 	awsv2.Register("aws_glue_connection", sweepConnections)
 	awsv2.Register("aws_glue_crawler", sweepCrawlers)

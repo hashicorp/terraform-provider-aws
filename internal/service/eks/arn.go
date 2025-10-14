@@ -53,7 +53,12 @@ func Canonicalize(arn string) (string, error) {
 			}
 			// IAM ARNs can contain paths, part[0] is resource, parts[len(parts)] is the SessionName.
 			role := strings.Join(parts[1:len(parts)-1], "/")
-			return fmt.Sprintf("arn:%s:iam::%s:role/%s", parsed.Partition, parsed.AccountID, role), nil
+			return awsarn.ARN{
+				Partition: parsed.Partition,
+				Service:   "iam",
+				AccountID: parsed.AccountID,
+				Resource:  "role/" + role,
+			}.String(), nil
 		default:
 			return "", fmt.Errorf("unrecognized resource %q for service sts", parsed.Resource)
 		}

@@ -150,6 +150,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `semgrep-naming-cae`<sup>D</sup> | Semgrep Checks / Naming Scan Caps/`AWS`/EC2 | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-service-naming`<sup>D</sup> | Semgrep Checks / Service Name Scan A-Z | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-validate` | Validate Semgrep configuration files |  |  |  |
+| `semgrep-vcr` | Enable VCR support with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `skaff`<sup>D</sup> | Install skaff |  |  | `GO_VER` |
 | `skaff-check-compile` | Skaff Checks / Compile skaff | ✔️ |  |  |
 | `sweep`<sup>D</sup> | Run sweepers |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP`, `SWEEPARGS` |
@@ -172,6 +173,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
+| `vcr-enable` | Enable Go-VCR support |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |
 | `website-link-check` | Check website links |  | ✔️ |  |
 | `website-link-check-ghrc` | Check website links with ghrc |  | ✔️ |  |

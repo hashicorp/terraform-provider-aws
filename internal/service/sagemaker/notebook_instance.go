@@ -49,15 +49,6 @@ func resourceNotebookInstance() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"accelerator_types": {
-				Deprecated: "accelerator_types is deprecated. Use instance_type instead.",
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.NotebookInstanceAcceleratorType](),
-				},
-			},
 			"additional_code_repositories": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -179,10 +170,6 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("accelerator_types"); ok && v.(*schema.Set).Len() > 0 {
-		input.AcceleratorTypes = flex.ExpandStringyValueSet[awstypes.NotebookInstanceAcceleratorType](v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("additional_code_repositories"); ok && v.(*schema.Set).Len() > 0 {
 		input.AdditionalCodeRepositories = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -251,7 +238,6 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set("accelerator_types", flex.FlattenStringyValueSet[awstypes.NotebookInstanceAcceleratorType](notebookInstance.AcceleratorTypes))
 	d.Set("additional_code_repositories", notebookInstance.AdditionalCodeRepositories)
 	d.Set(names.AttrARN, notebookInstance.NotebookInstanceArn)
 	d.Set("default_code_repository", notebookInstance.DefaultCodeRepository)
@@ -283,14 +269,6 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateNotebookInstanceInput{
 			NotebookInstanceName: aws.String(d.Get(names.AttrName).(string)),
-		}
-
-		if d.HasChange("accelerator_types") {
-			if v, ok := d.GetOk("accelerator_types"); ok {
-				input.AcceleratorTypes = flex.ExpandStringyValueSet[awstypes.NotebookInstanceAcceleratorType](v.(*schema.Set))
-			} else {
-				input.DisassociateAcceleratorTypes = aws.Bool(true)
-			}
 		}
 
 		if d.HasChange("additional_code_repositories") {
@@ -439,33 +417,26 @@ func startNotebookInstance(ctx context.Context, conn *sagemaker.Client, id strin
 	}
 	// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
 	// it doesn't change we'll send another request
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.StartNotebookInstance(ctx, startOpts)
 		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("starting: %s", err))
+			return tfresource.NonRetryableError(fmt.Errorf("starting: %w", err))
 		}
 
 		err = waitNotebookInstanceStarted(ctx, conn, id)
 		if err != nil {
-			return retry.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
+			return tfresource.RetryableError(fmt.Errorf("starting: waiting for completion: %w", err))
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.StartNotebookInstance(ctx, startOpts)
-		if err != nil {
-			return fmt.Errorf("starting: %s", err)
-		}
 
-		err = waitNotebookInstanceStarted(ctx, conn, id)
-		if err != nil {
-			return fmt.Errorf("starting: waiting for completion: %s", err)
-		}
+	if err != nil {
+		return fmt.Errorf("starting: %w", err)
 	}
 
 	if err := waitNotebookInstanceInService(ctx, conn, id); err != nil {
-		return fmt.Errorf("starting: waiting to be in service: %s", err)
+		return fmt.Errorf("starting: waiting to be in service: %w", err)
 	}
 	return nil
 }
@@ -489,11 +460,11 @@ func stopNotebookInstance(ctx context.Context, conn *sagemaker.Client, id string
 	}
 
 	if _, err := conn.StopNotebookInstance(ctx, stopOpts); err != nil {
-		return fmt.Errorf("stopping: %s", err)
+		return fmt.Errorf("stopping: %w", err)
 	}
 
 	if err := waitNotebookInstanceStopped(ctx, conn, id); err != nil {
-		return fmt.Errorf("stopping: waiting for completion: %s", err)
+		return fmt.Errorf("stopping: waiting for completion: %w", err)
 	}
 
 	return nil

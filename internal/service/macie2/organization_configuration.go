@@ -26,7 +26,7 @@ func newOrganizationConfigurationResource(_ context.Context) (resource.ResourceW
 }
 
 type organizationConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[organizationConfigurationResourceModel]
 	framework.WithNoOpDelete
 }
 
@@ -160,5 +160,6 @@ func isOrganizationConfigurationNotFoundError(err error) bool {
 }
 
 type organizationConfigurationResourceModel struct {
+	framework.WithRegionModel
 	AutoEnable types.Bool `tfsdk:"auto_enable"`
 }

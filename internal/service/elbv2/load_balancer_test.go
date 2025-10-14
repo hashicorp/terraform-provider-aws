@@ -2059,6 +2059,56 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 	})
 }
 
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_secondaryIPAddresses(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pre, mid, post awstypes.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// GovCloud Regions don't always have 3 AZs.
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbBasic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "secondary_ips_auto_assigned_per_subnet", "0"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSecondaryIPAddresses(rName, 3, 7),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &mid),
+					// Increasing secondary IP count should not force recreation
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
+					resource.TestCheckResourceAttr(resourceName, "secondary_ips_auto_assigned_per_subnet", "7"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSecondaryIPAddresses(rName, 3, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
+					// Decreasing secondary IP count should force recreation
+					testAccCheckLoadBalancerRecreated(&mid, &post),
+					resource.TestCheckResourceAttr(resourceName, "secondary_ips_auto_assigned_per_subnet", "3"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, mid, post awstypes.LoadBalancer
@@ -2348,12 +2398,13 @@ func testAccCheckLoadBalancerAttribute(ctx context.Context, n, key, value string
 
 func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb" && rs.Type != "aws_alb" {
 				continue
 			}
+
+			ctx = conns.NewResourceContext(ctx, "", "", rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 			_, err := tfelbv2.FindLoadBalancerByARN(ctx, conn, rs.Primary.ID)
 
@@ -2401,7 +2452,9 @@ func testAccPreCheckGatewayLoadBalancer(ctx context.Context, t *testing.T) {
 }
 
 func testAccLoadBalancerConfig_baseInternal(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, subnetCount),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -2433,7 +2486,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   tags = {
@@ -2444,7 +2497,7 @@ resource "aws_vpc_ipam" "test" {
 resource "aws_vpc_ipam_pool" "test_pool" {
   address_family   = "ipv4"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
-  locale           = data.aws_region.current.name
+  locale           = data.aws_region.current.region
   public_ip_source = "amazon"
   description      = "Test Amazon CIDR Pool"
   aws_service      = "ec2"
@@ -2620,7 +2673,7 @@ func testAccLoadBalancerConfig_IPAMPools_modify(rName string) string {
 resource "aws_vpc_ipam_pool" "test_pool2" {
   address_family   = "ipv4"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
-  locale           = data.aws_region.current.name
+  locale           = data.aws_region.current.region
   public_ip_source = "amazon"
   description      = "Test Amazon CIDR Pool 2"
   aws_service      = "ec2"
@@ -2666,7 +2719,7 @@ func testAccLoadBalancerConfig_IPAMPools_modify_destroyALB(rName string) string 
 resource "aws_vpc_ipam_pool" "test_pool2" {
   address_family   = "ipv4"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
-  locale           = data.aws_region.current.name
+  locale           = data.aws_region.current.region
   public_ip_source = "amazon"
   description      = "Test Amazon CIDR Pool 2"
   aws_service      = "ec2"
@@ -3002,6 +3055,30 @@ func testAccLoadBalancerConfig_nlbCrossZone(rName string, cz bool) string {
 
 func testAccLoadBalancerConfig_nlbZonalShift(rName string, zs bool) string {
 	return testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, true, zs, 1)
+}
+
+func testAccLoadBalancerConfig_nlbSecondaryIPAddresses(rName string, subnetCount, addressCount int) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+
+  enable_deletion_protection             = false
+  secondary_ips_auto_assigned_per_subnet = %[2]d
+
+  dynamic "subnet_mapping" {
+    for_each = aws_subnet.test[*]
+    content {
+      subnet_id = subnet_mapping.value.id
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, addressCount))
 }
 
 func testAccLoadBalancerConfig_nlbSubnetMappingCount(rName string, cz, zs bool, subnetCount int) string {

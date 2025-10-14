@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `preferredVersions` - (Optional) Ordered list of preferred Kafka versions. The first match in this list will be returned. Either `preferredVersions` or `version` must be set.
 * `version` - (Optional) Version of MSK Kafka. For example 2.4.1.1 or "2.2.1" etc. Either `preferredVersions` or `version` must be set.
 
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `status` - Status of the MSK Kafka version eg. `ACTIVE` or `DEPRECATED`.
 
-<!-- cache-key: cdktf-0.20.8 input-fc5dc06107ca88ebb74fb0da019627e9b71acdce85dbbaef653b82472c71012e -->
+<!-- cache-key: cdktf-0.20.8 input-2e059beed3a3ef2fbbf3ebbd66f697d6ed8763da68f2534a4f659b4f88a314d8 -->

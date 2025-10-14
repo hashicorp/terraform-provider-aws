@@ -109,6 +109,7 @@ resource "aws_connect_contact_flow_module" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content` - (Optional) Specifies the content of the Contact Flow Module, provided as a JSON string, written in Amazon Connect Contact Flow Language. If defined, the `filename` argument cannot be used.
 * `content_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the Contact Flow Module source specified with `filename`. The usual way to set this is filebase64sha256("contact_flow_module.json") (Terraform 0.11.12 and later) or base64sha256(file("contact_flow_module.json")) (Terraform 0.11.11 and earlier), where "contact_flow_module.json" is the local filename of the Contact Flow Module source.
 * `description` - (Optional) Specifies the description of the Contact Flow Module.

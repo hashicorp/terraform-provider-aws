@@ -29,8 +29,10 @@ import (
 
 // @SDKResource("aws_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Subnet")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Subnet")
 // @Testing(generator=false)
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.8.0")
 func resourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,9 +40,6 @@ func resourceSubnet() *schema.Resource {
 		ReadWithoutTimeout:   resourceSubnetRead,
 		UpdateWithoutTimeout: resourceSubnetUpdate,
 		DeleteWithoutTimeout: resourceSubnetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -231,7 +230,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	subnet, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Subnet, error) {
 		return findSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -244,8 +243,6 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
 	}
-
-	subnet := outputRaw.(*awstypes.Subnet)
 
 	d.Set(names.AttrARN, subnet.SubnetArn)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
@@ -375,7 +372,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
 			SubnetId: aws.String(d.Id()),
 		})

@@ -26,7 +26,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,13 +64,7 @@ func resourceAnalysis() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,

@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -43,7 +42,8 @@ const (
 )
 
 type subscriberNotificationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[subscriberNotificationResourceModel]
+	framework.WithImportByID
 }
 
 func (r *subscriberNotificationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -282,10 +282,6 @@ func (r *subscriberNotificationResource) Delete(ctx context.Context, req resourc
 	}
 }
 
-func (r *subscriberNotificationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 // findSubscriberNotificationBySubscriberID returns an `*awstypes.SubscriberResource` because subscriber notifications are not really a standalone concept
 func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securitylake.Client, subscriberID string) (*awstypes.SubscriberResource, error) {
 	output, err := findSubscriberByID(ctx, conn, subscriberID)
@@ -350,6 +346,7 @@ func expandSQSNotificationConfigurationModel(SQSNotifications []sqsNotificationC
 }
 
 type subscriberNotificationResourceModel struct {
+	framework.WithRegionModel
 	Configuration      fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel] `tfsdk:"configuration"`
 	EndpointID         types.String                                                                      `tfsdk:"endpoint_id"`
 	ID                 types.String                                                                      `tfsdk:"id"`

@@ -3,7 +3,7 @@
 
 package organizations
 
-import (
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"errors"
 	"fmt"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,6 +32,12 @@ import (
 
 // @SDKResource("aws_organizations_account", name="Account")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @CustomImport
+// @Testing(tagsTest=false, identityTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Account")
+// @Testing(serialize=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsEnabled")
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -43,6 +51,7 @@ func resourceAccount() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
@@ -91,7 +100,6 @@ func resourceAccount() *schema.Resource {
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"parent_id": {
@@ -138,8 +146,8 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.RoleName = aws.String(v.(string))
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
-			func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
+			func(ctx context.Context) (any, error) {
 				return conn.CreateGovCloudAccount(ctx, input)
 			})
 
@@ -163,8 +171,8 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.RoleName = aws.String(v.(string))
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
-			func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
+			func(ctx context.Context) (any, error) {
 				return conn.CreateAccount(ctx, input)
 			})
 
@@ -244,7 +252,35 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	connOrg := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	connAcc := meta.(*conns.AWSClient).AccountClient(ctx)
+
+	if d.HasChange(names.AttrName) {
+		name := d.Get(names.AttrName).(string)
+		input := account.PutAccountNameInput{
+			AccountId:   aws.String(d.Id()),
+			AccountName: aws.String(name),
+		}
+		_, err := connAcc.PutAccountName(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating AWS Account (%s) name: %s", d.Id(), err)
+		}
+
+		_, err = tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), name, func(ctx context.Context) (string, error) {
+			output, err := findAccountByID(ctx, connOrg, d.Id())
+
+			if err != nil {
+				return "", err
+			}
+
+			return aws.ToString(output.Name), nil
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for AWS Account (%s) name update: %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -255,7 +291,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DestinationParentId: aws.String(n.(string)),
 		}
 
-		_, err := conn.MoveAccount(ctx, input)
+		_, err := connOrg.MoveAccount(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "moving AWS Organizations Account (%s): %s", d.Id(), err)
@@ -302,16 +338,24 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	if strings.Contains(d.Id(), "_") {
-		parts := strings.Split(d.Id(), "_")
-		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			return nil, fmt.Errorf("unexpected format of ID (%s), expected <account_id>_<IAM User Access Status> or <account_id>", d.Id())
-		}
+	if d.Id() != "" {
+		if strings.Contains(d.Id(), "_") {
+			parts := strings.Split(d.Id(), "_")
+			if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+				return nil, fmt.Errorf("unexpected format of ID (%s), expected <account_id>_<IAM User Access Status> or <account_id>", d.Id())
+			}
 
-		d.SetId(parts[0])
-		d.Set("iam_user_access_to_billing", parts[1])
+			d.SetId(parts[0])
+			d.Set("iam_user_access_to_billing", parts[1])
+		} else {
+			d.SetId(d.Id())
+		}
 	} else {
-		d.SetId(d.Id())
+		identitySpec := importer.IdentitySpec(ctx)
+
+		if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+			return nil, err
+		}
 	}
 
 	return []*schema.ResourceData{d}, nil

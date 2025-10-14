@@ -3,83 +3,109 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_invocation"
 description: |-
-  Invoke AWS Lambda Function
+  Manages an AWS Lambda Function invocation.
 ---
 
 # Resource: aws_lambda_invocation
 
-Use this resource to invoke a lambda function. The lambda function is invoked with the [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax) invocation type.
+Manages an AWS Lambda Function invocation. Use this resource to invoke a Lambda function with the [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax) invocation type.
 
-~> **NOTE:** By default this resource _only_ invokes the function when the arguments call for a create or replace. In other words, after an initial invocation on _apply_, if the arguments do not change, a subsequent _apply_ does not invoke the function again. To dynamically invoke the function, see the `triggers` example below. To always invoke a function on each _apply_, see the [`aws_lambda_invocation`](/docs/providers/aws/d/lambda_invocation.html) data source. To invoke the lambda function when the terraform resource is updated and deleted, see the [CRUD Lifecycle Scope](#crud-lifecycle-scope) example below.
+~> **Note:** By default this resource _only_ invokes the function when the arguments call for a create or replace. After an initial invocation on _apply_, if the arguments do not change, a subsequent _apply_ does not invoke the function again. To dynamically invoke the function, see the `triggers` example below. To always invoke a function on each _apply_, see the [`aws_lambda_invocation` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/lambda_invocation). To invoke the Lambda function when the Terraform resource is updated and deleted, see the [CRUD Lifecycle Management](#crud-lifecycle-management) example below.
 
-~> **NOTE:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking an [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html) with environment variables, the IAM role associated with the function may have been deleted and recreated _after_ the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
+~> **Note:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking a Lambda function with environment variables, the IAM role associated with the function may have been deleted and recreated after the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
 
 ## Example Usage
 
-### Basic Example
+### Basic Invocation
 
 ```terraform
+# Lambda function to invoke
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "data_processor"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+}
+
+# Invoke the function once during resource creation
 resource "aws_lambda_invocation" "example" {
-  function_name = aws_lambda_function.lambda_function_test.function_name
+  function_name = aws_lambda_function.example.function_name
 
   input = jsonencode({
-    key1 = "value1"
-    key2 = "value2"
+    operation = "initialize"
+    config = {
+      environment = "production"
+      debug       = false
+    }
   })
 }
 
-output "result_entry" {
-  value = jsondecode(aws_lambda_invocation.example.result)["key1"]
+# Use the result in other resources
+output "initialization_result" {
+  value = jsondecode(aws_lambda_invocation.example.result)["status"]
 }
 ```
 
-### Dynamic Invocation Example Using Triggers
+### Dynamic Invocation with Triggers
 
 ```terraform
 resource "aws_lambda_invocation" "example" {
-  function_name = aws_lambda_function.lambda_function_test.function_name
+  function_name = aws_lambda_function.example.function_name
 
+  # Re-invoke when function environment changes
   triggers = {
-    redeployment = sha1(jsonencode([
-      aws_lambda_function.example.environment
-    ]))
+    function_version = aws_lambda_function.example.version
+    config_hash = sha256(jsonencode({
+      environment = var.environment
+      timestamp   = timestamp()
+    }))
   }
 
   input = jsonencode({
-    key1 = "value1"
-    key2 = "value2"
+    operation   = "process_data"
+    environment = var.environment
+    batch_id    = random_uuid.batch_id.result
   })
 }
 ```
 
-### CRUD Lifecycle Scope
+### CRUD Lifecycle Management
 
 ```terraform
 resource "aws_lambda_invocation" "example" {
-  function_name = aws_lambda_function.lambda_function_test.function_name
+  function_name = aws_lambda_function.example.function_name
 
   input = jsonencode({
-    key1 = "value1"
-    key2 = "value2"
+    resource_name = "database_setup"
+    database_url  = aws_db_instance.example.endpoint
+    credentials = {
+      username = var.db_username
+      password = var.db_password
+    }
   })
 
   lifecycle_scope = "CRUD"
 }
 ```
 
-~> **NOTE:** `lifecycle_scope = "CRUD"` will inject a key `tf` in the input event to pass lifecycle information! This allows the lambda function to handle different lifecycle transitions uniquely.  If you need to use a key `tf` in your own input JSON, the default key name can be overridden with the `terraform_key` argument.
+~> **Note:** `lifecycle_scope = "CRUD"` will inject a key `tf` in the input event to pass lifecycle information! This allows the Lambda function to handle different lifecycle transitions uniquely. If you need to use a key `tf` in your own input JSON, the default key name can be overridden with the `terraform_key` argument.
 
-The key `tf` gets added with subkeys:
+The lifecycle key gets added with subkeys:
 
 * `action` - Action Terraform performs on the resource. Values are `create`, `update`, or `delete`.
 * `prev_input` - Input JSON payload from the previous invocation. This can be used to handle update and delete events.
 
-When the resource from the example above is created, the Lambda will get following JSON payload:
+When the resource from the CRUD example above is created, the Lambda will receive the following JSON payload:
 
 ```json
 {
-  "key1": "value1",
-  "key2": "value2",
+  "resource_name": "database_setup",
+  "database_url": "mydb.cluster-xyz.us-west-2.rds.amazonaws.com:5432",
+  "credentials": {
+    "username": "admin",
+    "password": "secret123"
+  },
   "tf": {
     "action": "create",
     "prev_input": null
@@ -87,33 +113,49 @@ When the resource from the example above is created, the Lambda will get followi
 }
 ```
 
-If the input value of `key1` changes to "valueB", then the lambda will be invoked again with the following JSON payload:
+If the `database_url` changes, the Lambda will be invoked again with:
 
 ```json
 {
-  "key1": "valueB",
-  "key2": "value2",
+  "resource_name": "database_setup",
+  "database_url": "mydb-new.cluster-abc.us-west-2.rds.amazonaws.com:5432",
+  "credentials": {
+    "username": "admin",
+    "password": "secret123"
+  },
   "tf": {
     "action": "update",
     "prev_input": {
-      "key1": "value1",
-      "key2": "value2"
+      "resource_name": "database_setup",
+      "database_url": "mydb.cluster-xyz.us-west-2.rds.amazonaws.com:5432",
+      "credentials": {
+        "username": "admin",
+        "password": "secret123"
+      }
     }
   }
 }
 ```
 
-When the invocation resource is removed, the final invocation will have the following JSON payload:
+When the invocation resource is removed, the final invocation will have:
 
 ```json
 {
-  "key1": "valueB",
-  "key2": "value2",
+  "resource_name": "database_setup",
+  "database_url": "mydb-new.cluster-abc.us-west-2.rds.amazonaws.com:5432",
+  "credentials": {
+    "username": "admin",
+    "password": "secret123"
+  },
   "tf": {
     "action": "delete",
     "prev_input": {
-      "key1": "valueB",
-      "key2": "value2"
+      "resource_name": "database_setup",
+      "database_url": "mydb-new.cluster-abc.us-west-2.rds.amazonaws.com:5432",
+      "credentials": {
+        "username": "admin",
+        "password": "secret123"
+      }
     }
   }
 }
@@ -123,18 +165,19 @@ When the invocation resource is removed, the final invocation will have the foll
 
 The following arguments are required:
 
-* `function_name` - (Required) Name of the lambda function.
-* `input` - (Required) JSON payload to the lambda function.
+* `function_name` - (Required) Name of the Lambda function.
+* `input` - (Required) JSON payload to the Lambda function.
 
 The following arguments are optional:
 
 * `lifecycle_scope` - (Optional) Lifecycle scope of the resource to manage. Valid values are `CREATE_ONLY` and `CRUD`. Defaults to `CREATE_ONLY`. `CREATE_ONLY` will invoke the function only on creation or replacement. `CRUD` will invoke the function on each lifecycle event, and augment the input JSON payload with additional lifecycle information.
-* `qualifier` - (Optional) Qualifier (i.e., version) of the lambda function. Defaults to `$LATEST`.
-* `terraform_key` - (Optional) The JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycle_scope` is set to `CRUD`.
-* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
+* `qualifier` - (Optional) Qualifier (i.e., version) of the Lambda function. Defaults to `$LATEST`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `terraform_key` - (Optional) JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycle_scope` is set to `CRUD`.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://developer.hashicorp.com/terraform/cli/commands/taint).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `result` - String result of the lambda function invocation.
+* `result` - String result of the Lambda function invocation.

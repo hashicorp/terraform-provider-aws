@@ -241,7 +241,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `assume_role_policy` - (Required) Policy that grants an entity permission to assume the role.
 
@@ -282,6 +282,31 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_role.example
+  identity = {
+    name = "developer_name"
+  }
+}
+
+resource "aws_iam_role" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the IAM role.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Roles using the `name`. For example:
 
 ```python
@@ -296,13 +321,13 @@ from imports.aws.iam_role import IamRole
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        IamRole.generate_config_for_import(self, "developer", "developer_name")
+        IamRole.generate_config_for_import(self, "example", "developer_name")
 ```
 
 Using `terraform import`, import IAM Roles using the `name`. For example:
 
 ```console
-% terraform import aws_iam_role.developer developer_name
+% terraform import aws_iam_role.example developer_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cc0706c2ff662b976d263da6b20bfd28567462ac69912e6e1cfb323fe6711d20 -->
+<!-- cache-key: cdktf-0.20.8 input-5368d8bc2072ec67884864005aebc6c73a9e00af5c6889b2bbc82ff13c703b84 -->

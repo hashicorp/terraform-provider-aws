@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_ecs_service: Fix refreshing `service_connect_configuration` when deleted outside of Terraform

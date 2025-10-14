@@ -26,6 +26,7 @@ func TestAccLightsailStaticIPAttachment_basic(t *testing.T) {
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 	instanceName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	resourceName := "aws_lightsail_static_ip_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -36,9 +37,14 @@ func TestAccLightsailStaticIPAttachment_basic(t *testing.T) {
 			{
 				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStaticIPAttachmentExists(ctx, "aws_lightsail_static_ip_attachment.test"),
-					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", names.AttrIPAddress),
+					testAccCheckStaticIPAttachmentExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIPAddress),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

@@ -40,10 +40,9 @@ func newCapacityBlockReservationResource(context.Context) (resource.ResourceWith
 }
 
 type capacityBlockReservationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[capacityBlockReservationReservationModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-	framework.WithNoOpUpdate[capacityBlockReservationReservationModel]
 	framework.WithNoOpDelete
 }
 
@@ -239,6 +238,7 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 }
 
 type capacityBlockReservationReservationModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                                     `tfsdk:"arn"`
 	AvailabilityZone        types.String                                                     `tfsdk:"availability_zone"`
 	CapacityBlockOfferingID types.String                                                     `tfsdk:"capacity_block_offering_id"`

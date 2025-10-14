@@ -44,7 +44,8 @@ const (
 	loadBalancerAttributeZonalShiftConfigEnabled                         = "zonal_shift.config.enabled"
 
 	// The following attributes are supported by only Network Load Balancers:
-	loadBalancerAttributeDNSRecordClientRoutingPolicy = "dns_record.client_routing_policy"
+	loadBalancerAttributeDNSRecordClientRoutingPolicy      = "dns_record.client_routing_policy"
+	loadBalancerAttributeSecondaryIPsAutoAssignedPerSubnet = "secondary_ips.auto_assigned.per_subnet"
 )
 
 const (
@@ -201,7 +202,7 @@ const (
 )
 
 func healthCheckProtocolEnumValues() []string {
-	return enum.Slice[awstypes.ProtocolEnum](
+	return enum.Slice(
 		awstypes.ProtocolEnumHttp,
 		awstypes.ProtocolEnumHttps,
 		awstypes.ProtocolEnumTcp,

@@ -43,7 +43,7 @@ func newIntegrationResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type integrationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[integrationResourceModel]
 	framework.WithTimeouts
 }
 
@@ -264,14 +264,15 @@ func integrationError(v awstypes.IntegrationError) error {
 }
 
 type integrationResourceModel struct {
-	AdditionalEncryptionContext fwtypes.MapValueOf[types.String] `tfsdk:"additional_encryption_context"`
-	Description                 types.String                     `tfsdk:"description"`
-	IntegrationARN              types.String                     `tfsdk:"arn"`
-	IntegrationName             types.String                     `tfsdk:"integration_name"`
-	KMSKeyID                    types.String                     `tfsdk:"kms_key_id"`
-	SourceARN                   fwtypes.ARN                      `tfsdk:"source_arn"`
-	Tags                        tftags.Map                       `tfsdk:"tags"`
-	TagsAll                     tftags.Map                       `tfsdk:"tags_all"`
-	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
-	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
+	framework.WithRegionModel
+	AdditionalEncryptionContext fwtypes.MapOfString `tfsdk:"additional_encryption_context"`
+	Description                 types.String        `tfsdk:"description"`
+	IntegrationARN              types.String        `tfsdk:"arn"`
+	IntegrationName             types.String        `tfsdk:"integration_name"`
+	KMSKeyID                    types.String        `tfsdk:"kms_key_id"`
+	SourceARN                   fwtypes.ARN         `tfsdk:"source_arn"`
+	Tags                        tftags.Map          `tfsdk:"tags"`
+	TagsAll                     tftags.Map          `tfsdk:"tags_all"`
+	TargetARN                   fwtypes.ARN         `tfsdk:"target_arn"`
+	Timeouts                    timeouts.Value      `tfsdk:"timeouts"`
 }

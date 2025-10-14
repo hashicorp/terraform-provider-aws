@@ -15,8 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -150,9 +155,9 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
@@ -537,7 +542,8 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 					testAccCheckSnapshotHour(23, &input),
 				),
 			},
-		}})
+		},
+	})
 }
 
 func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
@@ -905,7 +911,6 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.7"),
-					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", "1"),
@@ -929,7 +934,6 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.7"),
-					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", "0"),
@@ -1127,7 +1131,8 @@ func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": string(awstypes.LogTypeIndexSlowLogs),
+						names.AttrEnabled: acctest.CtTrue,
+						"log_type":        string(awstypes.LogTypeIndexSlowLogs),
 					}),
 				),
 			},
@@ -1163,7 +1168,8 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": string(awstypes.LogTypeSearchSlowLogs),
+						names.AttrEnabled: acctest.CtTrue,
+						"log_type":        string(awstypes.LogTypeSearchSlowLogs),
 					}),
 				),
 			},
@@ -1199,7 +1205,8 @@ func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) 
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": string(awstypes.LogTypeEsApplicationLogs),
+						names.AttrEnabled: acctest.CtTrue,
+						"log_type":        string(awstypes.LogTypeEsApplicationLogs),
 					}),
 				),
 			},
@@ -1235,7 +1242,8 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": string(awstypes.LogTypeAuditLogs),
+						names.AttrEnabled: acctest.CtTrue,
+						"log_type":        string(awstypes.LogTypeAuditLogs),
 					}),
 				),
 			},
@@ -1246,6 +1254,210 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeDomainConfig
 				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_LogPublishingOptions_disable(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_disabledLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(false),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeIndexSlowLogs)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_disabledLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(false),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_noLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_LogPublishingOptions_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_multipleLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeSearchSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
+			},
+			{
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeIndexSlowLogs)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_multipleLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeSearchSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_noLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(0)),
+				},
 			},
 		},
 	})
@@ -1437,10 +1649,22 @@ func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccDomainConfig_policyNewOrder(rName),
-				PlanOnly: true,
+				Config: testAccDomainConfig_policyNewOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1866,7 +2090,8 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 					testAccCheckEBSVolumeIops(3000, &input),
 				),
 			},
-		}})
+		},
+	})
 }
 
 // Verifies that EBS volume_type can be changed from gp3 to a type which does not
@@ -1915,7 +2140,8 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp2"),
 				),
 			},
-		}})
+		},
+	})
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
@@ -1999,7 +2225,8 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.3"),
 				),
 			},
-		}})
+		},
+	})
 }
 
 func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
@@ -2035,6 +2262,132 @@ func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
 		},
 	})
 }
+
+func TestAccOpenSearchDomain_AIMLOptions_createEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+	enabledState := "ENABLED"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", enabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options",
+				},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+	enabledState := "ENABLED"
+	disabledState := "DISABLED"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", disabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options",
+				},
+			},
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", enabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", disabledState),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2237,24 +2590,21 @@ func testAccCheckCognitoOptions(enabled bool, status *awstypes.DomainStatus) res
 	}
 }
 
-func testAccCheckDomainExists(ctx context.Context, n string, domain *awstypes.DomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string, v *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No OpenSearch Domain ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
-		resp, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+
+		output, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 		if err != nil {
-			return fmt.Errorf("Error describing domain: %s", err.Error())
+			return err
 		}
 
-		*domain = *resp
+		*v = *output
 
 		return nil
 	}
@@ -2307,6 +2657,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
@@ -2317,8 +2668,9 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("OpenSearch domain %s still exists", rs.Primary.ID)
+			return fmt.Errorf("OpenSearch Domain %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -2886,6 +3238,8 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -2903,7 +3257,7 @@ resource "aws_opensearch_domain" "test" {
         AWS = aws_iam_role.test.arn
       }
       Action   = "es:*"
-      Resource = "arn:${data.aws_partition.current.partition}:es:*"
+      Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"
     }]
   })
 }
@@ -2929,6 +3283,8 @@ data "aws_iam_policy_document" "test" {
 func testAccDomainConfig_policyOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -2949,7 +3305,7 @@ resource "aws_opensearch_domain" "test" {
         ]
       }
       Action   = "es:*"
-      Resource = "arn:${data.aws_partition.current.partition}:es:*"
+      Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"
     }]
   })
 }
@@ -2980,6 +3336,8 @@ data "aws_iam_policy_document" "test" {
 func testAccDomainConfig_policyNewOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -3000,7 +3358,7 @@ resource "aws_opensearch_domain" "test" {
         ]
       }
       Action   = "es:*"
-      Resource = "arn:${data.aws_partition.current.partition}:es:*"
+      Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"
     }]
   })
 }
@@ -3031,6 +3389,8 @@ data "aws_iam_policy_document" "test" {
 func testAccDomainConfig_policyDocument(rName string, roleCount int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -3046,7 +3406,7 @@ resource "aws_opensearch_domain" "test" {
 data "aws_iam_policy_document" "test" {
   statement {
     actions   = ["es:*"]
-    resources = ["arn:${data.aws_partition.current.partition}:es:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"]
     principals {
       type        = "AWS"
       identifiers = aws_iam_role.test[*].arn
@@ -3101,6 +3461,7 @@ func testAccDomainConfig_encryptAtRestKey(rName, version string, enabled bool) s
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_opensearch_domain" "test" {
@@ -3713,12 +4074,14 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomain_logPublishingOptionsBase(rName string) string {
+func testAccDomainConfig_baseLogPublishingOptions(rName string, nLogGroups int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
+  count = %[2]d
+
+  name = "%[1]s-${count.index}"
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
@@ -3742,7 +4105,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
     }]
   })
 }
-`, rName)
+`, rName, nLogGroups)
 }
 
 func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
@@ -3771,7 +4134,8 @@ func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 			enabled = true
 		}`
 	}
-	return acctest.ConfigCompose(testAccDomain_logPublishingOptionsBase(rName), fmt.Sprintf(`
+
+	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 1), fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name    = %[1]q
   engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
@@ -3781,14 +4145,72 @@ resource "aws_opensearch_domain" "test" {
     volume_size = 10
   }
 
-    %[2]s
+  %[2]s
 
   log_publishing_options {
     log_type                 = %[3]q
-    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test[0].arn
   }
 }
 `, rName, auditLogsConfig, logType))
+}
+
+func testAccDomainConfig_multipleLogPublishingOptions(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 2), fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  log_publishing_options {
+    log_type                 = "INDEX_SLOW_LOGS"
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test[0].arn
+  }
+
+  log_publishing_options {
+    log_type                 = "SEARCH_SLOW_LOGS"
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test[1].arn
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_disabledLogPublishingOptions(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 0), fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  log_publishing_options {
+    enabled                  = false
+    log_type                 = "INDEX_SLOW_LOGS"
+    cloudwatch_log_group_arn = ""
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_noLogPublishingOptions(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 0), fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName))
 }
 
 func testAccDomainConfig_cognitoOptions(rName string, includeCognitoOptions bool) string {
@@ -3907,4 +4329,54 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, option)
+}
+
+func testAccDomainConfig_AIMLOptions(rName, desiredState string, S3VecotrsEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  cluster_config {
+    instance_type  = "or1.medium.search"
+    instance_count = 1
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 20
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  aiml_options {
+    natural_language_query_generation_options {
+      desired_state = %[2]q
+    }
+
+    s3_vectors_engine {
+      enabled = %[3]t
+    }
+  }
+}
+`, rName, desiredState, S3VecotrsEnabled)
 }

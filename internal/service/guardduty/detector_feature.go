@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_detector_feature", name="Detector Feature")
-func ResourceDetectorFeature() *schema.Resource {
+func resourceDetectorFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorFeaturePut,
 		ReadWithoutTimeout:   resourceDetectorFeatureRead,
@@ -112,7 +112,7 @@ func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	feature, err := FindDetectorFeatureByTwoPartKey(ctx, conn, detectorID, name)
+	feature, err := findDetectorFeatureByTwoPartKey(ctx, conn, detectorID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Detector Feature (%s) not found, removing from state", d.Id())
@@ -153,8 +153,8 @@ func detectorFeatureParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DETECTORID%[2]sFEATURENAME", id, detectorFeatureResourceIDSeparator)
 }
 
-func FindDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.DetectorFeatureConfigurationResult, error) {
-	output, err := FindDetectorByID(ctx, conn, detectorID)
+func findDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.DetectorFeatureConfigurationResult, error) {
+	output, err := findDetectorByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return nil, err

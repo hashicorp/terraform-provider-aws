@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,6 +36,11 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 					testAccCheckQueueExists(ctx, fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -42,11 +48,15 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccQueueRedrivePolicyConfig_basic(rName),
-				PlanOnly: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "redrive_policy", queueResourceName, "redrive_policy"),
-				),
+				Config: testAccQueueRedrivePolicyConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -136,6 +146,17 @@ func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
 		},
 	})
 }
+
+// Satisfy generated identity test function names by aliasing to queue checks
+//
+// This mimics the standard policy acceptance test behavior, but in the
+// future we may consider replacing this approach with custom checks
+// to validate the presence/content of the redrive policy rather than just
+// the parent queue.
+var (
+	testAccCheckQueueRedrivePolicyExists  = testAccCheckQueueExists
+	testAccCheckQueueRedrivePolicyDestroy = testAccCheckQueueDestroy
+)
 
 func testAccQueueRedrivePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`

@@ -33,8 +33,8 @@ import (
 // @FrameworkResource("aws_verifiedpermissions_policy_store", name="Policy Store")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func newResourcePolicyStore(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePolicyStore{}
+func newPolicyStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &policyStoreResource{}
 
 	return r, nil
 }
@@ -43,15 +43,23 @@ const (
 	ResNamePolicyStore = "Policy Store"
 )
 
-type resourcePolicyStore struct {
-	framework.ResourceWithConfigure
+type policyStoreResource struct {
+	framework.ResourceWithModel[policyStoreResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *policyStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDeletionProtection: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DeletionProtection](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -87,8 +95,8 @@ func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.Schem
 	response.Schema = s
 }
 
-func (r *resourcePolicyStore) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourcePolicyStoreData
+func (r *policyStoreResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data policyStoreResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -118,17 +126,28 @@ func (r *resourcePolicyStore) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	data.ID = fwflex.StringToFramework(ctx, output.PolicyStoreId)
+
+	policyStore, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, ResNamePolicyStore, data.PolicyStoreID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, policyStore, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.ID = fwflex.StringToFramework(ctx, output.PolicyStoreId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourcePolicyStore) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourcePolicyStoreData
+func (r *policyStoreResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data policyStoreResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -162,8 +181,8 @@ func (r *resourcePolicyStore) Read(ctx context.Context, request resource.ReadReq
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourcePolicyStore) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourcePolicyStoreData
+func (r *policyStoreResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new policyStoreResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -175,7 +194,7 @@ func (r *resourcePolicyStore) Update(ctx context.Context, request resource.Updat
 
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 
-	if !new.Description.Equal(old.Description) || !new.ValidationSettings.Equal(old.ValidationSettings) {
+	if !new.DeletionProtection.Equal(old.DeletionProtection) || !new.Description.Equal(old.Description) || !new.ValidationSettings.Equal(old.ValidationSettings) {
 		var input verifiedpermissions.UpdatePolicyStoreInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -196,8 +215,8 @@ func (r *resourcePolicyStore) Update(ctx context.Context, request resource.Updat
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourcePolicyStoreData
+func (r *policyStoreResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data policyStoreResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -227,9 +246,11 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-type resourcePolicyStoreData struct {
+type policyStoreResourceModel struct {
+	framework.WithRegionModel
 	ARN                types.String                                        `tfsdk:"arn"`
 	Description        types.String                                        `tfsdk:"description"`
+	DeletionProtection fwtypes.StringEnum[awstypes.DeletionProtection]     `tfsdk:"deletion_protection"`
 	ID                 types.String                                        `tfsdk:"id"`
 	PolicyStoreID      types.String                                        `tfsdk:"policy_store_id"`
 	Tags               tftags.Map                                          `tfsdk:"tags"`

@@ -37,6 +37,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_minor_version_upgrade` - (Optional, Forces new resource) When set to `true`, the cluster will automatically receive minor engine version upgrades after launch. Defaults to `true`.
 * `data_tiering` - (Optional, Forces new resource) Enables data tiering. This option is not supported by all instance types. For more information, see [Data tiering](https://docs.aws.amazon.com/memorydb/latest/devguide/data-tiering.html).
 * `description` - (Optional) Description for the cluster. Defaults to `"Managed by Terraform"`.

@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the DB proxy.
 
 ## Attribute Reference
@@ -44,6 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the DB Proxy.
 * `auth` - Configuration(s) with authorization mechanisms to connect to the associated instance or cluster.
 * `debug_logging` - Whether the proxy includes detailed information about SQL statements in its logs.
+* `default_auth_scheme` - Default authentication scheme that the proxy uses for client connections to the proxy and connections from the proxy to the underlying database.
 * `endpoint` - Endpoint that you can use to connect to the DB proxy.
 * `engine_family` - Kinds of databases that the proxy can connect to.
 * `idle_client_timeout` - Number of seconds a connection to the proxy can have no activity before the proxy drops the client connection.
@@ -53,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_security_group_ids` - Provides a list of VPC security groups that the proxy belongs to.
 * `vpc_subnet_ids` - EC2 subnet IDs for the proxy.
 
-<!-- cache-key: cdktf-0.20.8 input-40613dad61f863b46258986380665de6148f37458b6c3dc04b218f3d733ebd72 -->
+<!-- cache-key: cdktf-0.20.8 input-2d7107af0b40b25e985e6a5808abdb4493f3c83631c51bca95c34e0824918c71 -->

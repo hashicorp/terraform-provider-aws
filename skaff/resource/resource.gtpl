@@ -55,9 +55,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/YakDriver/smarterr"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
@@ -164,7 +165,7 @@ func Resource{{ .Resource }}() *schema.Resource {
 		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		{{- end }}
 		Schema: map[string]*schema.Schema{
-			"arn": { {{- if .IncludeComments }} // TIP: Many, but not all, resources have an `arn` attribute.{{- end }}
+			names.AttrARN: { {{- if .IncludeComments }} // TIP: Many, but not all, resources have an `arn` attribute.{{- end }}
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -231,8 +232,8 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		// TIP: Mandatory or fields that will always be present can be set when
 		// you create the Input structure. (Replace these with real fields.)
 		{{- end }}
-		{{ .Resource }}Name: aws.String(d.Get("name").(string)),
-		{{ .Resource }}Type: aws.String(d.Get("type").(string)),
+		{{ .Resource }}Name: aws.String(d.Get(names.AttrName).(string)),
+		{{ .Resource }}Type: aws.String(d.Get(names.AttrType).(string)),
 		{{ if .IncludeComments }}
 		// TIP: Not all resources support tags and tags don't always make sense. If
 		// your resource doesn't need tags, you can remove the tags lines here and
@@ -268,11 +269,11 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
 		// in error messages at this point.
 		{{- end }}
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, d.Get("name").(string), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Get(names.AttrName).(string))
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, d.Get("name").(string), errors.New("empty output"))
+		return smerr.Append(ctx, diags, errors.New("empty output"), smerr.ID, d.Get(names.AttrName).(string))
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
@@ -283,7 +284,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	// TIP: -- 5. Use a waiter to wait for create to complete
 	{{- end }}
 	if _, err := wait{{ .Resource }}Created(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionWaitingForCreation, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Call the Read function in the Create return
@@ -325,14 +326,14 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Set the arguments and attributes
 	//
 	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
 	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
-	// d.Set("arn", out.Arn) is sufficient. No error or nil checking is
+	// d.Set(names.AttrARN, out.Arn) is sufficient. No error or nil checking is
 	// necessary.
 	//
 	// However, there are some situations where more handling is needed.
@@ -342,8 +343,8 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON.
 	{{- end }}
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrName, out.Name)
 	{{ if .IncludeComments }}
 	// TIP: Setting a complex type.
 	// For more information, see:
@@ -352,19 +353,19 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("policy", p)
@@ -435,13 +436,13 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[DEBUG] Updating {{ .Service }} {{ .Resource }} (%s): %#v", d.Id(), in)
 	out, err := conn.Update{{ .Resource }}(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Use a waiter to wait for update to complete
 	{{- end }}
 	if _, err := wait{{ .Resource }}Updated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionWaitingForUpdate, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Call the Read function in the Update return
@@ -491,13 +492,13 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 		return diags
 	}
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Use a waiter to wait for delete to complete
 	{{- end }}
 	if _, err := wait{{ .Resource }}Deleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionWaitingForDeletion, ResName{{ .Resource }}, d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Return diags
@@ -543,10 +544,10 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: It is easier to determine whether a resource is updated for some
@@ -566,10 +567,10 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
@@ -585,10 +586,10 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: ==== STATUS ====
@@ -607,7 +608,7 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return out, aws.ToString(out.Status), nil
@@ -627,17 +628,17 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 
 	out, err := conn.Get{{ .Resource }}(ctx, in)
 	if errs.IsA[*types.ResourceNotFoundException](err){
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
-		}
+		})
 	}
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return out.{{ .Resource }}, nil

@@ -198,10 +198,10 @@ class MyConvertedCode(TerraformStack):
         CognitoUserPoolClient(self, "userpool_client",
             explicit_auth_flows=["ADMIN_NO_SRP_AUTH"],
             name="client",
-            refresh_token_rotation=[{
-                "feature": "ENABLED",
-                "retry_grace_period_seconds": 10
-            }
+            refresh_token_rotation=[CognitoUserPoolClientRefreshTokenRotation(
+                feature="ENABLED",
+                retry_grace_period_seconds=10
+            )
             ],
             user_pool_id=pool.id
         )
@@ -216,6 +216,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to use OAuth 2.0 features. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure the following arguments: `callback_urls`, `logout_urls`, `allowed_oauth_scopes` and `allowed_oauth_flows`.
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows, including `code`, `implicit`, and `client_credentials`. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
@@ -293,4 +294,4 @@ Using `terraform import`, import Cognito User Pool Clients using the `id` of the
 % terraform import aws_cognito_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a9c0bb17375caaed839a69432aa5e85713ff4dadbb1d322112e50c25d12e16a1 -->
+<!-- cache-key: cdktf-0.20.8 input-d1a394d73b0a087acf5e418fb0d8c8e608a58d64886c462e83fcbbe2799898ee -->

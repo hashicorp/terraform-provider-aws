@@ -22,12 +22,13 @@ import (
 )
 
 // @FrameworkDataSource("aws_ecr_lifecycle_policy_document", name="Lifecycle Policy Document")
+// @Region(overrideEnabled=false)
 func newLifecyclePolicyDocumentDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &lifecyclePolicyDocumentDataSource{}, nil
 }
 
 type lifecyclePolicyDocumentDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[lifecyclePolicyDocumentDataSourceModel]
 }
 
 func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

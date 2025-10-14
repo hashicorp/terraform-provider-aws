@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -330,12 +330,12 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 							operations = append(operations, types.PatchOperation{
 								Op:    types.OpReplace,
 								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th[names.AttrPath].(string))),
-								Value: aws.String(strconv.FormatFloat(th["rate_limit"].(float64), 'f', -1, 64)),
+								Value: flex.Float64ValueToString(th["rate_limit"].(float64)),
 							})
 							operations = append(operations, types.PatchOperation{
 								Op:    types.OpReplace,
 								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th[names.AttrPath].(string))),
-								Value: aws.String(strconv.Itoa(th["burst_limit"].(int))),
+								Value: flex.IntValueToString(th["burst_limit"].(int)),
 							})
 						}
 					}
@@ -363,12 +363,12 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpReplace,
 						Path:  aws.String("/throttle/rateLimit"),
-						Value: aws.String(strconv.FormatFloat(d["rate_limit"].(float64), 'f', -1, 64)),
+						Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
 					})
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpReplace,
 						Path:  aws.String("/throttle/burstLimit"),
-						Value: aws.String(strconv.Itoa(d["burst_limit"].(int))),
+						Value: flex.IntValueToString(d["burst_limit"].(int)),
 					})
 				}
 
@@ -377,12 +377,12 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpAdd,
 						Path:  aws.String("/throttle/rateLimit"),
-						Value: aws.String(strconv.FormatFloat(d["rate_limit"].(float64), 'f', -1, 64)),
+						Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
 					})
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpAdd,
 						Path:  aws.String("/throttle/burstLimit"),
-						Value: aws.String(strconv.Itoa(d["burst_limit"].(int))),
+						Value: flex.IntValueToString(d["burst_limit"].(int)),
 					})
 				}
 			}
@@ -412,12 +412,12 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpReplace,
 						Path:  aws.String("/quota/limit"),
-						Value: aws.String(strconv.Itoa(d["limit"].(int))),
+						Value: flex.IntValueToString(d["limit"].(int)),
 					})
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpReplace,
 						Path:  aws.String("/quota/offset"),
-						Value: aws.String(strconv.Itoa(d["offset"].(int))),
+						Value: flex.IntValueToString(d["offset"].(int)),
 					})
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpReplace,
@@ -431,12 +431,12 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpAdd,
 						Path:  aws.String("/quota/limit"),
-						Value: aws.String(strconv.Itoa(d["limit"].(int))),
+						Value: flex.IntValueToString(d["limit"].(int)),
 					})
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpAdd,
 						Path:  aws.String("/quota/offset"),
-						Value: aws.String(strconv.Itoa(d["offset"].(int))),
+						Value: flex.IntValueToString(d["offset"].(int)),
 					})
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpAdd,

@@ -154,6 +154,7 @@ resource "aws_route53_record" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Fully-qualified domain name to register.
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. See below.
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name. See below.

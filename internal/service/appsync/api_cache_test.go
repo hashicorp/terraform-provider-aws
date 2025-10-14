@@ -32,18 +32,29 @@ func testAccAPICache_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAPICacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPICacheConfig_basic(rName),
+				Config: testAccAPICacheConfig_basic(rName, "SMALL", "FULL_REQUEST_CACHING", 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SMALL"),
 					resource.TestCheckResourceAttr(resourceName, "api_caching_behavior", "FULL_REQUEST_CACHING"),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "60"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAPICacheConfig_basic(rName, "MEDIUM", "PER_RESOLVER_CACHING", 120),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
+					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "MEDIUM"),
+					resource.TestCheckResourceAttr(resourceName, "api_caching_behavior", "PER_RESOLVER_CACHING"),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "120"),
+				),
 			},
 		},
 	})
@@ -62,7 +73,7 @@ func testAccAPICache_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAPICacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPICacheConfig_basic(rName),
+				Config: testAccAPICacheConfig_basic(rName, "SMALL", "FULL_REQUEST_CACHING", 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
@@ -120,7 +131,7 @@ func testAccCheckAPICacheExists(ctx context.Context, n string, v *awstypes.ApiCa
 	}
 }
 
-func testAccAPICacheConfig_basic(rName string) string {
+func testAccAPICacheConfig_basic(rName, typeString, apiCachingBehavior string, ttl int) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -129,9 +140,9 @@ resource "aws_appsync_graphql_api" "test" {
 
 resource "aws_appsync_api_cache" "test" {
   api_id               = aws_appsync_graphql_api.test.id
-  type                 = "SMALL"
-  api_caching_behavior = "FULL_REQUEST_CACHING"
-  ttl                  = 60
+  type                 = %[2]q
+  api_caching_behavior = %[3]q
+  ttl                  = %[4]d
 }
-`, rName)
+`, rName, typeString, apiCachingBehavior, ttl)
 }

@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -101,7 +101,7 @@ func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
 func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var streamprocessor, streamprocessor2 rekognition.DescribeStreamProcessorOutput
+	var v rekognition.DescribeStreamProcessorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_stream_processor.test"
 
@@ -118,21 +118,22 @@ func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 			{
 				Config: testAccStreamProcessorConfig_connectedHome(rName, testAccStreamProcessorConfig_boundingBox()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					testAccCheckStreamProcessorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.left", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.top", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.height", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.width", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.left", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.top", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.height", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.width", "0.5"),
 				),
 			},
 			{
 				Config: testAccStreamProcessorConfig_connectedHome(rName, testAccStreamProcessorConfig_polygons()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor2),
-					testAccCheckStreamProcessorNotRecreated(&streamprocessor, &streamprocessor2),
+					testAccCheckStreamProcessorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.0.x", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.0.y", "0.5"),
@@ -205,10 +206,11 @@ func TestAccRekognitionStreamProcessor_faceRecognition_boundingBox(t *testing.T)
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.left", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.top", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.height", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.width", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.left", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.top", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.height", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.width", "0.5"),
 				),
 			},
 		},
@@ -237,6 +239,7 @@ func TestAccRekognitionStreamProcessor_faceRecognition_polygon(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.0.x", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.0.y", "0.5"),
@@ -303,6 +306,125 @@ func TestAccRekognitionStreamProcessor_tags(t *testing.T) {
 	})
 }
 
+func TestAccRekognitionStreamProcessor_UpgradeV6_0_0_regionsOfInterestBoundingBox(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var streamprocessor, streamprocessor2 rekognition.DescribeStreamProcessorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_stream_processor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.RekognitionServiceID),
+		CheckDestroy: testAccCheckStreamProcessorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.94.1",
+					},
+				},
+				Config: testAccStreamProcessorConfig_connectedHome(rName, testAccStreamProcessorConfig_boundingBox()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.left", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.top", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.height", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.width", "0.5"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccStreamProcessorConfig_connectedHome(rName, testAccStreamProcessorConfig_boundingBox()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor2),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.left", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.top", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.height", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.0.width", "0.5"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRekognitionStreamProcessor_UpgradeV6_0_0_regionsOfInterestPolygon(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v rekognition.DescribeStreamProcessorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_stream_processor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.RekognitionServiceID),
+		CheckDestroy: testAccCheckStreamProcessorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.94.1",
+					},
+				},
+				Config: testAccStreamProcessorConfig_connectedHome(rName, testAccStreamProcessorConfig_polygons()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "regions_of_interest.0.bounding_box"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.0.x", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.0.y", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.1.x", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.1.y", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.2.x", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.2.y", "0.5"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccStreamProcessorConfig_connectedHome(rName, testAccStreamProcessorConfig_polygons()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.0.x", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.0.y", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.1.x", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.1.y", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.2.x", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.2.y", "0.5"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckStreamProcessorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
@@ -364,16 +486,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckStreamProcessorNotRecreated(before, after *rekognition.DescribeStreamProcessorOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.StreamProcessorArn), aws.ToString(after.StreamProcessorArn); before != after {
-			return create.Error(names.Rekognition, create.ErrActionCheckingNotRecreated, tfrekognition.ResNameStreamProcessor, aws.ToString(&before), errors.New("recreated"))
-		}
-
-		return nil
 	}
 }
 

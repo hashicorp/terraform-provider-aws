@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enabled` - (Optional) Whether or not serial console access is enabled. Valid values are `true` or `false`. Defaults to `true`.
 
 ## Attribute Reference
@@ -68,4 +69,4 @@ Using `terraform import`, import serial console access state. For example:
 % terraform import aws_ec2_serial_console_access.example default
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a8751aa6eb0a3b96c3378b69be9c857d11be1b4723fc3142c82967475affbbbc -->
+<!-- cache-key: cdktf-0.20.8 input-a749da3cacd9be7e610950040a08e3a7979ae548c34b760c22f3fec3a3e84963 -->

@@ -22,6 +22,7 @@ data "aws_directory_service_directory" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_id` - (Required) ID of the directory.
 
 ## Attribute Reference
@@ -40,7 +41,7 @@ This data source exports the following attributes in addition to the arguments a
 * `access_url` - Access URL for the directory/connector, such as http://alias.awsapps.com.
 * `dns_ip_addresses` - List of IP addresses of the DNS servers for the directory/connector.
 * `security_group_id` - ID of the security group created by the directory/connector.
-* `tags` – A map of tags assigned to the directory/connector.
+* `tags` - A map of tags assigned to the directory/connector.
 
  `vpc_settings` (for `SimpleAD` and `MicrosoftAD`) is also exported with the following attributes:
 

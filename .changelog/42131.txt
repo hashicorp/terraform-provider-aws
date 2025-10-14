@@ -1,0 +1,35 @@
+```release-note:note
+data-source/aws_region: The `name` attribute has been deprecated. All configurations using `name` should be updated to use the `region` attribute instead
+```
+
+```release-note:note
+resource/aws_servicequotas_template: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead
+```
+
+```release-note:note
+data-source/aws_servicequotas_templates: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead
+```
+
+```release-note:enhancement
+resource/aws_quicksight_iam_policy_assignment: Add plan-time validation of `policy_arn`
+```
+
+```release-note:enhancement
+resource/aws_securitylake_subscriber: Add plan-time validation of `access_type` `source.aws_log_source_resource.source_name`, and `subscriber_identity.external_id`
+```
+
+```release-note:bug
+resource/aws_securitylake_subscriber: Change `access_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
+
+```release-note:enhancement
+resource/aws_auditmanager_control: Add plan-time validation of `control_mapping_sources.source_frequency`, `control_mapping_sources.source_set_up_option`, and `control_mapping_sources.source_type`
+```
+
+```release-note:bug
+resource/aws_auditmanager_control: Fix `Provider produced inconsistent result after apply` errors
+```
+
+```release-note:enhancement
+resource/aws_auditmanager_assessment: Add plan-time validation of `roles.role_arn` and `roles.role_type`
+```

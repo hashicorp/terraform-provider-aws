@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1628,10 +1629,11 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "data_replication_primary_broker_arn"},
 			},
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				// Preparation for destruction would require multiple configuration changes
 				// and applies to unpair brokers. Instead, complete the necessary update, reboot,
-				// and delete opreations on the primary cluster out-of-band to ensure remaining
+				// and delete operations on the primary cluster out-of-band to ensure remaining
 				// resources will be freed for clean up.
 				PreConfig: func() {
 					// In order to delete, replicated brokers must first be unpaired by setting
@@ -1736,7 +1738,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccUnpairBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
 	brokerID := aws.ToString(broker.BrokerId)
-	deadline := tfresource.NewDeadline(30 * time.Minute)
+	deadline := inttypes.NewDeadline(30 * time.Minute)
 	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
 
 	_, err := conn.UpdateBroker(ctx, &mq.UpdateBrokerInput{
@@ -1760,7 +1762,7 @@ func testAccUnpairBrokerWithProvider(ctx context.Context, t *testing.T, broker *
 
 func testAccDeleteBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
 	brokerID := aws.ToString(broker.BrokerId)
-	deadline := tfresource.NewDeadline(30 * time.Minute)
+	deadline := inttypes.NewDeadline(30 * time.Minute)
 	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
 
 	_, err := conn.DeleteBroker(ctx, &mq.DeleteBrokerInput{BrokerId: aws.String(brokerID)})
@@ -2079,6 +2081,7 @@ func testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, version string) string
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_security_group" "test" {

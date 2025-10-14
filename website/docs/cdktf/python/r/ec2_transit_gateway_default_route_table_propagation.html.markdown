@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_id` - (Required) ID of the Transit Gateway to change the default association route table on.
 * `transit_gateway_route_table_id` - (Required) ID of the Transit Gateway Route Table to be made the default association route table.
 
@@ -52,4 +53,4 @@ This resource exports no additional attributes.
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.8 input-62bf9382308bb760bba17873883a0b2f0ee6b7d43a93e2832f0dc3515deabbf2 -->
+<!-- cache-key: cdktf-0.20.8 input-2ebacbec0bec9eeaa674a30d32f7225048bea7b4c1109f0dfdf40e8d25b15a08 -->

@@ -11,6 +11,6 @@ import (
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfm2.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfm2.ServicePackage(ctx), resourceAddress, knownValue)
 }

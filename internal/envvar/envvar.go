@@ -60,6 +60,18 @@ const (
 	// For tests using a third AWS account, the equivalent of AWS_SECRET_ACCESS_KEY for that account
 	ThirdSecretAccessKey = "AWS_THIRD_SECRET_ACCESS_KEY"
 
+	// For tests using a fourth AWS account, the equivalent of AWS_ACCESS_KEY_ID for that account
+	FourthAccessKeyId = "AWS_FOURTH_ACCESS_KEY_ID"
+
+	// For tests using a fourth AWS account, the equivalent of AWS_PROFILE for that account
+	FourthProfile = "AWS_FOURTH_PROFILE"
+
+	// For tests using a fourth AWS region, the equivalent of AWS_DEFAULT_REGION for that region
+	FourthRegion = "AWS_FOURTH_REGION"
+
+	// For tests using a fourth AWS account, the equivalent of AWS_SECRET_ACCESS_KEY for that account
+	FourthSecretAccessKey = "AWS_FOURTH_SECRET_ACCESS_KEY"
+
 	// For tests requiring GitHub permissions
 	GithubToken = "GITHUB_TOKEN"
 

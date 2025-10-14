@@ -28,17 +28,16 @@ import (
 )
 
 // @SDKResource("aws_ce_anomaly_monitor", name="Anomaly Monitor")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalyMonitor")
 func resourceAnomalyMonitor() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalyMonitorCreate,
 		ReadWithoutTimeout:   resourceAnomalyMonitorRead,
 		UpdateWithoutTimeout: resourceAnomalyMonitorUpdate,
 		DeleteWithoutTimeout: resourceAnomalyMonitorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

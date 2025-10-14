@@ -33,8 +33,8 @@ import (
 )
 
 // @FrameworkResource("aws_datazone_glossary", name="Glossary")
-func newResourceGlossary(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceGlossary{}
+func newGlossaryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &glossaryResource{}
 	return r, nil
 }
 
@@ -42,11 +42,11 @@ const (
 	ResNameGlossary = "Glossary"
 )
 
-type resourceGlossary struct {
-	framework.ResourceWithConfigure
+type glossaryResource struct {
+	framework.ResourceWithModel[glossaryResourceModel]
 }
 
-func (r *resourceGlossary) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *glossaryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -83,10 +83,10 @@ func (r *resourceGlossary) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *resourceGlossary) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *glossaryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan glossaryData
+	var plan glossaryResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,10 +121,10 @@ func (r *resourceGlossary) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceGlossary) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *glossaryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state glossaryData
+	var state glossaryResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -150,10 +150,10 @@ func (r *resourceGlossary) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceGlossary) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *glossaryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state glossaryData
+	var plan, state glossaryResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -192,9 +192,9 @@ func (r *resourceGlossary) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceGlossary) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *glossaryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state glossaryData
+	var state glossaryResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -238,7 +238,7 @@ func (r *resourceGlossary) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-func (r *resourceGlossary) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *glossaryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 3 {
@@ -273,7 +273,8 @@ func findGlossaryByID(ctx context.Context, conn *datazone.Client, id string, dom
 	return out, nil
 }
 
-type glossaryData struct {
+type glossaryResourceModel struct {
+	framework.WithRegionModel
 	Description             types.String                                `tfsdk:"description"`
 	Name                    types.String                                `tfsdk:"name"`
 	OwningProjectIdentifier types.String                                `tfsdk:"owning_project_identifier"`

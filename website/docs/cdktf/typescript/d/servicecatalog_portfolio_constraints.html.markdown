@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `acceptLanguage` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `productId` - (Optional) Product identifier.
 
@@ -61,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `productId` - Identifier of the product the constraint applies to. A constraint applies to a specific instance of a product within a certain portfolio.
 * `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `STACKSET`, and `TEMPLATE`.
 
-<!-- cache-key: cdktf-0.20.8 input-f95e8d8a013aacf7b3916f6b479047744fecc334d40aba4c8da473d8e4af976e -->
+<!-- cache-key: cdktf-0.20.8 input-797df2d3aebcacfcc17b0ae2b47fc3a0fd92b98e23ee5e9ca72e5af9dae1e9ad -->

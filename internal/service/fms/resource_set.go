@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -35,8 +34,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/fms;fms.GetResourceSetOutput")
 // @Testing(serialize=true)
-func newResourceResourceSet(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourceSet{}
+func newResourceSetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceSetResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -49,12 +48,13 @@ const (
 	ResNameResourceSet = "Resource Set"
 )
 
-type resourceResourceSet struct {
-	framework.ResourceWithConfigure
+type resourceSetResource struct {
+	framework.ResourceWithModel[resourceSetResourceModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resourceSetLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[resourceSetData](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -89,8 +89,9 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 				"resource_type_list": schema.ListAttribute{
-					CustomType: fwtypes.ListOfStringType,
-					Optional:   true,
+					CustomType:  fwtypes.ListOfStringType,
+					Optional:    true,
+					ElementType: types.StringType,
 				},
 			},
 		},
@@ -114,10 +115,10 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceResourceSet) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceSetResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().FMSClient(ctx)
 
-	var plan resourceResourceSetData
+	var plan resourceSetResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,10 +169,10 @@ func (r *resourceResourceSet) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceResourceSet) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().FMSClient(ctx)
 
-	var state resourceResourceSetData
+	var state resourceSetResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -197,10 +198,10 @@ func (r *resourceResourceSet) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourceSet) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceSetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().FMSClient(ctx)
 
-	var plan, state resourceResourceSetData
+	var plan, state resourceSetResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -246,10 +247,10 @@ func (r *resourceResourceSet) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceSetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().FMSClient(ctx)
 
-	var state resourceResourceSetData
+	var state resourceSetResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -280,10 +281,6 @@ func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteReq
 		)
 		return
 	}
-}
-
-func (r *resourceResourceSet) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
@@ -378,7 +375,8 @@ func findResourceSetByID(ctx context.Context, conn *fms.Client, id string) (*fms
 	return out, nil
 }
 
-type resourceResourceSetData struct {
+type resourceSetResourceModel struct {
+	framework.WithRegionModel
 	ARN         types.String                                     `tfsdk:"arn"`
 	ID          types.String                                     `tfsdk:"id"`
 	ResourceSet fwtypes.ListNestedObjectValueOf[resourceSetData] `tfsdk:"resource_set"`
@@ -393,6 +391,6 @@ type resourceSetData struct {
 	LastUpdateTime    timetypes.RFC3339                              `tfsdk:"last_update_time"`
 	Name              types.String                                   `tfsdk:"name"`
 	ResourceSetStatus fwtypes.StringEnum[awstypes.ResourceSetStatus] `tfsdk:"resource_set_status"`
-	ResourceTypeList  fwtypes.ListValueOf[types.String]              `tfsdk:"resource_type_list"`
+	ResourceTypeList  fwtypes.ListOfString                           `tfsdk:"resource_type_list"`
 	UpdateToken       types.String                                   `tfsdk:"update_token"`
 }

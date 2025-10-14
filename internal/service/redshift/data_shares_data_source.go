@@ -18,47 +18,30 @@ import (
 )
 
 // @FrameworkDataSource("aws_redshift_data_shares", name="Data Shares")
-func newDataSourceDataShares(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDataShares{}, nil
+func newDataSharesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSharesDataSource{}, nil
 }
 
 const (
 	DSNameDataShares = "Data Shares Data Source"
 )
 
-type dataSourceDataShares struct {
-	framework.DataSourceWithConfigure
+type dataSharesDataSource struct {
+	framework.DataSourceWithModel[dataSharesDataSourceModel]
 }
 
-func (d *dataSourceDataShares) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSharesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-		},
-		Blocks: map[string]schema.Block{
-			"data_shares": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSharesData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"data_share_arn": schema.StringAttribute{
-							Computed: true,
-						},
-						"managed_by": schema.StringAttribute{
-							Computed: true,
-						},
-						"producer_arn": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
+			"data_shares": framework.DataSourceComputedListOfObjectAttribute[dataSharesData](ctx),
+			names.AttrID:  framework.IDAttribute(),
 		},
 	}
 }
-func (d *dataSourceDataShares) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *dataSharesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().RedshiftClient(ctx)
 
-	var data dataSourceDataSharesData
+	var data dataSharesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -91,7 +74,8 @@ func (d *dataSourceDataShares) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceDataSharesData struct {
+type dataSharesDataSourceModel struct {
+	framework.WithRegionModel
 	DataShares fwtypes.ListNestedObjectValueOf[dataSharesData] `tfsdk:"data_shares"`
 	ID         types.String                                    `tfsdk:"id"`
 }

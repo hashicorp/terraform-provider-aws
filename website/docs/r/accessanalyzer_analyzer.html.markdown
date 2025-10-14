@@ -35,7 +35,7 @@ resource "aws_accessanalyzer_analyzer" "example" {
 }
 ```
 
-### Organization Unused Access Analyzer with analysis rule
+### Organization Unused Access Analyzer With Analysis Rule
 
 ```terraform
 resource "aws_accessanalyzer_analyzer" "example" {
@@ -64,6 +64,49 @@ resource "aws_accessanalyzer_analyzer" "example" {
 }
 ```
 
+### Account Internal Access Analyzer by Resource Types
+
+```terraform
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = "example"
+  type          = "ORGANIZATION_INTERNAL_ACCESS"
+
+  configuration {
+    internal_access {
+      analysis_rule {
+        inclusion {
+          resource_types = [
+            "AWS::S3::Bucket",
+            "AWS::RDS::DBSnapshot",
+            "AWS::DynamoDB::Table",
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+### Organization Internal Access Analyzer by Account ID and Resource ARN
+
+```terraform
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = "example"
+  type          = "ORGANIZATION_INTERNAL_ACCESS"
+
+  configuration {
+    internal_access {
+      analysis_rule {
+        inclusion {
+          account_ids   = ["123456789012"]
+          resource_arns = ["arn:aws:s3:::my-example-bucket"]
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -72,34 +115,64 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `configuration` - (Optional) A block that specifies the configuration of the analyzer. [Documented below](#configuration-argument-reference)
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `configuration` - (Optional) A block that specifies the configuration of the analyzer. See [`configuration` Block](#configuration-block) for details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT`, `ORGANIZATION`, `ACCOUNT_UNUSED_ACCESS `, `ORGANIZATION_UNUSED_ACCESS`. Defaults to `ACCOUNT`.
+* `type` - (Optional) Type that represents the zone of trust or scope for the analyzer. Valid values are `ACCOUNT`, `ACCOUNT_INTERNAL_ACCESS`, `ACCOUNT_UNUSED_ACCESS`, `ORGANIZATION`, `ORGANIZATION_INTERNAL_ACCESS`, `ORGANIZATION_UNUSED_ACCESS`. Defaults to `ACCOUNT`.
 
-### `configuration` Argument Reference
+### `configuration` Block
 
-* `unused_access` - (Optional) A block that specifies the configuration of an unused access analyzer for an AWS organization or account. [Documented below](#unused_access-argument-reference)
+The `configuration` configuration block supports the following arguments:
 
-### `unused_access` Argument Reference
+* `internal_access` - (Optional) Specifies the configuration of an internal access analyzer for an AWS organization or account. This configuration determines how the analyzer evaluates access within your AWS environment. See [`internal_access` Block](#internal_access-block) for details.
+* `unused_access` - (Optional) Specifies the configuration of an unused access analyzer for an AWS organization or account. See [`unused_access` Block](#unused_access-block) for details.
 
-* `unused_access_age` - (Optional) The specified access age in days for which to generate findings for unused access.
-* `analysis_rule` - (Optional) A block for analysis rules. [Documented below](#analysis_rule-argument-reference)
+### `internal_access` Block
 
-### `analysis_rule` Argument Reference
+The `internal_access` configuration block supports the following arguments:
 
-* `exclusion` - (Optional) A block for the analyzer rules containing criteria to exclude from analysis. [Documented below](#exclusion-argument-reference)
+* `analysis_rule` - (Optional) Information about analysis rules for the internal access analyzer. These rules determine which resources and access patterns will be analyzed. See [`analysis_rule` Block for Internal Access Analyzer](#analysis_rule-block-for-internal-access-analyzer) for details.
 
-#### `exclusion` Argument Reference
+### `analysis_rule` Block for Internal Access Analyzer
 
-* `account_ids` - (Optional) A list of account IDs to exclude from the analysis.
-* `resource_tags` - (Optional) A list of key-value pairs for resource tags to exclude from the analysis.
+The `analysis_rule` configuration block for internal access analyzer supports the following arguments:
+
+* `inclusion` - (Optional) List of rules for the internal access analyzer containing criteria to include in analysis. Only resources that meet the rule criteria will generate findings. See [`inclusion` Block](#inclusion-block) for details.
+
+### `inclusion` Block
+
+The `inclusion` configuration block supports the following arguments:
+
+* `account_ids` - (Optional) List of AWS account IDs to apply to the internal access analysis rule criteria. Account IDs can only be applied to the analysis rule criteria for organization-level analyzers.
+* `resource_arns` - (Optional) List of resource ARNs to apply to the internal access analysis rule criteria. The analyzer will only generate findings for resources that match these ARNs.
+* `resource_types` - (Optional) List of resource types to apply to the internal access analysis rule criteria. The analyzer will only generate findings for resources of these types. Refer to [InternalAccessAnalysisRuleCriteria](https://docs.aws.amazon.com/access-analyzer/latest/APIReference/API_InternalAccessAnalysisRuleCriteria.html) in the AWS IAM Access Analyzer API Reference for valid values.
+
+### `unused_access` Block
+
+The `unused_access` configuration block supports the following arguments:
+
+* `unused_access_age` - (Optional) Specified access age in days for which to generate findings for unused access.
+* `analysis_rule` - (Optional) Information about analysis rules for the analyzer. Analysis rules determine which entities will generate findings based on the criteria you define when you create the rule. See [`analysis_rule` Block for Unused Access Analyzer](#analysis_rule-block-for-unused-access-analyzer) for details.
+
+### `analysis_rule` Block for Unused Access Analyzer
+
+The `analysis_rule` configuration block for unused access analyzer supports the following arguments:
+
+* `exclusion` - (Optional) List of rules for the analyzer containing criteria to exclude from analysis. Entities that meet the rule criteria will not generate findings. See [`exclusion` Block](#exclusion-block) for details.
+
+### `exclusion` Block
+
+The `exclusion` configuration block supports the following arguments:
+
+* `account_ids` - (Optional) List of AWS account IDs to apply to the analysis rule criteria. The accounts cannot include the organization analyzer owner account. Account IDs can only be applied to the analysis rule criteria for organization-level analyzers.
+* `resource_tags` - (Optional) List of key-value pairs for resource tags to exclude from the analysis.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Analyzer.
-* `id` - Analyzer name.
+* `id` - Name of the analyzer.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

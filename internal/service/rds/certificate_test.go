@@ -24,6 +24,7 @@ func TestAccRDSCertificate_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccCertificate_basic,
 		acctest.CtDisappears: testAccCertificate_disappears,
+		"Identity":           testAccRDSCertificate_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -62,6 +63,122 @@ func testAccCertificate_basic(t *testing.T) {
 		},
 	})
 }
+
+// func testAccRDSCertificate_Identity_Basic(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var v types.Certificate
+// 	resourceName := "aws_rds_certificate.test"
+
+// 	resource.Test(t, resource.TestCase{
+// 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+// 			tfversion.SkipBelow(tfversion.Version1_12_0),
+// 		},
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccCertificateConfig_basic("rds-ca-rsa4096-g1"),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					testAccCheckCertificateExists(ctx, resourceName, &v),
+// 				),
+// 				ConfigStateChecks: []statecheck.StateCheck{
+// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+// 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+// 						names.AttrAccountID: tfknownvalue.AccountID(),
+// 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+// 					}),
+// 				},
+// 			},
+// 			{
+// 				ResourceName:      resourceName,
+// 				ImportState:       true,
+// 				ImportStateKind:   resource.ImportCommandWithID,
+// 				ImportStateVerify: true,
+// 			},
+// 			{
+// 				ResourceName:    resourceName,
+// 				ImportState:     true,
+// 				ImportStateKind: resource.ImportBlockWithID,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
+// 					},
+// 				},
+// 			},
+// 			{
+// 				ResourceName:    resourceName,
+// 				ImportState:     true,
+// 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
+// 					},
+// 				},
+// 			},
+// 		},
+// 	})
+// }
+
+// func testAccRDSCertificate_Identity_RegionOverride(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	resourceName := "aws_rds_certificate.test"
+
+// 	resource.Test(t, resource.TestCase{
+// 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+// 			tfversion.SkipBelow(tfversion.Version1_12_0),
+// 		},
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccCertificateConfig_regionOverride(),
+// 				ConfigStateChecks: []statecheck.StateCheck{
+// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+// 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+// 						names.AttrAccountID: tfknownvalue.AccountID(),
+// 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+// 					}),
+// 				},
+// 			},
+// 			{
+// 				ResourceName:      resourceName,
+// 				ImportState:       true,
+// 				ImportStateKind:   resource.ImportCommandWithID,
+// 				ImportStateVerify: true,
+// 			},
+// 			{
+// 				ResourceName:    resourceName,
+// 				ImportState:     true,
+// 				ImportStateKind: resource.ImportBlockWithID,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
+// 					},
+// 				},
+// 			},
+// 			{
+// 				ResourceName:    resourceName,
+// 				ImportState:     true,
+// 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
+// 					},
+// 				},
+// 			},
+// 		},
+// 	})
+// }
 
 func testAccCertificate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
