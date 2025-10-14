@@ -18,7 +18,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_wafv2_application_integration_url", name="Application Integration URL")
-func newDataSourceApplicationIntegrationURL(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceApplicationIntegrationURL(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplicationIntegrationURL{}, nil
 }
 
@@ -27,7 +27,7 @@ const (
 )
 
 type dataSourceApplicationIntegrationURL struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[dataSourceApplicationIntegrationURLModel]
 }
 
 func (d *dataSourceApplicationIntegrationURL) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -73,5 +73,6 @@ func (d *dataSourceApplicationIntegrationURL) Read(ctx context.Context, req data
 }
 
 type dataSourceApplicationIntegrationURLModel struct {
+	framework.WithRegionModel
 	URL types.String `tfsdk:"url"`
 }
