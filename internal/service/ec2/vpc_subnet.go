@@ -33,6 +33,8 @@ import (
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // @SDKResource("aws_subnet", name="Subnet")
@@ -735,6 +737,13 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 	awsClient := l.Meta()
 	conn := awsClient.EC2Client(ctx)
 
+	attributes := []attribute.KeyValue{
+		otelaws.RegionAttr(awsClient.Region(ctx)),
+	}
+	for _, attribute := range attributes {
+		ctx = tflog.SetField(ctx, string(attribute.Key), attribute.Value.AsInterface())
+	}
+
 	var query subnetListResourceModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
@@ -754,6 +763,8 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 		Values: []string{"false"},
 	})
 
+	tflog.Info(ctx, "Listing resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
 		for pages.HasMorePages() {
@@ -765,12 +776,16 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 			}
 
 			for _, subnet := range page.Subnets {
+				ctx := tflog.SetField(ctx, "tf_aws.resource_attribute.id", aws.ToString(subnet.SubnetId))
+
 				result := request.NewListResult(ctx)
 
 				tags := keyValueTags(ctx, subnet.Tags)
 
 				rd := l.ResourceData()
 				rd.SetId(aws.ToString(subnet.SubnetId))
+
+				tflog.Info(ctx, "Reading resource")
 				resourceSubnetFlatten(ctx, &subnet, rd)
 
 				// set tags
