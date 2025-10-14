@@ -626,6 +626,13 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
+	case reflect.Struct:
+		// Check if target is an XML wrapper struct
+		if isXMLWrapperStruct(vTo.Type()) {
+			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
+			return diags
+		}
+
 	case reflect.Slice:
 		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
 		case reflect.Int32, reflect.Int64:
@@ -698,6 +705,13 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
+	case reflect.Struct:
+		// Check if target is an XML wrapper struct
+		if isXMLWrapperStruct(vTo.Type()) {
+			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
+			return diags
+		}
+
 	case reflect.Slice:
 		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
 		case reflect.String:
@@ -918,6 +932,12 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 
 	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Struct:
+		// Check if target is an XML wrapper struct before handling as generic struct
+		if isXMLWrapperStruct(tTo) {
+			diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath, vFrom, targetPath, vTo)...)
+			return diags
+		}
+
 		sourcePath := sourcePath.AtListIndex(0)
 		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 		diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
@@ -926,6 +946,17 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 	case reflect.Pointer:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
+			// Check if target is a pointer to XML wrapper struct
+			if isXMLWrapperStruct(tElem) {
+				// Create new instance of the XML wrapper struct
+				newWrapper := reflect.New(tElem)
+				diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath, vFrom, targetPath, newWrapper.Elem())...)
+				if !diags.HasError() {
+					vTo.Set(newWrapper)
+				}
+				return diags
+			}
+
 			//
 			// types.List(OfObject) -> *struct.
 			//
@@ -1429,4 +1460,223 @@ func diagExpandingIncompatibleTypes(sourceType, targetType reflect.Type) diag.Er
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Source type %q cannot be expanded to target type %q.", fullTypeName(sourceType), fullTypeName(targetType)),
 	)
+}
+
+// xmlWrapper handles expansion from TF collection types to AWS XML wrapper structs
+// that follow the pattern: {Items: []T, Quantity: *int32}
+func (expander autoExpander) xmlWrapper(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, wrapperField string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Verify target is a struct with Items and Quantity fields
+	if !isXMLWrapperStruct(vTo.Type()) {
+		tflog.SubsystemError(ctx, subsystemName, "Target is not a valid XML wrapper struct", map[string]any{
+			"target_type": vTo.Type().String(),
+		})
+		diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+		return diags
+	}
+
+	// Get the Items and Quantity fields
+	itemsField := vTo.FieldByName("Items")
+	quantityField := vTo.FieldByName("Quantity")
+
+	if !itemsField.IsValid() || !quantityField.IsValid() {
+		tflog.SubsystemError(ctx, subsystemName, "XML wrapper struct missing required fields")
+		diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+		return diags
+	}
+
+	// Convert the collection elements to a slice
+	elements := vFrom.Elements()
+	itemsSliceType := itemsField.Type()
+	itemsSlice := reflect.MakeSlice(itemsSliceType, len(elements), len(elements))
+
+	// Convert each element
+	for i, elem := range elements {
+		itemValue := itemsSlice.Index(i)
+		if !itemValue.CanSet() {
+			continue
+		}
+
+		// Handle different element types
+		switch elemTyped := elem.(type) {
+		case basetypes.StringValuable:
+			if itemsSliceType.Elem().Kind() == reflect.String {
+				strVal, d := elemTyped.ToStringValue(ctx)
+				diags.Append(d...)
+				if !diags.HasError() {
+					itemValue.SetString(strVal.ValueString())
+				}
+			}
+		case basetypes.Int64Valuable:
+			if elemKind := itemsSliceType.Elem().Kind(); elemKind == reflect.Int32 {
+				int64Val, d := elemTyped.ToInt64Value(ctx)
+				diags.Append(d...)
+				if !diags.HasError() {
+					itemValue.SetInt(int64(int32(int64Val.ValueInt64())))
+				}
+			} else if elemKind == reflect.Int64 {
+				int64Val, d := elemTyped.ToInt64Value(ctx)
+				diags.Append(d...)
+				if !diags.HasError() {
+					itemValue.SetInt(int64Val.ValueInt64())
+				}
+			}
+		case basetypes.Int32Valuable:
+			if itemsSliceType.Elem().Kind() == reflect.Int32 {
+				int32Val, d := elemTyped.ToInt32Value(ctx)
+				diags.Append(d...)
+				if !diags.HasError() {
+					itemValue.SetInt(int64(int32Val.ValueInt32()))
+				}
+			}
+		default:
+			// For complex types, try direct assignment if types are compatible
+			if elem != nil && !elem.IsNull() && !elem.IsUnknown() {
+				elemInterface := elem.(attr.Value)
+				if itemValue.Type().AssignableTo(reflect.TypeOf(elemInterface)) {
+					itemValue.Set(reflect.ValueOf(elemInterface))
+				}
+			}
+		}
+	}
+
+	// Set the Items field
+	if itemsField.CanSet() {
+		itemsField.Set(itemsSlice)
+	}
+
+	// Set the Quantity field
+	if quantityField.CanSet() && quantityField.Type().Kind() == reflect.Pointer {
+		quantity := int32(len(elements))
+		quantityPtr := reflect.New(quantityField.Type().Elem())
+		quantityPtr.Elem().Set(reflect.ValueOf(quantity))
+		quantityField.Set(quantityPtr)
+	}
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Successfully expanded to XML wrapper", map[string]any{
+		"source_type":   reflect.TypeOf(vFrom).String(),
+		"target_type":   vTo.Type().String(),
+		"items_count":   len(elements),
+		"wrapper_field": wrapperField,
+	})
+
+	return diags
+}
+
+// isXMLWrapperStruct detects AWS SDK types that follow the XML wrapper pattern
+// with Items slice and Quantity pointer fields
+func isXMLWrapperStruct(t reflect.Type) bool {
+	if t.Kind() != reflect.Struct {
+		return false
+	}
+
+	// Check for Items field (slice)
+	itemsField, hasItems := t.FieldByName("Items")
+	if !hasItems || itemsField.Type.Kind() != reflect.Slice {
+		return false
+	}
+
+	// Check for Quantity field (pointer to int32)
+	quantityField, hasQuantity := t.FieldByName("Quantity")
+	if !hasQuantity || quantityField.Type.Kind() != reflect.Pointer {
+		return false
+	}
+
+	// Quantity should be *int32
+	if quantityField.Type.Elem().Kind() != reflect.Int32 {
+		return false
+	}
+
+	return true
+}
+
+// nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
+// that follows the pattern: {Items: []T, Quantity: *int32}
+func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper", map[string]any{
+		"source_type": vFrom.Type(ctx).String(),
+		"target_type": vTo.Type().String(),
+	})
+
+	// Get the nested Objects as a slice
+	from, d := vFrom.ToObjectSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Get reflect value of the slice
+	fromSlice := reflect.ValueOf(from)
+	if fromSlice.Kind() != reflect.Slice {
+		diags.AddError("Invalid source", "ToObjectSlice did not return a slice")
+		return diags
+	}
+
+	// Get the Items and Quantity fields from target struct
+	itemsField := vTo.FieldByName("Items")
+	quantityField := vTo.FieldByName("Quantity")
+
+	if !itemsField.IsValid() || !quantityField.IsValid() {
+		tflog.SubsystemError(ctx, subsystemName, "XML wrapper struct missing required fields")
+		diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+		return diags
+	}
+
+	// Create the Items slice
+	itemsSliceType := itemsField.Type()
+	itemsCount := fromSlice.Len()
+	itemsSlice := reflect.MakeSlice(itemsSliceType, itemsCount, itemsCount)
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Converting nested objects to items", map[string]any{
+		"items_count": itemsCount,
+		"items_type":  itemsSliceType.String(),
+	})
+
+	// Convert each nested object
+	for i := 0; i < itemsCount; i++ {
+		sourceItem := fromSlice.Index(i)
+		targetItem := itemsSlice.Index(i)
+
+		// Create new instance for the target item
+		targetItemType := itemsSliceType.Elem()
+		if targetItemType.Kind() == reflect.Pointer {
+			// For []*struct
+			newItem := reflect.New(targetItemType.Elem())
+			diags.Append(autoExpandConvert(ctx, sourceItem.Interface(), newItem.Interface(), expander)...)
+			if diags.HasError() {
+				return diags
+			}
+			targetItem.Set(newItem)
+		} else {
+			// For []struct - need to set the value directly
+			newItem := reflect.New(targetItemType)
+			diags.Append(autoExpandConvert(ctx, sourceItem.Interface(), newItem.Interface(), expander)...)
+			if diags.HasError() {
+				return diags
+			}
+			targetItem.Set(newItem.Elem())
+		}
+	}
+
+	// Set the Items field
+	if itemsField.CanSet() {
+		itemsField.Set(itemsSlice)
+	}
+
+	// Set the Quantity field
+	if quantityField.CanSet() && quantityField.Type().Kind() == reflect.Pointer {
+		quantity := int32(itemsCount)
+		quantityPtr := reflect.New(quantityField.Type().Elem())
+		quantityPtr.Elem().Set(reflect.ValueOf(quantity))
+		quantityField.Set(quantityPtr)
+	}
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Successfully expanded NestedObjectCollection to XML wrapper", map[string]any{
+		"items_count": itemsCount,
+	})
+
+	return diags
 }
