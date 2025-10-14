@@ -1487,6 +1487,222 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 	return diags
 }
 
+// xmlWrapperFlatten handles flattening from AWS XML wrapper structs to TF collection types
+// that follow the pattern: {Items: []T, Quantity: *int32} -> []T
+func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, wrapperField string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Starting XML wrapper flatten", map[string]any{
+		"source_type":   vFrom.Type().String(),
+		"target_type":   tTo.String(),
+		"wrapper_field": wrapperField,
+	})
+
+	// Verify source is a valid XML wrapper struct
+	if !isXMLWrapperStruct(vFrom.Type()) {
+		tflog.SubsystemError(ctx, subsystemName, "Source is not a valid XML wrapper struct", map[string]any{
+			"source_type": vFrom.Type().String(),
+		})
+		diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), reflect.TypeOf(vTo.Interface())))
+		return diags
+	}
+
+	// Get the Items field from the source wrapper struct
+	itemsField := vFrom.FieldByName("Items")
+	if !itemsField.IsValid() {
+		tflog.SubsystemError(ctx, subsystemName, "XML wrapper struct missing Items field")
+		diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), reflect.TypeOf(vTo.Interface())))
+		return diags
+	}
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Found Items field", map[string]any{
+		"items_type":   itemsField.Type().String(),
+		"items_kind":   itemsField.Kind().String(),
+		"items_len":    itemsField.Len(),
+		"items_is_nil": itemsField.IsNil(),
+	})
+
+	// Determine element type
+	var elementType attr.Type = types.StringType // default
+	if tToWithElem, ok := tTo.(attr.TypeWithElementType); ok {
+		elementType = tToWithElem.ElementType()
+		tflog.SubsystemTrace(ctx, subsystemName, "Using target element type", map[string]any{
+			"element_type": elementType.String(),
+		})
+	}
+
+	// Handle different target collection types
+	switch tTo := tTo.(type) {
+	case basetypes.ListTypable:
+		// Items []T -> types.List
+		if itemsField.IsNil() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Flattening XML wrapper with ListNull")
+			to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			vTo.Set(reflect.ValueOf(to))
+			return diags
+		}
+
+		// Convert items slice to list elements
+		itemsLen := itemsField.Len()
+		elements := make([]attr.Value, itemsLen)
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Converting items to list elements", map[string]any{
+			"items_count": itemsLen,
+		})
+
+		for i := 0; i < itemsLen; i++ {
+			item := itemsField.Index(i)
+
+			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
+				"index":      i,
+				"item_kind":  item.Kind().String(),
+				"item_value": item.Interface(),
+			})
+
+			// Convert each item based on its type
+			switch item.Kind() {
+			case reflect.Int32:
+				elements[i] = types.Int64Value(item.Int())
+			case reflect.String:
+				elements[i] = types.StringValue(item.String())
+			default:
+				// For complex types, handle struct conversion if needed
+				if item.Kind() == reflect.Struct {
+					// This would need to be handled by a nested object conversion
+					// For now, we'll return an error for unsupported types
+					diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
+					return diags
+				}
+			}
+		}
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Creating list value", map[string]any{
+			"element_count": len(elements),
+			"element_type":  elementType.String(),
+		})
+
+		list, d := types.ListValue(elementType, elements)
+		diags.Append(d...)
+		if diags.HasError() {
+			tflog.SubsystemError(ctx, subsystemName, "Error creating list value", map[string]any{
+				"error": d.Errors(),
+			})
+			return diags
+		}
+
+		to, d := tTo.ValueFromList(ctx, list)
+		diags.Append(d...)
+		if diags.HasError() {
+			tflog.SubsystemError(ctx, subsystemName, "Error converting to target list", map[string]any{
+				"error": d.Errors(),
+			})
+			return diags
+		}
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Setting target list value")
+		vTo.Set(reflect.ValueOf(to))
+		return diags
+
+	case basetypes.SetTypable:
+		// Items []T -> types.Set
+		if itemsField.IsNil() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Flattening XML wrapper with SetNull")
+			to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			vTo.Set(reflect.ValueOf(to))
+			return diags
+		}
+
+		// Convert items slice to set elements
+		itemsLen := itemsField.Len()
+		elements := make([]attr.Value, itemsLen)
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Converting items to set elements", map[string]any{
+			"items_count": itemsLen,
+		})
+
+		for i := 0; i < itemsLen; i++ {
+			item := itemsField.Index(i)
+
+			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
+				"index":      i,
+				"item_kind":  item.Kind().String(),
+				"item_value": item.Interface(),
+			})
+
+			// Convert each item based on its type
+			switch item.Kind() {
+			case reflect.Int32:
+				elements[i] = types.Int64Value(item.Int())
+			case reflect.String:
+				elements[i] = types.StringValue(item.String())
+			case reflect.Struct:
+				// Handle complex struct types by converting to the target element type
+				if elemTyper, ok := tTo.(attr.TypeWithElementType); ok && elemTyper.ElementType() != nil {
+					elemType := elemTyper.ElementType()
+
+					// Create a new instance of the target element type
+					targetValue := reflect.New(reflect.TypeOf(elemType.ValueType(ctx))).Elem()
+
+					// Use AutoFlex to flatten the struct to the target type
+					diags.Append(flattener.convert(ctx, path.Empty(), item, path.Empty(), targetValue, fieldOpts{})...)
+					if diags.HasError() {
+						return diags
+					}
+
+					// The converted value should implement attr.Value
+					if attrVal, ok := targetValue.Interface().(attr.Value); ok {
+						elements[i] = attrVal
+					} else {
+						diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(targetValue.Interface())))
+						return diags
+					}
+				} else {
+					diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
+					return diags
+				}
+			default:
+				// For other complex types, handle conversion if needed
+				diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
+				return diags
+			}
+		}
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Creating set value", map[string]any{
+			"element_count": len(elements),
+			"element_type":  elementType.String(),
+		})
+
+		set, d := types.SetValue(elementType, elements)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		to, d := tTo.ValueFromSet(ctx, set)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(to))
+		return diags
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "Unsupported target type for XML wrapper flattening", map[string]any{
+		"target_type": tTo,
+	})
+	diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), reflect.TypeOf(vTo.Interface())))
+	return diags
+}
+
 // flattenStruct traverses struct `from`, calling `flexer` for each exported field.
 func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -1508,6 +1724,45 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 
 	typeFrom := valFrom.Type()
 	typeTo := valTo.Type()
+
+	// Special handling: Check if the entire source struct is an XML wrapper
+	// and should be flattened to a target field with wrapper tag
+	if isXMLWrapperStruct(typeFrom) {
+		for toField := range tfreflect.ExportedStructFields(typeTo) {
+			toFieldName := toField.Name
+			_, toOpts := autoflexTags(toField)
+			if wrapperField := toOpts.WrapperField(); wrapperField != "" {
+				toFieldVal := valTo.FieldByIndex(toField.Index)
+				if !toFieldVal.CanSet() {
+					continue
+				}
+
+				tflog.SubsystemTrace(ctx, subsystemName, "Converting entire XML wrapper struct to collection field", map[string]any{
+					logAttrKeySourceType:      typeFrom.String(),
+					logAttrKeyTargetFieldname: toFieldName,
+					"wrapper_field":           wrapperField,
+				})
+
+				valTo, ok := toFieldVal.Interface().(attr.Value)
+				if !ok {
+					tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
+					diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
+					return diags
+				}
+
+				if f, ok := flexer.(*autoFlattener); ok {
+					diags.Append(f.xmlWrapperFlatten(ctx, valFrom, valTo.Type(ctx), toFieldVal, wrapperField)...)
+				} else {
+					diags.Append(DiagFlatteningIncompatibleTypes(valFrom.Type(), reflect.TypeOf(toFieldVal.Interface())))
+				}
+				if diags.HasError() {
+					return diags
+				}
+				// Successfully handled as XML wrapper, don't process individual fields
+				return diags
+			}
+		}
+	}
 
 	for fromField := range flattenSourceFields(ctx, typeFrom, flexer.getOptions()) {
 		fromFieldName := fromField.Name
@@ -1550,6 +1805,35 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			logAttrKeySourceFieldname: fromFieldName,
 			logAttrKeyTargetFieldname: toFieldName,
 		})
+
+		// Check if target has wrapper tag and source is an XML wrapper struct
+		if wrapperField := toOpts.WrapperField(); wrapperField != "" {
+			fromFieldVal := valFrom.FieldByIndex(fromField.Index)
+			if isXMLWrapperStruct(fromFieldVal.Type()) {
+				tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
+					logAttrKeySourceFieldname: fromFieldName,
+					logAttrKeyTargetFieldname: toFieldName,
+					"wrapper_field":           wrapperField,
+				})
+
+				valTo, ok := toFieldVal.Interface().(attr.Value)
+				if !ok {
+					tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
+					diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
+					break
+				}
+
+				if f, ok := flexer.(*autoFlattener); ok {
+					diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal, valTo.Type(ctx), toFieldVal, wrapperField)...)
+				} else {
+					diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
+				}
+				if diags.HasError() {
+					break
+				}
+				continue
+			}
+		}
 
 		opts := fieldOpts{
 			legacy:    toOpts.Legacy(),
