@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -349,6 +350,82 @@ func TestAccVPCSubnet_List_SubnetIDs(t *testing.T) {
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						names.AttrID:        id4.Value(),
+					}),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCSubnet_List_FilteredSubnetIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceNameExpected1 := "aws_subnet.expected[0]"
+	resourceNameExpected2 := "aws_subnet.expected[1]"
+	resourceNameNotExpected1 := "aws_subnet.not_expected[0]"
+	resourceNameNotExpected2 := "aws_subnet.not_expected[1]"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	expected1 := tfstatecheck.StateValue()
+	expected2 := tfstatecheck.StateValue()
+	notExpected1 := tfstatecheck.StateValue()
+	notExpected2 := tfstatecheck.StateValue()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/list_filtered_subnet_ids/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					expected1.GetStateValue(resourceNameExpected1, tfjsonpath.New(names.AttrID)),
+					expected2.GetStateValue(resourceNameExpected2, tfjsonpath.New(names.AttrID)),
+					notExpected1.GetStateValue(resourceNameNotExpected1, tfjsonpath.New(names.AttrID)),
+					notExpected2.GetStateValue(resourceNameNotExpected2, tfjsonpath.New(names.AttrID)),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/list_filtered_subnet_ids/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        expected1.Value(),
+					}),
+
+					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        expected2.Value(),
+					}),
+
+					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        notExpected1.Value(),
+					}),
+
+					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        notExpected2.Value(),
 					}),
 				},
 			},
