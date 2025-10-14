@@ -227,3 +227,61 @@ func TestAccVPCSubnet_List_Filtered(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVPCSubnet_List_ExcludeDefaultSubnets(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	id := tfstatecheck.StateValue()
+	defaultSubnetID0 := tfstatecheck.StateValue()
+	defaultSubnetID1 := tfstatecheck.StateValue()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDefaultSubnetExists(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/list_exclude_default/"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					id.GetStateValue("aws_subnet.test", tfjsonpath.New(names.AttrID)),
+
+					defaultSubnetID0.GetStateValue("data.aws_subnets.defaults", tfjsonpath.New(names.AttrIDs).AtSliceIndex(0)),
+					defaultSubnetID1.GetStateValue("data.aws_subnets.defaults", tfjsonpath.New(names.AttrIDs).AtSliceIndex(1)),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/list_filtered/"),
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectIdentity("aws_subnet.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        id.Value(),
+					}),
+
+					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        defaultSubnetID0.Value(),
+					}),
+					querycheck.ExpectNoIdentity("aws_subnet.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        defaultSubnetID1.Value(),
+					}),
+				},
+			},
+		},
+	})
+}
