@@ -310,6 +310,13 @@ func testAccServer_securityPolicy(t *testing.T) {
 					),
 				},
 			*/
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-AS2Restricted-2025-07"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-SshAuditCompliant-2025-02"),
+				),
+			},
 		},
 	})
 }
