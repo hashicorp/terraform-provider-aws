@@ -27,7 +27,7 @@ list "aws_vpc" "example" {
 This example will return VPCs with the tag `Project` with the value `example`.
 
 ```terraform
-list "aws_instance" "example" {
+list "aws_vpc" "example" {
   provider = aws
 
   config {
