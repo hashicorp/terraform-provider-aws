@@ -434,7 +434,7 @@ func TestAccVPCSubnet_List_FilteredSubnetIDs(t *testing.T) {
 	})
 }
 
-func TestAccSubnet_List_Filtered_DefaultForAZ(t *testing.T) {
+func TestAccVPCSubnet_List_Filtered_DefaultForAZ(t *testing.T) {
 	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
 
 	ctx := acctest.Context(t)
@@ -458,7 +458,7 @@ func TestAccSubnet_List_Filtered_DefaultForAZ(t *testing.T) {
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Subnet/list_filtered_default_for_az/"),
-				ExpectError:              regexache.MustCompile(`The filter "is-default" is not supported. To list default VPCs, use the resource type "aws_default_vpc".`),
+				ExpectError:              regexache.MustCompile(`The filter "default-for-az" is not supported. To list default Subnets, use the resource type "aws_default_subnet".`),
 			},
 		},
 	})
