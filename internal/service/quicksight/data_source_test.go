@@ -289,6 +289,54 @@ func TestAccQuickSightDataSource_s3RoleARN(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSource_athenaRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource awstypes.DataSource
+	resourceName := "aws_quicksight_data_source.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	iamRoleResourceName := "aws_iam_role.test"
+	iamRoleResourceNameUpdated := "aws_iam_role.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_athenaRoleARN(rId, rName, rName2, iamRoleResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.0.work_group", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "parameters.0.athena.0.role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeAthena)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// change the selector update the data source with the new Role
+			{
+				Config: testAccDataSourceConfig_athenaRoleARN(rId, rName, rName2, iamRoleResourceNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.0.work_group", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "parameters.0.athena.0.role_arn", iamRoleResourceNameUpdated, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeAthena)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceExists(ctx context.Context, n string, v *awstypes.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -956,6 +1004,123 @@ resource "aws_quicksight_data_source" "test" {
   depends_on = [
     aws_iam_role_policy_attachment.test
   ]
+}
+`, rId, rName, rName2, iamRoleResourceName))
+}
+
+func testAccDataSourceConfig_athenaRoleARN(rId, rName, rName2, iamRoleResourceName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfig_baseNoACL(rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[2]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "quicksight.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "test2" {
+  name = %[3]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "quicksight.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[2]q
+
+  configuration {
+    enforce_workgroup_configuration = true
+
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/output/"
+    }
+  }
+  
+  force_destroy = true
+}
+
+resource "aws_iam_policy" "test" {
+  name        = %[2]q
+  description = "Policy to allow QuickSight access to athena workgroup"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action   = [
+          "athena:*QueryExecution"
+        ],
+        Effect   = "Allow",
+        Resource = aws_athena_workgroup.test.arn
+      },
+      {
+        Action   = [
+          "s3:GetObject",
+          "s3:PutObject"
+        ],
+        Effect   = "Allow",
+        Resource = "${aws_s3_bucket.test.arn}/output/*"
+      },
+      {
+        Action   = [
+          "s3:GetBucketLocation",
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads",
+          "s3:ListMultipartUploadParts",
+          "s3:AbortMultipartUpload"
+        ],
+        Effect   = "Allow",
+        Resource = aws_s3_bucket.test.arn
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = aws_iam_policy.test.arn
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_role_policy_attachment" "test2" {
+  policy_arn = aws_iam_policy.test.arn
+  role       = aws_iam_role.test2.name
+}
+
+resource "aws_quicksight_data_source" "test" {
+  data_source_id = %[1]q
+  name           = %[2]q
+
+  parameters {
+    athena {
+      work_group = aws_athena_workgroup.test.id
+      role_arn   = %[4]s.arn
+    }
+  }
+
+  type = "ATHENA"
 }
 `, rId, rName, rName2, iamRoleResourceName))
 }
