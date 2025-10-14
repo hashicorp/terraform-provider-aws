@@ -1636,7 +1636,7 @@ func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Cont
 	})
 
 	// Convert each nested object
-	for i := 0; i < itemsCount; i++ {
+	for i := range itemsCount {
 		sourceItem := fromSlice.Index(i)
 		targetItem := itemsSlice.Index(i)
 

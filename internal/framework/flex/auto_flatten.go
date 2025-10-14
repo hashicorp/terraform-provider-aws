@@ -1554,7 +1554,7 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 			"items_count": itemsLen,
 		})
 
-		for i := 0; i < itemsLen; i++ {
+		for i := range itemsLen {
 			item := itemsField.Index(i)
 
 			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
@@ -1628,7 +1628,7 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 			"items_count": itemsLen,
 		})
 
-		for i := 0; i < itemsLen; i++ {
+		for i := range itemsLen {
 			item := itemsField.Index(i)
 
 			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{

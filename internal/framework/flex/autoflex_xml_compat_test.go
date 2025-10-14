@@ -166,7 +166,7 @@ func TestExpandXMLWrapperDirect(t *testing.T) {
 func TestIsXMLWrapperStruct(t *testing.T) {
 	testCases := []struct {
 		name     string
-		input    interface{}
+		input    any
 		expected bool
 	}{
 		{

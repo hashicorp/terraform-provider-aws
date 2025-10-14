@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,9 +22,7 @@ var updateGolden = flag.Bool("update-golden", false, "update golden files")
 func normalizeLogLine(m map[string]any) map[string]any {
 	// clone (so we don't mutate the original)
 	out := make(map[string]any, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
+	maps.Copy(out, m)
 
 	// Common volatile keys produced by tflog/test or your logger
 	/*
