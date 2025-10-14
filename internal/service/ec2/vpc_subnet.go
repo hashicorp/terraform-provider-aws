@@ -740,6 +740,11 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 		return
 	}
 
+	input.Filters = append(input.Filters, awstypes.Filter{
+		Name:   aws.String("default-for-az"),
+		Values: []string{"false"},
+	})
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
 		for pages.HasMorePages() {
@@ -751,11 +756,6 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 			}
 
 			for _, subnet := range page.Subnets {
-				// Skip default subnets.
-				if aws.ToBool(subnet.DefaultForAz) {
-					continue
-				}
-
 				result := request.NewListResult(ctx)
 
 				tags := keyValueTags(ctx, subnet.Tags)
