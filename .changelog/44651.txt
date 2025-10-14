@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_transfer_server: Add support for `TransferSecurityPolicy-AS2Restricted-2025-07` for the `security_policy_name` argument
-```
