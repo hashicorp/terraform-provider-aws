@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPNConnectionDataSource_basic(t *testing.T) {
+func TestAccVPNConnectionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(65501, 65534)
-	dataSourceName := "data.aws_ec2_vpn_connection.test"
+	dataSourceName := "data.aws_vpn_connection.test"
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,11 +46,11 @@ func TestAccEC2VPNConnectionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnectionDataSource_byFilter(t *testing.T) {
+func TestAccVPNConnectionDataSource_byFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(65501, 65534)
-	dataSourceName := "data.aws_ec2_vpn_connection.test"
+	dataSourceName := "data.aws_vpn_connection.test"
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,7 +75,7 @@ func TestAccEC2VPNConnectionDataSource_byFilter(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnectionDataSource_nonExistentId(t *testing.T) {
+func TestAccVPNConnectionDataSource_nonExistentId(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,7 +91,7 @@ func TestAccEC2VPNConnectionDataSource_nonExistentId(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConnectionDataSource_noInput(t *testing.T) {
+func TestAccVPNConnectionDataSource_noInput(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -131,7 +131,7 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
 }
 
-data "aws_ec2_vpn_connection" "test" {
+data "aws_vpn_connection" "test" {
   vpn_connection_id = aws_vpn_connection.test.id
 
   depends_on = [aws_vpn_connection.test]
@@ -163,7 +163,7 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
 }
 
-data "aws_ec2_vpn_connection" "test" {
+data "aws_vpn_connection" "test" {
   filter {
     name   = "customer-gateway-id"
     values = [aws_customer_gateway.test.id]
@@ -181,7 +181,7 @@ data "aws_ec2_vpn_connection" "test" {
 
 func testAccVPNConnectionDataSourceConfig_nonExistentId() string {
 	return `
-data "aws_ec2_vpn_connection" "test" {
+data "aws_vpn_connection" "test" {
   vpn_connection_id = "vpn-12345678901234567"
 }
 `
@@ -189,7 +189,7 @@ data "aws_ec2_vpn_connection" "test" {
 
 func testAccVPNConnectionDataSourceConfig_noInput() string {
 	return `
-data "aws_ec2_vpn_connection" "test" {
+data "aws_vpn_connection" "test" {
   # No vpn_connection_id or filter specified
 }
 `

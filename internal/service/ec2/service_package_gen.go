@@ -39,12 +39,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newDataSourceVPNConnection,
-			TypeName: "aws_ec2_vpn_connection",
-			Name:     "VPN Connection",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
 			Factory:  newSpotDataFeedSubscriptionDataSource,
 			TypeName: "aws_spot_datafeed_subscription",
 			Name:     "Spot Data Feed Subscription Data Source",
@@ -79,6 +73,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newSecurityGroupRulesDataSource,
 			TypeName: "aws_vpc_security_group_rules",
 			Name:     "Security Group Rules",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceVPNConnection,
+			TypeName: "aws_vpn_connection",
+			Name:     "VPN Connection",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}

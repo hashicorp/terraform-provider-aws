@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_ec2_vpn_connection", name="VPN Connection")
+// @FrameworkDataSource("aws_vpn_connection", name="VPN Connection")
 func newDataSourceVPNConnection(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceVPNConnection{}, nil
 }

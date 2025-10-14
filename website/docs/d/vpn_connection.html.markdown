@@ -1,21 +1,21 @@
 ---
-subcategory: "EC2 (Elastic Compute Cloud)"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
-page_title: "AWS: aws_ec2_vpn_connection"
+page_title: "AWS: aws_vpn_connection"
 description: |-
-  Provides details about an AWS EC2 (Elastic Compute Cloud) VPN Connection.
+  Fetches details of a Site-to-Site VPN connection. A Site-to-Site VPN connection is an Internet Protocol security (IPsec) VPN connection between a VPC and an on-premises network.
 ---
 
-# Data Source: aws_ec2_vpn_connection
+# Data Source: aws_vpn_connection
 
-Provides details about an AWS EC2 (Elastic Compute Cloud) VPN Connection.
+Fetches details of a Site-to-Site VPN connection. A Site-to-Site VPN connection is an Internet Protocol security (IPsec) VPN connection between a VPC and an on-premises network.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_ec2_vpn_connection" "example" {
+data "aws_vpn_connection" "example" {
   filter {
     name   = "customer-gateway-id"
     values = ["cgw-1234567890"]
@@ -23,19 +23,19 @@ data "aws_ec2_vpn_connection" "example" {
 }
 
 output "vpn_connection_id" {
-  value = data.aws_ec2_vpn_connection.example.vpn_connection_id
+  value = data.aws_vpn_connection.example.vpn_connection_id
 }
 ```
 
 ### Find by VPN Connection ID
 
 ```terraform
-data "aws_ec2_vpn_connection" "example" {
+data "aws_vpn_connection" "example" {
   vpn_connection_id = "vpn-abcd1234567890"
 }
 
 output "gateway_association_state" {
-  value = data.aws_ec2_vpn_connection.example.gateway_association_state
+  value = data.aws_vpn_connection.example.gateway_association_state
 }
 ```
 
