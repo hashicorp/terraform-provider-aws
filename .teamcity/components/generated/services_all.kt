@@ -165,6 +165,7 @@ val services = mapOf(
     "neptune" to ServiceSpec("Neptune"),
     "neptunegraph" to ServiceSpec("Neptune Analytics"),
     "networkfirewall" to ServiceSpec("Network Firewall", vpcLock = true),
+    "networkflowmonitor" to ServiceSpec("CloudWatch NetworkFlow Monitor"),
     "networkmanager" to ServiceSpec("Network Manager", vpcLock = true),
     "networkmonitor" to ServiceSpec("CloudWatch Network Monitor"),
     "notifications" to ServiceSpec("User Notifications"),
