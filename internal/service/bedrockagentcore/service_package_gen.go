@@ -4,6 +4,7 @@ package bedrockagentcore
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -21,7 +22,26 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newAgentRuntimeResource,
+			TypeName: "aws_bedrockagentcore_agent_runtime",
+			Name:     "Agent Runtime",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "agent_runtime_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newAgentRuntimeEndpointResource,
+			TypeName: "aws_bedrockagentcore_agent_runtime_endpoint",
+			Name:     "Agent Runtime Endpoint",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "agent_runtime_endpoint_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
