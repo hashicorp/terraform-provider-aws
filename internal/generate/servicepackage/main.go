@@ -102,6 +102,8 @@ func main() {
 				value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
 
 				v.frameworkListResources[key] = value
+			} else {
+				g.Fatalf("Framework List Resource %q has no matching Framework Resource", key)
 			}
 		}
 
@@ -117,6 +119,8 @@ func main() {
 				value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
 
 				v.sdkListResources[key] = value
+			} else {
+				g.Fatalf("SDK List Resource %q has no matching SDK Resource", key)
 			}
 		}
 
