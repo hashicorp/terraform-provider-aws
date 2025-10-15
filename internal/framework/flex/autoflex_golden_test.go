@@ -54,47 +54,63 @@ func normalizeLogs(lines []map[string]any) []map[string]any {
 
 func writeGolden(t *testing.T, path string, v any) {
 	t.Helper()
+
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
-		t.Fatalf("marshal golden: %v", err)
+		t.Fatalf("marshal golden data for %s: %v", path, err)
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		t.Fatalf("mkdir: %v", err)
+
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("create directory %s: %v", dir, err)
 	}
+
 	if err := os.WriteFile(path, data, 0o644); err != nil {
-		t.Fatalf("write golden: %v", err)
+		t.Fatalf("write golden file %s: %v", path, err)
 	}
 }
 
 func readGolden(t *testing.T, path string) []byte {
 	t.Helper()
+
 	data, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatalf("read golden %s: %v", path, err)
+		t.Fatalf("read golden file %s: %v", path, err)
 	}
+
 	return data
 }
 
 func compareWithGolden(t *testing.T, goldenPath string, got any) {
 	t.Helper()
+
 	data, err := json.MarshalIndent(got, "", "  ")
 	if err != nil {
-		t.Fatalf("marshal got: %v", err)
+		t.Fatalf("marshal comparison data for %s: %v", goldenPath, err)
 	}
+
+	// Update golden file if flag is set
 	if *updateGolden {
 		writeGolden(t, goldenPath, got)
 		return
 	}
+
+	// Read and compare with existing golden file
 	want := readGolden(t, goldenPath)
-	if !bytes.Equal(bytes.TrimSpace(want), bytes.TrimSpace(data)) {
-		t.Fatalf("logs differ from golden\nGOLDEN: %s\nGOT:\n%s", goldenPath, string(data))
+	if bytes.Equal(bytes.TrimSpace(want), bytes.TrimSpace(data)) {
+		return // Files match, test passes
 	}
+
+	// Files differ, fail the test with detailed output
+	t.Fatalf("comparison failed for golden file %s\nExpected content from: %s\nActual content:\n%s",
+		goldenPath, goldenPath, string(data))
 }
 
 // autoGenerateGoldenPath creates a golden file path from test name and case description.
 // Automatically determines subdirectory from the test function name:
 // TestExpandLogging_collections -> searches for it in autoflex_*_test.go files
-func autoGenerateGoldenPath(fullTestName, testCaseName string) string {
+func autoGenerateGoldenPath(t *testing.T, fullTestName, testCaseName string) string {
+	t.Helper()
 	// Extract the base test function name from the full path
 	// fullTestName might be "TestExpandLogging_collections/Collection_of_primitive_types_Source_and_slice_or_map_of_primtive_types_Target"
 	// We want to extract "TestExpandLogging_collections"
@@ -116,7 +132,7 @@ func autoGenerateGoldenPath(fullTestName, testCaseName string) string {
 	cleanCaseName = regexache.MustCompile(`[^a-z0-9_]`).ReplaceAllString(cleanCaseName, "")
 
 	// Determine subdirectory from test function name
-	subdirectory := determineSubdirectoryFromTestName(baseName)
+	subdirectory := determineSubdirectoryFromTestName(t, baseName)
 
 	// Build hierarchical path using filepath.Join for cross-OS compatibility
 	// Creates: autoflex/subdirectory/test_name/case_name.golden
@@ -125,40 +141,72 @@ func autoGenerateGoldenPath(fullTestName, testCaseName string) string {
 
 // determineSubdirectoryFromTestName determines the subdirectory based on which test file contains the test function.
 // Returns the subdirectory name (e.g., "dispatch", "maps") or "unknown" if not found.
-func determineSubdirectoryFromTestName(testFunctionName string) string {
-	// Get list of autoflex test files
+func determineSubdirectoryFromTestName(t *testing.T, testFunctionName string) string {
+	t.Helper()
+
 	files, err := filepath.Glob("autoflex_*_test.go")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error globbing test files: %v\n", err)
+		t.Logf("Error globbing test files: %v", err)
 		return "unknown"
 	}
 
 	for _, file := range files {
-		content, err := os.ReadFile(file)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading file %s: %v\n", file, err)
-			continue
-		}
-
-		// Look for the test function definition
-		pattern := fmt.Sprintf(`func\s+%s\s*\(`, regexp.QuoteMeta(testFunctionName))
-		matched, err := regexp.Match(pattern, content)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error matching pattern in file %s: %v\n", file, err)
-			continue
-		}
-
-		if matched {
-			// Extract subdirectory from filename: autoflex_dispatch_test.go -> dispatch
-			if strings.HasPrefix(file, "autoflex_") && strings.HasSuffix(file, "_test.go") {
-				subdirectory := strings.TrimPrefix(file, "autoflex_")
-				subdirectory = strings.TrimSuffix(subdirectory, "_test.go")
-				return subdirectory
-			}
+		if subdirectory := extractSubdirectoryFromFile(t, file, testFunctionName); subdirectory != "" {
+			return subdirectory
 		}
 	}
 
 	return "unknown"
+}
+
+// extractSubdirectoryFromFile attempts to find the test function in the given file
+// and returns the subdirectory name if found, empty string otherwise.
+func extractSubdirectoryFromFile(t *testing.T, filename, testFunctionName string) string {
+	t.Helper()
+
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		t.Logf("Error reading file %s: %v", filename, err)
+		return ""
+	}
+
+	if !containsTestFunction(t, content, testFunctionName) {
+		return ""
+	}
+
+	return parseSubdirectoryFromFilename(filename)
+}
+
+// containsTestFunction checks if the file content contains the specified test function definition.
+func containsTestFunction(t *testing.T, content []byte, testFunctionName string) bool {
+	t.Helper()
+
+	pattern := fmt.Sprintf(`func\s+%s\s*\(`, regexp.QuoteMeta(testFunctionName))
+	matched, err := regexp.Match(pattern, content)
+	if err != nil {
+		t.Logf("Error matching pattern for function %s: %v", testFunctionName, err)
+		return false
+	}
+
+	return matched
+}
+
+// parseSubdirectoryFromFilename extracts the subdirectory name from an autoflex test filename.
+// Examples: "autoflex_dispatch_test.go" -> "dispatch", "autoflex_maps_test.go" -> "maps"
+func parseSubdirectoryFromFilename(filename string) string {
+	const (
+		prefix = "autoflex_"
+		suffix = "_test.go"
+	)
+
+	if !strings.HasPrefix(filename, prefix) || !strings.HasSuffix(filename, suffix) {
+		return ""
+	}
+
+	subdirectory := strings.TrimPrefix(filename, prefix)
+	subdirectory = strings.TrimSuffix(subdirectory, suffix)
+
+	return subdirectory
 }
 
 // camelToSnake converts CamelCase to snake_case

@@ -117,7 +117,7 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 				// Use explicit path if provided, otherwise auto-generate
 				goldenFileName := tc.GoldenLogsPath
 				if goldenFileName == "" {
-					goldenFileName = autoGenerateGoldenPath(t.Name(), testName)
+					goldenFileName = autoGenerateGoldenPath(t, t.Name(), testName)
 				}
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
@@ -172,7 +172,7 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 				// Use explicit path if provided, otherwise auto-generate
 				goldenFileName := testCase.GoldenLogsPath
 				if goldenFileName == "" {
-					goldenFileName = autoGenerateGoldenPath(t.Name(), testName)
+					goldenFileName = autoGenerateGoldenPath(t, t.Name(), testName)
 				}
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
@@ -244,7 +244,7 @@ func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevel
 				// Use explicit path if provided, otherwise auto-generate
 				goldenFileName := testCase.GoldenLogsPath
 				if goldenFileName == "" {
-					goldenFileName = autoGenerateGoldenPath(t.Name(), testName)
+					goldenFileName = autoGenerateGoldenPath(t, t.Name(), testName)
 				}
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
