@@ -141,7 +141,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 	policy, statement, err := findLayerVersionPermissionByThreePartKey(ctx, conn, layerName, versionNumber, statementId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Lambda Layer Version Permission (%s, %s) not found, removing from state", d.Id(), statementId)
+		log.Printf("[WARN] Lambda Layer Version Permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
