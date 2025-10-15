@@ -342,8 +342,8 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 }
 
 const (
-	InstanceProfileFound      = "Found"
-	InstanceProfileInvalidARN = "InvalidARN"
+	instanceProfileFoundState      = "Found"
+	instanceProfileInvalidARNState = "InvalidARN"
 )
 
 func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) retry.StateRefreshFunc {
@@ -359,17 +359,17 @@ func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) r
 
 		_, err = arn.Parse(aws.ToString(output.Arn))
 		if err != nil {
-			return nil, InstanceProfileInvalidARN, nil // lint:ignore nilerr // this is usually a temporary state
+			return nil, instanceProfileInvalidARNState, nil // lint:ignore nilerr // this is usually a temporary state
 		}
 
-		return output, InstanceProfileFound, nil
+		return output, instanceProfileFoundState, nil
 	}
 }
 
 func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{"", InstanceProfileInvalidARN},
-		Target:                    enum.Slice(InstanceProfileFound),
+		Pending:                   []string{"", instanceProfileInvalidARNState},
+		Target:                    enum.Slice(instanceProfileFoundState),
 		Refresh:                   statusInstanceProfile(ctx, conn, id),
 		Timeout:                   timeout,
 		Delay:                     5 * time.Second,

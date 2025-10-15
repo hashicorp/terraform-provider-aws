@@ -76,6 +76,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cleanrooms_configured_table.example
+  identity = {
+    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+
+resource "aws_cleanrooms_configured_table" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the cleanrooms configured table.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cleanrooms_configured_table` using the `id`. For example:
 
 ```python
@@ -99,4 +125,4 @@ Using `terraform import`, import `aws_cleanrooms_configured_table` using the `id
 % terraform import aws_cleanrooms_configured_table.table 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e1777f2f449586e0f3edfd950cbcaf9a609653a1d4d1a6184f76be209efceb44 -->
+<!-- cache-key: cdktf-0.20.8 input-8c4b1714996a90f7879df1beefac566f16a841ace009547f2c98bff0917700cd -->

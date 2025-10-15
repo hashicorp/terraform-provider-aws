@@ -29,6 +29,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceCloudAutonomousVmClustersList,
+			TypeName: "aws_odb_cloud_autonomous_vm_clusters",
+			Name:     "Cloud Autonomous Vm Clusters",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceCloudExadataInfrastructure,
 			TypeName: "aws_odb_cloud_exadata_infrastructure",
 			Name:     "Cloud Exadata Infrastructure",
@@ -38,6 +44,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceCloudExadataInfrastructuresList,
+			TypeName: "aws_odb_cloud_exadata_infrastructures",
+			Name:     "Cloud Exadata Infrastructures",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceCloudVmCluster,
 			TypeName: "aws_odb_cloud_vm_cluster",
 			Name:     "Cloud Vm Cluster",
@@ -45,6 +57,48 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceCloudVmClustersList,
+			TypeName: "aws_odb_cloud_vm_clusters",
+			Name:     "Cloud Vm Clusters",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDBNode,
+			TypeName: "aws_odb_db_node",
+			Name:     "Db Node",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDBNodes,
+			TypeName: "aws_odb_db_nodes",
+			Name:     "Db Nodes",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDBServer,
+			TypeName: "aws_odb_db_server",
+			Name:     "Db Server",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDBServers,
+			TypeName: "aws_odb_db_servers",
+			Name:     "Db Servers",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDBSystemShapes,
+			TypeName: "aws_odb_db_system_shapes",
+			Name:     "Db System Shapes",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceGiVersions,
+			TypeName: "aws_odb_gi_versions",
+			Name:     "Gi Versions",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newDataSourceNetwork,
@@ -59,6 +113,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceNetworkPeeringConnection,
 			TypeName: "aws_odb_network_peering_connection",
 			Name:     "Network Peering Connection",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceNetworkPeeringConnectionsList,
+			TypeName: "aws_odb_network_peering_connections",
+			Name:     "Network Peering Connections",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceNetworksList,
+			TypeName: "aws_odb_networks",
+			Name:     "Networks",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}

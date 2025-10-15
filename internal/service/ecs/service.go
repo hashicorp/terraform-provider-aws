@@ -2424,31 +2424,11 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) 
 }
 
 func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
-	// to be backward compatible, should ForceNew almost always (previous behavior), unless:
-	//   force_new_deployment is true and
-	//   neither the old set nor new set is 0 length
-	if v := d.Get("force_new_deployment").(bool); !v {
-		return capacityProviderStrategyForceNew(d)
-	}
-
-	old, new := d.GetChange(names.AttrCapacityProviderStrategy)
-
-	ol := old.(*schema.Set).Len()
-	nl := new.(*schema.Set).Len()
-
-	if (ol == 0 && nl > 0) || (ol > 0 && nl == 0) {
-		return capacityProviderStrategyForceNew(d)
-	}
-
-	return nil
-}
-
-func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
-	for _, key := range d.GetChangedKeysPrefix(names.AttrCapacityProviderStrategy) {
-		if d.HasChange(key) {
-			if err := d.ForceNew(key); err != nil {
-				return fmt.Errorf("while attempting to force a new ECS service for capacity_provider_strategy: %w", err)
-			}
+	// This if-statement is true only when the resource is being updated.
+	// d.Id() != "" means the resource (ecs service) already exists.
+	if d.Id() != "" && d.HasChange(names.AttrCapacityProviderStrategy) {
+		if v := d.Get("force_new_deployment").(bool); !v {
+			return fmt.Errorf("force_new_deployment should be true when capacity_provider_strategy is being updated")
 		}
 	}
 	return nil
