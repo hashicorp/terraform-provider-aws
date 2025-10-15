@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,6 +72,29 @@ func resourceDirectoryConfig() *schema.Resource {
 					},
 				},
 			},
+			"certificate_based_auth_properties": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_authority_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								string(awstypes.CertificateBasedAuthStatusEnabled),
+								string(awstypes.CertificateBasedAuthStatusDisabled),
+								string(awstypes.CertificateBasedAuthStatusEnabledNoDirectoryLoginFallback),
+							}, false),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -84,6 +108,7 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 		DirectoryName:                        aws.String(directoryName),
 		OrganizationalUnitDistinguishedNames: flex.ExpandStringValueSet(d.Get("organizational_unit_distinguished_names").(*schema.Set)),
 		ServiceAccountCredentials:            expandServiceAccountCredentials(d.Get("service_account_credentials").([]any)),
+		CertificateBasedAuthProperties:       expandCertificateBasedAuthProperties(d.Get("certificate_based_auth_properties").([]any)),
 	}
 
 	output, err := conn.CreateDirectoryConfig(ctx, &input)
@@ -119,6 +144,9 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	if err = d.Set("service_account_credentials", flattenServiceAccountCredentials(directoryConfig.ServiceAccountCredentials, d)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_account_credentials: %s", err)
 	}
+	if err = d.Set("certificate_based_auth_properties", flattenCertificateBasedAuthProperties(directoryConfig.CertificateBasedAuthProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_based_auth_properties: %s", err)
+	}
 
 	return diags
 }
@@ -137,6 +165,10 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("service_account_credentials") {
 		input.ServiceAccountCredentials = expandServiceAccountCredentials(d.Get("service_account_credentials").([]any))
+	}
+
+	if d.HasChange("certificate_based_auth_properties") {
+		input.CertificateBasedAuthProperties = expandCertificateBasedAuthProperties(d.Get("certificate_based_auth_properties").([]any))
 	}
 
 	_, err := conn.UpdateDirectoryConfig(ctx, &input)
@@ -237,6 +269,44 @@ func flattenServiceAccountCredentials(apiObject *awstypes.ServiceAccountCredenti
 	tfList := map[string]any{}
 	tfList["account_name"] = aws.ToString(apiObject.AccountName)
 	tfList["account_password"] = d.Get("service_account_credentials.0.account_password").(string)
+
+	return []any{tfList}
+}
+
+func expandCertificateBasedAuthProperties(tfList []any) *awstypes.CertificateBasedAuthProperties {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	attr := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.CertificateBasedAuthProperties{}
+
+	if v, ok := attr["certificate_authority_arn"].(string); ok && v != "" {
+		apiObject.CertificateAuthorityArn = aws.String(v)
+	}
+
+	if v, ok := attr["status"].(string); ok && v != "" {
+		apiObject.Status = awstypes.CertificateBasedAuthStatus(v)
+	}
+
+	return apiObject
+}
+
+func flattenCertificateBasedAuthProperties(apiObject *awstypes.CertificateBasedAuthProperties) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfList := map[string]any{}
+
+	if v := aws.ToString(apiObject.CertificateAuthorityArn); v != "" {
+		tfList["certificate_authority_arn"] = v
+	}
+
+	if v := apiObject.Status; v != "" {
+		tfList["status"] = string(v)
+	}
 
 	return []any{tfList}
 }
