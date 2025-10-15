@@ -3,6 +3,8 @@
 
 package flex
 
+// Tests AutoFlex's Expand/Flatten of maps.
+
 import (
 	"context"
 	"testing"

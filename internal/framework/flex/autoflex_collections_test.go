@@ -3,8 +3,9 @@
 
 package flex
 
-// Tests Expand/Flatten behavior for list, set, and map conversions—verifying value correctness and
+// Tests AutoFlex's Expand/Flatten for list, set, and map conversions—verifying value correctness and
 // diagnostics, not internal logging or trace output. For logging validation, see autoflex_dispatch_test.go.
+// Specific map tests are in autoflex_maps_test.go.
 
 import (
 	"context"

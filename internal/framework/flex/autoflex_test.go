@@ -3,6 +3,8 @@
 
 package flex
 
+// This file contains common test helpers for Autoflex tests.
+
 import (
 	"bytes"
 	"context"

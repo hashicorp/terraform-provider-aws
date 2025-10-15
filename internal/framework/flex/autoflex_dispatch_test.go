@@ -8,13 +8,7 @@ package flex
 // mapping.
 //
 // This test file uses golden snapshots for log verification. These can be found in
-// testdata/autoflex_dispatch/*.golden
-//
-// To regenerate golden snapshots after making changes to logging output:
-//   go test -run <TestName> -update-golden
-// Example: go test -run TestExpandExpander -update-golden
-// For the whole file:
-//   go test -v -update-golden -run '^(TestExpandLogging_collections|TestExpandInterfaceContract|TestExpandExpander|TestExpandInterface|TestExpandInterfaceTypedExpander|TestExpandTypedExpander|TestFlattenLogging_collections|TestFlattenInterfaceContract|TestFlattenInterface|TestFlattenFlattener|TestFlattenInterfaceToStringTypable)$' .
+// testdata/autoflex/dispatch/*.golden
 
 import (
 	"context"

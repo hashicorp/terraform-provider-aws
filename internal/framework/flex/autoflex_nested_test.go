@@ -3,6 +3,8 @@
 
 package flex
 
+// Tests AutoFlex's Expand/Flatten of nested blocks and complex types.
+
 import (
 	"context"
 	"reflect"

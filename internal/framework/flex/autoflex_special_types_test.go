@@ -3,6 +3,11 @@
 
 package flex
 
+// Tests AutoFlex's Expand/Flatten of special types:
+// - timestamptypes.RFC3339
+// - types.ARN
+// - types.JSON and fwtypes.SmithyJSON
+
 import (
 	"errors"
 	"testing"

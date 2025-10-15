@@ -3,6 +3,8 @@
 
 package flex
 
+// Tests AutoFlex's Expand/Flatten of AWS API XML wrappers (Items/Quantity).
+
 import (
 	"context"
 	"reflect"

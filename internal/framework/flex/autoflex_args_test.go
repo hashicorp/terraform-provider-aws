@@ -3,8 +3,8 @@
 
 package flex
 
-// Args tests validate top-level argument shape (nil/typed-nil, pointer-ness, struct↔non-struct).
-// They intentionally do not assert logging; only diagnostic codes.
+// Tests AutoFlex's Expand/Flatten of args to validate top-level argument shape (nil/typed-nil,
+// pointer-ness, struct↔non-struct). They intentionally do not assert logging; only diagnostic codes.
 
 import (
 	"testing"

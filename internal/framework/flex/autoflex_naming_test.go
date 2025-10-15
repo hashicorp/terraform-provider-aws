@@ -3,6 +3,8 @@
 
 package flex
 
+// Tests AutoFlex's Expand/Flatten of naming differences (plural, prefix, suffix, capitalization).
+
 import (
 	"context"
 	"reflect"

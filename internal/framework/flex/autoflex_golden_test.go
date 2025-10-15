@@ -3,6 +3,15 @@
 
 package flex
 
+// This file contains helpers for golden snapshot testing of Autoflex logging output.
+//
+// To regenerate golden snapshots after making changes to logging output:
+//   go test -run <TestName> -update-golden
+// Example: go test -run TestExpandExpander -update-golden
+// For the whole file:
+//   cd internal/framework/flex
+//   go test -v -update-golden .
+
 import (
 	"bytes"
 	"encoding/json"
