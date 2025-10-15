@@ -30,10 +30,12 @@ const (
 
 func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
-		Target:  enum.Slice(awstypes.TableStatusActive),
-		Refresh: statusTable(ctx, conn, tableName),
-		Timeout: max(createTableTimeout, timeout),
+		Pending:                   enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
+		Target:                    enum.Slice(awstypes.TableStatusActive),
+		Refresh:                   statusTable(ctx, conn, tableName),
+		Timeout:                   max(createTableTimeout, timeout),
+		Delay:                     5 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
