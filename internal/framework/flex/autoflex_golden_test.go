@@ -14,6 +14,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/YakDriver/regexache"
 )
 
 var updateGolden = flag.Bool("update-golden", false, "update golden files")
@@ -24,9 +26,8 @@ func normalizeLogLine(m map[string]any) map[string]any {
 	out := make(map[string]any, len(m))
 	maps.Copy(out, m)
 
-	// Common volatile keys produced by tflog/test or your logger
+	// Common volatile keys that could be removed
 	/*
-		// Temporarily remove to see what happens without deleting
 		delete(out, "@timestamp")
 		delete(out, "timestamp")
 		delete(out, "time")
@@ -35,11 +36,9 @@ func normalizeLogLine(m map[string]any) map[string]any {
 		delete(out, "goroutine")
 	*/
 
-	// If your logs contain fully-qualified type names that can drift, optionally
-	// normalize them with a regex:
+	// Example of normalizing a field with a regex (e.g., stripping version suffixes)
 	if s, ok := out["source_type"].(string); ok {
-		// example: strip module version suffixes, if any
-		out["source_type"] = regexp.MustCompile(`@v[0-9.]+`).ReplaceAllString(s, "")
+		out["source_type"] = regexache.MustCompile(`@v[0-9.]+`).ReplaceAllString(s, "")
 	}
 
 	return out
@@ -114,7 +113,7 @@ func autoGenerateGoldenPath(fullTestName, testCaseName string) string {
 	cleanCaseName = strings.ReplaceAll(cleanCaseName, " ", "_")
 	cleanCaseName = strings.ToLower(cleanCaseName)
 	// Remove special characters but keep underscores and alphanumeric
-	cleanCaseName = regexp.MustCompile(`[^a-z0-9_]`).ReplaceAllString(cleanCaseName, "")
+	cleanCaseName = regexache.MustCompile(`[^a-z0-9_]`).ReplaceAllString(cleanCaseName, "")
 
 	// Determine subdirectory from test function name
 	subdirectory := determineSubdirectoryFromTestName(baseName)
@@ -130,14 +129,14 @@ func determineSubdirectoryFromTestName(testFunctionName string) string {
 	// Get list of autoflex test files
 	files, err := filepath.Glob("autoflex_*_test.go")
 	if err != nil {
-		fmt.Printf("Error globbing test files: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error globbing test files: %v\n", err)
 		return "unknown"
 	}
 
 	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
-			fmt.Printf("Error reading file %s: %v\n", file, err)
+			fmt.Fprintf(os.Stderr, "Error reading file %s: %v\n", file, err)
 			continue
 		}
 
@@ -145,7 +144,7 @@ func determineSubdirectoryFromTestName(testFunctionName string) string {
 		pattern := fmt.Sprintf(`func\s+%s\s*\(`, regexp.QuoteMeta(testFunctionName))
 		matched, err := regexp.Match(pattern, content)
 		if err != nil {
-			fmt.Printf("Error matching pattern in file %s: %v\n", file, err)
+			fmt.Fprintf(os.Stderr, "Error matching pattern in file %s: %v\n", file, err)
 			continue
 		}
 
@@ -165,7 +164,7 @@ func determineSubdirectoryFromTestName(testFunctionName string) string {
 // camelToSnake converts CamelCase to snake_case
 func camelToSnake(s string) string {
 	// Insert underscores before uppercase letters (except first)
-	re := regexp.MustCompile(`([a-z0-9])([A-Z])`)
+	re := regexache.MustCompile(`([a-z0-9])([A-Z])`)
 	snake := re.ReplaceAllString(s, `${1}_${2}`)
 	return strings.ToLower(snake)
 }
