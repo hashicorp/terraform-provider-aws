@@ -723,7 +723,7 @@ type subnetListResourceModel struct {
 func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"subnet_ids": listschema.ListAttribute{
+			names.AttrSubnetIDs: listschema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
