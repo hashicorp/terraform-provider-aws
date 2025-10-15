@@ -2428,11 +2428,21 @@ func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *te
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "s3_key", "lambdatest.zip"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				// Update with a non-existent S3 key to force an error
 				Config:      testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest_not_exist.zip"),
 				ExpectError: regexache.MustCompile(`The specified key does not exist`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				// Revert to previous configuration to ensure non-refreshable attributes were reset
@@ -2451,6 +2461,11 @@ func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *te
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "s3_key", "lambdatest_modified.zip"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
