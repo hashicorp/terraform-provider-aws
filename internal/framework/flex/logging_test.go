@@ -147,10 +147,6 @@ const (
 	logModule = "provider." + subsystemName
 )
 
-func infoExpanding(sourceType, targetType reflect.Type) map[string]any {
-	return infoLogLine("Expanding", sourceType, targetType)
-}
-
 func infoFlattening(sourceType, targetType reflect.Type) map[string]any {
 	return infoLogLine("Flattening", sourceType, targetType)
 }
@@ -171,60 +167,6 @@ func infoConvertingWithPath(sourceFieldPath string, sourceType reflect.Type, tar
 		logAttrKeyTargetType: fullTypeName(targetType),
 		logAttrKeyTargetPath: targetFieldPath,
 	})
-}
-
-func traceSkipIgnoredSourceField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
-	return traceSkipIgnoredSourceFieldWithPath(
-		"", sourceType, sourceFieldName,
-		"", targetType,
-	)
-}
-
-func traceSkipIgnoredSourceFieldWithPath(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type) map[string]any {
-	return map[string]any{
-		"@level":                  hclog.Trace.String(),
-		"@module":                 logModule,
-		"@message":                "Skipping ignored source field",
-		logAttrKeySourcePath:      sourcePath,
-		logAttrKeySourceType:      fullTypeName(sourceType),
-		logAttrKeySourceFieldname: sourceFieldName,
-		logAttrKeyTargetPath:      targetPath,
-		logAttrKeyTargetType:      fullTypeName(targetType),
-	}
-}
-
-func traceSkipIgnoredTargetField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type, targetFieldName string) map[string]any {
-	return traceSkipIgnoredTargetFieldWithPath(
-		"", sourceType, sourceFieldName,
-		"", targetType, targetFieldName,
-	)
-}
-
-func traceSkipIgnoredTargetFieldWithPath(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type, targetFieldName string) map[string]any {
-	return map[string]any{
-		"@level":                  hclog.Trace.String(),
-		"@module":                 logModule,
-		"@message":                "Skipping ignored target field",
-		logAttrKeySourcePath:      sourcePath,
-		logAttrKeySourceType:      fullTypeName(sourceType),
-		logAttrKeySourceFieldname: sourceFieldName,
-		logAttrKeyTargetPath:      targetPath,
-		logAttrKeyTargetType:      fullTypeName(targetType),
-		logAttrKeyTargetFieldname: targetFieldName,
-	}
-}
-
-func traceSkipMapBlockKey(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
-	return map[string]any{
-		"@level":                  hclog.Trace.String(),
-		"@module":                 logModule,
-		"@message":                "Skipping map block key",
-		logAttrKeySourcePath:      sourcePath,
-		logAttrKeySourceType:      fullTypeName(sourceType),
-		logAttrKeySourceFieldname: mapBlockKeyFieldName,
-		logAttrKeyTargetPath:      targetPath,
-		logAttrKeyTargetType:      fullTypeName(targetType),
-	}
 }
 
 func traceMatchedFields(sourceFieldName string, sourceType reflect.Type, targetFieldName string, targetType reflect.Type) map[string]any {
@@ -248,54 +190,16 @@ func traceMatchedFieldsWithPath(sourcePath, sourceFieldName string, sourceType r
 	}
 }
 
-func debugNoCorrespondingField(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
+func debugSkippingSourceFieldTag(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Debug.String(),
 		"@module":                 logModule,
-		"@message":                "No corresponding field",
+		"@message":                "Skipping source field due to tag",
 		logAttrKeySourcePath:      "",
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: sourceFieldName,
 		logAttrKeyTargetPath:      "",
 		logAttrKeyTargetType:      fullTypeName(targetType),
-	}
-}
-
-func traceExpandingNullValue(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
-	return map[string]any{
-		"@level":             hclog.Trace.String(),
-		"@module":            logModule,
-		"@message":           "Expanding null value",
-		logAttrKeySourcePath: sourcePath,
-		logAttrKeySourceType: fullTypeName(sourceType),
-		logAttrKeyTargetPath: targetPath,
-		logAttrKeyTargetType: fullTypeName(targetType),
-	}
-}
-
-func traceExpandingWithElementsAs(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
-	return map[string]any{
-		"@level":             hclog.Trace.String(),
-		"@module":            logModule,
-		"@message":           "Expanding with ElementsAs",
-		logAttrKeySourcePath: sourcePath,
-		logAttrKeySourceType: fullTypeName(sourceType),
-		logAttrKeySourceSize: float64(sourceLen), // numbers are deserialized from JSON as float64
-		logAttrKeyTargetPath: targetPath,
-		logAttrKeyTargetType: fullTypeName(targetType),
-	}
-}
-
-func traceExpandingNestedObjectCollection(sourcePath string, sourceType reflect.Type, sourceLen int, targetPath string, targetType reflect.Type) map[string]any {
-	return map[string]any{
-		"@level":             hclog.Trace.String(),
-		"@module":            logModule,
-		"@message":           "Expanding nested object collection",
-		logAttrKeySourcePath: sourcePath,
-		logAttrKeySourceType: fullTypeName(sourceType),
-		logAttrKeySourceSize: float64(sourceLen), // numbers are deserialized from JSON as float64
-		logAttrKeyTargetPath: targetPath,
-		logAttrKeyTargetType: fullTypeName(targetType),
 	}
 }
 

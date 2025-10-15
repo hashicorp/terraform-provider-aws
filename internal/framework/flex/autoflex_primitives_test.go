@@ -369,7 +369,6 @@ func TestExpandPrimitives(t *testing.T) {
 	}
 
 	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
-
 }
 
 func TestExpandBool(t *testing.T) {

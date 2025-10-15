@@ -1533,9 +1533,8 @@ func (expander autoExpander) xmlWrapper(ctx context.Context, vFrom valueWithElem
 		default:
 			// For complex types, try direct assignment if types are compatible
 			if elem != nil && !elem.IsNull() && !elem.IsUnknown() {
-				elemInterface := elem.(attr.Value)
-				if itemValue.Type().AssignableTo(reflect.TypeOf(elemInterface)) {
-					itemValue.Set(reflect.ValueOf(elemInterface))
+				if itemValue.Type().AssignableTo(reflect.TypeOf(elem)) {
+					itemValue.Set(reflect.ValueOf(elem))
 				}
 			}
 		}
@@ -1593,7 +1592,7 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 
 // nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
 // that follows the pattern: {Items: []T, Quantity: *int32}
-func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, _ path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper", map[string]any{

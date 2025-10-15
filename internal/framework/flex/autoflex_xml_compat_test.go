@@ -164,6 +164,8 @@ func TestExpandXMLWrapperDirect(t *testing.T) {
 }
 
 func TestIsXMLWrapperStruct(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name     string
 		input    any
@@ -214,6 +216,8 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := isXMLWrapperStruct(reflect.TypeOf(tc.input))
 			if result != tc.expected {
 				t.Errorf("Expected %v, got %v", tc.expected, result)
