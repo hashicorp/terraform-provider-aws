@@ -5,10 +5,10 @@ package bedrockagentcore
 
 // Exports for use in tests only.
 var (
-	ResourceAgentRuntime         = newAgentRuntimeResource
-	ResourceAgentRuntimeEndpoint = newAgentRuntimeEndpointResource
+	ResourceAgentRuntime             = newAgentRuntimeResource
+	ResourceAgentRuntimeEndpoint     = newAgentRuntimeEndpointResource
 	ResourceAPIKeyCredentialProvider = newAPIKeyCredentialProviderResource
-	ResourceBrowser              = newBrowserResource
+	ResourceBrowser                  = newBrowserResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
