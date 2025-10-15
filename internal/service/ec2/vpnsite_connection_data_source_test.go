@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPNConnectionDataSource_basic(t *testing.T) {
+func TestAccSiteVPNConnectionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(65501, 65534)
@@ -45,7 +45,7 @@ func TestAccVPNConnectionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPNConnectionDataSource_byFilter(t *testing.T) {
+func TestAccSiteVPNConnectionDataSource_byFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(65501, 65534)
@@ -73,7 +73,7 @@ func TestAccVPNConnectionDataSource_byFilter(t *testing.T) {
 	})
 }
 
-func TestAccVPNConnectionDataSource_nonExistentId(t *testing.T) {
+func TestAccSiteVPNConnectionDataSource_nonExistentId(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,7 +89,7 @@ func TestAccVPNConnectionDataSource_nonExistentId(t *testing.T) {
 	})
 }
 
-func TestAccVPNConnectionDataSource_noInput(t *testing.T) {
+func TestAccSiteVPNConnectionDataSource_noInput(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.ParallelTest(t, resource.TestCase{
