@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -58,7 +57,6 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 				CustomType: fwtypes.StringEnumType[awstypes.GatewayAssociationState](),
 				Computed:   true,
 			},
-			names.AttrID: framework.IDAttribute(),
 			"pre_shared_key_arn": schema.StringAttribute{
 				Computed: true,
 			},
@@ -114,7 +112,6 @@ func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(aws.ToString(out.VpnConnectionId))
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.VpnConnectionId.String())
 }
 
@@ -129,15 +126,12 @@ func (d *dataSourceVPNConnection) ConfigValidators(_ context.Context) []datasour
 
 type dataSourceVPNConnectionModel struct {
 	framework.WithRegionModel
-	Filters         customFilters `tfsdk:"filter"`
-	VpnConnectionId types.String  `tfsdk:"vpn_connection_id"`
-	ID              types.String  `tfsdk:"id"`
-
 	Category                     types.String                                         `tfsdk:"category"`
 	CoreNetworkArn               types.String                                         `tfsdk:"core_network_arn"`
 	CoreNetworkAttachmentArn     types.String                                         `tfsdk:"core_network_attachment_arn"`
 	CustomerGatewayConfiguration types.String                                         `tfsdk:"customer_gateway_configuration"`
 	CustomerGatewayID            types.String                                         `tfsdk:"customer_gateway_id"`
+	Filters                      customFilters                                        `tfsdk:"filter"`
 	GatewayAssociationState      fwtypes.StringEnum[awstypes.GatewayAssociationState] `tfsdk:"gateway_association_state"`
 	PreSharedKeyArn              types.String                                         `tfsdk:"pre_shared_key_arn"`
 	State                        fwtypes.StringEnum[awstypes.VpnState]                `tfsdk:"state"`
@@ -146,6 +140,7 @@ type dataSourceVPNConnectionModel struct {
 	VpnGatewayId                 types.String                                         `tfsdk:"vpn_gateway_id"`
 	Routes                       fwtypes.ListNestedObjectValueOf[routeModel]          `tfsdk:"routes"`
 	VgwTelemetries               fwtypes.ListNestedObjectValueOf[vgwTelemetryModel]   `tfsdk:"vgw_telemetries"`
+	VpnConnectionId              types.String                                         `tfsdk:"vpn_connection_id"`
 	Tags                         tftags.Map                                           `tfsdk:"tags"`
 }
 

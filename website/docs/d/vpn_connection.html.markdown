@@ -51,7 +51,7 @@ This data source supports the following arguments:
 
 The `filter` configuration block supports the following arguments:
 
-* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeVPNConnections API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpnConnections.html).
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 `DescribeVPNConnections` API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpnConnections.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
@@ -65,11 +65,10 @@ This data source exports the following attributes in addition to the arguments a
 * `customer_gateway_id` - ID of the customer gateway at your end of the VPN connection.
 * `gateway_association_state` - Current state of the gateway association.
 * `pre_shared_key_arn` - (ARN) of the Secrets Manager secret storing the pre-shared key(s) for the VPN connection.
+* `routes` - List of static routes associated with the VPN connection.
 * `state` - Current state of the VPN connection.
+* `tags` - Tags associated to the VPN Connection.
 * `transit_gateway_id` - ID of a transit gateway associated with the VPN connection.
 * `type` - Type of VPN connection. Currently the only supported type is ipsec.1.
-* `vpn_gateway_id` - ID of a virtual private gateway associated with the VPN connection.
-* `id` - EC2 VPN Connection identifier.
-* `tags` - Tags associated to the VPN Connection.
-* `routes` - List of static routes associated with the VPN connection.
 * `vgw_telemetries` - List of objects containing information about the VPN tunnel.
+* `vpn_gateway_id` - ID of a virtual private gateway associated with the VPN connection.

@@ -30,7 +30,6 @@ func TestAccVPNConnectionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPNConnectionDataSourceConfig_byId(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpn_connection_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_gateway_id", resourceName, "customer_gateway_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpn_gateway_id", resourceName, "vpn_gateway_id"),
@@ -62,7 +61,6 @@ func TestAccVPNConnectionDataSource_byFilter(t *testing.T) {
 			{
 				Config: testAccVPNConnectionDataSourceConfig_byFilter(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpn_connection_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_gateway_id", resourceName, "customer_gateway_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpn_gateway_id", resourceName, "vpn_gateway_id"),
