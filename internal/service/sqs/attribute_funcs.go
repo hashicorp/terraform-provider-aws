@@ -59,7 +59,7 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(url)
 
-	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, deadline.Remaining()); err != nil {
+	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, deadline.Remaining(), meta); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attribute (%s) create: %s", d.Id(), h.AttributeName, err)
 	}
 
@@ -123,7 +123,7 @@ func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "deleting SQS Queue (%s) attribute (%s): %s", d.Id(), h.AttributeName, err)
 	}
 
-	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutDelete), meta); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attribute (%s) delete: %s", d.Id(), h.AttributeName, err)
 	}
 
