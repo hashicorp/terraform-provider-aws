@@ -4092,14 +4092,14 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 
-		for output, err := range listInstances(ctx, conn, &input) {
+		for instance, err := range listInstances(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			tags := keyValueTags(ctx, output.Tags)
+			tags := keyValueTags(ctx, instance.Tags)
 
 			if !includeAutoScaled {
 				// Exclude Auto Scaled Instances
@@ -4109,8 +4109,8 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.InstanceId))
-			result.Diagnostics.Append(translateDiags(resourceInstanceFlatten(ctx, awsClient, &output, rd))...)
+			rd.SetId(aws.ToString(instance.InstanceId))
+			result.Diagnostics.Append(translateDiags(resourceInstanceFlatten(ctx, awsClient, &instance, rd))...)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -4127,7 +4127,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			if v, ok := tags["Name"]; ok {
 				result.DisplayName = v.ValueString()
 			} else {
-				result.DisplayName = aws.ToString(output.InstanceId)
+				result.DisplayName = aws.ToString(instance.InstanceId)
 			}
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
