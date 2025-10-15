@@ -75,6 +75,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Security Group Rules",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newDataSourceVPNConnection,
+			TypeName: "aws_vpn_connection",
+			Name:     "VPN Connection",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
