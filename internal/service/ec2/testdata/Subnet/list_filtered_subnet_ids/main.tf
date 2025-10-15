@@ -4,7 +4,7 @@
 provider "aws" {}
 
 resource "aws_subnet" "expected" {
-  count =  2
+  count = 2
 
   cidr_block = cidrsubnet(aws_vpc.test[count.index].cidr_block, 8, 0)
   vpc_id     = aws_vpc.test[count.index].id
