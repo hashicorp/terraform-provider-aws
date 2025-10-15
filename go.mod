@@ -33,14 +33,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.38.7
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.49.7
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.51.6
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.8
 	github.com/aws/aws-sdk-go-v2/service/athena v1.55.6
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.45.6
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.59.3
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.29.5
-	github.com/aws/aws-sdk-go-v2/service/backup v1.48.0
+	github.com/aws/aws-sdk-go-v2/service/backup v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/batch v1.57.10
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.11.8
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.47.2
@@ -79,7 +79,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.6
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.47.5
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.58.2
-	github.com/aws/aws-sdk-go-v2/service/connect v1.141.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.142.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.33.6
@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.55.0
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.42.0
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/detective v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.35.6
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.8
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.51.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.255.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.256.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.5
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.65.1
@@ -259,8 +259,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.5
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.52.6
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.66.0
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.53.0
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.5
