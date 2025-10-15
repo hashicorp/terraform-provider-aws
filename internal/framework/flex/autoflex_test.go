@@ -18,23 +18,20 @@ import (
 )
 
 type autoFlexTestCase struct {
-	Options          []AutoFlexOptionsFunc
-	Source           any
-	Target           any
-	expectedDiags    diag.Diagnostics
-	expectedLogLines []map[string]any
-	GoldenLogsPath   string // path to golden log file (relative to testdata/)
-	WantTarget       any
-	WantDiff         bool
+	Options       []AutoFlexOptionsFunc
+	Source        any
+	Target        any
+	ExpectedDiags diag.Diagnostics
+	WantTarget    any
+	WantDiff      bool
 }
 
 type autoFlexTestCases map[string]autoFlexTestCase
 
 type runChecks struct {
 	CompareDiags  bool
-	CompareLogs   bool
-	GoldenLogs    bool // use golden snapshots for log comparison
 	CompareTarget bool
+	GoldenLogs    bool // use golden snapshots for log comparison
 }
 
 // diagAF is a testing helper that creates a diag.Diagnostics containing
@@ -78,6 +75,15 @@ func diagAFEmpty() diag.Diagnostics {
 	return diag.Diagnostics{}
 }
 
+// setFieldValue sets a field value in a struct using reflection
+func setFieldValue(structPtr any, fieldName string, value any) {
+	v := reflect.ValueOf(structPtr).Elem()
+	field := v.FieldByName(fieldName)
+	if field.IsValid() && field.CanSet() {
+		field.Set(reflect.ValueOf(value))
+	}
+}
+
 func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks runChecks) {
 	t.Helper()
 	for testName, tc := range testCases {
@@ -92,18 +98,8 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 			diags := Expand(ctx, tc.Source, tc.Target, tc.Options...)
 
 			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, tc.expectedDiags); diff != "" {
+				if diff := cmp.Diff(diags, tc.ExpectedDiags); diff != "" {
 					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
-			}
-
-			if checks.CompareLogs {
-				lines, err := tflogtest.MultilineJSONDecode(&buf)
-				if err != nil {
-					t.Fatalf("Expand: decoding log lines: %s", err)
-				}
-				if diff := cmp.Diff(lines, tc.expectedLogLines); diff != "" {
-					t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
 				}
 			}
 
@@ -114,11 +110,7 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				// Use explicit path if provided, otherwise auto-generate
-				goldenFileName := tc.GoldenLogsPath
-				if goldenFileName == "" {
-					goldenFileName = autoGenerateGoldenPath(t, t.Name(), testName)
-				}
+				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
@@ -147,18 +139,8 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 			diags := Flatten(ctx, testCase.Source, testCase.Target, testCase.Options...)
 
 			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
 					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
-			}
-
-			if checks.CompareLogs {
-				lines, err := tflogtest.MultilineJSONDecode(&buf)
-				if err != nil {
-					t.Fatalf("Flatten: decoding log lines: %s", err)
-				}
-				if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
-					t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
 				}
 			}
 
@@ -169,11 +151,7 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				// Use explicit path if provided, otherwise auto-generate
-				goldenFileName := testCase.GoldenLogsPath
-				if goldenFileName == "" {
-					goldenFileName = autoGenerateGoldenPath(t, t.Name(), testName)
-				}
+				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
@@ -192,11 +170,9 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 
 // Top-level tests need a concrete target type for some reason when calling `cmp.Diff`
 type toplevelTestCase[Tsource, Ttarget any] struct {
-	source           Tsource
-	expectedValue    Ttarget
-	expectedDiags    diag.Diagnostics
-	expectedLogLines []map[string]any
-	GoldenLogsPath   string // path to golden log file (relative to testdata/)
+	source        Tsource
+	expectedValue Ttarget
+	ExpectedDiags diag.Diagnostics
 }
 
 type toplevelTestCases[Tsource, Ttarget any] map[string]toplevelTestCase[Tsource, Ttarget]
@@ -219,18 +195,8 @@ func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevel
 			diags := Flatten(ctx, testCase.source, &target)
 
 			if checks.CompareDiags {
-				if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				if diff := cmp.Diff(diags, testCase.ExpectedDiags); diff != "" {
 					t.Errorf("unexpected diagnostics difference: %s", diff)
-				}
-			}
-
-			if checks.CompareLogs {
-				lines, err := tflogtest.MultilineJSONDecode(&buf)
-				if err != nil {
-					t.Fatalf("Flatten: decoding log lines: %s", err)
-				}
-				if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
-					t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
 				}
 			}
 
@@ -241,11 +207,7 @@ func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevel
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				// Use explicit path if provided, otherwise auto-generate
-				goldenFileName := testCase.GoldenLogsPath
-				if goldenFileName == "" {
-					goldenFileName = autoGenerateGoldenPath(t, t.Name(), testName)
-				}
+				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}

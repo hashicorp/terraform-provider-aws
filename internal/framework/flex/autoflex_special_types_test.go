@@ -144,7 +144,7 @@ func TestExpandSpecialTypes(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -216,7 +216,7 @@ func TestFlattenSpecialTypes(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
 		})
 	}
 }
@@ -280,7 +280,7 @@ func TestFlattenJSONInterfaceToStringTypable(t *testing.T) {
 				Field1: &testJSONDocumentError{},
 			},
 			Target:        &tfSingleStringField{},
-			expectedDiags: diagAFTypeErr[*testJSONDocumentError](diagFlatteningMarshalSmithyDocument, errMarshallSmithyDocument),
+			ExpectedDiags: diagAFTypeErr[*testJSONDocumentError](diagFlatteningMarshalSmithyDocument, errMarshallSmithyDocument),
 		},
 
 		"non-json interface Source string Target": {
@@ -306,5 +306,5 @@ func TestFlattenJSONInterfaceToStringTypable(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }

@@ -289,7 +289,7 @@ func TestExpandInterfaceContract(t *testing.T) {
 		"source field does not implement attr.Value Source": {
 			Source:        &awsSingleStringValue{Field1: "a"},
 			Target:        &awsSingleStringValue{},
-			expectedDiags: diagAF[string](diagExpandingSourceDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[string](diagExpandingSourceDoesNotImplementAttrValue),
 		},
 	}
 
@@ -323,21 +323,21 @@ func TestExpandExpander(t *testing.T) {
 				Field1: types.StringValue("value1"),
 			},
 			Target:        &awsExpanderIncompatible{},
-			expectedDiags: diagAF2[awsExpander, awsExpanderIncompatible](diagCannotBeAssigned),
+			ExpectedDiags: diagAF2[awsExpander, awsExpanderIncompatible](diagCannotBeAssigned),
 		},
 		"top level expands to nil": {
 			Source: tfExpanderToNil{
 				Field1: types.StringValue("value1"),
 			},
 			Target:        &awsExpander{},
-			expectedDiags: diagAF[tfExpanderToNil](diagExpandsToNil),
+			ExpectedDiags: diagAF[tfExpanderToNil](diagExpandsToNil),
 		},
 		"top level incompatible non-struct Target": {
 			Source: tfExpanderToString{
 				Field1: types.StringValue("value1"),
 			},
 			Target:        aws.Int64(0),
-			expectedDiags: diagAF2[string, int64](diagCannotBeAssigned),
+			ExpectedDiags: diagAF2[string, int64](diagCannotBeAssigned),
 		},
 		"single list Source and single struct Target": {
 			Source: tfExpanderListNestedObject{
@@ -583,7 +583,7 @@ func TestExpandInterface(t *testing.T) {
 				Field1: types.StringValue("value1"),
 			},
 			Target:        &targetInterface,
-			expectedDiags: diagAF2[*awsInterfaceIncompatibleImpl, awsInterfaceInterface](diagExpandedTypeDoesNotImplement),
+			ExpectedDiags: diagAF2[*awsInterfaceIncompatibleImpl, awsInterfaceInterface](diagExpandedTypeDoesNotImplement),
 		},
 		"single list Source and single interface Target": {
 			Source: tfListNestedObject[tfInterfaceFlexer]{
@@ -731,7 +731,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 				Field1: types.StringValue("value1"),
 			},
 			Target:        &targetInterface,
-			expectedDiags: diagAF2[*awsInterfaceIncompatibleImpl, awsInterfaceInterface](diagExpandedTypeDoesNotImplement),
+			ExpectedDiags: diagAF2[*awsInterfaceIncompatibleImpl, awsInterfaceInterface](diagExpandedTypeDoesNotImplement),
 		},
 		"single list Source and single interface Target": {
 			Source: tfListNestedObject[tfInterfaceTypedExpander]{
@@ -877,14 +877,14 @@ func TestExpandTypedExpander(t *testing.T) {
 				Field1: types.StringValue("value1"),
 			},
 			Target:        &awsExpanderIncompatible{},
-			expectedDiags: diagAF2[awsExpander, awsExpanderIncompatible](diagCannotBeAssigned),
+			ExpectedDiags: diagAF2[awsExpander, awsExpanderIncompatible](diagCannotBeAssigned),
 		},
 		"top level expands to nil": {
 			Source: tfTypedExpanderToNil{
 				Field1: types.StringValue("value1"),
 			},
 			Target:        &awsExpander{},
-			expectedDiags: diagAF[tfTypedExpanderToNil](diagExpandsToNil),
+			ExpectedDiags: diagAF[tfTypedExpanderToNil](diagExpandsToNil),
 		},
 		"single list Source and single struct Target": {
 			Source: tfTypedExpanderListNestedObject{
@@ -1169,27 +1169,27 @@ func TestFlattenInterfaceContract(t *testing.T) {
 		"target field does not implement attr.Value Target": {
 			Source:        &awsSingleStringValue{Field1: "a"},
 			Target:        &awsSingleStringValue{},
-			expectedDiags: diagAF[string](diagFlatteningTargetDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[string](diagFlatteningTargetDoesNotImplementAttrValue),
 		},
 		"source struct field to non-attr.Value": {
 			Source:        &awsRFC3339TimeValue{},
 			Target:        &awsRFC3339TimeValue{},
-			expectedDiags: diagAF[time.Time](diagFlatteningTargetDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[time.Time](diagFlatteningTargetDoesNotImplementAttrValue),
 		},
 		"source struct ptr field to non-attr.Value": {
 			Source:        &awsRFC3339TimePointer{},
 			Target:        &awsRFC3339TimeValue{},
-			expectedDiags: diagAF[time.Time](diagFlatteningTargetDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[time.Time](diagFlatteningTargetDoesNotImplementAttrValue),
 		},
 		"source struct field to non-attr.Value ptr": {
 			Source:        &awsRFC3339TimeValue{},
 			Target:        &awsRFC3339TimePointer{},
-			expectedDiags: diagAF[*time.Time](diagFlatteningTargetDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[*time.Time](diagFlatteningTargetDoesNotImplementAttrValue),
 		},
 		"source struct ptr field to non-attr.Value ptr": {
 			Source:        &awsRFC3339TimePointer{},
 			Target:        &awsRFC3339TimePointer{},
-			expectedDiags: diagAF[*time.Time](diagFlatteningTargetDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[*time.Time](diagFlatteningTargetDoesNotImplementAttrValue),
 		},
 	}
 
@@ -1244,29 +1244,6 @@ func TestFlattenInterface(t *testing.T) {
 			Target: &tfListNestedObject[tfSingleStringField]{},
 			WantTarget: &tfListNestedObject[tfSingleStringField]{
 				Field1: fwtypes.NewListNestedObjectValueOfNull[tfSingleStringField](ctx),
-			},
-			expectedLogLines: []map[string]any{
-				infoFlattening(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfListNestedObject[tfSingleStringField]]()),
-				infoConverting(reflect.TypeFor[awsInterfaceSingle](), reflect.TypeFor[*tfListNestedObject[tfSingleStringField]]()),
-				traceMatchedFields("Field1", reflect.TypeFor[awsInterfaceSingle](), "Field1", reflect.TypeFor[*tfListNestedObject[tfSingleStringField]]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[awsInterfaceInterface](), "Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
-				{
-					"@level":   "error",
-					"@module":  "provider.autoflex",
-					"@message": "AutoFlex Flatten; incompatible types",
-					"from":     float64(reflect.Interface),
-					"to": map[string]any{
-						"ElemType": map[string]any{
-							"AttrTypes": map[string]any{
-								"field1": map[string]any{},
-							},
-						},
-					},
-					logAttrKeySourcePath: "Field1",
-					logAttrKeySourceType: fullTypeName(reflect.TypeFor[awsInterfaceInterface]()),
-					logAttrKeyTargetPath: "Field1",
-					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[fwtypes.ListNestedObjectValueOf[tfSingleStringField]]()),
-				},
 			},
 		},
 

@@ -79,7 +79,7 @@ func TestExpandCollections(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandListOfInt64(t *testing.T) {
@@ -159,7 +159,7 @@ func TestExpandListOfInt64(t *testing.T) {
 			WantTarget: &[]*int32{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandSetOfInt64(t *testing.T) {
@@ -239,7 +239,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			WantTarget: &[]*int32{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandListOfStringEnum(t *testing.T) {
@@ -265,7 +265,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			WantTarget: &[]testEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandSetOfStringEnum(t *testing.T) {
@@ -291,7 +291,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			WantTarget: &[]testEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 type tfListOfStringEnum struct {
@@ -337,7 +337,7 @@ func TestExpandStructListOfStringEnum(t *testing.T) {
 			WantTarget: &awsSliceOfStringEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 type tfSetOfStringEnum struct {
@@ -379,7 +379,7 @@ func TestExpandStructSetOfStringEnum(t *testing.T) {
 			WantTarget: &awsSliceOfStringEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 type tfSingleStringFieldIgnore struct {
@@ -406,7 +406,7 @@ func TestExpandIgnoreStructTag(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 type TFExportedStruct struct {
@@ -459,7 +459,7 @@ func TestExpandEmbeddedStruct(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 // List/Set/Map of string types.
@@ -578,7 +578,7 @@ func TestFlattenCollections(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 type awsSimpleStringValueSlice struct {
@@ -672,7 +672,7 @@ func TestFlattenSimpleListOfPrimitiveValues(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
 		})
 	}
 }
@@ -764,7 +764,7 @@ func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
 		})
 	}
 }
@@ -789,7 +789,7 @@ func TestFlattenIgnoreStructTag(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestFlattenStructListOfStringEnum(t *testing.T) {
@@ -834,7 +834,7 @@ func TestFlattenStructListOfStringEnum(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
 		})
 	}
 }
@@ -881,7 +881,7 @@ func TestFlattenStructSetOfStringEnum(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
 		})
 	}
 }
@@ -918,5 +918,5 @@ func TestFlattenEmbeddedStruct(t *testing.T) {
 		},
 	}
 	// cmp.Diff cannot handle an unexported field
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, CompareLogs: false}, cmpopts.EquateComparable(tfUnexportedEmbeddedStruct{}))
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true}, cmpopts.EquateComparable(tfUnexportedEmbeddedStruct{}))
 }

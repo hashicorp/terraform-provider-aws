@@ -23,26 +23,26 @@ func TestExpandArgs_nilAndPointers(t *testing.T) {
 	testCases := autoFlexTestCases{
 		"nil Source": {
 			Target:        &emptyStruct{},
-			expectedDiags: diagAFNil(diagExpandingSourceIsNil),
+			ExpectedDiags: diagAFNil(diagExpandingSourceIsNil),
 		},
 		"typed nil Source": {
 			Source:        typedNilSource,
 			Target:        &emptyStruct{},
-			expectedDiags: diagAFNil(diagExpandingSourceIsNil), // FIXME: Should give the actual type
+			ExpectedDiags: diagAFNil(diagExpandingSourceIsNil), // FIXME: Should give the actual type
 		},
 		"nil Target": {
 			Source:        emptyStruct{},
-			expectedDiags: diagAFNil(diagConvertingTargetIsNil),
+			ExpectedDiags: diagAFNil(diagConvertingTargetIsNil),
 		},
 		"typed nil Target": {
 			Source:        emptyStruct{},
 			Target:        typedNilTarget,
-			expectedDiags: diagAF[*emptyStruct](diagConvertingTargetIsNil),
+			ExpectedDiags: diagAF[*emptyStruct](diagConvertingTargetIsNil),
 		},
 		"non-pointer Target": {
 			Source:        emptyStruct{},
 			Target:        0,
-			expectedDiags: diagAF[int](diagConvertingTargetIsNotPointer),
+			ExpectedDiags: diagAF[int](diagConvertingTargetIsNotPointer),
 		},
 	}
 
@@ -58,12 +58,12 @@ func TestExpandArgs_shapeCompatibility(t *testing.T) {
 		"non-struct Source struct Target": {
 			Source:        testString,
 			Target:        &emptyStruct{},
-			expectedDiags: diagAF[string](diagExpandingSourceDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[string](diagExpandingSourceDoesNotImplementAttrValue),
 		},
 		"struct Source non-struct Target": {
 			Source:        emptyStruct{},
 			Target:        &testString,
-			expectedDiags: diagAF[emptyStruct](diagExpandingSourceDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[emptyStruct](diagExpandingSourceDoesNotImplementAttrValue),
 		},
 		"empty struct Source and Target": {
 			Source:     emptyStruct{},
@@ -91,26 +91,26 @@ func TestFlattenArgs_nilAndPointers(t *testing.T) {
 	testCases := autoFlexTestCases{
 		"nil Source": {
 			Target:        &emptyStruct{},
-			expectedDiags: diagAFNil(diagFlatteningSourceIsNil),
+			ExpectedDiags: diagAFNil(diagFlatteningSourceIsNil),
 		},
 		"typed nil Source": {
 			Source:        typedNilSource,
 			Target:        &emptyStruct{},
-			expectedDiags: diagAF[*emptyStruct](diagFlatteningSourceIsNil),
+			ExpectedDiags: diagAF[*emptyStruct](diagFlatteningSourceIsNil),
 		},
 		"nil Target": {
 			Source:        emptyStruct{},
-			expectedDiags: diagAFNil(diagConvertingTargetIsNil),
+			ExpectedDiags: diagAFNil(diagConvertingTargetIsNil),
 		},
 		"typed nil Target": {
 			Source:        emptyStruct{},
 			Target:        typedNilTarget,
-			expectedDiags: diagAF[*emptyStruct](diagConvertingTargetIsNil),
+			ExpectedDiags: diagAF[*emptyStruct](diagConvertingTargetIsNil),
 		},
 		"non-pointer Target": {
 			Source:        emptyStruct{},
 			Target:        0,
-			expectedDiags: diagAF[int](diagConvertingTargetIsNotPointer),
+			ExpectedDiags: diagAF[int](diagConvertingTargetIsNotPointer),
 		},
 	}
 
@@ -126,12 +126,12 @@ func TestFlattenArgs_shapeCompatibility(t *testing.T) {
 		"non-struct Source struct Target": {
 			Source:        testString,
 			Target:        &emptyStruct{},
-			expectedDiags: diagAF[emptyStruct](diagFlatteningTargetDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[emptyStruct](diagFlatteningTargetDoesNotImplementAttrValue),
 		},
 		"struct Source non-struct Target": {
 			Source:        emptyStruct{},
 			Target:        &testString,
-			expectedDiags: diagAF[string](diagFlatteningTargetDoesNotImplementAttrValue),
+			ExpectedDiags: diagAF[string](diagFlatteningTargetDoesNotImplementAttrValue),
 		},
 		"empty struct Source and Target": {
 			Source:     emptyStruct{},

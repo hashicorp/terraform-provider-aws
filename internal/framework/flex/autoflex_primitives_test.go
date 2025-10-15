@@ -301,7 +301,7 @@ func TestExpandString(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -500,7 +500,7 @@ func TestExpandBool(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -755,7 +755,7 @@ func TestExpandFloat64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -891,14 +891,14 @@ func TestExpandFloat32(t *testing.T) {
 					Field1: types.Float32Value(42),
 				},
 				Target:        &awsSingleFloat64Value{},
-				expectedDiags: diagAF2[types.Float32, float64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Float32, float64](diagExpandingIncompatibleTypes),
 			},
 			"zero": {
 				Source: tfSingleFloat32Field{
 					Field1: types.Float32Value(0),
 				},
 				Target:        &awsSingleFloat64Value{},
-				expectedDiags: diagAF2[types.Float32, float64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Float32, float64](diagExpandingIncompatibleTypes),
 			},
 			"null": {
 				// TODO: The test for a null value happens before type checking
@@ -918,14 +918,14 @@ func TestExpandFloat32(t *testing.T) {
 					Field1: types.Float32Value(42),
 				},
 				Target:        &awsSingleFloat64Value{},
-				expectedDiags: diagAF2[types.Float32, float64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Float32, float64](diagExpandingIncompatibleTypes),
 			},
 			"zero": {
 				Source: tfSingleFloat32FieldLegacy{
 					Field1: types.Float32Value(0),
 				},
 				Target:        &awsSingleFloat64Value{},
-				expectedDiags: diagAF2[types.Float32, float64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Float32, float64](diagExpandingIncompatibleTypes),
 			},
 			"null": {
 				// TODO: The test for a null value happens before type checking
@@ -945,14 +945,14 @@ func TestExpandFloat32(t *testing.T) {
 					Field1: types.Float32Value(42),
 				},
 				Target:        &awsSingleFloat64Pointer{},
-				expectedDiags: diagAF2[types.Float32, *float64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Float32, *float64](diagExpandingIncompatibleTypes),
 			},
 			"zero": {
 				Source: tfSingleFloat32Field{
 					Field1: types.Float32Value(0),
 				},
 				Target:        &awsSingleFloat64Pointer{},
-				expectedDiags: diagAF2[types.Float32, *float64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Float32, *float64](diagExpandingIncompatibleTypes),
 			},
 			"null": {
 				// TODO: The test for a null value happens before type checking
@@ -972,14 +972,14 @@ func TestExpandFloat32(t *testing.T) {
 					Field1: types.Float32Value(42),
 				},
 				Target:        &awsSingleFloat64Pointer{},
-				expectedDiags: diagAF2[types.Float32, *float64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Float32, *float64](diagExpandingIncompatibleTypes),
 			},
 			"zero": {
 				Source: tfSingleFloat32FieldLegacy{
 					Field1: types.Float32Value(0),
 				},
 				Target:        &awsSingleFloat64Pointer{},
-				expectedDiags: diagAF2[types.Float32, *float64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Float32, *float64](diagExpandingIncompatibleTypes),
 			},
 			"null": {
 				// TODO: The test for a null value happens before type checking
@@ -998,7 +998,7 @@ func TestExpandFloat32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -1253,7 +1253,7 @@ func TestExpandInt64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -1389,14 +1389,14 @@ func TestExpandInt32(t *testing.T) {
 					Field1: types.Int32Value(42),
 				},
 				Target:        &awsSingleInt64Value{},
-				expectedDiags: diagAF2[types.Int32, int64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Int32, int64](diagExpandingIncompatibleTypes),
 			},
 			"zero": {
 				Source: tfSingleInt32Field{
 					Field1: types.Int32Value(0),
 				},
 				Target:        &awsSingleInt64Value{},
-				expectedDiags: diagAF2[types.Int32, int64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Int32, int64](diagExpandingIncompatibleTypes),
 			},
 			"null": {
 				// TODO: The test for a null value happens before type checking
@@ -1414,14 +1414,14 @@ func TestExpandInt32(t *testing.T) {
 					Field1: types.Int32Value(42),
 				},
 				Target:        &awsSingleInt64Value{},
-				expectedDiags: diagAF2[types.Int32, int64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Int32, int64](diagExpandingIncompatibleTypes),
 			},
 			"zero": {
 				Source: tfSingleInt32FieldLegacy{
 					Field1: types.Int32Value(0),
 				},
 				Target:        &awsSingleInt64Value{},
-				expectedDiags: diagAF2[types.Int32, int64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Int32, int64](diagExpandingIncompatibleTypes),
 			},
 			"null": {
 				// TODO: The test for a null value happens before type checking
@@ -1439,14 +1439,14 @@ func TestExpandInt32(t *testing.T) {
 					Field1: types.Int32Value(42),
 				},
 				Target:        &awsSingleInt64Pointer{},
-				expectedDiags: diagAF2[types.Int32, *int64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Int32, *int64](diagExpandingIncompatibleTypes),
 			},
 			"zero": {
 				Source: tfSingleInt32Field{
 					Field1: types.Int32Value(0),
 				},
 				Target:        &awsSingleInt64Pointer{},
-				expectedDiags: diagAF2[types.Int32, *int64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Int32, *int64](diagExpandingIncompatibleTypes),
 			},
 			"null": {
 				// TODO: The test for a null value happens before type checking
@@ -1464,14 +1464,14 @@ func TestExpandInt32(t *testing.T) {
 					Field1: types.Int32Value(42),
 				},
 				Target:        &awsSingleInt64Pointer{},
-				expectedDiags: diagAF2[types.Int32, *int64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Int32, *int64](diagExpandingIncompatibleTypes),
 			},
 			"zero": {
 				Source: tfSingleInt32FieldLegacy{
 					Field1: types.Int32Value(0),
 				},
 				Target:        &awsSingleInt64Pointer{},
-				expectedDiags: diagAF2[types.Int32, *int64](diagExpandingIncompatibleTypes),
+				ExpectedDiags: diagAF2[types.Int32, *int64](diagExpandingIncompatibleTypes),
 			},
 			"null": {
 				// TODO: The test for a null value happens before type checking
@@ -1488,7 +1488,7 @@ func TestExpandInt32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -1511,7 +1511,7 @@ func TestExpandStringEnum(t *testing.T) {
 			WantTarget: &enum,
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenPrimitives(t *testing.T) {
@@ -1697,7 +1697,7 @@ func TestFlattenBool(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -1874,7 +1874,7 @@ func TestFlattenFloat64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -1971,14 +1971,14 @@ func TestFlattenFloat32(t *testing.T) {
 					Field1: 42,
 				},
 				Target:        &tfSingleFloat32Field{},
-				expectedDiags: diagAF2[float64, types.Float32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[float64, types.Float32](DiagFlatteningIncompatibleTypes),
 			},
 			"zero": {
 				Source: awsSingleFloat64Value{
 					Field1: 0,
 				},
 				Target:        &tfSingleFloat32Field{},
-				expectedDiags: diagAF2[float64, types.Float32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[float64, types.Float32](DiagFlatteningIncompatibleTypes),
 			},
 		},
 
@@ -1988,21 +1988,21 @@ func TestFlattenFloat32(t *testing.T) {
 					Field1: aws.Float64(42),
 				},
 				Target:        &tfSingleFloat32Field{},
-				expectedDiags: diagAF2[*float64, types.Float32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[*float64, types.Float32](DiagFlatteningIncompatibleTypes),
 			},
 			"zero": {
 				Source: awsSingleFloat64Pointer{
 					Field1: aws.Float64(0),
 				},
 				Target:        &tfSingleFloat32Field{},
-				expectedDiags: diagAF2[*float64, types.Float32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[*float64, types.Float32](DiagFlatteningIncompatibleTypes),
 			},
 			"null": {
 				Source: awsSingleFloat64Pointer{
 					Field1: nil,
 				},
 				Target:        &tfSingleFloat32Field{},
-				expectedDiags: diagAF2[*float64, types.Float32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[*float64, types.Float32](DiagFlatteningIncompatibleTypes),
 			},
 		},
 	}
@@ -2011,7 +2011,7 @@ func TestFlattenFloat32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -2188,7 +2188,7 @@ func TestFlattenInt64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -2285,14 +2285,14 @@ func TestFlattenInt32(t *testing.T) {
 					Field1: 42,
 				},
 				Target:        &tfSingleInt32Field{},
-				expectedDiags: diagAF2[int64, types.Int32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[int64, types.Int32](DiagFlatteningIncompatibleTypes),
 			},
 			"zero": {
 				Source: awsSingleInt64Value{
 					Field1: 0,
 				},
 				Target:        &tfSingleInt32Field{},
-				expectedDiags: diagAF2[int64, types.Int32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[int64, types.Int32](DiagFlatteningIncompatibleTypes),
 			},
 		},
 
@@ -2302,21 +2302,21 @@ func TestFlattenInt32(t *testing.T) {
 					Field1: aws.Int64(42),
 				},
 				Target:        &tfSingleInt32Field{},
-				expectedDiags: diagAF2[*int64, types.Int32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[*int64, types.Int32](DiagFlatteningIncompatibleTypes),
 			},
 			"zero": {
 				Source: awsSingleInt64Pointer{
 					Field1: aws.Int64(0),
 				},
 				Target:        &tfSingleInt32Field{},
-				expectedDiags: diagAF2[*int64, types.Int32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[*int64, types.Int32](DiagFlatteningIncompatibleTypes),
 			},
 			"null": {
 				Source: awsSingleInt64Pointer{
 					Field1: nil,
 				},
 				Target:        &tfSingleInt32Field{},
-				expectedDiags: diagAF2[*int64, types.Int32](DiagFlatteningIncompatibleTypes),
+				ExpectedDiags: diagAF2[*int64, types.Int32](DiagFlatteningIncompatibleTypes),
 			},
 		},
 	}
@@ -2325,7 +2325,7 @@ func TestFlattenInt32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -2475,7 +2475,7 @@ func TestFlattenString(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, CompareLogs: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -2487,23 +2487,23 @@ func TestFlattenTopLevelStringPtr(t *testing.T) {
 		"value": {
 			source:        aws.String("value"),
 			expectedValue: types.StringValue("value"),
-			expectedDiags: diagAFEmpty(),
+			ExpectedDiags: diagAFEmpty(),
 		},
 
 		"empty": {
 			source:        aws.String(""),
 			expectedValue: types.StringValue(""),
-			expectedDiags: diagAFEmpty(),
+			ExpectedDiags: diagAFEmpty(),
 		},
 
 		"nil": {
 			source:        nil,
 			expectedValue: types.StringNull(),
-			expectedDiags: diagAFEmpty(),
+			ExpectedDiags: diagAFEmpty(),
 		},
 	}
 
-	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareLogs: false, CompareTarget: true})
+	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenTopLevelInt64Ptr(t *testing.T) {
@@ -2513,21 +2513,21 @@ func TestFlattenTopLevelInt64Ptr(t *testing.T) {
 		"value": {
 			source:        aws.Int64(42),
 			expectedValue: types.Int64Value(42),
-			expectedDiags: diagAFEmpty(),
+			ExpectedDiags: diagAFEmpty(),
 		},
 
 		"empty": {
 			source:        aws.Int64(0),
 			expectedValue: types.Int64Value(0),
-			expectedDiags: diagAFEmpty(),
+			ExpectedDiags: diagAFEmpty(),
 		},
 
 		"nil": {
 			source:        nil,
 			expectedValue: types.Int64Null(),
-			expectedDiags: diagAFEmpty(),
+			ExpectedDiags: diagAFEmpty(),
 		},
 	}
 
-	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareLogs: false, CompareTarget: true})
+	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }

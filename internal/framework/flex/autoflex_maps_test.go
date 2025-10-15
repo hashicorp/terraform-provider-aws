@@ -369,7 +369,7 @@ func TestExpandMapBlock(t *testing.T) {
 				}),
 			},
 			Target:        &awsMapBlockValues{},
-			expectedDiags: diagAF[tfMapBlockElementNoKey](diagExpandingNoMapBlockKey),
+			ExpectedDiags: diagAF[tfMapBlockElementNoKey](diagExpandingNoMapBlockKey),
 		},
 	}
 	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
@@ -598,7 +598,7 @@ func TestFlattenMapBlock(t *testing.T) {
 				},
 			},
 			Target:        &tfMapBlockListNoKey{},
-			expectedDiags: diagAF[tfMapBlockElementNoKey](diagFlatteningNoMapBlockKey),
+			ExpectedDiags: diagAF[tfMapBlockElementNoKey](diagFlatteningNoMapBlockKey),
 		},
 	}
 	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
