@@ -107,7 +107,7 @@ func TestAccVPNConnectionDataSource_noInput(t *testing.T) {
 	})
 }
 
-func testAccVPNConnectionDataSourceConfig_byId(rName string, rBgpAsn int) string {
+func testAccVPNConnectionDataSourceConfigBase(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -129,40 +129,24 @@ resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = aws_vpn_gateway.test.id
   customer_gateway_id = aws_customer_gateway.test.id
   type                = "ipsec.1"
-}
-
-data "aws_vpn_connection" "test" {
-  vpn_connection_id = aws_vpn_connection.test.id
-
-  depends_on = [aws_vpn_connection.test]
 }
 `, rName, rBgpAsn)
 }
 
+func testAccVPNConnectionDataSourceConfig_byId(rName string, rBgpAsn int) string {
+	return acctest.ConfigCompose(
+		testAccVPNConnectionDataSourceConfigBase(rName, rBgpAsn),
+		`
+data "aws_vpn_connection" "test" {
+  vpn_connection_id = aws_vpn_connection.test.id
+}
+`)
+}
+
 func testAccVPNConnectionDataSourceConfig_byFilter(rName string, rBgpAsn int) string {
-	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_customer_gateway" "test" {
-  bgp_asn    = %[2]d
-  ip_address = "178.0.0.1"
-  type       = "ipsec.1"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpn_connection" "test" {
-  vpn_gateway_id      = aws_vpn_gateway.test.id
-  customer_gateway_id = aws_customer_gateway.test.id
-  type                = "ipsec.1"
-}
-
+	return acctest.ConfigCompose(
+		testAccVPNConnectionDataSourceConfigBase(rName, rBgpAsn),
+		`
 data "aws_vpn_connection" "test" {
   filter {
     name   = "customer-gateway-id"
@@ -176,7 +160,7 @@ data "aws_vpn_connection" "test" {
 
   depends_on = [aws_vpn_connection.test]
 }
-`, rName, rBgpAsn)
+`)
 }
 
 func testAccVPNConnectionDataSourceConfig_nonExistentId() string {
