@@ -905,7 +905,7 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				}
 
 				if v, ok := tags["Name"]; ok {
-					result.DisplayName = v.ValueString()
+					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(vpc.VpcId))
 				} else {
 					result.DisplayName = aws.ToString(vpc.VpcId)
 				}

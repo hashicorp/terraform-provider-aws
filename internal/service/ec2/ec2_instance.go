@@ -4125,7 +4125,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			if v, ok := tags["Name"]; ok {
-				result.DisplayName = v.ValueString()
+				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(instance.InstanceId))
 			} else {
 				result.DisplayName = aws.ToString(instance.InstanceId)
 			}

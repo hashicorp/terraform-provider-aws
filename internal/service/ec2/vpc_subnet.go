@@ -844,7 +844,7 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 				}
 
 				if v, ok := tags["Name"]; ok {
-					result.DisplayName = v.ValueString()
+					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(subnet.SubnetId))
 				} else {
 					result.DisplayName = aws.ToString(subnet.SubnetId)
 				}
