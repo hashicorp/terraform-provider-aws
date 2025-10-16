@@ -5,7 +5,6 @@ package iam
 
 import (
 	"context"
-	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -104,22 +103,18 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.SetId(arn)
 	resourcePolicyFlatten(ctx, policy, d)
 
-	output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
+	policyVersion, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 		func(ctx context.Context) (*awstypes.PolicyVersion, error) {
 			return findPolicyVersionByTwoPartKey(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
 		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) default version: %s", arn, err)
 	}
 
-	policyDocument, err := url.QueryUnescape(aws.ToString(output.Document))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", arn, err)
+	if err := resourcePolicyFlattenPolicyDocument(aws.ToString(policyVersion.Document), d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	d.Set(names.AttrPolicy, policyDocument)
 
 	return diags
 }
