@@ -47,6 +47,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Api Key Credential Provider",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newBrowserResource,
+			TypeName: "aws_bedrockagentcore_browser",
+			Name:     "Browser",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "browser_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 

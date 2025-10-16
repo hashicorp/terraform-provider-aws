@@ -19,6 +19,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_agent_runtime", sweepAgentRuntimes)
 	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints)
+	awsv2.Register("aws_bedrockagentcore_browser", sweepBrowsers)
 	awsv2.Register("aws_bedrockagentcore_api_key_credential_provider", sweepAPIKeyCredentialProviders)
 }
 
@@ -61,6 +62,28 @@ func sweepAgentRuntimeEndpoints(ctx context.Context, client *conns.AWSClient) ([
 				framework.NewAttribute("agent_runtime_id", aws.ToString(v.Id)),
 				framework.NewAttribute(names.AttrName, aws.ToString(v.Name)),
 			),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepBrowsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListBrowsersInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListBrowsersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.BrowserSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newBrowserResource, client,
+				framework.NewAttribute("browser_id", aws.ToString(v.BrowserId))),
 			)
 		}
 	}
