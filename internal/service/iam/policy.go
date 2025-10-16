@@ -194,17 +194,9 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.policy.PolicyName)))
 
-	policyDocument, err := url.QueryUnescape(aws.ToString(output.policyVersion.Document))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", d.Id(), err)
+	if err := resourcePolicyFlattenPolicyDocument(aws.ToString(output.policyVersion.Document), d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policyDocument)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
 }
@@ -290,6 +282,22 @@ func resourcePolicyFlatten(ctx context.Context, policy *awstypes.Policy, d *sche
 	d.Set("policy_id", policy.PolicyId)
 
 	setTagsOut(ctx, policy.Tags)
+}
+
+func resourcePolicyFlattenPolicyDocument(policyDocument string, d *schema.ResourceData) error {
+	policyDocument, err := url.QueryUnescape(policyDocument)
+	if err != nil {
+		return fmt.Errorf("parsing IAM Policy (%s) document: %w", d.Id(), err)
+	}
+
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policyDocument)
+	if err != nil {
+		return fmt.Errorf("parsing IAM Policy (%s) document: %w", d.Id(), err)
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return nil
 }
 
 // policyPruneVersions deletes the oldest version.
