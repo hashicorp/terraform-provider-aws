@@ -585,9 +585,28 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 		return
 	}
 
+	// Set the ID so Read can work
 	data.ID = types.StringValue(aws.ToString(output.Distribution.Id))
 
+	// Call Read to populate all computed fields
+	readReq := resource.ReadRequest{State: response.State}
+	readResp := &resource.ReadResponse{State: response.State}
+
+	// Set the ID in state first
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Now call Read to populate everything else
+	r.Read(ctx, readReq, readResp)
+	response.Diagnostics.Append(readResp.Diagnostics...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Copy the fully populated state
+	response.State = readResp.State
 }
 
 func (r *multiTenantDistributionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -949,10 +968,39 @@ func (m multiTenantDistributionResourceModel) Expand(ctx context.Context) (any, 
 		var items []awstypes.Origin
 		for _, origin := range origins {
 			var item awstypes.Origin
-			diags.Append(fwflex.Expand(ctx, origin, &item)...)
+
+			// Use AutoFlex with field prefix to avoid nested CustomOriginConfig issues
+			diags.Append(fwflex.Expand(ctx, origin, &item, fwflex.WithFieldNamePrefix("Origin"))...)
 			if diags.HasError() {
 				return nil, diags
 			}
+
+			// Manually handle CustomOriginConfig.OriginSSLProtocols
+			if !origin.CustomOriginConfig.IsNull() {
+				customConfigs, d := origin.CustomOriginConfig.ToSlice(ctx)
+				diags.Append(d...)
+				if diags.HasError() {
+					return nil, diags
+				}
+
+				if len(customConfigs) > 0 && !customConfigs[0].OriginSSLProtocols.IsNull() {
+					protocolElements := customConfigs[0].OriginSSLProtocols.Elements()
+					sslProtocols := make([]awstypes.SslProtocol, 0, len(protocolElements))
+					for _, elem := range protocolElements {
+						if strVal, ok := elem.(types.String); ok {
+							sslProtocols = append(sslProtocols, awstypes.SslProtocol(strVal.ValueString()))
+						}
+					}
+					if item.CustomOriginConfig == nil {
+						item.CustomOriginConfig = &awstypes.CustomOriginConfig{}
+					}
+					item.CustomOriginConfig.OriginSslProtocols = &awstypes.OriginSslProtocols{
+						Items:    sslProtocols,
+						Quantity: aws.Int32(int32(len(sslProtocols))),
+					}
+				}
+			}
+
 			items = append(items, item)
 		}
 
@@ -974,10 +1022,33 @@ func (m multiTenantDistributionResourceModel) Expand(ctx context.Context) (any, 
 			behavior := behaviors[0]
 			var defaultBehavior awstypes.DefaultCacheBehavior
 
-			// Use AutoFlex for most fields
-			diags.Append(fwflex.Expand(ctx, behavior, &defaultBehavior)...)
-			if diags.HasError() {
-				return nil, diags
+			// Manually set basic fields instead of using AutoFlex
+			if !behavior.CachePolicyID.IsNull() {
+				defaultBehavior.CachePolicyId = aws.String(behavior.CachePolicyID.ValueString())
+			}
+			if !behavior.Compress.IsNull() {
+				defaultBehavior.Compress = aws.Bool(behavior.Compress.ValueBool())
+			}
+			if !behavior.FieldLevelEncryptionID.IsNull() {
+				defaultBehavior.FieldLevelEncryptionId = aws.String(behavior.FieldLevelEncryptionID.ValueString())
+			}
+			if !behavior.OriginRequestPolicyID.IsNull() {
+				defaultBehavior.OriginRequestPolicyId = aws.String(behavior.OriginRequestPolicyID.ValueString())
+			}
+			if !behavior.RealtimeLogConfigARN.IsNull() {
+				defaultBehavior.RealtimeLogConfigArn = aws.String(behavior.RealtimeLogConfigARN.ValueString())
+			}
+			if !behavior.ResponseHeadersPolicyID.IsNull() {
+				defaultBehavior.ResponseHeadersPolicyId = aws.String(behavior.ResponseHeadersPolicyID.ValueString())
+			}
+			if !behavior.SmoothStreaming.IsNull() {
+				defaultBehavior.SmoothStreaming = aws.Bool(behavior.SmoothStreaming.ValueBool())
+			}
+			if !behavior.TargetOriginID.IsNull() {
+				defaultBehavior.TargetOriginId = aws.String(behavior.TargetOriginID.ValueString())
+			}
+			if !behavior.ViewerProtocolPolicy.IsNull() {
+				defaultBehavior.ViewerProtocolPolicy = behavior.ViewerProtocolPolicy.ValueEnum()
 			}
 
 			// Manually handle AllowedMethods structure
@@ -1429,7 +1500,7 @@ func (r *multiTenantDistributionResource) Flatten(ctx context.Context, output *c
 				if diags.HasError() {
 					return diags
 				}
-				
+
 				var failoverCriteria failoverCriteriaModel
 				failoverCriteria.StatusCodes = setVal
 				listVal, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*failoverCriteriaModel{&failoverCriteria}, nil)
