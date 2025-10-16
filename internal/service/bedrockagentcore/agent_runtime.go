@@ -6,7 +6,6 @@ package bedrockagentcore
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -528,7 +527,8 @@ var (
 	_ fwflex.Flattener = &agentRuntimeArtifactModel{}
 )
 
-func (m *agentRuntimeArtifactModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *agentRuntimeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.AgentRuntimeArtifactMemberContainerConfiguration:
 		var data containerConfigurationModel
@@ -541,13 +541,14 @@ func (m *agentRuntimeArtifactModel) Flatten(ctx context.Context, v any) (diags d
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("artifact flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("artifact flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m agentRuntimeArtifactModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m agentRuntimeArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	switch {
 	case !m.ContainerConfiguration.IsNull():
 		data, d := m.ContainerConfiguration.ToPtr(ctx)
@@ -578,7 +579,8 @@ var (
 	_ fwflex.Flattener = &authorizerConfigurationModel{}
 )
 
-func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer:
 		var data customJWTAuthorizerConfigurationModel
@@ -591,13 +593,14 @@ func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) (diag
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("authorization configuration flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("authorization configuration flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m authorizerConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	switch {
 	case !m.CustomJWTAuthorizer.IsNull():
 		data, d := m.CustomJWTAuthorizer.ToPtr(ctx)
@@ -649,7 +652,8 @@ var (
 	_ fwflex.Flattener = &requestHeaderConfigurationModel{}
 )
 
-func (m *requestHeaderConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *requestHeaderConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.RequestHeaderConfigurationMemberRequestHeaderAllowlist:
 		m.RequestHeaderAllowlist = fwflex.FlattenFrameworkStringValueSetOfString(ctx, t.Value)
@@ -657,13 +661,14 @@ func (m *requestHeaderConfigurationModel) Flatten(ctx context.Context, v any) (d
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("artifact flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("artifact flatten: %T", v),
 		)
 	}
 	return diags
 }
 
-func (m requestHeaderConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m requestHeaderConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	switch {
 	case !m.RequestHeaderAllowlist.IsNull():
 		var diags diag.Diagnostics
