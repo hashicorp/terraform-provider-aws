@@ -85,8 +85,8 @@ func resourceDirectoryConfig() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.CertificateBasedAuthStatus](),
 						},
 					},
