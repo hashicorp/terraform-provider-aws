@@ -2472,9 +2472,16 @@ func sweepVPCs(region string) error {
 	}
 
 	conn := client.EC2Client(ctx)
-	input := ec2.DescribeVpcsInput{}
 	var sweepResources []sweep.Sweepable
 
+	input := ec2.DescribeVpcsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("is-default"),
+				Values: []string{"false"},
+			},
+		},
+	}
 	pages := ec2.NewDescribeVpcsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -2489,11 +2496,6 @@ func sweepVPCs(region string) error {
 		}
 
 		for _, v := range page.Vpcs {
-			// Skip default VPCs.
-			if aws.ToBool(v.IsDefault) {
-				continue
-			}
-
 			r := resourceVPC()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VpcId))
