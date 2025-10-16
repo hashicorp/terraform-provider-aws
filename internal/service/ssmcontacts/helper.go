@@ -16,6 +16,9 @@ func setContactResourceData(d *schema.ResourceData, getContactOutput *ssmcontact
 	d.Set(names.AttrAlias, getContactOutput.Alias)
 	d.Set(names.AttrType, getContactOutput.Type)
 	d.Set(names.AttrDisplayName, getContactOutput.DisplayName)
+	if getContactOutput.Plan != nil {
+		d.Set("rotation_ids", getContactOutput.Plan.RotationIds)
+	}
 
 	return nil
 }
