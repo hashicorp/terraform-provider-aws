@@ -6,6 +6,8 @@ package odb
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -187,6 +189,15 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 			"oci_vcn_url": schema.StringAttribute{
 				Computed:    true,
 				Description: "The URL of the OCI VCN for the ODB network.",
+			},
+			"delete_associated_resources": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+				Description: "If set to true deletes associated OCI resources. Default false.",
 			},
 			"percent_progress": schema.Float32Attribute{
 				Computed:    true,
@@ -474,10 +485,9 @@ func (r *resourceNetwork) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	deleteAssociatedResources := false
 	input := odb.DeleteOdbNetworkInput{
 		OdbNetworkId:              state.OdbNetworkId.ValueStringPointer(),
-		DeleteAssociatedResources: &deleteAssociatedResources,
+		DeleteAssociatedResources: state.DeleteAssociatedResources.ValueBoolPointer(),
 	}
 
 	_, err := conn.DeleteOdbNetwork(ctx, &input)
@@ -651,33 +661,34 @@ func FindOracleDBNetworkResourceByID(ctx context.Context, conn *odb.Client, id s
 
 type odbNetworkResourceModel struct {
 	framework.WithRegionModel
-	DisplayName             types.String                                                               `tfsdk:"display_name"`
-	AvailabilityZone        types.String                                                               `tfsdk:"availability_zone"`
-	AvailabilityZoneId      types.String                                                               `tfsdk:"availability_zone_id"`
-	ClientSubnetCidr        types.String                                                               `tfsdk:"client_subnet_cidr"`
-	BackupSubnetCidr        types.String                                                               `tfsdk:"backup_subnet_cidr"`
-	CustomDomainName        types.String                                                               `tfsdk:"custom_domain_name"`
-	DefaultDnsPrefix        types.String                                                               `tfsdk:"default_dns_prefix"`
-	S3Access                fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"s3_access" autoflex:",noflatten"`
-	ZeroEtlAccess           fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"zero_etl_access" autoflex:",noflatten"`
-	S3PolicyDocument        types.String                                                               `tfsdk:"s3_policy_document" autoflex:",noflatten"`
-	OdbNetworkId            types.String                                                               `tfsdk:"id"`
-	PeeredCidrs             fwtypes.SetValueOf[types.String]                                           `tfsdk:"peered_cidrs"`
-	OciDnsForwardingConfigs fwtypes.ListNestedObjectValueOf[odbNwkOciDnsForwardingConfigResourceModel] `tfsdk:"oci_dns_forwarding_configs"`
-	OciNetworkAnchorId      types.String                                                               `tfsdk:"oci_network_anchor_id"`
-	OciNetworkAnchorUrl     types.String                                                               `tfsdk:"oci_network_anchor_url"`
-	OciResourceAnchorName   types.String                                                               `tfsdk:"oci_resource_anchor_name"`
-	OciVcnId                types.String                                                               `tfsdk:"oci_vcn_id"`
-	OciVcnUrl               types.String                                                               `tfsdk:"oci_vcn_url"`
-	OdbNetworkArn           types.String                                                               `tfsdk:"arn"`
-	PercentProgress         types.Float32                                                              `tfsdk:"percent_progress"`
-	Status                  fwtypes.StringEnum[odbtypes.ResourceStatus]                                `tfsdk:"status"`
-	StatusReason            types.String                                                               `tfsdk:"status_reason"`
-	Timeouts                timeouts.Value                                                             `tfsdk:"timeouts"`
-	ManagedServices         fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesResourceModel]    `tfsdk:"managed_services"`
-	CreatedAt               timetypes.RFC3339                                                          `tfsdk:"created_at"`
-	Tags                    tftags.Map                                                                 `tfsdk:"tags"`
-	TagsAll                 tftags.Map                                                                 `tfsdk:"tags_all"`
+	DisplayName               types.String                                                               `tfsdk:"display_name"`
+	AvailabilityZone          types.String                                                               `tfsdk:"availability_zone"`
+	AvailabilityZoneId        types.String                                                               `tfsdk:"availability_zone_id"`
+	ClientSubnetCidr          types.String                                                               `tfsdk:"client_subnet_cidr"`
+	BackupSubnetCidr          types.String                                                               `tfsdk:"backup_subnet_cidr"`
+	CustomDomainName          types.String                                                               `tfsdk:"custom_domain_name"`
+	DefaultDnsPrefix          types.String                                                               `tfsdk:"default_dns_prefix"`
+	S3Access                  fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"s3_access" autoflex:",noflatten"`
+	ZeroEtlAccess             fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"zero_etl_access" autoflex:",noflatten"`
+	S3PolicyDocument          types.String                                                               `tfsdk:"s3_policy_document" autoflex:",noflatten"`
+	OdbNetworkId              types.String                                                               `tfsdk:"id"`
+	PeeredCidrs               fwtypes.SetValueOf[types.String]                                           `tfsdk:"peered_cidrs"`
+	OciDnsForwardingConfigs   fwtypes.ListNestedObjectValueOf[odbNwkOciDnsForwardingConfigResourceModel] `tfsdk:"oci_dns_forwarding_configs"`
+	OciNetworkAnchorId        types.String                                                               `tfsdk:"oci_network_anchor_id"`
+	OciNetworkAnchorUrl       types.String                                                               `tfsdk:"oci_network_anchor_url"`
+	OciResourceAnchorName     types.String                                                               `tfsdk:"oci_resource_anchor_name"`
+	OciVcnId                  types.String                                                               `tfsdk:"oci_vcn_id"`
+	OciVcnUrl                 types.String                                                               `tfsdk:"oci_vcn_url"`
+	OdbNetworkArn             types.String                                                               `tfsdk:"arn"`
+	PercentProgress           types.Float32                                                              `tfsdk:"percent_progress"`
+	Status                    fwtypes.StringEnum[odbtypes.ResourceStatus]                                `tfsdk:"status"`
+	StatusReason              types.String                                                               `tfsdk:"status_reason"`
+	Timeouts                  timeouts.Value                                                             `tfsdk:"timeouts"`
+	ManagedServices           fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesResourceModel]    `tfsdk:"managed_services"`
+	CreatedAt                 timetypes.RFC3339                                                          `tfsdk:"created_at"`
+	DeleteAssociatedResources types.Bool                                                                 `tfsdk:"delete_associated_resources"`
+	Tags                      tftags.Map                                                                 `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                                 `tfsdk:"tags_all"`
 }
 
 type odbNwkOciDnsForwardingConfigResourceModel struct {

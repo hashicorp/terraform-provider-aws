@@ -37,7 +37,9 @@ func TestAccODBNetworkResource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	importStateVerifyIgnore := []string{
+		"delete_associated_resources",
+	}
 	var network odbtypes.OdbNetwork
 	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
@@ -57,9 +59,10 @@ func TestAccODBNetworkResource_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})
@@ -70,7 +73,9 @@ func TestAccODBNetworkResource_withAllParams(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	importStateVerifyIgnore := []string{
+		"delete_associated_resources",
+	}
 	var network1 odbtypes.OdbNetwork
 	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
@@ -91,9 +96,10 @@ func TestAccODBNetworkResource_withAllParams(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})
@@ -104,7 +110,9 @@ func TestAccODBNetworkResource_updateManagedService(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	importStateVerifyIgnore := []string{
+		"delete_associated_resources",
+	}
 	var network1, network2 odbtypes.OdbNetwork
 	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
@@ -125,9 +133,10 @@ func TestAccODBNetworkResource_updateManagedService(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName),
@@ -142,9 +151,10 @@ func TestAccODBNetworkResource_updateManagedService(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})
@@ -155,7 +165,9 @@ func TestAccODBNetworkResource_disableManagedService(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	importStateVerifyIgnore := []string{
+		"delete_associated_resources",
+	}
 	var network1, network2 odbtypes.OdbNetwork
 	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
@@ -176,9 +188,10 @@ func TestAccODBNetworkResource_disableManagedService(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetwork(rName),
@@ -193,9 +206,10 @@ func TestAccODBNetworkResource_disableManagedService(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})
@@ -206,7 +220,9 @@ func TestAccODBNetworkResource_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	importStateVerifyIgnore := []string{
+		"delete_associated_resources",
+	}
 	var network1, network2 odbtypes.OdbNetwork
 	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
@@ -242,9 +258,10 @@ func TestAccODBNetworkResource_updateTags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})
@@ -346,14 +363,48 @@ func (oracleDBNetworkResourceTest) basicNetwork(rName string) string {
 
 
 
+
+
+
+
 resource "aws_odb_network" "test" {
-  display_name         = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access            = "DISABLED"
-  zero_etl_access      = "DISABLED"
+  display_name                = %[1]q
+  availability_zone_id        = "use1-az6"
+  client_subnet_cidr          = "10.2.0.0/24"
+  backup_subnet_cidr          = "10.2.1.0/24"
+  s3_access                   = "DISABLED"
+  zero_etl_access             = "DISABLED"
+  delete_associated_resources = true
 }
+
+
+
+
+`, rName)
+	return networkRes
+}
+
+func (oracleDBNetworkResourceTest) basicNetworkWithDeleteAssociatedResourceTrue(rName string) string {
+	networkRes := fmt.Sprintf(`
+
+
+
+
+
+
+
+
+resource "aws_odb_network" "test" {
+  display_name                = %[1]q
+  availability_zone_id        = "use1-az6"
+  client_subnet_cidr          = "10.2.0.0/24"
+  backup_subnet_cidr          = "10.2.1.0/24"
+  s3_access                   = "DISABLED"
+  zero_etl_access             = "DISABLED"
+  delete_associated_resources = true
+}
+
+
 
 
 `, rName)
@@ -366,14 +417,21 @@ func (oracleDBNetworkResourceTest) basicNetworkWithActiveManagedService(rName st
 
 
 
+
+
+
+
 resource "aws_odb_network" "test" {
-  display_name         = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access            = "ENABLED"
-  zero_etl_access      = "ENABLED"
+  display_name                = %[1]q
+  availability_zone_id        = "use1-az6"
+  client_subnet_cidr          = "10.2.0.0/24"
+  backup_subnet_cidr          = "10.2.1.0/24"
+  s3_access                   = "ENABLED"
+  zero_etl_access             = "ENABLED"
+  delete_associated_resources = true
 }
+
+
 
 
 `, rName)
@@ -386,15 +444,22 @@ func (oracleDBNetworkResourceTest) networkWithAllParams(rName, customDomainName 
 
 
 
+
+
+
+
 resource "aws_odb_network" "test" {
-  display_name         = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access            = "DISABLED"
-  zero_etl_access      = "DISABLED"
-  custom_domain_name   = %[2]q
+  display_name                = %[1]q
+  availability_zone_id        = "use1-az6"
+  client_subnet_cidr          = "10.2.0.0/24"
+  backup_subnet_cidr          = "10.2.1.0/24"
+  s3_access                   = "DISABLED"
+  zero_etl_access             = "DISABLED"
+  custom_domain_name          = %[2]q
+  delete_associated_resources = true
 }
+
+
 
 
 `, rName, customDomainName)
@@ -407,13 +472,18 @@ func (oracleDBNetworkResourceTest) updateNetworkTags(rName string) string {
 
 
 
+
+
+
+
 resource "aws_odb_network" "test" {
-  display_name         = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access            = "DISABLED"
-  zero_etl_access      = "DISABLED"
+  display_name                = %[1]q
+  availability_zone_id        = "use1-az6"
+  client_subnet_cidr          = "10.2.0.0/24"
+  backup_subnet_cidr          = "10.2.1.0/24"
+  s3_access                   = "DISABLED"
+  zero_etl_access             = "DISABLED"
+  delete_associated_resources = true
   tags = {
     "env" = "dev"
   }
