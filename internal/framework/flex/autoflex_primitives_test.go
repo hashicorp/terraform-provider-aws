@@ -29,38 +29,42 @@ func TestPrimitivesRoundtrip(t *testing.T) {
 
 	// Test string roundtrips with all variants
 	t.Run("String", func(t *testing.T) {
+		t.Parallel()
 		testStringRoundtrip(t)
 	})
 
 	// Test bool roundtrips with all variants
 	t.Run("Bool", func(t *testing.T) {
+		t.Parallel()
 		testBoolRoundtrip(t)
 	})
 
 	// Test int64 roundtrips with all variants
 	t.Run("Int64", func(t *testing.T) {
+		t.Parallel()
 		testInt64Roundtrip(t)
 	})
 
 	// Test int32 roundtrips with all variants
 	t.Run("Int32", func(t *testing.T) {
+		t.Parallel()
 		testInt32Roundtrip(t)
 	})
 
 	// Test float64 roundtrips with all variants
 	t.Run("Float64", func(t *testing.T) {
+		t.Parallel()
 		testFloat64Roundtrip(t)
 	})
 
 	// Test float32 roundtrips with all variants
 	t.Run("Float32", func(t *testing.T) {
+		t.Parallel()
 		testFloat32Roundtrip(t)
 	})
 }
 
 func testStringRoundtrip(t *testing.T) {
-	t.Parallel()
-
 	// Define String-specific type info
 	stringTypeInfo := PrimitiveTypeInfo[string]{
 		TFType:         reflect.TypeOf(types.String{}),
@@ -180,8 +184,6 @@ func testStringRoundtrip(t *testing.T) {
 }
 
 func testBoolRoundtrip(t *testing.T) {
-	t.Parallel()
-
 	// Define Bool-specific type info
 	boolTypeInfo := PrimitiveTypeInfo[bool]{
 		TFType:         reflect.TypeOf(types.Bool{}),
@@ -236,8 +238,6 @@ func testBoolRoundtrip(t *testing.T) {
 }
 
 func testInt64Roundtrip(t *testing.T) {
-	t.Parallel()
-
 	// Define Int64-specific type info
 	int64TypeInfo := PrimitiveTypeInfo[int64]{
 		TFType:         reflect.TypeOf(types.Int64{}),
@@ -286,8 +286,6 @@ func testInt64Roundtrip(t *testing.T) {
 }
 
 func testInt32Roundtrip(t *testing.T) {
-	t.Parallel()
-
 	// Define Int32-specific type info
 	int32TypeInfo := PrimitiveTypeInfo[int32]{
 		TFType:         reflect.TypeOf(types.Int32{}),
@@ -336,8 +334,6 @@ func testInt32Roundtrip(t *testing.T) {
 }
 
 func testFloat64Roundtrip(t *testing.T) {
-	t.Parallel()
-
 	// Define Float64-specific type info
 	float64TypeInfo := PrimitiveTypeInfo[float64]{
 		TFType:         reflect.TypeOf(types.Float64{}),
@@ -392,8 +388,6 @@ func testFloat64Roundtrip(t *testing.T) {
 }
 
 func testFloat32Roundtrip(t *testing.T) {
-	t.Parallel()
-
 	// Define Float32-specific type info
 	float32TypeInfo := PrimitiveTypeInfo[float32]{
 		TFType:         reflect.TypeOf(types.Float32{}),
@@ -527,10 +521,9 @@ func runBasicRoundtripTest[T any](t *testing.T, testName string, variant string,
 			v := reflect.ValueOf(awsStruct).Elem()
 			field := v.FieldByName("Field1")
 			awsFieldType := field.Type()
-			if awsFieldType.Kind() == reflect.Ptr {
-				// For null values with pointer AWS fields, leave the field unset (zero value)
-				// The struct should already have nil as the zero value for pointer fields
-			} else {
+			// For null values with non-pointer AWS fields, set to zero value
+			// For pointer fields, leave unset (nil is already the zero value)
+			if awsFieldType.Kind() != reflect.Ptr {
 				if field.IsValid() && field.CanSet() {
 					field.Set(reflect.ValueOf(typeInfo.GetZeroValue()))
 				}
