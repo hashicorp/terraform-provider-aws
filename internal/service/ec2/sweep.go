@@ -1783,7 +1783,14 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 	var sweepResources []sweep.Sweepable
 
 	r := resourceSubnet()
-	input := ec2.DescribeSubnetsInput{}
+	input := ec2.DescribeSubnetsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("default-for-az"),
+				Values: []string{"false"},
+			},
+		},
+	}
 	pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -1792,11 +1799,6 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, v := range page.Subnets {
-			// Skip default subnets.
-			if aws.ToBool(v.DefaultForAz) {
-				continue
-			}
-
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.SubnetId))
 
