@@ -13,6 +13,8 @@ FEATURES:
 * **New Resource:** `aws_bedrockagentcore_api_key_credential_provider` ([#44302](https://github.com/hashicorp/terraform-provider-aws/issues/44302))
 * **New Resource:** `aws_bedrockagentcore_browser` ([#44303](https://github.com/hashicorp/terraform-provider-aws/issues/44303))
 * **New Resource:** `aws_bedrockagentcore_code_interpreter` ([#44304](https://github.com/hashicorp/terraform-provider-aws/issues/44304))
+* **New Resource:** `aws_bedrockagentcore_gateway` ([#44305](https://github.com/hashicorp/terraform-provider-aws/issues/44305))
+* **New Resource:** `aws_bedrockagentcore_gateway_target` ([#44305](https://github.com/hashicorp/terraform-provider-aws/issues/44305))
 
 ENHANCEMENTS:
 
