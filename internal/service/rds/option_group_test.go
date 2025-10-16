@@ -1221,7 +1221,7 @@ resource "aws_db_option_group" "test" {
     }
     option_settings {
       name  = "MINIMUM_TLS_VERSION"
-      value = "TLSv1.2"
+      value = "TLSv1.2_2021"
     }
     option_settings {
       name  = "TLS_CIPHER_SUITE"
@@ -1282,7 +1282,7 @@ resource "aws_db_option_group" "test" {
     }
     option_settings {
       name  = "MINIMUM_TLS_VERSION"
-      value = "TLSv1.2"
+      value = "TLSv1.2_2021"
     }
     option_settings {
       name  = "TLS_CIPHER_SUITE"
