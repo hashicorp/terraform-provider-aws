@@ -7,8 +7,11 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_rds_global_cluster` ([#37286](https://github.com/hashicorp/terraform-provider-aws/issues/37286))
+* **New Data Source:** `aws_vpn_connection` ([#44622](https://github.com/hashicorp/terraform-provider-aws/issues/44622))
 * **New Resource:** `aws_bedrockagentcore_agent_runtime` ([#44301](https://github.com/hashicorp/terraform-provider-aws/issues/44301))
 * **New Resource:** `aws_bedrockagentcore_agent_runtime_endpoint` ([#44301](https://github.com/hashicorp/terraform-provider-aws/issues/44301))
+* **New Resource:** `aws_bedrockagentcore_api_key_credential_provider` ([#44302](https://github.com/hashicorp/terraform-provider-aws/issues/44302))
+* **New Resource:** `aws_bedrockagentcore_browser` ([#44303](https://github.com/hashicorp/terraform-provider-aws/issues/44303))
 
 ENHANCEMENTS:
 
@@ -21,6 +24,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_ec2_transit_gateway_route_table_propagation.test: Fix bug causing `inconsistent final plan` errors ([#44542](https://github.com/hashicorp/terraform-provider-aws/issues/44542))
+* resource/aws_lambda_function: Reset non-API attributes (`source_code_hash`, `s3_bucket`, `s3_key`, `s3_object_version` and `filename`) to their previous values when an update operation fails ([#42829](https://github.com/hashicorp/terraform-provider-aws/issues/42829))
 
 ## 6.16.0 (October 9, 2025)
 

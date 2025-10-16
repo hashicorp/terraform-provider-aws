@@ -57,6 +57,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newCodeInterpreterResource,
+			TypeName: "aws_bedrockagentcore_code_interpreter",
+			Name:     "Code Interpreter",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "code_interpreter_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newGatewayResource,
 			TypeName: "aws_bedrockagentcore_gateway",
 			Name:     "Gateway",

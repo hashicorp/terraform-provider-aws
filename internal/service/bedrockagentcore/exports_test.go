@@ -11,6 +11,7 @@ var (
 	ResourceBrowser                  = newBrowserResource
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayTarget            = newGatewayTargetResource
+	ResourceCodeInterpreter          = newCodeInterpreterResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
@@ -18,4 +19,5 @@ var (
 	FindBrowserByID                      = findBrowserByID
 	FindGatewayByID                      = findGatewayByID
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
+	FindCodeInterpreterByID              = findCodeInterpreterByID
 )
