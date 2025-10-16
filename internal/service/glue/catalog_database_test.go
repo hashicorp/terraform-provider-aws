@@ -77,6 +77,52 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogDatabase_createTablePermissionTransition(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_glue_catalog_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccCatalogDatabaseConfig_permission(rName, "ALL"),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALL"),
+				),
+			},
+			{
+				Config:  testAccCatalogDatabaseConfig_emptyPermission(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogDatabaseExists(ctx, resourceName),
+					// Empty block should result in the block being present but with 0 permissions
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "0"),
+				),
+			},
+			{
+				Config:  testAccCatalogDatabaseConfig_basic(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogDatabaseExists(ctx, resourceName),
+					// After removing the block entirely, AWS keeps the empty permissions from step 2
+					// AWS doesn't automatically restore default permissions once they've been cleared
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueCatalogDatabase_createTablePermission(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_glue_catalog_database.test"
@@ -514,6 +560,17 @@ resource "aws_glue_catalog_database" "test" {
   }
 }
 `, rName, permission)
+}
+
+func testAccCatalogDatabaseConfig_emptyPermission(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+
+  create_table_default_permission {
+  }
+}
+`, rName)
 }
 
 func testAccCatalogDatabaseConfig_tags1(rName, tagKey1, tagValue1 string) string {
