@@ -192,6 +192,8 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	resourcePolicyFlatten(ctx, output.policy, d)
 
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.policy.PolicyName)))
+
 	policyDocument, err := url.QueryUnescape(aws.ToString(output.policyVersion.Document))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", d.Id(), err)
@@ -284,7 +286,6 @@ func resourcePolicyFlatten(ctx context.Context, policy *awstypes.Policy, d *sche
 	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set(names.AttrDescription, policy.Description)
 	d.Set(names.AttrName, policy.PolicyName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
 	d.Set(names.AttrPath, policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 

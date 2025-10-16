@@ -102,14 +102,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any)
 	arn = aws.ToString(policy.Arn)
 
 	d.SetId(arn)
-	d.Set(names.AttrARN, arn)
-	d.Set("attachment_count", policy.AttachmentCount)
-	d.Set(names.AttrDescription, policy.Description)
-	d.Set(names.AttrName, policy.PolicyName)
-	d.Set(names.AttrPath, policy.Path)
-	d.Set("policy_id", policy.PolicyId)
-
-	setTagsOut(ctx, policy.Tags)
+	resourcePolicyFlatten(ctx, policy, d)
 
 	output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 		func(ctx context.Context) (*awstypes.PolicyVersion, error) {
