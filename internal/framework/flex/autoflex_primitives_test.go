@@ -138,7 +138,6 @@ func testStringRoundtrip(t *testing.T) {
 		for _, variant := range tc.variants {
 			testName := tc.name + "_" + variant
 			t.Run(testName, func(t *testing.T) {
-
 				// Special handling for omitempty (flatten-only) cases
 				if tc.skipExpand {
 					// Generate structs for this variant
@@ -927,7 +926,7 @@ func generateOmitEmptyStructs(fieldType reflect.Type) (tf, aws any) {
 
 // generateTFToAWSPointerStructs creates value TF structs paired with pointer AWS structs
 // Tests: types.String -> *string, types.Bool -> *bool, etc.
-func generateTFToAWSPointerStructs(fieldType reflect.Type) (tf, aws any) {
+func generateTFToAWSPointerStructs(fieldType reflect.Type) (tf, aws any) { // nosemgrep:ci.aws-in-func-name
 	// Create TF struct with value field type
 	tfStructType := reflect.StructOf([]reflect.StructField{
 		{
@@ -970,7 +969,7 @@ func generateTFToAWSPointerStructs(fieldType reflect.Type) (tf, aws any) {
 
 // generateLegacyTFToAWSPointerStructs creates legacy TF structs paired with pointer AWS structs
 // Tests: types.String (legacy) -> *string, types.Bool (legacy) -> *bool, etc.
-func generateLegacyTFToAWSPointerStructs(fieldType reflect.Type) (tf, aws any) {
+func generateLegacyTFToAWSPointerStructs(fieldType reflect.Type) (tf, aws any) { // nosemgrep:ci.aws-in-func-name
 	// Create TF struct with legacy tag
 	tfStructType := reflect.StructOf([]reflect.StructField{
 		{
