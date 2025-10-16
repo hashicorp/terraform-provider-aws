@@ -17,6 +17,17 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newQueryAction,
+			TypeName: "aws_rdsdata_query",
+			Name:     "RDS Data Query",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
