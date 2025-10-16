@@ -190,16 +190,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s): %s", d.Id(), err)
 	}
 
-	policy := output.policy
-	d.Set(names.AttrARN, policy.Arn)
-	d.Set("attachment_count", policy.AttachmentCount)
-	d.Set(names.AttrDescription, policy.Description)
-	d.Set(names.AttrName, policy.PolicyName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
-	d.Set(names.AttrPath, policy.Path)
-	d.Set("policy_id", policy.PolicyId)
-
-	setTagsOut(ctx, policy.Tags)
+	resourcePolicyFlatten(ctx, output.policy, d)
 
 	policyDocument, err := url.QueryUnescape(aws.ToString(output.policyVersion.Document))
 	if err != nil {
@@ -286,6 +277,18 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
+}
+
+func resourcePolicyFlatten(ctx context.Context, policy *awstypes.Policy, d *schema.ResourceData) {
+	d.Set(names.AttrARN, policy.Arn)
+	d.Set("attachment_count", policy.AttachmentCount)
+	d.Set(names.AttrDescription, policy.Description)
+	d.Set(names.AttrName, policy.PolicyName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
+	d.Set(names.AttrPath, policy.Path)
+	d.Set("policy_id", policy.PolicyId)
+
+	setTagsOut(ctx, policy.Tags)
 }
 
 // policyPruneVersions deletes the oldest version.
