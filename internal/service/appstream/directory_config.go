@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -83,14 +84,10 @@ func resourceDirectoryConfig() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(awstypes.CertificateBasedAuthStatusEnabled),
-								string(awstypes.CertificateBasedAuthStatusDisabled),
-								string(awstypes.CertificateBasedAuthStatusEnabledNoDirectoryLoginFallback),
-							}, false),
+							ValidateDiagFunc: enum.Validate[awstypes.CertificateBasedAuthStatus](),
 						},
 					},
 				},
@@ -286,7 +283,7 @@ func expandCertificateBasedAuthProperties(tfList []any) *awstypes.CertificateBas
 		apiObject.CertificateAuthorityArn = aws.String(v)
 	}
 
-	if v, ok := attr["status"].(string); ok && v != "" {
+	if v, ok := attr[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = awstypes.CertificateBasedAuthStatus(v)
 	}
 
@@ -305,7 +302,7 @@ func flattenCertificateBasedAuthProperties(apiObject *awstypes.CertificateBasedA
 	}
 
 	if v := apiObject.Status; v != "" {
-		tfList["status"] = string(v)
+		tfList[names.AttrStatus] = string(v)
 	}
 
 	return []any{tfList}

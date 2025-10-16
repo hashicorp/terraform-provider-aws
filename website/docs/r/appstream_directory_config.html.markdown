@@ -23,8 +23,8 @@ resource "aws_appstream_directory_config" "example" {
   }
 
   certificate_based_auth_properties {
-	certificate_authority_arn = "ARN OF CERTIFICATE AUTHORITY"
-	status = "STATUS OF CERTIFICATE BASED AUTHENTICATION"
+    certificate_authority_arn = "ARN OF CERTIFICATE AUTHORITY"
+    status                    = "STATUS OF CERTIFICATE BASED AUTHENTICATION"
   }
 }
 ```
