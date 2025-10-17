@@ -52,9 +52,10 @@ func dataSourcePolicy() *schema.Resource {
 				Computed: true,
 			},
 			"path_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrARN},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ConflictsWith:    []string{names.AttrARN},
+				ValidateDiagFunc: validPolicyPath,
 			},
 			names.AttrPolicy: {
 				Type:     schema.TypeString,
