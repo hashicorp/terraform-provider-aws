@@ -115,8 +115,8 @@ func resourcePolicy() *schema.Resource {
 }
 
 // @SDKListResource("aws_iam_policy")
-func subnetResourceAsListResource() inttypes.ListResourceForSDK {
-	l := subnetListResource{}
+func policyResourceAsListResource() inttypes.ListResourceForSDK {
+	l := policyListResource{}
 	l.SetResourceSchema(resourcePolicy())
 
 	return &l
@@ -524,9 +524,9 @@ func policyTags(ctx context.Context, conn *iam.Client, identifier string, optFns
 	return output, nil
 }
 
-var _ list.ListResourceWithRawV5Schemas = &subnetListResource{}
+var _ list.ListResourceWithRawV5Schemas = &policyListResource{}
 
-type subnetListResource struct {
+type policyListResource struct {
 	framework.ResourceWithConfigure
 	framework.ListResourceWithSDKv2Resource
 	framework.ListResourceWithSDKv2Tags
@@ -536,7 +536,7 @@ type policyListResourceModel struct {
 	PathPrefix types.String `tfsdk:"path_prefix"`
 }
 
-func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+func (l *policyListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"path_prefix": listschema.StringAttribute{
@@ -549,7 +549,7 @@ func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, reque
 	}
 }
 
-func (l *subnetListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (l *policyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.IAMClient(ctx)
 
