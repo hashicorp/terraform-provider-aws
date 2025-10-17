@@ -538,7 +538,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
 resource "aws_sagemaker_image" "test" {
