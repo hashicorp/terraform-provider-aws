@@ -46,6 +46,8 @@ type Config struct {
 	Profile                        string
 	Region                         string
 	RetryMode                      aws.RetryMode
+	RequiredTagsDiagnosticLevel    string
+	RequiredTagsEnabled            bool
 	S3UsePathStyle                 bool
 	S3USEast1RegionalEndpoint      string
 	SecretKey                      string
@@ -191,6 +193,19 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	}
 
+	// Fetch required tags when the feature is enabled
+	if c.RequiredTagsEnabled {
+		tflog.Debug(ctx, "Retrieving required tag details")
+		reqTags, d := getRequiredTags(ctx, cfg)
+		diags = append(diags, d...)
+
+		client.requiredTagsConfig = &tftags.RequiredConfig{
+			Enabled: c.RequiredTagsEnabled,
+			Level:   c.RequiredTagsDiagnosticLevel,
+			Data:    reqTags,
+		}
+	}
+
 	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
@@ -227,3 +242,42 @@ func NormalizeS3USEast1RegionalEndpoint(v string) string {
 		return ""
 	}
 }
+
+// TODO: move into separate package and/or aws-sdk-go-base
+func getRequiredTags(ctx context.Context, awsConfig aws.Config) (map[string]*tftags.RequiredTagsOutput, diag.Diagnostics) {
+	// TODO implement
+	// client := resourceGroupsTaggingAPIClient(ctx, awsConfig)
+
+	out := map[string]*tftags.RequiredTagsOutput{
+		// "aws_s3_bucket": {
+		// 	EnforcedRequiredTagKeys: tftags.KeyValueTags{
+		// 		"owner":       nil,
+		// 		"cost_center": nil,
+		// 	},
+		// },
+		// "aws_cloudwatch_log_group": {
+		// 	EnforcedRequiredTagKeys: tftags.KeyValueTags{
+		// 		"owner":       nil,
+		// 		"cost_center": nil,
+		// 	},
+		// },
+		"Bucket": {
+			EnforcedRequiredTagKeys: tftags.KeyValueTags{
+				"owner":       nil,
+				"cost_center": nil,
+			},
+		},
+		"Log Group": {
+			EnforcedRequiredTagKeys: tftags.KeyValueTags{
+				"owner":       nil,
+				"cost_center": nil,
+			},
+		},
+	}
+
+	return out, nil
+}
+
+// func resourceGroupsTaggingAPIClient(ctx context.Context, awsConfig aws.Config) *resourcegroupstaggingapi.Client {
+// 	return resourcegroupstaggingapi.NewFromConfig(awsConfig)
+// }

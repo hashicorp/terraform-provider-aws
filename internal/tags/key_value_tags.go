@@ -59,6 +59,24 @@ type IgnoreConfig struct {
 	KeyPrefixes KeyValueTags
 }
 
+// RequiredConfig is a mapping of Terraform resoruce type names to their corresponding
+// tagging requirements
+type RequiredConfig struct {
+	Enabled bool
+	Level   string // TODO: enum?
+	Data    map[string]*RequiredTagsOutput
+}
+
+// RequiredTagsOutput contains details on tagging requirements
+//
+// These requirements are set by an organizations effective tag policy,
+// and retrieved by the provider during initialization.
+type RequiredTagsOutput struct {
+	EnforcedAutomaticTagKeys KeyValueTags
+	EnforcedRequiredTagKeys  KeyValueTags
+	EnforcedTagKeys          KeyValueTags
+}
+
 // KeyValueTags is a standard implementation for AWS key-value resource tags.
 // The AWS Go SDK is split into multiple service packages, each service with
 // its own Go struct type representing a resource tag. To standardize logic
@@ -392,6 +410,17 @@ func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
 func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
 	for key, value := range target {
 		if v, ok := tags[key]; !ok || !v.Equal(value) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// ContainsAllKeys returns whether or not all the target tag keys are contained.
+func (tags KeyValueTags) ContainsAllKeys(target KeyValueTags) bool {
+	for key := range target {
+		if _, ok := tags[key]; !ok {
 			return false
 		}
 	}

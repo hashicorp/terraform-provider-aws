@@ -37,6 +37,7 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
+	requiredTagsConfig        *tftags.RequiredConfig
 	servicePackages           map[string]ServicePackage
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
@@ -79,6 +80,10 @@ func (c *AWSClient) DefaultTagsConfig(context.Context) *tftags.DefaultConfig {
 
 func (c *AWSClient) IgnoreTagsConfig(context.Context) *tftags.IgnoreConfig {
 	return c.ignoreTagsConfig
+}
+
+func (c *AWSClient) RequiredTagsConfig(context.Context) *tftags.RequiredConfig {
+	return c.requiredTagsConfig
 }
 
 func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name

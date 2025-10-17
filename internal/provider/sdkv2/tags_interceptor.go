@@ -53,6 +53,18 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 
 			tagsInContext.TagsIn = option.Some(tags)
 
+			// Verify required tags are present
+			if rtc := c.RequiredTagsConfig(ctx); rtc != nil {
+				if data, ok := rtc.Data[resourceName]; ok {
+					reqTags := data.EnforcedRequiredTagKeys
+
+					if !tags.ContainsAllKeys(reqTags) {
+						// TODO: filter to only missing required keys
+						return sdkdiag.AppendErrorf(diags, "missing required tags %s %s: %s", serviceName, resourceName, reqTags.Keys())
+					}
+				}
+			}
+
 			if why == Create {
 				break
 			}

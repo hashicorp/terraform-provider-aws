@@ -185,6 +185,16 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. " +
 						"Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 				},
+				"required_tags_diagnostic_level": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "",
+				},
+				"required_tags_enabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Description: "",
+				},
 				"s3_use_path_style": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -343,6 +353,7 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
+		RequiredTagsEnabled:            d.Get("required_tags_enabled").(bool),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
@@ -463,6 +474,12 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]any)[0].(map[string]any))
 	} else {
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
+	}
+
+	if v, ok := d.Get("required_tags_diagnostic_level").(string); ok && v != "" {
+		// TODO: validate required tags are enabled
+		// TODO: parse v and validate one of error, warning
+		config.RequiredTagsDiagnosticLevel = v
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -588,7 +605,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.RequiredTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 
@@ -753,7 +770,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.RequiredTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 
