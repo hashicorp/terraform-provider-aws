@@ -39,6 +39,12 @@ func resourceImageRecipe() *schema.Resource {
 		DeleteWithoutTimeout: resourceImageRecipeDelete,
 
 		Schema: map[string]*schema.Schema{
+			"ami_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -251,6 +257,10 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:        getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("ami_tags"); ok {
+		input.AmiTags = expandAmiTags(v.(map[string]any))
+	}
+
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
 		input.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
@@ -325,6 +335,11 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("component", flattenComponentConfigurations(imageRecipe.Components)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
 	}
+
+	if err := d.Set("ami_tags", flattenAmiTags(imageRecipe.AmiTags)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
+	}
+
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
@@ -396,6 +411,23 @@ func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn st
 	}
 
 	return output.ImageRecipe, nil
+}
+
+func expandAmiTags(tfMap map[string]any) map[string]string {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiMap := make(map[string]string, len(tfMap))
+	for k, v := range tfMap {
+		if s, ok := v.(string); ok && s != "" {
+			apiMap[k] = s
+		}
+	}
+	if len(apiMap) == 0 {
+		return nil
+	}
+	return apiMap
 }
 
 func expandComponentConfiguration(tfMap map[string]any) *awstypes.ComponentConfiguration {
@@ -584,6 +616,18 @@ func expandSystemsManagerAgent(tfMap map[string]any) *awstypes.SystemsManagerAge
 	}
 
 	return apiObject
+}
+
+func flattenAmiTags(apiMap map[string]string) map[string]any {
+	if len(apiMap) == 0 {
+		return nil
+	}
+
+	tfMap := make(map[string]any, len(apiMap))
+	for k, v := range apiMap {
+		tfMap[k] = v
+	}
+	return tfMap
 }
 
 func flattenComponentConfiguration(apiObject awstypes.ComponentConfiguration) map[string]any {
