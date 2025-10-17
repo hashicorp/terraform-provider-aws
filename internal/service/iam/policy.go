@@ -85,10 +85,11 @@ func resourcePolicy() *schema.Resource {
 				ValidateFunc:  validResourceName(policyNamePrefixMaxLen),
 			},
 			names.AttrPath: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "/",
+				ForceNew:         true,
+				ValidateDiagFunc: validPolicyPath,
 			},
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
