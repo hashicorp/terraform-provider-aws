@@ -98,7 +98,7 @@ func resourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									names.AttrVolumeSize: {
 										Type:         schema.TypeInt,

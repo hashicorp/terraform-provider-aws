@@ -168,6 +168,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
@@ -917,6 +918,10 @@ func (c *AWSClient) NeptuneGraphClient(ctx context.Context) *neptunegraph.Client
 
 func (c *AWSClient) NetworkFirewallClient(ctx context.Context) *networkfirewall.Client {
 	return errs.Must(client[*networkfirewall.Client](ctx, c, names.NetworkFirewall, make(map[string]any)))
+}
+
+func (c *AWSClient) NetworkFlowMonitorClient(ctx context.Context) *networkflowmonitor.Client {
+	return errs.Must(client[*networkflowmonitor.Client](ctx, c, names.NetworkFlowMonitor, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Client {

@@ -172,6 +172,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
@@ -432,6 +433,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		neptune.ServicePackage(ctx),
 		neptunegraph.ServicePackage(ctx),
 		networkfirewall.ServicePackage(ctx),
+		networkflowmonitor.ServicePackage(ctx),
 		networkmanager.ServicePackage(ctx),
 		networkmonitor.ServicePackage(ctx),
 		notifications.ServicePackage(ctx),
