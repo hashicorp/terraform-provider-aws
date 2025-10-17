@@ -305,6 +305,11 @@ func resourceDirectory() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
 			},
+			"tenancy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.Tenancy](),
+			},
 		},
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 			config := diff.GetRawConfig()
@@ -358,9 +363,10 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	directoryID := d.Get("directory_id").(string)
 	workspaceType := types.WorkspaceType(d.Get("workspace_type").(string))
+	tenancy := types.Tenancy(d.Get("tenancy").(string))
 	input := workspaces.RegisterWorkspaceDirectoryInput{
 		Tags:          getTagsIn(ctx),
-		Tenancy:       types.TenancyShared,
+		Tenancy:       tenancy,
 		WorkspaceType: workspaceType,
 	}
 
@@ -534,6 +540,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("workspace_directory_name", directory.WorkspaceDirectoryName)
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 	d.Set("workspace_type", directory.WorkspaceType)
+	d.Set("tenancy", directory.Tenancy)
 
 	return diags
 }
