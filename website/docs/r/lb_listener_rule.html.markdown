@@ -202,6 +202,43 @@ resource "aws_lb_listener_rule" "oidc" {
     target_group_arn = aws_lb_target_group.static.arn
   }
 }
+
+# With transform
+
+resource "aws_lb_listener_rule" "transform" {
+  listener_arn = aws_lb_listener.front_end.arn
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.static.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["*"]
+    }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+      rewrite {
+        regex   = "^mywebsite-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+}
 ```
 
 ## Argument Reference
@@ -214,6 +251,7 @@ This resource supports the following arguments:
 * `action` - (Required) An Action block. Action blocks are documented below.
 * `condition` - (Required) A Condition block. Multiple condition blocks of different types can be set and all must be satisfied for the rule to match. Condition blocks are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `transform` - (Optional) Configuration block for transform to apply to requests that match this rule. See [Transform Blocks](#transform-blocks) below.
 
 ### Action Blocks
 
@@ -345,6 +383,33 @@ Query String Value Blocks (for `query_string.values`) support the following:
 
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
+
+#### Transform Blocks
+
+Transform Blocks (for `transform`) support the following:
+
+* `type` - (Required) Type of transform. Valid values are `host-header-rewrite` and `url-rewrite`.
+* `host_header_rewrite_config` - (Optional) Configuration block for host header rewrite. Required if `type` is `host-header-rewrite`. See [Host Header Rewrite Config Blocks](#host-header-rewrite-config-blocks) below.
+* `url_rewrite_config` - (Optional) Configuration block for URL rewrite. Required if `type` is `url-rewrite`. See [URL Rewrite Config Blocks](#url-rewrite-config-blocks) below.
+
+### Host Header Rewrite Config Blocks
+
+Host Header Rewrite Config Blocks (for `host_header_rewrite_config`) support the following:
+
+* `rewrite` - (Optional) Block for host header rewrite configuration. Only one block is accepted. See [Rewrite Blocks](#rewrite-blocks) below.
+
+### URL Rewrite Config Blocks
+
+URL Rewrite Config Blocks (for `url_rewrite_config`) support the following:
+
+* `rewrite` - (Optional) Block for URL rewrite configuration. Only one block is accepted. See [Rewrite Blocks](#rewrite-blocks) below.
+
+### Rewrite Blocks
+
+Rewrite Blocks (for `rewrite`) support the following:
+
+* `regex` - (Required) Regular expression to match in the input string.
+* `replace` - (Required) Replacement string to use when rewriting the matched input. Capture groups in the regular expression (for example, `$1` and `$2`) can be specified.
 
 ## Attribute Reference
 
