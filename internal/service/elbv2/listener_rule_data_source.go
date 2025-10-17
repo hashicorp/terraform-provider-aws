@@ -368,6 +368,7 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 		},
 	}
 }
+
 func (d *listenerRuleDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.ExactlyOneOf(
