@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -540,6 +541,9 @@ func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, reque
 		Attributes: map[string]listschema.Attribute{
 			"path_prefix": listschema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					validPolicyPathFramework,
+				},
 			},
 		},
 	}
