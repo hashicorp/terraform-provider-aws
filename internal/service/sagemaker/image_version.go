@@ -125,7 +125,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("image_name").(string)
-	
+
 	conns.GlobalMutexKV.Lock(name)
 	defer conns.GlobalMutexKV.Unlock(name)
 	input := sagemaker.CreateImageVersionInput{
