@@ -80,6 +80,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Gateway Target",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newOAuth2CredentialProviderResource,
+			TypeName: "aws_bedrockagentcore_oauth2_credential_provider",
+			Name:     "OAuth2 Credential Provider",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newWorkloadIdentityResource,
+			TypeName: "aws_bedrockagentcore_workload_identity",
+			Name:     "Workload Identity",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
