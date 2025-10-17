@@ -332,6 +332,7 @@ The following arguments are optional:
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
   See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
   Defaults to the lastest version of OpenSearch.
+* `identity_center_options` - (Optional) Configuration block for enabling and managing IAM Identity Center integration within a domain. Detailed below.
 * `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4` and `dualstack`.
 * `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
@@ -436,6 +437,13 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type.
 * `volume_size` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
 * `volume_type` - (Optional) Type of EBS volumes attached to data nodes.
+
+### identity_center_options
+
+* enabled_api_access - (Optional) Boolean that indicates whether IAM Identity Center is enabled for API access. [Fine-grained access control](#enabling-fine-grained-access-control-on-an-existing-domain) must be enabled to use this feature. To disable it after enabling, set this argument to `false` or remove the `identity_center_options` block entirely.
+* identity_center_instance_arn - (Optional) ARN of the IAM Identity Center instance to create an OpenSearch UI application that uses IAM Identity Center for authentication. Required if `enabled_api_access` is set to `true`.
+* roles_key - (Optional) Attribute that contains the backend role identifier in IAM Identity Center. Valid values: `GroupName`, `GroupId`. Defaults to `GroupId`.
+* subject_key - (Optional) Attribute that contains the subject identifier in IAM Identity Center. Valid values: `UserName`, `UserId`, `Email`. Defaults to `UserId`.
 
 ### encrypt_at_rest
 
