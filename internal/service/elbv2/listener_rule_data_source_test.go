@@ -921,6 +921,78 @@ func TestAccELBV2ListenerRuleDataSource_conditionSourceIP(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRuleDataSource_transform(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_transform(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "transform.*", map[string]string{
+						names.AttrType:                                   "host-header-rewrite",
+						"host_header_rewrite_config.#":                   "1",
+						"host_header_rewrite_config.0.rewrite.#":         "1",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite-(.+).com$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "transform.*", map[string]string{
+						names.AttrType:                           "url-rewrite",
+						"url_rewrite_config.#":                   "1",
+						"url_rewrite_config.0.rewrite.#":         "1",
+						"url_rewrite_config.0.rewrite.0.regex":   "^/dp/([A-Za-z0-9]+)/?$",
+						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
+					}),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("transform"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrType: knownvalue.StringExact(string(awstypes.TransformTypeEnumHostHeaderRewrite)),
+							"host_header_rewrite_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"rewrite": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"regex":   knownvalue.StringExact("^mywebsite-(.+).com$"),
+											"replace": knownvalue.StringExact("internal.dev.$1.myweb.com"),
+										}),
+									}),
+								}),
+							}),
+							"url_rewrite_config": knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrType:               knownvalue.StringExact(string(awstypes.TransformTypeEnumUrlRewrite)),
+							"host_header_rewrite_config": knownvalue.ListExact([]knownvalue.Check{}),
+							"url_rewrite_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"rewrite": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"regex":   knownvalue.StringExact("^/dp/([A-Za-z0-9]+)/?$"),
+											"replace": knownvalue.StringExact("/product.php?id=$1"),
+										}),
+									}),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func expectKnownCondition(key string, check knownvalue.Check) knownvalue.Check {
 	checks := map[string]knownvalue.Check{
 		"host_header":         knownvalue.ListExact([]knownvalue.Check{}),
@@ -1504,6 +1576,49 @@ resource "aws_lb_listener_rule" "test" {
         "dead:cafe::/64",
       ]
     }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_transform(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+   path_pattern {
+     values = ["*"]
+   }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+	  rewrite {
+		regex   = "^mywebsite-(.+).com$"
+		replace = "internal.dev.$1.myweb.com"
+      }
+	}
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+	  rewrite {
+		regex   = "^/dp/([A-Za-z0-9]+)/?$"
+		replace = "/product.php?id=$1"
+      }
+	}
   }
 }
 `)
