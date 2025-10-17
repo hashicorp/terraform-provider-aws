@@ -941,20 +941,6 @@ func TestAccELBV2ListenerRuleDataSource_transform(t *testing.T) {
 				Config: testAccListenerRuleDataSourceConfig_transform(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "transform.*", map[string]string{
-						names.AttrType:                                   "host-header-rewrite",
-						"host_header_rewrite_config.#":                   "1",
-						"host_header_rewrite_config.0.rewrite.#":         "1",
-						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite-(.+).com$",
-						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "transform.*", map[string]string{
-						names.AttrType:                           "url-rewrite",
-						"url_rewrite_config.#":                   "1",
-						"url_rewrite_config.0.rewrite.#":         "1",
-						"url_rewrite_config.0.rewrite.0.regex":   "^/dp/([A-Za-z0-9]+)/?$",
-						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
-					}),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("transform"), knownvalue.SetExact([]knownvalue.Check{
