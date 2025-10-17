@@ -23,6 +23,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_code_interpreter", sweepCodeInterpreters)
 	awsv2.Register("aws_bedrockagentcore_browser", sweepBrowsers)
 	awsv2.Register("aws_bedrockagentcore_api_key_credential_provider", sweepAPIKeyCredentialProviders)
+	awsv2.Register("aws_bedrockagentcore_oauth2_credential_provider", sweepOAuth2CredentialProviders)
 	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
 }
@@ -188,6 +189,29 @@ func sweepAPIKeyCredentialProviders(ctx context.Context, client *conns.AWSClient
 			)
 		}
 	}
+
+	return sweepResources, nil
+}
+
+func sweepOAuth2CredentialProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListOauth2CredentialProvidersInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListOauth2CredentialProvidersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.CredentialProviders {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newOAuth2CredentialProviderResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
+			)
+		}
+	}
+
 	return sweepResources, nil
 }
 
