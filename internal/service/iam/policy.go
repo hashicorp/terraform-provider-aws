@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -531,11 +532,16 @@ type subnetListResource struct {
 }
 
 type policyListResourceModel struct {
+	PathPrefix types.String `tfsdk:"path_prefix"`
 }
 
 func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
+		Attributes: map[string]listschema.Attribute{
+			"path_prefix": listschema.StringAttribute{
+				Optional: true,
+			},
+		},
 	}
 }
 
