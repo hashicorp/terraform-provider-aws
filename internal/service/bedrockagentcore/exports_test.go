@@ -8,10 +8,16 @@ var (
 	ResourceAgentRuntime             = newAgentRuntimeResource
 	ResourceAgentRuntimeEndpoint     = newAgentRuntimeEndpointResource
 	ResourceAPIKeyCredentialProvider = newAPIKeyCredentialProviderResource
-	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
+	ResourceBrowser                  = newBrowserResource
+	ResourceGateway                  = newGatewayResource
+	ResourceGatewayTarget            = newGatewayTargetResource
+	ResourceCodeInterpreter          = newCodeInterpreterResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
 	FindAPIKeyCredentialProviderByName   = findAPIKeyCredentialProviderByName
-	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
+	FindBrowserByID                      = findBrowserByID
+	FindGatewayByID                      = findGatewayByID
+	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
+	FindCodeInterpreterByID              = findCodeInterpreterByID
 )

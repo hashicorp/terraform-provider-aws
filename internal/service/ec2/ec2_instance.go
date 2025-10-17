@@ -4042,8 +4042,6 @@ type instanceListResourceModel struct {
 	IncludeAutoScaled types.Bool        `tfsdk:"include_auto_scaled"`
 }
 
-// ListResourceConfigSchema defines the schema for the List configuration
-// might be able to intercept or wrap this for simplicity
 func (l *instanceListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
@@ -4094,14 +4092,14 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 
-		for output, err := range listInstances(ctx, conn, &input) {
+		for instance, err := range listInstances(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			tags := keyValueTags(ctx, output.Tags)
+			tags := keyValueTags(ctx, instance.Tags)
 
 			if !includeAutoScaled {
 				// Exclude Auto Scaled Instances
@@ -4111,8 +4109,8 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.InstanceId))
-			result.Diagnostics.Append(translateDiags(resourceInstanceFlatten(ctx, awsClient, &output, rd))...)
+			rd.SetId(aws.ToString(instance.InstanceId))
+			result.Diagnostics.Append(translateDiags(resourceInstanceFlatten(ctx, awsClient, &instance, rd))...)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -4127,9 +4125,9 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			if v, ok := tags["Name"]; ok {
-				result.DisplayName = v.ValueString()
+				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(instance.InstanceId))
 			} else {
-				result.DisplayName = aws.ToString(output.InstanceId)
+				result.DisplayName = aws.ToString(instance.InstanceId)
 			}
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)

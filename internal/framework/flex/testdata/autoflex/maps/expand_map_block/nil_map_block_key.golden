@@ -1,0 +1,47 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockList",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockValues"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockList",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockValues"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "MapBlock",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockList",
+    "autoflex.target.fieldname": "MapBlock",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockValues"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "MapBlock",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElement]",
+    "autoflex.target.path": "MapBlock",
+    "autoflex.target.type": "map[string]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding null value",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "MapBlock",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElement]",
+    "autoflex.target.path": "MapBlock",
+    "autoflex.target.type": "map[string]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  }
+]
