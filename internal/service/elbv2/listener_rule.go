@@ -540,7 +540,7 @@ func resourceListenerRule() *schema.Resource {
 												"regex": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringLenBetween(0, 1024),
+													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
 												"replace": {
 													Type:         schema.TypeString,
