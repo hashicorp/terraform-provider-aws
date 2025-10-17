@@ -4966,29 +4966,29 @@ resource "aws_lb_listener_rule" "test" {
   }
 
   condition {
-   path_pattern {
-     values = ["*"]
-   }
+    path_pattern {
+      values = ["*"]
+    }
   }
 
   transform {
     type = "host-header-rewrite"
     host_header_rewrite_config {
-	  rewrite {
-		regex   = "^mywebsite-(.+).com$"
-		replace = "internal.dev.$1.myweb.com"
+      rewrite {
+        regex   = "^mywebsite-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
       }
-	}
+    }
   }
 
   transform {
     type = "url-rewrite"
     url_rewrite_config {
-	  rewrite {
-		regex   = "^/dp/([A-Za-z0-9]+)/?$"
-		replace = "/product.php?id=$1"
+      rewrite {
+        regex   = "^/dp/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
       }
-	}
+    }
   }
 }
 `)
@@ -5005,29 +5005,29 @@ resource "aws_lb_listener_rule" "test" {
   }
 
   condition {
-   path_pattern {
-     values = ["*"]
-   }
+    path_pattern {
+      values = ["*"]
+    }
   }
 
   transform {
     type = "url-rewrite"
     url_rewrite_config {
-	  rewrite {
-		regex   = "^/dp2/([A-Za-z0-9]+)/?$"
-		replace = "/product.php?id=$1"
+      rewrite {
+        regex   = "^/dp2/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
       }
-	}
+    }
   }
 
   transform {
     type = "host-header-rewrite"
     host_header_rewrite_config {
-	  rewrite {
-		regex   = "^mywebsite2-(.+).com$"
-		replace = "internal.dev.$1.myweb.com"
+      rewrite {
+        regex   = "^mywebsite2-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
       }
-	}
+    }
   }
 }
 `)
