@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -1159,15 +1160,14 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		result := request.NewListResult(ctx)
-
 		for role, err := range listNonServiceLinkedRoles(ctx, conn, &input) {
 			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
+				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
+			result := request.NewListResult(ctx)
 
 			rd := l.ResourceData()
 			rd.SetId(aws.ToString(role.RoleName))
