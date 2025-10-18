@@ -326,19 +326,7 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[hostHeaderRewriteConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"rewrite": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[rewriteConfigModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"regex": schema.StringAttribute{
-													Computed: true,
-												},
-												"replace": schema.StringAttribute{
-													Computed: true,
-												},
-											},
-										},
-									},
+									"rewrite": transformRewriteConfigDataSourceSchema(),
 								},
 							},
 						},
@@ -346,23 +334,27 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[urlRewriteConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"rewrite": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[rewriteConfigModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"regex": schema.StringAttribute{
-													Computed: true,
-												},
-												"replace": schema.StringAttribute{
-													Computed: true,
-												},
-											},
-										},
-									},
+									"rewrite": transformRewriteConfigDataSourceSchema(),
 								},
 							},
 						},
 					},
+				},
+			},
+		},
+	}
+}
+
+func transformRewriteConfigDataSourceSchema() schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[rewriteConfigModel](context.Background()),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"regex": schema.StringAttribute{
+					Computed: true,
+				},
+				"replace": schema.StringAttribute{
+					Computed: true,
 				},
 			},
 		},
