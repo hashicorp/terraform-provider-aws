@@ -503,25 +503,7 @@ func resourceListenerRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"rewrite": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1, // This argument is an array, but the current AWS API accepts exactly only one `rewrite`
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"regex": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-												"replace": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(0, 1024),
-												},
-											},
-										},
-									},
+									"rewrite": transformRewriteConfigSchema(),
 								},
 							},
 						},
@@ -531,25 +513,7 @@ func resourceListenerRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"rewrite": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1, // This argument is an array, but the current AWS API accepts exactly only one `rewrite`
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"regex": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-												"replace": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(0, 1024),
-												},
-											},
-										},
-									},
+									"rewrite": transformRewriteConfigSchema(),
 								},
 							},
 						},
@@ -561,6 +525,28 @@ func resourceListenerRule() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			validateListenerActionsCustomDiff(names.AttrAction),
 		),
+	}
+}
+
+func transformRewriteConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1, // This argument is an array, but the current AWS API accepts exactly only one `rewrite`
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"regex": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"replace": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+			},
+		},
 	}
 }
 
