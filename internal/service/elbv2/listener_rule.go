@@ -774,7 +774,11 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("transform") {
-			input.Transforms = expandRuleTransforms(d.Get("transform").(*schema.Set).List())
+			if v, ok := d.GetOk("transform"); ok && len(v.(*schema.Set).List()) > 0 {
+				input.Transforms = expandRuleTransforms(d.Get("transform").(*schema.Set).List())
+			} else {
+				input.ResetTransforms = aws.Bool(true)
+			}
 			requestUpdate = true
 		}
 
