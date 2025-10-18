@@ -1170,8 +1170,8 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 
 
 			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.RoleName))
-			result.Diagnostics.Append(translateDiags(resourceRoleFlatten(ctx, &output, rd))...)
+			rd.SetId(aws.ToString(role.RoleName))
+			result.Diagnostics.Append(translateDiags(resourceRoleFlatten(ctx, &role, rd))...)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -1185,7 +1185,7 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 				return
 			}
 
-			result.DisplayName = aws.ToString(output.RoleName)
+			result.DisplayName = aws.ToString(role.RoleName)
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
