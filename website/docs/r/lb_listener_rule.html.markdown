@@ -408,8 +408,8 @@ URL Rewrite Config Blocks (for `url_rewrite_config`) support the following:
 
 Rewrite Blocks (for `rewrite`) support the following:
 
-* `regex` - (Required) Regular expression to match in the input string.
-* `replace` - (Required) Replacement string to use when rewriting the matched input. Capture groups in the regular expression (for example, `$1` and `$2`) can be specified.
+* `regex` - (Required) Regular expression to match in the input string. Length constraints: Between 1 and 1024 characters.
+* `replace` - (Required) Replacement string to use when rewriting the matched input. Capture groups in the regular expression (for example, `$1` and `$2`) can be specified. Length constraints: Between 0 and 1024 characters.
 
 ## Attribute Reference
 
