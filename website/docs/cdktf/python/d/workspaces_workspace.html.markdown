@@ -58,14 +58,23 @@ class MyConvertedCode(TerraformStack):
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `bundle_id` - (Optional) ID of the bundle for the WorkSpace.
 * `directory_id` - (Optional) ID of the directory for the WorkSpace. You have to specify `user_name` along with `directory_id`. You cannot combine this parameter with `workspace_id`.
-* `root_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
-* `tags` - (Optional) Tags for the WorkSpace.
 * `user_name` - (Optional) User name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace. You cannot combine this parameter with `workspace_id`.
+* `workspace_id` - (Optional) ID of the WorkSpace. You cannot combine this parameter with `directory_id`.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `bundle_id` - (Optional) ID of the bundle for the WorkSpace.
+* `computer_name` - Name of the WorkSpace, as seen by the operating system.
+* `id` - Workspaces ID.
+* `ip_address` - IP address of the WorkSpace.
+* `root_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
+* `state` - Operational state of the WorkSpace.
+* `tags` - (Optional) Tags for the WorkSpace.
 * `user_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the user volume is encrypted.
 * `volume_encryption_key` - (Optional) Symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
-* `workspace_id` - (Optional) ID of the WorkSpace. You cannot combine this parameter with `directory_id`.
 * `workspace_properties` - (Optional) WorkSpace properties.
 
 `workspace_properties` supports the following:
@@ -75,14 +84,5 @@ This data source supports the following arguments:
 * `running_mode` - (Optional) Running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
 * `running_mode_auto_stop_timeout_in_minutes` - (Optional) Time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `user_volume_size_gib` - (Optional) Size of the user storage.
-
-## Attribute Reference
-
-This data source exports the following attributes in addition to the arguments above:
-
-* `id` - Workspaces ID.
-* `ip_address` - IP address of the WorkSpace.
-* `computer_name` - Name of the WorkSpace, as seen by the operating system.
-* `state` - Operational state of the WorkSpace.
 
 <!-- cache-key: cdktf-0.20.8 input-96910d558856d7344d33e2a9ed218c68620722efaee9bb56d3717376bb1c2d5c -->
