@@ -26,8 +26,7 @@ list "aws_iam_policy" "example" {
 
 ### Restricting Path
 
-This example will return IAM Policies with a `path` equal to or begining with `/example/`.
-
+This example will return IAM Policies with a `path` equal to or beginning with `/example/`.
 
 ```terraform
 list "aws_iam_policy" "example" {
