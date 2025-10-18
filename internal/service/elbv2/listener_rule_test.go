@@ -2263,12 +2263,6 @@ func TestAccELBV2ListenerRule_transform(t *testing.T) {
 				Config: testAccListenerRuleConfig_transformUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config: testAccListenerRuleConfig_transformUpdated(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
 						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
 						"host_header_rewrite_config.#":                   "1",
@@ -2283,6 +2277,14 @@ func TestAccELBV2ListenerRule_transform(t *testing.T) {
 						"url_rewrite_config.0.rewrite.0.regex":   "^/dp2/([A-Za-z0-9]+)/?$",
 						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
 					}),
+				),
+			},
+			{
+				// Remove all transforms
+				Config: testAccListenerRuleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "0"),
 				),
 			},
 		},
@@ -4959,6 +4961,7 @@ func testAccListenerRuleConfig_transform(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
+  priority     = 100
 
   action {
     type             = "forward"
@@ -4967,7 +4970,7 @@ resource "aws_lb_listener_rule" "test" {
 
   condition {
     path_pattern {
-      values = ["*"]
+      values = ["/static/*"]
     }
   }
 
@@ -4998,6 +5001,7 @@ func testAccListenerRuleConfig_transformUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
+  priority     = 100
 
   action {
     type             = "forward"
@@ -5006,7 +5010,7 @@ resource "aws_lb_listener_rule" "test" {
 
   condition {
     path_pattern {
-      values = ["*"]
+      values = ["/static/*"]
     }
   }
 
