@@ -1159,6 +1159,8 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 		return
 	}
 
+	tflog.Info(ctx, "Listing resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		for role, err := range listNonServiceLinkedRoles(ctx, conn, &input) {
 			if err != nil {
@@ -1167,10 +1169,14 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 				return
 			}
 
+			ctx := resourceRoleListItemLoggingContext(ctx, role)
+
 			result := request.NewListResult(ctx)
 
 			rd := l.ResourceData()
 			rd.SetId(aws.ToString(role.RoleName))
+
+			tflog.Info(ctx, "Reading resource")
 			result.Diagnostics.Append(translateDiags(resourceRoleFlatten(ctx, &role, rd))...)
 			if result.Diagnostics.HasError() {
 				yield(result)
@@ -1253,4 +1259,8 @@ func translatePath(in cty.Path) path.Path {
 	}
 
 	return out
+}
+
+func resourceRoleListItemLoggingContext(ctx context.Context, role awstypes.Role) context.Context {
+	return tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), aws.ToString(role.RoleName))
 }
