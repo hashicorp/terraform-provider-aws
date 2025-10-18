@@ -8,19 +8,29 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -77,10 +87,11 @@ func resourcePolicy() *schema.Resource {
 				ValidateFunc:  validResourceName(policyNamePrefixMaxLen),
 			},
 			names.AttrPath: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "/",
+				ForceNew:         true,
+				ValidateDiagFunc: validPolicyPath,
 			},
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
@@ -101,6 +112,14 @@ func resourcePolicy() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
+}
+
+// @SDKListResource("aws_iam_policy")
+func policyResourceAsListResource() inttypes.ListResourceForSDK {
+	l := policyListResource{}
+	l.SetResourceSchema(resourcePolicy())
+
+	return &l
 }
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -190,28 +209,13 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s): %s", d.Id(), err)
 	}
 
-	policy := output.policy
-	d.Set(names.AttrARN, policy.Arn)
-	d.Set("attachment_count", policy.AttachmentCount)
-	d.Set(names.AttrDescription, policy.Description)
-	d.Set(names.AttrName, policy.PolicyName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
-	d.Set(names.AttrPath, policy.Path)
-	d.Set("policy_id", policy.PolicyId)
+	resourcePolicyFlatten(ctx, output.policy, d)
 
-	setTagsOut(ctx, policy.Tags)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.policy.PolicyName)))
 
-	policyDocument, err := url.QueryUnescape(aws.ToString(output.policyVersion.Document))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", d.Id(), err)
+	if err := resourcePolicyFlattenPolicyDocument(aws.ToString(output.policyVersion.Document), d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policyDocument)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
 }
@@ -288,6 +292,33 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
+func resourcePolicyFlatten(ctx context.Context, policy *awstypes.Policy, d *schema.ResourceData) {
+	d.Set(names.AttrARN, policy.Arn)
+	d.Set("attachment_count", policy.AttachmentCount)
+	d.Set(names.AttrDescription, policy.Description)
+	d.Set(names.AttrName, policy.PolicyName)
+	d.Set(names.AttrPath, policy.Path)
+	d.Set("policy_id", policy.PolicyId)
+
+	setTagsOut(ctx, policy.Tags)
+}
+
+func resourcePolicyFlattenPolicyDocument(policyDocument string, d *schema.ResourceData) error {
+	policyDocument, err := url.QueryUnescape(policyDocument)
+	if err != nil {
+		return fmt.Errorf("parsing IAM Policy (%s) document: %w", d.Id(), err)
+	}
+
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policyDocument)
+	if err != nil {
+		return fmt.Errorf("parsing IAM Policy (%s) document: %w", d.Id(), err)
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return nil
+}
+
 // policyPruneVersions deletes the oldest version.
 //
 // Old versions are deleted until there are 4 or less remaining, which means at
@@ -352,8 +383,7 @@ func findPolicy(ctx context.Context, conn *iam.Client, input *iam.GetPolicyInput
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -424,8 +454,7 @@ func findPolicyVersion(ctx context.Context, conn *iam.Client, input *iam.GetPoli
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -457,8 +486,7 @@ func findPolicyVersions(ctx context.Context, conn *iam.Client, input *iam.ListPo
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -494,4 +522,131 @@ func policyTags(ctx context.Context, conn *iam.Client, identifier string, optFns
 	}
 
 	return output, nil
+}
+
+var _ list.ListResourceWithRawV5Schemas = &policyListResource{}
+
+type policyListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type policyListResourceModel struct {
+	PathPrefix types.String `tfsdk:"path_prefix"`
+}
+
+func (l *policyListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"path_prefix": listschema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					validPolicyPathFramework,
+				},
+			},
+		},
+	}
+}
+
+func (l *policyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.IAMClient(ctx)
+
+	var query policyListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input iam.ListPoliciesInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+	input.Scope = awstypes.PolicyScopeTypeLocal
+
+	tflog.Info(ctx, "Listing resources")
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		pages := iam.NewListPoliciesPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			for _, policy := range page.Policies {
+				ctx := resourcePolicyListItemLoggingContext(ctx, policy)
+
+				result := request.NewListResult(ctx)
+
+				rd := l.ResourceData()
+				rd.SetId(aws.ToString(policy.Arn))
+
+				tflog.Info(ctx, "Reading resource")
+				resourcePolicyFlatten(ctx, &policy, rd)
+
+				result.DisplayName = resourcePolicyDisplayName(rd)
+
+				if request.IncludeResource {
+					tflog.Info(ctx, "Reading additional resource data")
+
+					policyVersion, err := findPolicyVersionByTwoPartKey(ctx, conn, aws.ToString(policy.Arn), aws.ToString(policy.DefaultVersionId))
+					if retry.NotFound(err) {
+						tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+						continue
+					}
+					if err != nil {
+						result = fwdiag.NewListResultErrorDiagnostic(err)
+						yield(result)
+						return
+					}
+
+					if err := resourcePolicyFlattenPolicyDocument(aws.ToString(policyVersion.Document), rd); err != nil {
+						result = fwdiag.NewListResultErrorDiagnostic(err)
+						yield(result)
+						return
+					}
+
+					// set tags
+					err = l.SetTags(ctx, awsClient, rd)
+					if err != nil {
+						result = fwdiag.NewListResultErrorDiagnostic(err)
+						yield(result)
+						return
+					}
+				}
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func resourcePolicyListItemLoggingContext(ctx context.Context, policy awstypes.Policy) context.Context {
+	return tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), aws.ToString(policy.Arn))
+}
+
+func resourcePolicyDisplayName(d *schema.ResourceData) string {
+	var buf strings.Builder
+
+	path := d.Get(names.AttrPath).(string)
+	buf.WriteString(strings.TrimPrefix(path, "/"))
+
+	buf.WriteString(d.Get(names.AttrName).(string))
+
+	return buf.String()
 }

@@ -9,8 +9,11 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -63,4 +66,29 @@ var validRolePolicyRole = validation.All(
 		}
 		return
 	},
+)
+
+var validPolicyPath = validation.AllDiag(
+	validation.ToDiagFunc(validation.StringLenBetween(1, 512)),
+	func(i any, path cty.Path) diag.Diagnostics {
+		val := i.(string)
+		if !strings.HasPrefix(val, "/") || !strings.HasSuffix(val, "/") {
+			return diag.Diagnostics{
+				errs.NewInvalidValueAttributeError(
+					path,
+					fmt.Sprintf("Attribute %q must begin and end with a slash (/), got %q", errs.PathString(path), val),
+				),
+			}
+		}
+		if strings.Contains(val, "//") {
+			return diag.Diagnostics{
+				errs.NewInvalidValueAttributeError(
+					path,
+					fmt.Sprintf("Attribute %q must not contain consecutive slashes (//), got %q", errs.PathString(path), val),
+				),
+			}
+		}
+		return nil
+	},
+	validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9\.,\+@=_/-]*$`), "must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -")),
 )
