@@ -326,7 +326,7 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[hostHeaderRewriteConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"rewrite": transformRewriteConfigDataSourceSchema(),
+									"rewrite": transformRewriteConfigDataSourceSchema(ctx),
 								},
 							},
 						},
@@ -334,7 +334,7 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[urlRewriteConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"rewrite": transformRewriteConfigDataSourceSchema(),
+									"rewrite": transformRewriteConfigDataSourceSchema(ctx),
 								},
 							},
 						},
@@ -345,9 +345,9 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
-func transformRewriteConfigDataSourceSchema() schema.Block {
+func transformRewriteConfigDataSourceSchema(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[rewriteConfigModel](context.Background()),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[rewriteConfigModel](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"regex": schema.StringAttribute{
