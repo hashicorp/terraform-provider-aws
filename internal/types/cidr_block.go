@@ -67,8 +67,6 @@ func CIDRBlocksOverlap(cidr1, cidr2 string) bool {
 		return false
 	}
 
-	// Check if cidr2's first or last IP is within cidr1's range
-	// If either endpoint is contained, the CIDRs overlap
 	return net1.Contains(ip2) || net1.Contains(getLastIP(net2))
 }
 

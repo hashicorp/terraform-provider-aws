@@ -187,8 +187,13 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 
 	ipamPoolAllocationsInput := &ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(poolID),
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("resource-type"),
+				Values: []string{string(awstypes.IpamPoolAllocationResourceTypeVpc), string(awstypes.IpamPoolAllocationResourceTypeSubnet)},
+			},
+		},
 	}
-
 	allocations, err := findIPAMPoolAllocations(ctx, conn, ipamPoolAllocationsInput)
 	if intretry.NotFound(err) {
 		log.Printf("[DEBUG] IPAM Pool (%s) not found, skipping allocation checks", poolID)
@@ -204,11 +209,7 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 		if !types.CIDRBlocksOverlap(cidrBlock, allocationCIDR) {
 			continue
 		}
-
-		resourceType := allocation.ResourceType
-		if resourceType == awstypes.IpamPoolAllocationResourceTypeVpc || resourceType == awstypes.IpamPoolAllocationResourceTypeSubnet {
-			allocationsToTrack = append(allocationsToTrack, allocation)
-		}
+		allocationsToTrack = append(allocationsToTrack, allocation)
 	}
 
 	if len(allocationsToTrack) > 0 {
@@ -226,7 +227,6 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 					return sdkdiag.AppendErrorf(diags, "VPC %s (CIDR: %s) must be deleted before IPAM Pool CIDR can be deprovisioned", resourceID, allocationCIDR)
 				}
 				log.Printf("[DEBUG] VPC %s already deleted, waiting for allocation (CIDR: %s) to be released from IPAM Pool %s", resourceID, allocationCIDR, poolID)
-
 			case awstypes.IpamPoolAllocationResourceTypeSubnet:
 				_, err := findSubnetByID(ctx, conn, resourceID)
 				if err == nil {
@@ -255,12 +255,9 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 					continue
 				}
 
-				resourceType := allocation.ResourceType
-				if resourceType == awstypes.IpamPoolAllocationResourceTypeVpc || resourceType == awstypes.IpamPoolAllocationResourceTypeSubnet {
-					return allocation, nil
-				}
+				// API filter already ensures only VPC and Subnet resource types are returned
+				return allocation, nil
 			}
-
 			return nil, &retry.NotFoundError{}
 		})
 
@@ -294,7 +291,6 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	if _, err := waitIPAMPoolCIDRDeleted(ctx, conn, d.Get("ipam_pool_cidr_id").(string), poolID, cidrBlock, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) delete: %s", d.Id(), err)
 	}
-
 	return diags
 }
 
