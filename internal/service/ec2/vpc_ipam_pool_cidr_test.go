@@ -224,26 +224,6 @@ func testAccCheckIPAMPoolCIDRPrefix(cidr *awstypes.IpamPoolCidr, expected string
 	}
 }
 
-func testAccIPAMPoolCIDRConfig_base(rName string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_vpc_ipam" "test" {
-  description = "test"
-
-  operating_regions {
-    region_name = data.aws_region.current.name
-  }
-
-  cascade = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
 func testAccIPAMPoolCIDRConfig_privatePool(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_ipam_pool" "test" {
@@ -320,7 +300,7 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 }
 
 func testAccIPAMPoolCIDRConfig_ipam_VPCAllocation(rName, cidr string) string {
-	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base(rName), testAccIPAMPoolCIDRConfig_privatePool(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(TestAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePool(rName), fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q

@@ -182,8 +182,21 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	ipamPool, err := findIPAMPoolByID(ctx, conn, poolID)
+	if intretry.NotFound(err) {
+		log.Printf("[DEBUG] IPAM Pool (%s) not found, skipping IPAM Pool CIDR (%s) delete", poolID, d.Id())
+		return diags
+	} else if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool (%s): %s", poolID, err)
+	}
+
 	// VPC / Subnet allocations take upto 20m to be released after resource deletion.
 	log.Printf("[DEBUG] Checking for allocations from CIDR %s in IPAM Pool (%s) that need to be released", cidrBlock, poolID)
+
+	// Create a region-specific client for the pool's locale
+	poolRegion := aws.ToString(ipamPool.Locale)
+	allocationCtx := conns.NewResourceContext(ctx, names.EC2ServiceID, "aws_vpc_ipam_pool_cidr", poolRegion)
+	allocationConn := meta.(*conns.AWSClient).EC2Client(allocationCtx)
 
 	ipamPoolAllocationsInput := &ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(poolID),
@@ -194,9 +207,8 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 			},
 		},
 	}
-	allocations, err := findIPAMPoolAllocations(ctx, conn, ipamPoolAllocationsInput)
+	allocations, err := findIPAMPoolAllocations(allocationCtx, allocationConn, ipamPoolAllocationsInput)
 	if intretry.NotFound(err) {
-		log.Printf("[DEBUG] IPAM Pool (%s) not found, skipping allocation checks", poolID)
 		allocations = nil
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing IPAM Pool (%s) allocations: %s", poolID, err)
@@ -222,13 +234,13 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 
 			switch resourceType {
 			case awstypes.IpamPoolAllocationResourceTypeVpc:
-				_, err := findVPCByID(ctx, conn, resourceID)
+				_, err := findVPCByID(allocationCtx, allocationConn, resourceID)
 				if err == nil {
 					return sdkdiag.AppendErrorf(diags, "VPC %s (CIDR: %s) must be deleted before IPAM Pool CIDR can be deprovisioned", resourceID, allocationCIDR)
 				}
 				log.Printf("[DEBUG] VPC %s already deleted, waiting for allocation (CIDR: %s) to be released from IPAM Pool %s", resourceID, allocationCIDR, poolID)
 			case awstypes.IpamPoolAllocationResourceTypeSubnet:
-				_, err := findSubnetByID(ctx, conn, resourceID)
+				_, err := findSubnetByID(allocationCtx, allocationConn, resourceID)
 				if err == nil {
 					return sdkdiag.AppendErrorf(diags, "subnet %s (CIDR: %s) must be deleted before IPAM Pool CIDR can be deprovisioned", resourceID, allocationCIDR)
 				}
@@ -238,8 +250,8 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 
 		log.Printf("[DEBUG] Waiting for IPAM to release %d allocation(s) from CIDR %s", len(allocationsToTrack), cidrBlock)
 
-		_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-			allocations, err := findIPAMPoolAllocations(ctx, conn, ipamPoolAllocationsInput)
+		_, err = tfresource.RetryUntilNotFound(allocationCtx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+			allocations, err := findIPAMPoolAllocations(ctx, allocationConn, ipamPoolAllocationsInput)
 			if intretry.NotFound(err) {
 				log.Printf("[DEBUG] IPAM Pool (%s) deleted during wait, allocations released", poolID)
 				return nil, &retry.NotFoundError{}
@@ -255,13 +267,12 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 					continue
 				}
 
-				// API filter already ensures only VPC and Subnet resource types are returned
 				return allocation, nil
 			}
 			return nil, &retry.NotFoundError{}
 		})
 
-		if tfresource.TimedOut(err) {
+		if intretry.TimedOut(err) {
 			return sdkdiag.AppendErrorf(diags, "timeout waiting for IPAM Pool (%s) allocations to be released after %s", poolID, d.Timeout(schema.TimeoutDelete))
 		}
 
