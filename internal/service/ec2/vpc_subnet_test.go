@@ -6,6 +6,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -639,6 +640,89 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 	})
 }
 
+func TestAccVPCSubnet_IPAM_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Allocation": {
+			"ipv4": testAccVPCSubnet_IPAM_ipv4Allocation,
+			"ipv6": testAccVPCSubnet_IPAM_ipv6Allocation,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var subnet awstypes.Subnet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_subnet.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_ipv4IPAMAllocation(rName, 27),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv4_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_netmask_length", "27"),
+					testAccCheckSubnetCIDRPrefix(&subnet, "27"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
+			},
+		},
+	})
+}
+
+func testAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var subnet awstypes.Subnet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_subnet.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_ipv6IPAMAllocation(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv6_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "60"),
+					testAccCheckSubnetIPv6CIDRPrefix(&subnet, "60"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv6_ipam_pool_id", "ipv6_netmask_length"},
+			},
+		},
+	})
+}
+
 func testAccCheckSubnetIPv6BeforeUpdate(subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
@@ -729,6 +813,29 @@ func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *awstypes.Subnet, 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.ToString(subnet.SubnetId), oldTags, newTags)
+	}
+}
+
+func testAccCheckSubnetCIDRPrefix(subnet *awstypes.Subnet, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if strings.Split(aws.ToString(subnet.CidrBlock), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: got %s, expected /%s", aws.ToString(subnet.CidrBlock), expected)
+		}
+		return nil
+	}
+}
+
+func testAccCheckSubnetIPv6CIDRPrefix(subnet *awstypes.Subnet, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, association := range subnet.Ipv6CidrBlockAssociationSet {
+			if association.Ipv6CidrBlockState != nil && association.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated {
+				if strings.Split(aws.ToString(association.Ipv6CidrBlock), "/")[1] != expected {
+					return fmt.Errorf("Bad IPv6 cidr prefix: got %s, expected /%s", aws.ToString(association.Ipv6CidrBlock), expected)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("No associated IPv6 CIDR block found")
 	}
 }
 
@@ -1204,4 +1311,154 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName)
+}
+
+const testAccVPCSubnetConfig_ipamBase = `
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.region
+  }
+}
+`
+
+func testAccVPCSubnetConfig_ipamIPv4(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamBase, fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.current.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCSubnetConfig_ipamIPv6(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamBase, fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv6"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  netmask_length = 52
+}
+
+resource "aws_vpc" "test" {
+  cidr_block          = "10.1.0.0/16"
+  ipv6_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv6_netmask_length = 56
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv6"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.current.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCSubnetConfig_ipv4IPAMAllocation(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamIPv4(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr         = aws_vpc.test.cidr_block
+}
+
+resource "aws_subnet" "test" {
+  vpc_id              = aws_vpc.test.id
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.vpc.id
+  ipv4_netmask_length = %[1]d
+  availability_zone   = data.aws_availability_zones.available.names[0]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.vpc]
+}
+`, netmaskLength))
+}
+
+func testAccVPCSubnetConfig_ipv6IPAMAllocation(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamIPv6(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr         = aws_vpc.test.ipv6_cidr_block
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                                         = aws_vpc.test.id
+  ipv6_native                                    = true
+  assign_ipv6_address_on_creation                = true
+  ipv6_ipam_pool_id                              = aws_vpc_ipam_pool.vpc.id
+  ipv6_netmask_length                            = %[1]d
+  availability_zone                              = data.aws_availability_zones.available.names[0]
+  enable_resource_name_dns_aaaa_record_on_launch = true
+
+  depends_on = [aws_vpc_ipam_pool_cidr.vpc]
+}
+`, netmaskLength))
 }

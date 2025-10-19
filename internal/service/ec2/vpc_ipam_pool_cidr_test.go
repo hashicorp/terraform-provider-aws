@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -128,6 +129,44 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) { // nosemgrep:ci.vpc-in-
 	})
 }
 
+func TestAccIPAMPoolCIDR_ipam_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cidr awstypes.IpamPoolCidr
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_ipam_pool_cidr.test"
+	vpcResourceName := "aws_vpc.test"
+	cidrBlock := "10.0.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRConfig_ipam_VPCAllocation(rName, cidrBlock),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					resource.TestCheckResourceAttr(resourceName, "cidr", cidrBlock),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "ipam_pool_cidr_id"),
+					resource.TestCheckResourceAttrSet(vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(vpcResourceName, names.AttrCIDRBlock),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *awstypes.IpamPoolCidr) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -185,6 +224,40 @@ func testAccCheckIPAMPoolCIDRPrefix(cidr *awstypes.IpamPoolCidr, expected string
 	}
 }
 
+func testAccIPAMPoolCIDRConfig_base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  description = "test"
+
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+
+  cascade = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccIPAMPoolCIDRConfig_privatePool(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
 const TestAccIPAMPoolCIDRConfig_base = `
 data "aws_region" "current" {}
 
@@ -192,7 +265,7 @@ resource "aws_vpc_ipam" "test" {
   description = "test"
 
   operating_regions {
-    region_name = data.aws_region.current.region
+    region_name = data.aws_region.current.name
   }
 
   cascade = true
@@ -203,7 +276,7 @@ const TestAccIPAMPoolCIDRConfig_privatePool = `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-  locale         = data.aws_region.current.region
+  locale         = data.aws_region.current.name
 }
 `
 
@@ -244,4 +317,24 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
   depends_on     = [aws_vpc_ipam_pool_cidr.testparent]
 }
 `, netmaskLength))
+}
+
+func testAccIPAMPoolCIDRConfig_ipam_VPCAllocation(rName, cidr string) string {
+	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base(rName), testAccIPAMPoolCIDRConfig_privatePool(rName), fmt.Sprintf(`
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = %[1]q
+}
+
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  tags = {
+    Name = %[2]q
+  }
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+}
+`, cidr, rName))
 }

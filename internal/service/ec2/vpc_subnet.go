@@ -79,6 +79,7 @@ func resourceSubnet() *schema.Resource {
 			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
@@ -107,14 +108,43 @@ func resourceSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"ipv4_ipam_pool_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+			},
+			"ipv4_netmask_length": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+				RequiredWith:  []string{"ipv4_ipam_pool_id"},
+			},
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 			},
 			"ipv6_cidr_block_association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"ipv6_ipam_pool_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"ipv6_cidr_block"},
+			},
+			"ipv6_netmask_length": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+				ConflictsWith: []string{"ipv6_cidr_block"},
+				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
 			"ipv6_native": {
 				Type:     schema.TypeBool,
@@ -180,6 +210,22 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.CidrBlock = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("ipv4_ipam_pool_id"); ok {
+		input.Ipv4IpamPoolId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv4_netmask_length"); ok {
+		input.Ipv4NetmaskLength = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+		input.Ipv6IpamPoolId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
+		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
 		input.Ipv6CidrBlock = aws.String(v.(string))
 	}
@@ -220,7 +266,16 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	if err := modifySubnetAttributesOnCreate(ctx, conn, d, subnet, false); err != nil {
+	var computedIPv6CidrBlock bool
+	_, cidrExists := d.GetOk("ipv6_cidr_block")
+
+	if v, ok := d.GetOk("ipv6_native"); ok && v.(bool) && !cidrExists {
+		computedIPv6CidrBlock = true
+	} else {
+		computedIPv6CidrBlock = false
+	}
+
+	if err := modifySubnetAttributesOnCreate(ctx, conn, d, subnet, computedIPv6CidrBlock); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 

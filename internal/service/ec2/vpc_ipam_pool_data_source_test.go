@@ -4,8 +4,10 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,21 +49,107 @@ func TestAccIPAMPoolDataSource_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test
 	})
 }
 
+func TestAccIPAMPoolDataSource_sourceResource(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_ipam_pool.vpc"
+	dataSourceName := "data.aws_vpc_ipam_pool.vpc"
+	vpcResourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolDataSourceConfig_sourceResource(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "source_resource.#", resourceName, "source_resource.#"),
+					resource.TestCheckResourceAttr(dataSourceName, "source_resource.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "source_resource.0.resource_id", resourceName, "source_resource.0.resource_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "source_resource.0.resource_owner"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "source_resource.0.resource_region"),
+					resource.TestCheckResourceAttr(dataSourceName, "source_resource.0.resource_type", "vpc"),
+				),
+			},
+		},
+	})
+}
+
 var testAccIPAMPoolDataSourceConfig_optionsBasic = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
 resource "aws_vpc_ipam_pool" "test" {
-  address_family                    = "ipv4"
-  ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
-  auto_import                       = true
-  allocation_default_netmask_length = 32
-  allocation_max_netmask_length     = 32
-  allocation_min_netmask_length     = 32
-  allocation_resource_tags = {
-    test = "1"
-  }
-  description = "test"
+	address_family                    = "ipv4"
+	ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
+	auto_import                       = true
+	allocation_default_netmask_length = 32
+	allocation_max_netmask_length     = 32
+	allocation_min_netmask_length     = 32
+	allocation_resource_tags = {
+		test = "1"
+	}
+	description = "test"
 }
 
 data "aws_vpc_ipam_pool" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
 }
 `)
+
+func testAccIPAMPoolDataSourceConfig_sourceResource(rName string) string {
+	return acctest.ConfigCompose(testAccIPAMPoolConfig_base, fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.current.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_vpc_ipam_pool" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+}
+`, rName))
+}
