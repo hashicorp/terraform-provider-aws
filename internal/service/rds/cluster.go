@@ -1595,20 +1595,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
-		var storageType *string
+		provisionedIOPSStorageType := false
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
-			storageType = aws.String(v.(string))
-		} else {
-			storageType = nil
+			provisionedIOPSStorageType = isProvisionedIOPSStorageType(aws.String(v.(string)))
 		}
 
 		if d.HasChange(names.AttrAllocatedStorage) {
 			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
-			if isProvisionedIOPSStorageType(storageType) {
+			if provisionedIOPSStorageType {
 				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
-				if v, ok := d.GetOk(names.AttrIOPS); ok {
-					input.Iops = aws.Int32(int32(v.(int)))
-				}
+				input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 			}
 		}
 
@@ -1707,7 +1703,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange(names.AttrIOPS) {
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
-			if isProvisionedIOPSStorageType(storageType) {
+			if provisionedIOPSStorageType {
 				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
 				input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 			}
