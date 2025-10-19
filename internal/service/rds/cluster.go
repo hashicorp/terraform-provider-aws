@@ -1595,8 +1595,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
+		var storageType *string
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
+			storageType = aws.String(v.(string))
+		} else {
+			storageType = nil
+		}
+
 		if d.HasChange(names.AttrAllocatedStorage) {
 			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			if isProvisionedIOPSStorageType(storageType) {
+				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
+				if v, ok := d.GetOk(names.AttrIOPS); ok {
+					input.Iops = aws.Int32(int32(v.(int)))
+				}
+			}
 		}
 
 		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
@@ -1694,6 +1707,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange(names.AttrIOPS) {
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+			if isProvisionedIOPSStorageType(storageType) {
+				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
+				input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			}
 		}
 
 		if d.HasChange("manage_master_user_password") {
@@ -2383,4 +2400,8 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2Sc
 	}
 
 	return tfMap
+}
+
+func isProvisionedIOPSStorageType(storageType *string) bool {
+	return aws.ToString(storageType) == storageTypeIO1 || aws.ToString(storageType) == storageTypeIO2
 }
