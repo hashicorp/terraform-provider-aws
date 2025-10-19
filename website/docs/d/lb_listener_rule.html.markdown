@@ -62,7 +62,7 @@ This data source exports the following attributes in addition to the arguments a
 * `condition` - Set of conditions associated with the rule.
   [Detailed below](#condition).
 * `tags` - Tags assigned to the Listener Rule.
-* `transform` Block for transform to apply to requests that match this rule. [Detailed below](#transform).
+* `transform` - Block for transform to apply to requests that match this rule. [Detailed below](#transform).
 
 ### `action`
 
