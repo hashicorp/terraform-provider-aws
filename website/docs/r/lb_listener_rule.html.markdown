@@ -251,7 +251,7 @@ This resource supports the following arguments:
 * `action` - (Required) An Action block. Action blocks are documented below.
 * `condition` - (Required) A Condition block. Multiple condition blocks of different types can be set and all must be satisfied for the rule to match. Condition blocks are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `transform` - (Optional) Configuration block for transform to apply to requests that match this rule. See [Transform Blocks](#transform-blocks) below.
+* `transform` - (Optional) Configuration block that defines the transform to apply to requests matching this rule. See [Transform Blocks](#transform-blocks) below for more details. Once specified, to remove the transform from the rule, remove the `transform` block from the configuration.
 
 ### Action Blocks
 
