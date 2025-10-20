@@ -12,7 +12,7 @@ description: |-
 
 Lists IAM Policy resources.
 
-Excludes AWS Managed Policiesmanaged policies" in [Policies and permissions in AWS Identity and Access Management documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html#access_policy-types).
+Excludes AWS Managed Policies (see "AWS managed policies" in [Policies and permissions in AWS Identity and Access Management documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html#access_policy-types).
 
 ## Example Usage
 
