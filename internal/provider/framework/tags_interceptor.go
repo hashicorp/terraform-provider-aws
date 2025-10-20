@@ -31,7 +31,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 		return
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return
 	}
@@ -86,7 +86,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOpt
 		return
 	}
 
-	sp, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return
 	}
@@ -123,7 +123,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		return
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return
 	}
@@ -179,7 +179,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 		return
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return
 	}

@@ -37,7 +37,7 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 		return diags
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, typeName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return diags
 	}
@@ -55,12 +55,15 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 
 			// Verify required tags are present
 			if rtc := c.RequiredTagsConfig(ctx); rtc != nil {
-				if data, ok := rtc.Data[resourceName]; ok {
+				if data, ok := rtc.Data[typeName]; ok {
 					reqTags := data.EnforcedRequiredTagKeys
 
 					if !tags.ContainsAllKeys(reqTags) {
 						// TODO: filter to only missing required keys
-						return sdkdiag.AppendErrorf(diags, "missing required tags %s %s: %s", serviceName, resourceName, reqTags.Keys())
+						if rtc.Level == "error" {
+							return sdkdiag.AppendErrorf(diags, "missing required tags %s %s: %s", serviceName, resourceName, reqTags.Keys())
+						}
+						diags = sdkdiag.AppendWarningf(diags, "missing required tags %s %s: %s", serviceName, resourceName, reqTags.Keys())
 					}
 				}
 			}
@@ -203,7 +206,7 @@ func (r tagsDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterce
 		return diags
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return diags
 	}

@@ -603,7 +603,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						}
 					}
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, v.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.RequiredTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
@@ -768,7 +768,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						}
 					}
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, resource.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.RequiredTagsConfig(ctx))
 						ctx = c.RegisterLogger(ctx)

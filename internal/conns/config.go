@@ -249,25 +249,13 @@ func getRequiredTags(ctx context.Context, awsConfig aws.Config) (map[string]*tft
 	// client := resourceGroupsTaggingAPIClient(ctx, awsConfig)
 
 	out := map[string]*tftags.RequiredTagsOutput{
-		// "aws_s3_bucket": {
-		// 	EnforcedRequiredTagKeys: tftags.KeyValueTags{
-		// 		"owner":       nil,
-		// 		"cost_center": nil,
-		// 	},
-		// },
-		// "aws_cloudwatch_log_group": {
-		// 	EnforcedRequiredTagKeys: tftags.KeyValueTags{
-		// 		"owner":       nil,
-		// 		"cost_center": nil,
-		// 	},
-		// },
-		"Bucket": {
+		"aws_s3_bucket": {
 			EnforcedRequiredTagKeys: tftags.KeyValueTags{
 				"owner":       nil,
 				"cost_center": nil,
 			},
 		},
-		"Log Group": {
+		"aws_cloudwatch_log_group": {
 			EnforcedRequiredTagKeys: tftags.KeyValueTags{
 				"owner":       nil,
 				"cost_center": nil,

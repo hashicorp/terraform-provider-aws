@@ -1292,7 +1292,7 @@ func PreCheckSSOAdminInstancesWithRegion(ctx context.Context, t *testing.T, regi
 	t.Helper()
 
 	// Push region into Context.
-	ctx = conns.NewResourceContext(ctx, "", "", region)
+	ctx = conns.NewResourceContext(ctx, "", "", "", region)
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 	input := ssoadmin.ListInstancesInput{}
 	var instances []ssoadmintypes.InstanceMetadata
