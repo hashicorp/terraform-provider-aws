@@ -1226,11 +1226,11 @@ func flattenRewriteConfigs(apiObjects []awstypes.RewriteConfig) []any {
 func validateTransformConfiguration(d *schema.ResourceData, path string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	transformList := d.Get("transform").([]interface{})
+	transformList := d.Get("transform").([]any)
 	transformTypes := make(map[string]int)
 
 	for i, transform := range transformList {
-		tfMap := transform.(map[string]interface{})
+		tfMap := transform.(map[string]any)
 		transformType := tfMap[names.AttrType].(string)
 
 		// Count occurrences of each transform type
@@ -1253,7 +1253,7 @@ func validateTransformConfiguration(d *schema.ResourceData, path string) diag.Di
 		// Validate that the appropriate config block is provided
 		switch transformType {
 		case string(awstypes.TransformTypeEnumUrlRewrite):
-			if urlRewriteList, ok := tfMap["url_rewrite"].([]interface{}); !ok || len(urlRewriteList) == 0 {
+			if urlRewriteList, ok := tfMap["url_rewrite"].([]any); !ok || len(urlRewriteList) == 0 {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "Missing required configuration",
@@ -1266,7 +1266,7 @@ func validateTransformConfiguration(d *schema.ResourceData, path string) diag.Di
 				})
 			}
 		case string(awstypes.TransformTypeEnumHostHeaderRewrite):
-			if hostHeaderRewriteList, ok := tfMap["host_header_rewrite"].([]interface{}); !ok || len(hostHeaderRewriteList) == 0 {
+			if hostHeaderRewriteList, ok := tfMap["host_header_rewrite"].([]any); !ok || len(hostHeaderRewriteList) == 0 {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "Missing required configuration",

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb_listener_rule: Add support for URL rewrite transforms via new `transform` configuration block with `url_rewrite` type
+```
+
+```release-note:enhancement
+resource/aws_lb_listener_rule: Add support for host header rewrite transforms via new `transform` configuration block with `host_header_rewrite` type
+```
