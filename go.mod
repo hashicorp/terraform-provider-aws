@@ -11,7 +11,7 @@ require (
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
 	github.com/YakDriver/smarterr v0.6.0
-	github.com/aws/aws-sdk-go-v2 v1.39.2
+	github.com/aws/aws-sdk-go-v2 v1.39.3
 	github.com/aws/aws-sdk-go-v2/config v1.31.12
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.16
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.9
@@ -186,6 +186,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.8
 	github.com/aws/aws-sdk-go-v2/service/oam v1.22.5
+	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/odb v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.26.4
@@ -272,7 +273,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.63.6
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.4
-	github.com/aws/smithy-go v1.23.0
+	github.com/aws/smithy-go v1.23.1
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.2.6
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -327,8 +328,8 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.9 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.9 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.10 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.1 // indirect
