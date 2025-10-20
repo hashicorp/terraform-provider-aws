@@ -1191,7 +1191,7 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 				return
 			}
 
-			result.DisplayName = aws.ToString(role.RoleName)
+			result.DisplayName = resourceRoleDisplayName(role)
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
@@ -1204,6 +1204,17 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 			}
 		}
 	}
+}
+
+func resourceRoleDisplayName(role awstypes.Role) string {
+	var buf strings.Builder
+
+	path := aws.ToString(role.Path)
+	buf.WriteString(strings.TrimPrefix(path, "/"))
+
+	buf.WriteString(aws.ToString(role.RoleName))
+
+	return buf.String()
 }
 
 func translateDiags(in diag.Diagnostics) frameworkdiag.Diagnostics {
