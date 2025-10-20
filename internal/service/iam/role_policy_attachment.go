@@ -195,8 +195,12 @@ func createRolePolicyAttachmentImportID(d *schema.ResourceData) string {
 
 type rolePolicyAttachmentImportID struct{}
 
-func (rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
-	return fmt.Sprintf("%s/%s", d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
+func (v rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return v.create(d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
+}
+
+func (rolePolicyAttachmentImportID) create(roleName, policyARN string) string {
+	return fmt.Sprintf("%s/%s", roleName, policyARN)
 }
 
 func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
