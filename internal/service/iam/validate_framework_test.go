@@ -38,7 +38,7 @@ func TestValidPolicyPathFramework(t *testing.T) {
 			value: "",
 			expectedDiags: diag.Diagnostics{
 				validatordiag.InvalidAttributeValueLengthDiagnostic(
-					path.Root("path"),
+					path.Root(names.AttrPath),
 					"string length must be between 1 and 512",
 					"0",
 				)},
@@ -48,7 +48,7 @@ func TestValidPolicyPathFramework(t *testing.T) {
 			value: "test/",
 			expectedDiags: diag.Diagnostics{
 				validatordiag.InvalidAttributeValueDiagnostic(
-					path.Root("path"),
+					path.Root(names.AttrPath),
 					"value must begin and end with a slash (/)",
 					"test/",
 				),
@@ -59,7 +59,7 @@ func TestValidPolicyPathFramework(t *testing.T) {
 			value: "/test",
 			expectedDiags: diag.Diagnostics{
 				validatordiag.InvalidAttributeValueDiagnostic(
-					path.Root("path"),
+					path.Root(names.AttrPath),
 					"value must begin and end with a slash (/)",
 					"/test",
 				),
@@ -70,7 +70,7 @@ func TestValidPolicyPathFramework(t *testing.T) {
 			value: "/test//",
 			expectedDiags: diag.Diagnostics{
 				validatordiag.InvalidAttributeValueDiagnostic(
-					path.Root("path"),
+					path.Root(names.AttrPath),
 					"value must not contain consecutive slashes (//)",
 					"/test//",
 				),
@@ -81,7 +81,7 @@ func TestValidPolicyPathFramework(t *testing.T) {
 			value: "/test!/",
 			expectedDiags: diag.Diagnostics{
 				validatordiag.InvalidAttributeValueMatchDiagnostic(
-					path.Root("path"),
+					path.Root(names.AttrPath),
 					"value must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -",
 					"/test!/",
 				),
@@ -96,8 +96,8 @@ func TestValidPolicyPathFramework(t *testing.T) {
 			ctx := context.Background()
 
 			request := validator.StringRequest{
-				Path:           path.Root("path"),
-				PathExpression: path.MatchRoot("path"),
+				Path:           path.Root(names.AttrPath),
+				PathExpression: path.MatchRoot(names.AttrPath),
 				ConfigValue:    types.StringValue(tc.value),
 			}
 			var response validator.StringResponse
