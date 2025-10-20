@@ -199,6 +199,11 @@ func resourceDirectory() *schema.Resource {
 					},
 				},
 			},
+			"enable_directory_data_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -280,6 +285,12 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
+	if _, ok := d.GetOk("enable_directory_data_access"); ok {
+		if err := enableDirectoryDataAccess(ctx, conn, d.Id()); err != nil {
+			sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
@@ -354,6 +365,18 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		} else {
 			if err := disableSSO(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_directory_data_access") {
+		if _, ok := d.GetOk("enable_directory_data_access"); ok {
+			if err := enableDirectoryDataAccess(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		} else {
+			if err := disableDirectoryDataAccess(ctx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -557,6 +580,32 @@ func enableSSO(ctx context.Context, conn *directoryservice.Client, directoryID s
 
 	if err != nil {
 		return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", directoryID, err)
+	}
+
+	return nil
+}
+
+func enableDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string) error {
+	input := &directoryservice.EnableDirectoryDataAccessInput{
+		DirectoryId: aws.String(directoryID),
+	}
+
+	_, err := conn.EnableDirectoryDataAccess(ctx, input)
+	if err != nil {
+		return fmt.Errorf("enabling Directory Data Access for Directory Service Directory (%s): %w", directoryID, err)
+	}
+
+	return nil
+}
+
+func disableDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string) error {
+	input := &directoryservice.DisableDirectoryDataAccessInput{
+		DirectoryId: aws.String(directoryID),
+	}
+
+	_, err := conn.DisableDirectoryDataAccess(ctx, input)
+	if err != nil {
+		return fmt.Errorf("disabling Directory Data Access for Directory Service Directory (%s): %w", directoryID, err)
 	}
 
 	return nil
