@@ -178,7 +178,7 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
 
-	if err := d.Set("ami_tags", flattenAmiTags(imageRecipe.AmiTags)); err != nil {
+	if err := d.Set("ami_tags", flattenAMITags(imageRecipe.AmiTags)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
 	}
 

@@ -258,7 +258,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("ami_tags"); ok {
-		input.AmiTags = expandAmiTags(v.(map[string]any))
+		input.AmiTags = expandAMITags(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
@@ -336,7 +336,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
 	}
 
-	if err := d.Set("ami_tags", flattenAmiTags(imageRecipe.AmiTags)); err != nil {
+	if err := d.Set("ami_tags", flattenAMITags(imageRecipe.AmiTags)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
 	}
 
@@ -413,7 +413,7 @@ func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn st
 	return output.ImageRecipe, nil
 }
 
-func expandAmiTags(tfMap map[string]any) map[string]string {
+func expandAMITags(tfMap map[string]any) map[string]string {
 	if tfMap == nil {
 		return nil
 	}
@@ -618,7 +618,7 @@ func expandSystemsManagerAgent(tfMap map[string]any) *awstypes.SystemsManagerAge
 	return apiObject
 }
 
-func flattenAmiTags(apiMap map[string]string) map[string]any {
+func flattenAMITags(apiMap map[string]string) map[string]any {
 	if len(apiMap) == 0 {
 		return nil
 	}
