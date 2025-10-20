@@ -1078,7 +1078,7 @@ func expandRuleTransforms(tfList []any) []awstypes.RuleTransform {
 
 		case awstypes.TransformTypeEnumUrlRewrite:
 			if v, ok := tfMap["url_rewrite"].([]any); ok && len(v) > 0 {
-				apiObject.UrlRewriteConfig = expandUrlRewriteConfig(v)
+				apiObject.UrlRewriteConfig = expandURLRewriteConfig(v)
 			}
 		}
 
@@ -1107,7 +1107,7 @@ func expandHostHeaderRewriteConfig(tfList []any) *awstypes.HostHeaderRewriteConf
 	return config
 }
 
-func expandUrlRewriteConfig(tfList []any) *awstypes.UrlRewriteConfig {
+func expandURLRewriteConfig(tfList []any) *awstypes.UrlRewriteConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1167,7 +1167,7 @@ func flattenRuleTransforms(apiObjects []awstypes.RuleTransform) []any {
 			tfMap["host_header_rewrite"] = flattenHostHeaderRewriteConfig(apiObject.HostHeaderRewriteConfig)
 
 		case awstypes.TransformTypeEnumUrlRewrite:
-			tfMap["url_rewrite"] = flattenUrlRewriteConfig(apiObject.UrlRewriteConfig)
+			tfMap["url_rewrite"] = flattenURLRewriteConfig(apiObject.UrlRewriteConfig)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1188,7 +1188,7 @@ func flattenHostHeaderRewriteConfig(apiObject *awstypes.HostHeaderRewriteConfig)
 	return []any{tfMap}
 }
 
-func flattenUrlRewriteConfig(apiObject *awstypes.UrlRewriteConfig) []any {
+func flattenURLRewriteConfig(apiObject *awstypes.UrlRewriteConfig) []any {
 	if apiObject == nil {
 		return []any{}
 	}
