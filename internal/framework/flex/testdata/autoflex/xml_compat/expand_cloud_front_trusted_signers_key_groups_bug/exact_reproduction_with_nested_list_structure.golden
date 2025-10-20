@@ -1,0 +1,185 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "DefaultCacheBehavior",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.fieldname": "DefaultCacheBehavior",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[struct { TargetOriginId github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue \"tfsdk:\\\"target_origin_id\\\"\"; ViewerProtocolPolicy github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue \"tfsdk:\\\"viewer_protocol_policy\\\"\"; TrustedSigners github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue] \"tfsdk:\\\"trusted_signers\\\"\"; TrustedKeyGroups github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue] \"tfsdk:\\\"trusted_key_groups\\\"\" }]",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found XML wrapper collapse target",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.fieldname": "AllowedMethods",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "flex.AllowedMethods"
+  },
+  {
+    "@level": "trace",
+    "@message": "Building generic XML wrapper collapse struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior",
+    "target_type": "flex.AllowedMethods"
+  },
+  {
+    "@level": "trace",
+    "@message": "All source collection fields null - setting target to nil",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found XML wrapper collapse target",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.fieldname": "TrustedKeyGroups",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "flex.TrustedKeyGroups"
+  },
+  {
+    "@level": "trace",
+    "@message": "Building generic XML wrapper collapse struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior",
+    "target_type": "flex.TrustedKeyGroups"
+  },
+  {
+    "@level": "trace",
+    "@message": "All source collection fields null - setting target to nil",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found XML wrapper collapse target",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.fieldname": "TrustedSigners",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "flex.TrustedSigners"
+  },
+  {
+    "@level": "trace",
+    "@message": "Building generic XML wrapper collapse struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior",
+    "target_type": "flex.TrustedSigners"
+  },
+  {
+    "@level": "trace",
+    "@message": "All source collection fields null - setting target to nil",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "TargetOriginId",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.fieldname": "TargetOriginId",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0].TargetOriginId",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
+    "autoflex.target.path": "DefaultCacheBehavior.TargetOriginId",
+    "autoflex.target.type": "*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "ViewerProtocolPolicy",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.fieldname": "ViewerProtocolPolicy",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "DefaultCacheBehavior[0].ViewerProtocolPolicy",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
+    "autoflex.target.path": "DefaultCacheBehavior.ViewerProtocolPolicy",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.ViewerProtocolPolicy"
+  },
+  {
+    "@level": "trace",
+    "@message": "Skipping field already processed by XML wrapper collapse",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "TrustedSigners",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior"
+  },
+  {
+    "@level": "trace",
+    "@message": "Skipping field already processed by XML wrapper collapse",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "TrustedKeyGroups",
+    "autoflex.source.path": "DefaultCacheBehavior[0]",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "DefaultCacheBehavior",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DefaultCacheBehavior"
+  }
+]

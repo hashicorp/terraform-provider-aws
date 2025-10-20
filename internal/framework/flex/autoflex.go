@@ -28,6 +28,7 @@ const (
 type autoFlexer interface {
 	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, fieldOpts) diag.Diagnostics
 	getOptions() AutoFlexOptions
+	handleXMLWrapperCollapse(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, reflect.Type, reflect.Type, map[string]bool) diag.Diagnostics
 }
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.

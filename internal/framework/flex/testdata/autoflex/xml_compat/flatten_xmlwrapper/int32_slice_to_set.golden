@@ -69,7 +69,8 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
     "autoflex.target.path": "",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
-    "items_count": 2
+    "items_count": 2,
+    "valid_count": 2
   },
   {
     "@level": "trace",

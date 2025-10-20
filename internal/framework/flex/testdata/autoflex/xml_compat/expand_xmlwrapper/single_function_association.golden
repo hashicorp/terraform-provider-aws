@@ -36,6 +36,18 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations"
   },
   {
+    "@level": "debug",
+    "@message": "Creating XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "source_null": false,
+    "source_unknown": false,
+    "target_type": "flex.FunctionAssociations"
+  },
+  {
     "@level": "trace",
     "@message": "Expanding NestedObjectCollection to XML wrapper",
     "@module": "provider.autoflex",
