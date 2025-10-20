@@ -287,6 +287,12 @@ func (l *rolePolicyAttachmentListResource) List(ctx context.Context, request lis
 			pages := iam.NewListAttachedRolePoliciesPaginator(conn, &input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
+				if errs.IsA[*awstypes.NoSuchEntityException](err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping", map[string]any{
+						logging.ResourceAttributeKey(names.AttrRole): aws.ToString(role.RoleName),
+					})
+					continue
+				}
 				if err != nil {
 					result := fwdiag.NewListResultErrorDiagnostic(err)
 					yield(result)
