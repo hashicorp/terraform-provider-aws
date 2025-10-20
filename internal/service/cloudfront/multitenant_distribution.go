@@ -4,23 +4,26 @@
 package cloudfront
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -64,7 +67,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				},
 			},
 			names.AttrComment: schema.StringAttribute{
-				Optional: true,
+				Required: true,
 			},
 			"default_root_object": schema.StringAttribute{
 				Optional: true,
@@ -116,14 +119,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					Attributes: map[string]schema.Attribute{
 						"allowed_methods": schema.SetAttribute{
 							Required:   true,
-							CustomType: fwtypes.SetOfStringType,
+							CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 						},
 						"cache_policy_id": schema.StringAttribute{
 							Optional: true,
 						},
 						"cached_methods": schema.SetAttribute{
 							Required:   true,
-							CustomType: fwtypes.SetOfStringType,
+							CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 						},
 						"compress": schema.BoolAttribute{
 							Optional: true,
@@ -203,18 +206,22 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 			},
 			"default_cache_behavior": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[defaultCacheBehaviorModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"allowed_methods": schema.SetAttribute{
 							Required:   true,
-							CustomType: fwtypes.SetOfStringType,
+							CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 						},
 						"cache_policy_id": schema.StringAttribute{
 							Optional: true,
 						},
 						"cached_methods": schema.SetAttribute{
 							Required:   true,
-							CustomType: fwtypes.SetOfStringType,
+							CustomType: fwtypes.SetOfStringEnumType[awstypes.Method](),
 						},
 						"compress": schema.BoolAttribute{
 							Optional: true,
@@ -360,7 +367,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 									},
 									"origin_ssl_protocols": schema.SetAttribute{
 										Required:   true,
-										CustomType: fwtypes.SetOfStringType,
+										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
 									},
 								},
 							},
@@ -540,46 +547,151 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 	}
 }
 
+func registerLogger(ctx context.Context, logLevel hclog.Level) context.Context {
+	return tflog.NewSubsystem(ctx, "cloudfront_testing",
+		tflog.WithLevel(logLevel),
+		tflog.WithRootFields(),
+	)
+}
+
 func (r *multiTenantDistributionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	// Simple file-based debug log to verify this method is called
+	if f, err := os.Create("/tmp/cloudfront_debug.log"); err == nil {
+		f.WriteString(fmt.Sprintf("Create method called at %v\n", time.Now()))
+		f.Close()
+	}
+
 	var data multiTenantDistributionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	// Debug: Check what's in the data model from the plan
+	fmt.Printf("DEBUG: Data model from plan:\n")
+	tflog.Error(ctx, "CloudFront multitenant distribution data model from plan")
+	fmt.Printf("DEBUG: data.Comment: %+v\n", data.Comment)
+	fmt.Printf("DEBUG: data.Enabled: %+v\n", data.Enabled)
+	fmt.Printf("DEBUG: data.DefaultCacheBehavior.IsNull(): %+v\n", data.DefaultCacheBehavior.IsNull())
+	tflog.Error(ctx, "DefaultCacheBehavior status", map[string]any{
+		"is_null":    data.DefaultCacheBehavior.IsNull(),
+		"is_unknown": data.DefaultCacheBehavior.IsUnknown(),
+	})
+	fmt.Printf("DEBUG: data.DefaultCacheBehavior.IsUnknown(): %+v\n", data.DefaultCacheBehavior.IsUnknown())
+	if !data.DefaultCacheBehavior.IsNull() && !data.DefaultCacheBehavior.IsUnknown() {
+		elements := data.DefaultCacheBehavior.Elements()
+		fmt.Printf("DEBUG: data.DefaultCacheBehavior.Elements(): %+v (len=%d)\n", elements, len(elements))
+		tflog.Error(ctx, "DefaultCacheBehavior elements", map[string]any{
+			"element_count": len(elements),
+			"elements":      fmt.Sprintf("%+v", elements),
+		})
+	}
+	fmt.Printf("DEBUG: data.Origin.IsNull(): %+v\n", data.Origin.IsNull())
+	if !data.Origin.IsNull() {
+		elements := data.Origin.Elements()
+		fmt.Printf("DEBUG: data.Origin.Elements(): %+v (len=%d)\n", elements, len(elements))
+	}
+
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	var distributionConfig awstypes.DistributionConfig
-	expandedConfig, d := data.Expand(ctx)
-	response.Diagnostics.Append(d...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	distributionConfig = expandedConfig.(awstypes.DistributionConfig)
-
-	// Debug: Log what AutoFlex populated
-	fmt.Printf("DEBUG: After AutoFlex - CallerReference: %v\n", distributionConfig.CallerReference)
-	fmt.Printf("DEBUG: After AutoFlex - Origins: %+v\n", distributionConfig.Origins)
-	fmt.Printf("DEBUG: After AutoFlex - DefaultCacheBehavior: %+v\n", distributionConfig.DefaultCacheBehavior)
-	if distributionConfig.DefaultCacheBehavior != nil {
-		fmt.Printf("DEBUG: AllowedMethods: %+v\n", distributionConfig.DefaultCacheBehavior.AllowedMethods)
-	}
-
-	// Set required computed fields that AutoFlex can't handle
-	distributionConfig.CallerReference = aws.String(id.UniqueId())
-
-	input := cloudfront.CreateDistributionWithTagsInput{
+	input := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
-			DistributionConfig: &distributionConfig,
+			DistributionConfig: &awstypes.DistributionConfig{},
 			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
 		},
 	}
+
+	var buf bytes.Buffer
+	ctx = tflogtest.RootLogger(ctx, &buf)
+	ctx = registerLogger(ctx, hclog.Trace)
+
+	defer func() {
+		fmt.Printf("CloudFront Multi-tenant Distribution Logs:\n%s", buf.String())
+	}()
+
+	// Additional debug info to file
+	if f, err := os.OpenFile("/tmp/cloudfront_debug.log", os.O_APPEND|os.O_WRONLY, 0644); err == nil {
+		f.WriteString(fmt.Sprintf("DefaultCacheBehavior.IsNull(): %v\n", data.DefaultCacheBehavior.IsNull()))
+		f.WriteString(fmt.Sprintf("DefaultCacheBehavior.IsUnknown(): %v\n", data.DefaultCacheBehavior.IsUnknown()))
+		if !data.DefaultCacheBehavior.IsNull() && !data.DefaultCacheBehavior.IsUnknown() {
+			elements := data.DefaultCacheBehavior.Elements()
+			f.WriteString(fmt.Sprintf("DefaultCacheBehavior elements count: %d\n", len(elements)))
+			f.WriteString(fmt.Sprintf("DefaultCacheBehavior type: %T\n", data.DefaultCacheBehavior))
+			f.WriteString(fmt.Sprintf("Target type: %T\n", input.DistributionConfigWithTags.DistributionConfig.DefaultCacheBehavior))
+		}
+		f.Close()
+	}
+
+	tflog.Error(ctx, "About to call AutoFlex Expand")
+	expandDiags := fwflex.Expand(ctx, data, input.DistributionConfigWithTags.DistributionConfig)
+	tflog.Error(ctx, "AutoFlex Expand completed", map[string]any{
+		"diagnostics_count": len(expandDiags),
+	})
+
+	if dcb := input.DistributionConfigWithTags.DistributionConfig.DefaultCacheBehavior; dcb != nil {
+		fmt.Printf("DEBUG: DefaultCacheBehavior after AutoFlex:\n")
+		fmt.Printf("  CachePolicyId: %v\n", dcb.CachePolicyId)
+		fmt.Printf("  ForwardedValues: %v\n", dcb.ForwardedValues)
+		fmt.Printf("  MinTTL: %v\n", dcb.MinTTL)
+		fmt.Printf("  MaxTTL: %v\n", dcb.MaxTTL)
+		fmt.Printf("  DefaultTTL: %v\n", dcb.DefaultTTL)
+		if dcb.TrustedSigners != nil {
+			fmt.Printf("  TrustedSigners: %+v\n", dcb.TrustedSigners)
+		} else {
+			fmt.Printf("  TrustedSigners: nil\n")
+		}
+		if dcb.TrustedKeyGroups != nil {
+			fmt.Printf("  TrustedKeyGroups: %+v\n", dcb.TrustedKeyGroups)
+		} else {
+			fmt.Printf("  TrustedKeyGroups: nil\n")
+		}
+	}
+
+	// Debug result to file
+	if f, err := os.OpenFile("/tmp/cloudfront_debug.log", os.O_APPEND|os.O_WRONLY, 0644); err == nil {
+		f.WriteString(fmt.Sprintf("After AutoFlex - DefaultCacheBehavior: %+v\n", input.DistributionConfigWithTags.DistributionConfig.DefaultCacheBehavior))
+		f.WriteString(fmt.Sprintf("After AutoFlex - Diagnostics count: %d\n", len(expandDiags)))
+		f.Close()
+	}
+	response.Diagnostics.Append(expandDiags...)
+
+	// Debug: Check for any diagnostics from AutoFlex
+	fmt.Printf("DEBUG: AutoFlex Expand diagnostics count: %d\n", len(expandDiags))
+	for i, diag := range expandDiags {
+		fmt.Printf("DEBUG: Expand diagnostic [%d]: %s - %s\n", i, diag.Severity(), diag.Summary())
+		tflog.Error(ctx, "AutoFlex diagnostic", map[string]any{
+			"index":    i,
+			"severity": diag.Severity().String(),
+			"summary":  diag.Summary(),
+		})
+		if diag.Detail() != "" {
+			fmt.Printf("DEBUG: Expand diagnostic [%d] detail: %s\n", i, diag.Detail())
+			tflog.Debug(ctx, "AutoFlex diagnostic detail", map[string]any{
+				"index":  i,
+				"detail": diag.Detail(),
+			})
+		}
+	}
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Debug: Check what AutoFlex populated
+	fmt.Printf("DEBUG: DistributionConfig after AutoFlex Expand:\n")
+	fmt.Printf("DEBUG: DefaultCacheBehavior: %+v\n", input.DistributionConfigWithTags.DistributionConfig.DefaultCacheBehavior)
+	fmt.Printf("DEBUG: Origins: %+v\n", input.DistributionConfigWithTags.DistributionConfig.Origins)
+	fmt.Printf("DEBUG: Enabled: %+v\n", input.DistributionConfigWithTags.DistributionConfig.Enabled)
+	fmt.Printf("DEBUG: Comment: %+v\n", input.DistributionConfigWithTags.DistributionConfig.Comment)
+
+	// Set required computed fields that AutoFlex can't handle
+	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(id.UniqueId())
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.DistributionConfigWithTags.Tags.Items = tags
 	}
 
-	output, err := conn.CreateDistributionWithTags(ctx, &input)
+	output, err := conn.CreateDistributionWithTags(ctx, input)
 	if err != nil {
 		response.Diagnostics.AddError("creating CloudFront Multi-tenant Distribution", err.Error())
 		return
@@ -634,8 +746,8 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	// Use custom flattener instead of AutoFlex
-	response.Diagnostics.Append(r.Flatten(ctx, output, &data)...)
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -723,13 +835,13 @@ type customHeaderModel struct {
 }
 
 type customOriginConfigModel struct {
-	HTTPPort               types.Int32                                       `tfsdk:"http_port"`
-	HTTPSPort              types.Int32                                       `tfsdk:"https_port"`
-	IPAddressType          fwtypes.StringEnum[awstypes.IpAddressType]        `tfsdk:"ip_address_type"`
-	OriginKeepaliveTimeout types.Int32                                       `tfsdk:"origin_keepalive_timeout"`
-	OriginReadTimeout      types.Int32                                       `tfsdk:"origin_read_timeout"`
-	OriginProtocolPolicy   fwtypes.StringEnum[awstypes.OriginProtocolPolicy] `tfsdk:"origin_protocol_policy"`
-	OriginSSLProtocols     fwtypes.SetValueOf[types.String]                  `tfsdk:"origin_ssl_protocols"`
+	HTTPPort               types.Int32                                                  `tfsdk:"http_port"`
+	HTTPSPort              types.Int32                                                  `tfsdk:"https_port"`
+	IPAddressType          fwtypes.StringEnum[awstypes.IpAddressType]                   `tfsdk:"ip_address_type"`
+	OriginKeepaliveTimeout types.Int32                                                  `tfsdk:"origin_keepalive_timeout"`
+	OriginReadTimeout      types.Int32                                                  `tfsdk:"origin_read_timeout"`
+	OriginProtocolPolicy   fwtypes.StringEnum[awstypes.OriginProtocolPolicy]            `tfsdk:"origin_protocol_policy"`
+	OriginSSLProtocols     fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"origin_ssl_protocols"`
 }
 
 type originShieldModel struct {
@@ -756,9 +868,9 @@ type memberModel struct {
 }
 
 type defaultCacheBehaviorModel struct {
-	AllowedMethods            fwtypes.SetValueOf[types.String]                               `tfsdk:"allowed_methods"`
+	AllowedMethods            fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]]        `tfsdk:"allowed_methods"`
 	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
-	CachedMethods             fwtypes.SetValueOf[types.String]                               `tfsdk:"cached_methods"`
+	CachedMethods             fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]]        `tfsdk:"cached_methods"`
 	Compress                  types.Bool                                                     `tfsdk:"compress"`
 	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id"`
 	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association"`
@@ -774,9 +886,9 @@ type defaultCacheBehaviorModel struct {
 }
 
 type cacheBehaviorModel struct {
-	AllowedMethods            fwtypes.SetValueOf[types.String]                               `tfsdk:"allowed_methods"`
+	AllowedMethods            fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]]        `tfsdk:"allowed_methods"`
 	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
-	CachedMethods             fwtypes.SetValueOf[types.String]                               `tfsdk:"cached_methods"`
+	CachedMethods             fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]]        `tfsdk:"cached_methods"`
 	Compress                  types.Bool                                                     `tfsdk:"compress"`
 	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id"`
 	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association"`
@@ -843,745 +955,4 @@ type stringSchemaConfigModel struct {
 	Required     types.Bool   `tfsdk:"required"`
 	Comment      types.String `tfsdk:"comment"`
 	DefaultValue types.String `tfsdk:"default_value"`
-}
-
-func (m multiTenantDistributionResourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	var distributionConfig awstypes.DistributionConfig
-
-	// DEBUGGING: Add a stack trace detection to catch infinite recursion
-	// This line is causing infinite recursion because AutoFlex will call this Expand method again
-	// when it encounters the multiTenantDistributionResourceModel which implements Expander interface
-	// REMOVED: diags.Append(fwflex.Expand(ctx, m, &distributionConfig)...)
-
-	// Manually set basic fields instead of using AutoFlex on the entire struct
-	distributionConfig.CallerReference = aws.String(m.CallerReference.ValueString())
-	distributionConfig.Comment = aws.String(m.Comment.ValueString())
-	distributionConfig.DefaultRootObject = aws.String(m.DefaultRootObject.ValueString())
-	distributionConfig.Enabled = aws.Bool(m.Enabled.ValueBool())
-	if !m.HTTPVersion.IsNull() {
-		distributionConfig.HttpVersion = m.HTTPVersion.ValueEnum()
-	}
-	if !m.WebACLID.IsNull() {
-		distributionConfig.WebACLId = aws.String(m.WebACLID.ValueString())
-	}
-
-	// Set multi-tenant specific fields
-	distributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
-
-	// Handle CustomErrorResponse field
-	if !m.CustomErrorResponse.IsNull() {
-		customErrorResponses, d := m.CustomErrorResponse.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var items []awstypes.CustomErrorResponse
-		for _, errorResponse := range customErrorResponses {
-			var item awstypes.CustomErrorResponse
-			diags.Append(fwflex.Expand(ctx, errorResponse, &item)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			items = append(items, item)
-		}
-
-		distributionConfig.CustomErrorResponses = &awstypes.CustomErrorResponses{
-			Items:    items,
-			Quantity: aws.Int32(int32(len(items))),
-		}
-	}
-
-	// Handle Restrictions field
-	if !m.Restrictions.IsNull() {
-		restrictions, d := m.Restrictions.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		if len(restrictions) > 0 {
-			var restrictionsItem awstypes.Restrictions
-			diags.Append(fwflex.Expand(ctx, restrictions[0], &restrictionsItem)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			// Handle GeoRestriction Items and Quantity
-			if restrictionsItem.GeoRestriction != nil {
-				geoRestrictions, d := restrictions[0].GeoRestriction.ToSlice(ctx)
-				diags.Append(d...)
-				if diags.HasError() {
-					return nil, diags
-				}
-
-				if len(geoRestrictions) > 0 {
-					if !geoRestrictions[0].Locations.IsNull() {
-						locations := geoRestrictions[0].Locations.Elements()
-
-						var items []string
-						for _, loc := range locations {
-							items = append(items, loc.(types.String).ValueString())
-						}
-
-						restrictionsItem.GeoRestriction.Items = items
-						restrictionsItem.GeoRestriction.Quantity = aws.Int32(int32(len(items)))
-					}
-				}
-			}
-
-			distributionConfig.Restrictions = &restrictionsItem
-		}
-	}
-
-	// Handle ViewerCertificate field
-	if !m.ViewerCertificate.IsNull() {
-		viewerCerts, d := m.ViewerCertificate.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		if len(viewerCerts) > 0 {
-			var viewerCert awstypes.ViewerCertificate
-			diags.Append(fwflex.Expand(ctx, viewerCerts[0], &viewerCert)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			distributionConfig.ViewerCertificate = &viewerCert
-		}
-	}
-
-	// Handle TenantConfig field (this might be a custom field that needs special handling)
-	// Note: This field might not exist in the AWS DistributionConfig, so we may need to handle it differently
-
-	// Manually handle Origins (AWS expects Origins struct with Items + Quantity)
-	if !m.Origin.IsNull() {
-		origins, d := m.Origin.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var items []awstypes.Origin
-		for _, origin := range origins {
-			var item awstypes.Origin
-
-			// Use AutoFlex with field prefix to avoid nested CustomOriginConfig issues
-			diags.Append(fwflex.Expand(ctx, origin, &item, fwflex.WithFieldNamePrefix("Origin"))...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			// Manually handle CustomOriginConfig.OriginSSLProtocols
-			if !origin.CustomOriginConfig.IsNull() {
-				customConfigs, d := origin.CustomOriginConfig.ToSlice(ctx)
-				diags.Append(d...)
-				if diags.HasError() {
-					return nil, diags
-				}
-
-				if len(customConfigs) > 0 && !customConfigs[0].OriginSSLProtocols.IsNull() {
-					protocolElements := customConfigs[0].OriginSSLProtocols.Elements()
-					sslProtocols := make([]awstypes.SslProtocol, 0, len(protocolElements))
-					for _, elem := range protocolElements {
-						if strVal, ok := elem.(types.String); ok {
-							sslProtocols = append(sslProtocols, awstypes.SslProtocol(strVal.ValueString()))
-						}
-					}
-					if item.CustomOriginConfig == nil {
-						item.CustomOriginConfig = &awstypes.CustomOriginConfig{}
-					}
-					item.CustomOriginConfig.OriginSslProtocols = &awstypes.OriginSslProtocols{
-						Items:    sslProtocols,
-						Quantity: aws.Int32(int32(len(sslProtocols))),
-					}
-				}
-			}
-
-			items = append(items, item)
-		}
-
-		distributionConfig.Origins = &awstypes.Origins{
-			Items:    items,
-			Quantity: aws.Int32(int32(len(items))),
-		}
-	}
-
-	// Manually handle DefaultCacheBehavior (AWS expects AllowedMethods/CachedMethods structs)
-	if !m.DefaultCacheBehavior.IsNull() {
-		behaviors, d := m.DefaultCacheBehavior.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		if len(behaviors) > 0 {
-			behavior := behaviors[0]
-			var defaultBehavior awstypes.DefaultCacheBehavior
-
-			// Manually set basic fields instead of using AutoFlex
-			if !behavior.CachePolicyID.IsNull() {
-				defaultBehavior.CachePolicyId = aws.String(behavior.CachePolicyID.ValueString())
-			}
-			if !behavior.Compress.IsNull() {
-				defaultBehavior.Compress = aws.Bool(behavior.Compress.ValueBool())
-			}
-			if !behavior.FieldLevelEncryptionID.IsNull() {
-				defaultBehavior.FieldLevelEncryptionId = aws.String(behavior.FieldLevelEncryptionID.ValueString())
-			}
-			if !behavior.OriginRequestPolicyID.IsNull() {
-				defaultBehavior.OriginRequestPolicyId = aws.String(behavior.OriginRequestPolicyID.ValueString())
-			}
-			if !behavior.RealtimeLogConfigARN.IsNull() {
-				defaultBehavior.RealtimeLogConfigArn = aws.String(behavior.RealtimeLogConfigARN.ValueString())
-			}
-			if !behavior.ResponseHeadersPolicyID.IsNull() {
-				defaultBehavior.ResponseHeadersPolicyId = aws.String(behavior.ResponseHeadersPolicyID.ValueString())
-			}
-			if !behavior.SmoothStreaming.IsNull() {
-				defaultBehavior.SmoothStreaming = aws.Bool(behavior.SmoothStreaming.ValueBool())
-			}
-			if !behavior.TargetOriginID.IsNull() {
-				defaultBehavior.TargetOriginId = aws.String(behavior.TargetOriginID.ValueString())
-			}
-			if !behavior.ViewerProtocolPolicy.IsNull() {
-				defaultBehavior.ViewerProtocolPolicy = behavior.ViewerProtocolPolicy.ValueEnum()
-			}
-
-			// Manually handle AllowedMethods structure
-			if !behavior.AllowedMethods.IsNull() {
-				allowedMethods := behavior.AllowedMethods.Elements()
-
-				var methods []awstypes.Method
-				for _, method := range allowedMethods {
-					methods = append(methods, awstypes.Method(method.(types.String).ValueString()))
-				}
-
-				defaultBehavior.AllowedMethods = &awstypes.AllowedMethods{
-					Items:    methods,
-					Quantity: aws.Int32(int32(len(methods))),
-				}
-
-				// Handle CachedMethods if present
-				if !behavior.CachedMethods.IsNull() {
-					cachedMethods := behavior.CachedMethods.Elements()
-
-					var cached []awstypes.Method
-					for _, method := range cachedMethods {
-						cached = append(cached, awstypes.Method(method.(types.String).ValueString()))
-					}
-
-					defaultBehavior.AllowedMethods.CachedMethods = &awstypes.CachedMethods{
-						Items:    cached,
-						Quantity: aws.Int32(int32(len(cached))),
-					}
-				}
-			}
-
-			distributionConfig.DefaultCacheBehavior = &defaultBehavior
-		}
-	}
-
-	// Manually handle CacheBehaviors (AWS expects CacheBehaviors struct with Items + Quantity)
-	if !m.CacheBehavior.IsNull() {
-		behaviors, d := m.CacheBehavior.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var items []awstypes.CacheBehavior
-		for _, behavior := range behaviors {
-			var cacheBehavior awstypes.CacheBehavior
-
-			// Use AutoFlex for most fields
-			diags.Append(fwflex.Expand(ctx, behavior, &cacheBehavior)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			// Manually handle AllowedMethods structure
-			if !behavior.AllowedMethods.IsNull() {
-				allowedMethods := behavior.AllowedMethods.Elements()
-
-				var methods []awstypes.Method
-				for _, method := range allowedMethods {
-					methods = append(methods, awstypes.Method(method.(types.String).ValueString()))
-				}
-
-				cacheBehavior.AllowedMethods = &awstypes.AllowedMethods{
-					Items:    methods,
-					Quantity: aws.Int32(int32(len(methods))),
-				}
-
-				// Handle CachedMethods if present
-				if !behavior.CachedMethods.IsNull() {
-					cachedMethods := behavior.CachedMethods.Elements()
-
-					var cached []awstypes.Method
-					for _, method := range cachedMethods {
-						cached = append(cached, awstypes.Method(method.(types.String).ValueString()))
-					}
-
-					cacheBehavior.AllowedMethods.CachedMethods = &awstypes.CachedMethods{
-						Items:    cached,
-						Quantity: aws.Int32(int32(len(cached))),
-					}
-				}
-			}
-
-			items = append(items, cacheBehavior)
-		}
-
-		distributionConfig.CacheBehaviors = &awstypes.CacheBehaviors{
-			Items:    items,
-			Quantity: aws.Int32(int32(len(items))),
-		}
-	}
-
-	// Manually handle OriginGroups (AWS expects OriginGroups struct with Items + Quantity)
-	if !m.OriginGroup.IsNull() {
-		originGroups, d := m.OriginGroup.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		var items []awstypes.OriginGroup
-		for _, originGroup := range originGroups {
-			var item awstypes.OriginGroup
-			diags.Append(fwflex.Expand(ctx, originGroup, &item)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			items = append(items, item)
-		}
-
-		distributionConfig.OriginGroups = &awstypes.OriginGroups{
-			Items:    items,
-			Quantity: aws.Int32(int32(len(items))),
-		}
-	}
-
-	return distributionConfig, diags
-}
-
-func (r *multiTenantDistributionResource) Flatten(ctx context.Context, output *cloudfront.GetDistributionOutput, data *multiTenantDistributionResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if output == nil || output.Distribution == nil {
-		return diags
-	}
-
-	distribution := output.Distribution
-	config := distribution.DistributionConfig
-
-	// DEBUGGING: Add a stack trace detection to catch infinite recursion
-	// This line is causing infinite recursion because AutoFlex will call this Flatten method again
-	// when it encounters the multiTenantDistributionResourceModel which implements Flattener interface
-	// REMOVED: diags.Append(fwflex.Flatten(ctx, output, data)...)
-
-	// Manually set basic fields that AutoFlex would have handled
-	if distribution.Id != nil {
-		data.ID = types.StringValue(aws.ToString(distribution.Id))
-	}
-	if distribution.ARN != nil {
-		data.ARN = types.StringValue(aws.ToString(distribution.ARN))
-	}
-	if distribution.Status != nil {
-		data.Status = types.StringValue(aws.ToString(distribution.Status))
-	}
-	if output.ETag != nil {
-		data.ETag = types.StringValue(aws.ToString(output.ETag))
-	}
-	if config != nil {
-		if config.CallerReference != nil {
-			data.CallerReference = types.StringValue(aws.ToString(config.CallerReference))
-		}
-		if config.Comment != nil {
-			data.Comment = types.StringValue(aws.ToString(config.Comment))
-		}
-		if config.DefaultRootObject != nil {
-			data.DefaultRootObject = types.StringValue(aws.ToString(config.DefaultRootObject))
-		}
-		if config.Enabled != nil {
-			data.Enabled = types.BoolValue(aws.ToBool(config.Enabled))
-		}
-		if config.HttpVersion != "" {
-			data.HTTPVersion = fwtypes.StringEnumValue(config.HttpVersion)
-		}
-		if config.WebACLId != nil {
-			data.WebACLID = types.StringValue(aws.ToString(config.WebACLId))
-		}
-	}
-
-	if config != nil && config.Origins != nil && config.Origins.Items != nil {
-		var origins []*originModel
-		for _, awsOrigin := range config.Origins.Items {
-			var origin originModel
-			diags.Append(fwflex.Flatten(ctx, awsOrigin, &origin)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			// Handle CustomHeaders Items
-			if awsOrigin.CustomHeaders != nil && awsOrigin.CustomHeaders.Items != nil {
-				var customHeaders []*customHeaderModel
-				for _, item := range awsOrigin.CustomHeaders.Items {
-					var header customHeaderModel
-					diags.Append(fwflex.Flatten(ctx, item, &header)...)
-					if diags.HasError() {
-						return diags
-					}
-					customHeaders = append(customHeaders, &header)
-				}
-				setVal, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, customHeaders, nil)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				origin.CustomHeader = setVal
-			}
-
-			origins = append(origins, &origin)
-		}
-
-		originsSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, origins, nil)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		data.Origin = originsSet
-	}
-
-	if config != nil && config.DefaultCacheBehavior != nil {
-		var behavior defaultCacheBehaviorModel
-		diags.Append(fwflex.Flatten(ctx, config.DefaultCacheBehavior, &behavior)...)
-		if diags.HasError() {
-			return diags
-		}
-
-		// Handle AllowedMethods and CachedMethods Items
-		if config.DefaultCacheBehavior.AllowedMethods != nil {
-			if config.DefaultCacheBehavior.AllowedMethods.Items != nil {
-				var methods []attr.Value
-				for _, method := range config.DefaultCacheBehavior.AllowedMethods.Items {
-					methods = append(methods, types.StringValue(string(method)))
-				}
-				setVal, d := fwtypes.NewSetValueOf[types.String](ctx, methods)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				behavior.AllowedMethods = setVal
-			}
-			if config.DefaultCacheBehavior.AllowedMethods.CachedMethods != nil && config.DefaultCacheBehavior.AllowedMethods.CachedMethods.Items != nil {
-				var methods []attr.Value
-				for _, method := range config.DefaultCacheBehavior.AllowedMethods.CachedMethods.Items {
-					methods = append(methods, types.StringValue(string(method)))
-				}
-				setVal, d := fwtypes.NewSetValueOf[types.String](ctx, methods)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				behavior.CachedMethods = setVal
-			}
-		}
-
-		// Handle FunctionAssociations Items
-		if config.DefaultCacheBehavior.FunctionAssociations != nil && config.DefaultCacheBehavior.FunctionAssociations.Items != nil {
-			var funcAssocs []*functionAssociationModel
-			for _, item := range config.DefaultCacheBehavior.FunctionAssociations.Items {
-				var assoc functionAssociationModel
-				diags.Append(fwflex.Flatten(ctx, item, &assoc)...)
-				if diags.HasError() {
-					return diags
-				}
-				funcAssocs = append(funcAssocs, &assoc)
-			}
-			setVal, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, funcAssocs, nil)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			behavior.FunctionAssociation = setVal
-		}
-
-		// Handle LambdaFunctionAssociations Items
-		if config.DefaultCacheBehavior.LambdaFunctionAssociations != nil && config.DefaultCacheBehavior.LambdaFunctionAssociations.Items != nil {
-			var lambdaAssocs []*lambdaFunctionAssociationModel
-			for _, item := range config.DefaultCacheBehavior.LambdaFunctionAssociations.Items {
-				var assoc lambdaFunctionAssociationModel
-				diags.Append(fwflex.Flatten(ctx, item, &assoc)...)
-				if diags.HasError() {
-					return diags
-				}
-				lambdaAssocs = append(lambdaAssocs, &assoc)
-			}
-			setVal, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, lambdaAssocs, nil)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			behavior.LambdaFunctionAssociation = setVal
-		}
-
-		// Handle TrustedKeyGroups Items
-		if config.DefaultCacheBehavior.TrustedKeyGroups != nil && config.DefaultCacheBehavior.TrustedKeyGroups.Items != nil {
-			var items []attr.Value
-			for _, item := range config.DefaultCacheBehavior.TrustedKeyGroups.Items {
-				items = append(items, types.StringValue(item))
-			}
-			listVal, d := fwtypes.NewListValueOf[types.String](ctx, items)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			behavior.TrustedKeyGroups = listVal
-		}
-
-		// Handle TrustedSigners Items
-		if config.DefaultCacheBehavior.TrustedSigners != nil && config.DefaultCacheBehavior.TrustedSigners.Items != nil {
-			var items []attr.Value
-			for _, item := range config.DefaultCacheBehavior.TrustedSigners.Items {
-				items = append(items, types.StringValue(item))
-			}
-			listVal, d := fwtypes.NewListValueOf[types.String](ctx, items)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			behavior.TrustedSigners = listVal
-		}
-
-		behaviorList, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*defaultCacheBehaviorModel{&behavior}, nil)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		data.DefaultCacheBehavior = behaviorList
-	}
-
-	if config != nil && config.CacheBehaviors != nil && config.CacheBehaviors.Items != nil {
-		var behaviors []*cacheBehaviorModel
-		for _, awsBehavior := range config.CacheBehaviors.Items {
-			var behavior cacheBehaviorModel
-			diags.Append(fwflex.Flatten(ctx, awsBehavior, &behavior)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			// Handle AllowedMethods and CachedMethods Items
-			if awsBehavior.AllowedMethods != nil {
-				if awsBehavior.AllowedMethods.Items != nil {
-					var methods []attr.Value
-					for _, method := range awsBehavior.AllowedMethods.Items {
-						methods = append(methods, types.StringValue(string(method)))
-					}
-					setVal, d := fwtypes.NewSetValueOf[types.String](ctx, methods)
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-					behavior.AllowedMethods = setVal
-				}
-				if awsBehavior.AllowedMethods.CachedMethods != nil && awsBehavior.AllowedMethods.CachedMethods.Items != nil {
-					var methods []attr.Value
-					for _, method := range awsBehavior.AllowedMethods.CachedMethods.Items {
-						methods = append(methods, types.StringValue(string(method)))
-					}
-					setVal, d := fwtypes.NewSetValueOf[types.String](ctx, methods)
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-					behavior.CachedMethods = setVal
-				}
-			}
-
-			// Handle FunctionAssociations Items
-			if awsBehavior.FunctionAssociations != nil && awsBehavior.FunctionAssociations.Items != nil {
-				var funcAssocs []*functionAssociationModel
-				for _, item := range awsBehavior.FunctionAssociations.Items {
-					var assoc functionAssociationModel
-					diags.Append(fwflex.Flatten(ctx, item, &assoc)...)
-					if diags.HasError() {
-						return diags
-					}
-					funcAssocs = append(funcAssocs, &assoc)
-				}
-				setVal, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, funcAssocs, nil)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				behavior.FunctionAssociation = setVal
-			}
-
-			// Handle LambdaFunctionAssociations Items
-			if awsBehavior.LambdaFunctionAssociations != nil && awsBehavior.LambdaFunctionAssociations.Items != nil {
-				var lambdaAssocs []*lambdaFunctionAssociationModel
-				for _, item := range awsBehavior.LambdaFunctionAssociations.Items {
-					var assoc lambdaFunctionAssociationModel
-					diags.Append(fwflex.Flatten(ctx, item, &assoc)...)
-					if diags.HasError() {
-						return diags
-					}
-					lambdaAssocs = append(lambdaAssocs, &assoc)
-				}
-				setVal, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, lambdaAssocs, nil)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				behavior.LambdaFunctionAssociation = setVal
-			}
-
-			// Handle TrustedKeyGroups Items
-			if awsBehavior.TrustedKeyGroups != nil && awsBehavior.TrustedKeyGroups.Items != nil {
-				var items []attr.Value
-				for _, item := range awsBehavior.TrustedKeyGroups.Items {
-					items = append(items, types.StringValue(item))
-				}
-				listVal, d := fwtypes.NewListValueOf[types.String](ctx, items)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				behavior.TrustedKeyGroups = listVal
-			}
-
-			// Handle TrustedSigners Items
-			if awsBehavior.TrustedSigners != nil && awsBehavior.TrustedSigners.Items != nil {
-				var items []attr.Value
-				for _, item := range awsBehavior.TrustedSigners.Items {
-					items = append(items, types.StringValue(item))
-				}
-				listVal, d := fwtypes.NewListValueOf[types.String](ctx, items)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				behavior.TrustedSigners = listVal
-			}
-
-			behaviors = append(behaviors, &behavior)
-		}
-
-		behaviorsList, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, behaviors, nil)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		data.CacheBehavior = behaviorsList
-	}
-
-	if config != nil && config.OriginGroups != nil && config.OriginGroups.Items != nil {
-		var originGroups []*originGroupModel
-		for _, awsOriginGroup := range config.OriginGroups.Items {
-			var originGroup originGroupModel
-			diags.Append(fwflex.Flatten(ctx, awsOriginGroup, &originGroup)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			// Handle FailoverCriteria StatusCodes Items
-			if awsOriginGroup.FailoverCriteria != nil && awsOriginGroup.FailoverCriteria.StatusCodes != nil && awsOriginGroup.FailoverCriteria.StatusCodes.Items != nil {
-				var statusCodes []attr.Value
-				for _, code := range awsOriginGroup.FailoverCriteria.StatusCodes.Items {
-					statusCodes = append(statusCodes, types.Int64Value(int64(code)))
-				}
-				setVal, d := fwtypes.NewSetValueOf[types.Int64](ctx, statusCodes)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				var failoverCriteria failoverCriteriaModel
-				failoverCriteria.StatusCodes = setVal
-				listVal, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*failoverCriteriaModel{&failoverCriteria}, nil)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				originGroup.FailoverCriteria = listVal
-			}
-
-			// Handle Members Items
-			if awsOriginGroup.Members != nil && awsOriginGroup.Members.Items != nil {
-				var members []*memberModel
-				for _, item := range awsOriginGroup.Members.Items {
-					var member memberModel
-					diags.Append(fwflex.Flatten(ctx, item, &member)...)
-					if diags.HasError() {
-						return diags
-					}
-					members = append(members, &member)
-				}
-				listVal, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, members, nil)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-				originGroup.Member = listVal
-			}
-
-			originGroups = append(originGroups, &originGroup)
-		}
-
-		originGroupsSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, originGroups, nil)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		data.OriginGroup = originGroupsSet
-	}
-
-	if config != nil && config.Restrictions != nil {
-		var restrictions restrictionsModel
-		diags.Append(fwflex.Flatten(ctx, config.Restrictions, &restrictions)...)
-		if diags.HasError() {
-			return diags
-		}
-
-		// Handle GeoRestriction Items
-		if config.Restrictions.GeoRestriction != nil && config.Restrictions.GeoRestriction.Items != nil {
-			var geoRestriction geoRestrictionModel
-			diags.Append(fwflex.Flatten(ctx, config.Restrictions.GeoRestriction, &geoRestriction)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			var items []attr.Value
-			for _, item := range config.Restrictions.GeoRestriction.Items {
-				items = append(items, types.StringValue(item))
-			}
-			setVal, d := fwtypes.NewSetValueOf[types.String](ctx, items)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			geoRestriction.Locations = setVal
-
-			listVal, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*geoRestrictionModel{&geoRestriction}, nil)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			restrictions.GeoRestriction = listVal
-		}
-
-		restrictionsList, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*restrictionsModel{&restrictions}, nil)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		data.Restrictions = restrictionsList
-	}
-
-	return diags
 }

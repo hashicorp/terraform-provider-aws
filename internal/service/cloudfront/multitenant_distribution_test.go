@@ -24,7 +24,7 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -119,10 +119,11 @@ func testAccMultiTenantDistributionConfig_basic() string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = true
+  comment = "Test multi-tenant distribution"
 
   origin {
     domain_name = "example.com"
-    origin_id   = "example"
+    id   = "example"
     
     custom_origin_config {
       http_port              = 80
@@ -137,6 +138,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # AWS Managed CachingDisabled policy
   }
 
   viewer_certificate {
