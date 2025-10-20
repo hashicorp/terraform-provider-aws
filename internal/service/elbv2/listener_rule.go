@@ -460,6 +460,82 @@ func resourceListenerRule() *schema.Resource {
 				ForceNew:     false,
 				ValidateFunc: validListenerRulePriority,
 			},
+			"transform": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    2, // AWS allows one host-header-rewrite and one url-rewrite transform
+				Description: "Transform configuration block. Transforms are applied to requests before they are sent to targets. Can specify up to one host-header-rewrite and one url-rewrite transform per rule.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Type of transform. Valid values are 'url-rewrite' and 'host-header-rewrite'.",
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.TransformTypeEnum](),
+						},
+						"host_header_rewrite": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							Description:      "Configuration block for host header rewrite. Required when type is 'host-header-rewrite'.",
+							DiffSuppressFunc: suppressIfTransformTypeNot(awstypes.TransformTypeEnumHostHeaderRewrite),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rewrite": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"regex": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+												"replacement": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"url_rewrite": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							Description:      "Configuration block for URL rewrite. Required when type is 'url-rewrite'.",
+							DiffSuppressFunc: suppressIfTransformTypeNot(awstypes.TransformTypeEnumUrlRewrite),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rewrite": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"regex": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+												"replacement": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -485,6 +561,21 @@ func suppressIfActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppres
 	}
 }
 
+func suppressIfTransformTypeNot(t awstypes.TransformTypeEnum) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		take := 2
+		i := strings.IndexFunc(k, func(r rune) bool {
+			if r == '.' {
+				take -= 1
+				return take == 0
+			}
+			return false
+		})
+		at := k[:i+1] + names.AttrType
+		return awstypes.TransformTypeEnum(d.Get(at).(string)) != t
+	}
+}
+
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
@@ -505,6 +596,10 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	input.Conditions, err = expandRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if v, ok := d.GetOk("transform"); ok {
+		input.Transforms = expandRuleTransforms(v.([]any))
 	}
 
 	output, err := retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
@@ -637,6 +732,10 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 
+	if err := d.Set("transform", flattenRuleTransforms(rule.Transforms)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting transform: %s", err)
+	}
+
 	return diags
 }
 
@@ -680,6 +779,16 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.Conditions, err = expandRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
+			}
+			requestUpdate = true
+		}
+
+		if d.HasChange("transform") {
+			if v, ok := d.GetOk("transform"); ok {
+				input.Transforms = expandRuleTransforms(v.([]any))
+			} else {
+				// Use ResetTransforms to remove all transforms
+				input.ResetTransforms = aws.Bool(true)
 			}
 			requestUpdate = true
 		}
@@ -942,4 +1051,235 @@ func expandRuleConditions(tfList []any) ([]awstypes.RuleCondition, error) {
 	}
 
 	return apiObjects, nil
+}
+
+func expandRuleTransforms(tfList []any) []awstypes.RuleTransform {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.RuleTransform
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.RuleTransform{
+			Type: awstypes.TransformTypeEnum(tfMap[names.AttrType].(string)),
+		}
+
+		switch awstypes.TransformTypeEnum(tfMap[names.AttrType].(string)) {
+		case awstypes.TransformTypeEnumHostHeaderRewrite:
+			if v, ok := tfMap["host_header_rewrite"].([]any); ok && len(v) > 0 {
+				apiObject.HostHeaderRewriteConfig = expandHostHeaderRewriteConfig(v)
+			}
+
+		case awstypes.TransformTypeEnumUrlRewrite:
+			if v, ok := tfMap["url_rewrite"].([]any); ok && len(v) > 0 {
+				apiObject.UrlRewriteConfig = expandUrlRewriteConfig(v)
+			}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandHostHeaderRewriteConfig(tfList []any) *awstypes.HostHeaderRewriteConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	config := &awstypes.HostHeaderRewriteConfig{}
+
+	if v, ok := tfMap["rewrite"].([]any); ok {
+		config.Rewrites = expandRewriteConfigs(v)
+	}
+
+	return config
+}
+
+func expandUrlRewriteConfig(tfList []any) *awstypes.UrlRewriteConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	config := &awstypes.UrlRewriteConfig{}
+
+	if v, ok := tfMap["rewrite"].([]any); ok {
+		config.Rewrites = expandRewriteConfigs(v)
+	}
+
+	return config
+}
+
+func expandRewriteConfigs(tfList []any) []awstypes.RewriteConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.RewriteConfig
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.RewriteConfig{
+			Regex:   aws.String(tfMap["regex"].(string)),
+			Replace: aws.String(tfMap["replacement"].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenRuleTransforms(apiObjects []awstypes.RuleTransform) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrType: apiObject.Type,
+		}
+
+		switch apiObject.Type {
+		case awstypes.TransformTypeEnumHostHeaderRewrite:
+			tfMap["host_header_rewrite"] = flattenHostHeaderRewriteConfig(apiObject.HostHeaderRewriteConfig)
+
+		case awstypes.TransformTypeEnumUrlRewrite:
+			tfMap["url_rewrite"] = flattenUrlRewriteConfig(apiObject.UrlRewriteConfig)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenHostHeaderRewriteConfig(apiObject *awstypes.HostHeaderRewriteConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"rewrite": flattenRewriteConfigs(apiObject.Rewrites),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenUrlRewriteConfig(apiObject *awstypes.UrlRewriteConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"rewrite": flattenRewriteConfigs(apiObject.Rewrites),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenRewriteConfigs(apiObjects []awstypes.RewriteConfig) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.Regex != nil {
+			tfMap["regex"] = aws.ToString(apiObject.Regex)
+		}
+		if apiObject.Replace != nil {
+			tfMap["replacement"] = aws.ToString(apiObject.Replace)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func validateTransformConfiguration(d *schema.ResourceData, path string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	transformList := d.Get("transform").([]interface{})
+	transformTypes := make(map[string]int)
+
+	for i, transform := range transformList {
+		tfMap := transform.(map[string]interface{})
+		transformType := tfMap[names.AttrType].(string)
+
+		// Count occurrences of each transform type
+		transformTypes[transformType]++
+
+		// Validate that each transform type appears at most once
+		if transformTypes[transformType] > 1 {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Duplicate transform type",
+				Detail:   fmt.Sprintf("Transform type '%s' can only be specified once per rule", transformType),
+				AttributePath: cty.Path{
+					cty.GetAttrStep{Name: "transform"},
+					cty.IndexStep{Key: cty.NumberIntVal(int64(i))},
+					cty.GetAttrStep{Name: names.AttrType},
+				},
+			})
+		}
+
+		// Validate that the appropriate config block is provided
+		switch transformType {
+		case string(awstypes.TransformTypeEnumUrlRewrite):
+			if urlRewriteList, ok := tfMap["url_rewrite"].([]interface{}); !ok || len(urlRewriteList) == 0 {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Missing required configuration",
+					Detail:   "url_rewrite configuration block is required when transform type is 'url-rewrite'",
+					AttributePath: cty.Path{
+						cty.GetAttrStep{Name: "transform"},
+						cty.IndexStep{Key: cty.NumberIntVal(int64(i))},
+						cty.GetAttrStep{Name: "url_rewrite"},
+					},
+				})
+			}
+		case string(awstypes.TransformTypeEnumHostHeaderRewrite):
+			if hostHeaderRewriteList, ok := tfMap["host_header_rewrite"].([]interface{}); !ok || len(hostHeaderRewriteList) == 0 {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Missing required configuration",
+					Detail:   "host_header_rewrite configuration block is required when transform type is 'host-header-rewrite'",
+					AttributePath: cty.Path{
+						cty.GetAttrStep{Name: "transform"},
+						cty.IndexStep{Key: cty.NumberIntVal(int64(i))},
+						cty.GetAttrStep{Name: "host_header_rewrite"},
+					},
+				})
+			}
+		}
+	}
+
+	return diags
 }

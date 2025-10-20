@@ -202,6 +202,62 @@ resource "aws_lb_listener_rule" "oidc" {
     target_group_arn = aws_lb_target_group.static.arn
   }
 }
+
+# Transform example
+
+resource "aws_lb_listener_rule" "path_rewrite" {
+  listener_arn = aws_lb_listener.front_end.arn
+  priority     = 50
+
+  transform {
+    type = "url-rewrite"
+
+    url_rewrite {
+      rewrite {
+        regex       = "^/dp/([A-Za-z0-9]+)/?$"
+        replacement = "/product.php?id=$1"
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.products.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/dp/*"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "host_rewrite" {
+  listener_arn = aws_lb_listener.front_end.arn
+  priority     = 60
+
+  transform {
+    type = "host-header-rewrite"
+
+    host_header_rewrite {
+      rewrite {
+        regex       = "^mywebsite-(.+).com$"
+        replacement = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.internal.arn
+  }
+
+  condition {
+    host_header {
+      values = ["mywebsite-*.com"]
+    }
+  }
+}
 ```
 
 ## Argument Reference
@@ -213,6 +269,7 @@ This resource supports the following arguments:
 * `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
 * `action` - (Required) An Action block. Action blocks are documented below.
 * `condition` - (Required) A Condition block. Multiple condition blocks of different types can be set and all must be satisfied for the rule to match. Condition blocks are documented below.
+* `transform` - (Optional) A Transform block. Multiple transform blocks can be set and are applied to requests before they are sent to targets. Transform blocks are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Action Blocks
@@ -330,6 +387,31 @@ Query String Value Blocks (for `query_string.values`) support the following:
 
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
+
+### Transform Blocks
+
+Transform Blocks (for `transform`) support the following:
+
+~> **NOTE:** Transforms can only be applied to non-default listener rules. You can add up to one `host-header-rewrite` transform and one `url-rewrite` transform per rule.
+
+* `type` - (Required) The type of transform. Valid values are `url-rewrite` and `host-header-rewrite`.
+* `host_header_rewrite` - (Optional) Configuration block for host header rewrite. Required if `type` is `host-header-rewrite`.
+* `url_rewrite` - (Optional) Configuration block for URL rewrite. Required if `type` is `url-rewrite`.
+
+Host Header Rewrite Blocks (for `host_header_rewrite`) support the following:
+
+* `rewrite` - (Required) One or more rewrite rules. [Rewrite Rule block](#rewrite-rule-blocks) fields documented below.
+
+URL Rewrite Blocks (for `url_rewrite`) support the following:
+
+* `rewrite` - (Required) One or more rewrite rules. [Rewrite Rule block](#rewrite-rule-blocks) fields documented below.
+
+#### Rewrite Rule Blocks
+
+Rewrite Rule Blocks (for `rewrite`) support the following:
+
+* `regex` - (Required) The regular expression to match in the input string. Maximum length is 1,024 characters.
+* `replacement` - (Required) The replacement string to use when rewriting the matched input. Maximum length is 1,024 characters. You can specify capture groups in the regular expression (for example, `$1` and `$2`).
 
 ## Attribute Reference
 
