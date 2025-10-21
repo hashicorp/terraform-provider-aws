@@ -93,6 +93,7 @@ func TestAccELBV2ListenerRuleDataSource_byARN(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
 						expectKnownCondition("host_header", knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.Null(),
 								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 									knownvalue.StringExact("example.com"),
 								}),
@@ -183,6 +184,7 @@ func TestAccELBV2ListenerRuleDataSource_byListenerAndPriority(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
 						expectKnownCondition("host_header", knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.Null(),
 								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 									knownvalue.StringExact("example.com"),
 								}),
