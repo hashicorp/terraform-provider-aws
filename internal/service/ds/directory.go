@@ -345,6 +345,16 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("vpc_settings", nil)
 	}
 
+	dda, err := getDirectoryDataAccess(ctx, conn, d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, "reading directory data access", err)
+	}
+	if dd.DataAccessStatus == awstypes.DataAccessStatusEnabled {
+		d.Set("enable_directory_data_access", true)
+	} else {
+		d.Set("enable_directory_data_access", false)
+	}
+
 	return diags
 }
 
@@ -609,6 +619,17 @@ func disableDirectoryDataAccess(ctx context.Context, conn *directoryservice.Clie
 	}
 
 	return nil
+}
+
+func getDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string) (*directoryservice.DescribeDirectoryDataAccessOutput, error) {
+	dda, err := conn.DescribeDirectoryDataAccess(ctx, &directoryservice.DescribeDirectoryDataAccessInput{
+		DirectoryId: aws.String(directoryID),
+	}
+	if err != nil {
+		return fmt.Errorf("describing Directory Data Access for Directory Service Directory (%s): %w", directoryID, err)
+	}
+
+		return dda, nil
 }
 
 func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.Client, directoryID string, desiredNumber int, timeout time.Duration, optFns ...func(*directoryservice.Options)) error {
