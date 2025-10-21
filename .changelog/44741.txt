@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_lb_listener_rule: Add `regex_values` arguments to `host_header`, `http_header` and `path_pattern` blocks within `condition` block
+```
+
+```release-note:enhancement
+resource/aws_lb_listener_rule: Change `values` arguments in `host_header`, `http_header` and `path_pattern` blocks within `condition` block from `Required` to `Optional`
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener_rule: Add `regex_values` attributes to `host_header`, `http_header` and `path_pattern` blocks within `condition` block
+```
