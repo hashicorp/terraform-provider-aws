@@ -1531,7 +1531,7 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 }
 
 // xmlWrapperFlatten handles flattening from AWS XML wrapper structs to TF collection types
-// that follow the pattern: {Items: []T, Quantity: *int32} -> []T
+// Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
 func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, wrapperField string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -1541,6 +1541,12 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 		"wrapper_field": wrapperField,
 	})
 
+	// Check if target is a NestedObjectCollection (Rule 2 pattern)
+	if nestedObjType, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+		return flattener.xmlWrapperFlattenRule2(ctx, vFrom, nestedObjType, vTo)
+	}
+
+	// Rule 1: Continue with existing logic
 	// Verify source is a valid XML wrapper struct
 	if !isXMLWrapperStruct(vFrom.Type()) {
 		tflog.SubsystemError(ctx, subsystemName, "Source is not a valid XML wrapper struct", map[string]any{
@@ -2743,4 +2749,69 @@ func (flattener autoFlattener) createTargetValue(ctx context.Context, sourceValu
 		// Fallback to string value
 		return sourceValue, diags
 	}
+}
+// xmlWrapperFlattenRule2 handles Rule 2: XML wrapper to single plural block with items + additional fields
+func (flattener autoFlattener) xmlWrapperFlattenRule2(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Flattening XML wrapper Rule 2 (items + additional fields)")
+
+	// Verify source is a valid XML wrapper struct
+	if !isXMLWrapperStruct(vFrom.Type()) {
+		diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), reflect.TypeOf(vTo.Interface())))
+		return diags
+	}
+
+	// Create a new object pointer for the nested object
+	nestedObjPtr, d := tTo.NewObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	
+	// Get the nested object value from the pointer
+	nestedObjValue := reflect.ValueOf(nestedObjPtr).Elem()
+
+	// Convert Items field to the nested object's Items field
+	itemsField := vFrom.FieldByName("Items")
+	if itemsField.IsValid() {
+		nestedItemsField := nestedObjValue.FieldByName("Items")
+		if nestedItemsField.IsValid() && nestedItemsField.CanSet() {
+			// Flatten Items slice to collection using existing logic
+			diags.Append(autoFlattenConvert(ctx, itemsField.Interface(), nestedItemsField.Addr().Interface(), flattener)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	}
+
+	// Handle additional fields (e.g., Enabled)
+	for i := 0; i < vFrom.NumField(); i++ {
+		sourceField := vFrom.Field(i)
+		sourceFieldType := vFrom.Type().Field(i)
+		fieldName := sourceFieldType.Name
+
+		// Skip Items and Quantity (already handled)
+		if fieldName == "Items" || fieldName == "Quantity" {
+			continue
+		}
+
+		// Look for matching field in nested object
+		nestedField := nestedObjValue.FieldByName(fieldName)
+		if nestedField.IsValid() && nestedField.CanSet() {
+			// Convert AWS field to TF field
+			diags.Append(autoFlattenConvert(ctx, sourceField.Interface(), nestedField.Addr().Interface(), flattener)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	}
+
+	// Create a slice containing the single nested object pointer
+	nestedObjSlice := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(nestedObjPtr)), 1, 1)
+	nestedObjSlice.Index(0).Set(reflect.ValueOf(nestedObjPtr))
+
+	// Convert the slice to the target NestedObjectCollection
+	diags.Append(autoFlattenConvert(ctx, nestedObjSlice.Interface(), vTo.Addr().Interface(), flattener)...)
+	return diags
 }

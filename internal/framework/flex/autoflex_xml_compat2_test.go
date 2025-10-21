@@ -42,7 +42,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -411,7 +410,6 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 	}
 }
 // Test Rule 2 Flatten: XML wrappers with Items/Quantity + additional fields
-// NOTE: Rule 2 flatten is not yet implemented - these tests document the expected behavior
 func TestFlattenXMLWrapperRule2(t *testing.T) {
 	t.Parallel()
 
@@ -433,17 +431,19 @@ func TestFlattenXMLWrapperRule2(t *testing.T) {
 				Source:     &sourceStruct{XMLWrapper: nil},
 				Target:     &targetStruct{},
 				WantTarget: &targetStruct{XMLWrapper: fwtypes.NewListNestedObjectValueOfNull[testRule2Model](ctx)},
-				ExpectedDiags: diag.Diagnostics{
-					diag.NewErrorDiagnostic("Incompatible Types", "An unexpected error occurred while converting configuration. This is always an issue with the provider and should be reported to the provider developers."),
-				},
 			},
 			"empty items, enabled false": {
 				Source: &sourceStruct{
 					XMLWrapper: &testXMLWrapperRule2{Items: []string{}, Quantity: aws.Int32(0), Enabled: aws.Bool(false)},
 				},
 				Target: &targetStruct{},
-				ExpectedDiags: diag.Diagnostics{
-					diag.NewErrorDiagnostic("Incompatible Types", "An unexpected error occurred while converting configuration. This is always an issue with the provider and should be reported to the provider developers."),
+				WantTarget: &targetStruct{
+					XMLWrapper: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+						{
+							Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{}),
+							Enabled: types.BoolValue(false),
+						},
+					}),
 				},
 			},
 		},
@@ -453,17 +453,13 @@ func TestFlattenXMLWrapperRule2(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			// Rule 2 flatten is not implemented yet, so we expect errors
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: false})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
 
 // Test Rule 2 Symmetry: Verify expand→flatten produces identical results
-// NOTE: This test will fail until Rule 2 flatten is implemented
 func TestXMLWrapperRule2Symmetry(t *testing.T) {
-	t.Skip("Rule 2 flatten not implemented yet - this test documents the expected behavior")
-
 	t.Parallel()
 
 	ctx := context.Background()
@@ -490,7 +486,7 @@ func TestXMLWrapperRule2Symmetry(t *testing.T) {
 				awsStruct.Items, *awsStruct.Quantity, *awsStruct.Enabled)
 		}
 
-		// Flatten: AWS → TF (this will fail until Rule 2 flatten is implemented)
+		// Flatten: AWS → TF (this should now work)
 		sourceStruct := &struct{ XMLWrapper *testXMLWrapperRule2 }{XMLWrapper: awsStruct}
 		targetStruct := &struct{ XMLWrapper fwtypes.ListNestedObjectValueOf[testRule2Model] `autoflex:",wrapper=items"` }{}
 		
