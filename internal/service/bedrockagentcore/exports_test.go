@@ -13,6 +13,7 @@ var (
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayTarget            = newGatewayTargetResource
 	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
+	ResourceTokenVaultCMK            = newTokenVaultCMKResource
 	ResourceWorkloadIdentity         = newWorkloadIdentityResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
@@ -23,5 +24,6 @@ var (
 	FindGatewayByID                      = findGatewayByID
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
 	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
+	FindTokenVaultByID                   = findTokenVaultByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 )
