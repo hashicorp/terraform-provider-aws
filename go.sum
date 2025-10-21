@@ -393,6 +393,8 @@ github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.9 h1:y5CRnr5s9oY
 github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.9/go.mod h1:vPMJfXRU61fKZM+FJDEOQkmRRqhF9u/xWn0+ydJAXig=
 github.com/aws/aws-sdk-go-v2/service/oam v1.22.6 h1:vBy4IO6aoNf2agrv8BeMNUudEPHS+iLm2Kl+aAHUizY=
 github.com/aws/aws-sdk-go-v2/service/oam v1.22.6/go.mod h1:Fy0Ncm6O91W1Ml0e8/pZASa4i+ZqAGWhQusrmO1v36A=
+github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.1 h1:KzQWNqEton+QplSp5mVZTTAuEXj+kllSO2rPMkmMc9Q=
+github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.1/go.mod h1:OB648xq26IgHbYWAoGnhgEtDeYAc4GKsMSReZmGofwU=
 github.com/aws/aws-sdk-go-v2/service/odb v1.5.1 h1:RKB9xVdUxhAc1erfFkM95o5XBpZSUX+zRBpvHdROXGA=
 github.com/aws/aws-sdk-go-v2/service/odb v1.5.1/go.mod h1:l6MBuiKgkjiZj2mcrazf2nk1xXHXPDlRxxbpMx31gW0=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.6 h1:IaszD7J1ALGK549MHZlRu2vhMxA5q3OSomQIkpL5dAw=
@@ -577,8 +579,8 @@ github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc h1:biVzkmvwrH8
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
 github.com/bufbuild/protocompile v0.14.1 h1:iA73zAf/fyljNjQKwYzUHD6AD4R8KMasmwa/FBatYVw=
 github.com/bufbuild/protocompile v0.14.1/go.mod h1:ppVdAIhbr2H8asPk6k4pY7t9zB1OU5DoEw9xY/FUi1c=
-github.com/cedar-policy/cedar-go v1.2.6 h1:q6f1sRxhoBG7lnK/fH6oBG33ruf2yIpcfcPXNExANa0=
-github.com/cedar-policy/cedar-go v1.2.6/go.mod h1:h5+3CVW1oI5LXVskJG+my9TFCYI5yjh/+Ul3EJie6MI=
+github.com/cedar-policy/cedar-go v1.2.7 h1:F1BKVBRxvCAwztEyql/YHTgyTwokUdPy1JVQIBj9sQc=
+github.com/cedar-policy/cedar-go v1.2.7/go.mod h1:h5+3CVW1oI5LXVskJG+my9TFCYI5yjh/+Ul3EJie6MI=
 github.com/cloudflare/circl v1.6.1 h1:zqIqSPIndyBh1bjLVVDHMPpVKqp8Su/V+6MeDzzQBQ0=
 github.com/cloudflare/circl v1.6.1/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=

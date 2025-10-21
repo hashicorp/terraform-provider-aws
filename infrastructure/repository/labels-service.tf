@@ -243,6 +243,7 @@ variable "service_labels" {
     "notifications",
     "notificationscontacts",
     "oam",
+    "observabilityadmin",
     "odb",
     "opensearch",
     "opensearchserverless",

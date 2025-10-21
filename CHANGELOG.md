@@ -1,5 +1,17 @@
 ## 6.18.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_bedrockagentcore_oauth2_credential_provider` ([#44307](https://github.com/hashicorp/terraform-provider-aws/issues/44307))
+* **New Resource:** `aws_bedrockagentcore_workload_identity` ([#44308](https://github.com/hashicorp/terraform-provider-aws/issues/44308))
+
+ENHANCEMENTS:
+
+* data-source/aws_iam_policy: Adds validation for `path_prefix` attribute ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
+* resource/aws_appstream_directory_config: Add certificate_based_auth_properties support ([#44679](https://github.com/hashicorp/terraform-provider-aws/issues/44679))
+* resource/aws_iam_policy: Adds List support ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
+* resource/aws_iam_policy: Adds validation for `path` attribute ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
+
 ## 6.17.0 (October 16, 2025)
 
 NOTES:

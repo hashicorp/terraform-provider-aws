@@ -186,6 +186,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.9
 	github.com/aws/aws-sdk-go-v2/service/oam v1.22.6
+	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/odb v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.6
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.26.5
@@ -274,7 +275,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.5
 	github.com/aws/smithy-go v1.23.1
 	github.com/beevik/etree v1.6.0
-	github.com/cedar-policy/cedar-go v1.2.6
+	github.com/cedar-policy/cedar-go v1.2.7
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/gertd/go-pluralize v0.2.1
