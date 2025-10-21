@@ -57,6 +57,7 @@ A `media_concurrencies` block supports the following attributes:
 
 * `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
 * `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
+* `behaviour` - Cross-channel behavior for routing contacts across multiple channels. Valid values are `ROUTE_CURRENT_CHANNEL_ONLY`, `ROUTE_ANY_CHANNEL`.
 
 A `queue_configs` block supports the following attributes:
 

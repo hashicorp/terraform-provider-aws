@@ -78,6 +78,12 @@ func resourceRoutingProfile() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
 						},
+						"behaviour": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          string(awstypes.BehaviorTypeRouteAnyChannel),
+							ValidateDiagFunc: enum.Validate[awstypes.BehaviorType](),
+						},
 					},
 				},
 			},
@@ -477,6 +483,13 @@ func expandMediaConcurrencies(tfList []any) []awstypes.MediaConcurrency {
 			Channel:     awstypes.Channel(tfMap["channel"].(string)),
 			Concurrency: aws.Int32(int32(tfMap["concurrency"].(int))),
 		}
+
+		if v, ok := tfMap["behaviour"].(string); ok && v != "" {
+			apiObject.CrossChannelBehavior = &awstypes.CrossChannelBehavior{
+				BehaviorType: awstypes.BehaviorType(v),
+			}
+		}
+
 		apiObjects = append(apiObjects, apiObject)
 	}
 
@@ -490,6 +503,10 @@ func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency) []any {
 		tfMap := map[string]any{
 			"channel":     apiObject.Channel,
 			"concurrency": aws.ToInt32(apiObject.Concurrency),
+		}
+
+		if apiObject.CrossChannelBehavior != nil {
+			tfMap["behaviour"] = string(apiObject.CrossChannelBehavior.BehaviorType)
 		}
 
 		tfList = append(tfList, tfMap)

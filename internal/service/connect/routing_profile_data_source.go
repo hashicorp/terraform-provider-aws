@@ -59,6 +59,10 @@ func dataSourceRoutingProfile() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"behaviour": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
