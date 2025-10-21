@@ -1657,9 +1657,14 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 }
 
 // nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
-// that follows the pattern: {Items: []T, Quantity: *int32}
+// Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
 func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, _ path.Path, vFrom fwtypes.NestedObjectCollectionValue, _ path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper", map[string]any{
+		"source_type": vFrom.Type(ctx).String(),
+		"target_type": vTo.Type().String(),
+	})
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Expanding NestedObjectCollection to XML wrapper", map[string]any{
 		"source_type": vFrom.Type(ctx).String(),
@@ -1680,13 +1685,98 @@ func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Cont
 		return diags
 	}
 
+	// Check if this is Rule 2 pattern (single nested object with items + additional fields)
+	if fromSlice.Len() == 1 {
+		nestedObj := fromSlice.Index(0)
+		
+		// Handle pointer to struct (which is what NestedObjectCollection contains)
+		if nestedObj.Kind() == reflect.Ptr && !nestedObj.IsNil() {
+			structObj := nestedObj.Elem()
+			if structObj.Kind() == reflect.Struct {
+				// Check if the struct has an "Items" field - indicates Rule 2
+				itemsField := structObj.FieldByName("Items")
+				if itemsField.IsValid() {
+					return expander.expandRule2XMLWrapper(ctx, nestedObj, vTo)
+				}
+			}
+		}
+	}
+
+	// Rule 1: Direct collection to XML wrapper (existing logic)
+	return expander.expandRule1XMLWrapper(ctx, fromSlice, vTo)
+}
+
+// expandRule2XMLWrapper handles Rule 2: single plural block with items + additional fields
+func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedObjPtr reflect.Value, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding Rule 2 XML wrapper (items + additional fields)")
+
+	// Get target fields
+	itemsField := vTo.FieldByName("Items")
+	quantityField := vTo.FieldByName("Quantity")
+	
+	if !itemsField.IsValid() || !quantityField.IsValid() {
+		diags.Append(diagExpandingIncompatibleTypes(nestedObjPtr.Type(), vTo.Type()))
+		return diags
+	}
+
+	// Get the struct from the pointer
+	nestedObj := nestedObjPtr.Elem()
+	
+	// Extract "Items" field from nested object
+	itemsSourceField := nestedObj.FieldByName("Items")
+	if !itemsSourceField.IsValid() {
+		diags.AddError("Missing items field", "Rule 2 XML wrapper requires 'Items' field")
+		return diags
+	}
+
+	// Convert items collection to Items slice using existing logic
+	if itemsAttr, ok := itemsSourceField.Interface().(attr.Value); ok {
+		if collectionValue, ok := itemsAttr.(valueWithElementsAs); ok {
+			diags.Append(expander.convertCollectionToXMLWrapperFields(ctx, collectionValue, itemsField, quantityField)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	}
+
+	// Handle additional fields (e.g., Enabled)
+	for i := 0; i < vTo.NumField(); i++ {
+		targetField := vTo.Field(i)
+		targetFieldType := vTo.Type().Field(i)
+		fieldName := targetFieldType.Name
+		
+		// Skip Items and Quantity (already handled)
+		if fieldName == "Items" || fieldName == "Quantity" {
+			continue
+		}
+		
+		// Look for matching field in nested object
+		sourceField := nestedObj.FieldByName(fieldName)
+		if sourceField.IsValid() {
+			// Convert TF field to AWS field
+			if tfAttr, ok := sourceField.Interface().(attr.Value); ok {
+				diags.Append(autoExpandConvert(ctx, tfAttr, targetField.Addr().Interface(), expander)...)
+			}
+		}
+	}
+
+	return diags
+}
+
+// expandRule1XMLWrapper handles Rule 1: direct collection to XML wrapper (existing logic)
+func (expander autoExpander) expandRule1XMLWrapper(ctx context.Context, fromSlice reflect.Value, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding Rule 1 XML wrapper (direct collection)")
+
 	// Get the Items and Quantity fields from target struct
 	itemsField := vTo.FieldByName("Items")
 	quantityField := vTo.FieldByName("Quantity")
 
 	if !itemsField.IsValid() || !quantityField.IsValid() {
-		tflog.SubsystemError(ctx, subsystemName, "XML wrapper struct missing required fields")
-		diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+		diags.Append(diagExpandingIncompatibleTypes(fromSlice.Type(), vTo.Type()))
 		return diags
 	}
 
@@ -1738,10 +1828,6 @@ func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Cont
 		quantityPtr.Elem().Set(reflect.ValueOf(quantity))
 		quantityField.Set(quantityPtr)
 	}
-
-	tflog.SubsystemTrace(ctx, subsystemName, "Successfully expanded NestedObjectCollection to XML wrapper", map[string]any{
-		"items_count": itemsCount,
-	})
 
 	return diags
 }
