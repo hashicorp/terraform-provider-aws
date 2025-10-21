@@ -1,0 +1,230 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package networkflowmonitor_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfnetworkflowmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccNetworkFlowMonitorScope_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var scope networkflowmonitor.GetScopeOutput
+	resourceName := "aws_networkflowmonitor_scope.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScopeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScopeConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScopeExists(ctx, resourceName, &scope),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "scope_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFlowMonitorScope_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var scope networkflowmonitor.GetScopeOutput
+	resourceName := "aws_networkflowmonitor_scope.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScopeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScopeConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScopeExists(ctx, resourceName, &scope),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkflowmonitor.ResourceScope, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFlowMonitorScope_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var scope networkflowmonitor.GetScopeOutput
+	resourceName := "aws_networkflowmonitor_scope.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScopeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScopeConfig_tags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScopeExists(ctx, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScopeConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScopeExists(ctx, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccScopeConfig_tags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScopeExists(ctx, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckScopeExists(ctx context.Context, n string, v *networkflowmonitor.GetScopeOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFlowMonitorClient(ctx)
+
+		output, err := tfnetworkflowmonitor.FindScopeByID(ctx, conn, rs.Primary.Attributes["scope_id"])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckScopeDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFlowMonitorClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networkflowmonitor_scope" {
+				continue
+			}
+
+			_, err := tfnetworkflowmonitor.FindScopeByID(ctx, conn, rs.Primary.Attributes["scope_id"])
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Flow Monitor Scope %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccScopeConfig_basic() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+resource "aws_networkflowmonitor_scope" "test" {
+  targets {
+    region = "us-east-1"
+    target_identifier {
+      target_id   = data.aws_caller_identity.current.account_id
+      target_type = "ACCOUNT"
+    }
+  }
+}
+`
+}
+
+func testAccScopeConfig_tags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_networkflowmonitor_scope" "test" {
+  targets {
+    region = "us-east-1"
+    target_identifier {
+      target_id   = data.aws_caller_identity.current.account_id
+      target_type = "ACCOUNT"
+    }
+  }
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccScopeConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_networkflowmonitor_scope" "test" {
+  targets {
+    region = "us-east-1"
+    target_identifier {
+      target_id   = data.aws_caller_identity.current.account_id
+      target_type = "ACCOUNT"
+    }
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
