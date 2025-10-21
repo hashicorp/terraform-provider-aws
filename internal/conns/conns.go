@@ -57,7 +57,7 @@ var (
 type InContext struct {
 	overrideRegion     string // Any currently in effect per-resource Region override.
 	resourceName       string // Friendly resource name, e.g. "Subnet"
-	typeName           string // Friendly resource name, e.g. "aws_iam_role"
+	typeName           string // Resource type name, e.g. "aws_iam_role"
 	servicePackageName string // Canonical name defined as a constant in names package
 	vcrEnabled         bool   // Whether VCR testing is enabled
 }
