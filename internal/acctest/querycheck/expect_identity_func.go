@@ -34,7 +34,7 @@ func (e expectIdentityFunc) CheckQuery(_ context.Context, req querycheck.CheckQu
 		}
 
 		if len(res.Identity) != len(checks) {
-			deltaMsg := ""
+			var deltaMsg string
 			if len(res.Identity) > len(checks) {
 				deltaMsg = statecheck.CreateDeltaString(res.Identity, checks, "actual identity has extra attribute(s): ")
 			} else {
@@ -62,7 +62,7 @@ func (e expectIdentityFunc) CheckQuery(_ context.Context, req querycheck.CheckQu
 			}
 
 			if err := checks[k].CheckValue(actualIdentityVal); err != nil {
-				errCollection = append(errCollection, fmt.Errorf("%s - %q identity attribute: %s", e.listResourceAddress, k, err))
+				errCollection = append(errCollection, fmt.Errorf("%s - %q identity attribute: %w", e.listResourceAddress, k, err))
 			}
 		}
 
