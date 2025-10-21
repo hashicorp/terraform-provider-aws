@@ -38,6 +38,8 @@ func TestAccSiteVPNConnectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "customer_gateway_configuration"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "category"),
 					resource.TestCheckResourceAttr(dataSourceName, "routes.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "vgw_telemetries.#", "2"),
 				),
 			},
@@ -127,6 +129,10 @@ resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = aws_vpn_gateway.test.id
   customer_gateway_id = aws_customer_gateway.test.id
   type                = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn)
 }
