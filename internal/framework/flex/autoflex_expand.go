@@ -623,6 +623,64 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 }
 
 // listOrSetOfInt64 copies a Plugin Framework ListOfInt64(ish) or SetOfInt64(ish) value to a compatible AWS API value.
+func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Struct:
+		// Check if target is an XML wrapper struct
+		if isXMLWrapperStruct(vTo.Type()) {
+			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
+			return diags
+		}
+
+	case reflect.Slice:
+		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
+		case reflect.Int32:
+			//
+			// types.Set(OfInt32) -> []int32
+			//
+			tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+				logAttrKeySourceSize: len(vFrom.Elements()),
+			})
+			var to []int32
+			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(to))
+			return diags
+
+		case reflect.Pointer:
+			switch tSliceElem.Elem().Kind() {
+			case reflect.Int32:
+				//
+				// types.Set(OfInt32) -> []*int32
+				//
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+					logAttrKeySourceSize: len(vFrom.Elements()),
+				})
+				var to []*int32
+				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+		}
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
+		"from": "Set[Int32]",
+		"to":   vTo.Kind(),
+	})
+
+	return diags
+}
+
 func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -921,6 +979,10 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 	switch v.ElementType(ctx).(type) {
 	case basetypes.Int64Typable:
 		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo)...)
+		return diags
+
+	case basetypes.Int32Typable:
+		diags.Append(expander.listOrSetOfInt32(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.StringTypable:
@@ -1657,6 +1719,16 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 }
 
 // nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
+// 
+// XML Wrapper Compatibility Rules:
+// Rule 1: Items/Quantity only - Direct collection mapping
+//   AWS: {Items: []T, Quantity: *int32}
+//   TF:  Repeatable singular blocks (e.g., lambda_function_association { ... })
+//
+// Rule 2: Items/Quantity + additional fields - Single plural block  
+//   AWS: {Items: []T, Quantity: *int32, Enabled: *bool, ...}
+//   TF:  Single plural block (e.g., trusted_signers { items = [...], enabled = true })
+//
 // Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
 func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, _ path.Path, vFrom fwtypes.NestedObjectCollectionValue, _ path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -1805,7 +1877,7 @@ func (expander autoExpander) expandRule1XMLWrapper(ctx context.Context, fromSlic
 				return diags
 			}
 			targetItem.Set(newItem)
-		} else {
+		} else if targetItemType.Kind() == reflect.Struct {
 			// For []struct - need to set the value directly
 			newItem := reflect.New(targetItemType)
 			diags.Append(autoExpandConvert(ctx, sourceItem.Interface(), newItem.Interface(), expander)...)
@@ -1813,6 +1885,12 @@ func (expander autoExpander) expandRule1XMLWrapper(ctx context.Context, fromSlic
 				return diags
 			}
 			targetItem.Set(newItem.Elem())
+		} else {
+			// For primitive types ([]int32, []string, etc.) - direct conversion
+			diags.Append(autoExpandConvert(ctx, sourceItem.Interface(), targetItem.Addr().Interface(), expander)...)
+			if diags.HasError() {
+				return diags
+			}
 		}
 	}
 

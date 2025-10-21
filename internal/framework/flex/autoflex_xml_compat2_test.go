@@ -52,6 +52,12 @@ type testXMLWrapperScalar struct {
 	Quantity *int32
 }
 
+// Test int32 slice items (like StatusCodes)
+type testXMLWrapperInt32 struct {
+	Items    []int32 `autoflex:",wrapper=items"`
+	Quantity *int32
+}
+
 type testXMLWrapperStruct struct {
 	Items    []testStructItem `autoflex:",wrapper=items"`
 	Quantity *int32
@@ -113,6 +119,18 @@ func TestExpandXMLWrapperRule1ScalarElements(t *testing.T) {
 				}),
 				Target:     &testXMLWrapperScalar{},
 				WantTarget: &testXMLWrapperScalar{Items: []string{"item1", "item2"}, Quantity: aws.Int32(2)},
+			},
+		},
+		"TestXMLWrapperInt32": {
+			"empty set": {
+				Source:     fwtypes.NewSetValueOfMust[types.Int32](ctx, []attr.Value{}),
+				Target:     &testXMLWrapperInt32{},
+				WantTarget: &testXMLWrapperInt32{Items: []int32{}, Quantity: aws.Int32(0)},
+			},
+			"single item": {
+				Source:     fwtypes.NewSetValueOfMust[types.Int32](ctx, []attr.Value{types.Int32Value(404)}),
+				Target:     &testXMLWrapperInt32{},
+				WantTarget: &testXMLWrapperInt32{Items: []int32{404}, Quantity: aws.Int32(1)},
 			},
 		},
 	}
@@ -360,6 +378,13 @@ type testXMLWrapperRule2 struct {
 	Enabled  *bool
 }
 
+// Test different field ordering (matches real TrustedSigners/TrustedKeyGroups)
+type testXMLWrapperRule2DifferentOrder struct {
+	Enabled  *bool
+	Quantity *int32
+	Items    []string
+}
+
 type testRule2Model struct {
 	Items   fwtypes.ListValueOf[types.String] `tfsdk:"items"`
 	Enabled types.Bool                        `tfsdk:"enabled"`
@@ -397,6 +422,18 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 				}),
 				Target:     &testXMLWrapperRule2{},
 				WantTarget: &testXMLWrapperRule2{Items: []string{"item1"}, Quantity: aws.Int32(1), Enabled: aws.Bool(true)},
+			},
+		},
+		"TestXMLWrapperRule2DifferentOrder": {
+			"different field order": {
+				Source: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+					{
+						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("item1")}),
+						Enabled: types.BoolValue(true),
+					},
+				}),
+				Target:     &testXMLWrapperRule2DifferentOrder{},
+				WantTarget: &testXMLWrapperRule2DifferentOrder{Items: []string{"item1"}, Quantity: aws.Int32(1), Enabled: aws.Bool(true)},
 			},
 		},
 	}

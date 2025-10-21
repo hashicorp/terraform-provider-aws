@@ -1531,6 +1531,16 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 }
 
 // xmlWrapperFlatten handles flattening from AWS XML wrapper structs to TF collection types
+//
+// XML Wrapper Compatibility Rules:
+// Rule 1: Items/Quantity only - Direct collection mapping
+//   AWS: {Items: []T, Quantity: *int32}
+//   TF:  Repeatable singular blocks (e.g., lambda_function_association { ... })
+//
+// Rule 2: Items/Quantity + additional fields - Single plural block
+//   AWS: {Items: []T, Quantity: *int32, Enabled: *bool, ...}  
+//   TF:  Single plural block (e.g., trusted_signers { items = [...], enabled = true })
+//
 // Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
 func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, wrapperField string) diag.Diagnostics {
 	var diags diag.Diagnostics
