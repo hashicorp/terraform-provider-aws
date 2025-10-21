@@ -1595,14 +1595,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
-		provisionedIOPSStorageType := false
-		if v, ok := d.GetOk(names.AttrStorageType); ok {
-			provisionedIOPSStorageType = isProvisionedIOPSStorageType(aws.String(v.(string)))
-		}
-
+		storageType := d.Get(names.AttrStorageType).(string)
 		if d.HasChange(names.AttrAllocatedStorage) {
 			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
-			if provisionedIOPSStorageType {
+			if isProvisionedIOPSStorageType(storageType) {
 				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
 				input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 			}
@@ -1703,7 +1699,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange(names.AttrIOPS) {
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
-			if provisionedIOPSStorageType {
+			if isProvisionedIOPSStorageType(storageType) {
 				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
 				input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 			}
@@ -2398,6 +2394,6 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2Sc
 	return tfMap
 }
 
-func isProvisionedIOPSStorageType(storageType *string) bool {
-	return aws.ToString(storageType) == storageTypeIO1 || aws.ToString(storageType) == storageTypeIO2
+func isProvisionedIOPSStorageType(storageType string) bool {
+	return storageType == storageTypeIO1 || storageType == storageTypeIO2
 }
