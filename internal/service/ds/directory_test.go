@@ -454,7 +454,7 @@ func TestAccDSDirectory_enableDirectoryDataAccess(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", acctest.CtTrue),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", "Enterprise"),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", acctest.CtFalse),
@@ -481,7 +481,7 @@ func TestAccDSDirectory_enableDirectoryDataAccess(t *testing.T) {
 				Config: testAccDirectoryConfig_enableDirectoryDataAccess(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", acctest.CtTrue),
 				),
 			},
 			{
