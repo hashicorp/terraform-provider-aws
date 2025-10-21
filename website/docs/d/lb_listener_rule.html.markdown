@@ -143,19 +143,32 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `condition`
 
-* `host_header` - Contains a single attribute `values`, which contains a set of host names.
+* `host_header` - Host header patterns to match.
+  [Detailed below](#host_header).
 * `http_header` - HTTP header and values to match.
   [Detailed below](#http_header).
 * `http_request_method` - Contains a single attribute `values`, which contains a set of HTTP request methods.
-* `path_pattern` - Contains a single attribute `values`, which contains a set of path patterns to compare against the request URL.
+* `path_pattern` - Path patterns to compare against the request URL.
+  [Detailed below](#path_pattern).
 * `query_string` - Query string parameters to match.
   [Detailed below](#query_string).
 * `source_ip` - Contains a single attribute `values`, which contains a set of source IPs in CIDR notation.
 
+#### `host_header`
+
+* `regex_values` - Set of regular expressions to compare against the host header.
+* `values` - Set of host header value patterns to match.
+
 #### `http_header`
 
 * `http_header_name` - Name of the HTTP header to match.
+* `regex_values` - Set of regular expression to compare against the HTTP header.
 * `values` - Set of values to compare against the value of the HTTP header.
+
+#### `path_pattern`
+
+* `regex_values` - Set of regular expressions to compare against the request URL.
+* `values` - Set of path patterns to compare against the request URL.
 
 #### `query_string`
 
