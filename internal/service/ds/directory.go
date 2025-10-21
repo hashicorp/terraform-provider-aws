@@ -346,7 +346,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	dda, err := getDirectoryDataAccess(ctx, conn, d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading directory data access", err)
+		return sdkdiag.AppendErrorf(diags, "reading directory data access: %s", err)
 	}
 	if dda.DataAccessStatus == awstypes.DataAccessStatusEnabled {
 		d.Set("enable_directory_data_access", true)
@@ -615,9 +615,11 @@ func disableDirectoryDataAccess(ctx context.Context, conn *directoryservice.Clie
 }
 
 func getDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string) (*directoryservice.DescribeDirectoryDataAccessOutput, error) {
-	dda, err := conn.DescribeDirectoryDataAccess(ctx, &directoryservice.DescribeDirectoryDataAccessInput{
+	input := directoryservice.DescribeDirectoryDataAccessInput{
 		DirectoryId: aws.String(directoryID),
-	})
+	}
+
+	dda, err := conn.DescribeDirectoryDataAccess(ctx, &input)
 	if err != nil {
 		return nil, fmt.Errorf("describing Directory Data Access for Directory Service Directory (%s): %w", directoryID, err)
 	}
