@@ -612,7 +612,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 			conditionMap["host_header"] = []any{flattenHostHeaderConditionConfig(condition.HostHeaderConfig)}
 
 		case "http-header":
-			conditionMap["http_header"] = []any{flattenHttpHeaderConditionConfig(condition.HttpHeaderConfig)}
+			conditionMap["http_header"] = []any{flattenHTTPHeaderConditionConfig(condition.HttpHeaderConfig)}
 
 		case "http-request-method":
 			conditionMap["http_request_method"] = []any{
@@ -879,7 +879,7 @@ func expandRuleConditions(tfList []any) ([]awstypes.RuleCondition, error) {
 			field = "http-header"
 			attrs += 1
 
-			apiObjects[i].HttpHeaderConfig = expandHttpHeaderConditionConfig(httpHeader[0].(map[string]any))
+			apiObjects[i].HttpHeaderConfig = expandHTTPHeaderConditionConfig(httpHeader[0].(map[string]any))
 		}
 
 		if httpRequestMethod, ok := tfMap["http_request_method"].([]any); ok && len(httpRequestMethod) > 0 {
@@ -960,7 +960,7 @@ func expandHostHeaderConditionConfig(tfMap map[string]any) *awstypes.HostHeaderC
 	return apiObject
 }
 
-func expandHttpHeaderConditionConfig(tfMap map[string]any) *awstypes.HttpHeaderConditionConfig {
+func expandHTTPHeaderConditionConfig(tfMap map[string]any) *awstypes.HttpHeaderConditionConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1009,7 +1009,7 @@ func flattenHostHeaderConditionConfig(apiObject *awstypes.HostHeaderConditionCon
 	return tfMap
 }
 
-func flattenHttpHeaderConditionConfig(apiObject *awstypes.HttpHeaderConditionConfig) map[string]any {
+func flattenHTTPHeaderConditionConfig(apiObject *awstypes.HttpHeaderConditionConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
