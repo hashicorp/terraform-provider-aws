@@ -63,6 +63,7 @@ resource "aws_bedrockagent_agent" "example" {
   agent_name                  = "my-agent-name"
   agent_resource_role_arn     = aws_iam_role.example.arn
   idle_session_ttl_in_seconds = 500
+  instruction                 = "You are a friendly assistant who helps answer questions."
   foundation_model            = "anthropic.claude-v2"
 }
 ```
