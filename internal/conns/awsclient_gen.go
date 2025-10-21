@@ -174,6 +174,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
+	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -946,6 +947,10 @@ func (c *AWSClient) ODBClient(ctx context.Context) *odb.Client {
 
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam.Client {
 	return errs.Must(client[*oam.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
+}
+
+func (c *AWSClient) ObservabilityAdminClient(ctx context.Context) *observabilityadmin.Client {
+	return errs.Must(client[*observabilityadmin.Client](ctx, c, names.ObservabilityAdmin, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchClient(ctx context.Context) *opensearch.Client {
