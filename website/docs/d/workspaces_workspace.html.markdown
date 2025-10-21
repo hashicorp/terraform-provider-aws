@@ -42,22 +42,22 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `bundle_id` - (Optional) ID of the bundle for the WorkSpace.
+* `bundle_id` - ID of the bundle for the WorkSpace.
 * `computer_name` - Name of the WorkSpace, as seen by the operating system.
 * `id` - Workspaces ID.
 * `ip_address` - IP address of the WorkSpace.
-* `root_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
+* `root_volume_encryption_enabled` - Indicates whether the data stored on the root volume is encrypted.
 * `state` - Operational state of the WorkSpace.
-* `tags` - (Optional) Tags for the WorkSpace.
-* `user_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the user volume
+* `tags` - Tags for the WorkSpace.
+* `user_volume_encryption_enabled` - Indicates whether the data stored on the user volume
 is encrypted.
-* `volume_encryption_key` - (Optional) Symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
-* `workspace_properties` - (Optional) WorkSpace properties.
+* `volume_encryption_key` - Symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
+* `workspace_properties` - WorkSpace properties.
 
-`workspace_properties` supports the following:
+### `workspace_properties` Attribute Reference
 
-* `compute_type_name` - (Optional) Compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO` and `GRAPHICSPRO`.
-* `root_volume_size_gib` - (Optional) Size of the root volume.
-* `running_mode` - (Optional) Running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
-* `running_mode_auto_stop_timeout_in_minutes` - (Optional) Time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
-* `user_volume_size_gib` - (Optional) Size of the user storage.
+* `compute_type_name` - Compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO` and `GRAPHICSPRO`.
+* `root_volume_size_gib` - Size of the root volume.
+* `running_mode` - Running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
+* `running_mode_auto_stop_timeout_in_minutes` - Time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
+* `user_volume_size_gib` - Size of the user storage.
