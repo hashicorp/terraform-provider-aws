@@ -6094,6 +6094,30 @@ service "oam" {
   brand                    = "AWS"
 }
 
+service "observabilityadmin" {
+  sdk {
+    id            = "ObservabilityAdmin"
+    arn_namespace = "observabilityadmin"
+  }
+
+  names {
+    provider_name_upper = "ObservabilityAdmin"
+    human_friendly      = "CloudWatch Observability Admin"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListCentralizationRulesForOrganization"
+  }
+
+  resource_prefix {
+    correct = "aws_observabilityadmin_"
+  }
+
+  provider_package_correct = "observabilityadmin"
+  doc_prefix               = ["observabilityadmin_"]
+  brand                    = "AWS"
+}
+
 service "odb" {
   sdk {
     id            = "ODB"

@@ -102,6 +102,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newTokenVaultCMKResource,
+			TypeName: "aws_bedrockagentcore_token_vault_cmk",
+			Name:     "Token Vault CMK",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newWorkloadIdentityResource,
 			TypeName: "aws_bedrockagentcore_workload_identity",
 			Name:     "Workload Identity",

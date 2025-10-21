@@ -1375,6 +1375,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// observabilityadmin
+
+				"observabilityadmin": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// odb
 
 				"odb": schema.StringAttribute{
