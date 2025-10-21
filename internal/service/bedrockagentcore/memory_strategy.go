@@ -101,7 +101,9 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 		Blocks: map[string]schema.Block{
 			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomConfigurationModel](ctx),
-				Validators: []validator.List{listvalidator.SizeAtMost(1)},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
@@ -115,14 +117,20 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					Blocks: map[string]schema.Block{
 						"consolidation": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[OverrideDetailsModel](ctx),
-							Validators: []validator.List{listvalidator.SizeAtMost(1)},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							PlanModifiers: []planmodifier.List{
 								ErrorIfSingleBlockRemoved("consolidation"),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"append_to_prompt": schema.StringAttribute{Required: true},
-									"model_id":         schema.StringAttribute{Required: true},
+									"append_to_prompt": schema.StringAttribute{
+										Required: true,
+									},
+									"model_id": schema.StringAttribute{
+										Required: true,
+									},
 								},
 							},
 						},
@@ -134,8 +142,12 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"append_to_prompt": schema.StringAttribute{Required: true},
-									"model_id":         schema.StringAttribute{Required: true},
+									"append_to_prompt": schema.StringAttribute{
+										Required: true,
+									},
+									"model_id": schema.StringAttribute{
+										Required: true,
+									},
 								},
 							},
 						},
@@ -162,9 +174,11 @@ func ErrorIfSingleBlockRemoved(label string) planmodifier.List {
 func (m errorIfSingleBlockRemoved) Description(context.Context) string {
 	return "Disallow removing previously configured " + m.label + " block"
 }
+
 func (m errorIfSingleBlockRemoved) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
+
 func (m errorIfSingleBlockRemoved) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
 	// Skip create or destroy.
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
@@ -212,7 +226,7 @@ func (m errorIfSingleBlockRemoved) PlanModifyList(ctx context.Context, req planm
 	}
 }
 
-func (r resourceMemoryStrategy) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	var data memoryStrategyResourceModel
 
 	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
@@ -305,6 +319,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 
 		_, err = waitMemoryStrategyCreated(ctx, conn, plan.MemoryID.ValueString(), plan.MemoryStrategyID.ValueString(), createTimeout)
 		if err != nil {
+			response.State.SetAttribute(ctx, path.Root("memory_id"), plan.MemoryID.ValueString())
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
 			return
 		}
@@ -331,6 +346,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryStrategyID.String())
 		return
@@ -433,6 +449,7 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryStrategyID.String())
 			return
 		}
+
 		_, err = waitMemoryStrategyDeleted(ctx, conn, state.MemoryID.ValueString(), state.MemoryStrategyID.ValueString(), deleteTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.MemoryStrategyID.String())
