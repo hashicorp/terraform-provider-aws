@@ -1,0 +1,73 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten"
+  },
+  {
+    "@level": "trace",
+    "@message": "Converting entire XML wrapper struct to collection field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "flex.awsStatusCodesForFlatten",
+    "autoflex.target.fieldname": "StatusCodes",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "wrapper_field": "items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Starting XML wrapper flatten",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "source_type": "flex.awsStatusCodesForFlatten",
+    "target_type": "SetTypeOf[basetypes.Int64Value]",
+    "wrapper_field": "items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found Items field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "items_is_nil": true,
+    "items_kind": "slice",
+    "items_len": 0,
+    "items_type": "[]int32"
+  },
+  {
+    "@level": "trace",
+    "@message": "Using target element type",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten",
+    "element_type": "basetypes.Int64Type"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening XML wrapper with SetNull",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsStatusCodesForFlatten",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfStatusCodesModelForFlatten"
+  }
+]

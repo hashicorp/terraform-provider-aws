@@ -247,6 +247,7 @@ provider "aws" {
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
 |Neptune Analytics|`neptunegraph`|`AWS_ENDPOINT_URL_NEPTUNE_GRAPH`|`neptune_graph`|
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
+|CloudWatch NetworkFlow Monitor|`networkflowmonitor`|`AWS_ENDPOINT_URL_NETWORKFLOWMONITOR`|`networkflowmonitor`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
 |User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|

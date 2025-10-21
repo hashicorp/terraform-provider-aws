@@ -42,6 +42,45 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newAPIKeyCredentialProviderResource,
+			TypeName: "aws_bedrockagentcore_api_key_credential_provider",
+			Name:     "Api Key Credential Provider",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newBrowserResource,
+			TypeName: "aws_bedrockagentcore_browser",
+			Name:     "Browser",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "browser_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newCodeInterpreterResource,
+			TypeName: "aws_bedrockagentcore_code_interpreter",
+			Name:     "Code Interpreter",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "code_interpreter_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newGatewayResource,
+			TypeName: "aws_bedrockagentcore_gateway",
+			Name:     "Gateway",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "gateway_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newGatewayTargetResource,
+			TypeName: "aws_bedrockagentcore_gateway_target",
+			Name:     "Gateway Target",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newMemoryResource,
 			TypeName: "aws_bedrockagentcore_memory",
 			Name:     "Memory",
@@ -54,6 +93,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceMemoryStrategy,
 			TypeName: "aws_bedrockagentcore_memory_strategy",
 			Name:     "Memory Strategy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newOAuth2CredentialProviderResource,
+			TypeName: "aws_bedrockagentcore_oauth2_credential_provider",
+			Name:     "OAuth2 Credential Provider",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newWorkloadIdentityResource,
+			TypeName: "aws_bedrockagentcore_workload_identity",
+			Name:     "Workload Identity",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}

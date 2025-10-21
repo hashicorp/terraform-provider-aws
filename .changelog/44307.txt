@@ -1,7 +1,3 @@
 ```release-note:new-resource
-aws_bedrockagentcore_memory
-```
-
-```release-note:new-resource
-aws_bedrockagentcore_memory_strategy
+aws_bedrockagentcore_oauth2_credential_provider
 ```

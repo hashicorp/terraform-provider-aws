@@ -11,32 +11,30 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdlm "github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
@@ -67,18 +65,18 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_event(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
@@ -116,18 +114,18 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_cron(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression", "cron(0 18 ? * WED *)"),
 				),
@@ -144,18 +142,18 @@ func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
 func TestAccDLMLifecyclePolicy_scriptsAlias(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_scriptsAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execution_handler", "AWS_VSS_BACKUP"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execute_operation_on_script_failure", acctest.CtFalse),
@@ -174,18 +172,18 @@ func TestAccDLMLifecyclePolicy_scriptsAlias(t *testing.T) {
 func TestAccDLMLifecyclePolicy_scriptsSSMDocument(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_scriptsSSMDocument(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execution_handler"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.scripts.0.execute_operation_on_script_failure", acctest.CtFalse),
@@ -206,18 +204,18 @@ func TestAccDLMLifecyclePolicy_scriptsSSMDocument(t *testing.T) {
 func TestAccDLMLifecyclePolicy_archiveRuleCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_archiveRuleCount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.archive_rule.0.archive_retain_rule.0.retention_archive_tier.0.count", "10"),
 				),
@@ -234,18 +232,18 @@ func TestAccDLMLifecyclePolicy_archiveRuleCount(t *testing.T) {
 func TestAccDLMLifecyclePolicy_archiveRuleInterval(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_archiveRuleInterval(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.archive_rule.0.archive_retain_rule.0.retention_archive_tier.0.interval", "6"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.archive_rule.0.archive_retain_rule.0.retention_archive_tier.0.interval_unit", "MONTHS"),
@@ -263,18 +261,18 @@ func TestAccDLMLifecyclePolicy_archiveRuleInterval(t *testing.T) {
 func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_retainInterval(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.interval", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.interval_unit", "DAYS"),
 				),
@@ -291,18 +289,18 @@ func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_deprecate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.deprecate_rule.0.count", "10"),
 				),
@@ -319,18 +317,18 @@ func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_defaultPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
@@ -359,18 +357,18 @@ func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
 func TestAccDLMLifecyclePolicy_defaultPolicyExclusions(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_defaultPolicyExclusions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
@@ -402,18 +400,18 @@ func TestAccDLMLifecyclePolicy_defaultPolicyExclusions(t *testing.T) {
 func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_fastRestore(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.fast_restore_rule.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.fast_restore_rule.0.availability_zones.#", "data.aws_availability_zones.available", "names.#"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.fast_restore_rule.0.count", "10"),
@@ -431,18 +429,18 @@ func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 func TestAccDLMLifecyclePolicy_shareRule(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_shareRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.share_rule.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.share_rule.0.target_accounts.0", "data.aws_caller_identity.current", names.AttrAccountID),
 				),
@@ -459,18 +457,18 @@ func TestAccDLMLifecyclePolicy_shareRule(t *testing.T) {
 func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_parametersInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", acctest.CtFalse),
@@ -488,18 +486,18 @@ func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
 func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_parametersVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", acctest.CtFalse),
@@ -517,18 +515,18 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 func TestAccDLMLifecyclePolicy_variableTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_variableTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.variable_tags.instance_id", "$(instance-id)"),
 				),
 			},
@@ -544,18 +542,18 @@ func TestAccDLMLifecyclePolicy_variableTags(t *testing.T) {
 func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-full"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
@@ -578,7 +576,7 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_fullUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-full-updated"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
@@ -599,10 +597,10 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 
 func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -610,12 +608,12 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_crossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "15"),
@@ -631,7 +629,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_updateCrossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.cmk_arn", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.copy_tags", acctest.CtTrue),
@@ -649,7 +647,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_noCrossRegionCopyRule(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "0"),
 				),
 			},
@@ -659,10 +657,10 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 
 func TestAccDLMLifecyclePolicy_crossRegionCopyRuleImageManagement(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -670,12 +668,12 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRuleImageManagement(t *testing.T) 
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_crossRegionCopyRuleImageManagement(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_type", "IMAGE_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", acctest.CtFalse),
@@ -695,19 +693,19 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRuleImageManagement(t *testing.T) 
 
 func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -720,7 +718,7 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -729,7 +727,7 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -741,18 +739,18 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkLifecyclePolicyExists(ctx, resourceName),
+					checkLifecyclePolicyExists(ctx, t, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
 				),
@@ -762,9 +760,9 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DLMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dlm_lifecycle_policy" {
@@ -773,7 +771,7 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfdlm.FindLifecyclePolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -788,14 +786,14 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestCheckFunc {
+func checkLifecyclePolicyExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.DLM, create.ErrActionCheckingExistence, tfdlm.ResNameLifecyclePolicy, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DLMClient(ctx)
 
 		_, err := tfdlm.FindLifecyclePolicyByID(ctx, conn, rs.Primary.ID)
 
@@ -808,7 +806,7 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).DLMClient(ctx)
 
 	input := &dlm.GetLifecyclePoliciesInput{}
 
