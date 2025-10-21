@@ -588,10 +588,50 @@ func TestAccELBV2ListenerRuleDataSource_conditionHostHeader(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
 						expectKnownCondition("host_header", knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.Null(),
 								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 									knownvalue.StringExact("example.com"),
 									knownvalue.StringExact("www.example.com"),
 								}),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionHostHeaderRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionHostHeaderRegex(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("host_header", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("^example\\.com$"),
+									knownvalue.StringExact("^www[0-9]+\\.example\\.com$"),
+								}),
+								names.AttrValues: knownvalue.Null(),
 							}),
 						})),
 					})),
@@ -627,10 +667,51 @@ func TestAccELBV2ListenerRuleDataSource_conditionHTTPHeader(t *testing.T) {
 						expectKnownCondition("http_header", knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"http_header_name": knownvalue.StringExact("X-Forwarded-For"),
+								"regex_values":     knownvalue.Null(),
 								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 									knownvalue.StringExact("192.168.1.*"),
 									knownvalue.StringExact("10.0.0.*"),
 								}),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionHTTPHeaderRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionHTTPHeaderRegex(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("http_header", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"http_header_name": knownvalue.StringExact("User-Agent"),
+								"regex_values": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("A.+"),
+									knownvalue.StringExact("B.*C"),
+								}),
+								names.AttrValues: knownvalue.Null(),
 							}),
 						})),
 					})),
@@ -703,10 +784,50 @@ func TestAccELBV2ListenerRuleDataSource_conditionPathPattern(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
 						expectKnownCondition("path_pattern", knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.Null(),
 								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 									knownvalue.StringExact("/public/*"),
 									knownvalue.StringExact("/cgi-bin/*"),
 								}),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionPathPatternRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionPathPatternRegex(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("path_pattern", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("^\\/api\\/(.*)$"),
+									knownvalue.StringExact("^\\/api2\\/(.*)$"),
+								}),
+								names.AttrValues: knownvalue.Null(),
 							}),
 						})),
 					})),
@@ -1184,6 +1305,30 @@ resource "aws_lb_listener_rule" "test" {
 `)
 }
 
+func testAccListenerRuleDataSourceConfig_conditionHostHeaderRegex(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    host_header {
+      regex_values = ["^example\\.com$", "^www[0-9]+\\.example\\.com$"]
+    }
+  }
+}
+`)
+}
+
 func testAccListenerRuleDataSourceConfig_conditionHTTPHeader(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
 data "aws_lb_listener_rule" "test" {
@@ -1203,6 +1348,31 @@ resource "aws_lb_listener_rule" "test" {
     http_header {
       http_header_name = "X-Forwarded-For"
       values           = ["192.168.1.*", "10.0.0.*"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionHTTPHeaderRegex(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    http_header {
+      http_header_name = "User-Agent"
+      regex_values     = ["A.+", "B.*C"]
     }
   }
 }
@@ -1251,6 +1421,30 @@ resource "aws_lb_listener_rule" "test" {
   condition {
     path_pattern {
       values = ["/public/*", "/cgi-bin/*"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionPathPatternRegex(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      regex_values = ["^\\/api\\/(.*)$", "^\\/api2\\/(.*)$"]
     }
   }
 }
