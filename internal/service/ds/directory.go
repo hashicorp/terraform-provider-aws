@@ -262,7 +262,6 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 		return nil
 	}, tfresource.WithPollInterval(1*time.Minute))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, fmt.Errorf("creating Directory Service %s Directory (%s): %w", creator.TypeName(), name, err))
 	}
@@ -347,9 +346,9 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	dda, err := getDirectoryDataAccess(ctx, conn, d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, "reading directory data access", err)
+		return sdkdiag.AppendErrorf(diags, "reading directory data access", err)
 	}
-	if dd.DataAccessStatus == awstypes.DataAccessStatusEnabled {
+	if dda.DataAccessStatus == awstypes.DataAccessStatusEnabled {
 		d.Set("enable_directory_data_access", true)
 	} else {
 		d.Set("enable_directory_data_access", false)
@@ -459,7 +458,6 @@ func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.C
 	}
 
 	output, err := conn.ConnectDirectory(ctx, input)
-
 	if err != nil {
 		return err
 	}
@@ -499,7 +497,6 @@ func (c microsoftADCreator) Create(ctx context.Context, conn *directoryservice.C
 	}
 
 	output, err := conn.CreateMicrosoftAD(ctx, input)
-
 	if err != nil {
 		return err
 	}
@@ -542,7 +539,6 @@ func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.Clie
 	}
 
 	output, err := conn.CreateDirectory(ctx, input)
-
 	if err != nil {
 		return err
 	}
@@ -559,7 +555,6 @@ func createAlias(ctx context.Context, conn *directoryservice.Client, directoryID
 	}
 
 	_, err := conn.CreateAlias(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", directoryID, alias, err)
 	}
@@ -573,7 +568,6 @@ func disableSSO(ctx context.Context, conn *directoryservice.Client, directoryID 
 	}
 
 	_, err := conn.DisableSso(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("disabling Directory Service Directory (%s) SSO: %w", directoryID, err)
 	}
@@ -587,7 +581,6 @@ func enableSSO(ctx context.Context, conn *directoryservice.Client, directoryID s
 	}
 
 	_, err := conn.EnableSso(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", directoryID, err)
 	}
@@ -624,19 +617,18 @@ func disableDirectoryDataAccess(ctx context.Context, conn *directoryservice.Clie
 func getDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string) (*directoryservice.DescribeDirectoryDataAccessOutput, error) {
 	dda, err := conn.DescribeDirectoryDataAccess(ctx, &directoryservice.DescribeDirectoryDataAccessInput{
 		DirectoryId: aws.String(directoryID),
-	}
+	})
 	if err != nil {
-		return fmt.Errorf("describing Directory Data Access for Directory Service Directory (%s): %w", directoryID, err)
+		return nil, fmt.Errorf("describing Directory Data Access for Directory Service Directory (%s): %w", directoryID, err)
 	}
 
-		return dda, nil
+	return dda, nil
 }
 
 func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.Client, directoryID string, desiredNumber int, timeout time.Duration, optFns ...func(*directoryservice.Options)) error {
 	oldDomainControllers, err := findDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
 		DirectoryId: aws.String(directoryID),
 	}, optFns...)
-
 	if err != nil {
 		return fmt.Errorf("reading Directory Service Directory (%s) domain controllers: %w", directoryID, err)
 	}
@@ -647,7 +639,6 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 	}
 
 	_, err = conn.UpdateNumberOfDomainControllers(ctx, input, optFns...)
-
 	if err != nil {
 		return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", directoryID, desiredNumber, err)
 	}
@@ -655,7 +646,6 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 	newDomainControllers, err := findDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
 		DirectoryId: aws.String(directoryID),
 	}, optFns...)
-
 	if err != nil {
 		return fmt.Errorf("reading Directory Service Directory (%s) domain controllers: %w", directoryID, err)
 	}
@@ -698,7 +688,6 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 
 func findDirectory(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDirectoriesInput) (*awstypes.DirectoryDescription, error) {
 	output, err := findDirectories(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -736,7 +725,6 @@ func findDirectoryByID(ctx context.Context, conn *directoryservice.Client, id st
 	}
 
 	output, err := findDirectory(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -823,7 +811,6 @@ func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, id
 
 func findDomainController(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDomainControllersInput, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
 	output, err := findDomainControllers(ctx, conn, input, optFns...)
-
 	if err != nil {
 		return nil, err
 	}
@@ -862,7 +849,6 @@ func findDomainControllerByTwoPartKey(ctx context.Context, conn *directoryservic
 	}
 
 	output, err := findDomainController(ctx, conn, input, optFns...)
-
 	if err != nil {
 		return nil, err
 	}
