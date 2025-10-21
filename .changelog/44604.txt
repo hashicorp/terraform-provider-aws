@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_launch_template: Update EBS `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes
+```
+```release-note:enhancement
+resource/aws_imagebuilder_container_recipe: Update EBS `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes
+```
+```release-note:enhancement
+resource/aws_imagebuilder_image_recipe: Update EBS `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes
+```

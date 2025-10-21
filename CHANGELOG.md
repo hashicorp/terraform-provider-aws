@@ -1,4 +1,47 @@
-## 6.16.0 (Unreleased)
+## 6.18.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_bedrockagentcore_oauth2_credential_provider` ([#44307](https://github.com/hashicorp/terraform-provider-aws/issues/44307))
+* **New Resource:** `aws_bedrockagentcore_workload_identity` ([#44308](https://github.com/hashicorp/terraform-provider-aws/issues/44308))
+
+ENHANCEMENTS:
+
+* resource/aws_appstream_directory_config: Add certificate_based_auth_properties support ([#44679](https://github.com/hashicorp/terraform-provider-aws/issues/44679))
+
+## 6.17.0 (October 16, 2025)
+
+NOTES:
+
+* resource/aws_quicksight_account_subscription: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing ([#44638](https://github.com/hashicorp/terraform-provider-aws/issues/44638))
+
+FEATURES:
+
+* **New Data Source:** `aws_rds_global_cluster` ([#37286](https://github.com/hashicorp/terraform-provider-aws/issues/37286))
+* **New Data Source:** `aws_vpn_connection` ([#44622](https://github.com/hashicorp/terraform-provider-aws/issues/44622))
+* **New Resource:** `aws_bedrockagentcore_agent_runtime` ([#44301](https://github.com/hashicorp/terraform-provider-aws/issues/44301))
+* **New Resource:** `aws_bedrockagentcore_agent_runtime_endpoint` ([#44301](https://github.com/hashicorp/terraform-provider-aws/issues/44301))
+* **New Resource:** `aws_bedrockagentcore_api_key_credential_provider` ([#44302](https://github.com/hashicorp/terraform-provider-aws/issues/44302))
+* **New Resource:** `aws_bedrockagentcore_browser` ([#44303](https://github.com/hashicorp/terraform-provider-aws/issues/44303))
+* **New Resource:** `aws_bedrockagentcore_code_interpreter` ([#44304](https://github.com/hashicorp/terraform-provider-aws/issues/44304))
+* **New Resource:** `aws_bedrockagentcore_gateway` ([#44305](https://github.com/hashicorp/terraform-provider-aws/issues/44305))
+* **New Resource:** `aws_bedrockagentcore_gateway_target` ([#44305](https://github.com/hashicorp/terraform-provider-aws/issues/44305))
+
+ENHANCEMENTS:
+
+* resource/aws_imagebuilder_container_recipe: Update EBS `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes ([#44604](https://github.com/hashicorp/terraform-provider-aws/issues/44604))
+* resource/aws_imagebuilder_image_recipe: Update EBS `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes ([#44604](https://github.com/hashicorp/terraform-provider-aws/issues/44604))
+* resource/aws_launch_template: Update EBS `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes ([#44604](https://github.com/hashicorp/terraform-provider-aws/issues/44604))
+* resource/aws_quicksight_account_subscription: Add `admin_pro_group`, `author_pro_group`, and `reader_pro_group` arguments ([#44638](https://github.com/hashicorp/terraform-provider-aws/issues/44638))
+* resource/aws_subnet: Adds List support ([#44671](https://github.com/hashicorp/terraform-provider-aws/issues/44671))
+* resource/aws_vpc: Adds List support ([#44609](https://github.com/hashicorp/terraform-provider-aws/issues/44609))
+
+BUG FIXES:
+
+* resource/aws_ec2_transit_gateway_route_table_propagation.test: Fix bug causing `inconsistent final plan` errors ([#44542](https://github.com/hashicorp/terraform-provider-aws/issues/44542))
+* resource/aws_lambda_function: Reset non-API attributes (`source_code_hash`, `s3_bucket`, `s3_key`, `s3_object_version` and `filename`) to their previous values when an update operation fails ([#42829](https://github.com/hashicorp/terraform-provider-aws/issues/42829))
+
+## 6.16.0 (October 9, 2025)
 
 FEATURES:
 
@@ -15,6 +58,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_codebuild_project: Add `auto_retry_limit` argument ([#40035](https://github.com/hashicorp/terraform-provider-aws/issues/40035))
 * resource/aws_emrserverless_application: Add `scheduler_configuration` block ([#44589](https://github.com/hashicorp/terraform-provider-aws/issues/44589))
 * resource/aws_lambda_event_source_mapping: Add `schema_registry_config` configuration blocks to `amazon_managed_kafka_event_source_config` and `self_managed_kafka_event_source_config` blocks ([#44540](https://github.com/hashicorp/terraform-provider-aws/issues/44540))
 * resource/aws_ssmcontacts_contact: Add resource identity support ([#44548](https://github.com/hashicorp/terraform-provider-aws/issues/44548))
@@ -36,6 +80,7 @@ BUG FIXES:
 * resource/aws_datazone_project: No longer ignores errors when deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_datazone_project: No longer returns error when already deleting. ([#44491](https://github.com/hashicorp/terraform-provider-aws/issues/44491))
 * resource/aws_dynamodb_table: Do not retry on `LimitExceededException` ([#44576](https://github.com/hashicorp/terraform-provider-aws/issues/44576))
+* resource/aws_ivschat_room: Set `maximum_message_rate_per_second` validation maximum to `100` ([#44572](https://github.com/hashicorp/terraform-provider-aws/issues/44572))
 * resource/aws_launch_template: `kms_key_id` validation now accepts key ID, alias, and alias ARN in addition to key ARN ([#44505](https://github.com/hashicorp/terraform-provider-aws/issues/44505))
 * resource/aws_servicecatalog_portfolio_share: Add global mutex lock around create and delete operations to prevent `ThrottlingException` errors ([#24730](https://github.com/hashicorp/terraform-provider-aws/issues/24730))
 
