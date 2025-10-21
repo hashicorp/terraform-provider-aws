@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -22,7 +22,7 @@ type expectIdentityFunc struct {
 	identityFunc        func() map[string]knownvalue.Check
 }
 
-// CheckQuery implements the query check logic.
+// Adapted (with updates) from github.com/hashicorp/terraform-plugin-testing/statecheck.ExpectIdentity
 func (e expectIdentityFunc) CheckQuery(_ context.Context, req querycheck.CheckQueryRequest, resp *querycheck.CheckQueryResponse) {
 	checks := e.identityFunc()
 
@@ -51,9 +51,7 @@ func (e expectIdentityFunc) CheckQuery(_ context.Context, req querycheck.CheckQu
 			keys = append(keys, k)
 		}
 
-		sort.SliceStable(keys, func(i, j int) bool {
-			return keys[i] < keys[j]
-		})
+		slices.Sort(keys)
 
 		for _, k := range keys {
 			actualIdentityVal, ok := res.Identity[k]
