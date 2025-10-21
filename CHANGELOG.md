@@ -9,7 +9,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_iam_policy: Adds validation for `path_prefix` attribute ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
-* resource/aws_appstream_directory_config: Add certificate_based_auth_properties support ([#44679](https://github.com/hashicorp/terraform-provider-aws/issues/44679))
+* resource/aws_appstream_directory_config: Add `certificate_based_auth_properties` argument ([#44679](https://github.com/hashicorp/terraform-provider-aws/issues/44679))
 * resource/aws_iam_policy: Adds List support ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
 * resource/aws_iam_policy: Adds validation for `path` attribute ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
 
