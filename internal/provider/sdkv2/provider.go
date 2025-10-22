@@ -720,6 +720,11 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					why:         CustomizeDiff,
 					interceptor: setTagsAll(),
 				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: validateRequiredTags(),
+				})
 			}
 
 			if len(resource.Identity.Attributes) > 0 {

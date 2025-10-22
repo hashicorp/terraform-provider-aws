@@ -37,7 +37,7 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 		return diags
 	}
 
-	sp, serviceName, resourceName, typeName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return diags
 	}
@@ -52,21 +52,6 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 			tags = tags.IgnoreSystem(sp.ServicePackageName())
 
 			tagsInContext.TagsIn = option.Some(tags)
-
-			// Verify required tags are present
-			if rtc := c.RequiredTagsConfig(ctx); rtc != nil {
-				if data, ok := rtc.Data[typeName]; ok {
-					reqTags := data.EnforcedRequiredTagKeys
-
-					if !tags.ContainsAllKeys(reqTags) {
-						// TODO: filter to only missing required keys
-						if rtc.Level == "error" {
-							return sdkdiag.AppendErrorf(diags, "missing required tags %s %s: %s", serviceName, resourceName, reqTags.Keys())
-						}
-						diags = sdkdiag.AppendWarningf(diags, "missing required tags %s %s: %s", serviceName, resourceName, reqTags.Keys())
-					}
-				}
-			}
 
 			if why == Create {
 				break
@@ -304,6 +289,44 @@ func setTagsAll() customizeDiffInterceptor {
 							return fmt.Errorf("setting tags_all to Computed: %w", err)
 						}
 						return nil
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+}
+
+func validateRequiredTags() customizeDiffInterceptor {
+	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
+		c := opts.c
+
+		switch d, when, why := opts.d, opts.when, opts.why; when {
+		case Before:
+			switch why {
+			case CustomizeDiff:
+				_, serviceName, resourceName, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
+				if !ok {
+					return nil
+				}
+
+				cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
+				// We intentionally _do not_ account for ignored tags here.
+				allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
+
+				// Verify required tags are present
+				if rtc := c.RequiredTagsConfig(ctx); rtc != nil {
+					if data, ok := rtc.Data[typeName]; ok {
+						reqTags := data.EnforcedRequiredTagKeys
+
+						if !allTags.ContainsAllKeys(reqTags) {
+							missing := reqTags.Removed(allTags).Keys() // Slightly misue Removed() here to get the missing keys
+							// TODO: CustomizeDiff does not support diagnostics - can we warn some other way?
+							if rtc.Level == "error" {
+								return fmt.Errorf("missing required tags %s %s: %s", serviceName, resourceName, missing)
+							}
+						}
 					}
 				}
 			}
