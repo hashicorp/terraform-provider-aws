@@ -6,6 +6,7 @@ package networkflowmonitor
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,6 +15,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -23,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -45,7 +47,6 @@ func newScopeResource(_ context.Context) (resource.ResourceWithConfigure, error)
 type scopeResource struct {
 	framework.ResourceWithConfigure
 	framework.ResourceWithModel[scopeResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -139,14 +140,10 @@ func (r *scopeResource) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
-	// MANDATORY: Use fwflex.Expand for automatic parameter mapping
+	// Manual parameter mapping (AutoFlex can't handle union types)
 	input := &networkflowmonitor.CreateScopeInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
 
-	// Handle union types that fwflex can't handle automatically
+	// Map targets manually since they contain union types
 	if !data.Targets.IsNull() && !data.Targets.IsUnknown() {
 		targets, diags := data.Targets.ToSlice(ctx)
 		response.Diagnostics.Append(diags...)
@@ -188,7 +185,7 @@ func (r *scopeResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	// Set ID and computed attributes
+	// Set ID and computed attributes from create output
 	data.ID = types.StringValue(aws.ToString(output.ScopeArn))
 	data.ARN = types.StringValue(aws.ToString(output.ScopeArn))
 
@@ -199,9 +196,53 @@ func (r *scopeResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	// Set computed attributes
+	// Set all attributes from final scope state manually
 	data.ScopeId = types.StringValue(aws.ToString(scope.ScopeId))
 	data.Status = types.StringValue(string(scope.Status))
+
+	// Handle targets with union types manually
+	if len(scope.Targets) > 0 {
+		targetModels := make([]targetResourceModel, len(scope.Targets))
+		for i, target := range scope.Targets {
+			targetModels[i].Region = types.StringValue(aws.ToString(target.Region))
+
+			if target.TargetIdentifier != nil {
+				var targetIdValue string
+				if accountId, ok := target.TargetIdentifier.TargetId.(*awstypes.TargetIdMemberAccountId); ok {
+					targetIdValue = accountId.Value
+				}
+
+				targetIdModel := targetIdentifierModel{
+					TargetId:   types.StringValue(targetIdValue),
+					TargetType: types.StringValue(string(target.TargetIdentifier.TargetType)),
+				}
+
+				targetIdentifierList, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []targetIdentifierModel{targetIdModel})
+				response.Diagnostics.Append(diags...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				targetModels[i].TargetIdentifier = targetIdentifierList
+			}
+		}
+
+		targetsList, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, targetModels)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		data.Targets = targetsList
+	}
+
+	// Set tags - preserve the original plan's tags state
+	// If tags were null in the plan, keep them null in the state
+	if !data.Tags.IsNull() {
+		tags := tftags.New(ctx, scope.Tags)
+		data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
+	}
+	// TagsAll should always reflect the actual AWS state
+	tags := tftags.New(ctx, scope.Tags)
+	data.TagsAll = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -228,13 +269,14 @@ func (r *scopeResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	// MANDATORY: Use fwflex.Flatten for automatic parameter mapping
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// Manual parameter mapping (AutoFlex can't handle union types)
+	// Set basic attributes
+	data.ID = types.StringValue(aws.ToString(output.ScopeArn))
+	data.ARN = types.StringValue(aws.ToString(output.ScopeArn))
+	data.ScopeId = types.StringValue(aws.ToString(output.ScopeId))
+	data.Status = types.StringValue(string(output.Status))
 
-	// Handle union types that fwflex can't handle automatically
+	// Handle targets with union types manually
 	if len(output.Targets) > 0 {
 		targetModels := make([]targetResourceModel, len(output.Targets))
 		for i, target := range output.Targets {
@@ -268,8 +310,17 @@ func (r *scopeResource) Read(ctx context.Context, request resource.ReadRequest, 
 		data.Targets = targetsList
 	}
 
-	// Set tags from API response
-	setTagsOut(ctx, output.Tags)
+	// Set tags - only set if there are actual tags, otherwise keep null
+	if len(output.Tags) > 0 {
+		tags := tftags.New(ctx, output.Tags)
+		data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
+		data.TagsAll = tftags.FlattenStringValueMap(ctx, tags.Map())
+	} else {
+		// Keep tags null if no tags were originally set and none exist in AWS
+		// TagsAll should always reflect AWS state (empty map when no tags)
+		tags := tftags.New(ctx, output.Tags)
+		data.TagsAll = tftags.FlattenStringValueMap(ctx, tags.Map())
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -287,6 +338,38 @@ func (r *scopeResource) Update(ctx context.Context, request resource.UpdateReque
 
 	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
+	// Handle targets updates
+	if !new.Targets.Equal(old.Targets) {
+		// Calculate targets to add and remove
+		resourcesToAdd, resourcesToDelete, diags := r.calculateTargetChanges(ctx, old.Targets, new.Targets)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Update scope targets if there are changes
+		if len(resourcesToAdd) > 0 || len(resourcesToDelete) > 0 {
+			input := &networkflowmonitor.UpdateScopeInput{
+				ScopeId:           aws.String(old.ScopeId.ValueString()),
+				ResourcesToAdd:    resourcesToAdd,
+				ResourcesToDelete: resourcesToDelete,
+			}
+
+			_, err := conn.UpdateScope(ctx, input)
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("updating Network Flow Monitor Scope (%s) targets", new.ID.ValueString()), err.Error())
+				return
+			}
+
+			// Wait for scope to be updated
+			_, err = waitScopeUpdated(ctx, conn, old.ScopeId.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Flow Monitor Scope (%s) update", new.ID.ValueString()), err.Error())
+				return
+			}
+		}
+	}
+
 	// Handle tag updates
 	if !new.Tags.Equal(old.Tags) {
 		if err := updateTags(ctx, conn, new.ID.ValueString(), old.Tags, new.Tags); err != nil {
@@ -295,7 +378,164 @@ func (r *scopeResource) Update(ctx context.Context, request resource.UpdateReque
 		}
 	}
 
+	// After updating, read the current state from AWS to get all computed values
+	output, err := findScopeByID(ctx, conn, old.ScopeId.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Network Flow Monitor Scope (%s) after update", new.ID.ValueString()), err.Error())
+		return
+	}
+
+	// Update the new model with current AWS state
+	new.ScopeId = types.StringValue(aws.ToString(output.ScopeId))
+	new.Status = types.StringValue(string(output.Status))
+
+	// Map targets manually from AWS response
+	if len(output.Targets) > 0 {
+		targetModels := make([]targetResourceModel, len(output.Targets))
+		for i, target := range output.Targets {
+			targetModels[i].Region = types.StringValue(aws.ToString(target.Region))
+
+			if target.TargetIdentifier != nil {
+				var targetIdValue string
+				if accountId, ok := target.TargetIdentifier.TargetId.(*awstypes.TargetIdMemberAccountId); ok {
+					targetIdValue = accountId.Value
+				}
+
+				targetIdModel := targetIdentifierModel{
+					TargetId:   types.StringValue(targetIdValue),
+					TargetType: types.StringValue(string(target.TargetIdentifier.TargetType)),
+				}
+
+				targetIdentifierList, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []targetIdentifierModel{targetIdModel})
+				response.Diagnostics.Append(diags...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				targetModels[i].TargetIdentifier = targetIdentifierList
+			}
+		}
+
+		targetsList, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, targetModels)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		new.Targets = targetsList
+	}
+
+	// Set tags based on the updated AWS state
+	if !new.Tags.IsNull() && len(output.Tags) > 0 {
+		tags := tftags.New(ctx, output.Tags)
+		new.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
+	}
+	// TagsAll should always reflect AWS state
+	tags := tftags.New(ctx, output.Tags)
+	new.TagsAll = tftags.FlattenStringValueMap(ctx, tags.Map())
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *scopeResource) calculateTargetChanges(ctx context.Context, oldTargets, newTargets fwtypes.ListNestedObjectValueOf[targetResourceModel]) ([]awstypes.TargetResource, []awstypes.TargetResource, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var resourcesToAdd, resourcesToDelete []awstypes.TargetResource
+
+	// Convert old targets to map for easy lookup
+	oldTargetsMap := make(map[string]awstypes.TargetResource)
+	if !oldTargets.IsNull() && !oldTargets.IsUnknown() {
+		oldTargetsList, d := oldTargets.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, nil, diags
+		}
+
+		for _, target := range oldTargetsList {
+			awsTarget := awstypes.TargetResource{
+				Region: aws.String(target.Region.ValueString()),
+			}
+
+			// Handle union type for TargetIdentifier
+			if !target.TargetIdentifier.IsNull() && !target.TargetIdentifier.IsUnknown() {
+				identifiers, d := target.TargetIdentifier.ToSlice(ctx)
+				diags.Append(d...)
+				if diags.HasError() {
+					return nil, nil, diags
+				}
+
+				if len(identifiers) > 0 {
+					identifier := identifiers[0]
+					awsTarget.TargetIdentifier = &awstypes.TargetIdentifier{
+						TargetId: &awstypes.TargetIdMemberAccountId{
+							Value: identifier.TargetId.ValueString(),
+						},
+						TargetType: awstypes.TargetType(identifier.TargetType.ValueString()),
+					}
+
+					// Create a key for the target (region + target_id + target_type)
+					key := fmt.Sprintf("%s:%s:%s",
+						target.Region.ValueString(),
+						identifier.TargetId.ValueString(),
+						identifier.TargetType.ValueString())
+					oldTargetsMap[key] = awsTarget
+				}
+			}
+		}
+	}
+
+	// Convert new targets to map and identify additions
+	newTargetsMap := make(map[string]awstypes.TargetResource)
+	if !newTargets.IsNull() && !newTargets.IsUnknown() {
+		newTargetsList, d := newTargets.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, nil, diags
+		}
+
+		for _, target := range newTargetsList {
+			awsTarget := awstypes.TargetResource{
+				Region: aws.String(target.Region.ValueString()),
+			}
+
+			// Handle union type for TargetIdentifier
+			if !target.TargetIdentifier.IsNull() && !target.TargetIdentifier.IsUnknown() {
+				identifiers, d := target.TargetIdentifier.ToSlice(ctx)
+				diags.Append(d...)
+				if diags.HasError() {
+					return nil, nil, diags
+				}
+
+				if len(identifiers) > 0 {
+					identifier := identifiers[0]
+					awsTarget.TargetIdentifier = &awstypes.TargetIdentifier{
+						TargetId: &awstypes.TargetIdMemberAccountId{
+							Value: identifier.TargetId.ValueString(),
+						},
+						TargetType: awstypes.TargetType(identifier.TargetType.ValueString()),
+					}
+
+					// Create a key for the target
+					key := fmt.Sprintf("%s:%s:%s",
+						target.Region.ValueString(),
+						identifier.TargetId.ValueString(),
+						identifier.TargetType.ValueString())
+					newTargetsMap[key] = awsTarget
+
+					// If this target doesn't exist in old targets, it's an addition
+					if _, exists := oldTargetsMap[key]; !exists {
+						resourcesToAdd = append(resourcesToAdd, awsTarget)
+					}
+				}
+			}
+		}
+	}
+
+	// Identify deletions
+	for key, target := range oldTargetsMap {
+		if _, exists := newTargetsMap[key]; !exists {
+			resourcesToDelete = append(resourcesToDelete, target)
+		}
+	}
+
+	return resourcesToAdd, resourcesToDelete, diags
 }
 
 func (r *scopeResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -323,6 +563,30 @@ func (r *scopeResource) Delete(ctx context.Context, request resource.DeleteReque
 	if _, err := waitScopeDeleted(ctx, conn, data.ScopeId.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Flow Monitor Scope (%s) delete", data.ID.ValueString()), err.Error())
 		return
+	}
+}
+
+func (r *scopeResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	// The import ID can be either an ARN or a scope ID
+	id := request.ID
+
+	// If it's an ARN, extract the scope ID
+	if strings.HasPrefix(id, "arn:aws:networkflowmonitor:") {
+		// ARN format: arn:aws:networkflowmonitor:region:account:scope/scope-id
+		parts := strings.Split(id, "/")
+		if len(parts) != 2 {
+			response.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("Expected ARN format 'arn:aws:networkflowmonitor:region:account:scope/scope-id', got: %s", id))
+			return
+		}
+		scopeId := parts[1]
+
+		// Set both ID (ARN) and scope_id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), id)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("scope_id"), scopeId)...)
+	} else {
+		// Assume it's a scope ID, we'll need to construct the ARN during read
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("scope_id"), id)...)
+		// ID will be set during the subsequent Read operation
 	}
 }
 
@@ -368,6 +632,23 @@ func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string
 }
 
 func waitScopeCreated(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ScopeStatusInProgress),
+		Target:  enum.Slice(awstypes.ScopeStatusSucceeded),
+		Refresh: statusScope(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkflowmonitor.GetScopeOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitScopeUpdated(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusInProgress),
 		Target:  enum.Slice(awstypes.ScopeStatusSucceeded),

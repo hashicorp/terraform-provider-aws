@@ -45,9 +45,10 @@ func TestAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"scope_arn"},
 			},
 		},
 	})
@@ -104,9 +105,10 @@ func TestAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"scope_arn"},
 			},
 			{
 				Config: testAccMonitorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -123,6 +125,75 @@ func TestAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 					testAccCheckMonitorExists(ctx, resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFlowMonitorMonitor_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var monitor networkflowmonitor.GetMonitorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkflowmonitor_monitor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitorConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "local_resources.0.type", "AWS::EC2::VPC"),
+				),
+			},
+			//adding one more local resource to monitor
+			{
+				Config: testAccMonitorConfig_updated1(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "local_resources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "remote_resources.#", "1"),
+				),
+			},
+			//reverting local resources to single resource.
+			{
+				Config: testAccMonitorConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "local_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "local_resources.0.type", "AWS::EC2::VPC"),
+				),
+			},
+			//adding 2 local resources and 2 remote resources
+			{
+				Config: testAccMonitorConfig_updated2(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "local_resources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "remote_resources.#", "2"),
+				),
+			},
+			//reverting local resources to single resource.
+			{
+				Config: testAccMonitorConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "local_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "local_resources.0.type", "AWS::EC2::VPC"),
 				),
 			},
 		},
@@ -188,7 +259,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_networkflowmonitor_monitor" "test" {
   monitor_name = %[1]q
-  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:123456789012:scope/test-scope"
+  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
 
   local_resources {
     type       = "AWS::EC2::VPC"
@@ -215,7 +286,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_networkflowmonitor_monitor" "test" {
   monitor_name = %[1]q
-  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:123456789012:scope/test-scope"
+  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
 
   local_resources {
     type       = "AWS::EC2::VPC"
@@ -246,7 +317,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_networkflowmonitor_monitor" "test" {
   monitor_name = %[1]q
-  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:123456789012:scope/test-scope"
+  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
 
   local_resources {
     type       = "AWS::EC2::VPC"
@@ -265,6 +336,94 @@ resource "aws_networkflowmonitor_monitor" "test" {
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
+
+func testAccMonitorConfig_updated1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkflowmonitor_monitor" "test" {
+  monitor_name = %[1]q
+  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
+
+  local_resources {
+    type       = "AWS::EC2::VPC"
+    identifier = aws_vpc.test.arn
+  }
+
+  local_resources {
+    type       = "AWS::EC2::Subnet"
+    identifier = aws_subnet.test.arn
+  }
+
+  remote_resources {
+    type       = "AWS::EC2::VPC"
+    identifier = aws_vpc.test.arn
+  }
+}
+`, rName)
+}
+
+func testAccMonitorConfig_updated2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkflowmonitor_monitor" "test" {
+  monitor_name = %[1]q
+  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
+
+  local_resources {
+    type       = "AWS::EC2::VPC"
+    identifier = aws_vpc.test.arn
+  }
+
+  local_resources {
+    type       = "AWS::EC2::Subnet"
+    identifier = aws_subnet.test.arn
+  }
+
+  remote_resources {
+    type       = "AWS::EC2::VPC"
+    identifier = aws_vpc.test.arn
+  }
+
+  remote_resources {
+    type       = "AWS::EC2::Subnet"
+    identifier = aws_subnet.test.arn
+  }
+}
+`, rName)
+}
+
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFlowMonitorClient(ctx)
 

@@ -6,13 +6,15 @@ package networkflowmonitor
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -46,7 +48,6 @@ func newMonitorResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type monitorResource struct {
 	framework.ResourceWithConfigure
 	framework.ResourceWithModel[monitorResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -73,15 +74,18 @@ func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"monitor_status": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"local_resources": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[monitorResourceConfigModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+			"local_resources": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[monitorResourceConfigModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -94,11 +98,8 @@ func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 				},
 			},
-			"remote_resources": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[monitorResourceConfigModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
+			"remote_resources": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[monitorResourceConfigModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -120,16 +121,16 @@ func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaReq
 }
 
 type monitorResourceModel struct {
-	ARN             types.String                                                `tfsdk:"arn"`
-	ID              types.String                                                `tfsdk:"id"`
-	MonitorName     types.String                                                `tfsdk:"monitor_name"`
-	ScopeArn        types.String                                                `tfsdk:"scope_arn"`
-	MonitorStatus   types.String                                                `tfsdk:"monitor_status"`
-	LocalResources  fwtypes.ListNestedObjectValueOf[monitorResourceConfigModel] `tfsdk:"local_resources"`
-	RemoteResources fwtypes.ListNestedObjectValueOf[monitorResourceConfigModel] `tfsdk:"remote_resources"`
-	Tags            tftags.Map                                                  `tfsdk:"tags"`
-	TagsAll         tftags.Map                                                  `tfsdk:"tags_all"`
-	Timeouts        timeouts.Value                                              `tfsdk:"timeouts"`
+	ARN             types.String                                               `tfsdk:"arn"`
+	ID              types.String                                               `tfsdk:"id"`
+	MonitorName     types.String                                               `tfsdk:"monitor_name"`
+	ScopeArn        types.String                                               `tfsdk:"scope_arn"`
+	MonitorStatus   types.String                                               `tfsdk:"monitor_status"`
+	LocalResources  fwtypes.SetNestedObjectValueOf[monitorResourceConfigModel] `tfsdk:"local_resources"`
+	RemoteResources fwtypes.SetNestedObjectValueOf[monitorResourceConfigModel] `tfsdk:"remote_resources"`
+	Tags            tftags.Map                                                 `tfsdk:"tags"`
+	TagsAll         tftags.Map                                                 `tfsdk:"tags_all"`
+	Timeouts        timeouts.Value                                             `tfsdk:"timeouts"`
 }
 
 type monitorResourceConfigModel struct {
@@ -171,8 +172,11 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	// Set computed attributes
-	data.MonitorStatus = types.StringValue(string(monitor.MonitorStatus))
+	// Use fwflex.Flatten to set all attributes including tags_all
+	response.Diagnostics.Append(fwflex.Flatten(ctx, monitor, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -199,14 +203,19 @@ func (r *monitorResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	// Use flex.Flatten to automatically map API response to model
+	// Use fwflex.Flatten to automatically map API response to model
 	response.Diagnostics.Append(fwflex.Flatten(ctx, monitor, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Set tags from API response
-	setTagsOut(ctx, monitor.Tags)
+	// Ensure ID and ARN are set properly (especially important for import)
+	if data.ID.IsNull() || data.ID.IsUnknown() {
+		data.ID = types.StringValue(aws.ToString(monitor.MonitorArn))
+	}
+	if data.ARN.IsNull() || data.ARN.IsUnknown() {
+		data.ARN = types.StringValue(aws.ToString(monitor.MonitorArn))
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -224,10 +233,152 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 
 	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
-	if !new.Tags.Equal(old.Tags) {
-		if err := updateTags(ctx, conn, new.ID.ValueString(), old.Tags, new.Tags); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Network Flow Monitor Monitor (%s) tags", new.ID.ValueString()), err.Error())
+	// Check if local_resources or remote_resources have changed
+	if !new.LocalResources.Equal(old.LocalResources) || !new.RemoteResources.Equal(old.RemoteResources) {
+		input := &networkflowmonitor.UpdateMonitorInput{
+			MonitorName: aws.String(new.MonitorName.ValueString()),
+		}
+
+		// Calculate local resources diff
+		oldLocalResources := make(map[string]awstypes.MonitorLocalResource)
+		newLocalResources := make(map[string]awstypes.MonitorLocalResource)
+
+		// Build map of old local resources
+		if !old.LocalResources.IsNull() && !old.LocalResources.IsUnknown() {
+			oldLocalSlice, diags := old.LocalResources.ToSlice(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			for _, resource := range oldLocalSlice {
+				key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
+				oldLocalResources[key] = awstypes.MonitorLocalResource{
+					Type:       awstypes.MonitorLocalResourceType(resource.Type.ValueString()),
+					Identifier: aws.String(resource.Identifier.ValueString()),
+				}
+			}
+		}
+
+		// Build map of new local resources
+		if !new.LocalResources.IsNull() && !new.LocalResources.IsUnknown() {
+			newLocalSlice, diags := new.LocalResources.ToSlice(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			for _, resource := range newLocalSlice {
+				key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
+				newLocalResources[key] = awstypes.MonitorLocalResource{
+					Type:       awstypes.MonitorLocalResourceType(resource.Type.ValueString()),
+					Identifier: aws.String(resource.Identifier.ValueString()),
+				}
+			}
+		}
+
+		// Find resources to add (in new but not in old)
+		var localResourcesToAdd []awstypes.MonitorLocalResource
+		for key, resource := range newLocalResources {
+			if _, exists := oldLocalResources[key]; !exists {
+				localResourcesToAdd = append(localResourcesToAdd, resource)
+			}
+		}
+
+		// Find resources to remove (in old but not in new)
+		var localResourcesToRemove []awstypes.MonitorLocalResource
+		for key, resource := range oldLocalResources {
+			if _, exists := newLocalResources[key]; !exists {
+				localResourcesToRemove = append(localResourcesToRemove, resource)
+			}
+		}
+
+		// Calculate remote resources diff
+		oldRemoteResources := make(map[string]awstypes.MonitorRemoteResource)
+		newRemoteResources := make(map[string]awstypes.MonitorRemoteResource)
+
+		// Build map of old remote resources
+		if !old.RemoteResources.IsNull() && !old.RemoteResources.IsUnknown() {
+			oldRemoteSlice, diags := old.RemoteResources.ToSlice(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			for _, resource := range oldRemoteSlice {
+				key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
+				oldRemoteResources[key] = awstypes.MonitorRemoteResource{
+					Type:       awstypes.MonitorRemoteResourceType(resource.Type.ValueString()),
+					Identifier: aws.String(resource.Identifier.ValueString()),
+				}
+			}
+		}
+
+		// Build map of new remote resources
+		if !new.RemoteResources.IsNull() && !new.RemoteResources.IsUnknown() {
+			newRemoteSlice, diags := new.RemoteResources.ToSlice(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			for _, resource := range newRemoteSlice {
+				key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
+				newRemoteResources[key] = awstypes.MonitorRemoteResource{
+					Type:       awstypes.MonitorRemoteResourceType(resource.Type.ValueString()),
+					Identifier: aws.String(resource.Identifier.ValueString()),
+				}
+			}
+		}
+
+		// Find resources to add (in new but not in old)
+		var remoteResourcesToAdd []awstypes.MonitorRemoteResource
+		for key, resource := range newRemoteResources {
+			if _, exists := oldRemoteResources[key]; !exists {
+				remoteResourcesToAdd = append(remoteResourcesToAdd, resource)
+			}
+		}
+
+		// Find resources to remove (in old but not in new)
+		var remoteResourcesToRemove []awstypes.MonitorRemoteResource
+		for key, resource := range oldRemoteResources {
+			if _, exists := newRemoteResources[key]; !exists {
+				remoteResourcesToRemove = append(remoteResourcesToRemove, resource)
+			}
+		}
+
+		// Set the calculated diffs in the input
+		if len(localResourcesToAdd) > 0 {
+			input.LocalResourcesToAdd = localResourcesToAdd
+		}
+		if len(localResourcesToRemove) > 0 {
+			input.LocalResourcesToRemove = localResourcesToRemove
+		}
+		if len(remoteResourcesToAdd) > 0 {
+			input.RemoteResourcesToAdd = remoteResourcesToAdd
+		}
+		if len(remoteResourcesToRemove) > 0 {
+			input.RemoteResourcesToRemove = remoteResourcesToRemove
+		}
+
+		_, err := conn.UpdateMonitor(ctx, input)
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Network Flow Monitor Monitor (%s)", new.ID.ValueString()), err.Error())
 			return
+		}
+
+		// Wait for the update to complete
+		monitor, err := waitMonitorUpdated(ctx, conn, new.MonitorName.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Flow Monitor Monitor (%s) update", new.ID.ValueString()), err.Error())
+			return
+		}
+
+		// Update only the computed attributes, preserve the order of resources from configuration
+		new.MonitorStatus = types.StringValue(string(monitor.MonitorStatus))
+
+		// Ensure ID and ARN are set properly
+		if new.ID.IsNull() || new.ID.IsUnknown() {
+			new.ID = types.StringValue(aws.ToString(monitor.MonitorArn))
+		}
+		if new.ARN.IsNull() || new.ARN.IsUnknown() {
+			new.ARN = types.StringValue(aws.ToString(monitor.MonitorArn))
 		}
 	}
 
@@ -259,6 +410,30 @@ func (r *monitorResource) Delete(ctx context.Context, request resource.DeleteReq
 	if _, err := waitMonitorDeleted(ctx, conn, data.MonitorName.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Flow Monitor Monitor (%s) delete", data.ID.ValueString()), err.Error())
 		return
+	}
+}
+
+func (r *monitorResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	// The import ID can be either an ARN or a monitor name
+	id := request.ID
+
+	// If it's an ARN, extract the monitor name
+	if strings.HasPrefix(id, "arn:aws:networkflowmonitor:") {
+		// ARN format: arn:aws:networkflowmonitor:region:account:monitor/monitor-name
+		parts := strings.Split(id, "/")
+		if len(parts) != 2 {
+			response.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("Expected ARN format 'arn:aws:networkflowmonitor:region:account:monitor/monitor-name', got: %s", id))
+			return
+		}
+		monitorName := parts[1]
+
+		// Set both ID (ARN) and monitor_name
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), id)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("monitor_name"), monitorName)...)
+	} else {
+		// Assume it's a monitor name, we'll need to construct the ARN during read
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("monitor_name"), id)...)
+		// ID will be set during the subsequent Read operation
 	}
 }
 
@@ -304,6 +479,23 @@ func statusMonitor(ctx context.Context, conn *networkflowmonitor.Client, name st
 }
 
 func waitMonitorCreated(ctx context.Context, conn *networkflowmonitor.Client, name string, timeout time.Duration) (*networkflowmonitor.GetMonitorOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.MonitorStatusPending),
+		Target:  enum.Slice(awstypes.MonitorStatusActive),
+		Refresh: statusMonitor(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkflowmonitor.GetMonitorOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMonitorUpdated(ctx context.Context, conn *networkflowmonitor.Client, name string, timeout time.Duration) (*networkflowmonitor.GetMonitorOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MonitorStatusPending),
 		Target:  enum.Slice(awstypes.MonitorStatusActive),

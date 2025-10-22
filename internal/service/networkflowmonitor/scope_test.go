@@ -19,12 +19,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFlowMonitorScope_basic(t *testing.T) {
+func TestAccNetworkFlowMonitorScope_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Scope": {
+			acctest.CtBasic:      testAccNetworkFlowMonitorScope_basic,
+			acctest.CtDisappears: testAccNetworkFlowMonitorScope_disappears,
+			"tags":               testAccNetworkFlowMonitorScope_tags,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccNetworkFlowMonitorScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var scope networkflowmonitor.GetScopeOutput
 	resourceName := "aws_networkflowmonitor_scope.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -51,12 +65,12 @@ func TestAccNetworkFlowMonitorScope_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFlowMonitorScope_disappears(t *testing.T) {
+func testAccNetworkFlowMonitorScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var scope networkflowmonitor.GetScopeOutput
 	resourceName := "aws_networkflowmonitor_scope.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -77,12 +91,12 @@ func TestAccNetworkFlowMonitorScope_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFlowMonitorScope_tags(t *testing.T) {
+func testAccNetworkFlowMonitorScope_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var scope networkflowmonitor.GetScopeOutput
 	resourceName := "aws_networkflowmonitor_scope.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)

@@ -32,33 +32,6 @@ resource "aws_networkflowmonitor_scope" "example" {
 }
 ```
 
-### Multiple Targets
-
-```terraform
-data "aws_caller_identity" "current" {}
-
-resource "aws_networkflowmonitor_scope" "example" {
-  targets {
-    region = "us-east-1"
-    target_identifier {
-      target_id   = data.aws_caller_identity.current.account_id
-      target_type = "ACCOUNT"
-    }
-  }
-
-  targets {
-    region = "us-west-2"
-    target_identifier {
-      target_id   = data.aws_caller_identity.current.account_id
-      target_type = "ACCOUNT"
-    }
-  }
-
-  tags = {
-    Name = "example"
-  }
-}
-```
 
 ## Argument Reference
 
