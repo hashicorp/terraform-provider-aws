@@ -1719,15 +1719,17 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 }
 
 // nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
-// 
+//
 // XML Wrapper Compatibility Rules:
 // Rule 1: Items/Quantity only - Direct collection mapping
-//   AWS: {Items: []T, Quantity: *int32}
-//   TF:  Repeatable singular blocks (e.g., lambda_function_association { ... })
 //
-// Rule 2: Items/Quantity + additional fields - Single plural block  
-//   AWS: {Items: []T, Quantity: *int32, Enabled: *bool, ...}
-//   TF:  Single plural block (e.g., trusted_signers { items = [...], enabled = true })
+//	AWS: {Items: []T, Quantity: *int32}
+//	TF:  Repeatable singular blocks (e.g., lambda_function_association { ... })
+//
+// Rule 2: Items/Quantity + additional fields - Single plural block
+//
+//	AWS: {Items: []T, Quantity: *int32, Enabled: *bool, ...}
+//	TF:  Single plural block (e.g., trusted_signers { items = [...], enabled = true })
 //
 // Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
 func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Context, _ path.Path, vFrom fwtypes.NestedObjectCollectionValue, _ path.Path, vTo reflect.Value) diag.Diagnostics {
@@ -1760,7 +1762,7 @@ func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Cont
 	// Check if this is Rule 2 pattern (single nested object with items + additional fields)
 	if fromSlice.Len() == 1 {
 		nestedObj := fromSlice.Index(0)
-		
+
 		// Handle pointer to struct (which is what NestedObjectCollection contains)
 		if nestedObj.Kind() == reflect.Ptr && !nestedObj.IsNil() {
 			structObj := nestedObj.Elem()
@@ -1787,7 +1789,7 @@ func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedOb
 	// Get target fields
 	itemsField := vTo.FieldByName("Items")
 	quantityField := vTo.FieldByName("Quantity")
-	
+
 	if !itemsField.IsValid() || !quantityField.IsValid() {
 		diags.Append(diagExpandingIncompatibleTypes(nestedObjPtr.Type(), vTo.Type()))
 		return diags
@@ -1795,7 +1797,7 @@ func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedOb
 
 	// Get the struct from the pointer
 	nestedObj := nestedObjPtr.Elem()
-	
+
 	// Extract "Items" field from nested object
 	itemsSourceField := nestedObj.FieldByName("Items")
 	if !itemsSourceField.IsValid() {
@@ -1818,12 +1820,12 @@ func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedOb
 		targetField := vTo.Field(i)
 		targetFieldType := vTo.Type().Field(i)
 		fieldName := targetFieldType.Name
-		
+
 		// Skip Items and Quantity (already handled)
 		if fieldName == "Items" || fieldName == "Quantity" {
 			continue
 		}
-		
+
 		// Look for matching field in nested object
 		sourceField := nestedObj.FieldByName(fieldName)
 		if sourceField.IsValid() {

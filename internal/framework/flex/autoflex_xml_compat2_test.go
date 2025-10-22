@@ -8,11 +8,11 @@
 //
 // ## Rule 1: Wrapper contains only Items/Quantity
 //   AWS: {Items: []T, Quantity: *int32}
-//   
+//
 //   Scalar elements ([]string, []enum):
 //     Terraform: SetAttribute or ListAttribute
 //     Example: origin_ssl_protocols = ["TLSv1.2", "TLSv1.3"]
-//   
+//
 //   Struct elements ([]CustomStruct):
 //     Terraform: Repeatable singular blocks (one block per item)
 //     Example: lambda_function_association { ... }
@@ -20,7 +20,7 @@
 //
 // ## Rule 2: Wrapper contains Items/Quantity + additional fields (e.g., Enabled)
 //   AWS: {Items: []T, Quantity: *int32, Enabled: *bool}
-//   
+//
 //   Terraform: Single plural block containing collection + extra fields
 //   Example: trusted_signers {
 //              items   = ["signer1", "signer2"]
@@ -241,7 +241,7 @@ func TestFlattenXMLWrapperRule1ScalarElements(t *testing.T) {
 	}
 }
 
-// Test Rule 1 Flatten: XML wrappers with Items/Quantity only (struct elements)  
+// Test Rule 1 Flatten: XML wrappers with Items/Quantity only (struct elements)
 func TestFlattenXMLWrapperRule1StructElements(t *testing.T) {
 	t.Parallel()
 
@@ -296,6 +296,7 @@ func TestFlattenXMLWrapperRule1StructElements(t *testing.T) {
 		})
 	}
 }
+
 // Test Rule 1 Symmetry: Verify expand→flatten produces identical results
 func TestXMLWrapperRule1Symmetry(t *testing.T) {
 	t.Parallel()
@@ -324,8 +325,10 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 
 		// Flatten: AWS → TF (using struct-to-struct pattern)
 		sourceStruct := &struct{ XMLWrapper *testXMLWrapperScalar }{XMLWrapper: awsStruct}
-		targetStruct := &struct{ XMLWrapper fwtypes.SetValueOf[types.String] `autoflex:",wrapper=items"` }{}
-		
+		targetStruct := &struct {
+			XMLWrapper fwtypes.SetValueOf[types.String] `autoflex:",wrapper=items"`
+		}{}
+
 		flattenDiags := Flatten(ctx, sourceStruct, targetStruct)
 		if flattenDiags.HasError() {
 			t.Fatalf("Flatten failed: %v", flattenDiags)
@@ -337,7 +340,7 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 		}
 	})
 
-	// Test struct elements symmetry  
+	// Test struct elements symmetry
 	t.Run("StructElements", func(t *testing.T) {
 		// Original Terraform value
 		original := fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
@@ -358,8 +361,10 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 
 		// Flatten: AWS → TF (using struct-to-struct pattern)
 		sourceStruct := &struct{ XMLWrapper *testXMLWrapperStruct }{XMLWrapper: awsStruct}
-		targetStruct := &struct{ XMLWrapper fwtypes.SetNestedObjectValueOf[testStructItemModel] `autoflex:",wrapper=items"` }{}
-		
+		targetStruct := &struct {
+			XMLWrapper fwtypes.SetNestedObjectValueOf[testStructItemModel] `autoflex:",wrapper=items"`
+		}{}
+
 		flattenDiags := Flatten(ctx, sourceStruct, targetStruct)
 		if flattenDiags.HasError() {
 			t.Fatalf("Flatten failed: %v", flattenDiags)
@@ -371,6 +376,7 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 		}
 	})
 }
+
 // Test data types for Rule 2 XML wrappers (Items/Quantity + additional fields)
 type testXMLWrapperRule2 struct {
 	Items    []string
@@ -446,6 +452,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 		})
 	}
 }
+
 // Test Rule 2 Flatten: XML wrappers with Items/Quantity + additional fields
 func TestFlattenXMLWrapperRule2(t *testing.T) {
 	t.Parallel()
@@ -519,14 +526,16 @@ func TestXMLWrapperRule2Symmetry(t *testing.T) {
 
 		// Verify expand result
 		if len(awsStruct.Items) != 2 || *awsStruct.Quantity != 2 || !*awsStruct.Enabled {
-			t.Errorf("Expand produced incorrect result: Items=%v, Quantity=%v, Enabled=%v", 
+			t.Errorf("Expand produced incorrect result: Items=%v, Quantity=%v, Enabled=%v",
 				awsStruct.Items, *awsStruct.Quantity, *awsStruct.Enabled)
 		}
 
 		// Flatten: AWS → TF (this should now work)
 		sourceStruct := &struct{ XMLWrapper *testXMLWrapperRule2 }{XMLWrapper: awsStruct}
-		targetStruct := &struct{ XMLWrapper fwtypes.ListNestedObjectValueOf[testRule2Model] `autoflex:",wrapper=items"` }{}
-		
+		targetStruct := &struct {
+			XMLWrapper fwtypes.ListNestedObjectValueOf[testRule2Model] `autoflex:",wrapper=items"`
+		}{}
+
 		flattenDiags := Flatten(ctx, sourceStruct, targetStruct)
 		if flattenDiags.HasError() {
 			t.Fatalf("Flatten failed: %v", flattenDiags)
@@ -568,7 +577,7 @@ func TestXMLWrapperRealCloudFrontTypes(t *testing.T) {
 		} else {
 			// Verify correct AWS structure
 			if len(target.Items) != 1 || *target.Quantity != 1 || !*target.Enabled {
-				t.Errorf("TrustedSigners incorrect: Items=%v, Quantity=%v, Enabled=%v", 
+				t.Errorf("TrustedSigners incorrect: Items=%v, Quantity=%v, Enabled=%v",
 					target.Items, *target.Quantity, *target.Enabled)
 			}
 		}

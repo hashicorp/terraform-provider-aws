@@ -1534,12 +1534,14 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 //
 // XML Wrapper Compatibility Rules:
 // Rule 1: Items/Quantity only - Direct collection mapping
-//   AWS: {Items: []T, Quantity: *int32}
-//   TF:  Repeatable singular blocks (e.g., lambda_function_association { ... })
+//
+//	AWS: {Items: []T, Quantity: *int32}
+//	TF:  Repeatable singular blocks (e.g., lambda_function_association { ... })
 //
 // Rule 2: Items/Quantity + additional fields - Single plural block
-//   AWS: {Items: []T, Quantity: *int32, Enabled: *bool, ...}  
-//   TF:  Single plural block (e.g., trusted_signers { items = [...], enabled = true })
+//
+//	AWS: {Items: []T, Quantity: *int32, Enabled: *bool, ...}
+//	TF:  Single plural block (e.g., trusted_signers { items = [...], enabled = true })
 //
 // Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
 func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, wrapperField string) diag.Diagnostics {
@@ -1561,7 +1563,7 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 		if diags.HasError() {
 			return diags
 		}
-		
+
 		// Check if the target model has an Items field (Rule 2 pattern)
 		sampleValue := reflect.ValueOf(samplePtr).Elem()
 		if sampleValue.FieldByName("Items").IsValid() {
@@ -2774,6 +2776,7 @@ func (flattener autoFlattener) createTargetValue(ctx context.Context, sourceValu
 		return sourceValue, diags
 	}
 }
+
 // xmlWrapperFlattenRule2 handles Rule 2: XML wrapper to single plural block with items + additional fields
 func (flattener autoFlattener) xmlWrapperFlattenRule2(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -2790,7 +2793,7 @@ func (flattener autoFlattener) xmlWrapperFlattenRule2(ctx context.Context, vFrom
 	if diags.HasError() {
 		return diags
 	}
-	
+
 	// Get the nested object value from the pointer
 	nestedObjValue := reflect.ValueOf(nestedObjPtr).Elem()
 
@@ -2835,12 +2838,12 @@ func (flattener autoFlattener) xmlWrapperFlattenRule2(ctx context.Context, vFrom
 	sliceType := reflect.SliceOf(ptrType)
 	objectSlice := reflect.MakeSlice(sliceType, 1, 1)
 	objectSlice.Index(0).Set(reflect.ValueOf(nestedObjPtr))
-	
+
 	targetValue, d := tTo.ValueFromObjectSlice(ctx, objectSlice.Interface())
 	diags.Append(d...)
 	if !diags.HasError() {
 		vTo.Set(reflect.ValueOf(targetValue))
 	}
-	
+
 	return diags
 }
