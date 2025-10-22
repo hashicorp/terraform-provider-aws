@@ -486,10 +486,15 @@ func (r *resourceNetwork) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	input := odb.DeleteOdbNetworkInput{
-		OdbNetworkId:              state.OdbNetworkId.ValueStringPointer(),
-		DeleteAssociatedResources: state.DeleteAssociatedResources.ValueBoolPointer(),
+		OdbNetworkId: state.OdbNetworkId.ValueStringPointer(),
 	}
 
+	if state.DeleteAssociatedResources.ValueBoolPointer() == nil || state.DeleteAssociatedResources.IsUnknown() {
+		deleteAssociatedResources := false
+		input.DeleteAssociatedResources = &deleteAssociatedResources
+	} else {
+		input.DeleteAssociatedResources = state.DeleteAssociatedResources.ValueBoolPointer()
+	}
 	_, err := conn.DeleteOdbNetwork(ctx, &input)
 
 	if err != nil {
