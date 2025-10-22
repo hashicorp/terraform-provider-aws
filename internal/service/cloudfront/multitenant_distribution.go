@@ -4,16 +4,13 @@
 package cloudfront
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,8 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -588,49 +583,11 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 	}
 }
 
-func registerLogger(ctx context.Context, logLevel hclog.Level) context.Context {
-	return tflog.NewSubsystem(ctx, "cloudfront_testing",
-		tflog.WithLevel(logLevel),
-		tflog.WithRootFields(),
-	)
-}
-
 func (r *multiTenantDistributionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	// Simple file-based debug log to verify this method is called
-	if f, err := os.Create("/tmp/cloudfront_debug.log"); err == nil {
-		f.WriteString(fmt.Sprintf("Create method called at %v\n", time.Now()))
-		f.Close()
-	}
-
 	var data multiTenantDistributionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	// Debug: Check what's in the data model from the plan
-	fmt.Printf("DEBUG: Data model from plan:\n")
-	tflog.Error(ctx, "CloudFront multitenant distribution data model from plan")
-	fmt.Printf("DEBUG: data.Comment: %+v\n", data.Comment)
-	fmt.Printf("DEBUG: data.Enabled: %+v\n", data.Enabled)
-	fmt.Printf("DEBUG: data.DefaultCacheBehavior.IsNull(): %+v\n", data.DefaultCacheBehavior.IsNull())
-	tflog.Error(ctx, "DefaultCacheBehavior status", map[string]any{
-		"is_null":    data.DefaultCacheBehavior.IsNull(),
-		"is_unknown": data.DefaultCacheBehavior.IsUnknown(),
-	})
-	fmt.Printf("DEBUG: data.DefaultCacheBehavior.IsUnknown(): %+v\n", data.DefaultCacheBehavior.IsUnknown())
-	if !data.DefaultCacheBehavior.IsNull() && !data.DefaultCacheBehavior.IsUnknown() {
-		elements := data.DefaultCacheBehavior.Elements()
-		fmt.Printf("DEBUG: data.DefaultCacheBehavior.Elements(): %+v (len=%d)\n", elements, len(elements))
-		tflog.Error(ctx, "DefaultCacheBehavior elements", map[string]any{
-			"element_count": len(elements),
-			"elements":      fmt.Sprintf("%+v", elements),
-		})
-	}
-	fmt.Printf("DEBUG: data.Origin.IsNull(): %+v\n", data.Origin.IsNull())
-	if !data.Origin.IsNull() {
-		elements := data.Origin.Elements()
-		fmt.Printf("DEBUG: data.Origin.Elements(): %+v (len=%d)\n", elements, len(elements))
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
@@ -642,88 +599,11 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 		},
 	}
 
-	var buf bytes.Buffer
-	ctx = tflogtest.RootLogger(ctx, &buf)
-	ctx = registerLogger(ctx, hclog.Trace)
-
-	defer func() {
-		fmt.Printf("CloudFront Multi-tenant Distribution Logs:\n%s", buf.String())
-	}()
-
-	// Additional debug info to file
-	if f, err := os.OpenFile("/tmp/cloudfront_debug.log", os.O_APPEND|os.O_WRONLY, 0644); err == nil {
-		f.WriteString(fmt.Sprintf("DefaultCacheBehavior.IsNull(): %v\n", data.DefaultCacheBehavior.IsNull()))
-		f.WriteString(fmt.Sprintf("DefaultCacheBehavior.IsUnknown(): %v\n", data.DefaultCacheBehavior.IsUnknown()))
-		if !data.DefaultCacheBehavior.IsNull() && !data.DefaultCacheBehavior.IsUnknown() {
-			elements := data.DefaultCacheBehavior.Elements()
-			f.WriteString(fmt.Sprintf("DefaultCacheBehavior elements count: %d\n", len(elements)))
-			f.WriteString(fmt.Sprintf("DefaultCacheBehavior type: %T\n", data.DefaultCacheBehavior))
-			f.WriteString(fmt.Sprintf("Target type: %T\n", input.DistributionConfigWithTags.DistributionConfig.DefaultCacheBehavior))
-		}
-		f.Close()
-	}
-
-	tflog.Error(ctx, "About to call AutoFlex Expand")
 	expandDiags := fwflex.Expand(ctx, data, input.DistributionConfigWithTags.DistributionConfig)
-	tflog.Error(ctx, "AutoFlex Expand completed", map[string]any{
-		"diagnostics_count": len(expandDiags),
-	})
-
-	if dcb := input.DistributionConfigWithTags.DistributionConfig.DefaultCacheBehavior; dcb != nil {
-		fmt.Printf("DEBUG: DefaultCacheBehavior after AutoFlex:\n")
-		fmt.Printf("  CachePolicyId: %v\n", dcb.CachePolicyId)
-		fmt.Printf("  ForwardedValues: %v\n", dcb.ForwardedValues)
-		fmt.Printf("  MinTTL: %v\n", dcb.MinTTL)
-		fmt.Printf("  MaxTTL: %v\n", dcb.MaxTTL)
-		fmt.Printf("  DefaultTTL: %v\n", dcb.DefaultTTL)
-		if dcb.TrustedSigners != nil {
-			fmt.Printf("  TrustedSigners: %+v\n", dcb.TrustedSigners)
-		} else {
-			fmt.Printf("  TrustedSigners: nil\n")
-		}
-		if dcb.TrustedKeyGroups != nil {
-			fmt.Printf("  TrustedKeyGroups: %+v\n", dcb.TrustedKeyGroups)
-		} else {
-			fmt.Printf("  TrustedKeyGroups: nil\n")
-		}
-	}
-
-	// Debug result to file
-	if f, err := os.OpenFile("/tmp/cloudfront_debug.log", os.O_APPEND|os.O_WRONLY, 0644); err == nil {
-		f.WriteString(fmt.Sprintf("After AutoFlex - DefaultCacheBehavior: %+v\n", input.DistributionConfigWithTags.DistributionConfig.DefaultCacheBehavior))
-		f.WriteString(fmt.Sprintf("After AutoFlex - Diagnostics count: %d\n", len(expandDiags)))
-		f.Close()
-	}
 	response.Diagnostics.Append(expandDiags...)
-
-	// Debug: Check for any diagnostics from AutoFlex
-	fmt.Printf("DEBUG: AutoFlex Expand diagnostics count: %d\n", len(expandDiags))
-	for i, diag := range expandDiags {
-		fmt.Printf("DEBUG: Expand diagnostic [%d]: %s - %s\n", i, diag.Severity(), diag.Summary())
-		tflog.Error(ctx, "AutoFlex diagnostic", map[string]any{
-			"index":    i,
-			"severity": diag.Severity().String(),
-			"summary":  diag.Summary(),
-		})
-		if diag.Detail() != "" {
-			fmt.Printf("DEBUG: Expand diagnostic [%d] detail: %s\n", i, diag.Detail())
-			tflog.Debug(ctx, "AutoFlex diagnostic detail", map[string]any{
-				"index":  i,
-				"detail": diag.Detail(),
-			})
-		}
-	}
-
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Debug: Check what AutoFlex populated
-	fmt.Printf("DEBUG: DistributionConfig after AutoFlex Expand:\n")
-	fmt.Printf("DEBUG: DefaultCacheBehavior: %+v\n", input.DistributionConfigWithTags.DistributionConfig.DefaultCacheBehavior)
-	fmt.Printf("DEBUG: Origins: %+v\n", input.DistributionConfigWithTags.DistributionConfig.Origins)
-	fmt.Printf("DEBUG: Enabled: %+v\n", input.DistributionConfigWithTags.DistributionConfig.Enabled)
-	fmt.Printf("DEBUG: Comment: %+v\n", input.DistributionConfigWithTags.DistributionConfig.Comment)
 
 	// Set required computed fields that AutoFlex can't handle
 	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(id.UniqueId())
@@ -767,6 +647,7 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 }
 
 func (r *multiTenantDistributionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	fmt.Printf("DEBUG Read: Entering Read method\n")
 	var data multiTenantDistributionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -791,7 +672,7 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
