@@ -13861,7 +13861,7 @@ resource "aws_db_instance" "test" {
 `, rName, enabled))
 }
 
-func testAccInstanceConfig_noDeleteAutomatedBackups(rName string) string {
+func testAccInstanceConfig_deleteAutomatedBackups(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMariadb(),
@@ -13877,7 +13877,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 
   backup_retention_period  = 1
-  delete_automated_backups = false
+  delete_automated_backups = true
 }
 `, rName))
 }
