@@ -58,11 +58,12 @@ resource "aws_bedrockagentcore_memory_strategy" "user_pref" {
 
 ```terraform
 resource "aws_bedrockagentcore_memory_strategy" "custom_semantic" {
-  name        = "custom-semantic-strategy"
-  memory_id   = aws_bedrockagentcore_memory.example.id
-  type        = "CUSTOM"
-  description = "Custom semantic processing strategy"
-  namespaces  = ["{sessionId}"]
+  name                      = "custom-semantic-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Custom semantic processing strategy"
+  namespaces                = ["{sessionId}"]
 
   configuration {
     type = "SEMANTIC_OVERRIDE"
