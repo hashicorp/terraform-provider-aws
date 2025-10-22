@@ -306,7 +306,7 @@ func validateRequiredTags() customizeDiffInterceptor {
 		case Before:
 			switch why {
 			case CustomizeDiff:
-				_, serviceName, resourceName, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
+				_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
 				if !ok {
 					return nil
 				}
@@ -322,7 +322,7 @@ func validateRequiredTags() customizeDiffInterceptor {
 							missing := reqTags.Removed(allTags).Keys() // Slightly misue Removed() here to get the missing keys
 							// TODO: CustomizeDiff does not support diagnostics - can we warn some other way?
 							if rtc.Level == "error" {
-								return fmt.Errorf("missing required tags %s %s: %s", serviceName, resourceName, missing)
+								return fmt.Errorf("missing required tags for %s: %s", typeName, missing)
 							}
 						}
 					}
