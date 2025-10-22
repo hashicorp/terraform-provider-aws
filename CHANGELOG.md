@@ -15,6 +15,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_vpn_connection: Properly set `tags` attribute ([#44761](https://github.com/hashicorp/terraform-provider-aws/issues/44761))
 * resource/aws_rds_cluster: Fix "When modifying Provisioned IOPS storage, specify a value for both allocated storage and iops" error when updating RDS clusters with Provisioned IOPS storage ([#44706](https://github.com/hashicorp/terraform-provider-aws/issues/44706))
 
 ## 6.17.0 (October 16, 2025)
