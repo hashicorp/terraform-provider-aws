@@ -59,22 +59,18 @@ type IgnoreConfig struct {
 	KeyPrefixes KeyValueTags
 }
 
-// RequiredConfig is a mapping of Terraform resoruce type names to their corresponding
-// tagging requirements
+// RequiredConfig contains options related to organizational tagging policies.
 type RequiredConfig struct {
-	Enabled bool
-	Level   string // TODO: enum?
-	Data    map[string]*RequiredTagsOutput
-}
+	// Level indicates the severity of the diagnostic
+	//
+	// Must be one of "error" or "warning". This is a higher level abstraction on
+	// the diagnostic severity types exposed by the plugin libraries, as it must be
+	// shared across both Plugin SDK V2 and Plugin Framework based resources.
+	Level string // TODO: enforce enum
 
-// RequiredTagsOutput contains details on tagging requirements
-//
-// These requirements are set by an organizations effective tag policy,
-// and retrieved by the provider during initialization.
-type RequiredTagsOutput struct {
-	EnforcedAutomaticTagKeys KeyValueTags
-	EnforcedRequiredTagKeys  KeyValueTags
-	EnforcedTagKeys          KeyValueTags
+	// RequiredTags is a mapping of Terraform resource type names to the required
+	// tags defined in the effective tag policy
+	RequiredTags map[string]KeyValueTags
 }
 
 // KeyValueTags is a standard implementation for AWS key-value resource tags.

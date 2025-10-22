@@ -317,9 +317,7 @@ func validateRequiredTags() customizeDiffInterceptor {
 
 				// Verify required tags are present
 				if rtc := c.RequiredTagsConfig(ctx); rtc != nil {
-					if data, ok := rtc.Data[typeName]; ok {
-						reqTags := data.EnforcedRequiredTagKeys
-
+					if reqTags, ok := rtc.RequiredTags[typeName]; ok {
 						if !allTags.ContainsAllKeys(reqTags) {
 							missing := reqTags.Removed(allTags).Keys() // Slightly misue Removed() here to get the missing keys
 							// TODO: CustomizeDiff does not support diagnostics - can we warn some other way?

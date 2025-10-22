@@ -200,9 +200,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		diags = append(diags, d...)
 
 		client.requiredTagsConfig = &tftags.RequiredConfig{
-			Enabled: c.RequiredTagsEnabled,
-			Level:   c.RequiredTagsDiagnosticLevel,
-			Data:    reqTags,
+			Level:        c.RequiredTagsDiagnosticLevel,
+			RequiredTags: reqTags,
 		}
 	}
 
@@ -244,22 +243,18 @@ func NormalizeS3USEast1RegionalEndpoint(v string) string {
 }
 
 // TODO: move into separate package and/or aws-sdk-go-base
-func getRequiredTags(ctx context.Context, awsConfig aws.Config) (map[string]*tftags.RequiredTagsOutput, diag.Diagnostics) {
+func getRequiredTags(ctx context.Context, awsConfig aws.Config) (map[string]tftags.KeyValueTags, diag.Diagnostics) {
 	// TODO implement
 	// client := resourceGroupsTaggingAPIClient(ctx, awsConfig)
 
-	out := map[string]*tftags.RequiredTagsOutput{
+	out := map[string]tftags.KeyValueTags{
 		"aws_s3_bucket": {
-			EnforcedRequiredTagKeys: tftags.KeyValueTags{
-				"owner":       nil,
-				"cost_center": nil,
-			},
+			"owner":       nil,
+			"cost_center": nil,
 		},
 		"aws_cloudwatch_log_group": {
-			EnforcedRequiredTagKeys: tftags.KeyValueTags{
-				"owner":       nil,
-				"cost_center": nil,
-			},
+			"owner":       nil,
+			"cost_center": nil,
 		},
 	}
 
