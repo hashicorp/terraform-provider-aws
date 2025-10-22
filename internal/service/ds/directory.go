@@ -289,7 +289,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 			sdkdiag.AppendFromErr(diags, err)
 		}
 		err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
-			if _, err := waitDirectoryDataAccess(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			if err := waitDirectoryDataAccess(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 				if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
 					if use.State == string(awstypes.DataAccessStatusFailed) {
 						tflog.Info(ctx, "retrying failed Directory Data Access enablement", map[string]any{
@@ -409,7 +409,7 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
-			if _, err := waitDirectoryDataAccess(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			if err := waitDirectoryDataAccess(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 				if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
 					if use.State == string(awstypes.DataAccessStatusFailed) {
 						tflog.Info(ctx, "retrying failed Directory Data Access enablement", map[string]any{
@@ -680,7 +680,7 @@ func statusDirectoryDataAccess(ctx context.Context, conn *directoryservice.Clien
 	}
 }
 
-func waitDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) (*directoryservice.DescribeDirectoryDataAccessOutput, error) {
+func waitDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(string(awstypes.DataAccessStatusEnabling), string(awstypes.DataAccessStatusDisabling)),
 		Target:     enum.Slice(string(awstypes.DataAccessStatusEnabled), string(awstypes.DataAccessStatusDisabled)),
@@ -702,10 +702,10 @@ func waitDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client,
 	if output, ok := outputRaw.(*directoryservice.DescribeDirectoryDataAccessOutput); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.DataAccessStatus))))
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.Client, directoryID string, desiredNumber int, timeout time.Duration, optFns ...func(*directoryservice.Options)) error {
