@@ -36,6 +36,29 @@ import (
 
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
 // @Tags(identifierAttribute="arn")
+//
+// Multi-tenant Distribution Limitations:
+// The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
+// - CacheBehavior.DefaultTTL, MaxTTL, MinTTL (use cache policies instead)
+// - CacheBehavior.SmoothStreaming
+// - CacheBehavior.TrustedSigners (use TrustedKeyGroups instead)
+// - DefaultCacheBehavior.DefaultTTL, MaxTTL, MinTTL (use cache policies instead)
+// - DefaultCacheBehavior.SmoothStreaming
+// - DefaultCacheBehavior.TrustedSigners (use TrustedKeyGroups instead)
+// - DistributionConfig.Aliases (managed by connection groups)
+// - DistributionConfig.AnycastIpListId (use connection group instead)
+// - DistributionConfig.ContinuousDeploymentPolicyId
+// - DistributionConfig.IsIPV6Enabled (use connection group instead)
+// - DistributionConfig.PriceClass
+// - DistributionConfig.Staging
+// - CacheBehavior.ForwardedValues (deprecated and not supported)
+// - DefaultCacheBehavior.ForwardedValues (deprecated and not supported)
+// - ViewerCertificate.IAMCertificateId (use ACM certificates instead)
+//
+// Multi-tenant Distribution Requirements:
+// - DistributionConfig.ConnectionMode is automatically set to "tenant-only"
+// - DistributionConfig.TenantConfig must be specified (contains parameter definitions)
+// - DistributionConfig.WebACLId must be a WAF V2 web ACL if specified
 func newMultiTenantDistributionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &multiTenantDistributionResource{}
 
@@ -91,6 +114,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"web_acl_id": schema.StringAttribute{
 				Optional: true,
+				// Note: For multi-tenant distributions, this must be a WAF V2 web ACL if specified
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -147,26 +171,14 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"response_headers_policy_id": schema.StringAttribute{
 							Optional: true,
 						},
-						"smooth_streaming": schema.BoolAttribute{
-							Optional: true,
-						},
 						"target_origin_id": schema.StringAttribute{
 							Required: true,
-						},
-						"trusted_key_groups": schema.ListAttribute{
-							Optional:   true,
-							Computed:   true,
-							CustomType: fwtypes.ListOfStringType,
-						},
-						"trusted_signers": schema.ListAttribute{
-							Optional:   true,
-							Computed:   true,
-							CustomType: fwtypes.ListOfStringType,
 						},
 						"viewer_protocol_policy": schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.ViewerProtocolPolicy](),
 						},
+						// Note: smooth_streaming and trusted_signers removed - not supported for multi-tenant distributions
 					},
 					Blocks: map[string]schema.Block{
 						"function_association": schema.SetNestedBlock{
@@ -201,6 +213,25 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
+						"trusted_key_groups": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[trustedKeyGroupsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"items": schema.ListAttribute{
+										Optional:   true,
+										CustomType: fwtypes.ListOfStringType,
+									},
+									names.AttrEnabled: schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						// Note: trusted_signers removed - not supported for multi-tenant distributions
 					},
 				},
 			},
@@ -239,22 +270,10 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"response_headers_policy_id": schema.StringAttribute{
 							Optional: true,
 						},
-						"smooth_streaming": schema.BoolAttribute{
-							Optional: true,
-						},
 						"target_origin_id": schema.StringAttribute{
 							Required: true,
 						},
-						"trusted_key_groups": schema.ListAttribute{
-							Optional:   true,
-							Computed:   true,
-							CustomType: fwtypes.ListOfStringType,
-						},
-						"trusted_signers": schema.ListAttribute{
-							Optional:   true,
-							Computed:   true,
-							CustomType: fwtypes.ListOfStringType,
-						},
+						// Note: smooth_streaming removed - not supported for multi-tenant distributions
 						"viewer_protocol_policy": schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.ViewerProtocolPolicy](),
@@ -293,6 +312,25 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
+						"trusted_key_groups": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[trustedKeyGroupsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"items": schema.ListAttribute{
+										Optional:   true,
+										CustomType: fwtypes.ListOfStringType,
+									},
+									names.AttrEnabled: schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						// Note: trusted_signers removed - not supported for multi-tenant distributions
 					},
 				},
 			},
@@ -455,9 +493,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"locations": schema.SetAttribute{
+									"items": schema.SetAttribute{
 										Optional:   true,
-										Computed:   true,
 										CustomType: fwtypes.SetOfStringType,
 									},
 									"restriction_type": schema.StringAttribute{
@@ -472,6 +509,10 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 			},
 			"tenant_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[tenantConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"parameter_definition": schema.ListNestedBlock{
@@ -687,6 +728,10 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	// Set required computed fields that AutoFlex can't handle
 	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(id.UniqueId())
 
+	// Set ConnectionMode to "tenant-only" to create a multi-tenant distribution instead of standard distribution
+	// This is the key field that distinguishes multi-tenant from standard distributions
+	input.DistributionConfigWithTags.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.DistributionConfigWithTags.Tags.Items = tags
 	}
@@ -746,7 +791,6 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -878,11 +922,10 @@ type defaultCacheBehaviorModel struct {
 	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
 	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
 	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
-	SmoothStreaming           types.Bool                                                     `tfsdk:"smooth_streaming"`
 	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListValueOf[types.String]                              `tfsdk:"trusted_key_groups"`
-	TrustedSigners            fwtypes.ListValueOf[types.String]                              `tfsdk:"trusted_signers"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups"`
 	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
+	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
 
 type cacheBehaviorModel struct {
@@ -897,11 +940,10 @@ type cacheBehaviorModel struct {
 	PathPattern               types.String                                                   `tfsdk:"path_pattern"`
 	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
 	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
-	SmoothStreaming           types.Bool                                                     `tfsdk:"smooth_streaming"`
 	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListValueOf[types.String]                              `tfsdk:"trusted_key_groups"`
-	TrustedSigners            fwtypes.ListValueOf[types.String]                              `tfsdk:"trusted_signers"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups"`
 	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
+	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
 
 type customErrorResponseModel struct {
@@ -916,7 +958,7 @@ type restrictionsModel struct {
 }
 
 type geoRestrictionModel struct {
-	Locations       fwtypes.SetValueOf[types.String]                `tfsdk:"locations"`
+	Items           fwtypes.SetValueOf[types.String]                `tfsdk:"items"`
 	RestrictionType fwtypes.StringEnum[awstypes.GeoRestrictionType] `tfsdk:"restriction_type"`
 }
 
@@ -955,4 +997,9 @@ type stringSchemaConfigModel struct {
 	Required     types.Bool   `tfsdk:"required"`
 	Comment      types.String `tfsdk:"comment"`
 	DefaultValue types.String `tfsdk:"default_value"`
+}
+
+type trustedKeyGroupsModel struct {
+	Items   fwtypes.ListValueOf[types.String] `tfsdk:"items"`
+	Enabled types.Bool                        `tfsdk:"enabled"`
 }

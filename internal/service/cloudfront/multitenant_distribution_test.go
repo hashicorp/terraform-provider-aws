@@ -144,6 +144,18 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
 }
 `)
 }
