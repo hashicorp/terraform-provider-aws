@@ -12,6 +12,8 @@ var (
 	ResourceCodeInterpreter          = newCodeInterpreterResource
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayTarget            = newGatewayTargetResource
+	ResourceMemory                   = newMemoryResource
+	ResourceMemoryStrategy           = newResourceMemoryStrategy
 	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
 	ResourceTokenVaultCMK            = newTokenVaultCMKResource
 	ResourceWorkloadIdentity         = newWorkloadIdentityResource
@@ -23,6 +25,8 @@ var (
 	FindCodeInterpreterByID              = findCodeInterpreterByID
 	FindGatewayByID                      = findGatewayByID
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
+	FindMemoryByID                       = findMemoryByID
+	FindMemoryStrategyByID               = findMemoryStrategyByTwoPartKey
 	FindOAuth2CredentialProviderByName   = findOAuth2CredentialProviderByName
 	FindTokenVaultByID                   = findTokenVaultByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
