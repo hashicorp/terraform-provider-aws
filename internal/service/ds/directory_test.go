@@ -481,7 +481,7 @@ func TestAccDSDirectory_enableDirectoryDataAccess(t *testing.T) {
 				Config: testAccDirectoryConfig_enableDirectoryDataAccess(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", acctest.CtFalse),
 				),
 			},
 			{
