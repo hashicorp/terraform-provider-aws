@@ -79,6 +79,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceVPNConnection,
 			TypeName: "aws_vpn_connection",
 			Name:     "VPN Connection",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}

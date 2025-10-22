@@ -23,6 +23,8 @@ import (
 )
 
 // @FrameworkDataSource("aws_vpn_connection", name="VPN Connection")
+// @Tags
+// @Testing(tagsTest=false)
 func newDataSourceVPNConnection(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceVPNConnection{}, nil
 }
@@ -112,6 +114,8 @@ func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadR
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	setTagsOut(ctx, out.Tags)
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.VpnConnectionId.String())
 }
 
