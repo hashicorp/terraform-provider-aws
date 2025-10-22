@@ -284,9 +284,27 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	if _, ok := d.GetOk("enable_directory_data_access"); ok {
+	if v, ok := d.GetOk("enable_directory_data_access"); ok && v.(bool) {
 		if err := enableDirectoryDataAccess(ctx, conn, d.Id()); err != nil {
 			sdkdiag.AppendFromErr(diags, err)
+		}
+		err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
+			if _, err := waitDirectoryDataAccess(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
+					if use.State == string(awstypes.DataAccessStatusFailed) {
+						tflog.Info(ctx, "retrying failed Directory Data Access enablement", map[string]any{
+							"directory_id": d.Id(),
+						})
+						return tfresource.RetryableError(err)
+					}
+				}
+				return tfresource.NonRetryableError(err)
+			}
+
+			return nil
+		}, tfresource.WithPollInterval(1*time.Minute))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, fmt.Errorf("enabling directory service data access: %w", err))
 		}
 	}
 
@@ -388,6 +406,25 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			if err := disableDirectoryDataAccess(ctx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
+		}
+
+		err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
+			if _, err := waitDirectoryDataAccess(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
+					if use.State == string(awstypes.DataAccessStatusFailed) {
+						tflog.Info(ctx, "retrying failed Directory Data Access enablement", map[string]any{
+							"directory_id": d.Id(),
+						})
+						return tfresource.RetryableError(err)
+					}
+				}
+				return tfresource.NonRetryableError(err)
+			}
+
+			return nil
+		}, tfresource.WithPollInterval(1*time.Minute))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, fmt.Errorf("enabling directory service data access: %w", err))
 		}
 	}
 
@@ -625,6 +662,50 @@ func getDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, 
 	}
 
 	return dda, nil
+}
+
+func statusDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := getDirectoryDataAccess(ctx, conn, directoryID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.DataAccessStatus), nil
+	}
+}
+
+func waitDirectoryDataAccess(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) (*directoryservice.DescribeDirectoryDataAccessOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(string(awstypes.DataAccessStatusEnabling), string(awstypes.DataAccessStatusDisabling)),
+		Target:     enum.Slice(string(awstypes.DataAccessStatusEnabled), string(awstypes.DataAccessStatusDisabled)),
+		Refresh:    statusDirectoryDataAccess(ctx, conn, directoryID),
+		Timeout:    timeout,
+		Delay:      1 * time.Minute,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
+	if output, ok := outputRaw.(*directoryservice.DescribeDirectoryDataAccessOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.DataAccessStatus))))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.Client, directoryID string, desiredNumber int, timeout time.Duration, optFns ...func(*directoryservice.Options)) error {
