@@ -144,7 +144,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Setup: Create memory
 			{
-				Config: memoryConfig(rName),
+				Config: testAccMemoryConfig_memoryExecutionRole(rName),
 			},
 			// Step 1: CUSTOM type with missing configuration block → ValidateConfig error
 			{
@@ -241,6 +241,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
 			},
 		},
 	})
@@ -369,7 +370,7 @@ func testAccMemoryStrategyConfig(rName, strategyType, description, namespace str
 
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name        = %[1]q
-  memory_id   = aws_bedrockagentcore_memory.test.memory_id
+  memory_id   = aws_bedrockagentcore_memory.test.id
   type        = %[2]q
   description = %[3]q
   namespaces  = [%[4]q]
@@ -383,7 +384,7 @@ func testAccMemoryStrategyConfig_duplicateType(rName string) string {
 
 resource "aws_bedrockagentcore_memory_strategy" "test2" {
   name        = "%s_duplicate"
-  memory_id   = aws_bedrockagentcore_memory.test.memory_id
+  memory_id   = aws_bedrockagentcore_memory.test.id
   type        = "USER_PREFERENCE"
   description = "Duplicate user preference strategy"
   namespaces  = ["preferences2"]
@@ -392,14 +393,14 @@ resource "aws_bedrockagentcore_memory_strategy" "test2" {
 }
 
 func testAccMemoryStrategyConfig_custom(rName, overrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {
-	return acctest.ConfigCompose(memoryConfig(rName), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name        = %[1]q
-  memory_id   = aws_bedrockagentcore_memory.test.memory_id
-  type        = "CUSTOM"
-  description = "Test custom strategy"
-  namespaces  = ["{sessionId}"]
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test custom strategy"
+  namespaces                = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -417,14 +418,14 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 }
 
 func testAccMemoryStrategyConfig_customConsolidationOnly(rName, overrideType, consolidationPrompt, consolidationModel string) string {
-	return acctest.ConfigCompose(memoryConfig(rName), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name        = %[1]q
-  memory_id   = aws_bedrockagentcore_memory.test.memory_id
-  type        = "CUSTOM"
-  description = "Test custom strategy"
-  namespaces  = ["{sessionId}"]
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test custom strategy"
+  namespaces                = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -438,14 +439,16 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 }
 
 func testAccMemoryStrategyConfig_customExtractionOnly(rName, overrideType, extractionPrompt, extractionModel string) string {
-	return acctest.ConfigCompose(memoryConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+
 
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name        = %[1]q
-  memory_id   = aws_bedrockagentcore_memory.test.memory_id
-  type        = "CUSTOM"
-  description = "Test custom strategy"
-  namespaces  = ["{sessionId}"]
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test custom strategy"
+  namespaces                = ["{sessionId}"]
 
   configuration {
     type = %[2]q
@@ -460,13 +463,13 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 
 func testAccMemoryStrategyConfig_customDummy(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_bedrockagentcore_memory_strategy" "%[1]s" {
-  name        = %[1]q
-  memory_id   = aws_bedrockagentcore_memory.test.memory_id
-  type        = "CUSTOM"
-  description = "Test custom strategy"
-  namespaces  = ["{sessionId}"]
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test custom strategy"
+  namespaces                = ["{sessionId}"]
 
   configuration {
     type = "SEMANTIC_OVERRIDE"
@@ -493,14 +496,14 @@ func testAccMemoryStrategyConfig_customTooMany(rName, overrideType, consolidatio
 }
 
 func testAccMemoryStrategyConfig_customInvalid(rName string) string {
-	return acctest.ConfigCompose(memoryConfig(rName), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name        = %[1]q
-  memory_id   = aws_bedrockagentcore_memory.test.memory_id
-  type        = "CUSTOM"
-  description = "Test custom strategy"
-  namespaces  = ["default"]
+  name                      = %[1]q
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  type                      = "CUSTOM"
+  description               = "Test custom strategy"
+  namespaces                = ["default"]
 }
 `, rName))
 }

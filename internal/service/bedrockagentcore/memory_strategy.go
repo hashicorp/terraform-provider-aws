@@ -70,6 +70,10 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
+			"memory_execution_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+			},
 			"memory_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -291,6 +295,10 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		},
 	}
 
+	if !plan.MemoryExecutionRoleARN.IsNull() {
+		input.MemoryExecutionRoleArn = plan.MemoryExecutionRoleARN.ValueStringPointer()
+	}
+
 	withMemoryLock(plan.MemoryID.ValueString(), func() {
 		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 		out, err := updateMemoryWithRetry(ctx, conn, createTimeout, &input, false)
@@ -389,6 +397,10 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 				ModifyMemoryStrategies: []awstypes.ModifyMemoryStrategyInput{strategyInput},
 			},
+		}
+
+		if !plan.MemoryExecutionRoleARN.IsNull() {
+			input.MemoryExecutionRoleArn = plan.MemoryExecutionRoleARN.ValueStringPointer()
 		}
 
 		withMemoryLock(plan.MemoryID.ValueString(), func() {
@@ -587,14 +599,15 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration    fwtypes.ListNestedObjectValueOf[CustomConfigurationModel] `tfsdk:"configuration"`
-	Description      types.String                                              `tfsdk:"description"`
-	MemoryStrategyID types.String                                              `tfsdk:"memory_strategy_id"`
-	MemoryID         types.String                                              `tfsdk:"memory_id"`
-	Name             types.String                                              `tfsdk:"name"`
-	Namespaces       fwtypes.SetOfString                                       `tfsdk:"namespaces"`
-	Type             fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
-	Timeouts         timeouts.Value                                            `tfsdk:"timeouts"`
+	Configuration          fwtypes.ListNestedObjectValueOf[CustomConfigurationModel] `tfsdk:"configuration"`
+	Description            types.String                                              `tfsdk:"description"`
+	MemoryExecutionRoleARN fwtypes.ARN                                               `tfsdk:"memory_execution_role_arn"`
+	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
+	MemoryID               types.String                                              `tfsdk:"memory_id"`
+	Name                   types.String                                              `tfsdk:"name"`
+	Namespaces             fwtypes.SetOfString                                       `tfsdk:"namespaces"`
+	Type                   fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
+	Timeouts               timeouts.Value                                            `tfsdk:"timeouts"`
 }
 
 func (m *memoryStrategyResourceModel) GetIdentifier() string {

@@ -353,7 +353,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonBedrockAgentCoreMemoryBedrockModelInferenceExecutionRolePolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/BedrockAgentCoreFullAccess"
 }
 
 resource "aws_kms_key" "test" {
