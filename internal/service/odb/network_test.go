@@ -298,6 +298,61 @@ func TestAccODBNetworkResource_disappears(t *testing.T) {
 	})
 }
 
+func TestAccODBNetworkResource_updateDeleteAssociatedResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	importStateVerifyIgnore := []string{
+		"delete_associated_resources",
+	}
+	var network1, network2 odbtypes.OdbNetwork
+	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	resourceName := "aws_odb_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithWithDeleteAssociatedResourceFalse(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
+			},
+			{
+				Config: oracleDBNetworkResourceTestEntity.basicNetwork(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(network1.OdbNetworkId), *(network2.OdbNetworkId)) != 0 {
+							return errors.New("should not  create a new cloud odb network")
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
+			},
+		},
+	})
+}
+
 func (oracleDBNetworkResourceTest) testAccCheckNetworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
@@ -384,7 +439,7 @@ resource "aws_odb_network" "test" {
 	return networkRes
 }
 
-func (oracleDBNetworkResourceTest) basicNetworkWithDeleteAssociatedResourceTrue(rName string) string {
+func (oracleDBNetworkResourceTest) basicNetworkWithWithDeleteAssociatedResourceFalse(rName string) string {
 	networkRes := fmt.Sprintf(`
 
 
@@ -394,15 +449,26 @@ func (oracleDBNetworkResourceTest) basicNetworkWithDeleteAssociatedResourceTrue(
 
 
 
+
+
+
+
+
+
+
+
 resource "aws_odb_network" "test" {
-  display_name                = %[1]q
-  availability_zone_id        = "use1-az6"
-  client_subnet_cidr          = "10.2.0.0/24"
-  backup_subnet_cidr          = "10.2.1.0/24"
-  s3_access                   = "DISABLED"
-  zero_etl_access             = "DISABLED"
-  delete_associated_resources = true
+  display_name         = %[1]q
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
 }
+
+
+
+
 
 
 
