@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -471,8 +472,9 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 }
 
 func (r *resourceMemoryStrategy) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, ",")
-	if len(parts) != 2 {
+	const idParts = 2
+	parts, err := intflex.ExpandResourceId(request.ID, idParts, false)
+	if err != nil {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "memory_id,strategy_id"`, request.ID))
 		return
 	}
