@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Resource:** `aws_bedrockagentcore_memory` ([#44306](https://github.com/hashicorp/terraform-provider-aws/issues/44306))
+* **New Resource:** `aws_bedrockagentcore_memory_strategy` ([#44306](https://github.com/hashicorp/terraform-provider-aws/issues/44306))
 * **New Resource:** `aws_bedrockagentcore_oauth2_credential_provider` ([#44307](https://github.com/hashicorp/terraform-provider-aws/issues/44307))
 * **New Resource:** `aws_bedrockagentcore_token_vault_cmk` ([#44606](https://github.com/hashicorp/terraform-provider-aws/issues/44606))
 * **New Resource:** `aws_bedrockagentcore_workload_identity` ([#44308](https://github.com/hashicorp/terraform-provider-aws/issues/44308))
@@ -12,11 +14,13 @@ ENHANCEMENTS:
 * resource/aws_appstream_directory_config: Add `certificate_based_auth_properties` argument ([#44679](https://github.com/hashicorp/terraform-provider-aws/issues/44679))
 * resource/aws_iam_policy: Adds List support ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
 * resource/aws_iam_policy: Adds validation for `path` attribute ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
+* resource/aws_iam_role_policy_attachment: Adds List support ([#44739](https://github.com/hashicorp/terraform-provider-aws/issues/44739))
 
 BUG FIXES:
 
 * data-source/aws_vpn_connection: Properly set `tags` attribute ([#44761](https://github.com/hashicorp/terraform-provider-aws/issues/44761))
 * resource/aws_rds_cluster: Fix "When modifying Provisioned IOPS storage, specify a value for both allocated storage and iops" error when updating RDS clusters with Provisioned IOPS storage ([#44706](https://github.com/hashicorp/terraform-provider-aws/issues/44706))
+* resource/guardduty_detector_feature: Fix `additional_configuration` block to ignore ordering ([#44627](https://github.com/hashicorp/terraform-provider-aws/issues/44627))
 
 ## 6.17.0 (October 16, 2025)
 
