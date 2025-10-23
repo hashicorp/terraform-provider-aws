@@ -489,10 +489,8 @@ func (r *resourceNetwork) Delete(ctx context.Context, req resource.DeleteRequest
 		OdbNetworkId: state.OdbNetworkId.ValueStringPointer(),
 	}
 
-	if state.DeleteAssociatedResources.ValueBoolPointer() == nil || state.DeleteAssociatedResources.IsUnknown() {
-		deleteAssociatedResources := false
-		input.DeleteAssociatedResources = &deleteAssociatedResources
-	} else {
+	input.DeleteAssociatedResources = aws.Bool(false)
+	if !state.DeleteAssociatedResources.IsNull() || !state.DeleteAssociatedResources.IsUnknown() {
 		input.DeleteAssociatedResources = state.DeleteAssociatedResources.ValueBoolPointer()
 	}
 	_, err := conn.DeleteOdbNetwork(ctx, &input)
