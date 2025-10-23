@@ -33,9 +33,9 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			acctest.CtBasic:                                testAccDetectorFeature_basic,
 			"multiple":                                     testAccDetectorFeature_multiple,
 			"additional_configuration":                     testAccDetectorFeature_additionalConfiguration,
-			"additional_configuration_update":              testAccDetectorFeature_additionalConfiguration_update,
 			"additional_configuration_new_order":           testAccDetectorFeature_additionalConfiguration_newOrder,
 			"additional_configuration_migrate_list_to_set": testAccDetectorFeature_additionalConfiguration_migrateListToSet,
+			"additional_configuration_update":              testAccDetectorFeature_additionalConfiguration_update,
 		},
 		"Filter": {
 			acctest.CtBasic:      testAccFilter_basic,

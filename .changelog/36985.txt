@@ -1,3 +1,0 @@
-```release-note:bug
-resource/guardduty_detector_feature: Fixed the additional_configuration block to ignore ordering
-```

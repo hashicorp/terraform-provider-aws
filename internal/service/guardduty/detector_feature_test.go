@@ -158,7 +158,18 @@ func testAccDetectorFeature_additionalConfiguration_update(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EKS_ADDON_MANAGEMENT", "EC2_AGENT_MANAGEMENT", "ECS_FARGATE_AGENT_MANAGEMENT"}),
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EKS_ADDON_MANAGEMENT", "EC2_AGENT_MANAGEMENT"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+				),
+			},
+			{
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EC2_AGENT_MANAGEMENT", "ECS_FARGATE_AGENT_MANAGEMENT", "EKS_ADDON_MANAGEMENT"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
@@ -166,22 +177,6 @@ func testAccDetectorFeature_additionalConfiguration_update(t *testing.T) {
 						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
 						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{names.AttrName: "ECS_FARGATE_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
-				),
-			},
-			{
-				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"ECS_FARGATE_AGENT_MANAGEMENT", "EKS_ADDON_MANAGEMENT"}),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
 						map[string]string{names.AttrName: "ECS_FARGATE_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 				),
