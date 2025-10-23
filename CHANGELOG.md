@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Resource:** `aws_bedrockagentcore_memory` ([#44306](https://github.com/hashicorp/terraform-provider-aws/issues/44306))
+* **New Resource:** `aws_bedrockagentcore_memory_strategy` ([#44306](https://github.com/hashicorp/terraform-provider-aws/issues/44306))
 * **New Resource:** `aws_bedrockagentcore_oauth2_credential_provider` ([#44307](https://github.com/hashicorp/terraform-provider-aws/issues/44307))
 * **New Resource:** `aws_bedrockagentcore_token_vault_cmk` ([#44606](https://github.com/hashicorp/terraform-provider-aws/issues/44606))
 * **New Resource:** `aws_bedrockagentcore_workload_identity` ([#44308](https://github.com/hashicorp/terraform-provider-aws/issues/44308))
