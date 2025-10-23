@@ -21,13 +21,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -181,7 +181,7 @@ func (r *configurationManagerResource) Read(ctx context.Context, request resourc
 	arn := fwflex.StringValueFromFramework(ctx, data.ManagerARN)
 	output, err := findConfigurationManagerByID(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -316,8 +316,7 @@ func findConfigurationManagerByID(ctx context.Context, conn *ssmquicksetup.Clien
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -332,11 +331,11 @@ func findConfigurationManagerByID(ctx context.Context, conn *ssmquicksetup.Clien
 	return output, nil
 }
 
-func statusConfigurationManager(ctx context.Context, conn *ssmquicksetup.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConfigurationManager(conn *ssmquicksetup.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConfigurationManagerByID(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -361,7 +360,7 @@ func waitConfigurationManagerCreated(ctx context.Context, conn *ssmquicksetup.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInitializing, awstypes.StatusDeploying),
 		Target:  enum.Slice(awstypes.StatusSucceeded),
-		Refresh: statusConfigurationManager(ctx, conn, arn),
+		Refresh: statusConfigurationManager(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -370,7 +369,7 @@ func waitConfigurationManagerCreated(ctx context.Context, conn *ssmquicksetup.Cl
 	if output, ok := outputRaw.(*ssmquicksetup.GetConfigurationManagerOutput); ok {
 		for _, v := range output.StatusSummaries {
 			if v.StatusType == awstypes.StatusTypeDeployment {
-				tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusMessage)))
+				retry.SetLastError(err, errors.New(aws.ToString(v.StatusMessage)))
 			}
 		}
 
@@ -384,7 +383,7 @@ func waitConfigurationManagerUpdated(ctx context.Context, conn *ssmquicksetup.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInitializing, awstypes.StatusDeploying),
 		Target:  enum.Slice(awstypes.StatusSucceeded),
-		Refresh: statusConfigurationManager(ctx, conn, arn),
+		Refresh: statusConfigurationManager(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -393,7 +392,7 @@ func waitConfigurationManagerUpdated(ctx context.Context, conn *ssmquicksetup.Cl
 	if output, ok := outputRaw.(*ssmquicksetup.GetConfigurationManagerOutput); ok {
 		for _, v := range output.StatusSummaries {
 			if v.StatusType == awstypes.StatusTypeDeployment {
-				tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusMessage)))
+				retry.SetLastError(err, errors.New(aws.ToString(v.StatusMessage)))
 			}
 		}
 
@@ -407,7 +406,7 @@ func waitConfigurationManagerDeleted(ctx context.Context, conn *ssmquicksetup.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusDeploying, awstypes.StatusStopping, awstypes.StatusDeleting),
 		Target:  []string{},
-		Refresh: statusConfigurationManager(ctx, conn, arn),
+		Refresh: statusConfigurationManager(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -416,7 +415,7 @@ func waitConfigurationManagerDeleted(ctx context.Context, conn *ssmquicksetup.Cl
 	if output, ok := outputRaw.(*ssmquicksetup.GetConfigurationManagerOutput); ok {
 		for _, v := range output.StatusSummaries {
 			if v.StatusType == awstypes.StatusTypeDeployment {
-				tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusMessage)))
+				retry.SetLastError(err, errors.New(aws.ToString(v.StatusMessage)))
 			}
 		}
 

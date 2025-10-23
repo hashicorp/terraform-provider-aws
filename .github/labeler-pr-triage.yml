@@ -1579,6 +1579,12 @@ service/networkfirewall:
           - any-glob-to-any-file:
               - 'internal/service/networkfirewall/**/*'
               - 'website/**/networkfirewall_*'
+service/networkflowmonitor:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networkflowmonitor/**/*'
+              - 'website/**/networkflowmonitor_*'
 service/networkmanager:
   - any:
       - changed-files:
@@ -1615,6 +1621,12 @@ service/oam:
           - any-glob-to-any-file:
               - 'internal/service/oam/**/*'
               - 'website/**/oam_*'
+service/observabilityadmin:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/observabilityadmin/**/*'
+              - 'website/**/observabilityadmin_*'
 service/odb:
   - any:
       - changed-files:
