@@ -33,6 +33,7 @@ This data source supports the following arguments:
 
 * `id` - ID of the WorkSpaces Pool.
 * `name` - Name of the WorkSpaces Pool.
+* `region` (Optional) - The AWS region to use for the resource.
 
 ## Attribute Reference
 
