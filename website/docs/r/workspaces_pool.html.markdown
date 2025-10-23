@@ -92,6 +92,8 @@ The following arguments are required:
 * `description` - (Required) Description of the WorkSpaces Pool.
 * `directory_id` - (Required) ID of the directory for the WorkSpaces Pool.
 * `name` - (Required) Name of the WorkSpaces Pool. This cannot be changed after creation.
+* `region` (Optional) - The AWS region to use for the resource.
+
 
 The following arguments are optional:
 
