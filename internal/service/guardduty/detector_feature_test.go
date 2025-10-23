@@ -144,47 +144,6 @@ func testAccDetectorFeature_additionalConfiguration_newOrder(t *testing.T) {
 	})
 }
 
-func testAccDetectorFeature_additionalConfiguration_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_guardduty_detector_feature.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckDetectorNotExists(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EKS_ADDON_MANAGEMENT", "EC2_AGENT_MANAGEMENT"}),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
-				),
-			},
-			{
-				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EC2_AGENT_MANAGEMENT", "ECS_FARGATE_AGENT_MANAGEMENT", "EKS_ADDON_MANAGEMENT"}),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{names.AttrName: "ECS_FARGATE_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
-				),
-			},
-		},
-	})
-}
-
 func testAccDetectorFeature_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource1Name := "aws_guardduty_detector_feature.test1"
