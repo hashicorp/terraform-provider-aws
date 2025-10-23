@@ -308,6 +308,17 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		}
 
 		if obsConfig != nil && obsConfig.Enabled.ValueBool() {
+
+			if err := r.ensureXRayResourcePolicy(ctx); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+				return
+			}
+
+			if err := r.waitForXRayResourcePolicy(ctx, propagationTimeout); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("waiting for X-Ray resource policy: %w", err), smerr.ID, agentRuntimeID)
+				return
+			}
+
 			if err := configureObservability(ctx, conn, r.Meta().XRayClient(ctx), runtime, data.EnvironmentVariables); err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 				return
@@ -800,6 +811,83 @@ func configureXRayForObservability(ctx context.Context, xrayConn *xray.Client, r
 	}
 
 	return nil
+}
+
+const xrayResourcePolicyName = "BedrockAgentXRayPolicy"
+
+func (r *agentRuntimeResource) ensureXRayResourcePolicy(ctx context.Context) error {
+	meta := r.Meta()
+
+	logsconn := meta.LogsClient(ctx)
+	region := meta.Region(ctx)
+	accountID := meta.AccountID(ctx)
+
+	policyDocument := fmt.Sprintf(`{
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "TransactionSearchXRayAccess",
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "xray.amazonaws.com"
+                },
+                "Action": "logs:PutLogEvents",
+                "Resource": [
+                    "arn:aws:logs:%[1]s:%[2]s:log-group:aws/spans:*",
+					"arn:aws:logs:%[1]s:%[2]s:log-group:/aws/application-signals/data:*"
+                ],
+                "Condition": {
+                    "ArnLike": {
+                        "aws:SourceArn": "arn:aws:xray:%[1]s:%[2]s:*"
+                    },
+                    "StringEquals": {
+                        "aws:SourceAccount": "%[2]s"
+                    }
+                }
+            }
+        ]
+    }`, region, accountID)
+
+	_, err := logsconn.PutResourcePolicy(ctx,
+		&cloudwatchlogs.PutResourcePolicyInput{
+			PolicyName:     aws.String(xrayResourcePolicyName),
+			PolicyDocument: aws.String(policyDocument),
+		})
+
+	if errs.IsA[*logstypes.ResourceAlreadyExistsException](err) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error putting CloudWatch Logs resource policy for X-Ray: %w", err)
+	}
+
+	return nil
+}
+
+func (r *agentRuntimeResource) waitForXRayResourcePolicy(ctx context.Context, timeout time.Duration) error {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{"notfound"},
+		Target:  []string{"found"},
+		Timeout: timeout,
+		Refresh: func() (interface{}, string, error) {
+			logsconn := r.Meta().LogsClient(ctx)
+			out, err := logsconn.DescribeResourcePolicies(ctx, &cloudwatchlogs.DescribeResourcePoliciesInput{
+				Limit: aws.Int32(50),
+			})
+			if err != nil {
+				return nil, "", err
+			}
+			for _, policy := range out.ResourcePolicies {
+				if aws.ToString(policy.PolicyName) == xrayResourcePolicyName {
+					return policy, "found", nil
+				}
+			}
+			return nil, "notfound", nil
+		},
+	}
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }
 
 type workloadIdentityDetailsModel struct {
