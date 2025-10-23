@@ -39,6 +39,7 @@ func resourceDetectorFeature() *schema.Resource {
 						names.AttrName: {
 							Type:             schema.TypeString,
 							Required:         true,
+							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FeatureAdditionalConfiguration](),
 						},
 						names.AttrStatus: {
