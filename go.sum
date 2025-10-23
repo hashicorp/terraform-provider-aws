@@ -217,8 +217,8 @@ github.com/aws/aws-sdk-go-v2/service/drs v1.35.7 h1:ChFSCpNWuvEscdtavWCdzz7rh7HE
 github.com/aws/aws-sdk-go-v2/service/drs v1.35.7/go.mod h1:La3SBMrb3kIw1VeeNKwgpycAtrxEGjxgnYlgw7pXkW4=
 github.com/aws/aws-sdk-go-v2/service/dsql v1.9.9 h1:4iFF3ET7IWkGzidQIxBzW/O7o5EsJYyrG2TvoxjuY6I=
 github.com/aws/aws-sdk-go-v2/service/dsql v1.9.9/go.mod h1:pA0lGpb/FSE55EiDiZz1J687KUQncYT60/YiXysOUnk=
-github.com/aws/aws-sdk-go-v2/service/dynamodb v1.51.1 h1:vSxJwz51rdh6AyZnxzZCP76L9HZWGFOEzz0RlfZWyXs=
-github.com/aws/aws-sdk-go-v2/service/dynamodb v1.51.1/go.mod h1:GyNGZUbiqJH5lMAVNlYlYXCNoJcCmyPAeLxlDKsmi1g=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.52.0 h1:V5rt841VqF3EGR/QbTaknaIHjowODmSF4OcDOjkTGnU=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.52.0/go.mod h1:GyNGZUbiqJH5lMAVNlYlYXCNoJcCmyPAeLxlDKsmi1g=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.257.2 h1:D8MCemFa8rt09x7o6Fkm2T7ThVbRPrD91R+LKhVEnVU=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.257.2/go.mod h1:Q/kZ++hvhasMpQU37I7daQh07ZqTa++isjj1aPi4zvM=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.50.6 h1:wklZmdNTNTLMVfZbYXXBWJ6E6t0W65qmLm1zuP37mIQ=
@@ -243,8 +243,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.7 h1:T1XpDs6FAe4
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.7/go.mod h1:1FBm5ugKg8LwtSbkgoRn0ySLXjcW0IAm4/OaduP7Ky4=
 github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.7 h1:rlSRNMyJYsjYZy0+8fl/iRVPfuQ/E98YI7CcUNBcbYU=
 github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.7/go.mod h1:6X+QJ73KsYOwBXZSZU6bWqlzmGuSqIxjhC/wuESb4iA=
-github.com/aws/aws-sdk-go-v2/service/emr v1.54.6 h1:6H20DGAXNeZCAatk4N/BQkWvp4aX5qqVf0mY36MjJQ0=
-github.com/aws/aws-sdk-go-v2/service/emr v1.54.6/go.mod h1:XsX6GG/Fe+N/BifooRLNlUNjbp2flEXL3djqGEugmWY=
+github.com/aws/aws-sdk-go-v2/service/emr v1.55.0 h1:aK2TmaoAIvL/eeAvbVqxT/N8DWsui5CJ488wm0abXs4=
+github.com/aws/aws-sdk-go-v2/service/emr v1.55.0/go.mod h1:XsX6GG/Fe+N/BifooRLNlUNjbp2flEXL3djqGEugmWY=
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.3 h1:phpyGCPc8dG+gD6wXdSJCxyTPK6vZGWpDNm2Xv58PIQ=
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.3/go.mod h1:JOZxLZHCqnWlvrk5ycGnrOAsmZG8Avo6d9bOISL48iU=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.36.7 h1:SAGQECTyXta6z9gI5pQW+ulJGqRua4zzG5+sOEDZqDI=
@@ -355,8 +355,8 @@ github.com/aws/aws-sdk-go-v2/service/macie2 v1.49.7 h1:zU+3rgEBStJkTMyf4EGN6W0Do
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.49.7/go.mod h1:De8F/wrZHRlVVHeq5FitJH+CTntbEMsfc/tP3I1Ad+E=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.45.1 h1:VM8mhD6c+KLh+Njur+J2EEnw9mq5nMD/2j5folMpgU8=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.45.1/go.mod h1:yfswHvbFmv7dvHSybcDPQX5I3jMi4v54OCU6EK8MWMw=
-github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.82.7 h1:Pe6AFlcZ0y6qwO8y133R+NHbs+5FUiLfogI9QWuA+Ww=
-github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.82.7/go.mod h1:UgcMPzxSzen6pqZlZikM0gKXQbYubwT88FxLz4p0sBU=
+github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.83.0 h1:0+AiRLPOwiTmrswYJbI9vKJlubjY5of21kNXmW7oXH8=
+github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.83.0/go.mod h1:UgcMPzxSzen6pqZlZikM0gKXQbYubwT88FxLz4p0sBU=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.84.1 h1:TdT9/Wb+dnS3msRGncneyL08NhlrhTGRpRwc2Ak03gw=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.84.1/go.mod h1:xzlq4nxPOaRUkOYVflTRlPuz800Jv+qABAAcCHSEe7E=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.7 h1:64d3V8tFsIIbfeJDnjBs2dEzILSaV0DkJnzhFo+C/Lc=

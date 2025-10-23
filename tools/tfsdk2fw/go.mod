@@ -115,7 +115,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.19.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/drs v1.35.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.51.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.52.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.257.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.7 // indirect
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.51.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/emr v1.54.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/emr v1.55.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.36.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.6 // indirect
@@ -184,7 +184,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.49.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.45.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.82.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.83.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.84.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.32.0 // indirect
