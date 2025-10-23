@@ -113,11 +113,11 @@ func testAccDetectorFeature_additionalConfigurationOrder(t *testing.T) {
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{"name": "EKS_ADDON_MANAGEMENT", "status": "ENABLED"}),
+						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{"name": "EC2_AGENT_MANAGEMENT", "status": "ENABLED"}),
+						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{"name": "ECS_FARGATE_AGENT_MANAGEMENT", "status": "ENABLED"}),
+						map[string]string{names.AttrName: "ECS_FARGATE_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 				),
 			},
 			{
@@ -132,11 +132,11 @@ func testAccDetectorFeature_additionalConfigurationOrder(t *testing.T) {
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{"name": "EKS_ADDON_MANAGEMENT", "status": "ENABLED"}),
+						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{"name": "EC2_AGENT_MANAGEMENT", "status": "ENABLED"}),
+						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
-						map[string]string{"name": "ECS_FARGATE_AGENT_MANAGEMENT", "status": "ENABLED"}),
+						map[string]string{names.AttrName: "ECS_FARGATE_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
 				),
 			},
 		},
@@ -270,7 +270,7 @@ resource "aws_guardduty_detector" "test" {
 resource "aws_guardduty_detector_feature" "test" {
   detector_id = aws_guardduty_detector.test.id
   name        = "RUNTIME_MONITORING"
-  status      = "ENABLED" 
+  status      = "ENABLED"
 
   additional_configuration {
     name   = %[1]q
