@@ -20,13 +20,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
+func TestAccNetworkFlowMonitorMonitor_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Monitor": {
+			acctest.CtBasic:      testAccNetworkFlowMonitorMonitor_basic,
+			acctest.CtDisappears: testAccNetworkFlowMonitorMonitor_disappears,
+			"tags":               testAccNetworkFlowMonitorMonitor_tags,
+			"update":             testAccNetworkFlowMonitorMonitor_update,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var monitor networkflowmonitor.GetMonitorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -54,13 +69,13 @@ func TestAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFlowMonitorMonitor_disappears(t *testing.T) {
+func testAccNetworkFlowMonitorMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var monitor networkflowmonitor.GetMonitorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -81,13 +96,13 @@ func TestAccNetworkFlowMonitorMonitor_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
+func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var monitor networkflowmonitor.GetMonitorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -131,13 +146,13 @@ func TestAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFlowMonitorMonitor_update(t *testing.T) {
+func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var monitor networkflowmonitor.GetMonitorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -249,6 +264,8 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccMonitorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -257,9 +274,19 @@ resource "aws_vpc" "test" {
   }
 }
 
+resource "aws_networkflowmonitor_scope" "test" {
+  targets {
+    region = "us-east-1"
+    target_identifier {
+      target_id   = data.aws_caller_identity.current.account_id
+      target_type = "ACCOUNT"
+    }
+  }
+}
+
 resource "aws_networkflowmonitor_monitor" "test" {
   monitor_name = %[1]q
-  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
+  scope_arn    = aws_networkflowmonitor_scope.test.arn
 
   local_resources {
     type       = "AWS::EC2::VPC"
@@ -276,6 +303,8 @@ resource "aws_networkflowmonitor_monitor" "test" {
 
 func testAccMonitorConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -284,9 +313,19 @@ resource "aws_vpc" "test" {
   }
 }
 
+resource "aws_networkflowmonitor_scope" "test" {
+  targets {
+    region = "us-east-1"
+    target_identifier {
+      target_id   = data.aws_caller_identity.current.account_id
+      target_type = "ACCOUNT"
+    }
+  }
+}
+
 resource "aws_networkflowmonitor_monitor" "test" {
   monitor_name = %[1]q
-  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
+  scope_arn    = aws_networkflowmonitor_scope.test.arn
 
   local_resources {
     type       = "AWS::EC2::VPC"
@@ -307,6 +346,8 @@ resource "aws_networkflowmonitor_monitor" "test" {
 
 func testAccMonitorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -315,9 +356,19 @@ resource "aws_vpc" "test" {
   }
 }
 
+resource "aws_networkflowmonitor_scope" "test" {
+  targets {
+    region = "us-east-1"
+    target_identifier {
+      target_id   = data.aws_caller_identity.current.account_id
+      target_type = "ACCOUNT"
+    }
+  }
+}
+
 resource "aws_networkflowmonitor_monitor" "test" {
   monitor_name = %[1]q
-  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
+  scope_arn    = aws_networkflowmonitor_scope.test.arn
 
   local_resources {
     type       = "AWS::EC2::VPC"
@@ -339,6 +390,8 @@ resource "aws_networkflowmonitor_monitor" "test" {
 
 func testAccMonitorConfig_updated1(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -356,9 +409,19 @@ resource "aws_subnet" "test" {
   }
 }
 
+resource "aws_networkflowmonitor_scope" "test" {
+  targets {
+    region = "us-east-1"
+    target_identifier {
+      target_id   = data.aws_caller_identity.current.account_id
+      target_type = "ACCOUNT"
+    }
+  }
+}
+
 resource "aws_networkflowmonitor_monitor" "test" {
   monitor_name = %[1]q
-  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
+  scope_arn    = aws_networkflowmonitor_scope.test.arn
 
   local_resources {
     type       = "AWS::EC2::VPC"
@@ -380,6 +443,8 @@ resource "aws_networkflowmonitor_monitor" "test" {
 
 func testAccMonitorConfig_updated2(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -397,9 +462,19 @@ resource "aws_subnet" "test" {
   }
 }
 
+resource "aws_networkflowmonitor_scope" "test" {
+  targets {
+    region = "us-east-1"
+    target_identifier {
+      target_id   = data.aws_caller_identity.current.account_id
+      target_type = "ACCOUNT"
+    }
+  }
+}
+
 resource "aws_networkflowmonitor_monitor" "test" {
   monitor_name = %[1]q
-  scope_arn    = "arn:aws:networkflowmonitor:us-east-1:664418989480:scope/cd8df3fd-8ffa-4bfa-bdce-8bb1afaa0f83"
+  scope_arn    = aws_networkflowmonitor_scope.test.arn
 
   local_resources {
     type       = "AWS::EC2::VPC"
