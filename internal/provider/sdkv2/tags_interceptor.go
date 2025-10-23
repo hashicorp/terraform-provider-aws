@@ -311,17 +311,16 @@ func validateRequiredTags() customizeDiffInterceptor {
 					return nil
 				}
 
-				cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
-				// We intentionally _do not_ account for ignored tags here.
-				allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
+				if policy := c.TaggingPolicyConfig(ctx); policy != nil {
+					cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
+					allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
 
-				// Verify required tags are present
-				if rtc := c.RequiredTagsConfig(ctx); rtc != nil {
-					if reqTags, ok := rtc.RequiredTags[typeName]; ok {
+					// Verify required tags are present
+					if reqTags, ok := policy.RequiredTags[typeName]; ok {
 						if !allTags.ContainsAllKeys(reqTags) {
-							missing := reqTags.Removed(allTags).Keys() // Slightly misue Removed() here to get the missing keys
+							missing := reqTags.Removed(allTags).Keys()
 							// TODO: CustomizeDiff does not support diagnostics - can we warn some other way?
-							if rtc.Level == "error" {
+							if policy.Level == "error" {
 								return fmt.Errorf("missing required tags for %s: %s", typeName, missing)
 							}
 						}

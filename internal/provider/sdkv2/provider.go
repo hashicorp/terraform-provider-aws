@@ -185,16 +185,6 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. " +
 						"Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 				},
-				"required_tags_diagnostic_level": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "",
-				},
-				"required_tags_enabled": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Description: "",
-				},
 				"s3_use_path_style": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -258,6 +248,19 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Optional: true,
 					Description: "The region where AWS STS operations will take place. Examples\n" +
 						"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
+				},
+				"tagging_policy_enforced": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Description: "Whether to enforce the organizations effective tagging policy on resources managed by " +
+						"this provider instance.",
+				},
+				"tagging_policy_severity": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Description: `The severity of diagnostics related to violations of the organizations effective tagging ` +
+						`policy. Can only be set when tagging_policy_enforced is true. Valid values are "warning" and "error". ` +
+						`Defaults to "error".`,
 				},
 				"token": {
 					Type:     schema.TypeString,
@@ -353,13 +356,13 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
-		RequiredTagsEnabled:            d.Get("required_tags_enabled").(bool),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
+		TaggingPolicyEnforced:          d.Get("tagging_policy_enforced").(bool),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
 		TokenBucketRateLimiterCapacity: d.Get("token_bucket_rate_limiter_capacity").(int),
@@ -476,10 +479,10 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
-	if v, ok := d.Get("required_tags_diagnostic_level").(string); ok && v != "" {
+	if v, ok := d.Get("tagging_policy_severity").(string); ok && v != "" {
 		// TODO: validate required tags are enabled
 		// TODO: parse v and validate one of error, warning
-		config.RequiredTagsDiagnosticLevel = v
+		config.TaggingPolicySeverity = v
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -605,7 +608,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, v.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.RequiredTagsConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TaggingPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 
@@ -775,7 +778,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, resource.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.RequiredTagsConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TaggingPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 

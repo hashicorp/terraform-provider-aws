@@ -46,8 +46,6 @@ type Config struct {
 	Profile                        string
 	Region                         string
 	RetryMode                      aws.RetryMode
-	RequiredTagsDiagnosticLevel    string
-	RequiredTagsEnabled            bool
 	S3UsePathStyle                 bool
 	S3USEast1RegionalEndpoint      string
 	SecretKey                      string
@@ -58,6 +56,8 @@ type Config struct {
 	SkipRequestingAccountId        bool
 	STSRegion                      string
 	SuppressDebugLog               bool
+	TaggingPolicyEnforced          bool
+	TaggingPolicySeverity          string
 	TerraformVersion               string
 	Token                          string
 	TokenBucketRateLimiterCapacity int
@@ -193,14 +193,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	}
 
-	// Fetch required tags when the feature is enabled
-	if c.RequiredTagsEnabled {
-		tflog.Debug(ctx, "Retrieving required tag details")
+	// Fetch tagging policy details when enforced
+	if c.TaggingPolicyEnforced {
+		tflog.Debug(ctx, "Retrieving tagging policy details")
 		reqTags, d := getRequiredTags(ctx, cfg)
 		diags = append(diags, d...)
 
-		client.requiredTagsConfig = &tftags.RequiredConfig{
-			Level:        c.RequiredTagsDiagnosticLevel,
+		client.taggingPolicyConfig = &tftags.TaggingPolicyConfig{
+			Level:        c.TaggingPolicySeverity,
 			RequiredTags: reqTags,
 		}
 	}

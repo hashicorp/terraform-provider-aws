@@ -155,14 +155,6 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
-			"required_tags_diagnostic_level": schema.StringAttribute{
-				Optional:    true,
-				Description: "",
-			},
-			"required_tags_enabled": schema.BoolAttribute{
-				Optional:    true,
-				Description: "",
-			},
 			"s3_use_path_style": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
@@ -206,6 +198,17 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 			"sts_region": schema.StringAttribute{
 				Optional:    true,
 				Description: "The region where AWS STS operations will take place. Examples\nare us-east-1 and us-west-2.", // lintignore:AWSAT003
+			},
+			"tagging_policy_enforced": schema.BoolAttribute{
+				Optional: true,
+				Description: "Whether to enforce the organizations effective tagging policy on resources managed by " +
+					"this provider instance.",
+			},
+			"tagging_policy_severity": schema.StringAttribute{
+				Optional: true,
+				Description: `The severity of diagnostics related to violations of the organizations effective tagging ` +
+					`policy. Can only be set when tagging_policy_enforced is true. Valid values are "warning" and "error". ` +
+					`Defaults to "error".`,
 			},
 			"token": schema.StringAttribute{
 				Optional:    true,

@@ -59,14 +59,14 @@ type IgnoreConfig struct {
 	KeyPrefixes KeyValueTags
 }
 
-// RequiredConfig contains options related to organizational tagging policies.
-type RequiredConfig struct {
+// TaggingPolicyConfig contains options related to organizational tagging policies.
+type TaggingPolicyConfig struct {
 	// Level indicates the severity of the diagnostic
 	//
 	// Must be one of "error" or "warning". This is a higher level abstraction on
 	// the diagnostic severity types exposed by the plugin libraries, as it must be
 	// shared across both Plugin SDK V2 and Plugin Framework based resources.
-	Level string // TODO: enforce enum
+	Level string
 
 	// RequiredTags is a mapping of Terraform resource type names to the required
 	// tags defined in the effective tag policy
