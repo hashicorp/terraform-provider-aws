@@ -56,7 +56,7 @@ resource "aws_bcmdataexports_export" "test" {
 
 ## Argument Reference
 
-This resources supports the following arguments:
+This resource supports the following arguments:
 
 * `export` - (Required) The details of the export, including data query, name, description, and destination configuration.  See the [`export` argument reference](#export-argument-reference) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
