@@ -11,10 +11,13 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -55,6 +58,7 @@ func (r *resourceAllowedImagesSettings) Schema(ctx context.Context, req resource
 		},
 		Blocks: map[string]schema.Block{
 			"image_criteria": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[imageCriterionModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(10),
 				},
@@ -98,16 +102,34 @@ func (r *resourceAllowedImagesSettings) Schema(ctx context.Context, req resource
 					},
 					Blocks: map[string]schema.Block{
 						"creation_date_condition": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[imageCriterionCreationDateConditionModel](ctx),
+							Validators: []validator.Object{
+								objectvalidator.AlsoRequires(
+									path.MatchRelative().AtName("maximum_days_since_created"),
+								),
+							},
 							Attributes: map[string]schema.Attribute{
 								"maximum_days_since_created": schema.Int32Attribute{
 									Optional: true,
+									Validators: []validator.Int32{
+										int32validator.AtLeast(0),
+									},
 								},
 							},
 						},
 						"deprecation_time_condition": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[imageCriterionDeprecationTimeConditionModel](ctx),
+							Validators: []validator.Object{
+								objectvalidator.AlsoRequires(
+									path.MatchRelative().AtName("maximum_days_since_deprecated"),
+								),
+							},
 							Attributes: map[string]schema.Attribute{
 								"maximum_days_since_deprecated": schema.Int32Attribute{
 									Optional: true,
+									Validators: []validator.Int32{
+										int32validator.AtLeast(0),
+									},
 								},
 							},
 						},
@@ -335,16 +357,16 @@ func (r *resourceAllowedImagesSettings) ImportState(ctx context.Context, req res
 
 type resourceAllowedImagesSettingsModel struct {
 	framework.WithRegionModel
-	State         types.String          `tfsdk:"state"`
-	ImageCriteria []imageCriterionModel `tfsdk:"image_criteria"`
+	State         types.String                                         `tfsdk:"state"`
+	ImageCriteria fwtypes.ListNestedObjectValueOf[imageCriterionModel] `tfsdk:"image_criteria"`
 }
 
 type imageCriterionModel struct {
-	ImageNames               fwtypes.SetValueOf[types.String]             `tfsdk:"image_names"`
-	ImageProviders           fwtypes.SetValueOf[types.String]             `tfsdk:"image_providers"`
-	MarketplaceProductCodes  fwtypes.SetValueOf[types.String]             `tfsdk:"marketplace_product_codes"`
-	CreationDateCondition    *imageCriterionCreationDateConditionModel    `tfsdk:"creation_date_condition"`
-	DeprecationTimeCondition *imageCriterionDeprecationTimeConditionModel `tfsdk:"deprecation_time_condition"`
+	ImageNames               fwtypes.SetValueOf[types.String]                                   `tfsdk:"image_names"`
+	ImageProviders           fwtypes.SetValueOf[types.String]                                   `tfsdk:"image_providers"`
+	MarketplaceProductCodes  fwtypes.SetValueOf[types.String]                                   `tfsdk:"marketplace_product_codes"`
+	CreationDateCondition    fwtypes.ObjectValueOf[imageCriterionCreationDateConditionModel]    `tfsdk:"creation_date_condition"`
+	DeprecationTimeCondition fwtypes.ObjectValueOf[imageCriterionDeprecationTimeConditionModel] `tfsdk:"deprecation_time_condition"`
 }
 
 type imageCriterionCreationDateConditionModel struct {
