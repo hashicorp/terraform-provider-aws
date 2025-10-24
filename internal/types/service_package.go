@@ -141,6 +141,7 @@ type Identity struct {
 	IsSingleParameter      bool
 	IsMutable              bool
 	IsSetOnUpdate          bool
+	version                int64
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -154,6 +155,10 @@ func (i Identity) HasInherentRegion() bool {
 		return true
 	}
 	return false
+}
+
+func (i Identity) Version() int64 {
+	return i.version
 }
 
 func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
@@ -380,6 +385,11 @@ func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	}
 
 	return identity
+}
+
+func VersionedIdentity(version int64, base Identity) Identity {
+	base.version = version
+	return base
 }
 
 type IdentityOptsFunc func(opts *Identity)
