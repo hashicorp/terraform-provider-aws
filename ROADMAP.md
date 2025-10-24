@@ -43,7 +43,7 @@ New Resource(s):
 
 Issue: [#40996](https://github.com/hashicorp/terraform-provider-aws/issues/40996)
 
-[AWS Transfer Family Web Apps](https://aws.amazon.com/aws-transfer-family/web-apps/) Transfer Family web apps offer a no-code, fully managed browser-based experience that enables secure file transfers to and from Amazon S3. Transfer Family web apps enable your authenticated users to perform essential file operations—including listing, uploading, downloading, and deleting—while maintaining security, reliability, and compliance. 
+[AWS Transfer Family Web Apps](https://aws.amazon.com/aws-transfer-family/web-apps/) Transfer Family web apps offer a no-code, fully managed browser-based experience that enables secure file transfers to and from Amazon S3. Transfer Family web apps enable your authenticated users to perform essential file operations—including listing, uploading, downloading, and deleting—while maintaining security, reliability, and compliance.
 
 Support for AWS Transfer Family Web Apps includes:
 
@@ -66,7 +66,6 @@ New Resource(s):
 Affected Resource:
 
 - `aws_cloudfront_distribution`
-
 
 ## Enhancements to Existing Services
 
