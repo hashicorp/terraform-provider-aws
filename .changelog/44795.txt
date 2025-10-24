@@ -1,0 +1,6 @@
+```release-note:new-data-source
+aws_ecrpublic_images
+```
+```release-note:note
+datasource/aws_ecrpublic_images: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing
+```
