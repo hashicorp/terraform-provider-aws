@@ -147,6 +147,7 @@ func newIdentityInterceptor(identitySpec *inttypes.Identity) interceptorInvocati
 
 func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
+		Version: v.Version(),
 		SchemaFunc: func() map[string]*schema.Schema {
 			return identity.NewIdentitySchema(v)
 		},
