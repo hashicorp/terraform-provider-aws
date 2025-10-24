@@ -141,6 +141,7 @@ type Identity struct {
 	IsSingleParameter      bool
 	IsMutable              bool
 	IsSetOnUpdate          bool
+	customInherentRegion   bool
 	version                int64
 }
 
@@ -152,6 +153,9 @@ func (i Identity) HasInherentRegion() bool {
 		return true
 	}
 	if i.IsARN && !i.IsGlobalARNFormat {
+		return true
+	}
+	if i.customInherentRegion {
 		return true
 	}
 	return false
@@ -242,6 +246,23 @@ func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Id
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute(name, true),
 		},
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
+func RegionalCustomInherentRegionIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
+		IsGlobalResource:  false,
+		IdentityAttribute: name,
+		Attributes: []IdentityAttribute{
+			StringIdentityAttribute(name, true),
+		},
+		customInherentRegion: true,
 	}
 
 	for _, opt := range opts {
