@@ -186,6 +186,12 @@ func (r *resourceAllowedImagesSettings) Read(ctx context.Context, req resource.R
 		return
 	}
 
+	// If the setting is disabled, treat it as deleted
+	if out.State != nil && *out.State == "disabled" {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
