@@ -237,15 +237,21 @@ func (r *resourceAllowedImagesSettings) Delete(ctx context.Context, req resource
 		return
 	}
 
-	// Disable the allowed images settings as we can't delete it
-	var input ec2.DisableAllowedImagesSettingsInput
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, &state, &input))
-	if resp.Diagnostics.HasError() {
+	clearCriteriaInput := &ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput{}
+	criteriaOut, err := conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, clearCriteriaInput)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err)
+		return
+	}
+	if criteriaOut == nil || !*criteriaOut.ReturnValue {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("failed to clear image criteria"))
 		return
 	}
 
-	out, err := conn.DisableAllowedImagesSettings(ctx, &input)
+	// Disable the allowed images settings as we can't delete it
+	input := &ec2.DisableAllowedImagesSettingsInput{}
+
+	out, err := conn.DisableAllowedImagesSettings(ctx, input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
@@ -265,11 +271,8 @@ func (r *resourceAllowedImagesSettings) updateAllowedImagesSettingsState(ctx con
 
 	if slices.Contains(awstypes.AllowedImagesSettingsEnabledState.Values(""), awstypes.AllowedImagesSettingsEnabledState(stateValue)) {
 		// Enable with the specified state (enabled or audit-mode)
-		var input ec2.EnableAllowedImagesSettingsInput
-
-		smerr.EnrichAppend(ctx, diags, flex.Expand(ctx, plan, &input))
-		if diags.HasError() {
-			return
+		input := ec2.EnableAllowedImagesSettingsInput{
+			AllowedImagesSettingsState: awstypes.AllowedImagesSettingsEnabledState(stateValue),
 		}
 
 		out, err := conn.EnableAllowedImagesSettings(ctx, &input)
@@ -288,14 +291,9 @@ func (r *resourceAllowedImagesSettings) updateAllowedImagesSettingsState(ctx con
 		smerr.EnrichAppend(ctx, diags, flex.Flatten(ctx, out, plan))
 	} else if slices.Contains(awstypes.AllowedImagesSettingsDisabledState.Values(""), awstypes.AllowedImagesSettingsDisabledState(stateValue)) {
 		// Disable
-		var input ec2.DisableAllowedImagesSettingsInput
+		input := &ec2.DisableAllowedImagesSettingsInput{}
 
-		smerr.EnrichAppend(ctx, diags, flex.Expand(ctx, plan, &input))
-		if diags.HasError() {
-			return
-		}
-
-		out, err := conn.DisableAllowedImagesSettings(ctx, &input)
+		out, err := conn.DisableAllowedImagesSettings(ctx, input)
 		if err != nil {
 			smerr.AddError(ctx, diags, err)
 			return
@@ -315,15 +313,18 @@ func (r *resourceAllowedImagesSettings) updateAllowedImagesSettingsState(ctx con
 }
 
 func (r *resourceAllowedImagesSettings) updateImageCriteria(ctx context.Context, conn *ec2.Client, plan *resourceAllowedImagesSettingsModel, diags *diag.Diagnostics) {
-	if len(plan.ImageCriteria) == 0 {
+	if plan.ImageCriteria.IsUnknown() {
 		return
 	}
 
 	var input ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput
 
-	smerr.EnrichAppend(ctx, diags, flex.Expand(ctx, plan, &input))
-	if diags.HasError() {
-		return
+	// AWS keeps image criteria options, even if set to disabled - set to empty
+	if !plan.ImageCriteria.IsNull() {
+		smerr.EnrichAppend(ctx, diags, flex.Expand(ctx, plan, &input))
+		if diags.HasError() {
+			return
+		}
 	}
 
 	out, err := conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &input)
@@ -343,22 +344,7 @@ func (r *resourceAllowedImagesSettings) updateImageCriteria(ctx context.Context,
 }
 
 func (r *resourceAllowedImagesSettings) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// There is only one setting per account and region, so no ID is needed.
-	conn := r.Meta().EC2Client(ctx)
-
-	out, err := conn.GetAllowedImagesSettings(ctx, &ec2.GetAllowedImagesSettingsInput{})
-	if err != nil {
-		resp.Diagnostics.AddError("importing Allowed Images Settings", err.Error())
-		return
-	}
-
-	var data resourceAllowedImagesSettingsModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrRegion), req, resp)
 }
 
 type resourceAllowedImagesSettingsModel struct {
