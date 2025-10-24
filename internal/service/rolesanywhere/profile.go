@@ -35,6 +35,10 @@ func resourceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"accept_role_session_name": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -91,6 +95,10 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any
 		Tags:     getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("accept_role_session_name"); ok {
+		input.AcceptRoleSessionName = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("duration_seconds"); ok {
 		input.DurationSeconds = aws.Int32(int32(v.(int)))
 	}
@@ -139,6 +147,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading RolesAnywhere Profile (%s): %s", d.Id(), err)
 	}
 
+	d.Set("accept_role_session_name", profile.AcceptRoleSessionName)
 	d.Set(names.AttrARN, profile.ProfileArn)
 	d.Set("duration_seconds", profile.DurationSeconds)
 	d.Set(names.AttrEnabled, profile.Enabled)
@@ -158,6 +167,10 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &rolesanywhere.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("accept_role_session_name") {
+			input.AcceptRoleSessionName = aws.Bool(d.Get("accept_role_session_name").(bool))
 		}
 
 		if d.HasChange("duration_seconds") {
