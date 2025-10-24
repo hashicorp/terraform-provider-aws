@@ -364,26 +364,28 @@ const (
 )
 
 type ResourceDatum struct {
-	service                  *serviceRecords
-	FileName                 string
-	idAttrDuplicates         string // TODO: Remove. Still needed for Parameterized Identity
-	GenerateConfig           bool
-	ARNFormat                string
-	arnAttribute             string
-	isARNFormatGlobal        triBoolean
-	ArnIdentity              bool
-	MutableIdentity          bool
-	IsGlobal                 bool
-	isSingleton              bool
-	HasRegionOverrideTest    bool
-	identityAttributes       []identityAttribute
-	identityAttribute        string
-	IdentityDuplicateAttrs   []string
-	IDAttrFormat             string
-	HasV6_0NullValuesError   bool
-	HasV6_0RefreshError      bool
-	HasNoPreExistingResource bool
-	PreIdentityVersion       *version.Version
+	service                        *serviceRecords
+	FileName                       string
+	idAttrDuplicates               string // TODO: Remove. Still needed for Parameterized Identity
+	GenerateConfig                 bool
+	ARNFormat                      string
+	arnAttribute                   string
+	isARNFormatGlobal              triBoolean
+	ArnIdentity                    bool
+	MutableIdentity                bool
+	IsGlobal                       bool
+	isSingleton                    bool
+	HasRegionOverrideTest          bool
+	identityAttributes             []identityAttribute
+	identityAttribute              string
+	IdentityDuplicateAttrs         []string
+	IDAttrFormat                   string
+	HasV6_0NullValuesError         bool
+	HasV6_0RefreshError            bool
+	HasNoPreExistingResource       bool
+	PreIdentityVersion             *version.Version
+	IsCustomInherentRegionIdentity bool
+	customIdentityAttribute        string
 	tests.CommonArgs
 }
 
@@ -436,7 +438,7 @@ func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 }
 
 func (d ResourceDatum) HasInherentRegion() bool {
-	return d.IsARNIdentity() || d.IsRegionalSingleton()
+	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
 }
 
 func (d ResourceDatum) IdentityAttribute() string {
@@ -453,6 +455,10 @@ func (r ResourceDatum) IsARNFormatGlobal() bool {
 
 func (r ResourceDatum) IdentityAttributes() []identityAttribute {
 	return r.identityAttributes
+}
+
+func (r ResourceDatum) CustomIdentityAttribute() string {
+	return namesgen.ConstOrQuote(r.customIdentityAttribute)
 }
 
 type identityAttribute struct {
@@ -718,6 +724,27 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.HasV6_0RefreshError = b
 					}
 				}
+
+			case "CustomInherentRegionIdentity":
+				hasIdentity = true
+				d.IsCustomInherentRegionIdentity = true
+
+				args := common.ParseArgs(m[3])
+				d.customIdentityAttribute = args.Positional[0]
+				d.identityAttribute = args.Positional[0]
+
+				var attrs []string
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs = strings.Split(attr, ";")
+				}
+				if d.Implementation == tests.ImplementationSDK {
+					attrs = append(attrs, "id")
+				}
+				slices.Sort(attrs)
+				attrs = slices.Compact(attrs)
+				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+					return namesgen.ConstOrQuote(s)
+				})
 
 			case "Testing":
 				args := common.ParseArgs(m[3])

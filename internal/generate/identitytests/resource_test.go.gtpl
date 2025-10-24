@@ -297,6 +297,11 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 							names.AttrAccountID: tfknownvalue.AccountID(),
 							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						}),
+					{{ else if .IsCustomInherentRegionIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							names.AttrAccountID: tfknownvalue.AccountID(),
@@ -418,6 +423,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							names.AttrAccountID: tfknownvalue.AccountID(),
 							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 						}),
+					{{ else if .IsCustomInherentRegionIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							names.AttrAccountID: tfknownvalue.AccountID(),
@@ -594,6 +604,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
 							}),
+						{{ else if .IsCustomInherentRegionIdentity -}}
+							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+							}),
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 						{{ else -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
@@ -711,6 +726,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
 							}),
+						{{ else if .IsCustomInherentRegionIdentity -}}
+							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+							}),
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 						{{ else -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
@@ -842,6 +862,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
 							}),
+						{{ else if .IsCustomInherentRegionIdentity -}}
+							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+							}),
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 						{{ else -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
@@ -978,6 +1003,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 									names.AttrAccountID: tfknownvalue.AccountID(),
 								}),
+							{{ else if .IsCustomInherentRegionIdentity -}}
+								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+									{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+								}),
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 							{{ else -}}
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 									names.AttrAccountID: tfknownvalue.AccountID(),
@@ -1186,6 +1216,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 									names.AttrAccountID: tfknownvalue.AccountID(),
 								}),
+							{{ else if .IsCustomInherentRegionIdentity -}}
+								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+									{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+								}),
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 							{{ else -}}
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 									names.AttrAccountID: tfknownvalue.AccountID(),
