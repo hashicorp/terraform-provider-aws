@@ -1,0 +1,638 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package ec2_test
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
+
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+)
+
+func TestAccEC2AllowedImagesSettings_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(*testing.T){
+		"basic":                            testAccEC2AllowedImagesSettings_basic,
+		"disappears":                       testAccEC2AllowedImagesSettings_disappears,
+		"auditMode":                        testAccEC2AllowedImagesSettings_auditMode,
+		"disabled":                         testAccEC2AllowedImagesSettings_disabled,
+		"imageCriteria":                    testAccEC2AllowedImagesSettings_imageCriteria,
+		"imageCriteriaMultiple":            testAccEC2AllowedImagesSettings_imageCriteriaMultiple,
+		"imageCriteriaWithNames":           testAccEC2AllowedImagesSettings_imageCriteriaWithNames,
+		"imageCriteriaWithMarketplace":     testAccEC2AllowedImagesSettings_imageCriteriaWithMarketplace,
+		"imageCriteriaWithCreationDate":    testAccEC2AllowedImagesSettings_imageCriteriaWithCreationDate,
+		"imageCriteriaWithDeprecationTime": testAccEC2AllowedImagesSettings_imageCriteriaWithDeprecationTime,
+		"imageCriteriaComplete":            testAccEC2AllowedImagesSettings_imageCriteriaComplete,
+		"stateUpdate":                      testAccEC2AllowedImagesSettings_stateUpdate,
+		"imageCriteriaUpdate":              testAccEC2AllowedImagesSettings_imageCriteriaUpdate,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccEC2AllowedImagesSettings_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAllowedImagesSettings, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_auditMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_auditMode(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "audit-mode"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_disabled(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_imageCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteria(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_providers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.image_providers.*", "amazon"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_imageCriteriaMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteriaMultiple(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_providers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.image_providers.*", "amazon"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.1.image_providers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.1.image_providers.*", "aws-marketplace"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_imageCriteriaWithNames(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithNames(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_names.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.image_names.*", "al2023-ami-*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.image_names.*", "ubuntu/images/*"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_imageCriteriaWithMarketplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithMarketplace(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.marketplace_product_codes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.marketplace_product_codes.*", "abcdef123456"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_imageCriteriaWithCreationDate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithCreationDate(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.0.maximum_days_since_created", "365"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_imageCriteriaWithDeprecationTime(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithDeprecationTime(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.0.maximum_days_since_deprecated", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_imageCriteriaComplete(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteriaComplete(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_providers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.marketplace_product_codes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_stateUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings1, settings2, settings3 ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+				),
+			},
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_auditMode(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "audit-mode"),
+				),
+			},
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_disabled(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "disabled"),
+				),
+			},
+		},
+	})
+}
+
+func testAccEC2AllowedImagesSettings_imageCriteriaUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var settings1, settings2 ec2.GetAllowedImagesSettingsOutput
+	resourceName := "aws_ec2_allowed_images_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteria(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings1),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
+				),
+			},
+			{
+				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteriaMultiple(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings2),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckEC2AllowedImagesSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ec2_allowed_images_settings" {
+				continue
+			}
+
+			out, err := conn.GetAllowedImagesSettings(ctx, &ec2.GetAllowedImagesSettingsInput{})
+			if err != nil {
+				return err
+			}
+
+			// Settings should be disabled after destroy
+			if aws.ToString(out.State) != "disabled" {
+				return errors.New("EC2 Allowed Images Settings not disabled")
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckEC2AllowedImagesSettingsExists(ctx context.Context, name string, settings *ec2.GetAllowedImagesSettingsOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEC2AllowedImagesSettings, name, errors.New("not found"))
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		out, err := conn.GetAllowedImagesSettings(ctx, &ec2.GetAllowedImagesSettingsInput{})
+		if err != nil {
+			return err
+		}
+
+		*settings = *out
+
+		return nil
+	}
+}
+
+func testAccEC2AllowedImagesSettingsConfig_basic() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "enabled"
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_auditMode() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "audit-mode"
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_disabled() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "disabled"
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_imageCriteria() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "enabled"
+
+  image_criteria {
+    image_providers = ["amazon"]
+  }
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_imageCriteriaMultiple() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "enabled"
+
+  image_criteria {
+    image_providers = ["amazon"]
+  }
+
+  image_criteria {
+    image_providers = ["aws-marketplace"]
+  }
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithNames() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "enabled"
+
+  image_criteria {
+    image_names = [
+      "al2023-ami-*",
+      "ubuntu/images/*"
+    ]
+  }
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithMarketplace() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "enabled"
+
+  image_criteria {
+    image_providers         = ["aws-marketplace"]
+    marketplace_product_codes = ["abcdef123456"]
+  }
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithCreationDate() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "enabled"
+
+  image_criteria {
+    image_providers = ["amazon"]
+    
+    creation_date_condition {
+      maximum_days_since_created = 365
+    }
+  }
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithDeprecationTime() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "enabled"
+
+  image_criteria {
+    image_providers = ["amazon"]
+    
+    deprecation_time_condition {
+      maximum_days_since_deprecated = 30
+    }
+  }
+}
+`
+}
+
+func testAccEC2AllowedImagesSettingsConfig_imageCriteriaComplete() string {
+	return `
+resource "aws_ec2_allowed_images_settings" "test" {
+  state = "enabled"
+
+  image_criteria {
+    image_names             = ["al2023-ami-*"]
+    image_providers         = ["amazon"]
+    marketplace_product_codes = ["abc123def456"]
+    
+    creation_date_condition {
+      maximum_days_since_created = 180
+    }
+    
+    deprecation_time_condition {
+      maximum_days_since_deprecated = 60
+    }
+  }
+}
+`
+}
