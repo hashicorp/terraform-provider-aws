@@ -237,6 +237,7 @@ type ResourceDatum struct {
 	SetIDAttribute                    bool
 	HasV6_0SDKv2Fix                   bool
 	HasIdentityFix                    bool
+	IdentityVersion                   int64
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -547,6 +548,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
+			case "IdentityVersion":
+				args := common.ParseArgs(m[3])
+				attr := args.Positional[0]
+				if i, err := strconv.ParseInt(attr, 10, 64); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid IdentityVersion value: %q at %s. Should be integer value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				} else {
+					d.IdentityVersion = i
+				}
+
 			// TODO: allow underscore?
 			case "V60SDKv2Fix":
 				d.HasV6_0SDKv2Fix = true
@@ -679,6 +690,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
+				if d.IdentityVersion > 0 {
+					v.errs = append(v.errs, fmt.Errorf("IdentityVersion not currently supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 			case "SDKDataSource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -773,7 +788,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkListResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport", "IdentityVersion":
 				// Handled above.
 			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.

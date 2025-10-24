@@ -452,6 +452,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	{{- end }}
 			{{- if $value.HasResourceIdentity }}
 				Identity:
+				{{- if $value.IdentityVersion }}
+					inttypes.VersionedIdentity({{ $value.IdentityVersion }},
+				{{- end -}}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
@@ -461,7 +464,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						},
 						{{- template "SDKv2CommonIdentityOpts" . -}}
 						),
-					{{- else }}
+					{{- else -}}
 						inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
@@ -478,7 +481,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{- end -}}
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
-					{{- else }}
+					{{- else -}}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
 								{{ .Name }},
@@ -493,7 +496,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
-					{{- else }}
+					{{- else -}}
 						{{- if $value.HasARNAttribute }}
 							inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
 						{{- else }}
@@ -508,11 +511,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						inttypes.GlobalSingletonIdentity(
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
-					{{- else }}
+					{{- else -}}
 						inttypes.RegionalSingletonIdentity(
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- end }}
+				{{- end }}
+				{{- if $value.IdentityVersion }}
+					),
 				{{- end }}
 			{{- end }}
 			{{- if $value.WrappedImport }}
@@ -563,6 +569,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			{{- end }}
 			{{- if $value.HasResourceIdentity }}
 				Identity:
+				{{- if $value.IdentityVersion }}
+					inttypes.VersionedIdentity({{ $value.IdentityVersion }},
+				{{- end -}}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
@@ -572,7 +581,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 						},
 						{{- template "CommonIdentityOpts" . -}}
 						),
-					{{- else }}
+					{{- else -}}
 						inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
@@ -589,7 +598,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
-					{{- else }}
+					{{- else -}}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
 								{{ .Name }},
@@ -611,7 +620,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- else }}
 								inttypes.RegionalResourceWithGlobalARNFormat(
 							{{- end }}
-						{{- else }}
+						{{- else -}}
 							{{- if $value.HasARNAttribute }}
 								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
 							{{- else }}
@@ -632,7 +641,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
-					{{ else }}
+					{{ else -}}
 						inttypes.RegionalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
 								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
@@ -640,6 +649,9 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
+				{{- end }}
+				{{- if $value.IdentityVersion }}
+					),
 				{{- end }}
 			{{- end }}
 		},
