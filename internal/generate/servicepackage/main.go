@@ -525,7 +525,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				args := common.ParseArgs(m[3])
 				attr := args.Positional[0]
 				if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
 				} else {
 					d.ImportIDHandler = typeName
