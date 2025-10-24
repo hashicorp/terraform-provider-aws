@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR (Elastic Container Registry) Public"
+subcategory: "ECR Public"
 layout: "aws"
 page_title: "AWS: aws_ecrpublic_images"
 description: |-
@@ -73,12 +73,12 @@ The `image_ids` configuration block supports the following:
 
 This data source exports the following attributes:
 
-* `images` - List of images returned. Each image contains:
-  * `digest` - Image digest.
-  * `tags` - List of image tags.
-  * `size_in_bytes` - Image size in bytes.
-  * `pushed_at` - Timestamp when image was pushed.
-  * `artifact_media_type` - Media type of the artifact.
-  * `image_manifest_media_type` - Media type of the image manifest.
-  * `registry_id` - AWS account ID associated with the public registry.
-  * `repository_name` - Name of the repository.
+* `images` - List of images returned. `Each image contains:
+    * `digest` - Image digest.
+    * `tags` - List of image tags.
+    * `size_in_bytes` - Image size in bytes.
+    * `pushed_at` - Timestamp when image was pushed.
+    * `artifact_media_type` - Media type of the artifact.
+    * `image_manifest_media_type` - Media type of the image manifest.
+    * `registry_id` - AWS account ID associated with the public registry.
+    * `repository_name` - Name of the repository.

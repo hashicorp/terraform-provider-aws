@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -39,7 +38,7 @@ func (d *dataSourceImages) Schema(ctx context.Context, req datasource.SchemaRequ
 	resp.Schema = schema.Schema{
 		Description: "Provides details about AWS ECR Public Images in a public repository.",
 		Attributes: map[string]schema.Attribute{
-			"repository_name": schema.StringAttribute{
+			names.AttrRepositoryName: schema.StringAttribute{
 				Description: "Name of the public repository.",
 				Required:    true,
 				Validators: []validator.String{
@@ -87,11 +86,11 @@ func (d *dataSourceImages) Read(ctx context.Context, req datasource.ReadRequest,
 	conn := d.Meta().ECRPublicClient(ctx)
 
 	input := &ecrpublic.DescribeImagesInput{
-		RepositoryName: aws.String(data.RepositoryName.ValueString()),
+		RepositoryName: data.RepositoryName.ValueStringPointer(),
 	}
 
 	if !data.RegistryID.IsNull() {
-		input.RegistryId = aws.String(data.RegistryID.ValueString())
+		input.RegistryId = data.RegistryID.ValueStringPointer()
 	}
 
 	if !data.ImageIDs.IsNull() {
@@ -108,11 +107,11 @@ func (d *dataSourceImages) Read(ctx context.Context, req datasource.ReadRequest,
 				identifier := awstypes.ImageIdentifier{}
 
 				if !id.ImageTag.IsNull() {
-					identifier.ImageTag = aws.String(id.ImageTag.ValueString())
+					identifier.ImageTag = id.ImageTag.ValueStringPointer()
 				}
 
 				if !id.ImageDigest.IsNull() {
-					identifier.ImageDigest = aws.String(id.ImageDigest.ValueString())
+					identifier.ImageDigest = id.ImageDigest.ValueStringPointer()
 				}
 
 				if identifier.ImageTag != nil || identifier.ImageDigest != nil {

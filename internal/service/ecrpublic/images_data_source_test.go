@@ -28,7 +28,7 @@ func TestAccECRPublicImagesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccImagesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "repository_name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "images.#", "0"),
 				),
 			},
@@ -49,7 +49,7 @@ func TestAccECRPublicImagesDataSource_registryID(t *testing.T) {
 			{
 				Config: testAccImagesDataSourceConfig_registryID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "repository_name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "registry_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "images.#", "0"),
 				),
