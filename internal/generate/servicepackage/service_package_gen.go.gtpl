@@ -516,8 +516,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- end }}
-				{{- end }}
-				{{- if $value.IdentityVersion }}
+				{{- else if $value.CustomInherentRegionIdentity -}}
+					inttypes.RegionalCustomInherentRegionIdentity({{ .CustomIdentityAttribute }},
+						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+						{{- template "SDKv2CommonIdentityOpts" . }}
+					),
+				{{- end -}}
+				{{- if $value.IdentityVersion -}}
 					),
 				{{- end }}
 			{{- end }}
@@ -649,7 +654,12 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
-				{{- end }}
+				{{- else if $value.CustomInherentRegionIdentity }}
+					inttypes.RegionalCustomInherentRegionIdentity({{ .CustomIdentityAttribute }},
+						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+						{{- template "SDKv2CommonIdentityOpts" . }}
+					),
+				{{- end -}}
 				{{- if $value.IdentityVersion }}
 					),
 				{{- end }}

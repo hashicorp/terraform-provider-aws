@@ -238,6 +238,8 @@ type ResourceDatum struct {
 	HasV6_0SDKv2Fix                   bool
 	HasIdentityFix                    bool
 	IdentityVersion                   int64
+	CustomInherentRegionIdentity      bool
+	customIdentityAttribute           string
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -276,7 +278,11 @@ func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 }
 
 func (r ResourceDatum) HasResourceIdentity() bool {
-	return len(r.IdentityAttributes) > 0 || r.ARNIdentity || r.SingletonIdentity
+	return len(r.IdentityAttributes) > 0 || r.ARNIdentity || r.SingletonIdentity || r.CustomInherentRegionIdentity
+}
+
+func (r ResourceDatum) CustomIdentityAttribute() string {
+	return namesgen.ConstOrQuote(r.customIdentityAttribute)
 }
 
 type ServiceDatum struct {
@@ -558,6 +564,21 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.IdentityVersion = i
 				}
 
+			case "CustomInherentRegionIdentity":
+				d.CustomInherentRegionIdentity = true
+				d.WrappedImport = true
+				d.CustomImport = true
+
+				args := common.ParseArgs(m[3])
+				d.customIdentityAttribute = args.Positional[0]
+
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs := strings.Split(attr, ";")
+					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+						return namesgen.ConstOrQuote(s)
+					})
+				}
+
 			// TODO: allow underscore?
 			case "V60SDKv2Fix":
 				d.HasV6_0SDKv2Fix = true
@@ -788,7 +809,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkListResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport", "IdentityVersion":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
 				// Handled above.
 			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.
