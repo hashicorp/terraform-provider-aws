@@ -172,82 +172,85 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
-			{{- if gt (len $value.IdentityAttributes) 1 }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					},
-					{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- else }}
-					inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					},
-					{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- end }}
-			{{- else if gt (len $value.IdentityAttributes) 0 }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalSingleParameterIdentity(
-						{{- range $value.IdentityAttributes -}}
-							{{ .Name }},
-						{{- end -}}
+			{{- if $value.HasResourceIdentity }}
+				Identity:
+				{{- if gt (len $value.IdentityAttributes) 1 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						},
 						{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- else }}
-					inttypes.RegionalSingleParameterIdentity(
-						{{- range $value.IdentityAttributes -}}
-							{{ .Name }},
-						{{- end -}}
-						{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- end }}
-			{{- else if $value.ARNIdentity }}
-				Identity: {{- if $.IsGlobal }}
-					{{- if $value.HasARNAttribute }}
-						inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						),
 					{{- else }}
-						inttypes.GlobalARNIdentity(
+						inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						},
+						{{- template "CommonIdentityOpts" . -}}
+						),
 					{{- end }}
-				{{- else }}
-					{{- if $value.IsARNFormatGlobal }}
+				{{- else if gt (len $value.IdentityAttributes) 0 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }},
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- else }}
+						inttypes.RegionalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }},
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- end }}
+				{{- else if $value.ARNIdentity }}
+					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
-							inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
 						{{- else }}
-							inttypes.RegionalResourceWithGlobalARNFormat(
+							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.IsARNFormatGlobal }}
+							{{- if $value.HasARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- else }}
+								inttypes.RegionalResourceWithGlobalARNFormat(
+							{{- end }}
 						{{- else }}
-							inttypes.RegionalARNIdentity(
+							{{- if $value.HasARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- else }}
+								inttypes.RegionalARNIdentity(
+							{{- end }}
 						{{- end }}
 					{{- end }}
-				{{- end }}
-					{{- if .HasIdentityDuplicateAttrs -}}
-						inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-					{{- end -}}
-					{{- template "CommonIdentityOpts" . -}}
-				),
-			{{- else if $value.SingletonIdentity }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalSingletonIdentity(
 						{{- if .HasIdentityDuplicateAttrs -}}
 							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{ else }}
-					inttypes.RegionalSingletonIdentity(
-						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-						{{- end -}}
-						{{- template "CommonIdentityOpts" . -}}
-					),
+				{{- else if $value.SingletonIdentity }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalSingletonIdentity(
+							{{- if .HasIdentityDuplicateAttrs -}}
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{ else }}
+						inttypes.RegionalSingletonIdentity(
+							{{- if .HasIdentityDuplicateAttrs -}}
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- end }}
 				{{- end }}
 			{{- end }}
 			{{- if $value.WrappedImport }}
@@ -299,82 +302,85 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
-			{{- if gt (len $value.IdentityAttributes) 1 }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					},
-					{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- else }}
-					inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					},
-					{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- end }}
-			{{- else if gt (len $value.IdentityAttributes) 0 }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalSingleParameterIdentity(
-						{{- range $value.IdentityAttributes -}}
-							{{ .Name }},
-						{{- end -}}
+			{{- if $value.HasResourceIdentity }}
+				Identity:
+				{{- if gt (len $value.IdentityAttributes) 1 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						},
 						{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- else }}
-					inttypes.RegionalSingleParameterIdentity(
-						{{- range $value.IdentityAttributes -}}
-							{{ .Name }},
-						{{- end -}}
-						{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- end }}
-			{{- else if $value.ARNIdentity }}
-				Identity: {{- if $.IsGlobal }}
-					{{- if $value.HasARNAttribute }}
-						inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						),
 					{{- else }}
-						inttypes.GlobalARNIdentity(
+						inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						},
+						{{- template "CommonIdentityOpts" . -}}
+						),
 					{{- end }}
-				{{- else }}
-					{{- if $value.IsARNFormatGlobal }}
+				{{- else if gt (len $value.IdentityAttributes) 0 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }},
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- else }}
+						inttypes.RegionalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }},
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- end }}
+				{{- else if $value.ARNIdentity }}
+					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
-							inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
 						{{- else }}
-							inttypes.RegionalResourceWithGlobalARNFormat(
+							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.IsARNFormatGlobal }}
+							{{- if $value.HasARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- else }}
+								inttypes.RegionalResourceWithGlobalARNFormat(
+							{{- end }}
 						{{- else }}
-							inttypes.RegionalARNIdentity(
+							{{- if $value.HasARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- else }}
+								inttypes.RegionalARNIdentity(
+							{{- end }}
 						{{- end }}
 					{{- end }}
-				{{- end }}
-					{{- if .HasIdentityDuplicateAttrs -}}
-						inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-					{{- end -}}
-					{{- template "CommonIdentityOpts" . -}}
-				),
-			{{- else if $value.SingletonIdentity }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalSingletonIdentity(
 						{{- if .HasIdentityDuplicateAttrs -}}
 							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{ else }}
-					inttypes.RegionalSingletonIdentity(
-						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-						{{- end -}}
-						{{- template "CommonIdentityOpts" . -}}
-					),
+				{{- else if $value.SingletonIdentity }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalSingletonIdentity(
+							{{- if .HasIdentityDuplicateAttrs -}}
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{ else }}
+						inttypes.RegionalSingletonIdentity(
+							{{- if .HasIdentityDuplicateAttrs -}}
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- end }}
 				{{- end }}
 			{{- end }}
 		},
@@ -444,66 +450,69 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
-			{{- if gt (len $value.IdentityAttributes) 1 }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					},
-					{{- template "SDKv2CommonIdentityOpts" . -}}
-					),
-				{{- else }}
-					inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					},
-					{{- template "SDKv2CommonIdentityOpts" . -}}
-					),
-				{{- end }}
-			{{- else if gt (len $value.IdentityAttributes) 0 }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalSingleParameterIdentity(
-						{{- range $value.IdentityAttributes -}}
-							{{ .Name }},
-						{{- end -}}
-						{{- template "SDKv2CommonIdentityOpts" . }}
-					),
-				{{- else }}
-					inttypes.RegionalSingleParameterIdentity(
-						{{- range $value.IdentityAttributes -}}
-							{{ .Name }},
-						{{- end }}
-						{{- template "SDKv2CommonIdentityOpts" . }}
-					),
-				{{- end }}
-			{{- else if $value.ARNIdentity }}
-				Identity: {{- if $.IsGlobal }}
-					{{- if $value.HasARNAttribute }}
-						inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+			{{- if $value.HasResourceIdentity }}
+				Identity:
+				{{- if gt (len $value.IdentityAttributes) 1 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						},
+						{{- template "SDKv2CommonIdentityOpts" . -}}
+						),
 					{{- else }}
-						inttypes.GlobalARNIdentity(
+						inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						},
+						{{- template "SDKv2CommonIdentityOpts" . -}}
+						),
 					{{- end }}
-				{{- else }}
-					{{- if $value.HasARNAttribute }}
-						inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+				{{- else if gt (len $value.IdentityAttributes) 0 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }},
+							{{- end -}}
+							{{- template "SDKv2CommonIdentityOpts" . }}
+						),
 					{{- else }}
-						inttypes.RegionalARNIdentity(
+						inttypes.RegionalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }},
+							{{- end }}
+							{{- template "SDKv2CommonIdentityOpts" . }}
+						),
 					{{- end }}
-				{{- end }}
-					inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-					{{- template "SDKv2CommonIdentityOpts" . }}
-				),
-			{{- else if $value.SingletonIdentity }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalSingletonIdentity(
+				{{- else if $value.ARNIdentity }}
+					{{- if $.IsGlobal }}
+						{{- if $value.HasARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- else }}
+							inttypes.GlobalARNIdentity(
+						{{- end }}
+					{{- else }}
+						{{- if $value.HasARNAttribute }}
+							inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- else }}
+							inttypes.RegionalARNIdentity(
+						{{- end }}
+					{{- end }}
+						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
-				{{- else }}
-					inttypes.RegionalSingletonIdentity(
-						{{- template "SDKv2CommonIdentityOpts" . }}
-					),
+				{{- else if $value.SingletonIdentity }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalSingletonIdentity(
+							{{- template "SDKv2CommonIdentityOpts" . }}
+						),
+					{{- else }}
+						inttypes.RegionalSingletonIdentity(
+							{{- template "SDKv2CommonIdentityOpts" . }}
+						),
+					{{- end }}
 				{{- end }}
 			{{- end }}
 			{{- if $value.WrappedImport }}
@@ -552,82 +561,85 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				{{- end }}
 			}),
 			{{- end }}
-			{{- if gt (len $value.IdentityAttributes) 1 }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					},
-					{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- else }}
-					inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					},
-					{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- end }}
-			{{- else if gt (len $value.IdentityAttributes) 0 }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalSingleParameterIdentity(
-						{{- range $value.IdentityAttributes -}}
-							{{ .Name }},
-						{{- end -}}
+			{{- if $value.HasResourceIdentity }}
+				Identity:
+				{{- if gt (len $value.IdentityAttributes) 1 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						},
 						{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- else }}
-					inttypes.RegionalSingleParameterIdentity(
-						{{- range $value.IdentityAttributes -}}
-							{{ .Name }},
-						{{- end -}}
-						{{- template "CommonIdentityOpts" . -}}
-					),
-				{{- end }}
-			{{- else if $value.ARNIdentity }}
-				Identity: {{- if $.IsGlobal }}
-					{{- if $value.HasARNAttribute }}
-						inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						),
 					{{- else }}
-						inttypes.GlobalARNIdentity(
+						inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						},
+						{{- template "CommonIdentityOpts" . -}}
+						),
 					{{- end }}
-				{{- else }}
-					{{- if $value.IsARNFormatGlobal }}
+				{{- else if gt (len $value.IdentityAttributes) 0 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }},
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- else }}
+						inttypes.RegionalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }},
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- end }}
+				{{- else if $value.ARNIdentity }}
+					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
-							inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
 						{{- else }}
-							inttypes.RegionalResourceWithGlobalARNFormat(
+							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.IsARNFormatGlobal }}
+							{{- if $value.HasARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- else }}
+								inttypes.RegionalResourceWithGlobalARNFormat(
+							{{- end }}
 						{{- else }}
-							inttypes.RegionalARNIdentity(
+							{{- if $value.HasARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- else }}
+								inttypes.RegionalARNIdentity(
+							{{- end }}
 						{{- end }}
 					{{- end }}
-				{{- end }}
-					{{- if .HasIdentityDuplicateAttrs -}}
-						inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-					{{- end -}}
-					{{- template "CommonIdentityOpts" . -}}
-				),
-			{{- else if $value.SingletonIdentity }}
-				Identity: {{- if or $.IsGlobal $value.IsGlobal }}
-					inttypes.GlobalSingletonIdentity(
 						{{- if .HasIdentityDuplicateAttrs -}}
 							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{ else }}
-					inttypes.RegionalSingletonIdentity(
-						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-						{{- end -}}
-						{{- template "CommonIdentityOpts" . -}}
-					),
+				{{- else if $value.SingletonIdentity }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						inttypes.GlobalSingletonIdentity(
+							{{- if .HasIdentityDuplicateAttrs -}}
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{ else }}
+						inttypes.RegionalSingletonIdentity(
+							{{- if .HasIdentityDuplicateAttrs -}}
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
+							{{- end -}}
+							{{- template "CommonIdentityOpts" . -}}
+						),
+					{{- end }}
 				{{- end }}
 			{{- end }}
 		},

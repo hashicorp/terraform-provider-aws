@@ -274,6 +274,10 @@ func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 	return len(r.IdentityDuplicateAttrs) > 0
 }
 
+func (r ResourceDatum) HasResourceIdentity() bool {
+	return len(r.IdentityAttributes) > 0 || r.ARNIdentity || r.SingletonIdentity
+}
+
 type ServiceDatum struct {
 	GenerateClient          bool
 	IsGlobal                bool // Is the service global?
