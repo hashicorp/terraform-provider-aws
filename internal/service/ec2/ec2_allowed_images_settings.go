@@ -52,7 +52,7 @@ func (r *resourceAllowedImagesSettings) Schema(ctx context.Context, req resource
 			names.AttrState: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("disabled", "enabled", "audit-mode"),
+					stringvalidator.OneOf("enabled", "audit-mode"),
 				},
 			},
 		},
