@@ -28,7 +28,6 @@ func TestAccEC2AllowedImagesSettings_serial(t *testing.T) {
 		"basic":                            testAccEC2AllowedImagesSettings_basic,
 		"disappears":                       testAccEC2AllowedImagesSettings_disappears,
 		"auditMode":                        testAccEC2AllowedImagesSettings_auditMode,
-		"disabled":                         testAccEC2AllowedImagesSettings_disabled,
 		"imageCriteria":                    testAccEC2AllowedImagesSettings_imageCriteria,
 		"imageCriteriaMultiple":            testAccEC2AllowedImagesSettings_imageCriteriaMultiple,
 		"imageCriteriaWithNames":           testAccEC2AllowedImagesSettings_imageCriteriaWithNames,
@@ -64,9 +63,11 @@ func testAccEC2AllowedImagesSettings_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -123,38 +124,11 @@ func testAccEC2AllowedImagesSettings_auditMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccEC2AllowedImagesSettings_disabled(t *testing.T) {
-	ctx := acctest.Context(t)
-	var settings ec2.GetAllowedImagesSettingsOutput
-	resourceName := "aws_ec2_allowed_images_settings.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEC2AllowedImagesSettingsDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEC2AllowedImagesSettingsConfig_disabled(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "disabled"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -184,9 +158,11 @@ func testAccEC2AllowedImagesSettings_imageCriteria(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -218,9 +194,11 @@ func testAccEC2AllowedImagesSettings_imageCriteriaMultiple(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -251,9 +229,11 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithNames(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -283,9 +263,11 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithMarketplace(t *testing.T) 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -310,14 +292,16 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithCreationDate(t *testing.T)
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.0.maximum_days_since_created", "365"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.maximum_days_since_created", "365"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -342,14 +326,16 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithDeprecationTime(t *testing
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.0.maximum_days_since_deprecated", "30"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.maximum_days_since_deprecated", "30"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -377,14 +363,16 @@ func testAccEC2AllowedImagesSettings_imageCriteriaComplete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.marketplace_product_codes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.%", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateId:                        acctest.Region(),
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -392,7 +380,7 @@ func testAccEC2AllowedImagesSettings_imageCriteriaComplete(t *testing.T) {
 
 func testAccEC2AllowedImagesSettings_stateUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var settings1, settings2, settings3 ec2.GetAllowedImagesSettingsOutput
+	var settings1, settings2 ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
 	resource.Test(t, resource.TestCase{
@@ -415,13 +403,6 @@ func testAccEC2AllowedImagesSettings_stateUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "audit-mode"),
-				),
-			},
-			{
-				Config: testAccEC2AllowedImagesSettingsConfig_disabled(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "disabled"),
 				),
 			},
 		},
@@ -477,6 +458,11 @@ func testAccCheckEC2AllowedImagesSettingsDestroy(ctx context.Context) resource.T
 			if aws.ToString(out.State) != "disabled" {
 				return errors.New("EC2 Allowed Images Settings not disabled")
 			}
+
+			// Image criteria should be empty after destroy
+			if len(out.ImageCriteria) > 0 {
+				return errors.New("EC2 Allowed Images Settings not empty")
+			}
 		}
 
 		return nil
@@ -515,14 +501,6 @@ func testAccEC2AllowedImagesSettingsConfig_auditMode() string {
 	return `
 resource "aws_ec2_allowed_images_settings" "test" {
   state = "audit-mode"
-}
-`
-}
-
-func testAccEC2AllowedImagesSettingsConfig_disabled() string {
-	return `
-resource "aws_ec2_allowed_images_settings" "test" {
-  state = "disabled"
 }
 `
 }
