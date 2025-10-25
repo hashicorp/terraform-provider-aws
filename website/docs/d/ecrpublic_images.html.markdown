@@ -13,67 +13,34 @@ The ECR Public Images data source allows the list of images in a specified publi
 ## Example Usage
 
 ```terraform
-# List all images in a public repository
 data "aws_ecrpublic_images" "example" {
-  repository_name = "public-repo-name"
+  repository_name = "my-public-repository"
 }
 
-# Filter images by tag
-data "aws_ecrpublic_images" "by_tag" {
-  repository_name = "public-repo-name"
-
-  image_ids {
-    image_tag = "latest"
-  }
+output "image_digests" {
+  value = [for img in data.aws_ecrpublic_images.example.images : img.digest if img.digest != null]
 }
 
-# Filter images by multiple tags
-data "aws_ecrpublic_images" "multi_tag" {
-  repository_name = "public-repo-name"
-
-  image_ids {
-    image_tag = "latest"
-  }
-
-  image_ids {
-    image_tag = "v1.0.0"
-  }
-}
-
-# Filter by image digest
-data "aws_ecrpublic_images" "by_digest" {
-  repository_name = "public-repo-name"
-
-  image_ids {
-    image_digest = "sha256:example1234567890abcdef"
-  }
-}
-
-# Using registry_id for cross-account access
-data "aws_ecrpublic_images" "cross_account" {
-  repository_name = "public-repo-name"
-  registry_id     = "012345678901"
+output "image_tags" {
+  value = distinct(flatten([for img in data.aws_ecrpublic_images.example.images : img.tags]))
 }
 ```
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `repository_name` - (Required) Name of the public repository.
 * `registry_id` - (Optional) The AWS account ID associated with the public registry that contains the repository. If not specified, the default public registry is assumed.
-* `image_ids` - (Optional) One or more image ID filters. Each image ID can use either a tag or digest (or both). See [Image IDs](#image-ids) below for more details.
-
-### Image IDs
-
-The `image_ids` configuration block supports the following:
-
-* `image_tag` - (Optional) The tag used for the image.
-* `image_digest` - (Optional) The digest of the image manifest.
+* `image_ids` - (Optional) One or more image ID filters. Each image ID can use either a tag or digest (or both). Each object has the following attributes:
+    * `image_tag` - (Optional) The tag used for the image.
+    * `image_digest` - (Optional) The digest of the image manifest.
 
 ## Attribute Reference
 
-This data source exports the following attributes:
+This data source exports the following attributes in addition to the arguments above:
 
-* `images` - List of images returned. `Each image contains:
+* `images` - List of images returned. Each image contains:
     * `digest` - Image digest.
     * `tags` - List of image tags.
     * `size_in_bytes` - Image size in bytes.
