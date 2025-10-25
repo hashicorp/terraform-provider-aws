@@ -286,21 +286,7 @@ func TestAccIPAMPool_ipv6PrivateScope(t *testing.T) { // nosemgrep:ci.vpc-in-tes
 	})
 }
 
-func TestAccIPAMPool_serial(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"ResourcePlanningVPC": {
-			"ipv4":                 testAccIPAMPool_ResourcePlanningVPC_ipv4,
-			"ipv6":                 testAccIPAMPool_ResourcePlanningVPC_ipv6,
-			"sourceResourceUpdate": testAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-func testAccIPAMPool_ResourcePlanningVPC_ipv4(t *testing.T) {
+func TestAccIPAMPool_ResourcePlanningVPC_ipv4(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -311,7 +297,7 @@ func testAccIPAMPool_ResourcePlanningVPC_ipv4(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -338,7 +324,7 @@ func testAccIPAMPool_ResourcePlanningVPC_ipv4(t *testing.T) {
 	})
 }
 
-func testAccIPAMPool_ResourcePlanningVPC_ipv6(t *testing.T) {
+func TestAccIPAMPool_ResourcePlanningVPC_ipv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -349,7 +335,7 @@ func testAccIPAMPool_ResourcePlanningVPC_ipv6(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -377,7 +363,7 @@ func testAccIPAMPool_ResourcePlanningVPC_ipv6(t *testing.T) {
 	})
 }
 
-func testAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) {
+func TestAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -389,7 +375,7 @@ func testAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 	vpcResourceName2 := "aws_vpc.new"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -417,6 +403,49 @@ func testAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_region"),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_type", "vpc"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccIPAMPool_ResourcePlanningVPC_crossRegion(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var pool awstypes.IpamPool
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_ipam_pool.vpc"
+	vpcResourceName := "aws_vpc.test"
+	parentPoolResourceName := "aws_vpc_ipam_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolConfig_resourcePlanningVPC_crossRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
+					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_type", "vpc"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_ipam_pool_id", parentPoolResourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cascade"},
 			},
 		},
 	})
@@ -753,6 +782,78 @@ resource "aws_vpc_ipam_pool" "vpc" {
     resource_id     = aws_vpc.test.id
     resource_owner  = data.aws_caller_identity.current.account_id
     resource_region = data.aws_region.current.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccIPAMPoolConfig_resourcePlanningVPC_crossRegion(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+
+  operating_regions {
+    region_name = data.aws_region.alternate.name
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.alternate.name
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  provider = awsalternate
+
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.alternate.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.alternate.name
     resource_type   = "vpc"
   }
 

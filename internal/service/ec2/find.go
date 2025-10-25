@@ -4514,6 +4514,28 @@ func findIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.Cli
 	return output, nil
 }
 
+func findIPAMResourceCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamResourceCidrsInput) ([]awstypes.IpamResourceCidr, error) {
+	var output []awstypes.IpamResourceCidr
+
+	pages := ec2.NewGetIpamResourceCidrsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.IpamResourceCidrs...)
+	}
+
+	return output, nil
+}
+
 func findIPAMScope(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamScopesInput) (*awstypes.IpamScope, error) {
 	output, err := findIPAMScopes(ctx, conn, input)
 

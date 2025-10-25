@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,7 +43,8 @@ func resourceIPAMPool() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(3 * time.Minute),
+			// Cross-region resources take 20+ minutes to be monitored by IPAM
+			Create: schema.DefaultTimeout(35 * time.Minute),
 			Update: schema.DefaultTimeout(3 * time.Minute),
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
@@ -244,13 +247,73 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.SourceIpamPoolId = aws.String(v.(string))
 	}
 
+	var sourceResourceData map[string]any
 	if v, ok := d.GetOk("source_resource"); ok && len(v.([]any)) > 0 {
-		tfMap := v.([]any)[0].(map[string]any)
+		sourceResourceData = v.([]any)[0].(map[string]any)
+	}
+
+	if sourceResourceData != nil {
+		resourceID := sourceResourceData[names.AttrResourceID].(string)
+		resourceRegion := sourceResourceData["resource_region"].(string)
+		resourceOwner := aws.String(sourceResourceData[names.AttrResourceOwner].(string))
+		resourceType := awstypes.IpamPoolSourceResourceType(sourceResourceData[names.AttrResourceType].(string))
+
+		log.Printf("[DEBUG] Checking if resource %s exists in region %s before waiting for IPAM discovery", resourceID, resourceRegion)
+
+		resourceConn := conn
+		if resourceRegion != meta.(*conns.AWSClient).Region(ctx) {
+			resourceCtx := conns.NewResourceContext(ctx, names.EC2ServiceID, "aws_vpc_ipam_pool", resourceRegion)
+			resourceConn = meta.(*conns.AWSClient).EC2Client(resourceCtx)
+		}
+
+		if resourceType == awstypes.IpamPoolSourceResourceTypeVpc {
+			if _, err := findVPCByID(ctx, resourceConn, resourceID); err != nil {
+				return sdkdiag.AppendErrorf(diags, "source_resource VPC (%s) does not exist: %s", resourceID, err)
+			}
+		}
+
+		log.Printf("[DEBUG] Resource %s exists, waiting for IPAM to manage the resource", resourceID)
+
+		// Wait for the resource to be managed by IPAM - can take 20+ minutes
+		_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			input := &ec2.GetIpamResourceCidrsInput{
+				IpamScopeId: aws.String(scopeID),
+				Filters: []awstypes.Filter{
+					{
+						Name:   aws.String("resource-id"),
+						Values: []string{resourceID},
+					},
+					{
+						Name:   aws.String("management-state"),
+						Values: []string{"managed"},
+					},
+				},
+			}
+
+			resources, err := findIPAMResourceCIDRs(ctx, conn, input)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(resources) == 0 {
+				return nil, &retry.NotFoundError{
+					Message: fmt.Sprintf("resource %s not yet managed by IPAM", resourceID),
+				}
+			}
+
+			log.Printf("[DEBUG] Resource %s is now managed by IPAM", resourceID)
+			return resources, nil
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for resource %s to be managed by IPAM: %s", resourceID, err)
+		}
+
 		input.SourceResource = &awstypes.IpamPoolSourceResourceRequest{
-			ResourceId:     aws.String(tfMap[names.AttrResourceID].(string)),
-			ResourceOwner:  aws.String(tfMap[names.AttrResourceOwner].(string)),
-			ResourceRegion: aws.String(tfMap["resource_region"].(string)),
-			ResourceType:   awstypes.IpamPoolSourceResourceType(tfMap[names.AttrResourceType].(string)),
+			ResourceId:     aws.String(resourceID),
+			ResourceOwner:  resourceOwner,
+			ResourceRegion: aws.String(resourceRegion),
+			ResourceType:   resourceType,
 		}
 	}
 
