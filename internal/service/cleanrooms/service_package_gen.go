@@ -63,6 +63,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  ResourceConfiguredTableAnalysisRule,
+			TypeName: "aws_cleanrooms_configured_table_analysis_rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
 }
 
