@@ -32,6 +32,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `alias` - A unique and identifiable alias of the contact or escalation plan.
-* `type` - The type of contact engaged. A single contact is type `PERSONAL` and an escalation plan is type `ESCALATION`.
+* `type` - The type of contact engaged. A single contact is type `PERSONAL`, an escalation plan is type `ESCALATION`, and an on-call schedule is type `ONCALL_SCHEDULE`.
 * `display_name` - Full friendly name of the contact or escalation plan.
+* `rotation_ids` - List of rotation IDs associated with the contact.
 * `tags` - Map of tags to assign to the resource.
