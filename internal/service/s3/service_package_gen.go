@@ -110,6 +110,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 	}
 }
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newEmptyBucketAction,
+			TypeName: "aws_s3_empty_bucket",
+			Name:     "Empty Bucket",
+		},
+	}
+}
+
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
