@@ -1,7 +1,7 @@
 ---
 subcategory: "Neptune"
 layout: "aws"
-page_title: "AWS: aws_neptune_neptune_cluster"
+page_title: "AWS: aws_neptune_cluster"
 description: |-
   Provides details about an AWS Neptune Cluster.
 ---
