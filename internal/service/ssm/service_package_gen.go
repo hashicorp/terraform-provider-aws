@@ -17,6 +17,16 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newSendCommandAction,
+			TypeName: "aws_ssm_send_command",
+			Name:     "Send Command",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
+}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource{
 		{
