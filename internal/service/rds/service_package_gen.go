@@ -85,6 +85,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	}
 }
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newCreateSnapshotAction,
+			TypeName: "aws_rds_create_snapshot",
+			Name:     "Create DB Snapshot",
+		},
+		{
+			Factory:  newRebootInstanceAction,
+			TypeName: "aws_rds_reboot_instance",
+			Name:     "Reboot DB Instance",
+		},
+	}
+}
+
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
