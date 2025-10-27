@@ -23,13 +23,17 @@ resource "aws_connect_routing_profile" "example" {
   media_concurrencies {
     channel     = "VOICE"
     concurrency = 1
-    behaviour   = "ROUTE_ANY_CHANNEL"
+    cross_channel_behavior {
+      behavior_type = "ROUTE_ANY_CHANNEL"
+    }
   }
 
   media_concurrencies {
     channel     = "CHAT"
     concurrency = 3
-    behaviour   = "ROUTE_CURRENT_CHANNEL_ONLY"
+    cross_channel_behavior {
+      behavior_type = "ROUTE_CURRENT_CHANNEL_ONLY"
+    }
   }
 
   queue_configs {
@@ -47,7 +51,7 @@ resource "aws_connect_routing_profile" "example" {
 
 ### Cross-Channel Behavior
 
-The `behaviour` field in `media_concurrencies` controls how Amazon Connect routes contacts across different channels:
+The `cross_channel_behavior` block in `media_concurrencies` controls how Amazon Connect routes contacts across different channels:
 
 - `ROUTE_ANY_CHANNEL` (default): Allows agents to receive contacts from any channel, regardless of the channel they are currently handling.
 - `ROUTE_CURRENT_CHANNEL_ONLY`: Restricts agents to receive contacts only from the channel they are currently handling.
@@ -72,7 +76,11 @@ A `media_concurrencies` block supports the following arguments:
 
 * `channel` - (Required) Specifies the channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
 * `concurrency` - (Required) Specifies the number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
-* `behaviour` - (Optional) Specifies the cross-channel behavior for routing contacts across multiple channels. Valid values are `ROUTE_CURRENT_CHANNEL_ONLY`, `ROUTE_ANY_CHANNEL`. Defaults to `ROUTE_ANY_CHANNEL`.
+* `cross_channel_behavior` - (Optional) Configuration block for cross-channel behavior. If not specified, AWS will use the service default behavior. Documented below.
+
+A `cross_channel_behavior` block supports the following arguments:
+
+* `behavior_type` - (Required) Specifies the cross-channel behavior for routing contacts across multiple channels. Valid values are `ROUTE_CURRENT_CHANNEL_ONLY`, `ROUTE_ANY_CHANNEL`.
 
 A `queue_configs` block supports the following arguments:
 

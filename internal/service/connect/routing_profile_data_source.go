@@ -59,9 +59,17 @@ func dataSourceRoutingProfile() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"behaviour": {
-							Type:     schema.TypeString,
+						"cross_channel_behavior": {
+							Type:     schema.TypeList,
 							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"behavior_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},
