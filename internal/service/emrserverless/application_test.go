@@ -1034,9 +1034,9 @@ resource "aws_emrserverless_application" "test" {
     classification = "spark-executor-log4j2"
 
     properties = {
-      "rootLogger.level"                       = "error"
-      "logger.IdentifierForClass.name"         = "classpathForSettingLogger"
-      "logger.IdentifierForClass.level"        = "info"
+      "rootLogger.level"                = "error"
+      "logger.IdentifierForClass.name"  = "classpathForSettingLogger"
+      "logger.IdentifierForClass.level" = "info"
     }
   }
 

@@ -66,21 +66,19 @@ resource "aws_emrserverless_application" "example" {
   name          = "example"
   release_label = "emr-6.8.0"
   type          = "spark"
-
-  application_configuration {
+  runtime_configuration {
     classification = "spark-executor-log4j2"
     properties = {
-      "rootLogger.level"                       = "error"
-      "logger.IdentifierForClass.name"         = "classpathForSettingLogger"
-      "logger.IdentifierForClass.level"        = "info"
+      "rootLogger.level"                = "error"
+      "logger.IdentifierForClass.name"  = "classpathForSettingLogger"
+      "logger.IdentifierForClass.level" = "info"
     }
   }
-
-  application_configuration {
+  runtime_configuration {
     classification = "spark-defaults"
     properties = {
       "spark.executor.memory" = "1g"
-      "spark.executor.cores" = "1"
+      "spark.executor.cores"  = "1"
     }
   }
 }
