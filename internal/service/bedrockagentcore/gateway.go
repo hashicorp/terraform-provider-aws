@@ -66,6 +66,9 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			"authorizer_type": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.AuthorizerType](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
