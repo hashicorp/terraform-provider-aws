@@ -238,7 +238,7 @@ func resourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"properties": {
+						names.AttrProperties: {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -990,7 +990,7 @@ func expandRuntimeConfiguration(tfList []any) []types.Configuration {
 			apiObject.Classification = aws.String(v)
 		}
 
-		if v, ok := tfMap["properties"].(map[string]any); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrProperties].(map[string]any); ok && len(v) > 0 {
 			apiObject.Properties = flex.ExpandStringValueMap(v)
 		}
 
@@ -1015,7 +1015,7 @@ func flattenRuntimeConfiguration(apiObjects []types.Configuration) []any {
 		}
 
 		if v := apiObject.Properties; v != nil {
-			tfMap["properties"] = flex.FlattenStringValueMap(v)
+			tfMap[names.AttrProperties] = flex.FlattenStringValueMap(v)
 		}
 
 		tfList = append(tfList, tfMap)
