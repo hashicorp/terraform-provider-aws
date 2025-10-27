@@ -497,6 +497,8 @@ service/neptunegraph:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptunegraph_'
 service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
+service/networkflowmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkflowmonitor_'
 service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
 service/networkmonitor:
@@ -509,6 +511,8 @@ service/notificationscontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notificationscontacts_'
 service/oam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
+service/observabilityadmin:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_observabilityadmin_'
 service/odb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_odb_'
 service/opensearch:
