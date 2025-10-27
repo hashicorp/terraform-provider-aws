@@ -1294,3 +1294,196 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		}
 	{{ end }}
 {{ end }}
+
+{{ if gt (len .IdentityVersions) 1 }}
+// Resource Identity version {{ .LatestIdentityVersion }} was added in version {{ index .IdentityVersions .LatestIdentityVersion }}
+func {{ template "testname" . }}_Identity_Upgrade(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{{ $step := 1 -}}
+			// Step {{ $step }}: Create with Identity version 0
+			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ VersionDecrementMinor (index .IdentityVersions 1) }}/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{ if .HasExistsFunc -}}
+				Check:  resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				{{ end -}}
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectHasIdentity(resourceName),
+				},
+			},
+
+			// Step {{ ($step = inc $step) | print }}: Current version
+			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ else -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+						}),
+					{{ else if .IsCustomInherentRegionIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
+							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							{{ if not .Optional -}}
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+							{{ end -}}
+						{{ end }}
+					{{ end -}}
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity version {{ .LatestIdentityVersion }} was added in version {{ index .IdentityVersions .LatestIdentityVersion }}
+func {{ template "testname" . }}_Identity_Upgrade_NoRefresh(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{{ $step := 1 -}}
+			// Step {{ $step }}: Create with Identity version 0
+			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ VersionDecrementMinor (index .IdentityVersions 1) }}/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{ if .HasExistsFunc -}}
+				Check:  resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				{{ end -}}
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectHasIdentity(resourceName),
+				},
+			},
+
+			// Step {{ ($step = inc $step) | print }}: Current version
+			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ else -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+						}),
+					{{ else if .IsCustomInherentRegionIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
+							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							{{ if not .Optional -}}
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+							{{ end -}}
+						{{ end }}
+					{{ end -}}
+				},
+			},
+		},
+	})
+}
+{{ end }}

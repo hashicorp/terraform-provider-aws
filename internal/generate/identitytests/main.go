@@ -13,6 +13,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -124,7 +125,8 @@ func main() {
 			"inc": func(i int) int {
 				return i + 1
 			},
-			"NewVersion": version.NewVersion,
+			"NewVersion":            version.NewVersion,
+			"VersionDecrementMinor": common.VersionDecrementMinor,
 		}
 		templates := template.New("identitytests").Funcs(templateFuncMap)
 
@@ -205,13 +207,15 @@ func main() {
 				g.Fatalf("parsing config template: %s", err)
 			}
 
-			common := commonConfig{
+			commonConfig := commonConfig{
 				AdditionalTfVars: additionalTfVars,
 				RequiredEnvVars:  resource.RequiredEnvVars,
 				WithRName:        (resource.Generator != ""),
 			}
 
-			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
+			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
+
+			var versions []*version.Version
 
 			if resource.PreIdentityVersion != nil {
 				if resource.PreIdentityVersion.Equal(v5_100_0) {
@@ -234,33 +238,39 @@ func main() {
 							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
 						}
 					}
-					commonV5 := common
-					commonV5.ExternalProviders = map[string]requiredProvider{
+					commonConfigV5 := commonConfig
+					commonConfigV5.ExternalProviders = map[string]requiredProvider{
 						"aws": {
 							Source:  "hashicorp/aws",
 							Version: "5.100.0",
 						},
 					}
-					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
+					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonConfigV5)
 
-					commonV6 := common
-					commonV6.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: "6.0.0",
-						},
-					}
-					generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
+					versions = append(versions, version.Must(version.NewVersion("6.0.0")))
 				} else {
-					commonPreIdentity := common
-					commonPreIdentity.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: resource.PreIdentityVersion.String(),
-						},
-					}
-					generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
+					versions = append(versions, resource.PreIdentityVersion)
 				}
+			}
+
+			if len(resource.IdentityVersions) > 1 {
+				v := resource.IdentityVersions[1]
+				v, err := common.VersionDecrementMinor(v)
+				if err != nil {
+					g.Fatalf("generating versioned configurations: %s", err)
+				}
+				versions = append(versions, v)
+			}
+
+			for _, version := range versions {
+				common := commonConfig
+				common.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: version.String(),
+					},
+				}
+				generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", version.String()), tfTemplates, common)
 			}
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
@@ -269,9 +279,9 @@ func main() {
 			}
 
 			if resource.GenerateRegionOverrideTest() {
-				common.WithRegion = true
+				commonConfig.WithRegion = true
 
-				generateTestConfig(g, testDirPath, "region_override", tfTemplates, common)
+				generateTestConfig(g, testDirPath, "region_override", tfTemplates, commonConfig)
 			}
 		}
 	}
@@ -386,6 +396,7 @@ type ResourceDatum struct {
 	PreIdentityVersion             *version.Version
 	IsCustomInherentRegionIdentity bool
 	customIdentityAttribute        string
+	IdentityVersions               map[int64]*version.Version
 	tests.CommonArgs
 }
 
@@ -459,6 +470,13 @@ func (r ResourceDatum) IdentityAttributes() []identityAttribute {
 
 func (r ResourceDatum) CustomIdentityAttribute() string {
 	return namesgen.ConstOrQuote(r.customIdentityAttribute)
+}
+
+func (r ResourceDatum) LatestIdentityVersion() int64 {
+	if len(r.IdentityVersions) == 0 {
+		return 0
+	}
+	return slices.Max(slices.Collect(maps.Keys(r.IdentityVersions)))
 }
 
 type identityAttribute struct {
@@ -558,6 +576,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs:            tests.InitCommonArgs(),
 		IsGlobal:              false,
 		HasRegionOverrideTest: true,
+		IdentityVersions:      make(map[int64]*version.Version, 0),
 	}
 	hasIdentity := false
 	skip := false
@@ -838,6 +857,26 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
+				}
+				if attr, ok := args.Keyword["identityVersion"]; ok {
+					parts := strings.Split(attr, ";")
+					if len(parts) != 2 {
+						v.errs = append(v.errs, fmt.Errorf("invalid identityVersion value: %q at %s. Should be in format <identity version>;<provider version>.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					var identityVersion int64
+					if i, err := strconv.ParseInt(parts[0], 10, 64); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid identity version value: %q at %s. Should be integer value.", parts[0], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityVersion = i
+					}
+					providerVersion, err := version.NewVersion(parts[1])
+					if err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid provider version value: %q at %s. Should be version value.", parts[1], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					d.IdentityVersions[identityVersion] = providerVersion
 				}
 			}
 		}
