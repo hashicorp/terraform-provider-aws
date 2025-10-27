@@ -15,6 +15,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_fis_experiment_template", sweepExperimentTemplates)
+	awsv2.Register("aws_fis_target_account_configuration", sweepTargetAccountConfigurations)
 }
 
 func sweepExperimentTemplates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
