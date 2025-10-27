@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -178,7 +179,7 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
 
-	if err := d.Set("ami_tags", flattenAMITags(imageRecipe.AmiTags)); err != nil {
+	if err := d.Set("ami_tags", flex.FlattenStringValueMap(imageRecipe.AmiTags)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
 	}
 

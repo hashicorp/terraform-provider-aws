@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -258,7 +259,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("ami_tags"); ok {
-		input.AmiTags = expandAMITags(v.(map[string]any))
+		input.AmiTags = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
@@ -336,7 +337,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
 	}
 
-	if err := d.Set("ami_tags", flattenAMITags(imageRecipe.AmiTags)); err != nil {
+	if err := d.Set("ami_tags", flex.FlattenStringValueMap(imageRecipe.AmiTags)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
 	}
 
@@ -411,23 +412,6 @@ func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn st
 	}
 
 	return output.ImageRecipe, nil
-}
-
-func expandAMITags(tfMap map[string]any) map[string]string {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiMap := make(map[string]string, len(tfMap))
-	for k, v := range tfMap {
-		if s, ok := v.(string); ok && s != "" {
-			apiMap[k] = s
-		}
-	}
-	if len(apiMap) == 0 {
-		return nil
-	}
-	return apiMap
 }
 
 func expandComponentConfiguration(tfMap map[string]any) *awstypes.ComponentConfiguration {
@@ -616,18 +600,6 @@ func expandSystemsManagerAgent(tfMap map[string]any) *awstypes.SystemsManagerAge
 	}
 
 	return apiObject
-}
-
-func flattenAMITags(apiMap map[string]string) map[string]any {
-	if len(apiMap) == 0 {
-		return nil
-	}
-
-	tfMap := make(map[string]any, len(apiMap))
-	for k, v := range apiMap {
-		tfMap[k] = v
-	}
-	return tfMap
 }
 
 func flattenComponentConfiguration(apiObject awstypes.ComponentConfiguration) map[string]any {
