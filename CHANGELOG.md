@@ -1,5 +1,10 @@
 ## 6.19.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_quicksight_data_set: Increase upper limit of `physical_table_map.relational_table.name` from 64 to 256 characters ([#44807](https://github.com/hashicorp/terraform-provider-aws/issues/44807))
+* resource/aws_sagemaker_notebook_instance: Add `notebook-al2023-v1` to valid `platform_identifier` values ([#44570](https://github.com/hashicorp/terraform-provider-aws/issues/44570))
+
 ## 6.18.0 (October 23, 2025)
 
 NOTES:
