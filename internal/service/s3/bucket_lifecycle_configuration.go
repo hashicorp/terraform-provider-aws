@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -643,6 +642,10 @@ func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumOb
 		return false
 	}
 
+	return lifecycleConfigRulesEqual(rules1, rules2)
+}
+
+func lifecycleConfigRulesEqual(rules1 []awstypes.LifecycleRule, rules2 []awstypes.LifecycleRule) bool {
 	if len(rules1) != len(rules2) {
 		return false
 	}
@@ -670,13 +673,21 @@ func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, o
 			return nil, "", err
 		}
 
-		return output, strconv.FormatBool(lifecycleConfigEqual(output.TransitionDefaultMinimumObjectSize, output.Rules, transitionMinSize, rules)), nil
+		return output, lifecycleConfigState(output.TransitionDefaultMinimumObjectSize, lifecycleConfigRulesEqual(output.Rules, rules)), nil
 	}
+}
+
+func lifecycleConfigState(transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rulesEqual bool) string {
+	return fmt.Sprintf(
+		"transition_default_minimum_object_size=%s rules_equal=%t",
+		transitionMinSize,
+		rulesEqual,
+	)
 }
 
 func waitLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule, timeout time.Duration) (*s3.GetBucketLifecycleConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Target:  []string{strconv.FormatBool(true)},
+		Target:  []string{lifecycleConfigState(transitionMinSize, true)},
 		Refresh: statusLifecycleConfigEquals(ctx, conn, bucket, owner, transitionMinSize, rules),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
