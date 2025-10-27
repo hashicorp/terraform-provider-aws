@@ -22,8 +22,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/amp v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.38.1
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.35.8
-	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.32.8
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.35.9
+	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.32.9
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.42.9
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.16.8
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.50.8
@@ -47,7 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.50.8
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.8.2
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.39.4
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.8
 	github.com/aws/aws-sdk-go-v2/service/chime v1.40.7
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.8
@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.55.2
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.43.2
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/detective v1.37.9
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.36.1
@@ -162,7 +162,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.56.8
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.36.8
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.2
-	github.com/aws/aws-sdk-go-v2/service/location v1.49.8
+	github.com/aws/aws-sdk-go-v2/service/location v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.36.8
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.0
@@ -228,11 +228,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.33.8
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.10
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.216.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.217.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.7
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.9
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.64.6
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.29.8
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.38.8
