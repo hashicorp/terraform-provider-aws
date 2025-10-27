@@ -286,7 +286,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &emrserverless.CreateApplicationInput{
+	input := emrserverless.CreateApplicationInput{
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
@@ -335,7 +335,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any))
 	}
 
-	output, err := conn.CreateApplication(ctx, input)
+	output, err := conn.CreateApplication(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Serveless Application (%s): %s", name, err)
 	}
@@ -417,7 +417,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &emrserverless.UpdateApplicationInput{
+		input := emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(id.UniqueId()),
 		}
@@ -472,7 +472,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]any))
 		}
 
-		_, err := conn.UpdateApplication(ctx, input)
+		_, err := conn.UpdateApplication(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EMR Serveless Application (%s): %s", d.Id(), err)
@@ -507,11 +507,11 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id string) (*types.Application, error) {
-	input := &emrserverless.GetApplicationInput{
+	input := emrserverless.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
 
-	output, err := conn.GetApplication(ctx, input)
+	output, err := conn.GetApplication(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
