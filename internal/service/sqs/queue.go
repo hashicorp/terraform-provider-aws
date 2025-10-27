@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -194,10 +195,13 @@ var (
 
 // @SDKResource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="id")
+// @IdentityVersion(1)
+// @CustomInherentRegionIdentity("url")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
-// @IdentityAttribute("url")
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(idAttrDuplicates="url")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.19.0")
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -213,6 +217,18 @@ func resourceQueue() *schema.Resource {
 			Create: schema.DefaultTimeout(3 * time.Minute),
 			Update: schema.DefaultTimeout(3 * time.Minute),
 			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
+
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importQueueURL(ctx, d, identitySpec); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 	}
 }
@@ -630,4 +646,70 @@ func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func importQueueURL(_ context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity) error {
+	attr := identitySpec.Attributes[0]
+	re := regexache.MustCompile(`^https://sqs\.([a-z0-9-]+)\.[^/]+/([0-9]{12})/.+`)
+
+	if rd.Id() != "" {
+		match := re.FindStringSubmatch(rd.Id())
+		if match == nil {
+			return fmt.Errorf("could not parse import ID %q as SQS URL", rd.Id())
+		}
+
+		urlRegion := match[1]
+
+		rd.Set(attr.ResourceAttributeName(), rd.Id())
+		for _, attr := range identitySpec.IdentityDuplicateAttrs {
+			setAttribute(rd, attr, rd.Id())
+		}
+
+		if region, ok := rd.GetOk(names.AttrRegion); ok {
+			if region != urlRegion {
+				return fmt.Errorf("the region passed for import %q does not match the region %q in the URL %q", region, urlRegion, rd.Id())
+			}
+		} else {
+			rd.Set(names.AttrRegion, urlRegion)
+		}
+
+		return nil
+	}
+
+	identity, err := rd.Identity()
+	if err != nil {
+		return err
+	}
+
+	urlRaw, ok := identity.GetOk(attr.Name())
+	if !ok {
+		return fmt.Errorf("identity attribute %q is required", attr.Name())
+	}
+
+	urlVal, ok := urlRaw.(string)
+	if !ok {
+		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), urlRaw)
+	}
+
+	match := re.FindStringSubmatch(urlVal)
+	if match == nil {
+		return fmt.Errorf("identity attribute %q: could not parse %q as SQS URL", attr.Name(), urlVal)
+	}
+
+	rd.Set(names.AttrRegion, match[1])
+
+	rd.Set(attr.ResourceAttributeName(), urlVal)
+	for _, attr := range identitySpec.IdentityDuplicateAttrs {
+		setAttribute(rd, attr, urlVal)
+	}
+
+	return nil
+}
+
+func setAttribute(rd *schema.ResourceData, name string, value string) {
+	if name == "id" {
+		rd.SetId(value)
+		return
+	}
+	rd.Set(name, value)
 }

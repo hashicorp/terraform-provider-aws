@@ -54,10 +54,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrURL),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalCustomInherentRegionIdentity(names.AttrURL,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			)),
 			Import: inttypes.SDKv2Import{
-				WrappedImport: true,
+				CustomImport: true,
 			},
 		},
 		{
