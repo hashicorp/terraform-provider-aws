@@ -210,7 +210,7 @@ func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.Creat
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*awstypes.DataCellsFilter, error) {
 		return findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
 	})
 
@@ -222,7 +222,6 @@ func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	output := outputRaws.(*awstypes.DataCellsFilter)
 	td := tableData{}
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &td)...)
 

@@ -133,21 +133,22 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `engine` – (Required) Name of the cache engine to be used for this cache cluster. Valid values are `memcached`, `redis` or `valkey`.
-* `name` – (Required) The Cluster name which serves as a unique identifier to the serverless cache
+* `engine` - (Required) Name of the cache engine to be used for this cache cluster. Valid values are `memcached`, `redis` or `valkey`.
+* `name` - (Required) The Cluster name which serves as a unique identifier to the serverless cache
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cache_usage_limits` - (Optional) Sets the cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
 * `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine types `"redis"` or `"valkey"`. Defaults to `0`.
 * `description` - (Optional) User-provided description for the serverless cache. The default is NULL.
 * `kms_key_id` - (Optional) ARN of the customer managed key for encrypting the data at rest. If no KMS key is provided, a default service key is used.
-* `major_engine_version` – (Optional) The version of the cache engine that will be used to create the serverless cache.
+* `major_engine_version` - (Optional) The version of the cache engine that will be used to create the serverless cache.
   See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
 * `security_group_ids` - (Optional) A list of the one or more VPC security groups to be associated with the serverless cache. The security group will authorize traffic access for the VPC end-point (private-link). If no other information is given this will be the VPC’s Default Security Group that is associated with the cluster VPC end-point.
 * `snapshot_arns_to_restore` - (Optional, Redis only) The list of ARN(s) of the snapshot that the new serverless cache will be created from. Available for Redis only.
 * `snapshot_retention_limit` - (Optional, Redis only) The number of snapshots that will be retained for the serverless cache that is being created. As new snapshots beyond this limit are added, the oldest snapshots will be deleted on a rolling basis. Available for Redis only.
-* `subnet_ids` – (Optional) A list of the identifiers of the subnets where the VPC endpoint for the serverless cache will be deployed. All the subnetIds must belong to the same VPC.
+* `subnet_ids` - (Optional) A list of the identifiers of the subnets where the VPC endpoint for the serverless cache will be deployed. All the subnetIds must belong to the same VPC.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_group_id` - (Optional) The identifier of the UserGroup to be associated with the serverless cache. Available for Redis only. Default is NULL.
 
@@ -232,4 +233,4 @@ Using `terraform import`, import ElastiCache Serverless Cache using the `name`. 
 % terraform import aws_elasticache_serverless_cache.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4776972907b5df7f3fe9ee18fb97acf3e8804283c96b49a0b12d5b614f3702f5 -->
+<!-- cache-key: cdktf-0.20.8 input-fd7e6a4928845cb5b7620232e3794fd67db6eb15b312647121bf7594dd418875 -->

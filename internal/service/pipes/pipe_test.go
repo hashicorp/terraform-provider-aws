@@ -3183,14 +3183,13 @@ func testAccPipeConfig_basicSQSSourceRedshiftTarget(rName string) string {
 		testAccPipeConfig_baseSQSSource(rName),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "target" {
-  cluster_identifier                  = "%[1]s-target"
-  database_name                       = "test"
-  master_username                     = "tfacctest"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = "%[1]s-target"
+  database_name         = "test"
+  master_username       = "tfacctest"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
 
 resource "aws_pipes_pipe" "test" {

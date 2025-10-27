@@ -743,7 +743,6 @@ data "aws_partition" "current" {}
 resource "aws_ecr_repository" "test" {
   name = %[1]q
 }
-
 `, rName)
 }
 

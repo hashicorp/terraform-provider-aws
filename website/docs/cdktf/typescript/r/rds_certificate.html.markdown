@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificateIdentifier` - (Required) Certificate identifier. For example, `rds-ca-rsa4096-g1`. Refer to [AWS RDS (Relational Database) Certificate Identifier](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificateIdentifier) for more information.
 
 ## Attribute Reference
@@ -74,4 +75,4 @@ Using `terraform import`, import the RDS certificate override using the `region`
 % terraform import aws_rds_certificate.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a32f6cec70e7aaf0b1e6cb044af99d1e2ce89b2a74d5477e7165720ae326d1c7 -->
+<!-- cache-key: cdktf-0.20.8 input-eeff02532beb9dbb6f3b41e9aee001b65d098eeebf5ceccb7ea8b70733c20f64 -->

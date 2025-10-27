@@ -133,3 +133,17 @@ resource "aws_sns_topic_data_protection_policy" "test" {
 }
 `, rName)
 }
+
+func testAccCheckTopicDataProtectionPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
+		_, err := tfsns.FindDataProtectionPolicyByARN(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}

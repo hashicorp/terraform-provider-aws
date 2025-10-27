@@ -200,6 +200,10 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"source_kms_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
 				Type:     schema.TypeInt,
@@ -282,7 +286,22 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s): %s", functionName, err)
 	}
 
+	// If Qualifier is specified, GetFunction will return nil for Concurrency.
+	// Need to fetch it separately using GetFunctionConcurrency.
+	if output.Concurrency == nil && input.Qualifier != nil {
+		outputGFC, err := findFunctionConcurrencyByName(ctx, conn, functionName)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) concurrency: %s", functionName, err)
+		}
+
+		output.Concurrency = &awstypes.Concurrency{
+			ReservedConcurrentExecutions: outputGFC.ReservedConcurrentExecutions,
+		}
+	}
+
 	function := output.Configuration
+	functionCode := output.Code
 	functionARN := aws.ToString(function.FunctionArn)
 	qualifierSuffix := fmt.Sprintf(":%s", aws.ToString(input.Qualifier))
 	versionSuffix := fmt.Sprintf(":%s", aws.ToString(function.Version))
@@ -344,6 +363,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
+	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
 	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {

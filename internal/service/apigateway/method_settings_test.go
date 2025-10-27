@@ -673,7 +673,12 @@ EOF
 resource "aws_api_gateway_deployment" "test" {
   depends_on  = [aws_api_gateway_integration.test]
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "dev"
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "dev"
+  deployment_id = aws_api_gateway_deployment.test.id
 }
 `, rName)
 }
@@ -683,7 +688,7 @@ func testAccMethodSettingsConfig_basic(rName string) string {
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {}
 }
@@ -695,7 +700,7 @@ func testAccMethodSettingsConfig_cacheDataEncrypted(rName string, cacheDataEncry
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     cache_data_encrypted = %[1]t
@@ -709,7 +714,7 @@ func testAccMethodSettingsConfig_cacheTTLInSeconds(rName string, cacheTtlInSecon
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     cache_ttl_in_seconds = %[1]d
@@ -723,7 +728,7 @@ func testAccMethodSettingsConfig_cachingEnabled(rName string, cachingEnabled boo
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     caching_enabled = %[1]t
@@ -737,7 +742,7 @@ func testAccMethodSettingsConfig_dataTraceEnabled(rName string, dataTraceEnabled
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     data_trace_enabled = %[1]t
@@ -754,7 +759,7 @@ func testAccMethodSettingsConfig_loggingLevel(rName, loggingLevel string) string
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     logging_level = %[1]q
@@ -770,7 +775,7 @@ func testAccMethodSettingsConfig_metricsEnabled(rName string, metricsEnabled boo
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     metrics_enabled = %[1]t
@@ -786,7 +791,7 @@ func testAccMethodSettingsConfig_multiple(rName, loggingLevel string, metricsEna
 		fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
 
   settings {
@@ -804,7 +809,7 @@ func testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName strin
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     require_authorization_for_cache_control = %[1]t
@@ -818,7 +823,7 @@ func testAccMethodSettingsConfig_throttlingBurstLimit(rName string, throttlingBu
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     throttling_burst_limit = %[1]d
@@ -832,7 +837,7 @@ func testAccMethodSettingsConfig_throttlingRateLimit(rName string, throttlingRat
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     throttling_rate_limit = %[1]f
@@ -846,7 +851,7 @@ func testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, u
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     unauthorized_cache_control_header_strategy = %[1]q

@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes;awstypes.Attachment")
+// @Testing(preIdentityVersion="v5.100.0")
 func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &crossAccountAttachmentResource{}
 
@@ -42,7 +43,7 @@ func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWith
 
 type crossAccountAttachmentResource struct {
 	framework.ResourceWithModel[crossAccountAttachmentResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

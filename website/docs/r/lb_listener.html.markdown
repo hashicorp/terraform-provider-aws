@@ -39,6 +39,45 @@ resource "aws_lb_listener" "front_end" {
 }
 ```
 
+With weighted target groups:
+
+```terraform
+resource "aws_lb" "front_end" {
+  # ...
+}
+
+resource "aws_lb_target_group" "front_end_blue" {
+  # ...
+}
+
+resource "aws_lb_target_group" "front_end_green" {
+  # ...
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.front_end.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
+
+  default_action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.front_end_blue.arn
+        weight = 100
+      }
+      target_group {
+        arn    = aws_lb_target_group.front_end_green.arn
+        weight = 0
+      }
+    }
+  }
+}
+```
+
 To a NLB:
 
 ```terraform
@@ -428,6 +467,27 @@ This resource exports the following attributes in addition to the arguments abov
 ~> **Note:** When importing a listener with a forward-type default action, you must include both a top-level target group ARN and a `forward` block with a `target_group` and `arn` to avoid import differences.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lb_listener.example
+  identity = {
+    "arn" = "arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96"
+  }
+}
+
+resource "aws_lb_listener" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the load balancer listener.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import listeners using their ARN. For example:
 

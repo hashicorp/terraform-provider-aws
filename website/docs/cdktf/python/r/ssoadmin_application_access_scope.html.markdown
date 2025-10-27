@@ -40,7 +40,7 @@ class MyConvertedCode(TerraformStack):
         aws_ssoadmin_application_example.override_logical_id("example")
         aws_ssoadmin_application_access_scope_example =
         SsoadminApplicationAccessScope(self, "example_2",
-            application_arn=Token.as_string(aws_ssoadmin_application_example.application_arn),
+            application_arn=Token.as_string(aws_ssoadmin_application_example.arn),
             authorized_targets=["arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012"
             ],
             scope="sso:account:access"
@@ -58,6 +58,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorized_targets` - (Optional) Specifies an array list of ARNs that represent the authorized targets for this access scope.
 
 ## Attribute Reference
@@ -91,4 +92,4 @@ Using `terraform import`, import SSO Admin Application Access Scope using the `i
 % terraform import aws_ssoadmin_application_access_scope.example arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012,sso:account:access
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6163465404b21df1061530d2b8116e366a185ed1d519058b4f3d40995e99a363 -->
+<!-- cache-key: cdktf-0.20.8 input-f3dec092d86f98863e4857dc79555ffc7d6e54579d8186572e056c8c788a15c6 -->

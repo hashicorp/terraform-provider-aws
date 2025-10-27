@@ -25,12 +25,6 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// Because dsql is in preview, we need to skip the PreCheckPartitionHasService
-			// acctest.PreCheckPartitionHasService(t, names.DSQLEndpointID)
-			// PreCheck for the region configuration as long as DSQL is in preview
-			acctest.PreCheckRegion(t, "us-east-1", "us-east-2")          //lintignore:AWSAT003
-			acctest.PreCheckAlternateRegion(t, "us-east-2", "us-east-1") //lintignore:AWSAT003
-			acctest.PreCheckThirdRegion(t, "us-west-2")                  //lintignore:AWSAT003
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},

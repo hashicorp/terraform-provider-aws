@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -246,6 +246,27 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
+			"scheduler_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_concurrent_runs": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 1000),
+						},
+						"queue_timeout_minutes": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(15, 720),
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
@@ -305,6 +326,11 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 	}
 
+	// Empty block (len(v.([]any)) > 0 but v.([]any)[0] == nil) is allowed to enable scheduler_configuration with default values
+	if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 {
+		input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any))
+	}
+
 	if v, ok := d.GetOk("application_configuration"); ok && len(v.([]any)) > 0 {
 		input.RuntimeConfiguration = expandApplicationConfiguration(v.([]any))
 	}
@@ -330,7 +356,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	application, err := findApplicationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Serverless Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -372,6 +398,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	if err := d.Set(names.AttrNetworkConfiguration, []any{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
+	}
+
+	if err := d.Set("scheduler_configuration", flattenSchedulerConfiguration(application.SchedulerConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scheduler_configuration: %s", err)
 	}
 
 	if err := d.Set("application_configuration", flattenApplicationConfiguration(application.RuntimeConfiguration)); err != nil {
@@ -425,6 +455,16 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 		}
 
+		if d.HasChange("scheduler_configuration") {
+			// Empty block (len(v.([]any)) > 0 but v.([]any)[0] == nil) is allowed to enable scheduler_configuration with default values
+			if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 {
+				input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any))
+			} else {
+				// scheduler_configuration block is removed
+				input.SchedulerConfiguration = &types.SchedulerConfiguration{}
+			}
+		}
+
 		if v, ok := d.GetOk("release_label"); ok {
 			input.ReleaseLabel = aws.String(v.(string))
 		}
@@ -476,8 +516,7 @@ func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id str
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -496,8 +535,8 @@ func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id str
 	return output.Application, nil
 }
 
-func statusApplication(ctx context.Context, conn *emrserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplication(conn *emrserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -521,7 +560,7 @@ func waitApplicationCreated(ctx context.Context, conn *emrserverless.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ApplicationStateCreating),
 		Target:     enum.Slice(types.ApplicationStateCreated),
-		Refresh:    statusApplication(ctx, conn, id),
+		Refresh:    statusApplication(conn, id),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      delay,
@@ -531,7 +570,7 @@ func waitApplicationCreated(ctx context.Context, conn *emrserverless.Client, id 
 
 	if output, ok := outputRaw.(*types.Application); ok {
 		if stateChangeReason := output.StateDetails; stateChangeReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
 		}
 
 		return output, err
@@ -549,7 +588,7 @@ func waitApplicationTerminated(ctx context.Context, conn *emrserverless.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Values[types.ApplicationState](),
 		Target:     []string{},
-		Refresh:    statusApplication(ctx, conn, id),
+		Refresh:    statusApplication(conn, id),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      delay,
@@ -559,7 +598,7 @@ func waitApplicationTerminated(ctx context.Context, conn *emrserverless.Client, 
 
 	if output, ok := outputRaw.(*types.Application); ok {
 		if stateChangeReason := output.StateDetails; stateChangeReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
 		}
 
 		return output, err
@@ -891,6 +930,46 @@ func flattenWorkerResourceConfig(apiObject *types.WorkerResourceConfig) map[stri
 	}
 
 	return tfMap
+}
+
+func expandSchedulerConfiguration(tfList []any) *types.SchedulerConfiguration {
+	// SchedulerConfiguration without any attributes disables the scheduler_configuration.
+	// If an empty block is specified, the scheduler_configuration is enabled with default values.
+	if tfList[0] == nil {
+		return &types.SchedulerConfiguration{
+			MaxConcurrentRuns:   aws.Int32(15),  // default
+			QueueTimeoutMinutes: aws.Int32(360), // default
+		}
+	}
+
+	apiObject := &types.SchedulerConfiguration{}
+	m := tfList[0].(map[string]any)
+
+	if v, ok := m["max_concurrent_runs"].(int); ok && v != 0 {
+		apiObject.MaxConcurrentRuns = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["queue_timeout_minutes"].(int); ok && v != 0 {
+		apiObject.QueueTimeoutMinutes = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenSchedulerConfiguration(apiObject *types.SchedulerConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.MaxConcurrentRuns; v != nil {
+		tfMap["max_concurrent_runs"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.QueueTimeoutMinutes; v != nil {
+		tfMap["queue_timeout_minutes"] = aws.ToInt32(v)
+	}
+	return []any{tfMap}
 }
 
 func expandApplicationConfiguration(tfList []any) []types.Configuration {

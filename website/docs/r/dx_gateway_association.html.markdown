@@ -114,6 +114,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `associated_gateway_type` - The type of the associated gateway, `transitGateway` or `virtualPrivateGateway`.
 * `dx_gateway_association_id` - The ID of the Direct Connect gateway association.
 * `dx_gateway_owner_account_id` - The ID of the AWS account that owns the Direct Connect gateway.
+* `transit_gateway_attachment_id` - The ID of the Transit Gateway Attachment when the type is `transitGateway`.
 
 ## Timeouts
 

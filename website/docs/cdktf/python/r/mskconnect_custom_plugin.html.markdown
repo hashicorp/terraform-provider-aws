@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the custom plugin..
 * `content_type` - (Required, Forces new resource) The type of the plugin file. Allowed values are `ZIP` and `JAR`.
 * `description` - (Optional, Forces new resource) A summary description of the custom plugin.
@@ -119,4 +120,4 @@ Using `terraform import`, import MSK Connect Custom Plugin using the plugin's `a
 % terraform import aws_mskconnect_custom_plugin.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e82c9833b818a70c48742da35e4c81720d50d8f9cfd1a276d8eba54973970cc2 -->
+<!-- cache-key: cdktf-0.20.8 input-0f9575ee42765d36c7f1492f28e6e1300d8185461a507593380bcdc5ef298a83 -->

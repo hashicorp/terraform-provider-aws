@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params wafv2.EndpointPa
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up wafv2 endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up wafv2 endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

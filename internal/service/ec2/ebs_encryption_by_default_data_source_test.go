@@ -18,9 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2EBSEncryptionByDefaultDataSource_basic(t *testing.T) {
+func testAccEBSEncryptionByDefaultDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -51,7 +52,7 @@ func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, n string)
 		input := ec2.GetEbsEncryptionByDefaultInput{}
 		actual, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("Error reading default EBS encryption toggle: %q", err)
+			return err
 		}
 
 		attr, _ := strconv.ParseBool(rs.Primary.Attributes[names.AttrEnabled])

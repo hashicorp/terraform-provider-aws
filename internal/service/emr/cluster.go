@@ -1016,7 +1016,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RunJobFlow(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -1328,7 +1328,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			const (
 				timeout = 1 * time.Minute
 			)
-			_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+			_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 				return findCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
 			})
 

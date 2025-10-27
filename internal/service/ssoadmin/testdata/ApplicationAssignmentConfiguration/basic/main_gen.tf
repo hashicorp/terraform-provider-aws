@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ssoadmin_application_assignment_configuration" "test" {
-  application_arn     = aws_ssoadmin_application.test.application_arn
+  application_arn     = aws_ssoadmin_application.test.arn
   assignment_required = true
 }
 

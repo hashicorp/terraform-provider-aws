@@ -45,11 +45,11 @@ class MyConvertedCode(TerraformStack):
         example_agent_permissions = DataAwsIamPolicyDocument(self, "example_agent_permissions",
             statement=[DataAwsIamPolicyDocumentStatement(
                 actions=["bedrock:InvokeModel"],
-                resources=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.name + "}::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0"
+                resources=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.region + "}::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0"
                 ]
             ), DataAwsIamPolicyDocumentStatement(
                 actions=["bedrock:GetAgentAlias", "bedrock:InvokeAgent"],
-                resources=["arn:${" + current_agent.partition + "}:bedrock:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:agent/*", "arn:${" + current_agent.partition + "}:bedrock:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:agent-alias/*"
+                resources=["arn:${" + current_agent.partition + "}:bedrock:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:agent/*", "arn:${" + current_agent.partition + "}:bedrock:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:agent-alias/*"
                 ]
             )
             ]
@@ -63,7 +63,7 @@ class MyConvertedCode(TerraformStack):
                     variable="aws:SourceAccount"
                 ), DataAwsIamPolicyDocumentStatementCondition(
                     test="ArnLike",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:agent/*"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:agent/*"
                     ],
                     variable="AWS:SourceArn"
                 )
@@ -130,10 +130,11 @@ The following arguments are required:
 
 * `agent_id` - (Required) ID if the agent to associate the collaborator.
 * `collaboration_instruction` - (Required) Instruction to give the collaborator.
-* `collbaorator_name` - (Required) Name of this collaborator.
+* `collaborator_name` - (Required) Name of this collaborator.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `relay_conversation_history` - (Optional) Configure relaying the history to the collaborator.
 
@@ -182,4 +183,4 @@ Using `terraform import`, import Bedrock Agents Agent Collaborator using a comma
 % terraform import aws_bedrockagent_agent_collaborator.example 9LSJO0BFI8,DRAFT,AG3TN4RQIY
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-57b5c6c247e36a0f4260a7906aa72d93e72a760ebb81f8f6f75a7cd3ed0e6c52 -->
+<!-- cache-key: cdktf-0.20.8 input-e55d5ed8bf79e67f007ed0e46d96c501034c7594c635e5641300e32fa92dfe08 -->

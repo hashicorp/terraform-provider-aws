@@ -18,39 +18,40 @@ const (
 	policyModelMarshallJSONStartSliceSize = 2
 )
 
-type IAMPolicyDoc struct {
+type iamPolicyDoc struct {
 	Version    string                `json:",omitempty"`
 	Id         string                `json:",omitempty"`
-	Statements []*IAMPolicyStatement `json:"Statement,omitempty"`
+	Statements []*iamPolicyStatement `json:"Statement,omitempty"`
 }
 
-type IAMPolicyStatement struct {
+type iamPolicyStatement struct {
 	Sid           string                         `json:",omitempty"`
 	Effect        string                         `json:",omitempty"`
 	Actions       any                            `json:"Action,omitempty"`
 	NotActions    any                            `json:"NotAction,omitempty"`
 	Resources     any                            `json:"Resource,omitempty"`
 	NotResources  any                            `json:"NotResource,omitempty"`
-	Principals    IAMPolicyStatementPrincipalSet `json:"Principal,omitempty"`
-	NotPrincipals IAMPolicyStatementPrincipalSet `json:"NotPrincipal,omitempty"`
-	Conditions    IAMPolicyStatementConditionSet `json:"Condition,omitempty"`
+	Principals    iamPolicyStatementPrincipalSet `json:"Principal,omitempty"`
+	NotPrincipals iamPolicyStatementPrincipalSet `json:"NotPrincipal,omitempty"`
+	Conditions    iamPolicyStatementConditionSet `json:"Condition,omitempty"`
 }
 
-type IAMPolicyStatementPrincipal struct {
+type iamPolicyStatementPrincipal struct {
 	Type        string
 	Identifiers any
 }
 
-type IAMPolicyStatementCondition struct {
+type iamPolicyStatementPrincipalSet []iamPolicyStatementPrincipal
+
+type iamPolicyStatementCondition struct {
 	Test     string
 	Variable string
 	Values   any
 }
 
-type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
-type IAMPolicyStatementConditionSet []IAMPolicyStatementCondition
+type iamPolicyStatementConditionSet []iamPolicyStatementCondition
 
-func (s *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
+func (s *iamPolicyDoc) Merge(newDoc *iamPolicyDoc) {
 	// adopt newDoc's Id
 	if len(newDoc.Id) > 0 {
 		s.Id = newDoc.Id
@@ -82,7 +83,7 @@ func (s *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
 	}
 }
 
-func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
+func (ps iamPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 	raw := map[string]any{}
 
 	// Although IAM documentation says that "*" and {"AWS": "*"} are equivalent
@@ -137,8 +138,8 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&raw)
 }
 
-func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
-	var out IAMPolicyStatementPrincipalSet
+func (ps *iamPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
+	var out iamPolicyStatementPrincipalSet
 
 	var data any
 	if err := json.Unmarshal(b, &data); err != nil {
@@ -147,19 +148,19 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 
 	switch t := data.(type) {
 	case string:
-		out = append(out, IAMPolicyStatementPrincipal{Type: "*", Identifiers: []string{"*"}})
+		out = append(out, iamPolicyStatementPrincipal{Type: "*", Identifiers: []string{"*"}})
 	case map[string]any:
 		for key, value := range data.(map[string]any) {
 			switch vt := value.(type) {
 			case string:
-				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: value.(string)})
+				out = append(out, iamPolicyStatementPrincipal{Type: key, Identifiers: value.(string)})
 			case []any:
 				values := []string{}
 				for _, v := range value.([]any) {
 					values = append(values, v.(string))
 				}
 				slices.Sort(values)
-				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: values})
+				out = append(out, iamPolicyStatementPrincipal{Type: key, Identifiers: values})
 			default:
 				return fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet.Identifiers", vt)
 			}
@@ -172,7 +173,7 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
+func (cs iamPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 	raw := map[string]map[string]any{}
 
 	for _, c := range cs {
@@ -206,8 +207,8 @@ func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&raw)
 }
 
-func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
-	var out IAMPolicyStatementConditionSet
+func (cs *iamPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
+	var out iamPolicyStatementConditionSet
 
 	var data map[string]map[string]any
 	if err := json.Unmarshal(b, &data); err != nil {
@@ -218,15 +219,15 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 		for var_key, var_values := range test_value {
 			switch var_values := var_values.(type) {
 			case string:
-				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
+				out = append(out, iamPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
 			case bool:
-				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: strconv.FormatBool(var_values)})
+				out = append(out, iamPolicyStatementCondition{Test: test_key, Variable: var_key, Values: strconv.FormatBool(var_values)})
 			case []any:
 				values := []string{}
 				for _, v := range var_values {
 					values = append(values, v.(string))
 				}
-				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: values})
+				out = append(out, iamPolicyStatementCondition{Test: test_key, Variable: var_key, Values: values})
 			}
 		}
 	}
@@ -248,11 +249,11 @@ func policyDecodeConfigStringList(lI []any) any {
 	return ret
 }
 
-// PolicyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
+// policyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
 // Assumes that non-"AWS" Principals are valid
 // The value can be a single string or a slice of strings
 // Valid strings are either an ARN or an AWS account ID
-func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
+func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
 	var policyData any
 	err := json.Unmarshal([]byte(policy), &policyData)
 	if err != nil {
@@ -272,12 +273,12 @@ func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.
 	for _, principal := range principals {
 		switch x := principal.(type) {
 		case string:
-			if !IsValidPolicyAWSPrincipal(x) {
+			if !isValidPolicyAWSPrincipal(x) {
 				return false, nil
 			}
 		case []string:
 			for _, s := range x {
-				if !IsValidPolicyAWSPrincipal(s) {
+				if !isValidPolicyAWSPrincipal(s) {
 					return false, nil
 				}
 			}
@@ -287,9 +288,9 @@ func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.
 	return true, nil
 }
 
-// IsValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
+// isValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
 // That is: either an ARN, an AWS account ID, or `*`
-func IsValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
 	if principal == "*" {
 		return true
 	}

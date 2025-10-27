@@ -356,7 +356,7 @@ func userDelete(ctx context.Context, conn *transfer.Client, serverID, userName s
 		return fmt.Errorf("deleting Transfer User (%s): %w", id, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findUserByTwoPartKey(ctx, conn, serverID, userName)
 	})
 

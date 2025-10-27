@@ -66,10 +66,9 @@ from cdktf import TerraformStack
 from imports.aws.security_group_rule import SecurityGroupRule
 from imports.aws.vpc_endpoint import VpcEndpoint
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, serviceName, vpcId):
+    def __init__(self, scope, name, *, vpcId):
         super().__init__(scope, name)
         my_endpoint = VpcEndpoint(self, "my_endpoint",
-            service_name=service_name,
             vpc_id=vpc_id
         )
         SecurityGroupRule(self, "allow_all",
@@ -101,7 +100,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         current = DataAwsRegion(self, "current")
         s3 = DataAwsPrefixList(self, "s3",
-            name="com.amazonaws.${" + current.name + "}.s3"
+            name="com.amazonaws.${" + current.region + "}.s3"
         )
         SecurityGroupRule(self, "s3_gateway_egress",
             description="S3 Gateway Egress",
@@ -116,8 +115,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `from_port` - (Required) Start port (or ICMP type number if protocol is "icmp" or "icmpv6").
 * `protocol` - (Required) Protocol. If not icmp, icmpv6, tcp, udp, or all use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
 * `security_group_id` - (Required) Security group to apply this rule to.
@@ -127,6 +127,7 @@ or `egress` (outbound).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 ~> **Note** Although `cidr_blocks`, `ipv6_cidr_blocks`, `prefix_list_ids`, and `source_security_group_id` are all marked as optional, you _must_ provide one of them in order to configure the source of the traffic.
 
 * `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
@@ -320,4 +321,4 @@ Import a rule that has itself and an IPv6 CIDR block as sources:
 % terraform import aws_security_group_rule.rule_name sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-578806f64d2eb20469073fe581e9aac81f7b9a5a2def695b71e0eb1736fd3507 -->
+<!-- cache-key: cdktf-0.20.8 input-404769c8224b238d376812dbcce66e6e4526200026487201eb9a559700c3f558 -->

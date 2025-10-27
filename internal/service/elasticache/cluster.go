@@ -20,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -770,26 +770,23 @@ func deleteCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClus
 	}
 
 	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", cacheClusterID)
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteCacheCluster(ctx, input)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheClusterStateFault](err, "serving as primary") {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheClusterStateFault](err, "only member of a replication group") {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			// The cluster may be just snapshotting, so we retry until it's ready for deletion
 			if errs.IsA[*awstypes.InvalidCacheClusterStateFault](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheCluster(ctx, input)
-	}
 
 	return err
 }
@@ -831,8 +828,7 @@ func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *ela
 
 		if errs.IsA[*awstypes.CacheClusterNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -850,11 +846,11 @@ func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *ela
 	return output, nil
 }
 
-func statusCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCacheCluster(conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCacheClusterByID(ctx, conn, cacheClusterID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -887,7 +883,7 @@ func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.Client, ca
 			cacheClusterStatusRebootingClusterNodes,
 		},
 		Target:     []string{cacheClusterStatusAvailable},
-		Refresh:    statusCacheCluster(ctx, conn, cacheClusterID),
+		Refresh:    statusCacheCluster(conn, cacheClusterID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -914,7 +910,7 @@ func waitCacheClusterDeleted(ctx context.Context, conn *elasticache.Client, cach
 			cacheClusterStatusSnapshotting,
 		},
 		Target:     []string{},
-		Refresh:    statusCacheCluster(ctx, conn, cacheClusterID),
+		Refresh:    statusCacheCluster(conn, cacheClusterID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

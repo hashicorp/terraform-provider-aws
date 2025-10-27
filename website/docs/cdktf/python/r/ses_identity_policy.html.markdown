@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identity` - (Required) Name or Amazon Resource Name (ARN) of the SES Identity.
 * `name` - (Required) Name of the policy.
 * `policy` - (Required) JSON string of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
@@ -91,4 +92,4 @@ Using `terraform import`, import SES Identity Policies using the identity and po
 % terraform import aws_ses_identity_policy.example 'example.com|example'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2c45ba1c268b42067effb76b3698082d64f075923127efb622a58e4e81a1ba1a -->
+<!-- cache-key: cdktf-0.20.8 input-adf9c821eaa530b14df89cc7a466459b26e8c91abd22fb2e25bcd0b21ba86456 -->

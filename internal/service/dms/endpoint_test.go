@@ -948,6 +948,34 @@ func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_Oracle_kerberos(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_kerberos(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "oracle_settings.0.authentication_method", "kerberos"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -1116,6 +1144,130 @@ func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_MySQL_settings_source(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQLSourceSettings(rName, true, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.after_connect_script", "SELECT NOW();"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.authentication_method", "iam"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.clean_source_metadata_on_mismatch", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.events_poll_interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "100"),
+					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
+			},
+			{
+				// Change events_poll_interval from 5 to 10
+				Config: testAccEndpointConfig_mySQLSourceSettings(rName, true, 10),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.after_connect_script", "SELECT NOW();"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.authentication_method", "iam"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.clean_source_metadata_on_mismatch", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.events_poll_interval", "10"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "100"),
+					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				// Remove mysql_settings block (inherited the previous values)
+				Config: testAccEndpointConfig_mySQLSourceSettings(rName, false, 10),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.after_connect_script", "SELECT NOW();"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.authentication_method", "iam"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.clean_source_metadata_on_mismatch", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.events_poll_interval", "10"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "100"),
+					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MySQL_settings_target(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQLTargetSettings(rName, true, 100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.after_connect_script", "SELECT NOW();"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.authentication_method", string(awstypes.MySQLAuthenticationMethodPassword)),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "100"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.max_file_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.parallel_load_threads", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.target_db_type", string(awstypes.TargetDbTypeMultipleDatabases)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
+			},
+			{
+				// Change execute_timeout from 100 to 60
+				Config: testAccEndpointConfig_mySQLTargetSettings(rName, true, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.after_connect_script", "SELECT NOW();"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.authentication_method", string(awstypes.MySQLAuthenticationMethodPassword)),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.max_file_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.parallel_load_threads", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.target_db_type", string(awstypes.TargetDbTypeMultipleDatabases)),
+				),
+			},
+			{
+				// Remove mysql_settings block (inherited the previous values)
+				Config: testAccEndpointConfig_mySQLTargetSettings(rName, false, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.after_connect_script", "SELECT NOW();"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.authentication_method", string(awstypes.MySQLAuthenticationMethodPassword)),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.max_file_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.parallel_load_threads", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.target_db_type", string(awstypes.TargetDbTypeMultipleDatabases)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_PostgreSQL_settings_source(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -1133,6 +1285,7 @@ func TestAccDMSEndpoint_PostgreSQL_settings_source(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.authentication_method", "iam"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.capture_ddls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.ddl_artifacts_schema", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.execute_timeout", "100"),
@@ -1145,6 +1298,7 @@ func TestAccDMSEndpoint_PostgreSQL_settings_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.map_long_varchar_as", "wstring"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.max_file_size", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.plugin_name", "pglogical"),
+					resource.TestCheckResourceAttrSet(resourceName, "postgres_settings.0.service_access_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.slot_name", "test"),
 				),
 			},
@@ -1169,6 +1323,7 @@ func TestAccDMSEndpoint_PostgreSQL_settings_target(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.authentication_method", names.AttrPassword),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.babelfish_database_name", "babelfish"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.database_mode", "babelfish"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.execute_timeout", "100"),
@@ -1177,6 +1332,67 @@ func TestAccDMSEndpoint_PostgreSQL_settings_target(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccDMSEndpoint_PostgreSQL_settings_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Create with heartbeat disabled
+				Config: testAccEndpointConfig_postgreSQLHeartbeat(rName, false, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "engine_name", "postgres"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_enable", acctest.CtFalse),
+				),
+			},
+			{
+				// Update only nested postgres_settings: enable heartbeat + set schema
+				Config: testAccEndpointConfig_postgreSQLHeartbeat(rName, true, "dms_heartbeat"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_schema", "dms_heartbeat"),
+				),
+			},
+		},
+	})
+}
+
+func testAccEndpointConfig_postgreSQLHeartbeat(id string, heartbeat bool, schema string) string {
+	schemaLine := ""
+	if schema != "" {
+		schemaLine = fmt.Sprintf(`heartbeat_schema = %q`, schema)
+	}
+
+	// DMS ModifyEndpoint accepts metadata changes without validating connectivity,
+	// so placeholder connection values are sufficient for the test
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %q
+  endpoint_type = "source"
+  engine_name   = "postgres"
+
+  username      = "user"
+  password      = "pass"
+  server_name   = "example.com"
+  database_name = "postgres"
+  port          = 5432
+
+  postgres_settings {
+    heartbeat_enable = %t
+    %s
+  }
+}
+`, id, heartbeat, schemaLine)
 }
 
 func TestAccDMSEndpoint_SQLServer_basic(t *testing.T) {
@@ -3024,6 +3240,33 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
+func testAccEndpointConfig_kerberos(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "oracle"
+
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  oracle_settings {
+    authentication_method = "kerberos"
+  }
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
 func testAccEndpointConfig_postgreSQL(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
@@ -3092,8 +3335,136 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
+func testAccEndpointConfig_mySQLSourceSettingsBlock(eventsPollInterval int) string {
+	return fmt.Sprintf(`
+  mysql_settings {
+    after_connect_script              = "SELECT NOW();"
+    authentication_method             = "iam"
+    clean_source_metadata_on_mismatch = true
+    events_poll_interval              = %[1]d
+    execute_timeout                   = 100
+    service_access_role_arn           = aws_iam_role.test.arn
+	server_timezone                   = "UTC"
+  }
+`, eventsPollInterval)
+}
+
+func testAccEndpointConfig_certificateBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_certificate" "dms_certificate" {
+  certificate_id  = %[1]q
+  certificate_pem = "-----BEGIN CERTIFICATE-----\nMIID2jCCAsKgAwIBAgIJAJ58TJVjU7G1MA0GCSqGSIb3DQEBBQUAMFExCzAJBgNV\nBAYTAlVTMREwDwYDVQQIEwhDb2xvcmFkbzEPMA0GA1UEBxMGRGVudmVyMRAwDgYD\nVQQKEwdDaGFydGVyMQwwCgYDVQQLEwNDU0UwHhcNMTcwMTMwMTkyMDA4WhcNMjYx\nMjA5MTkyMDA4WjBRMQswCQYDVQQGEwJVUzERMA8GA1UECBMIQ29sb3JhZG8xDzAN\nBgNVBAcTBkRlbnZlcjEQMA4GA1UEChMHQ2hhcnRlcjEMMAoGA1UECxMDQ1NFMIIB\nIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv6dq6VLIImlAaTrckb5w3X6J\nWP7EGz2ChGAXlkEYto6dPCba0v5+f+8UlMOpeB25XGoai7gdItqNWVFpYsgmndx3\nvTad3ukO1zeElKtw5oHPH2plOaiv/gVJaDa9NTeINj0EtGZs74fCOclAzGFX5vBc\nb08ESWBceRgGjGv3nlij4JzHfqTkCKQz6P6pBivQBfk62rcOkkH5rKoaGltRHROS\nMbkwOhu2hN0KmSYTXRvts0LXnZU4N0l2ms39gmr7UNNNlKYINL2JoTs9dNBc7APD\ndZvlEHd+/FjcLCI8hC3t4g4AbfW0okIBCNG0+oVjqGb2DeONSJKsThahXt89MQID\nAQABo4G0MIGxMB0GA1UdDgQWBBQKq8JxjY1GmeZXJjfOMfW0kBIzPDCBgQYDVR0j\nBHoweIAUCqvCcY2NRpnmVyY3zjH1tJASMzyhVaRTMFExCzAJBgNVBAYTAlVTMREw\nDwYDVQQIEwhDb2xvcmFkbzEPMA0GA1UEBxMGRGVudmVyMRAwDgYDVQQKEwdDaGFy\ndGVyMQwwCgYDVQQLEwNDU0WCCQCefEyVY1OxtTAMBgNVHRMEBTADAQH/MA0GCSqG\nSIb3DQEBBQUAA4IBAQAWifoMk5kbv+yuWXvFwHiB4dWUUmMlUlPU/E300yVTRl58\np6DfOgJs7MMftd1KeWqTO+uW134QlTt7+jwI8Jq0uyKCu/O2kJhVtH/Ryog14tGl\n+wLcuIPLbwJI9CwZX4WMBrq4DnYss+6F47i8NCc+Z3MAiG4vtq9ytBmaod0dj2bI\ng4/Lac0e00dql9RnqENh1+dF0V+QgTJCoPkMqDNAlSB8vOodBW81UAb2z12t+IFi\n3X9J3WtCK2+T5brXL6itzewWJ2ALvX3QpmZx7fMHJ3tE+SjjyivE1BbOlzYHx83t\nTeYnm7pS9un7A/UzTDHbs7hPUezLek+H3xTPAnnq\n-----END CERTIFICATE-----\n"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_mySQLSourceSettings(rName string, outputMySQLSettings bool, eventsPollInterval int) string {
+	mysqlSettings := ""
+	if outputMySQLSettings {
+		mysqlSettings = testAccEndpointConfig_mySQLSourceSettingsBlock(eventsPollInterval)
+	}
+	return acctest.ConfigCompose(testAccEndpointConfig_certificateBase(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dms.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_dms_endpoint" "test" {
+  certificate_arn             = aws_dms_certificate.dms_certificate.certificate_arn
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "mysql"
+  server_name                 = "tftest"
+  port                        = 5432
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "verify-full"
+  extra_connection_attributes = ""
+
+  %[2]s
+}
+`, rName, mysqlSettings))
+}
+
+func testAccEndpointConfig_mySQLTargetSettingsBlock(executeTimeout int) string {
+	return fmt.Sprintf(`
+  mysql_settings {
+    after_connect_script    = "SELECT NOW();"
+    authentication_method   = "password"
+    execute_timeout         = %[1]d
+    max_file_size           = 1024
+    parallel_load_threads   = 1
+    target_db_type          = "multiple-databases"
+  }
+`, executeTimeout)
+}
+
+func testAccEndpointConfig_mySQLTargetSettings(rName string, outputMySQLSettings bool, executeTimeout int) string {
+	mysqlSettings := ""
+	if outputMySQLSettings {
+		mysqlSettings = testAccEndpointConfig_mySQLTargetSettingsBlock(executeTimeout)
+	}
+	return acctest.ConfigCompose(testAccEndpointConfig_certificateBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  certificate_arn             = aws_dms_certificate.dms_certificate.certificate_arn
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "mysql"
+  server_name                 = "tftest"
+  port                        = 5432
+  username                    = "tftest"
+  password                    = "tftest"
+  ssl_mode                    = "verify-full"
+  extra_connection_attributes = ""
+
+  %[2]s
+}
+`, rName, mysqlSettings))
+}
+
 func testAccEndpointConfig_postgreSQLSourceSettings(rName string) string {
 	return fmt.Sprintf(`
+
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dms.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -3108,6 +3479,7 @@ resource "aws_dms_endpoint" "test" {
 
   postgres_settings {
     after_connect_script         = "SET search_path TO pg_catalog,public;"
+    authentication_method        = "iam"
     capture_ddls                 = true
     ddl_artifacts_schema         = true
     execute_timeout              = 100
@@ -3120,6 +3492,7 @@ resource "aws_dms_endpoint" "test" {
     map_long_varchar_as          = "wstring"
     max_file_size                = 1024
     plugin_name                  = "pglogical"
+    service_access_role_arn      = aws_iam_role.test.arn
     slot_name                    = "test"
   }
 }
@@ -3142,6 +3515,7 @@ resource "aws_dms_endpoint" "test" {
 
   postgres_settings {
     after_connect_script    = "SET search_path TO pg_catalog,public;"
+    authentication_method   = "password"
     babelfish_database_name = "babelfish"
     database_mode           = "babelfish"
     execute_timeout         = 100
@@ -3647,12 +4021,11 @@ resource "aws_redshift_cluster" "test" {
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "Mustbe8characters"
-  node_type          = "dc2.large"
+  node_type          = "ra3.large"
   cluster_type       = "single-node"
   encrypted          = true
 
-  automated_snapshot_retention_period = 0
-  skip_final_snapshot                 = true
+  skip_final_snapshot = true
 }
 
 data "aws_partition" "current" {}

@@ -47,6 +47,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkfirewall;networkfirewall.DescribeTLSInspectionConfigurationOutput")
 // @Testing(subdomainTfVar="common_name;certificate_domain")
 // @Testing(importIgnore="update_token", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v5.100.0")
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}
 
@@ -59,7 +60,7 @@ func newTLSInspectionConfigurationResource(_ context.Context) (resource.Resource
 
 type tlsInspectionConfigurationResource struct {
 	framework.ResourceWithModel[tlsInspectionConfigurationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 

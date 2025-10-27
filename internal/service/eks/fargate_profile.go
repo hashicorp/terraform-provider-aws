@@ -131,7 +131,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// Retry for IAM eventual consistency on error:
 	// InvalidParameterException: Misconfigured PodExecutionRole Trust Policy; Please add the eks-fargate-pods.amazonaws.com Service Principal
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFargateProfile(ctx, input)
 	}, "Misconfigured PodExecutionRole Trust Policy")
 

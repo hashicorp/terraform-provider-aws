@@ -325,11 +325,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) Name of the S3 bucket.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket using the `bucket`. For example:
 
 ```terraform
 import {
-  to = aws_s3_bucket.bucket
+  to = aws_s3_bucket.example
   id = "bucket-name"
 }
 ```
@@ -337,5 +363,5 @@ import {
 Using `terraform import`, import S3 bucket using the `bucket`. For example:
 
 ```console
-% terraform import aws_s3_bucket.bucket bucket-name
+% terraform import aws_s3_bucket.example bucket-name
 ```

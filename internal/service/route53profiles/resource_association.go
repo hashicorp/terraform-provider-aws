@@ -77,6 +77,7 @@ func (r *resourceAssociationResource) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"resource_properties": schema.StringAttribute{
+				Computed:   true,
 				CustomType: jsontypes.NormalizedType{},
 				Optional:   true,
 			},

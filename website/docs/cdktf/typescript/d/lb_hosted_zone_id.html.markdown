@@ -47,14 +47,13 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
-  Defaults to the region from the AWS provider configuration.
+* `region` - (Optional) Name of the Region whose AWS ELB HostedZoneId is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `loadBalancerType` - (Optional) Type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the AWS ELB HostedZoneId in the selected region.
+* `id` - ID of the AWS ELB HostedZoneId in the selected Region.
 
-<!-- cache-key: cdktf-0.20.8 input-ba7cf1aba696164bd6d94c1520d2ef59c7e08bf1768812ed6f86e6421fe11bc9 -->
+<!-- cache-key: cdktf-0.20.8 input-5e0ee8b74a7ca52b95aab1b8f35310fd0c889ef1d2d383f920d21f31faa2fe44 -->

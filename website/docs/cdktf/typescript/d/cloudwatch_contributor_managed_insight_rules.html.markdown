@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceArn` - (Required) ARN of an Amazon Web Services resource that has managed Contributor Insights rules.
 
 ## Attribute Reference
@@ -60,4 +61,4 @@ This data source exports the following attributes in addition to the arguments a
 * `ruleName` - Name of the Contributor Insights rule that contains data for the specified Amazon Web Services resource.
 * `state` - Indicates whether the rule is enabled or disabled.
 
-<!-- cache-key: cdktf-0.20.8 input-832ca64aae9ec54eb1e287edbfece39ca22fe82bc14afd47b0217ffe60336392 -->
+<!-- cache-key: cdktf-0.20.8 input-d8f7f6a7e66ad4415c5e168ac24b7315d435a9248148a1529da14c7e15e01a05 -->
