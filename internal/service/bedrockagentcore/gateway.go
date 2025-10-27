@@ -66,6 +66,9 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			"authorizer_type": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.AuthorizerType](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -114,8 +117,6 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			"authorizer_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -184,6 +185,24 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 				Delete: true,
 			}),
 		},
+	}
+}
+
+func (r *gatewayResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data gatewayResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.AuthorizerType.ValueEnum() == awstypes.AuthorizerTypeCustomJwt {
+		if data.AuthorizerConfiguration.IsNull() {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("authorizer_configuration"),
+				"Missing Required Attribute",
+				"authorizer_configuration is required when authorizer_type is CUSTOM_JWT",
+			)
+		}
 	}
 }
 

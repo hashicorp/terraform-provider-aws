@@ -224,6 +224,10 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[hostHeaderConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"regex_values": schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
 									names.AttrValues: schema.SetAttribute{
 										ElementType: types.StringType,
 										Computed:    true,
@@ -237,6 +241,10 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 								Attributes: map[string]schema.Attribute{
 									"http_header_name": schema.StringAttribute{
 										Computed: true,
+									},
+									"regex_values": schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
 									},
 									names.AttrValues: schema.SetAttribute{
 										ElementType: types.StringType,
@@ -260,6 +268,10 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[pathPatternConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"regex_values": schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
 									names.AttrValues: schema.SetAttribute{
 										ElementType: types.StringType,
 										Computed:    true,
@@ -464,11 +476,13 @@ type ruleConditionModel struct {
 }
 
 type hostHeaderConfigModel struct {
-	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
+	RegexValues fwtypes.SetValueOf[types.String] `tfsdk:"regex_values"`
+	Values      fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
 type httpHeaderConfigModel struct {
 	HTTPHeaderName types.String                     `tfsdk:"http_header_name"`
+	RegexValues    fwtypes.SetValueOf[types.String] `tfsdk:"regex_values"`
 	Values         fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
@@ -477,7 +491,8 @@ type httpRquestMethodConfigModel struct {
 }
 
 type pathPatternConfigModel struct {
-	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
+	RegexValues fwtypes.SetValueOf[types.String] `tfsdk:"regex_values"`
+	Values      fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
 type queryStringConfigModel struct {

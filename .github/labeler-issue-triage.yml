@@ -511,6 +511,8 @@ service/notificationscontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notificationscontacts_'
 service/oam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
+service/observabilityadmin:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_observabilityadmin_'
 service/odb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_odb_'
 service/opensearch:

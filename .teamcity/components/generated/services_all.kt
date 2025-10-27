@@ -171,6 +171,7 @@ val services = mapOf(
     "notifications" to ServiceSpec("User Notifications"),
     "notificationscontacts" to ServiceSpec("User Notifications Contacts"),
     "oam" to ServiceSpec("CloudWatch Observability Access Manager"),
+    "observabilityadmin" to ServiceSpec("CloudWatch Observability Admin"),
     "odb" to ServiceSpec("Oracle Database@AWS"),
     "opensearch" to ServiceSpec("OpenSearch", vpcLock = true),
     "opensearchserverless" to ServiceSpec("OpenSearch Serverless"),

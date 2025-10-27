@@ -342,9 +342,17 @@ func resourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"regex_values": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+									},
 									names.AttrValues: {
 										Type:     schema.TypeSet,
-										Required: true,
+										Optional: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -365,13 +373,21 @@ func resourceListenerRule() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$"), ""), // was "," meant to be included? +-. creates a range including: +,-.
 									},
+									"regex_values": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+									},
 									names.AttrValues: {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(1, 128),
 										},
-										Required: true,
+										Optional: true,
 									},
 								},
 							},
@@ -399,9 +415,17 @@ func resourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"regex_values": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+									},
 									names.AttrValues: {
 										Type:     schema.TypeSet,
-										Required: true,
+										Optional: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -585,19 +609,10 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		switch aws.ToString(condition.Field) {
 		case "host-header":
-			conditionMap["host_header"] = []any{
-				map[string]any{
-					names.AttrValues: flex.FlattenStringValueSet(condition.HostHeaderConfig.Values),
-				},
-			}
+			conditionMap["host_header"] = []any{flattenHostHeaderConditionConfig(condition.HostHeaderConfig)}
 
 		case "http-header":
-			conditionMap["http_header"] = []any{
-				map[string]any{
-					"http_header_name": aws.ToString(condition.HttpHeaderConfig.HttpHeaderName),
-					names.AttrValues:   flex.FlattenStringValueSet(condition.HttpHeaderConfig.Values),
-				},
-			}
+			conditionMap["http_header"] = []any{flattenHTTPHeaderConditionConfig(condition.HttpHeaderConfig)}
 
 		case "http-request-method":
 			conditionMap["http_request_method"] = []any{
@@ -607,11 +622,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 			}
 
 		case "path-pattern":
-			conditionMap["path_pattern"] = []any{
-				map[string]any{
-					names.AttrValues: flex.FlattenStringValueSet(condition.PathPatternConfig.Values),
-				},
-			}
+			conditionMap["path_pattern"] = []any{flattenPathPatternConditionConfig(condition.PathPatternConfig)}
 
 		case "query-string":
 			values := make([]any, len(condition.QueryStringConfig.Values))
@@ -860,23 +871,15 @@ func expandRuleConditions(tfList []any) ([]awstypes.RuleCondition, error) {
 		if hostHeader, ok := tfMap["host_header"].([]any); ok && len(hostHeader) > 0 {
 			field = "host-header"
 			attrs += 1
-			values := hostHeader[0].(map[string]any)[names.AttrValues].(*schema.Set)
 
-			apiObjects[i].HostHeaderConfig = &awstypes.HostHeaderConditionConfig{
-				Values: flex.ExpandStringValueSet(values),
-			}
+			apiObjects[i].HostHeaderConfig = expandHostHeaderConditionConfig(hostHeader[0].(map[string]any))
 		}
 
 		if httpHeader, ok := tfMap["http_header"].([]any); ok && len(httpHeader) > 0 {
 			field = "http-header"
 			attrs += 1
-			httpHeaderMap := httpHeader[0].(map[string]any)
-			values := httpHeaderMap[names.AttrValues].(*schema.Set)
 
-			apiObjects[i].HttpHeaderConfig = &awstypes.HttpHeaderConditionConfig{
-				HttpHeaderName: aws.String(httpHeaderMap["http_header_name"].(string)),
-				Values:         flex.ExpandStringValueSet(values),
-			}
+			apiObjects[i].HttpHeaderConfig = expandHTTPHeaderConditionConfig(httpHeader[0].(map[string]any))
 		}
 
 		if httpRequestMethod, ok := tfMap["http_request_method"].([]any); ok && len(httpRequestMethod) > 0 {
@@ -892,11 +895,8 @@ func expandRuleConditions(tfList []any) ([]awstypes.RuleCondition, error) {
 		if pathPattern, ok := tfMap["path_pattern"].([]any); ok && len(pathPattern) > 0 {
 			field = "path-pattern"
 			attrs += 1
-			values := pathPattern[0].(map[string]any)[names.AttrValues].(*schema.Set)
 
-			apiObjects[i].PathPatternConfig = &awstypes.PathPatternConditionConfig{
-				Values: flex.ExpandStringValueSet(values),
-			}
+			apiObjects[i].PathPatternConfig = expandPathPatternConditionConfig(pathPattern[0].(map[string]any))
 		}
 
 		if queryString, ok := tfMap["query_string"].(*schema.Set); ok && queryString.Len() > 0 {
@@ -942,4 +942,100 @@ func expandRuleConditions(tfList []any) ([]awstypes.RuleCondition, error) {
 	}
 
 	return apiObjects, nil
+}
+
+func expandHostHeaderConditionConfig(tfMap map[string]any) *awstypes.HostHeaderConditionConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.HostHeaderConditionConfig{}
+
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Values = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["regex_values"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.RegexValues = flex.ExpandStringValueSet(v)
+	}
+	return apiObject
+}
+
+func expandHTTPHeaderConditionConfig(tfMap map[string]any) *awstypes.HttpHeaderConditionConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.HttpHeaderConditionConfig{
+		HttpHeaderName: aws.String(tfMap["http_header_name"].(string)),
+	}
+
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Values = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["regex_values"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.RegexValues = flex.ExpandStringValueSet(v)
+	}
+	return apiObject
+}
+
+func expandPathPatternConditionConfig(tfMap map[string]any) *awstypes.PathPatternConditionConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PathPatternConditionConfig{}
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Values = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["regex_values"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.RegexValues = flex.ExpandStringValueSet(v)
+	}
+	return apiObject
+}
+
+func flattenHostHeaderConditionConfig(apiObject *awstypes.HostHeaderConditionConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if apiObject.Values != nil {
+		tfMap[names.AttrValues] = flex.FlattenStringValueSet(apiObject.Values)
+	}
+	if apiObject.RegexValues != nil {
+		tfMap["regex_values"] = flex.FlattenStringValueSet(apiObject.RegexValues)
+	}
+
+	return tfMap
+}
+
+func flattenHTTPHeaderConditionConfig(apiObject *awstypes.HttpHeaderConditionConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{
+		"http_header_name": aws.ToString(apiObject.HttpHeaderName),
+	}
+	if apiObject.Values != nil {
+		tfMap[names.AttrValues] = flex.FlattenStringValueSet(apiObject.Values)
+	}
+	if apiObject.RegexValues != nil {
+		tfMap["regex_values"] = flex.FlattenStringValueSet(apiObject.RegexValues)
+	}
+	return tfMap
+}
+
+func flattenPathPatternConditionConfig(apiObject *awstypes.PathPatternConditionConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if apiObject.Values != nil {
+		tfMap[names.AttrValues] = flex.FlattenStringValueSet(apiObject.Values)
+	}
+	if apiObject.RegexValues != nil {
+		tfMap["regex_values"] = flex.FlattenStringValueSet(apiObject.RegexValues)
+	}
+	return tfMap
 }
