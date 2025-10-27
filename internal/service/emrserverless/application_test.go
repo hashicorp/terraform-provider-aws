@@ -424,36 +424,36 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 	})
 }
 
-func TestAccEMRServerlessApplication_applicationConfiguration(t *testing.T) {
+func TestAccEMRServerlessApplication_runtimeConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_applicationConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.classification", "spark-defaults"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.properties.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.properties.spark.driver.cores", "2"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.properties.spark.executor.cores", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.properties.spark.driver.memory", "4G"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.properties.spark.executor.memory", "4G"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.1.classification", "spark-executor-log4j2"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.1.properties.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.1.properties.rootLogger.level", "error"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.1.properties.logger.IdentifierForClass.name", "classpathForSettingLogger"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.1.properties.logger.IdentifierForClass.level", "info"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.2.classification", "spark-driver-log4j2"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.2.properties.%", "0"),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.classification", "spark-defaults"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.driver.cores", "2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.executor.cores", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.driver.memory", "4G"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.executor.memory", "4G"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.classification", "spark-executor-log4j2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.rootLogger.level", "error"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.logger.IdentifierForClass.name", "classpathForSettingLogger"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.logger.IdentifierForClass.level", "info"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.2.classification", "spark-driver-log4j2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.2.properties.%", "0"),
 				),
 			},
 			{
@@ -464,15 +464,15 @@ func TestAccEMRServerlessApplication_applicationConfiguration(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_applicationConfigurationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.classification", "spark-defaults"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.properties.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.properties.spark.driver.cores", "4"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.properties.spark.driver.memory", "8G"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.1.classification", "hive-site"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.1.properties.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.1.properties.hive.metastore.client.factory.class", "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.classification", "spark-defaults"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.driver.cores", "4"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.driver.memory", "8G"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.classification", "hive-site"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.hive.metastore.client.factory.class", "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"),
 				),
 			},
 		},
@@ -1019,7 +1019,7 @@ resource "aws_emrserverless_application" "test" {
   release_label = "emr-6.8.0"
   type          = "spark"
 
-  application_configuration {
+  runtime_configuration {
     classification = "spark-defaults"
 
     properties = {
@@ -1030,7 +1030,7 @@ resource "aws_emrserverless_application" "test" {
     }
   }
 
-  application_configuration {
+  runtime_configuration {
     classification = "spark-executor-log4j2"
 
     properties = {
@@ -1040,7 +1040,7 @@ resource "aws_emrserverless_application" "test" {
     }
   }
 
-  application_configuration {
+  runtime_configuration {
     classification = "spark-driver-log4j2"
     properties     = {}
   }
@@ -1055,7 +1055,7 @@ resource "aws_emrserverless_application" "test" {
   release_label = "emr-6.8.0"
   type          = "spark"
 
-  application_configuration {
+  runtime_configuration {
     classification = "spark-defaults"
 
     properties = {
@@ -1064,7 +1064,7 @@ resource "aws_emrserverless_application" "test" {
     }
   }
 
-  application_configuration {
+  runtime_configuration {
     classification = "hive-site"
 
     properties = {
