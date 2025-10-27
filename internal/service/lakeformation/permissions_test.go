@@ -42,7 +42,7 @@ func testAccPermissions_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
@@ -67,7 +67,7 @@ func testAccPermissions_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"event\", \"timestamp\""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourcePermissions(), resourceName),
 				),
@@ -92,7 +92,7 @@ func testAccPermissions_database(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_database(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -125,7 +125,7 @@ func testAccPermissions_databaseIAMAllowed(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_databaseIAMAllowed(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, tflakeformation.IAMAllowedPrincipals),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -154,7 +154,7 @@ func testAccPermissions_databaseIAMPrincipals(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_databaseIAMPrincipals(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					testAccCheckIAMPrincipalsGrantPrincipal(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -186,7 +186,7 @@ func testAccPermissions_databaseMultiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_databaseMultiple(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -229,7 +229,7 @@ func testAccPermissions_dataCellsFilter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_dataCellsFilter(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
@@ -256,7 +256,7 @@ func testAccPermissions_dataLocation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_dataLocation(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
@@ -285,7 +285,7 @@ func testAccPermissions_lfTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_lfTag(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -320,7 +320,7 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_lfTagPolicy(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -357,7 +357,7 @@ func testAccPermissions_lfTagPolicyMultiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_lfTagPolicyMultiple(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -404,7 +404,7 @@ func testAccPermissions_tableBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, names.AttrPrincipal),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
@@ -434,7 +434,7 @@ func testAccPermissions_tableIAMAllowed(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableIAMAllowed(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, tflakeformation.IAMAllowedPrincipals),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -464,7 +464,7 @@ func testAccPermissions_tableIAMPrincipals(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableIAMPrincipals(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					testAccCheckIAMPrincipalsGrantPrincipal(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
@@ -495,7 +495,7 @@ func testAccPermissions_tableImplicit(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableImplicit(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
@@ -526,7 +526,7 @@ func testAccPermissions_tableMultipleRoles(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableMultipleRoles(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, names.AttrPrincipal),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
@@ -564,7 +564,7 @@ func testAccPermissions_tableSelectOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableSelectOnly(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, names.AttrPrincipal),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
@@ -592,7 +592,7 @@ func testAccPermissions_tableSelectPlus(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableSelectPlus(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
@@ -617,7 +617,7 @@ func testAccPermissions_tableWildcardNoSelect(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableWildcardNoSelect(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", databaseResourceName, names.AttrName),
@@ -642,7 +642,7 @@ func testAccPermissions_tableWildcardSelectOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableWildcardSelectOnly(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
@@ -668,7 +668,7 @@ func testAccPermissions_tableWildcardSelectPlus(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_tableWildcardSelectPlus(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
@@ -694,7 +694,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"event\", \"timestamp\""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
@@ -709,7 +709,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 			},
 			{
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"timestamp\", \"event\""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
@@ -724,7 +724,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 			},
 			{
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"timestamp\", \"event\", \"transactionamount\""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
@@ -740,7 +740,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 			},
 			{
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"event\""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
@@ -771,7 +771,7 @@ func testAccPermissions_twcImplicit(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_twcImplicit(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
@@ -800,7 +800,7 @@ func testAccPermissions_twcWildcardExcludedColumns(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_twcWildcardExcludedColumns(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
@@ -826,7 +826,7 @@ func testAccPermissions_twcWildcardSelectOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_twcWildcardSelectOnly(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
@@ -856,7 +856,7 @@ func testAccPermissions_twcWildcardSelectPlus(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsConfig_twcWildcardSelectPlus(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
