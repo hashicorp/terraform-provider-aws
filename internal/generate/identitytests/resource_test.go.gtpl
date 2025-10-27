@@ -180,8 +180,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 					{{ end -}}
 				{{ end -}}
 			{{ end -}}
-		{{ end -}}
-		{{ if .IsRegionalSingleton -}}
+		{{ else if .IsRegionalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
 		{{ else if .IsGlobalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
@@ -189,6 +188,8 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ range .IdentityAttributes -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
 			{{ end -}}
+		{{ else if ne .IdentityAttribute "" -}}
+			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
