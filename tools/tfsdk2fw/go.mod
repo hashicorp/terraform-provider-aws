@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.31.15 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.19 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.11 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.15 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.11 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.11 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.4 // indirect
@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.32.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.26.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.58.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.59.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.54.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.58.0 // indirect
@@ -148,7 +148,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.37.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.65.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.48.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.49.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.33.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.7 // indirect
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.27.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.40.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.32.7 // indirect
