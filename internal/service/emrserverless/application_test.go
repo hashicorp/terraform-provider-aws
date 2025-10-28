@@ -965,18 +965,18 @@ func TestAccEMRServerlessApplication_monitoringConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_monitoringConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.enabled", acctest.CtTrue),
@@ -995,7 +995,7 @@ func TestAccEMRServerlessApplication_monitoringConfiguration(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_monitoringConfigurationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.enabled", acctest.CtFalse),

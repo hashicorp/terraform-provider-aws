@@ -436,7 +436,6 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	output, err := conn.CreateApplication(ctx, input)
 	if v, ok := d.GetOk("runtime_configuration"); ok && len(v.([]any)) > 0 {
 		input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]any))
 	}
@@ -587,7 +586,6 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
 		}
 
-		_, err := conn.UpdateApplication(ctx, input)
 		if v, ok := d.GetOk("runtime_configuration"); ok && len(v.([]any)) > 0 {
 			input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]any))
 		}
