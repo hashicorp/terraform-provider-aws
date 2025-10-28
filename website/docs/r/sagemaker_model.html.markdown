@@ -104,6 +104,13 @@ The `primary_container` and `container` block both support:
 
 * `mode` - (Required) How containers in a multi-container are run. The following values are valid `Serial` and `Direct`.
 
+### VPC Config
+
+The following arguments are required:
+* `security_group_ids` - (Required) List of security group IDs you want to be applied to your training job or model. Specify the security groups for the VPC that is specified in the Subnets field.
+* `subnets` - (Required) List of subnet IDs in the VPC to which you want to connect your training job or model.
+
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
