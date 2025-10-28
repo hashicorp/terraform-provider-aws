@@ -961,6 +961,141 @@ resource "aws_emrserverless_application" "test" {
 `, rName, selectedVersionResourceName, firstImageVersion, secondImageVersion), nil
 }
 
+func TestAccEMRServerlessApplication_monitoringConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application types.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_monitoringConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.log_group_name", "/aws/emr-serverless/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.0.log_uri"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_monitoringConfigurationUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.prometheus_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.prometheus_monitoring_configuration.0.remote_write_url"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.0.log_uri"),
+				),
+			},
+		},
+	})
+}
+
+func testAccApplicationConfig_monitoringConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/emr-serverless/%[1]s"
+}
+
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.1.0"
+  type          = "spark"
+
+  monitoring_configuration {
+    cloudwatch_logging_configuration {
+      enabled                = true
+      log_group_name         = aws_cloudwatch_log_group.test.name
+      log_stream_name_prefix = "spark-logs"
+
+      log_types {
+        name   = "SPARK_DRIVER"
+        values = ["STDOUT", "STDERR"]
+      }
+
+      log_types {
+        name   = "SPARK_EXECUTOR"
+        values = ["STDOUT"]
+      }
+    }
+
+    managed_persistence_monitoring_configuration {
+      enabled = true
+    }
+
+    s3_monitoring_configuration {
+      log_uri = "s3://${aws_s3_bucket.test.bucket}/logs/"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccApplicationConfig_monitoringConfigurationUpdated(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test_updated" {
+  bucket        = "%[1]s-updated"
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/emr-serverless/%[1]s"
+}
+
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.1.0"
+  type          = "spark"
+
+  monitoring_configuration {
+    cloudwatch_logging_configuration {
+      enabled        = false
+      log_group_name = aws_cloudwatch_log_group.test.name
+    }
+
+    managed_persistence_monitoring_configuration {
+      enabled = false
+    }
+
+    prometheus_monitoring_configuration {
+      remote_write_url = "https://aps-workspaces.${data.aws_region.current.name}.amazonaws.com/workspaces/ws-12345678-1234-1234-1234-123456789012/api/v1/remote_write"
+    }
+
+    s3_monitoring_configuration {
+      log_uri = "s3://${aws_s3_bucket.test_updated.bucket}/logs/"
+    }
+  }
+}
+`, rName)
+}
+
 func testAccApplicationConfig_schedulerConfiguration(rName string, maxConcurrentRuns, queueTimeoutMinutes int) string {
 	return fmt.Sprintf(`
 resource "aws_emrserverless_application" "test" {
