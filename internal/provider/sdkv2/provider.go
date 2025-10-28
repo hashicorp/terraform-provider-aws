@@ -800,19 +800,19 @@ func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
 			}
 		}
 
-		for _, v := range sp.SDKResources(ctx) {
-			typeName := v.TypeName
-			r := v.Factory()
+		for _, resource := range sp.SDKResources(ctx) {
+			typeName := resource.TypeName
+			r := resource.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if !tfunique.IsHandleNil(resource.Tags) {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
