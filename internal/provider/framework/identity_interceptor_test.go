@@ -262,6 +262,10 @@ func (c mockClient) ServicePackage(_ context.Context, name string) conns.Service
 	panic("not implemented") //lintignore:R009
 }
 
+func (c mockClient) TaggingPolicyConfig(ctx context.Context) *tftags.TaggingPolicyConfig {
+	panic("not implemented") //lintignore:R009
+}
+
 func (c mockClient) ValidateInContextRegionInPartition(ctx context.Context) error {
 	panic("not implemented") //lintignore:R009
 }

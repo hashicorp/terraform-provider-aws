@@ -546,6 +546,7 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 
 	if !tfunique.IsHandleNil(spec.Tags) {
 		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags))
+		interceptors = append(interceptors, resourceValidateRequiredTags())
 	}
 
 	inner, _ := spec.Factory(context.TODO())

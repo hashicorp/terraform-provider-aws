@@ -248,11 +248,13 @@ func getRequiredTags(ctx context.Context, awsConfig aws.Config) (map[string]tfta
 	// client := resourceGroupsTaggingAPIClient(ctx, awsConfig)
 
 	out := map[string]tftags.KeyValueTags{
-		"aws_s3_bucket": {
+		// Plugin SDK V2 based
+		"aws_cloudwatch_log_group": {
 			"owner":       nil,
 			"cost_center": nil,
 		},
-		"aws_cloudwatch_log_group": {
+		// Plugin Framework based
+		"aws_iot_billing_group": {
 			"owner":       nil,
 			"cost_center": nil,
 		},

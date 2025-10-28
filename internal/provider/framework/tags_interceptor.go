@@ -261,3 +261,54 @@ func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttype
 		HTags: interceptors.HTags(servicePackageResourceTags),
 	}
 }
+
+// resourceValidateRequiredTags validates that required tags are present for a given resource type.
+func resourceValidateRequiredTags() resourceModifyPlanInterceptor {
+	return &resourceValidateRequiredTagsInterceptor{}
+}
+
+type resourceValidateRequiredTagsInterceptor struct{}
+
+func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) {
+	c := opts.c
+
+	_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
+	if !ok {
+		return
+	}
+
+	switch request, _, when := opts.request, opts.response, opts.when; when {
+	case Before:
+		// If the entire plan is null, the resource is planned for destruction.
+		if request.Plan.Raw.IsNull() {
+			return
+		}
+
+		var planTags tftags.Map
+		opts.response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
+		if opts.response.Diagnostics.HasError() {
+			return
+		}
+
+		if policy := c.TaggingPolicyConfig(ctx); policy != nil {
+			allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags))
+
+			// Verify required tags are present
+			if reqTags, ok := policy.RequiredTags[typeName]; ok {
+				if !allTags.ContainsAllKeys(reqTags) {
+					missing := reqTags.Removed(allTags).Keys()
+					summary := "Missing Required Tags"
+					detail := fmt.Sprintf("An organizational tagging policy requires the following tags for %s: %s", typeName, missing)
+
+					switch policy.Level {
+					case "error":
+						opts.response.Diagnostics.AddAttributeError(path.Root(names.AttrTags), summary, detail)
+					default:
+						opts.response.Diagnostics.AddAttributeWarning(path.Root(names.AttrTags), summary, detail)
+					}
+					return
+				}
+			}
+		}
+	}
+}

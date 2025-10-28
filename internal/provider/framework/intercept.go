@@ -27,6 +27,7 @@ type awsClient interface {
 	IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig
 	Partition(context.Context) string
 	ServicePackage(_ context.Context, name string) conns.ServicePackage
+	TaggingPolicyConfig(ctx context.Context) *tftags.TaggingPolicyConfig
 	ValidateInContextRegionInPartition(ctx context.Context) error
 	AwsConfig(context.Context) aws.Config
 }
