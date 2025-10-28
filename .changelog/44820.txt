@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_bedrockagentcore_browser: Update `network_configuration` block to use correct `vpc_config` nested block (with `security_groups` and `subnets` attributes) as specified in AWS API reference for CreateBrowser.
-```
