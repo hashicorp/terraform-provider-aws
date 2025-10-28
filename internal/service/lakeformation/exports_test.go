@@ -16,4 +16,5 @@ var (
 	FindOptInByID           = findOptInByID
 
 	ValidPrincipal = validPrincipal
+	ValidCatalogID = validCatalogID
 )
