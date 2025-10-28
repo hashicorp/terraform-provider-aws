@@ -48,8 +48,8 @@ resource "terraform_data" "prepare_trigger" {
 
 ```terraform
 resource "aws_bedrockagent_agent_action_group" "example" {
-  agent_id                = aws_bedrockagent_agent.example.agent_id
-  action_group_name       = "example-action-group"
+  agent_id          = aws_bedrockagent_agent.example.agent_id
+  action_group_name = "example-action-group"
   action_group_executor {
     lambda = aws_lambda_function.example.function_name
   }
