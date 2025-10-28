@@ -240,6 +240,7 @@ type ResourceDatum struct {
 	IdentityVersion                   int64
 	CustomInherentRegionIdentity      bool
 	customIdentityAttribute           string
+	CustomInherentRegionParser        string
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -567,10 +568,26 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "CustomInherentRegionIdentity":
 				d.CustomInherentRegionIdentity = true
 				d.WrappedImport = true
-				d.CustomImport = true
 
 				args := common.ParseArgs(m[3])
+
+				if len(args.Positional) < 2 {
+					v.errs = append(v.errs, fmt.Errorf("CustomInherentRegionIdentity missing required parameters: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
 				d.customIdentityAttribute = args.Positional[0]
+
+				attr := args.Positional[1]
+				if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
+				} else {
+					d.CustomInherentRegionParser = funcName
+					if importSpec != nil {
+						d.goImports = append(d.goImports, *importSpec)
+					}
+				}
 
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
 					attrs := strings.Split(attr, ";")

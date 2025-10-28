@@ -517,7 +517,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						),
 					{{- end }}
 				{{- else if $value.CustomInherentRegionIdentity -}}
-					inttypes.RegionalCustomInherentRegionIdentity({{ .CustomIdentityAttribute }},
+					inttypes.RegionalCustomInherentRegionIdentity({{ .CustomIdentityAttribute }}, {{ .CustomInherentRegionParser }},
 						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
