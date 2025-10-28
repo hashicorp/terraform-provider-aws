@@ -1058,6 +1058,8 @@ resource "aws_emrserverless_application" "test" {
 
 func testAccApplicationConfig_monitoringConfigurationUpdated(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_s3_bucket" "test_updated" {
   bucket        = "%[1]s-updated"
   force_destroy = true
@@ -1083,7 +1085,7 @@ resource "aws_emrserverless_application" "test" {
     }
 
     prometheus_monitoring_configuration {
-      remote_write_url = "https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-12345678-1234-1234-1234-123456789012/api/v1/remote_write"
+      remote_write_url = "https://aps-workspaces.${data.aws_region.current.name}.amazonaws.com/workspaces/ws-12345678-1234-1234-1234-123456789012/api/v1/remote_write"
     }
 
     s3_monitoring_configuration {
