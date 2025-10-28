@@ -32,10 +32,10 @@ This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository_name` - (Required) Name of the public repository.
-* `registry_id` - (Optional) The AWS account ID associated with the public registry that contains the repository. If not specified, the default public registry is assumed.
+* `registry_id` - (Optional) AWS account ID associated with the public registry that contains the repository. If not specified, the default public registry is assumed.
 * `image_ids` - (Optional) One or more image ID filters. Each image ID can use either a tag or digest (or both). Each object has the following attributes:
-    * `image_tag` - (Optional) The tag used for the image.
-    * `image_digest` - (Optional) The digest of the image manifest.
+    * `image_tag` - (Optional) Tag used for the image.
+    * `image_digest` - (Optional) Digest of the image manifest.
 
 ## Attribute Reference
 
