@@ -71,7 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lake Formation Data Cells Filter using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lake Formation Data Cells Filter using the `database_name`, `name`, `table_catalog_id`, and `table_name` separated by `,`. For example:
 
 ```terraform
 import {
@@ -80,7 +80,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Lake Formation Data Cells Filter using the `id`. For example:
+Using `terraform import`, import Lake Formation Data Cells Filter using the `database_name`, `name`, `table_catalog_id`, and `table_name` separated by `,`. For example:
 
 ```console
 % terraform import aws_lakeformation_data_cells_filter.example database_name,name,table_catalog_id,table_name

@@ -194,8 +194,8 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
-		func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteThingType(ctx, &iot.DeleteThingTypeInput{
 				ThingTypeName: aws.String(d.Id()),
 			})

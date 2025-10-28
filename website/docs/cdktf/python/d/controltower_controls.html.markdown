@@ -45,8 +45,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `target_identifier` - (Required) The ARN of the organizational unit.
 
 ## Attribute Reference
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `enabled_controls` - List of all the ARNs for the controls applied to the `target_identifier`.
 
-<!-- cache-key: cdktf-0.20.8 input-5d64cbccc4ebc5f5b040cdf645dfc1895e2df0f54863b642aeb0024d4372f827 -->
+<!-- cache-key: cdktf-0.20.8 input-2fe58b58b7d25d224547265737fabe73c0a5ba28204cf3d2af6b0379d20b025f -->

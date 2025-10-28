@@ -92,7 +92,7 @@ func (d *inputDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	out, err := FindInputByID(ctx, conn, data.ID.ValueString())
+	out, err := findInputByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.MediaLive, create.ErrActionReading, DSNameInput, data.ID.String(), err),

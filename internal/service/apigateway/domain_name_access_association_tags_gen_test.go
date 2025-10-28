@@ -18,13 +18,14 @@ import (
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -218,13 +219,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -286,13 +288,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_null(t *testing.T) {
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -342,13 +345,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyMap(t *testing.T) {
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -430,13 +434,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_AddOnUpdate(t *testing.T)
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -530,13 +535,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnCreate(t *test
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -681,13 +687,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Add(t *
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -779,13 +786,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Replace
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -978,13 +986,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_providerOnly(
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1152,13 +1161,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nonOverlappin
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1342,13 +1352,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_overlapping(t
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1440,13 +1451,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToProvi
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1537,13 +1549,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToResou
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1609,13 +1622,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyResource
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1673,13 +1687,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyProvider
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1748,13 +1763,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullOverlappi
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1825,13 +1841,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullNonOverla
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1886,13 +1903,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnCreate(t *t
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1991,13 +2009,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Add(
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -2086,13 +2105,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Repl
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -2256,13 +2276,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Defaul
 
 func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),

@@ -81,6 +81,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identifier` - (Required) An identifier for the resource server.
 * `name` - (Required) A name for the resource server.
 * `userPoolId` - (Required) User pool the client belongs to.
@@ -129,4 +130,4 @@ Using `terraform import`, import `aws_cognito_resource_server` using their User 
 % terraform import aws_cognito_resource_server.example "us-west-2_abc123|https://example.com"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-856d9cab649aaa6104183bfcc330f7d63dfc6e10b98ba89d9fd544f7fa7fecb6 -->
+<!-- cache-key: cdktf-0.20.8 input-ad2c3d999cdd08aed23a3900a147af1388d03abf4709c342a86c330c6b286c42 -->

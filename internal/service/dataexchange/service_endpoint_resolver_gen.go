@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params dataexchange.End
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up dataexchange endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up dataexchange endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

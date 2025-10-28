@@ -34,6 +34,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway/types;awstypes;awstypes.DomainNameAccessAssociation")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
+// @Testing(preIdentityVersion="v5.100.0")
 func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &domainNameAccessAssociationResource{}
 
@@ -42,7 +43,7 @@ func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceW
 
 type domainNameAccessAssociationResource struct {
 	framework.ResourceWithModel[domainNameAccessAssociationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *domainNameAccessAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params kinesisvideo.End
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up kinesisvideo endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up kinesisvideo endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

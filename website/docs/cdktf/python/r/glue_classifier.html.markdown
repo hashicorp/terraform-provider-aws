@@ -115,11 +115,12 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `csv_classifier` - (Optional) A classifier for CSV content. Defined below.
-* `grok_classifier` – (Optional) A classifier that uses grok patterns. Defined below.
-* `json_classifier` – (Optional) A classifier for JSON content. Defined below.
-* `name` – (Required) The name of the classifier.
-* `xml_classifier` – (Optional) A classifier for XML content. Defined below.
+* `grok_classifier` - (Optional) A classifier that uses grok patterns. Defined below.
+* `json_classifier` - (Optional) A classifier for JSON content. Defined below.
+* `name` - (Required) The name of the classifier.
+* `xml_classifier` - (Optional) A classifier for XML content. Defined below.
 
 ### csv_classifier
 
@@ -131,7 +132,7 @@ This resource supports the following arguments:
 * `disable_value_trimming` - (Optional) Specifies whether to trim column values.
 * `header` - (Optional) A list of strings representing column names.
 * `quote_symbol` - (Optional) A custom symbol to denote what combines content into a single column value. It must be different from the column delimiter.
-* `serde` – (Optional) The SerDe for processing CSV. Valid values are `OpenCSVSerDe`, `LazySimpleSerDe`, `None`.
+* `serde` - (Optional) The SerDe for processing CSV. Valid values are `OpenCSVSerDe`, `LazySimpleSerDe`, `None`.
 
 ### grok_classifier
 
@@ -179,4 +180,4 @@ Using `terraform import`, import Glue Classifiers using their name. For example:
 % terraform import aws_glue_classifier.MyClassifier MyClassifier
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0aaa3383882d9c380ab9a6852627ccb29d90099f2e4ea7fa62eb9008043a9e56 -->
+<!-- cache-key: cdktf-0.20.8 input-9e936f4a8817c45d5461063ab381f4d89638f28fed1b0cd2d49f257e1ba3abd2 -->

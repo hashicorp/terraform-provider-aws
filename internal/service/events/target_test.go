@@ -1964,15 +1964,14 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  cluster_subnet_group_name           = aws_redshift_subnet_group.test.name
-  database_name                       = "test"
-  master_username                     = "tfacctest"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier        = %[1]q
+  cluster_subnet_group_name = aws_redshift_subnet_group.test.name
+  database_name             = "test"
+  master_username           = "tfacctest"
+  master_password           = "Mustbe8characters"
+  node_type                 = "ra3.large"
+  allow_version_upgrade     = false
+  skip_final_snapshot       = true
 
   depends_on = [aws_internet_gateway.test]
 }

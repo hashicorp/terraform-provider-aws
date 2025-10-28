@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_id` - (Required) ID of directory.
 * `dns_ips` - (Required) A list of forwarder IP addresses.
 * `remote_domain_name` - (Required) The fully qualified domain name of the remote domain for which forwarders will be used.
@@ -70,4 +71,4 @@ Using `terraform import`, import conditional forwarders using the directory id a
 % terraform import aws_directory_service_conditional_forwarder.example d-1234567890:example.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6c5202e2bda00c02157b7a412c0e460a4f86c81c2eec1650454ecd36ded52d0d -->
+<!-- cache-key: cdktf-0.20.8 input-c58fa6d7e1049eb0ee8fc1d8051ac048a81aa1ca91531c13de7b8fe9dc5c1d10 -->

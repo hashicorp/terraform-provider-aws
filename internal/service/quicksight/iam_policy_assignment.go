@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,23 +56,9 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, request resour
 				CustomType: fwtypes.StringEnumType[awstypes.AssignmentStatus](),
 				Required:   true,
 			},
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrNamespace: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString("default"),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
+			names.AttrID:           framework.IDAttribute(),
+			names.AttrNamespace:    quicksightschema.NamespaceAttribute(),
 			"policy_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -109,7 +95,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, request resour
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if data.AWSAccountID.IsUnknown() || data.AWSAccountID.IsNull() {
+	if data.AWSAccountID.IsUnknown() {
 		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 
@@ -144,7 +130,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, request resour
 	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 
@@ -289,7 +275,7 @@ func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, request resour
 	}
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 

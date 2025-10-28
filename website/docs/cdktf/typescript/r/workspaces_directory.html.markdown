@@ -171,26 +171,23 @@ import { Token, TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { WorkspacesDirectory } from "./.gen/providers/aws/workspaces-directory";
-interface MyConfig {
-  directoryId: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     new WorkspacesDirectory(this, "example", {
-      active_directory_config: [
-        {
-          domain_name: "example.internal",
-          service_account_secret_arn: awsSecretsmanagerSecretExample.arn,
-        },
-      ],
+      activeDirectoryConfig: {
+        domainName: "example.internal",
+        serviceAccountSecretArn: Token.asString(
+          awsSecretsmanagerSecretExample.arn
+        ),
+      },
       samlProperties: {
         relayStateParameterName: "RelayState",
         status: "ENABLED",
         userAccessUrl: "https://sso.example.com/",
       },
       subnetIds: [exampleC.id, exampleD.id],
-      user_identity_type: "CUSTOMER_MANAGED",
+      userIdentityType: "CUSTOMER_MANAGED",
       workspaceAccessProperties: {
         deviceTypeAndroid: "ALLOW",
         deviceTypeChromeos: "ALLOW",
@@ -206,10 +203,9 @@ class MyConvertedCode extends TerraformStack {
         defaultOu: "OU=AWS,DC=Workgroup,DC=Example,DC=com",
         enableInternetAccess: true,
       },
-      workspace_directory_description: "WorkSpaces Pools directory",
-      workspace_directory_name: "Pool directory",
-      workspace_type: "POOLS",
-      directoryId: config.directoryId,
+      workspaceDirectoryDescription: "WorkSpaces Pools directory",
+      workspaceDirectoryName: "Pool directory",
+      workspaceType: "POOLS",
     });
   }
 }
@@ -253,22 +249,23 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directoryId` - (Optional) The directory identifier for registration in WorkSpaces service.
 * `subnetIds` - (Optional) The identifiers of the subnets where the directory resides.
-* `ipGroupIds` – (Optional) The identifiers of the IP access control groups associated with the directory.
-* `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `ipGroupIds` - (Optional) The identifiers of the IP access control groups associated with the directory.
+* `tags` - (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `certificateBasedAuthProperties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
-* `samlProperties` – (Optional) Configuration of SAML authentication integration. Defined below.
-* `selfServicePermissions` – (Optional) Permissions to enable or disable self-service capabilities when `workspace_type` is set to `PERSONAL`.. Defined below.
-* `workspaceAccessProperties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
-* `workspaceCreationProperties` – (Optional) Default properties that are used for creating WorkSpaces. Defined below.
-* `workspace_type` - (Optional) Specifies the type of WorkSpaces directory. Valid values are `PERSONAL` and `POOLS`. Default is `PERSONAL`.
-* `active_directory_config` – (Optional) Configuration for Active Directory integration when `workspace_type` is set to `POOLS`. Defined below.
-* `workspace_directory_name` - (Required for `POOLS`) The name of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
-* `workspace_directory_description` - (Required for `POOLS`) The description of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
-* `user_identity_type` - (Required for `POOLS`) Specifies the user identity type for the WorkSpaces directory. Valid values are `CUSTOMER_MANAGED`, `AWS_DIRECTORY_SERVICE`, `AWS_IAM_IDENTITY_CENTER`.
+* `samlProperties` - (Optional) Configuration of SAML authentication integration. Defined below.
+* `selfServicePermissions` - (Optional) Permissions to enable or disable self-service capabilities when `workspaceType` is set to `PERSONAL`.. Defined below.
+* `workspaceAccessProperties` - (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
+* `workspaceCreationProperties` - (Optional) Default properties that are used for creating WorkSpaces. Defined below.
+* `workspaceType` - (Optional) Specifies the type of WorkSpaces directory. Valid values are `PERSONAL` and `POOLS`. Default is `PERSONAL`.
+* `activeDirectoryConfig` - (Optional) Configuration for Active Directory integration when `workspaceType` is set to `POOLS`. Defined below.
+* `workspaceDirectoryName` - (Required for `POOLS`) The name of the WorkSpaces directory when `workspaceType` is set to `POOLS`.
+* `workspaceDirectoryDescription` - (Required for `POOLS`) The description of the WorkSpaces directory when `workspaceType` is set to `POOLS`.
+* `userIdentityType` - (Required for `POOLS`) Specifies the user identity type for the WorkSpaces directory. Valid values are `CUSTOMER_MANAGED`, `AWS_DIRECTORY_SERVICE`, `AWS_IAM_IDENTITY_CENTER`.
 
--> **Note:** When `workspace_type` is set to `POOLS`, the `directoryId` is automatically generated and cannot be manually set.
+-> **Note:** When `workspaceType` is set to `POOLS`, the `directoryId` is automatically generated and cannot be manually set.
 
 ### certificate_based_auth_properties
 
@@ -283,39 +280,39 @@ This resource supports the following arguments:
 
 ### self_service_permissions
 
-* `changeComputeType` – (Optional) Whether WorkSpaces directory users can change the compute type (bundle) for their workspace. Default `false`.
-* `increaseVolumeSize` – (Optional) Whether WorkSpaces directory users can increase the volume size of the drives on their workspace. Default `false`.
-* `rebuildWorkspace` – (Optional) Whether WorkSpaces directory users can rebuild the operating system of a workspace to its original state. Default `false`.
-* `restartWorkspace` – (Optional) Whether WorkSpaces directory users can restart their workspace. Default `true`.
-* `switchRunningMode` – (Optional) Whether WorkSpaces directory users can switch the running mode of their workspace. Default `false`.
+* `changeComputeType` - (Optional) Whether WorkSpaces directory users can change the compute type (bundle) for their workspace. Default `false`.
+* `increaseVolumeSize` - (Optional) Whether WorkSpaces directory users can increase the volume size of the drives on their workspace. Default `false`.
+* `rebuildWorkspace` - (Optional) Whether WorkSpaces directory users can rebuild the operating system of a workspace to its original state. Default `false`.
+* `restartWorkspace` - (Optional) Whether WorkSpaces directory users can restart their workspace. Default `true`.
+* `switchRunningMode` - (Optional) Whether WorkSpaces directory users can switch the running mode of their workspace. Default `false`.
 
 ### workspace_access_properties
 
-* `deviceTypeAndroid` – (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
-* `deviceTypeChromeos` – (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
-* `deviceTypeIos` – (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
-* `deviceTypeLinux` – (Optional) Indicates whether users can use Linux clients to access their WorkSpaces.
-* `deviceTypeOsx` – (Optional) Indicates whether users can use macOS clients to access their WorkSpaces.
-* `deviceTypeWeb` – (Optional) Indicates whether users can access their WorkSpaces through a web browser.
-* `deviceTypeWindows` – (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
-* `deviceTypeZeroclient` – (Optional) Indicates whether users can use zero client devices to access their WorkSpaces.
+* `deviceTypeAndroid` - (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
+* `deviceTypeChromeos` - (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
+* `deviceTypeIos` - (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
+* `deviceTypeLinux` - (Optional) Indicates whether users can use Linux clients to access their WorkSpaces.
+* `deviceTypeOsx` - (Optional) Indicates whether users can use macOS clients to access their WorkSpaces.
+* `deviceTypeWeb` - (Optional) Indicates whether users can access their WorkSpaces through a web browser.
+* `deviceTypeWindows` - (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
+* `deviceTypeZeroclient` - (Optional) Indicates whether users can use zero client devices to access their WorkSpaces.
 
 ### workspace_creation_properties
 
 -> **Note:** Once you specified `customSecurityGroupId` or `defaultOu`, there is no way to delete these attributes. If you cleanup them from the configuration, they still be present in state.
 
-* `customSecurityGroupId` – (Optional) The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
-* `defaultOu` – (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
-* `enableInternetAccess` – (Optional) Indicates whether internet access is enabled for your WorkSpaces.
-* `enableMaintenanceMode` – (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
-* `userEnabledAsLocalAdministrator` – (Optional) Indicates whether users are local administrators of their WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
+* `customSecurityGroupId` - (Optional) The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
+* `defaultOu` - (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
+* `enableInternetAccess` - (Optional) Indicates whether internet access is enabled for your WorkSpaces.
+* `enableMaintenanceMode` - (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. Valid only if `workspaceType` is set to `PERSONAL`.
+* `userEnabledAsLocalAdministrator` - (Optional) Indicates whether users are local administrators of their WorkSpaces. Valid only if `workspaceType` is set to `PERSONAL`.
 
 ### active_directory_config
 
--> **Note:** `active_directory_config` is only valid if `workspaces_type` is set to `POOLS`.
+-> **Note:** `activeDirectoryConfig` is only valid if `workspaces_type` is set to `POOLS`.
 
-* `domainName` – Fully qualified domain name of the AWS Directory Service directory.
-* `service_account_secret_arn` – ARN of the Secrets Manager secret that contains the credentials for the service account. For more information, see [Service Account Details](https://docs.aws.amazon.com/workspaces/latest/adminguide/pools-service-account-details.html).
+* `domainName` - Fully qualified domain name of the AWS Directory Service directory.
+* `serviceAccountSecretArn` - ARN of the Secrets Manager secret that contains the credentials for the service account. For more information, see [Service Account Details](https://docs.aws.amazon.com/workspaces/latest/adminguide/pools-service-account-details.html).
 
 ## Attribute Reference
 
@@ -361,4 +358,4 @@ Using `terraform import`, import Workspaces directory using the directory ID. Fo
 % terraform import aws_workspaces_directory.main d-4444444444
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-87a326ccf795070d83d6ff9474c2155fa87ee487ee14ef2a79d42e595c0134c9 -->
+<!-- cache-key: cdktf-0.20.8 input-479596fbfcf51961c1a6a2956447260a712572ef97f86cda0522dda795f74c33 -->

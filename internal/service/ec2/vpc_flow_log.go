@@ -5,12 +5,10 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -154,6 +152,15 @@ func resourceFlowLog() *schema.Resource {
 				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    flowLogSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: flowLogStateUpgradeV0,
+				Version: 0,
+			},
+		},
 	}
 }
 
@@ -233,7 +240,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.MaxAggregationInterval = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFlowLogs(ctx, input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
@@ -252,7 +259,8 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	fl, err := findFlowLogByID(ctx, conn, d.Id())
 
@@ -266,14 +274,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Flow Log (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, flowLogARN(ctx, c, d.Id()))
 	d.Set("deliver_cross_account_role", fl.DeliverCrossAccountRole)
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []any{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
@@ -379,4 +380,8 @@ func flattenDestinationOptionsResponse(apiObject *awstypes.DestinationOptionsRes
 	}
 
 	return tfMap
+}
+
+func flowLogARN(ctx context.Context, c *conns.AWSClient, flowLogID string) string {
+	return c.RegionalARN(ctx, names.EC2, "vpc-flow-log/"+flowLogID)
 }

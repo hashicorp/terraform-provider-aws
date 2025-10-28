@@ -42,16 +42,14 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Listener")
 // @Testing(importIgnore="default_action.0.forward")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
 		UpdateWithoutTimeout: resourceListenerUpdate,
 		DeleteWithoutTimeout: resourceListenerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -641,7 +639,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(aws.ToString(output.Listeners[0].ListenerArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findListenerByARN(ctx, conn, d.Id())
 	})
 
@@ -767,7 +765,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.SslPolicy = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.ModifyListener(ctx, input)
 		})
 
@@ -1038,7 +1036,7 @@ func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awsty
 }
 
 func retryListenerCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.CreateListenerInput, timeout time.Duration) (*elasticloadbalancingv2.CreateListenerOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateListener(ctx, input)
 	})
 

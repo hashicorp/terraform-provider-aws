@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Required) Fully-qualified domain name to look up. If no domain name is found, an error will be returned.
 * `domainNameId` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
 
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `securityPolicy` - Security policy for the domain name.
 * `tags` - Key-value map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-b1d4411ef59b05824a042c0653a8dd7961011e7d97a61114194a099903fb5e88 -->
+<!-- cache-key: cdktf-0.20.8 input-c0c4a9382879894c240e1244b5e57489ab3c252465a026d69b6a30328159be01 -->

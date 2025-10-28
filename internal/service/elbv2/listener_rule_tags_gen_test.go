@@ -7,7 +7,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,11 +18,12 @@ import (
 
 func TestAccELBV2ListenerRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
@@ -213,11 +213,12 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
@@ -283,11 +284,12 @@ func TestAccELBV2ListenerRule_tags_null(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
@@ -349,11 +351,12 @@ func TestAccELBV2ListenerRule_tags_EmptyMap(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
@@ -433,11 +436,12 @@ func TestAccELBV2ListenerRule_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
@@ -528,11 +532,12 @@ func TestAccELBV2ListenerRule_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
@@ -671,11 +676,12 @@ func TestAccELBV2ListenerRule_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
@@ -763,11 +769,12 @@ func TestAccELBV2ListenerRule_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -956,11 +963,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1125,11 +1133,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1310,11 +1319,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_overlapping(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1403,11 +1413,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_updateToProviderOnly(t *testing.T
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1495,11 +1506,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_updateToResourceOnly(t *testing.T
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1563,11 +1575,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1623,11 +1636,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1688,11 +1702,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_nullOverlappingResourceTag(t *tes
 
 func TestAccELBV2ListenerRule_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1753,11 +1768,12 @@ func TestAccELBV2ListenerRule_tags_DefaultTags_nullNonOverlappingResourceTag(t *
 
 func TestAccELBV2ListenerRule_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1811,11 +1827,12 @@ func TestAccELBV2ListenerRule_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -1911,11 +1928,12 @@ func TestAccELBV2ListenerRule_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -2001,11 +2019,12 @@ func TestAccELBV2ListenerRule_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
@@ -2163,11 +2182,12 @@ func TestAccELBV2ListenerRule_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),

@@ -126,6 +126,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowedOauthFlowsUserPoolClient` - (Optional) Whether the client is allowed to use OAuth 2.0 features. `allowedOauthFlowsUserPoolClient` must be set to `true` before you can configure the following arguments: `callbackUrls`, `logoutUrls`, `allowedOauthScopes` and `allowedOauthFlows`.
 * `allowedOauthFlows` - (Optional) List of allowed OAuth flows, including `code`, `implicit`, and `client_credentials`. `allowedOauthFlowsUserPoolClient` must be set to `true` before you can configure this option.
@@ -142,7 +143,7 @@ The following arguments are optional:
 * `logoutUrls` - (Optional) List of allowed logout URLs for the identity providers. `allowedOauthFlowsUserPoolClient` must be set to `true` before you can configure this option.
 * `preventUserExistenceErrors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
 * `readAttributes` - (Optional) List of user pool attributes that the application client can read from.
-* `refresh_token_rotation` - (Optional) A block that specifies the configuration of refresh token rotation. [Detailed below](#refresh_token_rotation).
+* `refreshTokenRotation` - (Optional) A block that specifies the configuration of refresh token rotation. [Detailed below](#refresh_token_rotation).
 * `refreshTokenValidity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.
 * `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `providerName` attribute of the `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `tokenValidityUnits` - (Optional) Configuration block for representing the validity times in units. See details below. [Detailed below](#token_validity_units).
@@ -161,7 +162,7 @@ Either `applicationArn` or `applicationId` is required for this configuration bl
 ### refresh_token_rotation
 
 * `feature` - (Required) The state of refresh token rotation for the current app client. Valid values are `ENABLED` or `DISABLED`.
-* `retry_grace_period_seconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
+* `retryGracePeriodSeconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
 
 ### token_validity_units
 
@@ -211,4 +212,4 @@ Using `terraform import`, import Cognito User Pool Clients using the `id` of the
 % terraform import aws_cognito_managed_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7c2d2f5e6a9c0975851c0ea283f85a31d7d9aae5f2d9db1a81ea428b518d050e -->
+<!-- cache-key: cdktf-0.20.8 input-8aa8bc85eb7fbe041bfccce50da66fa179fb20e8dca7c121e1459eb714c7b80c -->

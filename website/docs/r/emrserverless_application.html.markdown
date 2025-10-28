@@ -93,11 +93,37 @@ resource "aws_emrserverless_application" "example" {
 }
 ```
 
+### Runtime Configuration Usage
+
+```terraform
+resource "aws_emrserverless_application" "example" {
+  name          = "example"
+  release_label = "emr-6.8.0"
+  type          = "spark"
+  runtime_configuration {
+    classification = "spark-executor-log4j2"
+    properties = {
+      "rootLogger.level"                = "error"
+      "logger.IdentifierForClass.name"  = "classpathForSettingLogger"
+      "logger.IdentifierForClass.level" = "info"
+    }
+  }
+  runtime_configuration {
+    classification = "spark-defaults"
+    properties = {
+      "spark.executor.memory" = "1g"
+      "spark.executor.cores"  = "1"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `runtime_configuration` - (Optional) A configuration specification to be used when provisioning an application. A configuration consists of a classification, properties, and optional nested configurations. A classification refers to an application-specific configuration file. Properties are the settings you want to change in that file.
 * `architecture` - (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `auto_start_configuration` - (Optional) The configuration for an application to automatically start on job submission.
 * `auto_stop_configuration` - (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
@@ -109,6 +135,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the application.
 * `network_configuration` - (Optional) The network configuration for customer VPC connectivity.
 * `release_label` - (Required) The EMR release version associated with the application.
+* `scheduler_configuration` - (Optional) Scheduler configuration for batch and streaming jobs running on this application. Supported with release labels `emr-7.0.0` and above. See [scheduler_configuration Arguments](#scheduler_configuration-arguments) below.
 * `type` - (Required) The type of application you want to start, such as `spark` or `hive`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -120,6 +147,11 @@ This resource supports the following arguments:
 
 * `enabled` - (Optional) Enables the application to automatically stop after a certain amount of time being idle. Defaults to `true`.
 * `idle_timeout_minutes` - (Optional) The amount of idle time in minutes after which your application will automatically stop. Defaults to `15` minutes.
+
+### runtime_configuration Arguments
+
+* `classification` - (Required) The classification within a configuration.
+* `properties` - (Optional) A set of properties specified within a configuration classification.
 
 ### initial_capacity Arguments
 
@@ -185,6 +217,14 @@ This resource supports the following arguments:
 * `cpu` - (Required) The CPU requirements for every worker instance of the worker type.
 * `disk` - (Optional) The disk requirements for every worker instance of the worker type.
 * `memory` - (Required) The memory requirements for every worker instance of the worker type.
+
+### scheduler_configuration Arguments
+
+When an empty `scheduler_configuration {}` block is specified, the feature is enabled with default settings.
+To disable the feature after it has been enabled, remove the block from the configuration.
+
+* `max_concurrent_runs` - (Optional) Maximum concurrent job runs on this application. Valid range is `1` to `1000`. Defaults to `15`.
+* `queue_timeout_minutes` - (Optional) Maximum duration in minutes for the job in QUEUED state. Valid range is from `15` to `720`. Defaults to `360`.
 
 ## Attribute Reference
 

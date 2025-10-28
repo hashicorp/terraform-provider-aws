@@ -31,6 +31,7 @@ func TestAccECSAccountSettingDefault_serial(t *testing.T) {
 		"vpcTrunking":                     testAccAccountSettingDefault_vpcTrunking,
 		"containerInsights":               testAccAccountSettingDefault_containerInsights,
 		"fargateTaskRetirementWaitPeriod": testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod,
+		"dualStackIPv6":                   testAccAccountSettingDefault_dualStackIPv6,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -99,6 +100,35 @@ func testAccAccountSettingDefault_defaultLogDriverMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "non-blocking"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
+			},
+		},
+	})
+}
+
+func testAccAccountSettingDefault_dualStackIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecs_account_setting_default.test"
+	settingName := "dualStackIPv6"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

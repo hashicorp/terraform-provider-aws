@@ -8,8 +8,10 @@ import (
 	"slices"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,6 +42,15 @@ func ResourceRegionDisabled() ServicePackageResourceRegion {
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
 	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
+}
+
+// ServicePackageAction represents a Terraform Plugin Framework action
+// implemented by a service package.
+type ServicePackageAction struct {
+	Factory  func(context.Context) (action.ActionWithConfigure, error)
+	TypeName string
+	Name     string
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageEphemeralResource represents a Terraform Plugin Framework ephemeral resource
@@ -73,6 +84,15 @@ type ServicePackageFrameworkResource struct {
 	Import   FrameworkImport
 }
 
+type ServicePackageFrameworkListResource struct {
+	Factory  func() list.ListResourceWithConfigure
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
 // implemented by a service package.
 type ServicePackageSDKDataSource struct {
@@ -95,27 +115,42 @@ type ServicePackageSDKResource struct {
 	Import   SDKv2Import
 }
 
+type ListResourceForSDK interface {
+	list.ListResourceWithRawV5Schemas
+	list.ListResourceWithConfigure
+}
+
+type ServicePackageSDKListResource struct {
+	Factory  func() ListResourceForSDK
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
 type Identity struct {
 	IsGlobalResource       bool   // All
-	Singleton              bool   // Singleton
-	ARN                    bool   // ARN
+	IsSingleton            bool   // Singleton
+	IsARN                  bool   // ARN
 	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN, Single-Parameter
+	IdentityAttribute      string // ARN
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
 	IsSingleParameter      bool
 	IsMutable              bool
+	IsSetOnUpdate          bool
 }
 
 func (i Identity) HasInherentRegion() bool {
 	if i.IsGlobalResource {
 		return false
 	}
-	if i.Singleton {
+	if i.IsSingleton {
 		return true
 	}
-	if i.ARN && !i.IsGlobalARNFormat {
+	if i.IsARN && !i.IsGlobalARNFormat {
 		return true
 	}
 	return false
@@ -123,21 +158,15 @@ func (i Identity) HasInherentRegion() bool {
 
 func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
-		{
-			Name:     "account_id",
-			Required: false,
-		},
-		{
-			Name:     "region",
-			Required: false,
-		},
+		StringIdentityAttribute("account_id", false),
+		StringIdentityAttribute("region", false),
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	identity := Identity{
 		Attributes: append(baseAttributes, attributes...),
 	}
 	if len(attributes) == 1 {
-		identity.IDAttrShadowsAttr = attributes[0].Name
+		identity.IDAttrShadowsAttr = attributes[0].Name()
 	}
 
 	for _, opt := range opts {
@@ -148,14 +177,38 @@ func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...Ident
 }
 
 type IdentityAttribute struct {
-	Name     string
-	Required bool
+	name                  string
+	required              bool
+	resourceAttributeName string
+}
+
+func (ia IdentityAttribute) Name() string {
+	return ia.name
+}
+
+func (ia IdentityAttribute) Required() bool {
+	return ia.required
+}
+
+func (ia IdentityAttribute) ResourceAttributeName() string {
+	if ia.resourceAttributeName == "" {
+		return ia.name
+	}
+	return ia.resourceAttributeName
 }
 
 func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 	return IdentityAttribute{
-		Name:     name,
-		Required: required,
+		name:     name,
+		required: required,
+	}
+}
+
+func StringIdentityAttributeWithMappedName(name string, required bool, resourceAttributeName string) IdentityAttribute {
+	return IdentityAttribute{
+		name:                  name,
+		required:              required,
+		resourceAttributeName: resourceAttributeName,
 	}
 }
 
@@ -178,14 +231,11 @@ func RegionalARNIdentityNamed(name string, opts ...IdentityOptsFunc) Identity {
 func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource:  isGlobalResource,
-		ARN:               true,
+		IsARN:             true,
 		IsGlobalARNFormat: isGlobalResource,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     name,
-				Required: true,
-			},
+			StringIdentityAttribute(name, true),
 		},
 	}
 
@@ -204,30 +254,36 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	identity := RegionalARNIdentityNamed(name, opts...)
 
 	identity.IsGlobalARNFormat = true
-	identity.Attributes = slices.Insert(identity.Attributes, 0, IdentityAttribute{
-		Name:     "region",
-		Required: false,
-	})
+	identity.Attributes = slices.Insert(identity.Attributes, 0,
+		StringIdentityAttribute("region", false),
+	)
 
 	return identity
 }
 
 func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
-		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     "region",
-				Required: false,
-			},
-			{
-				Name:     name,
-				Required: true,
-			},
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttribute("region", false),
+			StringIdentityAttribute(name, true),
+		},
+		IsSingleParameter: true,
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
+func RegionalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
+		Attributes: []IdentityAttribute{
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttribute("region", false),
+			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
 		},
 		IsSingleParameter: true,
 	}
@@ -241,17 +297,27 @@ func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Iden
 
 func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
-		IsGlobalResource:  true,
-		IdentityAttribute: name,
+		IsGlobalResource: true,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     name,
-				Required: true,
-			},
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttribute(name, true),
+		},
+		IsSingleParameter: true,
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
+func GlobalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
+		IsGlobalResource: true,
+		Attributes: []IdentityAttribute{
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
 		},
 		IsSingleParameter: true,
 	}
@@ -265,10 +331,7 @@ func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identi
 
 func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
-		{
-			Name:     "account_id",
-			Required: false,
-		},
+		StringIdentityAttribute("account_id", false),
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	identity := Identity{
@@ -276,7 +339,7 @@ func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...Identit
 		Attributes:       append(baseAttributes, attributes...),
 	}
 	if len(attributes) == 1 {
-		identity.IDAttrShadowsAttr = attributes[0].Name
+		identity.IDAttrShadowsAttr = attributes[0].Name()
 	}
 
 	for _, opt := range opts {
@@ -289,12 +352,9 @@ func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...Identit
 func GlobalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: true,
-		Singleton:        true,
+		IsSingleton:      true,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
+			StringIdentityAttribute("account_id", false),
 		},
 	}
 
@@ -308,16 +368,10 @@ func GlobalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: false,
-		Singleton:        true,
+		IsSingleton:      true,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     "region",
-				Required: false,
-			},
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttribute("region", false),
 		},
 	}
 
@@ -336,6 +390,23 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	}
 }
 
+// WithMutableIdentity is for use for resource types that normally have a mutable identity
+// If Identity must be mutable to fix potential errors, use WithIdentityFix()
+func WithMutableIdentity() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
+		opts.IsSetOnUpdate = true
+	}
+}
+
+// WithIdentityFix is for use ONLY for resource types that must be able to modify Resource Identity due to an error
+func WithIdentityFix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
+	}
+}
+
+// WithV6_0SDKv2Fix is for use ONLY for resource types affected by the v6.0 SDKv2 existing resource issue
 func WithV6_0SDKv2Fix() IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IsMutable = true
@@ -363,5 +434,10 @@ type SDKv2ImportID interface {
 
 type SDKv2Import struct {
 	WrappedImport bool
+	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
+}
+
+type SDKv2Tagger interface {
+	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
 }

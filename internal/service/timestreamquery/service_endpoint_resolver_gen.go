@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params timestreamquery.
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up timestreamquery endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up timestreamquery endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

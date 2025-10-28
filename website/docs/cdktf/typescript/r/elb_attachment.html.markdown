@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `elb` - (Required) The name of the ELB.
 * `instance` - (Required) Instance ID to place in the ELB pool.
 
@@ -53,4 +54,4 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-99c0a2bdaa3c996a4fa9095610cca1664b20df2774feb4374303141a331e823c -->
+<!-- cache-key: cdktf-0.20.8 input-e341fbe9fb496ca6c75561f9c6a8d3b115554c9dd016965ef51adcf3e2b046d8 -->

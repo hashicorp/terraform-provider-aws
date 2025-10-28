@@ -73,6 +73,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The friendly name of the AWS Firewall Manager Policy.
 * `deleteAllPolicyResources` - (Optional) If true, the request will also perform a clean-up process. Defaults to `true`. More information can be found here [AWS Firewall Manager delete policy](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_DeletePolicy.html)
 * `deleteUnusedFmManagedResources` - (Optional) If true, Firewall Manager will automatically remove protections from resources that leave the policy scope. Defaults to `false`. More information can be found here [AWS Firewall Manager policy contents](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html)
@@ -81,6 +82,7 @@ This resource supports the following arguments:
 * `excludeResourceTags` - (Required, Forces new resource) A boolean value, if true the tags that are specified in the `resourceTags` are not protected by this policy. If set to false and resource_tags are populated, resources that contain tags will be protected by this policy.
 * `includeMap` - (Optional) A map of lists of accounts and OU's to include in the policy. See the [`includeMap`](#include_map-configuration-block) block.
 * `remediationEnabled` - (Required) A boolean value, indicates if the policy should automatically applied to resources that already exist in the account.
+* `resourceTagLogicalOperator` - (Optional) Controls how multiple resource tags are combined: with AND, so that a resource must have all tags to be included or excluded, or OR, so that a resource must have at least one tag. The valid values are `AND` and `OR`.
 * `resourceTags` - (Optional) A map of resource tags, that if present will filter protections on resources based on the exclude_resource_tags.
 * `resourceType` - (Optional) A resource type to protect. Conflicts with `resourceTypeList`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values.
 * `resourceTypeList` - (Optional) A list of resource types to protect. Conflicts with `resourceType`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values. Lists with only one element are not supported, instead use `resourceType`.
@@ -202,4 +204,4 @@ Using `terraform import`, import Firewall Manager policies using the policy ID. 
 % terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7f072fc7867b57bc60d804c703653667e4d994b9f99b5593f83b578c07a2323a -->
+<!-- cache-key: cdktf-0.20.8 input-dd5778931fa54ca7bc468ed13af756318aaf853007af8bbb80abd27c4602aa96 -->

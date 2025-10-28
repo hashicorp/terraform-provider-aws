@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -113,9 +112,9 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 	const (
 		inARow = 2
 	)
-	if _, err := retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
+	if _, err := retry.Op(func(ctx context.Context) (*types.AlternateContact, error) {
 		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-	}).UntilFoundN(inARow).Run(ctx, d.Timeout(schema.TimeoutCreate)); err != nil {
+	}).UntilFoundN(inARow)(ctx, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Account Alternate Contact (%s) create: %s", d.Id(), err)
 	}
 
@@ -133,7 +132,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Account Alternate Contact (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -184,7 +183,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "updating Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	if _, err := retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
+	if _, err := retry.Op(func(ctx context.Context) (*types.AlternateContact, error) {
 		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}).If(func(v *types.AlternateContact, err error) (bool, error) {
 		if err != nil {
@@ -194,7 +193,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 		equal := email == aws.ToString(v.EmailAddress) && name == aws.ToString(v.Name) && phone == aws.ToString(v.PhoneNumber) && title == aws.ToString(v.Title)
 
 		return !equal, nil
-	}).Run(ctx, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	})(ctx, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Account Alternate Contact (%s) update: %s", d.Id(), err)
 	}
 
@@ -227,9 +226,9 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	if _, err := retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
+	if _, err := retry.Op(func(ctx context.Context) (*types.AlternateContact, error) {
 		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-	}).UntilNotFound().Run(ctx, d.Timeout(schema.TimeoutDelete)); err != nil {
+	}).UntilNotFound()(ctx, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Account Alternate Contact (%s) delete: %s", d.Id(), err)
 	}
 
@@ -247,9 +246,8 @@ func findAlternateContactByTwoPartKey(ctx context.Context, conn *account.Client,
 	output, err := conn.GetAlternateContact(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

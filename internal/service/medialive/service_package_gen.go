@@ -7,7 +7,6 @@ import (
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,7 +47,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceChannel,
+			Factory:  resourceChannel,
 			TypeName: "aws_medialive_channel",
 			Name:     "Channel",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -57,7 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceInput,
+			Factory:  resourceInput,
 			TypeName: "aws_medialive_input",
 			Name:     "Input",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -66,7 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceInputSecurityGroup,
+			Factory:  resourceInputSecurityGroup,
 			TypeName: "aws_medialive_input_security_group",
 			Name:     "Input Security Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -75,7 +74,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceMultiplex,
+			Factory:  resourceMultiplex,
 			TypeName: "aws_medialive_multiplex",
 			Name:     "Multiplex",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -109,7 +108,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *medialive.Options) {
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
-				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
 			}
 		},
 		withExtraOptions(ctx, p, config),

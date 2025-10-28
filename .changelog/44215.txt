@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_networkfirewall_rule_group: Add IPv6 CIDR block support to `address_definition` arguments in `source` and `destination` blocks within `rule_group.rules_source.stateless_rules_and_custom_actions.stateless_rule.rule_definition.match_attributes`
+```

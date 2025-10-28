@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the lifecycle configuration (must be unique). If omitted, Terraform will assign a random, unique name.
 * `on_create` - (Optional) A shell script (base64-encoded) that runs only once when the SageMaker AI Notebook Instance is created.
 * `on_start` - (Optional) A shell script (base64-encoded) that runs every time the SageMaker AI Notebook Instance is started including the time it's created.
@@ -76,4 +77,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-28227de71629dcfc9159d835c7e580a0b16ad921fd1e5b06c024e7da6fe7fb70 -->
+<!-- cache-key: cdktf-0.20.8 input-eaa75171c1e8ec6bf10d5608f06924201a24c18d88774cda961ad5311596b7db -->

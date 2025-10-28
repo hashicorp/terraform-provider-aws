@@ -49,17 +49,12 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mostRecent` - (Optional) If more than one result is returned, use the most recent snapshot.
-
 * `owners` - (Optional) Returns the snapshots owned by the specified owner id. Multiple owners can be specified.
-
 * `snapshotIds` - (Optional) Returns information on a specific snapshot_id.
-
 * `restorableByUserIds` - (Optional) One or more AWS accounts IDs that can create volumes from the snapshot.
-
-* `filter` - (Optional) One or more name/value pairs to filter off of. There are
-several valid keys, for a full reference, check out
-[describe-snapshots in the AWS CLI reference][1].
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-snapshots in the AWS CLI reference][1].
 
 ## Attribute Reference
 
@@ -90,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
 
-<!-- cache-key: cdktf-0.20.8 input-86581368f66aad8815bf1d7ad238630d56cadb2709c7c6b32c933a80a4a25b30 -->
+<!-- cache-key: cdktf-0.20.8 input-c830a0db450dd61d816fbd0bd2c88db8820ad9386d09112631cee9215fc21845 -->

@@ -42,6 +42,7 @@ const (
 // @Testing(serialize=true)
 // Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
 // @Testing(identityRegionOverrideTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newRotationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &rotationResource{}
 
@@ -50,7 +51,7 @@ func newRotationResource(context.Context) (resource.ResourceWithConfigure, error
 
 type rotationResource struct {
 	framework.ResourceWithModel[rotationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *rotationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

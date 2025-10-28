@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `status` - (Required) Transfer acceleration state of the bucket. Valid values: `Enabled`, `Suspended`.
@@ -121,4 +122,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_accelerate_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b8d2eb8976f9eb67b7e44985d08d6df0a0c35907c6a6a2a51239045804765fc1 -->
+<!-- cache-key: cdktf-0.20.8 input-a4158d34ba4469ed0e57059ba2bf685c7b0eb27c0b4a66ba23cf1b0d995b0257 -->

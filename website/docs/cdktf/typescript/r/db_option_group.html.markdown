@@ -79,6 +79,7 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) Name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
 * `optionGroupDescription` - (Optional) Description of the option group. Defaults to "Managed by Terraform".
@@ -152,4 +153,4 @@ Using `terraform import`, import DB option groups using the `name`. For example:
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7c21a061374a3e140a82a5f64d30f96ee7632e4b0fbeba886f3b84b15cf34bd8 -->
+<!-- cache-key: cdktf-0.20.8 input-352d839d57d471fd0413ffb77c9e1150656cebf34a38f5ba6e21b2f96658a0ad -->

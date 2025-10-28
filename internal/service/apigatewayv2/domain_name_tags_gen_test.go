@@ -18,13 +18,14 @@ import (
 
 func TestAccAPIGatewayV2DomainName_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -218,13 +219,14 @@ func TestAccAPIGatewayV2DomainName_tags(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -293,13 +295,14 @@ func TestAccAPIGatewayV2DomainName_tags_null(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -364,13 +367,14 @@ func TestAccAPIGatewayV2DomainName_tags_EmptyMap(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -453,13 +457,14 @@ func TestAccAPIGatewayV2DomainName_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -552,13 +557,14 @@ func TestAccAPIGatewayV2DomainName_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -701,13 +707,14 @@ func TestAccAPIGatewayV2DomainName_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -798,13 +805,14 @@ func TestAccAPIGatewayV2DomainName_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -997,13 +1005,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1171,13 +1180,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_nonOverlapping(t *testing.T)
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1361,13 +1371,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_overlapping(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1459,13 +1470,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_updateToProviderOnly(t *test
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1556,13 +1568,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_updateToResourceOnly(t *test
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1627,13 +1640,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_emptyResourceTag(t *testing.
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1690,13 +1704,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_emptyProviderOnlyTag(t *test
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1758,13 +1773,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_nullOverlappingResourceTag(t
 
 func TestAccAPIGatewayV2DomainName_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1826,13 +1842,14 @@ func TestAccAPIGatewayV2DomainName_tags_DefaultTags_nullNonOverlappingResourceTa
 
 func TestAccAPIGatewayV2DomainName_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1887,13 +1904,14 @@ func TestAccAPIGatewayV2DomainName_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1992,13 +2010,14 @@ func TestAccAPIGatewayV2DomainName_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -2087,13 +2106,14 @@ func TestAccAPIGatewayV2DomainName_tags_ComputedTag_OnUpdate_Replace(t *testing.
 
 func TestAccAPIGatewayV2DomainName_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -2257,13 +2277,14 @@ func TestAccAPIGatewayV2DomainName_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 
 func TestAccAPIGatewayV2DomainName_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := acctest.RandomSubdomain()
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),

@@ -29,6 +29,9 @@ import (
 
 // @SDKResource("aws_networkmanager_site", name="Site")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
+// @Testing(importStateIdAttribute="arn")
 func resourceSite() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteCreate,
@@ -219,7 +222,7 @@ func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	log.Printf("[DEBUG] Deleting Network Manager Site: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, siteValidationExceptionTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteSite(ctx, &networkmanager.DeleteSiteInput{
 				GlobalNetworkId: aws.String(globalNetworkID),
 				SiteId:          aws.String(d.Id()),

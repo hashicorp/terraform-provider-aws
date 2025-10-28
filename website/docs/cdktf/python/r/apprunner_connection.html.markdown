@@ -41,6 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connection_name` - (Required) Name of the connection.
 * `provider_type` - (Required) Source repository provider. Valid values: `GITHUB`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -78,4 +79,4 @@ Using `terraform import`, import App Runner Connections using the `connection_na
 % terraform import aws_apprunner_connection.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-233842c2d0a641cf7e062256608f043bbe8a22d7846d76cd1de98269db8b2a7a -->
+<!-- cache-key: cdktf-0.20.8 input-64f3c760233439e7aa84830d2f64ccf5456eaf30e70e6f66211de9ed772b4ec1 -->

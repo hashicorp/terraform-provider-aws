@@ -30,6 +30,7 @@ import (
 // @Testing(useAlternateAccount=true)
 // We need to ignore `policy` because the JSON body is not normalized
 // @Testing(importIgnore="policy")
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -38,7 +39,7 @@ func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure,
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

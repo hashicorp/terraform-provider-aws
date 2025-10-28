@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the application.
 * `computePlatform` - (Optional) The compute platform can either be `ECS`, `Lambda`, or `Server`. Default is `Server`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -131,4 +132,4 @@ Using `terraform import`, import CodeDeploy Applications using the `name`. For e
 % terraform import aws_codedeploy_app.example my-application
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-00b9fbbd35972d7215984367937bb47e7c6439d5c41831dac0b563a419c59962 -->
+<!-- cache-key: cdktf-0.20.8 input-ba89f69f5f2b92f18a276c6a2c402e59b6da2a4ffde1f1a6a06a4690c3f040da -->

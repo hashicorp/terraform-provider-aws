@@ -44,6 +44,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -287,6 +288,57 @@ func TestAccEventsBus_deadLetterConfig(t *testing.T) {
 	})
 }
 
+func TestAccEventsBus_logConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeEventBusOutput
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusConfig_logConfig(busName, "FULL", "TRACE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.include_detail", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.level", "TRACE"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBusConfig_logConfig(busName, "NONE", "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.include_detail", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.level", "OFF"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBusDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
@@ -522,4 +574,16 @@ resource "aws_cloudwatch_event_bus" "test" {
   }
 }
 `, name)
+}
+
+func testAccBusConfig_logConfig(name, includeDetail, level string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  log_config {
+    include_detail = %[2]q
+    level          = %[3]q
+  }
+}
+`, name, includeDetail, level)
 }
