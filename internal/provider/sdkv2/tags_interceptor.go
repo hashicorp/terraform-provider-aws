@@ -306,22 +306,29 @@ func validateRequiredTags() customizeDiffInterceptor {
 		case Before:
 			switch why {
 			case CustomizeDiff:
-				_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
-				if !ok {
-					return nil
-				}
+				isCreate := d.GetRawState().IsNull()
+				hasTagsChange := d.HasChange(names.AttrTags)
 
-				if policy := c.TaggingPolicyConfig(ctx); policy != nil {
-					cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
-					allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
+				// TODO: removing this condition causes destroy ops to apply the validation
+				// on the pre-destroy refresh. Verify this is acceptable for now.
+				if isCreate || hasTagsChange {
+					_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
+					if !ok {
+						return nil
+					}
 
-					// Verify required tags are present
-					if reqTags, ok := policy.RequiredTags[typeName]; ok {
-						if !allTags.ContainsAllKeys(reqTags) {
-							missing := reqTags.Removed(allTags).Keys()
-							// TODO: CustomizeDiff does not support diagnostics - can we warn some other way?
-							if policy.Level == "error" {
-								return fmt.Errorf("missing required tags for %s: %s", typeName, missing)
+					if policy := c.TaggingPolicyConfig(ctx); policy != nil {
+						cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
+						allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
+
+						// Verify required tags are present
+						if reqTags, ok := policy.RequiredTags[typeName]; ok {
+							if !allTags.ContainsAllKeys(reqTags) {
+								missing := reqTags.Removed(allTags).Keys()
+								// TODO: CustomizeDiff does not support diagnostics - can we warn some other way?
+								if policy.Level == "error" {
+									return fmt.Errorf("missing required tags for %s: %s", typeName, missing)
+								}
 							}
 						}
 					}
