@@ -253,7 +253,7 @@ func stripInjectedMetadata(content []byte) ([]byte, error) {
 	}
 
 	// Remove _createdAt and _updatedAt from values.* objects
-	if values, ok := data["values"].(map[string]any); ok {
+	if values, ok := data[names.AttrValues].(map[string]any); ok {
 		for _, value := range values {
 			if valueMap, ok := value.(map[string]any); ok {
 				delete(valueMap, "_createdAt")
