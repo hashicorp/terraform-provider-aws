@@ -198,7 +198,6 @@ var (
 // @CustomInherentRegionIdentity("url", "parseQueueURL")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 // @Testing(preIdentityVersion="v6.9.0")
-// @Testing(idAttrDuplicates="url")
 // @Testing(identityVersion="0;v6.10.0")
 // @Testing(identityVersion="1;v6.19.0")
 func resourceQueue() *schema.Resource {
