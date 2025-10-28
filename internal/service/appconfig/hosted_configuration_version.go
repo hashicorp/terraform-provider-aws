@@ -134,7 +134,7 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrARN, hostedConfigurationVersionARN(ctx, meta.(*conns.AWSClient), applicationID, configurationProfileID, versionNumber))
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
 
-	cleanedContent, err := stripAppconfigMetadata(output.Content)
+	cleanedContent, err := stripInjectedMetadata(output.Content)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "cleaning content metadata: %s", err)
 	}
@@ -234,9 +234,9 @@ func hostedConfigurationVersionARN(ctx context.Context, c *conns.AWSClient, appl
 	return c.RegionalARN(ctx, "appconfig", "application/"+applicationID+"/configurationprofile/"+configurationProfileID+"/hostedconfigurationversion/"+flex.Int32ValueToStringValue(versionNumber))
 }
 
-// stripAppconfigMetadata removes AWS-injected metadata fields (_createdAt, _updatedAt)
-// from flags.* and values.* objects in AppConfig hosted configuration content.
-func stripAppconfigMetadata(content []byte) ([]byte, error) {
+// stripInjectedMetadata removes AWS-injected metadata fields (_createdAt, _updatedAt)
+// from flags.* and values.* objects in hosted configuration content.
+func stripInjectedMetadata(content []byte) ([]byte, error) {
 	var data map[string]any
 	if err := json.Unmarshal(content, &data); err != nil {
 		return nil, err
