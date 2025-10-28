@@ -67,7 +67,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_sqs_queue_policy",
 			Name:     "Queue Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity("queue_url"),
+			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalCustomInherentRegionIdentity("queue_url", parseQueueURL,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
