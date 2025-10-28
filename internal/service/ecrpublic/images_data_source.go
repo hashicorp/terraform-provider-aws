@@ -49,8 +49,7 @@ func (d *dataSourceImages) Schema(ctx context.Context, _ datasource.SchemaReques
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9]{12}$`), "must be a 12-digit AWS account ID"),
 				},
 			},
-			"images":     framework.DataSourceComputedListOfObjectAttribute[imageItemModel](ctx),
-			names.AttrID: framework.IDAttribute(),
+			"images": framework.DataSourceComputedListOfObjectAttribute[imageItemModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"image_ids": schema.ListNestedBlock{
@@ -107,14 +106,11 @@ func (d *dataSourceImages) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	data.ID = types.StringValue(data.RepositoryName.ValueString())
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dataSourceImagesModel struct {
 	framework.WithRegionModel
-	ID             types.String                                    `tfsdk:"id"`
 	RepositoryName types.String                                    `tfsdk:"repository_name"`
 	RegistryId     types.String                                    `tfsdk:"registry_id"`
 	ImageIds       fwtypes.ListNestedObjectValueOf[imagesIDsModel] `tfsdk:"image_ids"`
