@@ -68,9 +68,11 @@ func (a *agentPrepareAction) Invoke(ctx context.Context, req action.InvokeReques
 		Message: fmt.Sprintf("Preparing Bedrock Agent %s...", agentID),
 	})
 
-	_, err := conn.PrepareAgent(ctx, &bedrockagent.PrepareAgentInput{
+	input := bedrockagent.PrepareAgentInput{
 		AgentId: aws.String(agentID),
-	})
+	}
+
+	_, err := conn.PrepareAgent(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to Prepare Bedrock Agent",

@@ -54,10 +54,12 @@ func testAccCheckAgentPrepareActionExecuted(ctx context.Context, agentResourceNa
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 		agentID := rs.Primary.ID
 
-		// Check that the agent exists and has been prepared
-		output, err := conn.GetAgent(ctx, &bedrockagent.GetAgentInput{
+		input := bedrockagent.GetAgentInput{
 			AgentId: &agentID,
-		})
+		}
+
+		// Check that the agent exists and has been prepared
+		output, err := conn.GetAgent(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("error getting Bedrock Agent (%s): %w", agentID, err)
 		}
@@ -74,7 +76,7 @@ func testAccCheckAgentPrepareActionExecuted(ctx context.Context, agentResourceNa
 func testAccAgentPrepareActionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAgentConfig_basicUnprepared(rName, "anthropic.claude-v2", "basic claude"),
-		fmt.Sprintf(`
+		`
 action "aws_bedrockagent_agent_prepare" "test" {
   config {
     agent_id = aws_bedrockagent_agent.test.agent_id
@@ -91,5 +93,5 @@ resource "terraform_data" "trigger" {
 
   depends_on = [aws_bedrockagent_agent.test]
 }
-`))
+`)
 }
