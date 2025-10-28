@@ -251,6 +251,19 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 	}
 }
 
+func customInherentRegionResourceImporter(identity inttypes.Identity) *schema.ResourceImporter {
+	// Not supported for Global resources. This is validated in validateResourceSchemas().
+	return &schema.ResourceImporter{
+		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			if err := importer.RegionalInherentRegion(ctx, rd, identity); err != nil {
+				return nil, err
+			}
+
+			return []*schema.ResourceData{rd}, nil
+		},
+	}
+}
+
 func customResourceImporter(r *schema.Resource, identity *inttypes.Identity, importSpec *inttypes.SDKv2Import) {
 	importF := r.Importer.StateContext
 

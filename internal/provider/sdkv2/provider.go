@@ -733,6 +733,8 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					r.Importer = arnIdentityResourceImporter(resource.Identity)
 				} else if resource.Identity.IsSingleton {
 					r.Importer = singletonIdentityResourceImporter(resource.Identity)
+				} else if resource.Identity.IsCustomInherentRegion {
+					r.Importer = customInherentRegionResourceImporter(resource.Identity)
 				} else {
 					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
 				}
@@ -831,6 +833,13 @@ func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
 					}
 				} else {
 					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+					continue
+				}
+			}
+
+			if resource.Identity.IsCustomInherentRegion {
+				if resource.Identity.IsGlobalResource {
+					errs = append(errs, fmt.Errorf("`IsCustomInherentRegion` is not supported for Global resources: %s resource", typeName))
 					continue
 				}
 			}
