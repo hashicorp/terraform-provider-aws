@@ -30,6 +30,10 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			acctest.CtBasic:  testAccDataLakeSettingsDataSource_basic,
 			"readOnlyAdmins": testAccDataLakeSettingsDataSource_readOnlyAdmins,
 		},
+		"IdentityCenterConfiguration": {
+			acctest.CtBasic:      testAccLakeFormationIdentityCenterConfiguration_basic,
+			acctest.CtDisappears: testAccLakeFormationIdentityCenterConfiguration_disappears,
+		},
 		"OptIn": {
 			acctest.CtBasic:      testAccOptIn_basic,
 			acctest.CtDisappears: testAccOptIn_disappears,
