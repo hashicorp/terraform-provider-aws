@@ -1029,12 +1029,18 @@ resource "aws_emrserverless_application" "test" {
 
   monitoring_configuration {
     cloudwatch_logging_configuration {
-      enabled         = true
-      log_group_name  = aws_cloudwatch_log_group.test.name
+      enabled                = true
+      log_group_name         = aws_cloudwatch_log_group.test.name
       log_stream_name_prefix = "spark-logs"
-      log_types = {
-        "SPARK_DRIVER" = "STDOUT,STDERR"
-        "SPARK_EXECUTOR" = "STDOUT"
+
+      log_types {
+        name   = "SPARK_DRIVER"
+        values = ["STDOUT", "STDERR"]
+      }
+
+      log_types {
+        name   = "SPARK_EXECUTOR"
+        values = ["STDOUT"]
       }
     }
 
@@ -1068,7 +1074,7 @@ resource "aws_emrserverless_application" "test" {
 
   monitoring_configuration {
     cloudwatch_logging_configuration {
-      enabled = false
+      enabled        = false
       log_group_name = aws_cloudwatch_log_group.test.name
     }
 

@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
@@ -248,7 +248,7 @@ func resourceApplication() *schema.Resource {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
-									"log_group_name": {
+									names.AttrLogGroupName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 512),
@@ -264,9 +264,21 @@ func resourceApplication() *schema.Resource {
 										ValidateFunc: verify.ValidARN,
 									},
 									"log_types": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeSet,
 										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Required: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
 									},
 								},
 							},
@@ -304,7 +316,7 @@ func resourceApplication() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 10280),
 											validation.StringMatch(
-												regexp.MustCompile(`^https://aps-workspaces\.([a-z]{2}-[a-z-]{1,20}-[1-9])\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`),
+												regexache.MustCompile(`^https://aps-workspaces\.([a-z]{2}-[a-z-]{1,20}-[1-9])\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`),
 												"remote_write_url must be a valid Amazon Managed Service for Prometheus remote write URL",
 											),
 										),
@@ -428,12 +440,12 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.MaximumCapacity = expandMaximumCapacity(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
-	}
-
 	if v, ok := d.GetOk("monitoring_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("runtime_configuration"); ok && len(v.([]any)) > 0 {
@@ -505,12 +517,12 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
 
-	if err := d.Set(names.AttrNetworkConfiguration, []any{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
-	}
-
 	if err := d.Set("monitoring_configuration", flattenMonitoringConfiguration(application.MonitoringConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting monitoring_configuration: %s", err)
+	}
+
+	if err := d.Set(names.AttrNetworkConfiguration, []any{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
 	if err := d.Set("runtime_configuration", flattenRuntimeConfiguration(application.RuntimeConfiguration)); err != nil {
@@ -1205,7 +1217,7 @@ func expandCloudWatchLoggingConfiguration(tfMap map[string]any) *types.CloudWatc
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -1217,8 +1229,8 @@ func expandCloudWatchLoggingConfiguration(tfMap map[string]any) *types.CloudWatc
 		apiObject.EncryptionKeyArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["log_types"].(map[string]any); ok && len(v) > 0 {
-		apiObject.LogTypes = expandLogTypes(v)
+	if v, ok := tfMap["log_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LogTypes = expandLogTypes(v.List())
 	}
 
 	return apiObject
@@ -1236,7 +1248,7 @@ func flattenCloudWatchLoggingConfiguration(apiObject *types.CloudWatchLoggingCon
 	}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.ToString(v)
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
 	}
 
 	if v := apiObject.LogStreamNamePrefix; v != nil {
@@ -1254,42 +1266,36 @@ func flattenCloudWatchLoggingConfiguration(apiObject *types.CloudWatchLoggingCon
 	return tfMap
 }
 
-func expandLogTypes(tfMap map[string]any) map[string][]string {
-	if tfMap == nil {
+func expandLogTypes(tfList []any) map[string][]string {
+	if tfList == nil {
 		return nil
 	}
 
 	configs := make(map[string][]string)
-
-	for k, v := range tfMap {
-		if str, ok := v.(string); ok {
-			// Split comma-separated values into a slice
-			values := strings.Split(str, ",")
-			for i, val := range values {
-				values[i] = strings.TrimSpace(val)
-			}
-			configs[k] = values
-		}
+	for _, v := range tfList {
+		configData := v.(map[string]any)
+		key := configData[names.AttrName].(string)
+		values := flex.ExpandStringValueSet(configData[names.AttrValues].(*schema.Set))
+		configs[key] = values
 	}
 
 	return configs
 }
 
-func flattenLogTypes(apiObject map[string][]string) map[string]any {
+func flattenLogTypes(apiObject map[string][]string) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]any{}
-
+	var out []any
 	for k, v := range apiObject {
-		if len(v) > 0 {
-			// Join the slice with commas for storage in Terraform state
-			tfMap[k] = strings.Join(v, ",")
-		}
+		data := make(map[string]any)
+		data[names.AttrName] = k
+		data[names.AttrValues] = flex.FlattenStringValueSet(v)
+		out = append(out, data)
 	}
 
-	return tfMap
+	return out
 }
 
 func expandS3MonitoringConfiguration(tfMap map[string]any) *types.S3MonitoringConfiguration {
