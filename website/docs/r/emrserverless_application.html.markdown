@@ -72,14 +72,16 @@ resource "aws_emrserverless_application" "example" {
       enabled                = true
       log_group_name         = "/aws/emr-serverless/example"
       log_stream_name_prefix = "spark-logs"
-      log_types = {
-        "SPARK_DRIVER"   = "STDOUT,STDERR"
-        "SPARK_EXECUTOR" = "STDOUT"
-      }
-    }
 
-    s3_monitoring_configuration {
-      log_uri = "s3://my-bucket/logs/"
+      log_types {
+        name   = "SPARK_DRIVER"
+        values = ["STDOUT", "STDERR"]
+      }
+
+      log_types {
+        name   = "SPARK_EXECUTOR"
+        values = ["STDOUT"]
+      }
     }
 
     managed_persistence_monitoring_configuration {
@@ -176,8 +178,13 @@ This resource supports the following arguments:
 * `enabled` - (Required) Enables CloudWatch logging.
 * `log_group_name` - (Optional) The name of the log group in Amazon CloudWatch Logs where you want to publish your logs.
 * `log_stream_name_prefix` - (Optional) Prefix for the CloudWatch log stream name.
+* `log_types` - (Optional) The types of logs that you want to publish to CloudWatch. If you don't specify any log types, driver STDOUT and STDERR logs will be published to CloudWatch Logs by default. See [log_types](#log_types-arguments) for more details.
 * `encryption_key_arn` - (Optional) The AWS Key Management Service (KMS) key ARN to encrypt the logs that you store in CloudWatch Logs.
-* `log_types` - (Optional) The types of logs that you want to publish to CloudWatch. If you don't specify any log types, driver STDOUT and STDERR logs will be published to CloudWatch Logs by default. Specify as a map where keys are worker types (`SPARK_DRIVER`, `SPARK_EXECUTOR`, `HIVE_DRIVER`, `TEZ_TASK`) and values are comma-separated log types (`STDOUT`, `STDERR`, `HIVE_LOG`, `TEZ_AM`, `SYSTEM_LOGS`).
+
+##### log_types Arguments
+
+* `name` - (Required) The worker type. Valid values are `SPARK_DRIVER`, `SPARK_EXECUTOR`, `HIVE_DRIVER`, and `TEZ_TASK`.
+* `values` - (Required) The list of log types to publish. Valid values are `STDOUT`, `STDERR`, `HIVE_LOG`, `TEZ_AM`, and `SYSTEM_LOGS`.
 
 #### s3_monitoring_configuration Arguments
 
@@ -245,7 +252,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EMR Severless applications using the `id`. For example:
+Using `terraform import`, import EMR Serverless applications using the `id`. For example:
 
 ```console
 % terraform import aws_emrserverless_application.example id
