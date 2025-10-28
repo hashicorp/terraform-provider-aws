@@ -32,7 +32,7 @@ func resourceQueuePolicy() *schema.Resource {
 		UpdateWithoutTimeout: h.Upsert,
 		DeleteWithoutTimeout: h.Delete,
 
-		MigrateState:  QueuePolicyMigrateState,
+		MigrateState:  queuePolicyMigrateState,
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
