@@ -55,11 +55,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalCustomInherentRegionIdentity(names.AttrURL,
+			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalCustomInherentRegionIdentity(names.AttrURL, parseQueueURL,
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			)),
 			Import: inttypes.SDKv2Import{
-				CustomImport: true,
+				WrappedImport: true,
 			},
 		},
 		{
