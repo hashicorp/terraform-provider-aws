@@ -28,6 +28,12 @@ import (
 )
 
 // @FrameworkResource("aws_lakeformation_identity_center_configuration", name="Identity Center Configuration")
+// @IdentityAttribute("catalog_id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lakeformation;lakeformation.DescribeLakeFormationIdentityCenterConfigurationOutput")
+// @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(serialize=true)
+// @Testing(importStateIdAttribute="catalog_id")
 func newResourceIdentityCenterConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIdentityCenterConfiguration{}
 
@@ -40,6 +46,7 @@ const (
 
 type resourceIdentityCenterConfiguration struct {
 	framework.ResourceWithModel[resourceIdentityCenterConfigurationModel]
+	framework.WithImportByIdentity
 }
 
 func (r *resourceIdentityCenterConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

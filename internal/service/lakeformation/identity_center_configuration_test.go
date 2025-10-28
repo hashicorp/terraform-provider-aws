@@ -53,11 +53,6 @@ func testAccLakeFormationIdentityCenterConfiguration_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_share"), knownvalue.Null()),
 				},
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 		},
 	})
 }
