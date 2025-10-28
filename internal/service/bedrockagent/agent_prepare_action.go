@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
+const prepareTimeout = 5 * time.Minute
+
 // @Action(aws_bedrockagent_agent_prepare, name="Agent Prepare")
 func newAgentPrepareAction(_ context.Context) (action.ActionWithConfigure, error) {
 	return &agentPrepareAction{}, nil
@@ -72,7 +74,12 @@ func (a *agentPrepareAction) Invoke(ctx context.Context, req action.InvokeReques
 		AgentId: aws.String(agentID),
 	}
 
-	_, err := conn.PrepareAgent(ctx, &input)
+	_, err := retryOpIfPreparing(ctx, prepareTimeout,
+		func(ctx context.Context) (*bedrockagent.PrepareAgentOutput, error) {
+			return conn.PrepareAgent(ctx, &input)
+		},
+	)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to Prepare Bedrock Agent",
@@ -92,7 +99,7 @@ func (a *agentPrepareAction) Invoke(ctx context.Context, req action.InvokeReques
 			Value:  agent,
 		}, nil
 	}, actionwait.Options[*awstypes.Agent]{
-		Timeout:            10 * time.Minute,
+		Timeout:            prepareTimeout,
 		SuccessStates:      []actionwait.Status{actionwait.Status(awstypes.AgentStatusPrepared)},
 		TransitionalStates: []actionwait.Status{actionwait.Status(awstypes.AgentStatusNotPrepared), actionwait.Status(awstypes.AgentStatusPreparing)},
 		ProgressInterval:   30 * time.Second,
