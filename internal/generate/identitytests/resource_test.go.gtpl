@@ -69,7 +69,7 @@ CheckDestroy: acctest.CheckDestroyNoop,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
 {{ else if .HasImportStateIDAttribute -}}
-	// TODO
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ else -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 {{ end -}}
@@ -99,7 +99,7 @@ CheckDestroy: acctest.CheckDestroyNoop,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
 {{ else if .HasImportStateIDAttribute -}}
-	// TODO
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ else -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 {{ end -}}
