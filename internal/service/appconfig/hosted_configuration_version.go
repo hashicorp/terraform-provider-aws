@@ -7,6 +7,7 @@ package appconfig
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -148,7 +150,18 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set(names.AttrARN, hostedConfigurationVersionARN(ctx, meta.(*conns.AWSClient), applicationID, configurationProfileID, versionNumber))
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
-	d.Set(names.AttrContent, string(output.Content))
+
+	cleanedContent, err := stripAppconfigMetadata(output.Content)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "cleaning content metadata: %s", err)
+	}
+
+	normalizedContent, err := structure.NormalizeJsonString(string(cleanedContent))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "normalizing content: %s", err)
+	}
+
+	d.Set(names.AttrContent, normalizedContent)
 	d.Set(names.AttrContentType, output.ContentType)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("version_label", output.VersionLabel)
@@ -236,4 +249,35 @@ func findHostedConfigurationVersion(ctx context.Context, conn *appconfig.Client,
 
 func hostedConfigurationVersionARN(ctx context.Context, c *conns.AWSClient, applicationID, configurationProfileID string, versionNumber int32) string {
 	return c.RegionalARN(ctx, "appconfig", "application/"+applicationID+"/configurationprofile/"+configurationProfileID+"/hostedconfigurationversion/"+flex.Int32ValueToStringValue(versionNumber))
+}
+
+// stripAppconfigMetadata removes AWS-injected metadata fields (_createdAt, _updatedAt)
+// from flags.* and values.* objects in AppConfig hosted configuration content.
+func stripAppconfigMetadata(content []byte) ([]byte, error) {
+	var data map[string]any
+	if err := json.Unmarshal(content, &data); err != nil {
+		return nil, err
+	}
+
+	// Remove _createdAt and _updatedAt from flags.* objects
+	if flags, ok := data["flags"].(map[string]any); ok {
+		for _, flag := range flags {
+			if flagMap, ok := flag.(map[string]any); ok {
+				delete(flagMap, "_createdAt")
+				delete(flagMap, "_updatedAt")
+			}
+		}
+	}
+
+	// Remove _createdAt and _updatedAt from values.* objects
+	if values, ok := data["values"].(map[string]any); ok {
+		for _, value := range values {
+			if valueMap, ok := value.(map[string]any); ok {
+				delete(valueMap, "_createdAt")
+				delete(valueMap, "_updatedAt")
+			}
+		}
+	}
+
+	return json.Marshal(data)
 }
