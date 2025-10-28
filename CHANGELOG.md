@@ -2,8 +2,19 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_imagebuilder_image_recipe: Add `ami_tags` attribute ([#44731](https://github.com/hashicorp/terraform-provider-aws/issues/44731))
+* data-source/aws_lb_listener_rule: Add `regex_values` attribute to `condition.host_header`, `condition.http_header` and `condition.path_pattern` blocks ([#44741](https://github.com/hashicorp/terraform-provider-aws/issues/44741))
+* resource/aws_bedrockagentcore_gateway: Add validator to ensure correct `authorizer_configuration` and `authorizer_type` config ([#44826](https://github.com/hashicorp/terraform-provider-aws/issues/44826))
+* resource/aws_imagebuilder_image_recipe: Add `ami_tags` argument ([#44731](https://github.com/hashicorp/terraform-provider-aws/issues/44731))
+* resource/aws_lb_listener_rule: Add `regex_values` argument to `condition.host_header`, `condition.http_header` and `condition.path_pattern` blocks ([#44741](https://github.com/hashicorp/terraform-provider-aws/issues/44741))
+* resource/aws_lb_listener_rule: The `values` argument in `condition.host_header`, `condition.http_header` and `condition.path_pattern` is now optional ([#44741](https://github.com/hashicorp/terraform-provider-aws/issues/44741))
 * resource/aws_quicksight_data_set: Increase upper limit of `physical_table_map.relational_table.name` from 64 to 256 characters ([#44807](https://github.com/hashicorp/terraform-provider-aws/issues/44807))
 * resource/aws_sagemaker_notebook_instance: Add `notebook-al2023-v1` to valid `platform_identifier` values ([#44570](https://github.com/hashicorp/terraform-provider-aws/issues/44570))
+
+BUG FIXES:
+
+* resource/aws_bedrockagentcore_gateway: Change `authorizer_configuration` block from `Required` to `Optional` ([#44812](https://github.com/hashicorp/terraform-provider-aws/issues/44812))
+* resource/aws_bedrockagentcore_gateway: Mark `authorizer_type` argument as `ForceNew` ([#44812](https://github.com/hashicorp/terraform-provider-aws/issues/44812))
 
 ## 6.18.0 (October 23, 2025)
 

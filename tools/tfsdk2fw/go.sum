@@ -33,8 +33,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.18.19 h1:Jc1zzwkSY1QbkEcLujwqRTXOdvW
 github.com/aws/aws-sdk-go-v2/credentials v1.18.19/go.mod h1:DIfQ9fAk5H0pGtnqfqkbSIzky82qYnGvh06ASQXXg6A=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.11 h1:X7X4YKb+c0rkI6d4uJ5tEMxXgCZ+jZ/D6mvkno8c8Uw=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.11/go.mod h1:EqM6vPZQsZHYvC4Cai35UDg/f5NCEU+vp0WfbVqVcZc=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.15 h1:OsZ2Sk84YUPJfi6BemhyMQyuR8/5tWu37WBMVUl8lJk=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.19.15/go.mod h1:CYZDjBMY+MyT+U+QmXw81GBiq+lhgM97kIMdDAJk+hg=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.0 h1:t9Tt9EmN966vb5U4T6WIYg3hl3Jf7sBBoKuYSeOfK5k=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.0/go.mod h1:CYZDjBMY+MyT+U+QmXw81GBiq+lhgM97kIMdDAJk+hg=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.11 h1:7AANQZkF3ihM8fbdftpjhken0TP9sBzFbV/Ze/Y4HXA=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.11/go.mod h1:NTF4QCGkm6fzVwncpkFQqoquQyOolcyXfbpC98urj+c=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.11 h1:ShdtWUZT37LCAA4Mw2kJAJtzaszfSHFb5n25sdcv4YE=
@@ -177,8 +177,8 @@ github.com/aws/aws-sdk-go-v2/service/controltower v1.26.8 h1:i5ogAX2unKRAk1pUyvb
 github.com/aws/aws-sdk-go-v2/service/controltower v1.26.8/go.mod h1:D8X0NHYaqQiMvIOn0DnALJ5NT8mr4HVsHoD89A2YsWM=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.0 h1:qQ7dU2YrCgFNRMLbdLDby97lm1k5rW6354CBLhUxepI=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.0/go.mod h1:zgHY3zHk4laiej0r0uHZbxBYHfINrXYZMgfn2TKwezA=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.58.1 h1:49QOXledwKUXk5eeIgSW8Co/aoeIW5DA8xX+Nkh0Mjw=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.58.1/go.mod h1:lztpwJzFHVpn5pcUzSh4bvHwvOz9Tya+MzN84KluABA=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.59.0 h1:yQ/svgYI6tBCp8tK6Z1CCBcyVAAN+VV1uOdtqUaCLP8=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.59.0/go.mod h1:lztpwJzFHVpn5pcUzSh4bvHwvOz9Tya+MzN84KluABA=
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.8 h1:LxVCNRBjcHSB1fCTyzm/L/OjRkvQOWpUhB+a2xY1Z3Q=
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.8/go.mod h1:ZTnTx3WLUUAcb3/Q1Qf4pzcg4gDNtbSpmihfUZDSrdM=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.54.1 h1:3ehqabkjZoJuJOd7zJsf5amflJnIYJ0X0XqJntWEr8k=
@@ -283,8 +283,8 @@ github.com/aws/aws-sdk-go-v2/service/guardduty v1.65.2 h1:GUIKuI1Rt4pY8FAsXqDpmt
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.65.2/go.mod h1:upl40MCgHjOPstPX/9CUTxhekZEBfJ3XvueF/vTZoe4=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.0 h1:gG3EdMKnaYAM1xcHQSghAxlvCF1TGkcYCRY4wIVttd8=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.0/go.mod h1:CrTLP+0G1P6oNP84iBPK3kLl6VeBCbCR/1ouV+gz+UU=
-github.com/aws/aws-sdk-go-v2/service/iam v1.48.1 h1:ggI11z0sgXmg6tNEBWFRXk0EBCW2IvETUQphWjbbN4Q=
-github.com/aws/aws-sdk-go-v2/service/iam v1.48.1/go.mod h1:QvuzFFqvuknv43XjhxdWTMHt1ESYlQPaLJtb6iBlD3M=
+github.com/aws/aws-sdk-go-v2/service/iam v1.49.0 h1:3wiwzsfXBaykcbC4c6vaWkx9B46LXhFR8jyVMCZXK/k=
+github.com/aws/aws-sdk-go-v2/service/iam v1.49.0/go.mod h1:QvuzFFqvuknv43XjhxdWTMHt1ESYlQPaLJtb6iBlD3M=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.33.1 h1:dMDmIy1gvrzVTZBxAiev2wT7krtVrYENLJPAYWlLzQs=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.33.1/go.mod h1:+2ntP8W5CGrfucdBv+UAxbRUoTff8r5F3SjEfCUnPOs=
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.2 h1:GrKTZ5BXqDXbl1cRqkGkOLczKTilSdoZkHK+z6gdtKQ=
@@ -321,8 +321,8 @@ github.com/aws/aws-sdk-go-v2/service/kendra v1.60.8 h1:5bOMTCM6iPmOCUOQvlJ/Rqq+l
 github.com/aws/aws-sdk-go-v2/service/kendra v1.60.8/go.mod h1:Ll+X0Fqu4vgu3z7JKVbm5ispzx2NAXAs5c1M7I2TF4Y=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.1 h1:hE2o4sz9x3y1kQ+kkqZEojEvKzpH6aPb7evMAiJOLV4=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.1/go.mod h1:s/JQO5R+sXPiHsjwXtN/B5edpDhh9WvDXhF/KboTe3s=
-github.com/aws/aws-sdk-go-v2/service/kinesis v1.40.8 h1:JdP5i8oDf1/HkHKoC5ExEFNYvXYJAfM5GyKFrj04+9A=
-github.com/aws/aws-sdk-go-v2/service/kinesis v1.40.8/go.mod h1:EUB6vsgrRwQLgDaqJkvDbKacehckPJNDwL7JH+dK5UM=
+github.com/aws/aws-sdk-go-v2/service/kinesis v1.41.0 h1:yPJkwM43hsih4N5pgKbBNfXp9O/qTdPkJbnF51PVD6g=
+github.com/aws/aws-sdk-go-v2/service/kinesis v1.41.0/go.mod h1:EUB6vsgrRwQLgDaqJkvDbKacehckPJNDwL7JH+dK5UM=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.8 h1:zsqm/UT3Yz5xSeejPeVBACVogigyUa7/KCw1AyAAY2o=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.8/go.mod h1:wJ2gUq0Dy5lFrYlgyYcsHM8OpGAPULEY+KJePD9yLDk=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.9 h1:l6C6hW57J+Irs7qqYoeszVGLkiG284B+mVbY8a+M75M=
