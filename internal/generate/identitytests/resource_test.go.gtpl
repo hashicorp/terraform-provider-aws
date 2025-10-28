@@ -148,6 +148,11 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ end -}}
 		{{ else if ne .IdentityAttribute "" -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
+			{{ if .HasIdentityDuplicateAttrs -}}
+				{{ range .IdentityDuplicateAttrs -}}
+					plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+				{{ end -}}
+			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -190,6 +195,11 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ end -}}
 		{{ else if ne .IdentityAttribute "" -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
+			{{ if .HasIdentityDuplicateAttrs -}}
+				{{ range .IdentityDuplicateAttrs -}}
+					plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+				{{ end -}}
+			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
