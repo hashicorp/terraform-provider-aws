@@ -134,7 +134,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format(':open: <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                    "text": ${{ toJSON(format(':open-5403: <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
                   }
                 }
               ]
@@ -153,7 +153,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format(':open: :aws: contributor <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                    "text": ${{ toJSON(format(':open-5403: :aws: contributor <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
                   }
                 }
               ]
@@ -214,7 +214,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format(':merged: <{0}|{1}> merged <{2}|{3}>', env.MERGED_BY_URL, env.MERGED_BY_LOGIN, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                    "text": ${{ toJSON(format(':merged-rounded: <{0}|{1}> merged <{2}|{3}>', env.MERGED_BY_URL, env.MERGED_BY_LOGIN, env.ISSUE_URL, env.ISSUE_TITLE)) }}
                   }
                 }
               ]

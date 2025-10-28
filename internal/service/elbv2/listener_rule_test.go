@@ -1571,16 +1571,58 @@ func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
-						"host_header.#":          "1",
-						"host_header.0.values.#": "2",
-						"http_header.#":          "0",
-						"http_request_method.#":  "0",
-						"path_pattern.#":         "0",
-						"query_string.#":         "0",
-						"source_ip.#":            "0",
+						"host_header.#":                "1",
+						"host_header.0.values.#":       "2",
+						"host_header.0.regex_values.#": "0",
+						"http_header.#":                "0",
+						"http_request_method.#":        "0",
+						"path_pattern.#":               "0",
+						"query_string.#":               "0",
+						"source_ip.#":                  "0",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "www.example.com"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_conditionHostHeaderRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	lbName := fmt.Sprintf("testrule-hostHeader-%s", sdkacctest.RandString(12))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_conditionHostHeaderRegex(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+						"host_header.#":                "1",
+						"host_header.0.values.#":       "0",
+						"host_header.0.regex_values.#": "2",
+						"http_header.#":                "0",
+						"http_request_method.#":        "0",
+						"path_pattern.#":               "0",
+						"query_string.#":               "0",
+						"source_ip.#":                  "0",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.regex_values.*", "^example\\.com$"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.regex_values.*", "^www[0-9]+\\.example\\.com$"),
 				),
 			},
 		},
@@ -1615,6 +1657,7 @@ func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "X-Forwarded-For",
 						"http_header.0.values.#":         "2",
+						"http_header.0.regex_values.#":   "0",
 						"http_request_method.#":          "0",
 						"path_pattern.#":                 "0",
 						"query_string.#":                 "0",
@@ -1627,12 +1670,55 @@ func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "Zz9~|_^.-+*'&%$#!0aA",
 						"http_header.0.values.#":         "1",
+						"http_header.0.regex_values.#":   "0",
 						"http_request_method.#":          "0",
 						"path_pattern.#":                 "0",
 						"query_string.#":                 "0",
 						"source_ip.#":                    "0",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "RFC7230 Validity"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_conditionHTTPHeaderRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	lbName := fmt.Sprintf("testrule-httpHeader-%s", sdkacctest.RandString(12))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_conditionHTTPHeaderRegex(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+						"host_header.#":                  "0",
+						"http_header.#":                  "1",
+						"http_header.0.http_header_name": "User-Agent",
+						"http_header.0.values.#":         "0",
+						"http_header.0.regex_values.#":   "2",
+						"http_request_method.#":          "0",
+						"path_pattern.#":                 "0",
+						"query_string.#":                 "0",
+						"source_ip.#":                    "0",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.regex_values.*", "A.+"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.regex_values.*", "B.*C"),
 				),
 			},
 		},
@@ -1729,6 +1815,47 @@ func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/cgi-bin/*"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_conditionPathPatternRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", sdkacctest.RandString(11))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_conditionPathPatternRegex(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+						"host_header.#":                 "0",
+						"http_header.#":                 "0",
+						"http_request_method.#":         "0",
+						"path_pattern.#":                "1",
+						"path_pattern.0.values.#":       "0",
+						"path_pattern.0.regex_values.#": "2",
+						"query_string.#":                "0",
+						"source_ip.#":                   "0",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.regex_values.*", "^\\/api\\/(.*)$"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.regex_values.*", "^\\/api2\\/(.*)$"),
 				),
 			},
 		},
@@ -4500,6 +4627,16 @@ condition {
 `, lbName)
 }
 
+func testAccListenerRuleConfig_conditionHostHeaderRegex(lbName string) string {
+	return testAccListenerRuleConfig_conditionBase(`
+condition {
+  host_header {
+    regex_values = ["^example\\.com$", "^www[0-9]+\\.example\\.com$"]
+  }
+}
+`, lbName)
+}
+
 func testAccListenerRuleConfig_conditionHTTPHeader(lbName string) string {
 	return testAccListenerRuleConfig_conditionBase(`
 condition {
@@ -4513,6 +4650,17 @@ condition {
   http_header {
     http_header_name = "Zz9~|_^.-+*'&%$#!0aA"
     values           = ["RFC7230 Validity"]
+  }
+}
+`, lbName)
+}
+
+func testAccListenerRuleConfig_conditionHTTPHeaderRegex(lbName string) string {
+	return testAccListenerRuleConfig_conditionBase(`
+condition {
+  http_header {
+    http_header_name = "User-Agent"
+    regex_values     = ["A.+", "B.*C"]
   }
 }
 `, lbName)
@@ -4563,6 +4711,16 @@ func testAccListenerRuleConfig_conditionPathPattern(lbName string) string {
 condition {
   path_pattern {
     values = ["/public/*", "/cgi-bin/*"]
+  }
+}
+`, lbName)
+}
+
+func testAccListenerRuleConfig_conditionPathPatternRegex(lbName string) string {
+	return testAccListenerRuleConfig_conditionBase(`
+condition {
+  path_pattern {
+    regex_values = ["^\\/api\\/(.*)$", "^\\/api2\\/(.*)$"]
   }
 }
 `, lbName)

@@ -229,6 +229,23 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"runtime_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"classification": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrProperties: {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"scheduler_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -269,7 +286,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &emrserverless.CreateApplicationInput{
+	input := emrserverless.CreateApplicationInput{
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
@@ -309,13 +326,16 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("runtime_configuration"); ok && len(v.([]any)) > 0 {
+		input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]any))
+	}
+
 	// Empty block (len(v.([]any)) > 0 but v.([]any)[0] == nil) is allowed to enable scheduler_configuration with default values
 	if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 {
 		input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any))
 	}
 
-	output, err := conn.CreateApplication(ctx, input)
-
+	output, err := conn.CreateApplication(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Serveless Application (%s): %s", name, err)
 	}
@@ -379,6 +399,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
+	if err := d.Set("runtime_configuration", flattenRuntimeConfiguration(application.RuntimeConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting runtime_configuration: %s", err)
+	}
+
 	if err := d.Set("scheduler_configuration", flattenSchedulerConfiguration(application.SchedulerConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scheduler_configuration: %s", err)
 	}
@@ -393,7 +417,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &emrserverless.UpdateApplicationInput{
+		input := emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(id.UniqueId()),
 		}
@@ -444,7 +468,11 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.ReleaseLabel = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateApplication(ctx, input)
+		if v, ok := d.GetOk("runtime_configuration"); ok && len(v.([]any)) > 0 {
+			input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]any))
+		}
+
+		_, err := conn.UpdateApplication(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EMR Serveless Application (%s): %s", d.Id(), err)
@@ -479,11 +507,11 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id string) (*types.Application, error) {
-	input := &emrserverless.GetApplicationInput{
+	input := emrserverless.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
 
-	output, err := conn.GetApplication(ctx, input)
+	output, err := conn.GetApplication(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -941,4 +969,57 @@ func flattenSchedulerConfiguration(apiObject *types.SchedulerConfiguration) []an
 		tfMap["queue_timeout_minutes"] = aws.ToInt32(v)
 	}
 	return []any{tfMap}
+}
+
+func expandRuntimeConfiguration(tfList []any) []types.Configuration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.Configuration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.Configuration{}
+
+		if v, ok := tfMap["classification"].(string); ok && v != "" {
+			apiObject.Classification = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrProperties].(map[string]any); ok && len(v) > 0 {
+			apiObject.Properties = flex.ExpandStringValueMap(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenRuntimeConfiguration(apiObjects []types.Configuration) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.Classification; v != nil {
+			tfMap["classification"] = aws.ToString(v)
+		}
+
+		if v := apiObject.Properties; v != nil {
+			tfMap[names.AttrProperties] = flex.FlattenStringValueMap(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

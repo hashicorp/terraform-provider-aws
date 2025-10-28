@@ -1730,6 +1730,30 @@ service "networkmonitor" {
   brand                    = "Amazon"
 }
 
+service "networkflowmonitor" {
+  sdk {
+    id            = "NetworkFlowMonitor"
+    arn_namespace = "networkflowmonitor"
+  }
+
+  names {
+    provider_name_upper = "NetworkFlowMonitor"
+    human_friendly      = "CloudWatch NetworkFlow Monitor"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMonitors"
+  }
+
+  resource_prefix {
+    correct = "aws_networkflowmonitor_"
+  }
+
+  provider_package_correct = "networkflowmonitor"
+  doc_prefix               = ["networkflowmonitor_"]
+  brand                    = "Amazon"
+}
+
 service "rum" {
   go_packages {
     v1_package = "cloudwatchrum"
@@ -6067,6 +6091,30 @@ service "oam" {
 
   provider_package_correct = "oam"
   doc_prefix               = ["oam_"]
+  brand                    = "AWS"
+}
+
+service "observabilityadmin" {
+  sdk {
+    id            = "ObservabilityAdmin"
+    arn_namespace = "observabilityadmin"
+  }
+
+  names {
+    provider_name_upper = "ObservabilityAdmin"
+    human_friendly      = "CloudWatch Observability Admin"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListCentralizationRulesForOrganization"
+  }
+
+  resource_prefix {
+    correct = "aws_observabilityadmin_"
+  }
+
+  provider_package_correct = "observabilityadmin"
+  doc_prefix               = ["observabilityadmin_"]
   brand                    = "AWS"
 }
 
