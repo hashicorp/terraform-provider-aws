@@ -744,7 +744,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
-						if region, ok := getAttribute(names.AttrRegion); ok {
+						if region, ok := getAttribute(names.AttrRegion); ok && region != nil {
 							overrideRegion = region.(string)
 						}
 					}
