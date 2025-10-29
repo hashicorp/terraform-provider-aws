@@ -3032,8 +3032,8 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 func testAccPermissionsConfig_table_nonIAMPrincipals(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lakeformation_permissions" "test" {
-  principal        = aws_identitystore_group.test.arn
-  permissions      = ["DESCRIBE"]
+  principal   = aws_identitystore_group.test.arn
+  permissions = ["DESCRIBE"]
 
   table {
     database_name = aws_glue_catalog_database.test.name
@@ -3098,6 +3098,5 @@ resource "aws_glue_catalog_table" "test" {
     }
   }
 }
-
 `, rName)
 }
