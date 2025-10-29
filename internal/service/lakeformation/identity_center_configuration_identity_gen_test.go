@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -35,7 +34,6 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 
 	var v lakeformation.DescribeLakeFormationIdentityCenterConfigurationOutput
 	resourceName := "aws_lakeformation_identity_center_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -52,9 +50,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityCenterConfigurationExists(ctx, resourceName, &v),
 				),
@@ -71,10 +67,8 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:                      config.StaticDirectory("testdata/IdentityCenterConfiguration/basic/"),
+				ConfigVariables:                      config.Variables{},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrCatalogID),
 				ResourceName:                         resourceName,
@@ -85,10 +79,8 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/IdentityCenterConfiguration/basic/"),
+				ConfigVariables:   config.Variables{},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
@@ -104,9 +96,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -125,7 +115,6 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride(t *
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lakeformation_identity_center_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -143,8 +132,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride(t *
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -161,8 +149,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride(t *
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrCatalogID),
@@ -176,8 +163,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride(t *
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -195,8 +181,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride(t *
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
