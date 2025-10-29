@@ -10,8 +10,10 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -512,10 +514,15 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.ListPermissionsInput{
-		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
-		},
 		Resource: &awstypes.Resource{},
+	}
+
+	principalIdentifier := d.Get(names.AttrPrincipal).(string)
+	if includePrincipalIdentifierInList(principalIdentifier) {
+		principal := awstypes.DataLakePrincipal{
+			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
+		}
+		input.Principal = &principal
 	}
 
 	if v, ok := d.GetOk(names.AttrCatalogID); ok {
@@ -526,8 +533,8 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
-	if _, ok := d.GetOk("data_cells_filter"); ok {
-		input.Resource.DataCellsFilter = ExpandDataCellsFilter(d.Get("data_cells_filter").([]any))
+	if v, ok := d.GetOk("data_cells_filter"); ok {
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]any))
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -546,7 +553,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
 	}
 
-	tableType := ""
+	var tableType TableType
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
@@ -581,9 +588,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
-
-	allPermissions, err := waitPermissionsReady(ctx, conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	if !d.IsNewResource() {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
@@ -610,7 +615,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := filterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	if len(cleanPermissions) == 0 {
 		log.Printf("[WARN] No Lake Formation permissions (%s) found", d.Id())
@@ -1300,4 +1305,12 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 	slices.Sort(tfList)
 
 	return tfList
+}
+
+func includePrincipalIdentifierInList(principalIdentifier string) bool {
+	arn, err := arn.Parse(principalIdentifier)
+	if err != nil {
+		return true
+	}
+	return !(arn.Service == "identitystore" && strings.HasPrefix(arn.Resource, "group/"))
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,20 +20,22 @@ func TestFilterPermissions(t *testing.T) {
 	t.Parallel()
 
 	// primitives to make test cases easier
-	accountID := "481516234248"
+	accountID := acctest.Ct12Digit
 	dbName := "Hiliji"
 	altDBName := "Hiuhbum"
 	tableName := "Ladocmoc"
 
+	//lintignore:AWSAT005
+	principalIdentifier := fmt.Sprintf("arn:aws-us-gov:iam::%s:role/Zepotiz-Bulgaria", accountID)
+
 	principal := &awstypes.DataLakePrincipal{
-		//lintignore:AWSAT005
-		DataLakePrincipalIdentifier: aws.String(fmt.Sprintf("arn:aws-us-gov:iam::%s:role/Zepotiz-Bulgaria", accountID)),
+		DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 	}
 
 	testCases := []struct {
 		Name                string
 		Input               *lakeformation.ListPermissionsInput
-		TableType           string
+		TableType           tflakeformation.TableType
 		ColumnNames         []string
 		ExcludedColumnNames []string
 		ColumnWildcard      bool
@@ -547,7 +550,7 @@ func TestFilterPermissions(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			got := tflakeformation.FilterPermissions(testCase.Input, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
+			got := tflakeformation.FilterPermissions(testCase.Input, principalIdentifier, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
 
 			if !reflect.DeepEqual(testCase.ExpectedClean, got) {
 				t.Errorf("got %v, expected %v, input %v", got, testCase.ExpectedClean, testCase.Input)

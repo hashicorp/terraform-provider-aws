@@ -7,11 +7,16 @@ import (
 	"time"
 )
 
+type TableType string
+
 const (
-	TableNameAllTables        = "ALL_TABLES"
-	TableTypeTable            = "Table"
-	TableTypeTableWithColumns = "TableWithColumns"
-	IAMAllowedPrincipals      = "IAM_ALLOWED_PRINCIPALS"
+	TableTypeTable            TableType = "Table"
+	TableTypeTableWithColumns TableType = "TableWithColumns"
+)
+
+const (
+	TableNameAllTables   = "ALL_TABLES"
+	IAMAllowedPrincipals = "IAM_ALLOWED_PRINCIPALS"
 )
 
 const (

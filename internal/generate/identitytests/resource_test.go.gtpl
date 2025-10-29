@@ -69,7 +69,7 @@ CheckDestroy: acctest.CheckDestroyNoop,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
 {{ else if .HasImportStateIDAttribute -}}
-	// TODO
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ else -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 {{ end -}}
@@ -99,7 +99,7 @@ CheckDestroy: acctest.CheckDestroyNoop,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
 {{ else if .HasImportStateIDAttribute -}}
-	// TODO
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ else -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 {{ end -}}
@@ -238,9 +238,11 @@ func {{ template "testname" . }}_IdentitySerial(t *testing.T) {
 	{{- end }}
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             {{ template "testname" . }}_Identity_Basic,
-		"ExistingResource":          {{ template "testname" . }}_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic: {{ template "testname" . }}_Identity_Basic,
+		{{ if .PreIdentityVersion -}}
+			"ExistingResource":          {{ template "testname" . }}_Identity_ExistingResource,
+			"ExistingResourceNoRefresh": {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange,
+		{{ end -}}
 		{{ if .GenerateRegionOverrideTest -}}
 			"RegionOverride": {{ template "testname" . }}_Identity_RegionOverride,
 		{{ end -}}
