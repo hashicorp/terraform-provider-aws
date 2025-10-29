@@ -550,7 +550,7 @@ func TestFilterPermissions(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			got := tflakeformation.FilterPermissions(testCase.Input, principalIdentifier, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
+			got := tflakeformation.FilterPermissions(testCase.Input, nil, principalIdentifier, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
 
 			if !reflect.DeepEqual(testCase.ExpectedClean, got) {
 				t.Errorf("got %v, expected %v, input %v", got, testCase.ExpectedClean, testCase.Input)

@@ -6,7 +6,6 @@ package lakeformation_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"testing"
@@ -1109,7 +1108,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	if v, ok := rs.Primary.Attributes["catalog_resource"]; ok && v != "" && v == acctest.CtTrue {
+	if v, ok := rs.Primary.Attributes["catalog_resource"]; ok && v == acctest.CtTrue {
 		input.Resource.Catalog = tflakeformation.ExpandCatalogResource()
 
 		noResource = false
@@ -1287,7 +1286,8 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		return 0, nil
 	}
 
-	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
+	filter := permissionsFilter(rs.Primary.Attributes)
+
 	var allPermissions []awstypes.PrincipalResourcePermissions
 
 	err := tfresource.Retry(ctx, tflakeformation.IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
@@ -1376,9 +1376,19 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := tflakeformation.FilterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := tflakeformation.FilterPermissions(input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	return len(cleanPermissions), nil
+}
+
+func permissionsFilter(attributes map[string]string) tflakeformation.PermissionsFilter {
+	principalIdentifier := attributes[names.AttrPrincipal]
+
+	if v, ok := attributes["catalog_resource"]; ok && v == acctest.CtTrue {
+		return tflakeformation.FilterCatalogPermissions(principalIdentifier)
+	}
+
+	return nil
 }
 
 func testAccPermissionsConfig_basic(rName string) string {

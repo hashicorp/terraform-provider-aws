@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -513,7 +514,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	input := &lakeformation.ListPermissionsInput{
+	input := lakeformation.ListPermissionsInput{
 		Resource: &awstypes.Resource{},
 	}
 
@@ -566,6 +567,8 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		tableType = TableTypeTableWithColumns
 	}
 
+	filter := permissionsFilter(d)
+
 	columnNames := make([]string, 0)
 	excludedColumnNames := make([]string, 0)
 	columnWildcard := false
@@ -588,7 +591,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	allPermissions, err := waitPermissionsReady(ctx, conn, input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, &input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	if !d.IsNewResource() {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
@@ -615,7 +618,11 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := filterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := filterPermissions(&input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+
+	if len(cleanPermissions) != len(allPermissions) {
+		return sdkdiag.AppendErrorf(diags, "Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths", len(cleanPermissions), len(allPermissions))
+	}
 
 	if len(cleanPermissions) == 0 {
 		log.Printf("[WARN] No Lake Formation permissions (%s) found", d.Id())
@@ -627,10 +634,6 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("table_with_columns", nil)
 		d.Set("table", nil)
 		return diags
-	}
-
-	if len(cleanPermissions) != len(allPermissions) {
-		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
 	}
 
 	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
@@ -854,6 +857,17 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+type PermissionsFilter = tfslices.Predicate[awstypes.PrincipalResourcePermissions]
+
+func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
+	principalIdentifier := d.Get(names.AttrPrincipal).(string)
+
+	if _, ok := d.GetOk("catalog_resource"); ok {
+		return filterCatalogPermissions(principalIdentifier)
+	}
+	return nil
 }
 
 func ExpandCatalogResource() *awstypes.CatalogResource {

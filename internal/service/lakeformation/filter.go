@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-func filterPermissions(input *lakeformation.ListPermissionsInput, principalIdentifier string, tableType TableType, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterPermissions(input *lakeformation.ListPermissionsInput, filter PermissionsFilter, principalIdentifier string, tableType TableType, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	// For most Lake Formation permissions, filtering within the provider is unnecessary. The input
 	// contains everything for AWS to give you back exactly what you want.
 	//
@@ -27,8 +28,8 @@ func filterPermissions(input *lakeformation.ListPermissionsInput, principalIdent
 	// Thus, for most cases this is just a pass through filter but attempts to clean out
 	// permissions in the special cases to avoid extra permissions being included.
 
-	if input.Resource.Catalog != nil {
-		return filterCatalogPermissions(principalIdentifier, allPermissions)
+	if filter != nil {
+		return tfslices.Filter(allPermissions, filter)
 	}
 
 	if input.Resource.DataCellsFilter != nil {
@@ -60,6 +61,12 @@ func filterPermissions(input *lakeformation.ListPermissionsInput, principalIdent
 	}
 
 	return nil
+}
+
+func filterCatalogPermissions(principalIdentifier string) PermissionsFilter {
+	return func(permissions awstypes.PrincipalResourcePermissions) bool {
+		return principalIdentifier == aws.ToString(permissions.Principal.DataLakePrincipalIdentifier) && permissions.Resource.Catalog != nil
+	}
 }
 
 func filterTablePermissions(principalIdentifier string, table *awstypes.TableResource, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
@@ -143,22 +150,6 @@ func filterTableWithColumnsPermissions(principalIdentifier string, twc *awstypes
 		if perm.Resource.Table != nil && aws.ToString(perm.Resource.Table.Name) == aws.ToString(twc.Name) {
 			cleanPermissions = append(cleanPermissions, perm)
 			continue
-		}
-	}
-
-	return cleanPermissions
-}
-
-func filterCatalogPermissions(principalIdentifier string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
-	var cleanPermissions []awstypes.PrincipalResourcePermissions
-
-	for _, perm := range allPermissions {
-		if principalIdentifier != aws.ToString(perm.Principal.DataLakePrincipalIdentifier) {
-			continue
-		}
-
-		if perm.Resource.Catalog != nil {
-			cleanPermissions = append(cleanPermissions, perm)
 		}
 	}
 

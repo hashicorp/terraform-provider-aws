@@ -22,4 +22,6 @@ var (
 	FilterPermissions = filterPermissions
 
 	IncludePrincipalIdentifierInList = includePrincipalIdentifierInList
+
+	FilterCatalogPermissions = filterCatalogPermissions
 )

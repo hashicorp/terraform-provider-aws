@@ -5,7 +5,6 @@ package lakeformation
 
 import (
 	"context"
-	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -280,7 +279,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	input := &lakeformation.ListPermissionsInput{
+	input := lakeformation.ListPermissionsInput{
 		Resource: &awstypes.Resource{},
 	}
 
@@ -333,6 +332,8 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		tableType = TableTypeTableWithColumns
 	}
 
+	filter := permissionsFilter(d)
+
 	columnNames := make([]string, 0)
 	excludedColumnNames := make([]string, 0)
 	columnWildcard := false
@@ -355,9 +356,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
-
-	allPermissions, err := waitPermissionsReady(ctx, conn, input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, &input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
@@ -366,10 +365,10 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := filterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := filterPermissions(&input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	if len(cleanPermissions) != len(allPermissions) {
-		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
+		return sdkdiag.AppendErrorf(diags, "Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths", len(cleanPermissions), len(allPermissions))
 	}
 
 	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
