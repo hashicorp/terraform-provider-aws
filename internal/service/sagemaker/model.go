@@ -167,6 +167,61 @@ func resourceModel() *schema.Resource {
 								},
 							},
 						},
+						"additional_model_data_sources": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"channel_name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"s3_data_source": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
+												},
+												"s3_data_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+												},
+												"compression_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+												},
+												"model_access_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accept_eula": {
+																Type:     schema.TypeBool,
+																Required: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"inference_specification_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -307,6 +362,61 @@ func resourceModel() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"s3_data_source": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
+												},
+												"s3_data_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+												},
+												"compression_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+												},
+												"model_access_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accept_eula": {
+																Type:     schema.TypeBool,
+																Required: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"additional_model_data_sources": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"channel_name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
 									"s3_data_source": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -612,6 +722,10 @@ func expandContainer(m map[string]any) *awstypes.ContainerDefinition {
 	if v, ok := m["model_data_source"]; ok {
 		container.ModelDataSource = expandModelDataSource(v.([]any))
 	}
+
+	if v, ok := m["additional_model_data_sources"]; ok {
+		container.AdditionalModelDataSources = expandAdditionalModelDataSources(v.([]any))
+	}
 	if v, ok := m[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringValueMap(v)
 	}
@@ -645,6 +759,30 @@ func expandModelDataSource(l []any) *awstypes.ModelDataSource {
 	}
 
 	return &modelDataSource
+}
+
+func expandAdditionalModelDataSource(m map[string]any) *awstypes.AdditionalModelDataSource {
+
+	additionalModelDataSource := awstypes.AdditionalModelDataSource{}
+
+	if v, ok := m["channel_name"]; ok && v.(string) != "" {
+		additionalModelDataSource.ChannelName = aws.String(v.(string))
+	}
+	if v, ok := m["s3_data_source"]; ok {
+		additionalModelDataSource.S3DataSource = expandS3ModelDataSource(v.([]any))
+	}
+
+	return &additionalModelDataSource
+}
+
+func expandAdditionalModelDataSources(a []any) []awstypes.AdditionalModelDataSource {
+	additionalModelDataSources := make([]awstypes.AdditionalModelDataSource, 0, len(a))
+
+	for _, m := range a {
+		additionalModelDataSources = append(additionalModelDataSources, *expandAdditionalModelDataSource(m.(map[string]any)))
+	}
+
+	return additionalModelDataSources
 }
 
 func expandS3ModelDataSource(l []any) *awstypes.S3ModelDataSource {
@@ -769,6 +907,9 @@ func flattenContainer(container *awstypes.ContainerDefinition) []any {
 	if container.ModelDataSource != nil {
 		cfg["model_data_source"] = flattenModelDataSource(container.ModelDataSource)
 	}
+	if len(container.AdditionalModelDataSources) > 0 {
+		cfg["additional_model_data_sources"] = flattenAdditionalModelDataSources(container.AdditionalModelDataSources)
+	}
 	if container.ModelPackageName != nil {
 		cfg["model_package_name"] = aws.ToString(container.ModelPackageName)
 	}
@@ -805,6 +946,31 @@ func flattenModelDataSource(modelDataSource *awstypes.ModelDataSource) []any {
 	return []any{cfg}
 }
 
+func flattenAdditionalModelDataSource(ds *awstypes.AdditionalModelDataSource) []any {
+	if ds == nil {
+		return []any{}
+	}
+
+	m := make(map[string]any)
+	if ds.ChannelName != nil {
+		m["channel_name"] = aws.ToString(ds.ChannelName)
+	}
+	if ds.S3DataSource != nil {
+		m["s3_data_source"] = flattenS3ModelDataSource(ds.S3DataSource)
+	}
+	return []any{m}
+}
+
+func flattenAdditionalModelDataSources(additionalModelDataSources []awstypes.AdditionalModelDataSource) []any {
+	fSources := make([]any, 0, len(additionalModelDataSources))
+	for _, ds := range additionalModelDataSources {
+		flattened := flattenAdditionalModelDataSource(&ds)
+		if len(flattened) > 0 {
+			fSources = append(fSources, flattened[0].(map[string]any))
+		}
+	}
+	return fSources
+}
 func flattenS3ModelDataSource(s3ModelDataSource *awstypes.S3ModelDataSource) []any {
 	if s3ModelDataSource == nil {
 		return []any{}
