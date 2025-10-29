@@ -303,7 +303,17 @@ func resourceReplicationGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"primary_outpost_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"replica_availability_zones": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"replica_outpost_arns": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1565,8 +1575,14 @@ func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfigurati
 		if v, ok := tfMap["primary_availability_zone"].(string); ok && v != "" {
 			apiObject.PrimaryAvailabilityZone = aws.String(v)
 		}
+		if v, ok := tfMap["primary_outpost_arn"].(string); ok && v != "" {
+			apiObject.PrimaryOutpostArn = aws.String(v)
+		}
 		if v, ok := tfMap["replica_availability_zones"].([]any); ok && len(v) > 0 {
 			apiObject.ReplicaAvailabilityZones = flex.ExpandStringValueList(v)
+		}
+		if v, ok := tfMap["replica_outpost_arns"].([]any); ok && len(v) > 0 {
+			apiObject.ReplicaOutpostArns = flex.ExpandStringValueList(v)
 		}
 		if v, ok := tfMap["replica_count"].(int); ok {
 			apiObject.ReplicaCount = aws.Int32(int32(v))
