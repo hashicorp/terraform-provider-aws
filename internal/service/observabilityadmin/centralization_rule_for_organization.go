@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -32,8 +31,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -95,7 +92,10 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"account": schema.StringAttribute{
-										Optional: true,
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									names.AttrRegion: schema.StringAttribute{
 										Required: true,
@@ -189,7 +189,7 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 										Required: true,
 									},
 									names.AttrScope: schema.StringAttribute{
-										Optional: true,
+										Required: true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -260,16 +260,14 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 		return
 	}
 
-	// Set the ID to the rule name for identification
 	plan.ARN = flex.StringToFramework(ctx, out.RuleArn)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitCentralizationRuleForOrganizationCreated(ctx, conn, plan.RuleName.ValueString(), createTimeout)
+	// Check if the rule was created successfully by reading it back
+	_, err = findCentralizationRuleForOrganizationByRuleName(ctx, conn, plan.RuleName.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
 		return
 	}
-
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -282,7 +280,7 @@ func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, re
 		return
 	}
 
-	out, err := findCentralizationRuleForOrganizationByID(ctx, conn, state.RuleName.ValueString())
+	out, err := findCentralizationRuleForOrganizationByRuleName(ctx, conn, state.RuleName.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -337,8 +335,8 @@ func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, 
 		plan.ARN = flex.StringToFramework(ctx, out.RuleArn)
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitCentralizationRuleForOrganizationUpdated(ctx, conn, plan.RuleName.ValueString(), updateTimeout)
+	// Check if the rule was updated successfully by reading it back
+	_, err := findCentralizationRuleForOrganizationByRuleName(ctx, conn, plan.RuleName.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
 		return
@@ -369,96 +367,15 @@ func (r *resourceCentralizationRuleForOrganization) Delete(ctx context.Context, 
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName)
 		return
 	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitCentralizationRuleForOrganizationDeleted(ctx, conn, state.RuleName.String(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName)
-		return
-	}
 }
 
 func (r *resourceCentralizationRuleForOrganization) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("rule_name"), req, resp)
 }
 
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-func waitCentralizationRuleForOrganizationCreated(ctx context.Context, conn *observabilityadmin.Client, id string, timeout time.Duration) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusCentralizationRuleForOrganization(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*observabilityadmin.GetCentralizationRuleForOrganizationOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitCentralizationRuleForOrganizationUpdated(ctx context.Context, conn *observabilityadmin.Client, id string, timeout time.Duration) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusCentralizationRuleForOrganization(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*observabilityadmin.GetCentralizationRuleForOrganizationOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitCentralizationRuleForOrganizationDeleted(ctx context.Context, conn *observabilityadmin.Client, id string, timeout time.Duration) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusCentralizationRuleForOrganization(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*observabilityadmin.GetCentralizationRuleForOrganizationOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusCentralizationRuleForOrganization(ctx context.Context, conn *observabilityadmin.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findCentralizationRuleForOrganizationByID(ctx, conn, id)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.RuleHealth), nil
-	}
-}
-
-func findCentralizationRuleForOrganizationByID(ctx context.Context, conn *observabilityadmin.Client, id string) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
+func findCentralizationRuleForOrganizationByRuleName(ctx context.Context, conn *observabilityadmin.Client, ruleName string) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
 	input := observabilityadmin.GetCentralizationRuleForOrganizationInput{
-		RuleIdentifier: aws.String(id),
+		RuleIdentifier: aws.String(ruleName),
 	}
 
 	out, err := conn.GetCentralizationRuleForOrganization(ctx, &input)
@@ -485,8 +402,7 @@ func findCentralizationRuleForOrganizationByID(ctx context.Context, conn *observ
 
 type centralizationRuleForOrganizationModel struct {
 	framework.WithRegionModel
-	ARN types.String `tfsdk:"rule_arn"`
-	// ID       types.String   `tfsdk:"id"`
+	ARN      types.String                                             `tfsdk:"rule_arn"`
 	Rule     fwtypes.ListNestedObjectValueOf[centralizationRuleModel] `tfsdk:"rule"`
 	RuleName types.String                                             `tfsdk:"rule_name"`
 	Tags     tftags.Map                                               `tfsdk:"tags"`
@@ -530,26 +446,4 @@ type logsEncryptionConfigurationModel struct {
 	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
 	EncryptionConflictResolutionStrategy fwtypes.StringEnum[awstypes.EncryptionConflictResolutionStrategy] `tfsdk:"encryption_conflict_resolution_strategy"`
 	KMSKeyARN                            fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
-}
-
-func sweepCentralizationRuleForOrganizations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := observabilityadmin.ListCentralizationRulesForOrganizationInput{}
-	conn := client.ObservabilityAdminClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := observabilityadmin.NewListCentralizationRulesForOrganizationPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.CentralizationRuleSummaries {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceCentralizationRuleForOrganization, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.RuleName))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
