@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool) retry.StateRefreshFunc {
+func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, principalIdentifier, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		var permissions []awstypes.PrincipalResourcePermissions
 
@@ -40,7 +40,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 					continue
 				}
 
-				if aws.ToString(input.Principal.DataLakePrincipalIdentifier) != aws.ToString(permission.Principal.DataLakePrincipalIdentifier) {
+				if principalIdentifier != aws.ToString(permission.Principal.DataLakePrincipalIdentifier) {
 					continue
 				}
 
@@ -49,7 +49,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 		}
 
 		// clean permissions = filter out permissions that do not pertain to this specific resource
-		cleanPermissions := filterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
+		cleanPermissions := filterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
 
 		if len(cleanPermissions) == 0 {
 			return nil, statusNotFound, nil

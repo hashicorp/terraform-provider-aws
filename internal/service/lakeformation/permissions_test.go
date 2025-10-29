@@ -9,6 +9,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -1028,10 +1029,15 @@ func testAccCheckPermissionsExists(ctx context.Context, resourceName string) res
 
 func permissionCountForResource(ctx context.Context, conn *lakeformation.Client, rs *terraform.ResourceState) (int, error) {
 	input := &lakeformation.ListPermissionsInput{
-		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(rs.Primary.Attributes[names.AttrPrincipal]),
-		},
 		Resource: &awstypes.Resource{},
+	}
+
+	principalIdentifier := rs.Primary.Attributes[names.AttrPrincipal]
+	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") {
+		principal := awstypes.DataLakePrincipal{
+			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
+		}
+		input.Principal = &principal
 	}
 
 	noResource := true
@@ -1309,7 +1315,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := tflakeformation.FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := tflakeformation.FilterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	return len(cleanPermissions), nil
 }

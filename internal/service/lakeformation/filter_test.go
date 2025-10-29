@@ -19,14 +19,16 @@ func TestFilterPermissions(t *testing.T) {
 	t.Parallel()
 
 	// primitives to make test cases easier
-	accountID := "481516234248"
+	accountID := "123456789012"
 	dbName := "Hiliji"
 	altDBName := "Hiuhbum"
 	tableName := "Ladocmoc"
 
+	//lintignore:AWSAT005
+	principalIdentifier := fmt.Sprintf("arn:aws-us-gov:iam::%s:role/Zepotiz-Bulgaria", accountID)
+
 	principal := &awstypes.DataLakePrincipal{
-		//lintignore:AWSAT005
-		DataLakePrincipalIdentifier: aws.String(fmt.Sprintf("arn:aws-us-gov:iam::%s:role/Zepotiz-Bulgaria", accountID)),
+		DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 	}
 
 	testCases := []struct {
@@ -547,7 +549,7 @@ func TestFilterPermissions(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			got := tflakeformation.FilterPermissions(testCase.Input, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
+			got := tflakeformation.FilterPermissions(testCase.Input, principalIdentifier, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
 
 			if !reflect.DeepEqual(testCase.ExpectedClean, got) {
 				t.Errorf("got %v, expected %v, input %v", got, testCase.ExpectedClean, testCase.Input)

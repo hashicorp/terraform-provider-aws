@@ -581,9 +581,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
-
-	allPermissions, err := waitPermissionsReady(ctx, conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	if !d.IsNewResource() {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
@@ -610,7 +608,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := filterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := filterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	if len(cleanPermissions) == 0 {
 		log.Printf("[WARN] No Lake Formation permissions (%s) found", d.Id())
