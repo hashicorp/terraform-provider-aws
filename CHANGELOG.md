@@ -16,6 +16,10 @@ ENHANCEMENTS:
 * resource/aws_lb_listener_rule: The `values` argument in `condition.host_header`, `condition.http_header` and `condition.path_pattern` is now optional ([#44741](https://github.com/hashicorp/terraform-provider-aws/issues/44741))
 * resource/aws_quicksight_data_set: Increase upper limit of `physical_table_map.relational_table.name` from 64 to 256 characters ([#44807](https://github.com/hashicorp/terraform-provider-aws/issues/44807))
 * resource/aws_sagemaker_notebook_instance: Add `notebook-al2023-v1` to valid `platform_identifier` values ([#44570](https://github.com/hashicorp/terraform-provider-aws/issues/44570))
+* resource/aws_sqs_queue: Remove `account_id` and `region` from Resource Identity schema ([#44846](https://github.com/hashicorp/terraform-provider-aws/issues/44846))
+* resource/aws_sqs_queue_policy: Remove `account_id` and `region` from Resource Identity schema ([#44846](https://github.com/hashicorp/terraform-provider-aws/issues/44846))
+* resource/aws_sqs_queue_redrive_allow_policy: Remove `account_id` and `region` from Resource Identity schema ([#44846](https://github.com/hashicorp/terraform-provider-aws/issues/44846))
+* resource/aws_sqs_queue_redrive_policy: Remove `account_id` and `region` from Resource Identity schema ([#44846](https://github.com/hashicorp/terraform-provider-aws/issues/44846))
 
 BUG FIXES:
 
