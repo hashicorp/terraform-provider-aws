@@ -8,4 +8,6 @@ var (
 	ResourceExperimentTemplate = resourceExperimentTemplate
 
 	FindExperimentTemplateByID = findExperimentTemplateByID
+
+	FindTargetAccountConfigurationByID = findTargetAccountConfigurationByID
 )
