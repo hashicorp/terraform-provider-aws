@@ -3,36 +3,7 @@
 
 package fis
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/fis/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"fmt"
 	"log"
@@ -55,92 +26,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource function with schema
-// 4. Create, read, update, delete functions (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_fis_target_account_configuration", name="Target Account Configuration")
 func ResourceTargetAccountConfiguration() *schema.Resource {
 	return &schema.Resource{
-		// TIP: ==== ASSIGN CRUD FUNCTIONS ====
-		// These 4 functions handle CRUD responsibilities below.
 		CreateWithoutTimeout: resourceTargetAccountConfigurationCreate,
 		ReadWithoutTimeout:   resourceTargetAccountConfigurationRead,
 		UpdateWithoutTimeout: resourceTargetAccountConfigurationUpdate,
 		DeleteWithoutTimeout: resourceTargetAccountConfigurationDelete,
 
-		// TIP: ==== TERRAFORM IMPORTING ====
-		// If Read can get all the information it needs from the Identifier
-		// (i.e., d.Id()), you can use the Passthrough importer. Otherwise,
-		// you'll need a custom import function.
-		//
-		// See more:
-		// https://hashicorp.github.io/terraform-provider-aws/add-import-support/
-		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
-		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		// TIP: ==== CONFIGURABLE TIMEOUTS ====
-		// Users can configure timeout lengths but you need to use the times they
-		// provide. Access the timeout they configure (or the defaults) using,
-		// e.g., d.Timeout(schema.TimeoutCreate) (see below). The times here are
-		// the defaults if they don't configure timeouts.
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		// TIP: ==== SCHEMA ====
-		// In the schema, add each of the attributes in snake case (e.g.,
-		// delete_automated_backups).
-		//
-		// Formatting rules:
-		// * Alphabetize attributes to make them easier to find.
-		// * Do not add a blank line between attributes.
-		//
-		// Attribute basics:
-		// * If a user can provide a value ("configure a value") for an
-		//   attribute (e.g., instances = 5), we call the attribute an
-		//   "argument."
-		// * You change the way users interact with attributes using:
-		//     - Required
-		//     - Optional
-		//     - Computed
-		// * There are only four valid combinations:
-		//
-		// 1. Required only - the user must provide a value
-		// Required: true,
-		//
-		// 2. Optional only - the user can configure or omit a value; do not
-		//    use Default or DefaultFunc
-		// Optional: true,
-		//
-		// 3. Computed only - the provider can provide a value but the user
-		//    cannot, i.e., read-only
-		// Computed: true,
-		//
-		// 4. Optional AND Computed - the provider or user can provide a value;
-		//    use this combination if you are using Default or DefaultFunc
-		// Optional: true,
-		// Computed: true,
-		//
-		// You will typically find arguments in the input struct
-		// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-		// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-		// the modify operation.
-		//
-		// For more about schema options, visit
-		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:         schema.TypeString,
@@ -341,10 +245,6 @@ func parseTargetAccountConfigurationID(id string) (experimentTemplateId, account
 	return
 }
 
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
 const (
 	statusChangePending = "Pending"
 	statusDeleting      = "Deleting"
@@ -352,19 +252,6 @@ const (
 	statusUpdated       = "Updated"
 )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
 func waitTargetAccountConfigurationCreated(ctx context.Context, conn *fis.Client, id string, timeout time.Duration) (*types.TargetAccountConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -383,10 +270,6 @@ func waitTargetAccountConfigurationCreated(ctx context.Context, conn *fis.Client
 	return nil, smarterr.NewError(err)
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
 func waitTargetAccountConfigurationUpdated(ctx context.Context, conn *fis.Client, id string, timeout time.Duration) (*types.TargetAccountConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
@@ -405,8 +288,6 @@ func waitTargetAccountConfigurationUpdated(ctx context.Context, conn *fis.Client
 	return nil, smarterr.NewError(err)
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
 func waitTargetAccountConfigurationDeleted(ctx context.Context, conn *fis.Client, id string, timeout time.Duration) (*types.TargetAccountConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
@@ -423,13 +304,6 @@ func waitTargetAccountConfigurationDeleted(ctx context.Context, conn *fis.Client
 	return nil, smarterr.NewError(err)
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
 func statusTargetAccountConfiguration(ctx context.Context, conn *fis.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findTargetAccountConfigurationByID(ctx, conn, id)
@@ -450,11 +324,6 @@ func statusTargetAccountConfiguration(ctx context.Context, conn *fis.Client, id 
 	}
 }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
 func findTargetAccountConfigurationByID(ctx context.Context, conn *fis.Client, id string) (*types.TargetAccountConfiguration, error) {
 	experimentTemplateID, accountID, err := parseTargetAccountConfigurationID(id)
 	if err != nil {
@@ -484,17 +353,6 @@ func findTargetAccountConfigurationByID(ctx context.Context, conn *fis.Client, i
 	return out.TargetAccountConfiguration, nil
 }
 
-// TIP: ==== FLEX ====
-// Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return something you can use in
-// a d.Set() call. In other words, flatteners translate from AWS -> Terraform.
-//
-// On the other hand, expanders take a Terraform data structure and return
-// something that you can send to the AWS API. In other words, expanders
-// translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 func flattenComplexArgument(apiObject *fis.ComplexArgument) map[string]any {
 	if apiObject == nil {
 		return nil
@@ -513,10 +371,6 @@ func flattenComplexArgument(apiObject *fis.ComplexArgument) map[string]any {
 	return m
 }
 
-// TIP: Often the AWS API will return a slice of structures in response to a
-// request for information. Sometimes you will have set criteria (e.g., the ID)
-// that means you'll get back a one-length slice. This plural function works
-// brilliantly for that situation too.
 func flattenComplexArguments(apiObjects []*fis.ComplexArgument) []any {
 	if len(apiObjects) == 0 {
 		return nil
@@ -535,12 +389,6 @@ func flattenComplexArguments(apiObjects []*fis.ComplexArgument) []any {
 	return l
 }
 
-// TIP: Remember, as mentioned above, expanders take a Terraform data structure
-// and return something that you can send to the AWS API. In other words,
-// expanders translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 func expandComplexArgument(tfMap map[string]any) *fis.ComplexArgument {
 	if tfMap == nil {
 		return nil
@@ -559,32 +407,12 @@ func expandComplexArgument(tfMap map[string]any) *fis.ComplexArgument {
 	return a
 }
 
-// TIP: Even when you have a list with max length of 1, this plural function
-// works brilliantly. However, if the AWS API takes a structure rather than a
-// slice of structures, you will not need it.
 func expandComplexArguments(tfList []any) []*fis.ComplexArgument {
-	// TIP: The AWS API can be picky about whether you send a nil or zero-
-	// length for an argument that should be cleared. For example, in some
-	// cases, if you send a nil value, the AWS API interprets that as "make no
-	// changes" when what you want to say is "remove everything." Sometimes
-	// using a zero-length list will cause an error.
-	//
-	// As a result, here are two options. Usually, option 1, nil, will work as
-	// expected, clearing the field. But, test going from something to nothing
-	// to make sure it works. If not, try the second option.
-
-	// TIP: Option 1: Returning nil for zero-length list
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var s []*fis.ComplexArgument
-
-	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
-	// not work, after testing going from something to nothing (if that is
-	// possible), uncomment out the next line and remove option 1.
-	//
-	// s := make([]*fis.ComplexArgument, 0)
 
 	for _, r := range tfList {
 		m, ok := r.(map[string]any)
