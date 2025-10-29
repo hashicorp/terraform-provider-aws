@@ -752,6 +752,38 @@ func testAccPermissions_tableWildcardSelectPlus(t *testing.T) {
 	})
 }
 
+func testAccPermissions_table_nonIAMPrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	dbName := "aws_glue_catalog_table.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_table_nonIAMPrincipals(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, "aws_identitystore_group.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", dbName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", dbName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDescribe)),
+				),
+			},
+		},
+	})
+}
+
 func testAccPermissions_twcBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -974,10 +1006,10 @@ func testAccPermissions_catalogResource_nonIAMPrincipals(t *testing.T) {
 				Config: testAccPermissionsConfig_catalogResource_nonIAMPrincipals(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, "aws_identitystore_group.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDescribe)),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
 				),
 			},
 		},
@@ -2994,5 +3026,78 @@ data "aws_iam_session_context" "current" {
 resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [data.aws_iam_session_context.current.issuer_arn]
 }
+`, rName)
+}
+
+func testAccPermissionsConfig_table_nonIAMPrincipals(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lakeformation_permissions" "test" {
+  principal        = aws_identitystore_group.test.arn
+  permissions      = ["DESCRIBE"]
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+    aws_lakeformation_identity_center_configuration.test,
+  ]
+}
+
+resource "aws_identitystore_group" "test" {
+  identity_store_id = local.identity_store_id
+  display_name      = %[1]q
+}
+
+resource "aws_lakeformation_identity_center_configuration" "test" {
+  instance_arn = local.identity_center_instance_arn
+}
+
+locals {
+  identity_center_instance_arn = data.aws_ssoadmin_instances.test.arns[0]
+  identity_store_id            = data.aws_ssoadmin_instances.test.identity_store_ids[0]
+}
+
+data "aws_ssoadmin_instances" "test" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  storage_descriptor {
+    columns {
+      name = "event"
+      type = "string"
+    }
+
+    columns {
+      name = "timestamp"
+      type = "date"
+    }
+
+    columns {
+      name = "transactionamount"
+      type = "double"
+    }
+  }
+}
+
 `, rName)
 }

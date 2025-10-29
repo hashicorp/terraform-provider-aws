@@ -76,6 +76,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"wildcardNoSelect":   testAccPermissions_tableWildcardNoSelect,
 			"wildcardSelectOnly": testAccPermissions_tableWildcardSelectOnly,
 			"wildcardSelectPlus": testAccPermissions_tableWildcardSelectPlus,
+			"nonIAMPrincipals":   testAccPermissions_table_nonIAMPrincipals,
 		},
 		"PermissionsTableWithColumns": {
 			acctest.CtBasic:           testAccPermissions_twcBasic,
