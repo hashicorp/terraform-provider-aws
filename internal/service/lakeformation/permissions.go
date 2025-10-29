@@ -867,6 +867,9 @@ func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
 	if _, ok := d.GetOk("catalog_resource"); ok {
 		return filterCatalogPermissions(principalIdentifier)
 	}
+	if _, ok := d.GetOk("data_cells_filter"); ok {
+		return filterDataCellsFilter(principalIdentifier)
+	}
 	return nil
 }
 

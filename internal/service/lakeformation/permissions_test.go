@@ -1387,6 +1387,9 @@ func permissionsFilter(attributes map[string]string) tflakeformation.Permissions
 	if v, ok := attributes["catalog_resource"]; ok && v == acctest.CtTrue {
 		return tflakeformation.FilterCatalogPermissions(principalIdentifier)
 	}
+	if v, ok := attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
+		return tflakeformation.FilterDataCellsFilter(principalIdentifier)
+	}
 
 	return nil
 }

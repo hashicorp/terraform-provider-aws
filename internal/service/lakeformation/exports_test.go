@@ -24,4 +24,5 @@ var (
 	IncludePrincipalIdentifierInList = includePrincipalIdentifierInList
 
 	FilterCatalogPermissions = filterCatalogPermissions
+	FilterDataCellsFilter    = filterDataCellsFilter
 )
