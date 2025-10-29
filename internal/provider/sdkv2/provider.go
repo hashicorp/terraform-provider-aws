@@ -274,25 +274,7 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Type:        schema.TypeList,
 					Optional:    true,
 					Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"comment": {
-								Type:        schema.TypeString,
-								Optional:    true,
-								Description: "Comment describing any additional product details.",
-							},
-							"product_name": {
-								Type:        schema.TypeString,
-								Required:    true,
-								Description: "Product name.",
-							},
-							"product_version": {
-								Type:        schema.TypeString,
-								Optional:    true,
-								Description: "Product version. Optional, and should only be set when `product_name` is set.",
-							},
-						},
-					},
+					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 			},
 
@@ -302,25 +284,7 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Type:        schema.TypeList,
 					Optional:    true,
 					Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"comment": {
-								Type:        schema.TypeString,
-								Optional:    true,
-								Description: "Comment describing any additional product details.",
-							},
-							"product_name": {
-								Type:        schema.TypeString,
-								Required:    true,
-								Description: "Product name.",
-							},
-							"product_version": {
-								Type:        schema.TypeString,
-								Optional:    true,
-								Description: "Product version. Optional, and should only be set when `product_name` is set.",
-							},
-						},
-					},
+					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 			},
 

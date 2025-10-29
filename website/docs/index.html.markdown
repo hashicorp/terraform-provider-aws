@@ -232,7 +232,6 @@ provider "aws" {
 ```ini
 [profile customprofile]
 credential_process = custom-process --username jdoe
-
 ```
 
 ### Module-scoped User-Agent Information with `provider_meta`
@@ -245,7 +244,7 @@ For example, the following `terraform` block can be used to append additional Us
 ```terraform
 terraform {
   required_providers {
-    awscc = {
+    aws = {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
@@ -253,11 +252,7 @@ terraform {
 
   provider_meta "aws" {
     user_agent = [
-      {
-        product_name    = "example-demo"
-        product_version = "0.0.1"
-        comment         = "a demo module"
-      },
+      "example-demo/0.0.1 (a demo module)"
     ]
   }
 }
@@ -343,16 +338,7 @@ For example,
 % export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
 ```
 
-When using the `user_agent` block, the components will be parsed and appended to the User-Agent in the form `{product_name}/{product_version} ({comment})`.
-For example, the configuration below would append `example-demo/0.0.1 (a demo module)`.
-
-```terraform
-user_agent {
-  product_name    = "example-demo"
-  product_version = "0.0.1"
-  comment         = "a demo module"
-}
-```
+When using the `user_agent` list attribute, the items will be appended to the User-Agent in order.
 
 ## Argument Reference
 

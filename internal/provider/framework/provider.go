@@ -217,6 +217,11 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "Resolve an endpoint with FIPS capability",
 			},
+			"user_agent": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"assume_role": schema.ListNestedBlock{
@@ -341,25 +346,6 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 					},
 				},
 			},
-			"user_agent": schema.ListNestedBlock{
-				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"comment": schema.StringAttribute{
-							Optional:    true,
-							Description: "Comment describing any additional product details.",
-						},
-						"product_name": schema.StringAttribute{
-							Required:    true,
-							Description: "Product name.",
-						},
-						"product_version": schema.StringAttribute{
-							Optional:    true,
-							Description: "Product version. Optional, and should only be set when `product_name` is set.",
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -367,52 +353,12 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 func (p *frameworkProvider) MetaSchema(ctx context.Context, req provider.MetaSchemaRequest, resp *provider.MetaSchemaResponse) {
 	resp.Schema = metaschema.Schema{
 		Attributes: map[string]metaschema.Attribute{
-			"user_agent": metaschema.ListNestedAttribute{
-				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+			"user_agent": schema.ListAttribute{
+				ElementType: types.StringType,
 				Optional:    true,
-				NestedObject: metaschema.NestedAttributeObject{
-					Attributes: map[string]metaschema.Attribute{
-						"comment": schema.StringAttribute{
-							Description: "Comment describing any additional product details.",
-							Optional:    true,
-						},
-						"product_name": schema.StringAttribute{
-							Description: "Product name.",
-							Required:    true,
-						},
-						"product_version": schema.StringAttribute{
-							Description: "Product version. Optional, and should only be set when `product_name` is set.",
-							Optional:    true,
-						},
-					},
-				},
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
 			},
 		},
-
-		// TODO
-		// metaschema.Schema does not support a Blocks field. Can we mux this if we're on protocol V5?
-		//
-		// Blocks: map[string]schema.Block{
-		// 	"user_agent": schema.ListNestedBlock{
-		// 		Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
-		// 		NestedObject: schema.NestedBlockObject{
-		// 			Attributes: map[string]schema.Attribute{
-		// 				"comment": schema.StringAttribute{
-		// 					Optional:    true,
-		// 					Description: "Comment describing any additional product details.",
-		// 				},
-		// 				"product_name": schema.StringAttribute{
-		// 					Required:    true,
-		// 					Description: "Product name.",
-		// 				},
-		// 				"product_version": schema.StringAttribute{
-		// 					Optional:    true,
-		// 					Description: "Product version. Optional, and should only be set when `product_name` is set.",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// },
 	}
 }
 
