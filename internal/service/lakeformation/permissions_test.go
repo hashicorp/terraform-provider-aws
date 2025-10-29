@@ -1390,6 +1390,9 @@ func permissionsFilter(attributes map[string]string) tflakeformation.Permissions
 	if v, ok := attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
 		return tflakeformation.FilterDataCellsFilter(principalIdentifier)
 	}
+	if v, ok := attributes["data_location.#"]; ok && v != "" && v != "0" {
+		return tflakeformation.FilterDataLocationPermissions(principalIdentifier)
+	}
 
 	return nil
 }

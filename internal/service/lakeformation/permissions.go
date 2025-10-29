@@ -870,6 +870,9 @@ func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
 	if _, ok := d.GetOk("data_cells_filter"); ok {
 		return filterDataCellsFilter(principalIdentifier)
 	}
+	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterDataLocationPermissions(principalIdentifier)
+	}
 	return nil
 }
 

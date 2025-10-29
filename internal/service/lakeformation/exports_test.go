@@ -23,6 +23,7 @@ var (
 
 	IncludePrincipalIdentifierInList = includePrincipalIdentifierInList
 
-	FilterCatalogPermissions = filterCatalogPermissions
-	FilterDataCellsFilter    = filterDataCellsFilter
+	FilterCatalogPermissions      = filterCatalogPermissions
+	FilterDataCellsFilter         = filterDataCellsFilter
+	FilterDataLocationPermissions = filterDataLocationPermissions
 )
