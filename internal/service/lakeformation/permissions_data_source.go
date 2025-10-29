@@ -286,7 +286,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	principalIdentifier := d.Get(names.AttrPrincipal).(string)
-	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") {
+	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") { // nosemgrep:ci.semgrep.aws.prefer-isarn-to-stringshasprefix
 		principal := awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 		}

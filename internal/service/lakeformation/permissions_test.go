@@ -1093,7 +1093,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	}
 
 	principalIdentifier := rs.Primary.Attributes[names.AttrPrincipal]
-	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") {
+	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") { // nosemgrep:ci.semgrep.aws.prefer-isarn-to-stringshasprefix
 		principal := awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 		}
