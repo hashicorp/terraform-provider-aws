@@ -1,10 +1,15 @@
 ## 6.19.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ecrpublic_images` ([#44795](https://github.com/hashicorp/terraform-provider-aws/issues/44795))
+
 ENHANCEMENTS:
 
 * data-source/aws_imagebuilder_image_recipe: Add `ami_tags` attribute ([#44731](https://github.com/hashicorp/terraform-provider-aws/issues/44731))
 * data-source/aws_lb_listener_rule: Add `regex_values` attribute to `condition.host_header`, `condition.http_header` and `condition.path_pattern` blocks ([#44741](https://github.com/hashicorp/terraform-provider-aws/issues/44741))
 * resource/aws_bedrockagentcore_gateway: Add validator to ensure correct `authorizer_configuration` and `authorizer_type` config ([#44826](https://github.com/hashicorp/terraform-provider-aws/issues/44826))
+* resource/aws_emrserverless_application: Add `monitoring_configuration` argument ([#43317](https://github.com/hashicorp/terraform-provider-aws/issues/43317))
 * resource/aws_emrserverless_application: Add `runtime_configuration` argument ([#43302](https://github.com/hashicorp/terraform-provider-aws/issues/43302))
 * resource/aws_imagebuilder_image_recipe: Add `ami_tags` argument ([#44731](https://github.com/hashicorp/terraform-provider-aws/issues/44731))
 * resource/aws_lb_listener_rule: Add `regex_values` argument to `condition.host_header`, `condition.http_header` and `condition.path_pattern` blocks ([#44741](https://github.com/hashicorp/terraform-provider-aws/issues/44741))
@@ -14,6 +19,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Fix crash when setting override region during provider initialization ([#44860](https://github.com/hashicorp/terraform-provider-aws/issues/44860))
 * resource/aws_bedrockagentcore_gateway: Change `authorizer_configuration` block from `Required` to `Optional` ([#44812](https://github.com/hashicorp/terraform-provider-aws/issues/44812))
 * resource/aws_bedrockagentcore_gateway: Mark `authorizer_type` argument as `ForceNew` ([#44812](https://github.com/hashicorp/terraform-provider-aws/issues/44812))
 
