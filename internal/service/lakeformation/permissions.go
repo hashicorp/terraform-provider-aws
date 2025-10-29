@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -517,7 +518,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	principalIdentifier := d.Get(names.AttrPrincipal).(string)
-	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") { // nosemgrep:ci.semgrep.aws.prefer-isarn-to-stringshasprefix
+	if includePrincipalIdentifierInList(principalIdentifier) {
 		principal := awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 		}
@@ -1304,4 +1305,12 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 	slices.Sort(tfList)
 
 	return tfList
+}
+
+func includePrincipalIdentifierInList(principalIdentifier string) bool {
+	arn, err := arn.Parse(principalIdentifier)
+	if err != nil {
+		return true
+	}
+	return !(arn.Service == "identitystore" && strings.HasPrefix(arn.Resource, "group/"))
 }

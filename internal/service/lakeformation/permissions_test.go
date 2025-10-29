@@ -9,7 +9,6 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -1095,7 +1094,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	}
 
 	principalIdentifier := rs.Primary.Attributes[names.AttrPrincipal]
-	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") { // nosemgrep:ci.semgrep.aws.prefer-isarn-to-stringshasprefix
+	if tflakeformation.IncludePrincipalIdentifierInList(principalIdentifier) {
 		principal := awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 		}

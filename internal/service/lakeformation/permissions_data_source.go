@@ -7,7 +7,6 @@ import (
 	"context"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
@@ -286,7 +285,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	principalIdentifier := d.Get(names.AttrPrincipal).(string)
-	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") { // nosemgrep:ci.semgrep.aws.prefer-isarn-to-stringshasprefix
+	if includePrincipalIdentifierInList(principalIdentifier) {
 		principal := awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 		}
