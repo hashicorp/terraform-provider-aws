@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -92,7 +91,7 @@ func (r *resourceIdentityCenterConfiguration) Create(ctx context.Context, req re
 	}
 
 	if plan.CatalogID.IsNull() || plan.CatalogID.IsUnknown() {
-		plan.CatalogID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
+		plan.CatalogID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 
 	var input lakeformation.CreateLakeFormationIdentityCenterConfigurationInput

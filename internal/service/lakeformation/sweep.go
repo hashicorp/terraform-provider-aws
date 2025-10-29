@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
-	"github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -65,8 +64,8 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 			d := r.Data(nil)
 
 			d.Set(names.AttrPrincipal, v.Principal.DataLakePrincipalIdentifier)
-			d.Set(names.AttrPermissions, flattenResourcePermissions([]types.PrincipalResourcePermissions{v}))
-			d.Set("permissions_with_grant_option", flattenGrantPermissions([]types.PrincipalResourcePermissions{v}))
+			d.Set(names.AttrPermissions, flattenResourcePermissions([]awstypes.PrincipalResourcePermissions{v}))
+			d.Set("permissions_with_grant_option", flattenGrantPermissions([]awstypes.PrincipalResourcePermissions{v}))
 
 			d.Set("catalog_resource", v.Resource.Catalog != nil)
 
