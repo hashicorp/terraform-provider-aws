@@ -13,30 +13,33 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_observabilityadmin_centralization_rule_for_organization", name="Centralization Rule For Organization")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="rule_arn")
 func newResourceCentralizationRuleForOrganization(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCentralizationRuleForOrganization{}
 
@@ -52,15 +55,17 @@ const (
 )
 
 type resourceCentralizationRuleForOrganization struct {
-	framework.ResourceWithModel[resourceCentralizationRuleForOrganizationModel]
+	framework.ResourceWithModel[centralizationRuleForOrganizationModel]
 	framework.WithTimeouts
+
+	flexOpt fwflex.AutoFlexOptionsFunc
 }
 
 func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			"rule_arn": framework.ARNAttributeComputedOnly(),
+			// names.AttrID: framework.IDAttribute(),
 			"rule_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -71,18 +76,20 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"rule": schema.ListNestedBlock{
+			names.AttrRule: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[centralizationRuleModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"destination": schema.ListNestedBlock{
+						names.AttrDestination: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[centralizationRuleDestinationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -109,11 +116,12 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"backup_region": schema.StringAttribute{
+															names.AttrRegion: schema.StringAttribute{
 																Optional: true,
 															},
-															"kms_key_id": schema.StringAttribute{
-																Optional: true,
+															names.AttrKMSKeyARN: schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Optional:   true,
 															},
 														},
 													},
@@ -123,10 +131,37 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"kms_key_id": schema.StringAttribute{
-																Optional: true,
+															"encryption_strategy": schema.StringAttribute{
+																Required:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.EncryptionStrategy](),
+																Validators: []validator.String{
+																	stringvalidator.OneOf(
+																		string(awstypes.EncryptionStrategyAwsOwned),
+																		string(awstypes.EncryptionStrategyCustomerManaged),
+																	),
+																},
+															},
+															"encryption_conflict_resolution_strategy": schema.StringAttribute{
+																Optional:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.EncryptionConflictResolutionStrategy](),
+																Validators: []validator.String{
+																	stringvalidator.OneOf(
+																		string(awstypes.EncryptionConflictResolutionStrategyAllow),
+																		string(awstypes.EncryptionConflictResolutionStrategySkip),
+																	),
+																},
+															},
+															"kms_key_arn": schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Optional:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 														},
 													},
@@ -137,19 +172,23 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 								},
 							},
 						},
-						"source": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[centralizationRuleSourceModel](ctx),
+						names.AttrSource: schema.ListNestedBlock{
 							Validators: []validator.List{
 								listvalidator.IsRequired(),
 								listvalidator.SizeAtMost(1),
+								listvalidator.SizeAtLeast(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"regions": schema.ListAttribute{
+										CustomType:  fwtypes.ListOfStringType,
 										ElementType: types.StringType,
-										Required:    true,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
+										Required: true,
 									},
-									"scope": schema.StringAttribute{
+									names.AttrScope: schema.StringAttribute{
 										Optional: true,
 									},
 								},
@@ -162,10 +201,21 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"encrypted_log_group_strategy": schema.StringAttribute{
-													Required: true,
+													CustomType: fwtypes.StringEnumType[awstypes.EncryptedLogGroupStrategy](),
+													Required:   true,
+													Validators: []validator.String{
+														stringvalidator.OneOf(
+															string(awstypes.EncryptedLogGroupStrategyAllow),
+															string(awstypes.EncryptedLogGroupStrategySkip),
+														),
+													},
 												},
 												"log_group_selection_criteria": schema.StringAttribute{
 													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthAtLeast(1),
+														stringvalidator.LengthAtMost(2000),
+													},
 												},
 											},
 										},
@@ -188,7 +238,7 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	var plan resourceCentralizationRuleForOrganizationModel
+	var plan centralizationRuleForOrganizationModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -211,7 +261,6 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 	}
 
 	// Set the ID to the rule name for identification
-	plan.ID = plan.RuleName
 	plan.ARN = flex.StringToFramework(ctx, out.RuleArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -227,20 +276,20 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	var state resourceCentralizationRuleForOrganizationModel
+	var state centralizationRuleForOrganizationModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findCentralizationRuleForOrganizationByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	out, err := findCentralizationRuleForOrganizationByID(ctx, conn, state.RuleName.ValueString())
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName.String())
 		return
 	}
 
@@ -255,7 +304,7 @@ func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, re
 func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	var plan, state resourceCentralizationRuleForOrganizationModel
+	var plan, state centralizationRuleForOrganizationModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -277,11 +326,11 @@ func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, 
 
 		out, err := conn.UpdateCentralizationRuleForOrganization(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
 			return
 		}
 		if out == nil || out.RuleArn == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.RuleName.String())
 			return
 		}
 
@@ -289,9 +338,9 @@ func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, 
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitCentralizationRuleForOrganizationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err := waitCentralizationRuleForOrganizationUpdated(ctx, conn, plan.RuleName.ValueString(), updateTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
 		return
 	}
 
@@ -301,14 +350,14 @@ func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, 
 func (r *resourceCentralizationRuleForOrganization) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	var state resourceCentralizationRuleForOrganizationModel
+	var state centralizationRuleForOrganizationModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := observabilityadmin.DeleteCentralizationRuleForOrganizationInput{
-		RuleIdentifier: state.ID.ValueStringPointer(),
+		RuleIdentifier: state.RuleName.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteCentralizationRuleForOrganization(ctx, &input)
@@ -317,14 +366,14 @@ func (r *resourceCentralizationRuleForOrganization) Delete(ctx context.Context, 
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitCentralizationRuleForOrganizationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitCentralizationRuleForOrganizationDeleted(ctx, conn, state.RuleName.String(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName)
 		return
 	}
 }
@@ -341,7 +390,7 @@ const (
 )
 
 func waitCentralizationRuleForOrganizationCreated(ctx context.Context, conn *observabilityadmin.Client, id string, timeout time.Duration) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusCentralizationRuleForOrganization(ctx, conn, id),
@@ -359,7 +408,7 @@ func waitCentralizationRuleForOrganizationCreated(ctx context.Context, conn *obs
 }
 
 func waitCentralizationRuleForOrganizationUpdated(ctx context.Context, conn *observabilityadmin.Client, id string, timeout time.Duration) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
 		Refresh:                   statusCentralizationRuleForOrganization(ctx, conn, id),
@@ -377,7 +426,7 @@ func waitCentralizationRuleForOrganizationUpdated(ctx context.Context, conn *obs
 }
 
 func waitCentralizationRuleForOrganizationDeleted(ctx context.Context, conn *observabilityadmin.Client, id string, timeout time.Duration) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
 		Target:  []string{},
 		Refresh: statusCentralizationRuleForOrganization(ctx, conn, id),
@@ -392,10 +441,10 @@ func waitCentralizationRuleForOrganizationDeleted(ctx context.Context, conn *obs
 	return nil, err
 }
 
-func statusCentralizationRuleForOrganization(ctx context.Context, conn *observabilityadmin.Client, id string) retry.StateRefreshFunc {
+func statusCentralizationRuleForOrganization(ctx context.Context, conn *observabilityadmin.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findCentralizationRuleForOrganizationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -415,7 +464,7 @@ func findCentralizationRuleForOrganizationByID(ctx context.Context, conn *observ
 	out, err := conn.GetCentralizationRuleForOrganization(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -425,20 +474,23 @@ func findCentralizationRuleForOrganizationByID(ctx context.Context, conn *observ
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, &sdkretry.NotFoundError{
+			LastError:   errors.New("empty result"),
+			LastRequest: &input,
+		}
 	}
 
 	return out, nil
 }
 
-type resourceCentralizationRuleForOrganizationModel struct {
+type centralizationRuleForOrganizationModel struct {
 	framework.WithRegionModel
-	ARN      types.String                                             `tfsdk:"arn"`
-	ID       types.String                                             `tfsdk:"id"`
+	ARN types.String `tfsdk:"rule_arn"`
+	// ID       types.String   `tfsdk:"id"`
 	Rule     fwtypes.ListNestedObjectValueOf[centralizationRuleModel] `tfsdk:"rule"`
 	RuleName types.String                                             `tfsdk:"rule_name"`
-	Tags     types.Map                                                `tfsdk:"tags"`
-	TagsAll  types.Map                                                `tfsdk:"tags_all"`
+	Tags     tftags.Map                                               `tfsdk:"tags"`
+	TagsAll  tftags.Map                                               `tfsdk:"tags_all"`
 	Timeouts timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
@@ -454,7 +506,7 @@ type centralizationRuleDestinationModel struct {
 }
 
 type centralizationRuleSourceModel struct {
-	Regions                 types.List                                                    `tfsdk:"regions"`
+	Regions                 fwtypes.ListOfString                                          `tfsdk:"regions"`
 	Scope                   types.String                                                  `tfsdk:"scope"`
 	SourceLogsConfiguration fwtypes.ListNestedObjectValueOf[sourceLogsConfigurationModel] `tfsdk:"source_logs_configuration"`
 }
@@ -465,17 +517,19 @@ type destinationLogsConfigurationModel struct {
 }
 
 type sourceLogsConfigurationModel struct {
-	EncryptedLogGroupStrategy types.String `tfsdk:"encrypted_log_group_strategy"`
-	LogGroupSelectionCriteria types.String `tfsdk:"log_group_selection_criteria"`
+	EncryptedLogGroupStrategy fwtypes.StringEnum[awstypes.EncryptedLogGroupStrategy] `tfsdk:"encrypted_log_group_strategy"`
+	LogGroupSelectionCriteria types.String                                           `tfsdk:"log_group_selection_criteria"`
 }
 
 type logsBackupConfigurationModel struct {
-	BackupRegion types.String `tfsdk:"backup_region"`
-	KMSKeyID     types.String `tfsdk:"kms_key_id"`
+	Region    types.String `tfsdk:"region"`
+	KMSKeyARN fwtypes.ARN  `tfsdk:"kms_key_arn"`
 }
 
 type logsEncryptionConfigurationModel struct {
-	KMSKeyID types.String `tfsdk:"kms_key_id"`
+	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
+	EncryptionConflictResolutionStrategy fwtypes.StringEnum[awstypes.EncryptionConflictResolutionStrategy] `tfsdk:"encryption_conflict_resolution_strategy"`
+	KMSKeyARN                            fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
 }
 
 func sweepCentralizationRuleForOrganizations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
