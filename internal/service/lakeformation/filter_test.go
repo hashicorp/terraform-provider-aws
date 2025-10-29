@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,7 +20,7 @@ func TestFilterPermissions(t *testing.T) {
 	t.Parallel()
 
 	// primitives to make test cases easier
-	accountID := "123456789012"
+	accountID := acctest.Ct12Digit
 	dbName := "Hiliji"
 	altDBName := "Hiuhbum"
 	tableName := "Ladocmoc"
