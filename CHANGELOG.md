@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* action/aws_lambda_invoke: Output logs in a progress message when `log_type` is `Tail` ([#44843](https://github.com/hashicorp/terraform-provider-aws/issues/44843))
 * data-source/aws_imagebuilder_image_recipe: Add `ami_tags` attribute ([#44731](https://github.com/hashicorp/terraform-provider-aws/issues/44731))
 * data-source/aws_lb_listener_rule: Add `regex_values` attribute to `condition.host_header`, `condition.http_header` and `condition.path_pattern` blocks ([#44741](https://github.com/hashicorp/terraform-provider-aws/issues/44741))
 * resource/aws_bedrockagentcore_gateway: Add validator to ensure correct `authorizer_configuration` and `authorizer_type` config ([#44826](https://github.com/hashicorp/terraform-provider-aws/issues/44826))
