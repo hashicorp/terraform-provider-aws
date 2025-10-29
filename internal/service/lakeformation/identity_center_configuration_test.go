@@ -49,7 +49,7 @@ func testAccLakeFormationIdentityCenterConfiguration_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("application_arn"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCatalogID), tfknownvalue.AccountID()),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("instance_arn"), "data.aws_ssoadmin_instances.test", tfjsonpath.New("arns").AtSliceIndex(0), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("instance_arn"), "data.aws_ssoadmin_instances.test", tfjsonpath.New(names.AttrARNs).AtSliceIndex(0), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_share"), knownvalue.Null()),
 				},
 			},
