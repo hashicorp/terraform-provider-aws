@@ -868,6 +868,53 @@ func testAccPermissions_twcWildcardSelectPlus(t *testing.T) {
 	})
 }
 
+func testAccPermissions_CatalogIDS3Tables(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_catalogIDS3Tables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", "CREATE_TABLE"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPermissions_CatalogDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_catalogDefault(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", "ALTER"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", "CREATE_CATALOG"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", "CREATE_DATABASE"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIAMPrincipalsGrantPrincipal(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -922,7 +969,6 @@ func testAccCheckPermissionsExists(ctx context.Context, resourceName string) res
 		if !ok {
 			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
 		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		permCount, err := permissionCountForResource(ctx, conn, rs)
@@ -2830,6 +2876,108 @@ resource "aws_lakeformation_permissions" "test" {
 
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName)
+}
+
+func testAccPermissionsConfig_catalogIDS3Tables(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_lakeformation_data_lake_settings" "existing" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "glue.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+# Ensure the calling user remains an admin
+resource "aws_lakeformation_data_lake_settings" "admin" {
+  admins = tolist(concat(
+    tolist(data.aws_lakeformation_data_lake_settings.existing.admins),
+    [data.aws_iam_session_context.current.issuer_arn]
+  ))
+}
+
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3tables_namespace" "test" {
+  namespace        = replace(%[1]q, "-", "_")
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+}
+
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["CREATE_TABLE"]
+  principal   = aws_iam_role.test.arn
+
+  database {
+    name       = replace(%[1]q, "-", "_")
+    catalog_id = "${data.aws_caller_identity.current.account_id}:s3tablescatalog/%[1]s"
+  }
+  depends_on = [aws_lakeformation_data_lake_settings.admin, aws_s3tables_namespace.test]
+}
+  `, rName)
+}
+
+func testAccPermissionsConfig_catalogDefault(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_lakeformation_data_lake_settings" "existing" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "glue.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+# Ensure the calling user remains an admin
+resource "aws_lakeformation_data_lake_settings" "admin" {
+  admins = tolist(concat(
+    tolist(data.aws_lakeformation_data_lake_settings.existing.admins),
+    [data.aws_iam_session_context.current.issuer_arn]
+  ))
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions      = ["ALTER", "CREATE_CATALOG", "CREATE_DATABASE"]
+  principal        = aws_iam_role.test.arn
+  catalog_resource = true
+  catalog_id       = data.aws_caller_identity.current.account_id
+
+  depends_on = [aws_lakeformation_data_lake_settings.admin]
 }
 `, rName)
 }
