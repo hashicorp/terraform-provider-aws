@@ -299,9 +299,9 @@ resource "aws_fis_experiment_template" "test" {
 
 resource "aws_fis_target_account_configuration" "test" {
   experiment_template_id = aws_fis_experiment_template.test.id
-  account_id            = data.aws_caller_identity.current.account_id
-  role_arn             = aws_iam_role.test.arn
-  description          = "%[1]s target account configuration"
+  account_id             = data.aws_caller_identity.current.account_id
+  role_arn               = aws_iam_role.test.arn
+  description            = "%[1]s target account configuration"
 
   timeouts {
     create = "5m"
@@ -382,9 +382,9 @@ resource "aws_fis_experiment_template" "test" {
 
 resource "aws_fis_target_account_configuration" "test" {
   experiment_template_id = aws_fis_experiment_template.test.id
-  account_id            = data.aws_caller_identity.current.account_id
-  role_arn             = aws_iam_role.test.arn
-  description          = "%[1]s target account configuration updated"
+  account_id             = data.aws_caller_identity.current.account_id
+  role_arn               = aws_iam_role.test.arn
+  description            = "%[1]s target account configuration updated"
 
   timeouts {
     create = "5m"
