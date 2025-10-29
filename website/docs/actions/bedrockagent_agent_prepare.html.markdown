@@ -24,6 +24,7 @@ resource "aws_bedrockagent_agent" "example" {
   agent_resource_role_arn = aws_iam_role.agent.arn
   foundation_model        = "anthropic.claude-v2"
   instruction             = "You are a helpful assistant."
+  prepare_agent           = false
 }
 
 action "aws_bedrockagent_agent_prepare" "example" {
@@ -50,6 +51,7 @@ resource "terraform_data" "prepare_trigger" {
 resource "aws_bedrockagent_agent_action_group" "example" {
   agent_id          = aws_bedrockagent_agent.example.agent_id
   action_group_name = "example-action-group"
+  prepare_agent     = false
   action_group_executor {
     lambda = aws_lambda_function.example.function_name
   }
