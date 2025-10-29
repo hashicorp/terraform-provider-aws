@@ -288,6 +288,40 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"node_group_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_group_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{1,4}$`), "must be 1-4 digits"),
+						},
+						"primary_availability_zone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"replica_availability_zones": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"replica_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 5),
+						},
+						"slots": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\d,-]+$`), "must contain only digits, commas, and hyphens"),
+						},
+					},
+				},
+				ConflictsWith: []string{"preferred_cache_cluster_azs"},
+			},
 			"primary_endpoint_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -552,6 +586,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.PreferredCacheClusterAZs = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("node_group_configuration"); ok && len(v.([]any)) > 0 {
+		input.NodeGroupConfiguration = expandNodeGroupConfigurations(v.([]any))
+	}
+
 	rawConfig := d.GetRawConfig()
 	rawReplicasPerNodeGroup := rawConfig.GetAttr("replicas_per_node_group")
 	if rawReplicasPerNodeGroup.IsKnown() && !rawReplicasPerNodeGroup.IsNull() {
@@ -710,6 +748,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("num_node_groups", len(rgp.NodeGroups))
 	if len(rgp.NodeGroups) > 0 {
 		d.Set("replicas_per_node_group", len(rgp.NodeGroups[0].NodeGroupMembers)-1)
+		if err := d.Set("node_group_configuration", flattenNodeGroupConfigurations(rgp.NodeGroups)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting node_group_configuration: %s", err)
+		}
 	}
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
@@ -1509,4 +1550,55 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
 	_, has_global_replication_group := d.GetOk("global_replication_group_id")
 	return has_global_replication_group && !d.IsNewResource()
+}
+
+func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {
+	var apiObjects []awstypes.NodeGroupConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.NodeGroupConfiguration{}
+
+		if v, ok := tfMap["node_group_id"].(string); ok && v != "" {
+			apiObject.NodeGroupId = aws.String(v)
+		}
+		if v, ok := tfMap["primary_availability_zone"].(string); ok && v != "" {
+			apiObject.PrimaryAvailabilityZone = aws.String(v)
+		}
+		if v, ok := tfMap["replica_availability_zones"].([]any); ok && len(v) > 0 {
+			apiObject.ReplicaAvailabilityZones = flex.ExpandStringValueList(v)
+		}
+		if v, ok := tfMap["replica_count"].(int); ok {
+			apiObject.ReplicaCount = aws.Int32(int32(v))
+		}
+		if v, ok := tfMap["slots"].(string); ok && v != "" {
+			apiObject.Slots = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenNodeGroupConfigurations(apiObjects []awstypes.NodeGroup) []any {
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.NodeGroupId; v != nil {
+			tfMap["node_group_id"] = aws.ToString(v)
+		}
+		if len(apiObject.NodeGroupMembers) > 1 {
+			tfMap["replica_count"] = len(apiObject.NodeGroupMembers) - 1
+		}
+		if v := apiObject.Slots; v != nil {
+			tfMap["slots"] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
