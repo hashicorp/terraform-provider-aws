@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagentcore_flow: Fix input/output mapping for bedrock agent flow resource so `input` and `output` blocks are correctly set and read from the API, preventing spurious plan diffs and apply failures.
+```
