@@ -1399,6 +1399,9 @@ func permissionsFilter(attributes map[string]string) tflakeformation.Permissions
 	if v, ok := attributes["lf_tag.#"]; ok && v != "" && v != "0" {
 		return tflakeformation.FilterLFTagPermissions(principalIdentifier)
 	}
+	if v, ok := attributes["lf_tag_policy.#"]; ok && v != "" && v != "0" {
+		return tflakeformation.FilterLFTagPolicyPermissions(principalIdentifier)
+	}
 
 	return nil
 }
