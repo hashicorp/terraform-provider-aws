@@ -49,7 +49,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 		}
 
 		// clean permissions = filter out permissions that do not pertain to this specific resource
-		cleanPermissions := FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
+		cleanPermissions := filterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
 
 		if len(cleanPermissions) == 0 {
 			return nil, statusNotFound, nil

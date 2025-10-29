@@ -361,7 +361,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := filterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	if len(cleanPermissions) != len(allPermissions) {
 		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())

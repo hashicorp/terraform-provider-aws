@@ -9,7 +9,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 )
 
-func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterPermissions(input *lakeformation.ListPermissionsInput, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	// For most Lake Formation resources, filtering within the provider is unnecessary. The input
 	// contains everything for AWS to give you back exactly what you want. However, many challenges
 	// arise with tables and tables with columns. Perhaps the two biggest problems (so far) are as
@@ -24,7 +24,7 @@ func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType stri
 	// permissions in the special cases to avoid extra permissions being included.
 
 	if input.Resource.Catalog != nil {
-		return FilterCatalogPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+		return filterCatalogPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if input.Resource.DataCellsFilter != nil {
@@ -32,33 +32,33 @@ func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType stri
 	}
 
 	if input.Resource.DataLocation != nil {
-		return FilterDataLocationPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+		return filterDataLocationPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if input.Resource.Database != nil {
-		return FilterDatabasePermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+		return filterDatabasePermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if input.Resource.LFTag != nil {
-		return FilterLFTagPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+		return filterLFTagPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if input.Resource.LFTagPolicy != nil {
-		return FilterLFTagPolicyPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+		return filterLFTagPolicyPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if tableType == TableTypeTableWithColumns {
-		return FilterTableWithColumnsPermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+		return filterTableWithColumnsPermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 	}
 
 	if input.Resource.Table != nil || tableType == TableTypeTable {
-		return FilterTablePermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, allPermissions)
+		return filterTablePermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, allPermissions)
 	}
 
 	return nil
 }
 
-func FilterTablePermissions(principal *string, table *awstypes.TableResource, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterTablePermissions(principal *string, table *awstypes.TableResource, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	// CREATE PERMS (in)     = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT, SELECT on Table, Name = (Table Name)
 	//      LIST PERMS (out) = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT         on Table, Name = (Table Name)
 	//      LIST PERMS (out) = SELECT                                             on TableWithColumns, Name = (Table Name), ColumnWildcard
@@ -105,7 +105,7 @@ func FilterTablePermissions(principal *string, table *awstypes.TableResource, al
 	return cleanPermissions
 }
 
-func FilterTableWithColumnsPermissions(principal *string, twc *awstypes.TableResource, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterTableWithColumnsPermissions(principal *string, twc *awstypes.TableResource, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	// CREATE PERMS (in)       = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT, SELECT on TableWithColumns, Name = (Table Name), ColumnWildcard
 	//        LIST PERMS (out) = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT         on Table, Name = (Table Name)
 	//        LIST PERMS (out) = SELECT                                             on TableWithColumns, Name = (Table Name), ColumnWildcard
@@ -145,7 +145,7 @@ func FilterTableWithColumnsPermissions(principal *string, twc *awstypes.TableRes
 	return cleanPermissions
 }
 
-func FilterCatalogPermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterCatalogPermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	var cleanPermissions []awstypes.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
@@ -177,7 +177,7 @@ func filterDataCellsFilter(principal *string, allPermissions []awstypes.Principa
 	return cleanPermissions
 }
 
-func FilterDataLocationPermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterDataLocationPermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	var cleanPermissions []awstypes.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
@@ -193,7 +193,7 @@ func FilterDataLocationPermissions(principal *string, allPermissions []awstypes.
 	return cleanPermissions
 }
 
-func FilterDatabasePermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterDatabasePermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	var cleanPermissions []awstypes.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
@@ -209,7 +209,7 @@ func FilterDatabasePermissions(principal *string, allPermissions []awstypes.Prin
 	return cleanPermissions
 }
 
-func FilterLFTagPermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterLFTagPermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	var cleanPermissions []awstypes.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
@@ -225,7 +225,7 @@ func FilterLFTagPermissions(principal *string, allPermissions []awstypes.Princip
 	return cleanPermissions
 }
 
-func FilterLFTagPolicyPermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterLFTagPolicyPermissions(principal *string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	var cleanPermissions []awstypes.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {

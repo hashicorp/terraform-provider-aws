@@ -18,4 +18,6 @@ var (
 	FindIdentityCenterConfigurationByID = findIdentityCenterConfigurationByID
 
 	ValidPrincipal = validPrincipal
+
+	FilterPermissions = filterPermissions
 )
