@@ -431,3 +431,58 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
 `, region, key, value),
 	)
 }
+
+func testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, key, value string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentBlueprintDataSourceConfig_basic(domainName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment_blueprint_configuration" "test" {
+  domain_id                = aws_datazone_domain.test.id
+  environment_blueprint_id = data.aws_datazone_environment_blueprint.test.id
+  enabled_regions          = []
+
+  global_parameters = {
+    %[1]q = %[2]q
+  }
+}
+`, key, value),
+	)
+}
+func TestAccDataZoneEnvironmentBlueprintConfiguration_global_parameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
+	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment_blueprint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(
+					domainName,
+					"quickSightVPCConnectionRoleArn",
+					"arn:aws:iam::123456789012:role/example",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", "arn:aws:iam::123456789012:role/example"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
+			},
+		},
+	})
+}
