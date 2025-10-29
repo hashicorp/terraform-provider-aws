@@ -32,10 +32,6 @@ func filterPermissions(input *lakeformation.ListPermissionsInput, filter Permiss
 		return tfslices.Filter(allPermissions, filter)
 	}
 
-	if input.Resource.LFTag != nil {
-		return filterLFTagPermissions(principalIdentifier, allPermissions)
-	}
-
 	if input.Resource.LFTagPolicy != nil {
 		return filterLFTagPolicyPermissions(principalIdentifier, allPermissions)
 	}
@@ -72,6 +68,12 @@ func filterDataLocationPermissions(principalIdentifier string) PermissionsFilter
 func filterDatabasePermissions(principalIdentifier string) PermissionsFilter {
 	return func(permissions awstypes.PrincipalResourcePermissions) bool {
 		return principalIdentifier == aws.ToString(permissions.Principal.DataLakePrincipalIdentifier) && permissions.Resource.Database != nil
+	}
+}
+
+func filterLFTagPermissions(principalIdentifier string) PermissionsFilter {
+	return func(permissions awstypes.PrincipalResourcePermissions) bool {
+		return principalIdentifier == aws.ToString(permissions.Principal.DataLakePrincipalIdentifier) && permissions.Resource.LFTag != nil
 	}
 }
 
@@ -156,22 +158,6 @@ func filterTableWithColumnsPermissions(principalIdentifier string, twc *awstypes
 		if perm.Resource.Table != nil && aws.ToString(perm.Resource.Table.Name) == aws.ToString(twc.Name) {
 			cleanPermissions = append(cleanPermissions, perm)
 			continue
-		}
-	}
-
-	return cleanPermissions
-}
-
-func filterLFTagPermissions(principalIdentifier string, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
-	var cleanPermissions []awstypes.PrincipalResourcePermissions
-
-	for _, perm := range allPermissions {
-		if principalIdentifier != aws.ToString(perm.Principal.DataLakePrincipalIdentifier) {
-			continue
-		}
-
-		if perm.Resource.LFTag != nil {
-			cleanPermissions = append(cleanPermissions, perm)
 		}
 	}
 

@@ -27,4 +27,5 @@ var (
 	FilterDataCellsFilter         = filterDataCellsFilter
 	FilterDataLocationPermissions = filterDataLocationPermissions
 	FilterDatabasePermissions     = filterDatabasePermissions
+	FilterLFTagPermissions        = filterLFTagPermissions
 )
