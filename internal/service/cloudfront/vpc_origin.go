@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -97,9 +98,8 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"items": schema.SetAttribute{
-										CustomType:  fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
-										Required:    true,
-										ElementType: types.StringType,
+										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
+										Required:   true,
 									},
 									"quantity": schema.Int64Attribute{
 										Required: true,
@@ -420,4 +420,117 @@ type vpcOriginEndpointConfigModel struct {
 type originSSLProtocolsModel struct {
 	Items    fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"items"`
 	Quantity types.Int64                                                  `tfsdk:"quantity"`
+}
+
+var (
+	_ fwflex.Expander  = vpcOriginEndpointConfigModel{}
+	_ fwflex.Flattener = &vpcOriginEndpointConfigModel{}
+)
+
+func (m vpcOriginEndpointConfigModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	config := &awstypes.VpcOriginEndpointConfig{
+		Arn:                  fwflex.StringFromFramework(ctx, m.ARN),
+		HTTPPort:             aws.Int32(int32(m.HTTPPort.ValueInt64())),
+		HTTPSPort:            aws.Int32(int32(m.HTTPSPort.ValueInt64())),
+		Name:                 fwflex.StringFromFramework(ctx, m.Name),
+		OriginProtocolPolicy: m.OriginProtocolPolicy.ValueEnum(),
+	}
+
+	if !m.OriginSSLProtocols.IsNull() {
+		sslList, d := m.OriginSSLProtocols.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		if len(sslList) > 0 {
+			expanded, d := sslList[0].Expand(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			if sslProto, ok := expanded.(*awstypes.OriginSslProtocols); ok {
+				config.OriginSslProtocols = sslProto
+			} else {
+				diags.AddError("error expanding Origin SSL Protocols", fmt.Sprintf("expected OriginSslProtocols, got: %T", expanded))
+			}
+		}
+	}
+
+	return config, diags
+}
+
+func (m *vpcOriginEndpointConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+	if t, ok := v.(awstypes.VpcOriginEndpointConfig); ok {
+		m.ARN = fwflex.StringToFramework(ctx, t.Arn)
+		m.HTTPPort = types.Int64Value(int64(aws.ToInt32(t.HTTPPort)))
+		m.HTTPSPort = types.Int64Value(int64(aws.ToInt32(t.HTTPSPort)))
+		m.Name = fwflex.StringToFramework(ctx, t.Name)
+		m.OriginProtocolPolicy = fwtypes.StringEnumValue(t.OriginProtocolPolicy)
+
+		if t.OriginSslProtocols != nil {
+			var sslModel originSSLProtocolsModel
+			diags.Append(fwflex.Flatten(ctx, t.OriginSslProtocols, &sslModel)...)
+			if diags.HasError() {
+				return diags
+			}
+			sslList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &sslModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.OriginSSLProtocols = sslList
+		}
+	} else {
+		diags.AddError("error flattening VPC Origin Endpoint Config", fmt.Sprintf("expected VpcOriginEndpointConfig, got: %T", v))
+	}
+	return diags
+}
+
+var (
+	_ fwflex.Expander  = originSSLProtocolsModel{}
+	_ fwflex.Flattener = &originSSLProtocolsModel{}
+)
+
+func (m originSSLProtocolsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	var protocols []awstypes.SslProtocol
+	diags.Append(fwflex.Expand(ctx, m.Items, &protocols)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	result := awstypes.OriginSslProtocols{
+		Items:    protocols,
+		Quantity: aws.Int32(int32(m.Quantity.ValueInt64())),
+	}
+
+	return &result, diags
+}
+
+func (m *originSSLProtocolsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(awstypes.OriginSslProtocols); ok {
+		diags.Append(fwflex.Flatten(ctx, t.Items, &m.Items)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.Quantity = types.Int64Value(int64(aws.ToInt32(t.Quantity)))
+	} else {
+		diags.AddError("error flattening Origin SSL Protocols", fmt.Sprintf("expected OriginSslProtocols, got: %T", v))
+	}
+	return diags
 }
