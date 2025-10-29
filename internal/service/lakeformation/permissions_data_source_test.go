@@ -264,6 +264,33 @@ func testAccPermissionsDataSource_tableWithColumns(t *testing.T) {
 	})
 }
 
+func testAccPermissionsDataSource_catalogResource_nonIAMPrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	dataSourceName := "data.aws_lakeformation_permissions.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsDataSourceConfig_catalogResource_nonIAMPrincipals(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPrincipal, resourceName, names.AttrPrincipal),
+					resource.TestCheckResourceAttrPair(dataSourceName, "permissions.#", resourceName, "permissions.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "permissions.0", resourceName, "permissions.0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPermissionsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -824,4 +851,14 @@ data "aws_lakeformation_permissions" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPermissionsDataSourceConfig_catalogResource_nonIAMPrincipals(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPermissionsConfig_catalogResource_nonIAMPrincipals(rName), `
+data "aws_lakeformation_permissions" "test" {
+  principal        = aws_lakeformation_permissions.test.principal
+  catalog_resource = true
+}
+`)
 }
