@@ -1208,7 +1208,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	tableType := ""
+	var tableType tflakeformation.TableType
 
 	if v, ok := rs.Primary.Attributes["table.#"]; ok && v != "" && v != "0" {
 		tableType = tflakeformation.TableTypeTable

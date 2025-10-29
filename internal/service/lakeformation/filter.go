@@ -9,7 +9,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 )
 
-func filterPermissions(input *lakeformation.ListPermissionsInput, principalIdentifier, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterPermissions(input *lakeformation.ListPermissionsInput, principalIdentifier string, tableType TableType, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	// For most Lake Formation permissions, filtering within the provider is unnecessary. The input
 	// contains everything for AWS to give you back exactly what you want.
 	//

@@ -35,7 +35,7 @@ func TestFilterPermissions(t *testing.T) {
 	testCases := []struct {
 		Name                string
 		Input               *lakeformation.ListPermissionsInput
-		TableType           string
+		TableType           tflakeformation.TableType
 		ColumnNames         []string
 		ExcludedColumnNames []string
 		ColumnWildcard      bool

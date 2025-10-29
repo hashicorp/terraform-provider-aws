@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, principalIdentifier, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool) retry.StateRefreshFunc {
+func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, principalIdentifier string, tableType TableType, columnNames []string, excludedColumnNames []string, columnWildcard bool) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		var permissions []awstypes.PrincipalResourcePermissions
 

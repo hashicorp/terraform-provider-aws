@@ -321,7 +321,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
 	}
 
-	tableType := ""
+	var tableType TableType
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
