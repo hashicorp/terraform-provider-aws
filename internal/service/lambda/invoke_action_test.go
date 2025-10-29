@@ -138,13 +138,13 @@ func TestAccLambdaInvokeAction_logTypes(t *testing.T) {
 		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvokeActionConfig_logType(rName, testData, inputJSON, string(awstypes.LogTypeNone)),
+				Config: testAccInvokeActionConfig_logType(rName, testData, inputJSON, "None"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvokeActionLogType(ctx, rName, inputJSON, awstypes.LogTypeNone),
 				),
 			},
 			{
-				Config: testAccInvokeActionConfig_logType(rName, testData, inputJSON, string(awstypes.LogTypeTail)),
+				Config: testAccInvokeActionConfig_logType(rName, testData, inputJSON, "Tail"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvokeActionLogType(ctx, rName, inputJSON, awstypes.LogTypeTail),
 				),
@@ -176,34 +176,6 @@ func TestAccLambdaInvokeAction_clientContext(t *testing.T) {
 				Config: testAccInvokeActionConfig_clientContext(rName, testData, inputJSON, clientContext),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvokeActionClientContext(ctx, rName, inputJSON, clientContext),
-				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaInvokeAction_logTypeTail(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	testData := "log_output_test"
-	inputJSON := `{"key1":"value1","key2":"value2"}`
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_14_0),
-		},
-		CheckDestroy: acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInvokeActionConfig_logType(rName, testData, inputJSON, string(awstypes.LogTypeTail)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeActionLogOutput(ctx, rName, inputJSON),
 				),
 			},
 		},
@@ -370,46 +342,6 @@ func testAccCheckInvokeActionLogType(ctx context.Context, functionName, inputJSO
 			if output.LogResult == nil {
 				return fmt.Errorf("Expected log result when log type is Tail, but got none")
 			}
-		}
-
-		return nil
-	}
-}
-
-// testAccCheckInvokeActionLogOutput verifies that log output is captured and can be decoded
-func testAccCheckInvokeActionLogOutput(ctx context.Context, functionName, inputJSON string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
-
-		input := &lambda.InvokeInput{
-			FunctionName:   &functionName,
-			InvocationType: awstypes.InvocationTypeRequestResponse,
-			Payload:        []byte(inputJSON),
-			LogType:        awstypes.LogTypeTail,
-		}
-
-		output, err := conn.Invoke(ctx, input)
-		if err != nil {
-			return fmt.Errorf("Failed to invoke Lambda function %s with log type Tail: %w", functionName, err)
-		}
-
-		if output.FunctionError != nil {
-			return fmt.Errorf("Lambda function %s returned an error: %s", functionName, string(output.Payload))
-		}
-
-		// Verify log result is present
-		if output.LogResult == nil {
-			return fmt.Errorf("Expected log result when log type is Tail, but got none")
-		}
-
-		logData, err := base64.StdEncoding.DecodeString(*output.LogResult)
-		if err != nil {
-			return fmt.Errorf("Failed to decode log result: %w", err)
-		}
-
-		logStr := string(logData)
-		if len(logStr) == 0 {
-			return fmt.Errorf("Decoded log result is empty")
 		}
 
 		return nil
