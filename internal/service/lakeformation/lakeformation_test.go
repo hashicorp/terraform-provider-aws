@@ -52,6 +52,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"lfTag":                 testAccPermissions_lfTag,
 			"lfTagPolicy":           testAccPermissions_lfTagPolicy,
 			"lfTagPolicyMultiple":   testAccPermissions_lfTagPolicyMultiple,
+			"nonIAMPrincipals":      testAccPermissions_catalogResource_nonIAMPrincipals,
 		},
 		"PermissionsDataSource": {
 			acctest.CtBasic:    testAccPermissionsDataSource_basic,

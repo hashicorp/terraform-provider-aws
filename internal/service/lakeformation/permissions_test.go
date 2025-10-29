@@ -956,6 +956,34 @@ func testAccPermissions_twcWildcardSelectPlus(t *testing.T) {
 	})
 }
 
+func testAccPermissions_catalogResource_nonIAMPrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_catalogResource_nonIAMPrincipals(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, "aws_identitystore_group.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDescribe)),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIAMPrincipalsGrantPrincipal(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -2923,6 +2951,48 @@ resource "aws_lakeformation_permissions" "test" {
 
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName)
+}
+
+func testAccPermissionsConfig_catalogResource_nonIAMPrincipals(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lakeformation_permissions" "test" {
+  principal        = aws_identitystore_group.test.arn
+  permissions      = ["DESCRIBE"]
+  catalog_resource = true
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+    aws_lakeformation_identity_center_configuration.test,
+  ]
+}
+
+resource "aws_identitystore_group" "test" {
+  identity_store_id = local.identity_store_id
+  display_name      = %[1]q
+}
+
+resource "aws_lakeformation_identity_center_configuration" "test" {
+  instance_arn = local.identity_center_instance_arn
+}
+
+locals {
+  identity_center_instance_arn = data.aws_ssoadmin_instances.test.arns[0]
+  identity_store_id            = data.aws_ssoadmin_instances.test.identity_store_ids[0]
+}
+
+data "aws_ssoadmin_instances" "test" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
 }
 `, rName)
 }

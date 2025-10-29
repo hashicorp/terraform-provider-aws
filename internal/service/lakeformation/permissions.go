@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
@@ -512,10 +513,15 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.ListPermissionsInput{
-		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
-		},
 		Resource: &awstypes.Resource{},
+	}
+
+	principalIdentifier := d.Get(names.AttrPrincipal).(string)
+	if !strings.HasPrefix(principalIdentifier, "arn:aws:identitystore:::group/") {
+		principal := awstypes.DataLakePrincipal{
+			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
+		}
+		input.Principal = &principal
 	}
 
 	if v, ok := d.GetOk(names.AttrCatalogID); ok {
@@ -526,8 +532,8 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
-	if _, ok := d.GetOk("data_cells_filter"); ok {
-		input.Resource.DataCellsFilter = ExpandDataCellsFilter(d.Get("data_cells_filter").([]any))
+	if v, ok := d.GetOk("data_cells_filter"); ok {
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]any))
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
