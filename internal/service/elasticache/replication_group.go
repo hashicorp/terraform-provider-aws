@@ -1613,6 +1613,43 @@ func flattenNodeGroupConfigurations(apiObjects []awstypes.NodeGroup) []any {
 			tfMap["slots"] = aws.ToString(v)
 		}
 
+		// Extract availability zones and outpost ARNs from node group members
+		var primaryAZ string
+		var primaryOutpostArn string
+		var replicaAZs []string
+		var replicaOutpostArns []string
+
+		for _, member := range apiObject.NodeGroupMembers {
+			if member.CurrentRole != nil && aws.ToString(member.CurrentRole) == "primary" {
+				if member.PreferredAvailabilityZone != nil {
+					primaryAZ = aws.ToString(member.PreferredAvailabilityZone)
+				}
+				if member.PreferredOutpostArn != nil {
+					primaryOutpostArn = aws.ToString(member.PreferredOutpostArn)
+				}
+			} else {
+				if member.PreferredAvailabilityZone != nil {
+					replicaAZs = append(replicaAZs, aws.ToString(member.PreferredAvailabilityZone))
+				}
+				if member.PreferredOutpostArn != nil {
+					replicaOutpostArns = append(replicaOutpostArns, aws.ToString(member.PreferredOutpostArn))
+				}
+			}
+		}
+
+		if primaryAZ != "" {
+			tfMap["primary_availability_zone"] = primaryAZ
+		}
+		if primaryOutpostArn != "" {
+			tfMap["primary_outpost_arn"] = primaryOutpostArn
+		}
+		if len(replicaAZs) > 0 {
+			tfMap["replica_availability_zones"] = replicaAZs
+		}
+		if len(replicaOutpostArns) > 0 {
+			tfMap["replica_outpost_arns"] = replicaOutpostArns
+		}
+
 		tfList = append(tfList, tfMap)
 	}
 
