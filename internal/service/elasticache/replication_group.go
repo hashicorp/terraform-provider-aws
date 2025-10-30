@@ -247,11 +247,11 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
+					m := v.(map[string]any)
 					if v, ok := m["node_group_id"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+						fmt.Fprintf(&buf, "%s-", v.(string))
 					}
 					return create.StringHashcode(buf.String())
 				},
