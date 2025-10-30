@@ -39,6 +39,7 @@ This data source exports the following attributes in addition to the arguments a
 * `num_node_groups` - Number of node groups (shards) for the replication group.
 * `member_clusters` - Identifiers of all the nodes that are part of this replication group.
 * `multi_az_enabled` - Whether Multi-AZ Support is enabled for the replication group.
+* `node_group_configuration` - Configuration of the node groups (shards). See below.
 * `replicas_per_node_group` - Number of replica nodes in each node group.
 * `log_delivery_configuration` - Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) delivery settings.
 * `snapshot_window` - Daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your node group (shard).
@@ -47,3 +48,13 @@ This data source exports the following attributes in addition to the arguments a
 * `configuration_endpoint_address` - The configuration endpoint address to allow host discovery.
 * `primary_endpoint_address` - The endpoint of the primary node in this node group (shard).
 * `reader_endpoint_address` - The endpoint of the reader node in this node group (shard).
+
+### `node_group_configuration`
+
+* `node_group_id` - The ID of the node group.
+* `primary_availability_zone` - The Availability Zone for the primary node.
+* `primary_outpost_arn` - The outpost ARN of the primary node.
+* `replica_availability_zones` - A list of Availability Zones for the replica nodes.
+* `replica_count` - The number of replica nodes in this node group.
+* `replica_outpost_arns` - A list of outpost ARNs for the replica nodes.
+* `slots` - The keyspace for this node group (shard).
