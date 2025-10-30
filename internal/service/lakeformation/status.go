@@ -55,6 +55,6 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 			return nil, statusNotFound, nil
 		}
 
-		return permissions, statusAvailable, nil
+		return cleanPermissions, statusAvailable, nil
 	}
 }
