@@ -49,15 +49,6 @@ resource "aws_connect_routing_profile" "example" {
 }
 ```
 
-### Cross-Channel Behavior
-
-The `cross_channel_behavior` block in `media_concurrencies` controls how Amazon Connect routes contacts across different channels:
-
-- `ROUTE_ANY_CHANNEL` (default): Allows agents to receive contacts from any channel, regardless of the channel they are currently handling.
-- `ROUTE_CURRENT_CHANNEL_ONLY`: Restricts agents to receive contacts only from the channel they are currently handling.
-
-This feature enables fine-grained control over agent workload distribution and helps optimize contact center operations.
-
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -80,7 +71,7 @@ A `media_concurrencies` block supports the following arguments:
 
 A `cross_channel_behavior` block supports the following arguments:
 
-* `behavior_type` - (Required) Specifies the cross-channel behavior for routing contacts across multiple channels. Valid values are `ROUTE_CURRENT_CHANNEL_ONLY`, `ROUTE_ANY_CHANNEL`.
+* `behavior_type` - (Required) Specifies the cross-channel behavior for routing contacts across multiple channels. `ROUTE_ANY_CHANNEL` allows agents to receive contacts from any channel regardless of what they are currently handling. `ROUTE_CURRENT_CHANNEL_ONLY` restricts agents to receive contacts only from the channel they are currently handling. Valid values are `ROUTE_CURRENT_CHANNEL_ONLY`, `ROUTE_ANY_CHANNEL`.
 
 A `queue_configs` block supports the following arguments:
 

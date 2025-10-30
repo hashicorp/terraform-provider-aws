@@ -355,12 +355,14 @@ func testAccRoutingProfile_crossChannelBehavior(t *testing.T) {
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
-						"channel":     string(awstypes.ChannelVoice),
-						"concurrency": "1",
+						"channel":                  string(awstypes.ChannelVoice),
+						"concurrency":              "1",
+						"cross_channel_behavior.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
-						"channel":     string(awstypes.ChannelChat),
-						"concurrency": "2",
+						"channel":                  string(awstypes.ChannelChat),
+						"concurrency":              "2",
+						"cross_channel_behavior.#": "0",
 					}),
 				),
 			},

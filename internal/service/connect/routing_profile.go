@@ -494,16 +494,37 @@ func expandMediaConcurrencies(tfList []any) []awstypes.MediaConcurrency {
 		}
 
 		if v, ok := tfMap["cross_channel_behavior"].([]any); ok && len(v) > 0 {
-			crossChannelBehaviorMap := v[0].(map[string]any)
-			apiObject.CrossChannelBehavior = &awstypes.CrossChannelBehavior{
-				BehaviorType: awstypes.BehaviorType(crossChannelBehaviorMap["behavior_type"].(string)),
-			}
+			apiObject.CrossChannelBehavior = expandCrossChannelBehavior(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
+}
+
+func expandCrossChannelBehavior(tfList []any) *awstypes.CrossChannelBehavior {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return &awstypes.CrossChannelBehavior{
+		BehaviorType: awstypes.BehaviorType(tfMap["behavior_type"].(string)),
+	}
+}
+
+func flattenCrossChannelBehavior(apiObject *awstypes.CrossChannelBehavior) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return []map[string]any{
+		{
+			"behavior_type": string(apiObject.BehaviorType),
+		},
+	}
 }
 
 func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, configList ...[]any) []any {
@@ -529,11 +550,7 @@ func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, configLis
 		channel := string(apiObject.Channel)
 		if apiObject.CrossChannelBehavior != nil {
 			if len(configList) == 0 || configuredBehaviors[channel] {
-				tfMap["cross_channel_behavior"] = []map[string]any{
-					{
-						"behavior_type": string(apiObject.CrossChannelBehavior.BehaviorType),
-					},
-				}
+				tfMap["cross_channel_behavior"] = flattenCrossChannelBehavior(apiObject.CrossChannelBehavior)
 			}
 		}
 
