@@ -122,7 +122,7 @@ func filterTableWithColumnsPermissions(principalIdentifier string, twc *awstypes
 		}
 
 		if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnNames != nil {
-			if StringSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnNames, columnNames) {
+			if stringSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnNames, columnNames) {
 				cleanPermissions = append(cleanPermissions, perm)
 				continue
 			}
@@ -134,7 +134,7 @@ func filterTableWithColumnsPermissions(principalIdentifier string, twc *awstypes
 				continue
 			}
 
-			if len(excludedColumnNames) > 0 && StringSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnWildcard.ExcludedColumnNames, excludedColumnNames) {
+			if len(excludedColumnNames) > 0 && stringSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnWildcard.ExcludedColumnNames, excludedColumnNames) {
 				cleanPermissions = append(cleanPermissions, perm)
 				continue
 			}
