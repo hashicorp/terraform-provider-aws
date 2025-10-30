@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -216,16 +216,14 @@ func (r *resourceTargetAccountConfiguration) Delete(ctx context.Context, req res
 }
 
 func (r *resourceTargetAccountConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, ",")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Unexpected Import Identifier, expected import identifier with format: account_id,experiment_id. Got: %q", req.ID), smerr.ID, ctx)
+	const idParts = 2
+	parts, err := intflex.ExpandResourceId(req.ID, idParts, false)
+	if err != nil {
+		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "account_id,experiment_template_id"`, req.ID))
 		return
 	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics,
-		resp.State.SetAttribute(ctx, path.Root(names.AttrAccountID), idParts[0]),
-		resp.State.SetAttribute(ctx, path.Root("experiment_template_id"), idParts[1]),
-	)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrAccountID), parts[0]))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root("experiment_template_id"), parts[1]))
 }
 
 func findTargetAccountConfigurationByID(ctx context.Context, conn *fis.Client, accountId, experimentId *string) (*awstypes.TargetAccountConfiguration, error) {
