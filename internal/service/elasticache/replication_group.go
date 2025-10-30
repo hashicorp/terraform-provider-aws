@@ -4,6 +4,7 @@
 package elasticache
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -242,9 +244,17 @@ func resourceReplicationGroup() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 			},
 			"node_group_configuration": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					if v, ok := m["node_group_id"]; ok {
+						buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+					}
+					return create.StringHashcode(buf.String())
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"node_group_id": {
@@ -596,8 +606,8 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.PreferredCacheClusterAZs = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("node_group_configuration"); ok && len(v.([]any)) > 0 {
-		input.NodeGroupConfiguration = expandNodeGroupConfigurations(v.([]any))
+	if v, ok := d.GetOk("node_group_configuration"); ok && v.(*schema.Set).Len() > 0 {
+		input.NodeGroupConfiguration = expandNodeGroupConfigurations(v.(*schema.Set).List())
 	}
 
 	rawConfig := d.GetRawConfig()
