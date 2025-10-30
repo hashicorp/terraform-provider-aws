@@ -4,8 +4,10 @@
 package cloudfront_test
 
 import (
+	"fmt"
 	"testing"
 
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -13,6 +15,41 @@ import (
 
 func TestAccCloudFrontConnectionGroupDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cloudfront_connection_group.test"
+	resourceName := "aws_cloudfront_connection_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionGroupDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "anycast_ip_list_id", resourceName, "anycast_ip_list_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, names.AttrEnabled),
+					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_enabled", resourceName, "ipv6_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "is_default", resourceName, "is_default"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified_time", resourceName, "last_modified_time"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "routing_endpoint", resourceName, "routing_endpoint"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontConnectionGroupDataSource_byRoutingEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudfront_connection_group.test"
 	resourceName := "aws_cloudfront_connection_group.test"
 
@@ -22,12 +59,13 @@ func TestAccCloudFrontConnectionGroupDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionGroupDataSourceConfig_basic(),
+				Config: testAccConnectionGroupDataSourceConfig_byRoutingEndpoint(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "anycast_ip_list_id", resourceName, "anycast_ip_list_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, names.AttrEnabled),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_enabled", resourceName, "ipv6_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "is_default", resourceName, "is_default"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified_time", resourceName, "last_modified_time"),
@@ -40,48 +78,28 @@ func TestAccCloudFrontConnectionGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontConnectionGroupDataSource_anycast(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_cloudfront_connection_group.testip"
-	resourceName := "aws_cloudfront_connection_group.testip"
-	anycastIPListID := "aip_IuA2ABRz0cxB0EZ2ikd7rR"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConnectionGroupDataSourceConfig_anycast(anycastIPListID),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "anycast_ip_list_id", resourceName, "anycast_ip_list_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEnabled, resourceName, names.AttrEnabled),
-					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_enabled", resourceName, "ipv6_enabled"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "is_default", resourceName, "is_default"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified_time", resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "routing_endpoint", resourceName, "routing_endpoint"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
-				),
-			},
-		},
-	})
+func testAccConnectionGroupDataSourceConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_connection_group" "test" {
+  name    = %[1]q
+  enabled = true
 }
 
-func testAccConnectionGroupDataSourceConfig_basic() string {
-	return acctest.ConfigCompose(testAccConnectionGroupConfig_basic(), `
 data "aws_cloudfront_connection_group" "test" {
   id = aws_cloudfront_connection_group.test.id
 }
-`)
+`, rName)
 }
 
-func testAccConnectionGroupDataSourceConfig_anycast(anycastIPListID string) string {
-	return acctest.ConfigCompose(testAccConnectionGroupConfig_anycastIpList(anycastIPListID), `
-data "aws_cloudfront_connection_group" "testip" {
-  id = aws_cloudfront_connection_group.testip.id
+func testAccConnectionGroupDataSourceConfig_byRoutingEndpoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_connection_group" "test" {
+  name    = %[1]q
+  enabled = true
 }
-`)
+
+data "aws_cloudfront_connection_group" "test" {
+  routing_endpoint = aws_cloudfront_connection_group.test.routing_endpoint
+}
+`, rName)
 }

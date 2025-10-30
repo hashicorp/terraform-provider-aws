@@ -6,142 +6,151 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudfront_connection_group", name="Connection Group")
+// @FrameworkDataSource("aws_cloudfront_connection_group", name="Connection Group")
 // @Tags(identifierAttribute="arn")
-func dataSourceConnectionGroup() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceConnectionGroupRead,
+func newConnectionGroupDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &connectionGroupDataSource{}
+	return d, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			"anycast_ip_list_id": {
-				Type:     schema.TypeString,
+const (
+	DSNameConnectionGroup = "Connection Group Data Source"
+)
+
+type connectionGroupDataSource struct {
+	framework.DataSourceWithModel[connectionGroupDataSourceModel]
+}
+
+func (d *connectionGroupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"anycast_ip_list_id": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
+			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			"etag": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"routing_endpoint", names.AttrID},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"ipv6_enabled": {
-				Type:     schema.TypeBool,
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
-			"is_default": {
-				Type:     schema.TypeBool,
+			"ipv6_enabled": schema.BoolAttribute{
 				Computed: true,
 			},
-			"last_modified_time": {
-				Type:     schema.TypeString,
+			"is_default": schema.BoolAttribute{
 				Computed: true,
 			},
-			names.AttrName: {
-				Type:     schema.TypeString,
+			"last_modified_time": schema.StringAttribute{
 				Computed: true,
 			},
-			"routing_endpoint": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"routing_endpoint", names.AttrID},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"routing_endpoint": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrStatus: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-func dataSourceConnectionGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
-
-	var identifier string
-	var connectionGroup *awstypes.ConnectionGroup
-	var etag *string
-
-	if id, ok := d.GetOk(names.AttrID); ok {
-		identifier = id.(string)
-		output, err := findConnectionGroupByID(ctx, conn, identifier)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading CloudFront Connection Group by ID (%s): %s", identifier, err)
-		}
-		connectionGroup = output.ConnectionGroup
-		etag = output.ETag
-	} else {
-		identifier = d.Get("routing_endpoint").(string)
-		output, err := findConnectionGroupByEndpoint(ctx, conn, identifier)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading CloudFront Connection Group by endpoint (%s): %s", identifier, err)
-		}
-		connectionGroup = output.ConnectionGroup
-		etag = output.ETag
+func (d *connectionGroupDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data connectionGroupDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	d.SetId(aws.ToString(connectionGroup.Id))
-	d.Set("anycast_ip_list_id", connectionGroup.AnycastIpListId)
-	d.Set(names.AttrARN, connectionGroup.Arn)
-	d.Set(names.AttrEnabled, connectionGroup.Enabled)
-	d.Set("etag", etag)
-	d.Set("ipv6_enabled", connectionGroup.Ipv6Enabled)
-	d.Set("is_default", connectionGroup.IsDefault)
-	d.Set("last_modified_time", connectionGroup.LastModifiedTime.String())
-	d.Set(names.AttrName, connectionGroup.Name)
-	d.Set("routing_endpoint", connectionGroup.RoutingEndpoint)
-	d.Set(names.AttrStatus, connectionGroup.Status)
+	conn := d.Meta().CloudFrontClient(ctx)
 
-	return diags
-}
+	var output interface{}
+	var err error
 
-func findConnectionGroupByEndpoint(ctx context.Context, conn *cloudfront.Client, endpoint string) (*cloudfront.GetConnectionGroupByRoutingEndpointOutput, error) {
-	input := cloudfront.GetConnectionGroupByRoutingEndpointInput{
-		RoutingEndpoint: aws.String(endpoint),
-	}
-
-	output, err := conn.GetConnectionGroupByRoutingEndpoint(ctx, &input)
-
-	if errs.IsA[*awstypes.EntityNotFound](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+	if !data.ID.IsNull() && !data.ID.IsUnknown() {
+		output, err = findConnectionGroupByID(ctx, conn, data.ID.ValueString())
+	} else if !data.RoutingEndpoint.IsNull() && !data.RoutingEndpoint.IsUnknown() {
+		output, err = findConnectionGroupByRoutingEndpoint(ctx, conn, data.RoutingEndpoint.ValueString())
 	}
 
 	if err != nil {
-		return nil, err
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameConnectionGroup, data.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	if output == nil || output.ConnectionGroup == nil || output.ConnectionGroup.Name == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	// Handle both output types
+	var connectionGroup *awstypes.ConnectionGroup
+	var etag *string
+
+	switch v := output.(type) {
+	case *cloudfront.GetConnectionGroupOutput:
+		connectionGroup = v.ConnectionGroup
+		etag = v.ETag
+	case *cloudfront.GetConnectionGroupByRoutingEndpointOutput:
+		connectionGroup = v.ConnectionGroup
+		etag = v.ETag
 	}
 
-	return output, nil
+	// Flatten the connection group data into the model
+	response.Diagnostics.Append(fwflex.Flatten(ctx, connectionGroup, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Set computed fields that need special handling
+	data.ID = fwflex.StringToFramework(ctx, connectionGroup.Id)
+	data.ETag = fwflex.StringToFramework(ctx, etag)
+	if connectionGroup.LastModifiedTime != nil {
+		data.LastModifiedTime = types.StringValue(connectionGroup.LastModifiedTime.String())
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type connectionGroupDataSourceModel struct {
+	AnycastIPListID  types.String `tfsdk:"anycast_ip_list_id"`
+	ARN              types.String `tfsdk:"arn"`
+	Enabled          types.Bool   `tfsdk:"enabled"`
+	ETag             types.String `tfsdk:"etag"`
+	ID               types.String `tfsdk:"id"`
+	IPv6Enabled      types.Bool   `tfsdk:"ipv6_enabled"`
+	IsDefault        types.Bool   `tfsdk:"is_default"`
+	LastModifiedTime types.String `tfsdk:"last_modified_time"`
+	Name             types.String `tfsdk:"name"`
+	RoutingEndpoint  types.String `tfsdk:"routing_endpoint"`
+	Status           types.String `tfsdk:"status"`
+	Tags             tftags.Map   `tfsdk:"tags"`
+}
+
+func (d *connectionGroupDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot(names.AttrID),
+			path.MatchRoot("routing_endpoint"),
+		),
+	}
 }
