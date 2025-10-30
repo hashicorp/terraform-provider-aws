@@ -18,6 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type tableType string
+
+const (
+	tableTypeTable            tableType = "Table"
+	tableTypeTableWithColumns tableType = "TableWithColumns"
+)
+
 func TestFilterPermissions(t *testing.T) {
 	t.Parallel()
 
@@ -37,7 +44,7 @@ func TestFilterPermissions(t *testing.T) {
 	testCases := []struct {
 		Name                string
 		Input               *lakeformation.ListPermissionsInput
-		TableType           tflakeformation.TableType
+		TableType           tableType
 		ColumnNames         []string
 		ExcludedColumnNames []string
 		ColumnWildcard      bool
@@ -307,7 +314,7 @@ func TestFilterPermissions(t *testing.T) {
 					},
 				},
 			},
-			TableType:   tflakeformation.TableTypeTableWithColumns,
+			TableType:   tableTypeTableWithColumns,
 			ColumnNames: []string{names.AttrValue},
 			All: []awstypes.PrincipalResourcePermissions{
 				{
@@ -389,7 +396,7 @@ func TestFilterPermissions(t *testing.T) {
 					},
 				},
 			},
-			TableType:      tflakeformation.TableTypeTableWithColumns,
+			TableType:      tableTypeTableWithColumns,
 			ColumnWildcard: true,
 			All: []awstypes.PrincipalResourcePermissions{
 				{
@@ -471,7 +478,7 @@ func TestFilterPermissions(t *testing.T) {
 					},
 				},
 			},
-			TableType:           tflakeformation.TableTypeTableWithColumns,
+			TableType:           tableTypeTableWithColumns,
 			ColumnWildcard:      true,
 			ExcludedColumnNames: []string{names.AttrValue},
 			All: []awstypes.PrincipalResourcePermissions{
@@ -553,13 +560,13 @@ func TestFilterPermissions(t *testing.T) {
 			t.Parallel()
 
 			var filter tflakeformation.PermissionsFilter
-			if testCase.TableType != tflakeformation.TableTypeTableWithColumns {
+			if testCase.TableType != tableTypeTableWithColumns {
 				filter = tflakeformation.FilterTablePermissions(principalIdentifier, testCase.Input.Resource.Table)
 			} else {
 				filter = tflakeformation.FilterTableWithColumnsPermissions(principalIdentifier, testCase.Input.Resource.Table, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard)
 			}
 
-			got := tflakeformation.FilterPermissions(testCase.Input, filter, principalIdentifier, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
+			got := tflakeformation.FilterPermissions(filter, testCase.All)
 
 			if diff := cmp.Diff(got, testCase.ExpectedClean,
 				cmpopts.IgnoreUnexported(awstypes.PrincipalResourcePermissions{}),

@@ -1208,11 +1208,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	var tableType tflakeformation.TableType
-
 	if v, ok := rs.Primary.Attributes["table.#"]; ok && v != "" && v != "0" {
-		tableType = tflakeformation.TableTypeTable
-
 		tfMap := map[string]any{}
 
 		if v := rs.Primary.Attributes["table.0.catalog_id"]; v != "" {
@@ -1237,8 +1233,6 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	}
 
 	if v, ok := rs.Primary.Attributes["table_with_columns.#"]; ok && v != "" && v != "0" {
-		tableType = tflakeformation.TableTypeTableWithColumns
-
 		tfMap := map[string]any{}
 
 		if v := rs.Primary.Attributes["table_with_columns.0.catalog_id"]; v != "" {
@@ -1340,46 +1334,8 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		return 0, fmt.Errorf("acceptance test: error listing Lake Formation permissions after retry %v: %w", input, err)
 	}
 
-	columnNames := make([]string, 0)
-	excludedColumnNames := make([]string, 0)
-	columnWildcard := false
-
-	if tableType == tflakeformation.TableTypeTableWithColumns {
-		if v := rs.Primary.Attributes["table_with_columns.0.wildcard"]; v != "" && v == acctest.CtTrue {
-			columnWildcard = true
-		}
-
-		colCount := 0
-
-		if v := rs.Primary.Attributes["table_with_columns.0.column_names.#"]; v != "" {
-			colCount, err = strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"])
-
-			if err != nil {
-				return 0, fmt.Errorf("acceptance test: could not convert string (%s) Atoi for column_names: %w", rs.Primary.Attributes["table_with_columns.0.column_names.#"], err)
-			}
-		}
-
-		for i := range colCount {
-			columnNames = append(columnNames, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
-		}
-
-		colCount = 0
-
-		if v := rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"]; v != "" {
-			colCount, err = strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"])
-
-			if err != nil {
-				return 0, fmt.Errorf("acceptance test: could not convert string (%s) Atoi for excluded_column_names: %w", rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"], err)
-			}
-		}
-
-		for i := range colCount {
-			excludedColumnNames = append(excludedColumnNames, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)])
-		}
-	}
-
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := tflakeformation.FilterPermissions(input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := tflakeformation.FilterPermissions(filter, allPermissions)
 
 	return len(cleanPermissions), nil
 }

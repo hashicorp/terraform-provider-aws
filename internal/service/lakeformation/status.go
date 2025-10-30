@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter, principalIdentifier string, tableType TableType, columnNames []string, excludedColumnNames []string, columnWildcard bool) retry.StateRefreshFunc {
+func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter, principalIdentifier string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		var permissions []awstypes.PrincipalResourcePermissions
 
@@ -49,7 +49,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 		}
 
 		// clean permissions = filter out permissions that do not pertain to this specific resource
-		cleanPermissions := filterPermissions(input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
+		cleanPermissions := filterPermissions(filter, permissions)
 
 		if len(cleanPermissions) == 0 {
 			return nil, statusNotFound, nil

@@ -5,29 +5,11 @@ package lakeformation
 
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-func filterPermissions(input *lakeformation.ListPermissionsInput, filter PermissionsFilter, principalIdentifier string, tableType TableType, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
-	// For most Lake Formation permissions, filtering within the provider is unnecessary. The input
-	// contains everything for AWS to give you back exactly what you want.
-	//
-	// However, IAM Identity Center Group principals cannot be specified in the input, so we must use
-	// filtering for them.
-	//
-	// In addition, many challenges arise with tables and tables with columns.
-	// Perhaps the two biggest problems (so far) are as follows:
-	// 1. SELECT - when you grant SELECT, it may be part of a list of permissions. However, when
-	//    listing permissions, SELECT comes back in a separate permission.
-	// 2. Tables with columns. The ListPermissionsInput does not allow you to include a tables with
-	//    columns resource. This means you might get back more permissions than actually pertain to
-	//    the current situation. The table may have separate permissions that also come back.
-	//
-	// Thus, for most cases this is just a pass through filter but attempts to clean out
-	// permissions in the special cases to avoid extra permissions being included.
-
+func filterPermissions(filter PermissionsFilter, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
 	if filter != nil {
 		return tfslices.Filter(allPermissions, filter)
 	}

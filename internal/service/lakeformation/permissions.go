@@ -554,44 +554,18 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
 	}
 
-	var tableType TableType
-
 	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
-		tableType = TableTypeTable
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
 		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any))
-		tableType = TableTypeTableWithColumns
 	}
 
 	filter := permissionsFilter(d)
 
-	columnNames := make([]string, 0)
-	excludedColumnNames := make([]string, 0)
-	columnWildcard := false
-
-	if tableType == TableTypeTableWithColumns {
-		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
-			columnWildcard = v.(bool)
-		}
-
-		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
-			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				columnNames = flex.ExpandStringValueSet(v)
-			}
-		}
-
-		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
-			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				excludedColumnNames = flex.ExpandStringValueSet(v)
-			}
-		}
-	}
-
-	allPermissions, err := waitPermissionsReady(ctx, conn, &input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, &input, filter, principalIdentifier)
 
 	if !d.IsNewResource() {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
@@ -618,7 +592,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := filterPermissions(&input, filter, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := filterPermissions(filter, allPermissions)
 
 	if len(cleanPermissions) != len(allPermissions) {
 		return sdkdiag.AppendErrorf(diags, "Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths", len(cleanPermissions), len(allPermissions))
