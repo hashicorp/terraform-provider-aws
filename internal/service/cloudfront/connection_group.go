@@ -6,276 +6,370 @@ package cloudfront
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	ret "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudfront_connection_group", name="Connection Group")
+// @FrameworkResource("aws_cloudfront_connection_group", name="Connection Group")
 // @Tags(identifierAttribute="arn")
-func resourceConnectionGroup() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceConnectionGroupCreate,
-		ReadWithoutTimeout:   resourceConnectionGroupRead,
-		UpdateWithoutTimeout: resourceConnectionGroupUpdate,
-		DeleteWithoutTimeout: resourceConnectionGroupDelete,
+func newConnectionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &connectionGroupResource{}
+	return r, nil
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+const (
+	ResNameConnectionGroup = "Connection Group"
+)
 
-		Schema: map[string]*schema.Schema{
-			"anycast_ip_list_id": {
-				Type:     schema.TypeString,
+type connectionGroupResource struct {
+	framework.ResourceWithModel[connectionGroupResourceModel]
+	framework.WithImportByID
+}
+
+func (r *connectionGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"anycast_ip_list_id": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrEnabled: schema.BoolAttribute{
 				Optional: true,
-				Default:  true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
 			},
-			"etag": {
-				Type:     schema.TypeString,
+			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			"ipv6_enabled": {
-				Type:     schema.TypeBool,
+			names.AttrID: framework.IDAttribute(),
+			"ipv6_enabled": schema.BoolAttribute{
 				Optional: true,
-				Default:  false,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 			},
-			"is_default": {
-				Type:     schema.TypeBool,
+			"is_default": schema.BoolAttribute{
 				Computed: true,
 			},
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"last_modified_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
-			names.AttrName: {
-				Type:     schema.TypeString,
+			names.AttrName: schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"routing_endpoint": {
-				Type:     schema.TypeString,
+			"routing_endpoint": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
-			"wait_for_deployment": {
-				Type:     schema.TypeBool,
+			"wait_for_deployment": schema.BoolAttribute{
 				Optional: true,
-				Default:  true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-func resourceConnectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+type connectionGroupResourceModel struct {
+	AnycastIPListID   types.String      `tfsdk:"anycast_ip_list_id"`
+	ARN               types.String      `tfsdk:"arn"`
+	Enabled           types.Bool        `tfsdk:"enabled"`
+	ETag              types.String      `tfsdk:"etag"`
+	ID                types.String      `tfsdk:"id"`
+	IPv6Enabled       types.Bool        `tfsdk:"ipv6_enabled"`
+	IsDefault         types.Bool        `tfsdk:"is_default"`
+	LastModifiedTime  timetypes.RFC3339 `tfsdk:"last_modified_time"`
+	Name              types.String      `tfsdk:"name"`
+	RoutingEndpoint   types.String      `tfsdk:"routing_endpoint"`
+	Status            types.String      `tfsdk:"status"`
+	WaitForDeployment types.Bool        `tfsdk:"wait_for_deployment"`
+	Tags              tftags.Map        `tfsdk:"tags"`
+	TagsAll           tftags.Map        `tfsdk:"tags_all"`
+}
 
-	input := cloudfront.CreateConnectionGroupInput{
-		Name: aws.String(d.Get(names.AttrName).(string)),
+func (r *connectionGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data connectionGroupResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("anycast_ip_list_id"); ok {
-		input.AnycastIpListId = aws.String(v.(string))
-	}
+	conn := r.Meta().CloudFrontClient(ctx)
 
-	input.Ipv6Enabled = aws.Bool(d.Get("ipv6_enabled").(bool))
-	input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
+	input := &cloudfront.CreateConnectionGroupInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
-		input.Tags = &awstypes.Tags{Items: tags}
-	}
-
-	output, err := conn.CreateConnectionGroup(ctx, &input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFront Connection Group (%s): %s", *input.Name, err)
-	}
-
-	d.SetId(aws.ToString(output.ConnectionGroup.Id))
-
-	if d.Get("wait_for_deployment").(bool) {
-		if _, err := waitConnectionGroupDeployed(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Connection Group (%s) deploy: %s", d.Id(), err)
+		input.Tags = &awstypes.Tags{
+			Items: tags,
 		}
 	}
 
-	return append(diags, resourceConnectionGroupRead(ctx, d, meta)...)
-}
-
-func resourceConnectionGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
-
-	output, err := findConnectionGroupByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && ret.NotFound(err) {
-		log.Printf("[WARN] CloudFront Connection Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
+	output, err := conn.CreateConnectionGroup(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFront Connection Group (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionCreating, ResNameConnectionGroup, data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Use create response directly - no extra read needed
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.ConnectionGroup, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Set fields that fwflex.Flatten might not handle correctly
+	data.ID = fwflex.StringToFramework(ctx, output.ConnectionGroup.Id)
+	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.ConnectionGroup.LastModifiedTime)
+	data.ARN = fwflex.StringToFramework(ctx, output.ConnectionGroup.Arn)
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+
+	if data.WaitForDeployment.ValueBool() {
+		if _, err := waitConnectionGroupDeployed(ctx, conn, data.ID.ValueString()); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForCreation, ResNameConnectionGroup, data.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *connectionGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data connectionGroupResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	output, err := findConnectionGroupByID(ctx, conn, data.ID.ValueString())
+	if ret.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameConnectionGroup, data.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
 	connectionGroup := output.ConnectionGroup
-	d.Set("anycast_ip_list_id", connectionGroup.AnycastIpListId)
-	d.Set(names.AttrARN, connectionGroup.Arn)
-	d.Set(names.AttrEnabled, connectionGroup.Enabled)
-	d.Set("etag", output.ETag)
-	d.Set("ipv6_enabled", connectionGroup.Ipv6Enabled)
-	d.Set("is_default", connectionGroup.IsDefault)
-	d.Set("last_modified_time", connectionGroup.LastModifiedTime.String())
-	d.Set(names.AttrName, connectionGroup.Name)
-	d.Set("routing_endpoint", connectionGroup.RoutingEndpoint)
-	d.Set(names.AttrStatus, connectionGroup.Status)
 
-	return diags
+	// Flatten the connection group data into the model
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, connectionGroup, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Set computed fields that need special handling
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.ConnectionGroup.LastModifiedTime)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func resourceConnectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+func (r *connectionGroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new connectionGroupResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := cloudfront.UpdateConnectionGroupInput{
-			Id:      aws.String(d.Id()),
-			IfMatch: aws.String(d.Get("etag").(string)),
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	var updateOutput *cloudfront.UpdateConnectionGroupOutput
+
+	// Remove tags from main update condition since they're handled separately
+	if !new.AnycastIPListID.Equal(old.AnycastIPListID) || !new.IPv6Enabled.Equal(old.IPv6Enabled) || !new.Enabled.Equal(old.Enabled) {
+		input := &cloudfront.UpdateConnectionGroupInput{}
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		if v, ok := d.GetOk("anycast_ip_list_id"); ok {
-			input.AnycastIpListId = aws.String(v.(string))
-		}
+		// Handle special fields manually
+		input.Id = fwflex.StringFromFramework(ctx, new.ID)
+		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
-		input.Ipv6Enabled = aws.Bool(d.Get("ipv6_enabled").(bool))
-
-		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
-
-		_, err := conn.UpdateConnectionGroup(ctx, &input)
+		var err error
+		updateOutput, err = conn.UpdateConnectionGroup(ctx, input)
 
 		// Refresh our ETag if it is out of date and attempt update again.
 		if errs.IsA[*awstypes.PreconditionFailed](err) {
 			var etag string
-			etag, err = connectionGroupETag(ctx, conn, d.Id())
+			etag, err = connectionGroupETag(ctx, conn, new.ID.ValueString())
 
 			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameConnectionGroup, new.ID.String(), err),
+					err.Error(),
+				)
+				return
 			}
 
 			input.IfMatch = aws.String(etag)
-
-			_, err = conn.UpdateConnectionGroup(ctx, &input)
+			updateOutput, err = conn.UpdateConnectionGroup(ctx, input)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudFront Connection Group: %s", err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameConnectionGroup, new.ID.String(), err),
+				err.Error(),
+			)
+			return
 		}
 
-		if d.Get("wait_for_deployment").(bool) {
-			if _, err := waitConnectionGroupDeployed(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Connection Group (%s) deploy: %s", d.Id(), err)
+		if new.WaitForDeployment.ValueBool() {
+			if _, err := waitConnectionGroupDeployed(ctx, conn, new.ID.ValueString()); err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForUpdate, ResNameConnectionGroup, new.ID.String(), err),
+					err.Error(),
+				)
+				return
 			}
 		}
+
+		new.LastModifiedTime = fwflex.TimeToFramework(ctx, updateOutput.ConnectionGroup.LastModifiedTime)
+	} else {
+		new.LastModifiedTime = old.LastModifiedTime
 	}
 
-	return append(diags, resourceConnectionGroupRead(ctx, d, meta)...)
+	// Flatten the connection group data into the model
+	if updateOutput != nil {
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, updateOutput.ConnectionGroup, &new)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
+	} else {
+		// If no update was performed (e.g., tag-only changes), we still need to refresh the connection group data
+		// to ensure all computed fields are properly set
+		getOutput, err := conn.GetConnectionGroup(ctx, &cloudfront.GetConnectionGroupInput{
+			Identifier: fwflex.StringFromFramework(ctx, new.ID),
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameConnectionGroup, new.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, getOutput.ConnectionGroup, &new)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func resourceConnectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
-
-	if d.Get(names.AttrARN).(string) == "" {
-		diags = append(diags, resourceConnectionGroupRead(ctx, d, meta)...)
+func (r *connectionGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data connectionGroupResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if err := disableConnectionGroup(ctx, conn, d.Id()); err != nil {
+	conn := r.Meta().CloudFrontClient(ctx)
+	id := data.ID.ValueString()
+
+	if err := disableConnectionGroup(ctx, conn, id); err != nil {
 		if ret.NotFound(err) {
-			return diags
+			return
 		}
-		return sdkdiag.AppendFromErr(diags, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, data.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	err := deleteConnectionGroup(ctx, conn, d.Id())
+	err := deleteConnectionGroup(ctx, conn, id)
 
 	if err == nil || ret.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
-		return diags
+		return
 	}
-	// Disable connection group if it is not yet disabled and attempt deletion again.
-	// Here we update via the deployed configuration to ensure we are not submitting an out of date
-	// configuration from the Terraform configuration, should other changes have occurred manually.
-	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
-		if err := disableConnectionGroup(ctx, conn, d.Id()); err != nil {
-			if ret.NotFound(err) {
-				return diags
-			}
 
-			return sdkdiag.AppendFromErr(diags, err)
+	// Disable connection group if it is not yet disabled and attempt deletion again.
+	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
+		if err := disableConnectionGroup(ctx, conn, id); err != nil {
+			if ret.NotFound(err) {
+				return
+			}
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, data.ID.String(), err),
+				err.Error(),
+			)
+			return
 		}
 
-		const (
-			timeout = 30 * time.Second
-		)
+		const timeout = 30 * time.Second
 		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, timeout, func(ctx context.Context) (any, error) {
-			return nil, deleteConnectionGroup(ctx, conn, d.Id())
+			return nil, deleteConnectionGroup(ctx, conn, id)
 		})
 	}
 
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
-		const (
-			timeout = 10 * time.Second
-		)
+		const timeout = 10 * time.Second
 		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func(ctx context.Context) (any, error) {
-			return nil, deleteConnectionGroup(ctx, conn, d.Id())
+			return nil, deleteConnectionGroup(ctx, conn, id)
 		})
 	}
 
-	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
-		if err := disableConnectionGroup(ctx, conn, d.Id()); err != nil {
-			if ret.NotFound(err) {
-				return diags
-			}
-
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		err = deleteConnectionGroup(ctx, conn, d.Id())
-	}
-
 	if errs.IsA[*awstypes.EntityNotFound](err) {
-		return diags
+		return
 	}
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, data.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
-
-	return diags
 }
 
 func findConnectionGroupByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetConnectionGroupOutput, error) {
@@ -284,6 +378,31 @@ func findConnectionGroupByID(ctx context.Context, conn *cloudfront.Client, id st
 	}
 
 	output, err := conn.GetConnectionGroup(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ConnectionGroup == nil || output.ConnectionGroup.Name == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findConnectionGroupByRoutingEndpoint(ctx context.Context, conn *cloudfront.Client, endpoint string) (*cloudfront.GetConnectionGroupByRoutingEndpointOutput, error) {
+	input := cloudfront.GetConnectionGroupByRoutingEndpointInput{
+		RoutingEndpoint: aws.String(endpoint),
+	}
+
+	output, err := conn.GetConnectionGroupByRoutingEndpoint(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return nil, &retry.NotFoundError{

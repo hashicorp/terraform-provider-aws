@@ -31,6 +31,15 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newConnectionGroupDataSource,
+			TypeName: "aws_cloudfront_connection_group",
+			Name:     "Connection Group",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newOriginAccessControlDataSource,
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
@@ -41,6 +50,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newConnectionGroupResource,
+			TypeName: "aws_cloudfront_connection_group",
+			Name:     "Connection Group",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
 		{
 			Factory:  newContinuousDeploymentPolicyResource,
 			TypeName: "aws_cloudfront_continuous_deployment_policy",
@@ -138,15 +156,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-		},
-		{
-			Factory:  resourceConnectionGroup,
-			TypeName: "aws_cloudfront_connection_group",
-			Name:     "Connection Group",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceDistribution,
