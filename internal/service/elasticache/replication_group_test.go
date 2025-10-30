@@ -1582,6 +1582,47 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_ClusterMode_nodeGroupConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_nodeGroupConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.0.node_group_id", "0001"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.0.replica_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.0.slots", "0-8191"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.1.node_group_id", "0002"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.1.replica_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.1.slots", "8192-16383"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -5111,4 +5152,30 @@ data "aws_elasticache_replication_group" "test" {
   replication_group_id = aws_elasticache_replication_group.test.replication_group_id
 }
 `, rName, enableClusterMode, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
+}
+
+func testAccReplicationGroupConfig_nodeGroupConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  port                       = 6379
+  parameter_group_name       = "default.redis7.cluster.on"
+  automatic_failover_enabled = true
+  num_node_groups            = 2
+
+  node_group_configuration {
+    node_group_id = "0001"
+    replica_count = 1
+    slots         = "0-8191"
+  }
+
+  node_group_configuration {
+    node_group_id = "0002"
+    replica_count = 1
+    slots         = "8192-16383"
+  }
+}
+`, rName)
 }
