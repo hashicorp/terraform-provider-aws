@@ -5239,17 +5239,17 @@ resource "aws_elasticache_replication_group" "test" {
   num_node_groups            = 2
 
   node_group_configuration {
-    node_group_id               = "0001"
-    primary_availability_zone   = data.aws_availability_zones.available.names[0]
-    replica_availability_zones  = [data.aws_availability_zones.available.names[1]]
+    node_group_id              = "0001"
+    primary_availability_zone  = data.aws_availability_zones.available.names[0]
+    replica_availability_zones = [data.aws_availability_zones.available.names[1]]
     replica_count              = 1
     slots                      = "0-8191"
   }
 
   node_group_configuration {
-    node_group_id               = "0002"
-    primary_availability_zone   = data.aws_availability_zones.available.names[1]
-    replica_availability_zones  = [data.aws_availability_zones.available.names[0]]
+    node_group_id              = "0002"
+    primary_availability_zone  = data.aws_availability_zones.available.names[1]
+    replica_availability_zones = [data.aws_availability_zones.available.names[0]]
     replica_count              = 1
     slots                      = "8192-16383"
   }
