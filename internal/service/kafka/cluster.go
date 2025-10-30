@@ -528,6 +528,10 @@ func resourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrDeletionProtection: {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"zookeeper_connect_string": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -1007,6 +1011,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
+
+	if d.Get(names.AttrDeletionProtection).(bool) {
+		return sdkdiag.AppendErrorf(diags, "cannot delete MSK Cluster (%s): deletion_protection is enabled", d.Id())
+	}
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
 	_, err := conn.DeleteCluster(ctx, &kafka.DeleteClusterInput{
