@@ -59,7 +59,7 @@ type resourceTargetAccountConfiguration struct {
 func (r *resourceTargetAccountConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Required:   true,
 				Validators: []validator.String{stringvalidator.LengthBetween(12, 48)},
 				PlanModifiers: []planmodifier.String{
