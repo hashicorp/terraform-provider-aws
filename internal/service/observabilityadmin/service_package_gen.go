@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_observabilityadmin_centralization_rule_for_organization",
 			Name:     "Centralization Rule For Organization",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "rule_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
