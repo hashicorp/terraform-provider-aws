@@ -13,7 +13,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -38,7 +40,9 @@ import (
 // @FrameworkResource("aws_observabilityadmin_centralization_rule_for_organization", name="Centralization Rule For Organization")
 // @Tags(identifierAttribute="rule_arn")
 func newResourceCentralizationRuleForOrganization(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCentralizationRuleForOrganization{}
+	r := &resourceCentralizationRuleForOrganization{
+		flexOpt: flex.WithFieldNameSuffix(""),
+	}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -62,7 +66,6 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"rule_arn": framework.ARNAttributeComputedOnly(),
-			// names.AttrID: framework.IDAttribute(),
 			"rule_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -93,9 +96,6 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 								Attributes: map[string]schema.Attribute{
 									"account": schema.StringAttribute{
 										Required: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
 									},
 									names.AttrRegion: schema.StringAttribute{
 										Required: true,
@@ -180,11 +180,11 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"regions": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
+									"regions": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
-										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
 										},
 										Required: true,
 									},
@@ -236,31 +236,27 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 }
 
 func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan centralizationRuleForOrganizationModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	var plan centralizationRuleForOrganizationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var input observabilityadmin.CreateCentralizationRuleForOrganizationInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, r.flexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.CreateCentralizationRuleForOrganization(ctx, &input)
+	// input.Tags = getTagsIn(ctx)
+
+	rule, err := conn.CreateCentralizationRuleForOrganization(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
 		return
 	}
-	if out == nil || out.RuleArn == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.RuleName.String())
-		return
-	}
-
-	plan.ARN = flex.StringToFramework(ctx, out.RuleArn)
 
 	// Check if the rule was created successfully by reading it back
 	_, err = findCentralizationRuleForOrganizationByRuleName(ctx, conn, plan.RuleName.ValueString())
@@ -268,46 +264,70 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
 		return
 	}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+
+	plan.ARN = fwflex.StringToFramework(ctx, rule.RuleArn)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, rule, &plan, r.flexOpt)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+
 }
 
 func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().ObservabilityAdminClient(ctx)
-
 	var state centralizationRuleForOrganizationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findCentralizationRuleForOrganizationByRuleName(ctx, conn, state.RuleName.ValueString())
+	conn := r.Meta().ObservabilityAdminClient(ctx)
+
+	rule, err := findCentralizationRuleForOrganizationByRuleName(ctx, conn, state.RuleName.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
+	// regions := strings.Join(rule.CentralizationRule.Source.Regions, ",")
+
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
+	// Manual field mapping for fields with different names between Create and Get APIs
+	state.ARN = flex.StringToFramework(ctx, rule.RuleArn)
+	state.RuleName = flex.StringToFramework(ctx, rule.RuleName)
+
+	// Handle the CentralizationRule -> Rule field name mismatch manually
+	if rule.CentralizationRule != nil {
+		var ruleData centralizationRuleModel
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.CentralizationRule, &ruleData, r.flexOpt)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		ruleList := []centralizationRuleModel{ruleData}
+		var diags diag.Diagnostics
+		state.Rule, diags = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, ruleList)
+		resp.Diagnostics.Append(diags...)
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	// smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
 }
 
 func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().ObservabilityAdminClient(ctx)
-
 	var plan, state centralizationRuleForOrganizationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().ObservabilityAdminClient(ctx)
 
 	diff, d := flex.Diff(ctx, plan, state)
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
@@ -316,8 +336,10 @@ func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, 
 	}
 
 	if diff.HasChanges() {
-		var input observabilityadmin.UpdateCentralizationRuleForOrganizationInput
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+		input := observabilityadmin.UpdateCentralizationRuleForOrganizationInput{
+			RuleIdentifier: state.RuleName.ValueStringPointer(),
+		}
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, r.flexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -403,7 +425,7 @@ func findCentralizationRuleForOrganizationByRuleName(ctx context.Context, conn *
 type centralizationRuleForOrganizationModel struct {
 	framework.WithRegionModel
 	ARN      types.String                                             `tfsdk:"rule_arn"`
-	Rule     fwtypes.ListNestedObjectValueOf[centralizationRuleModel] `tfsdk:"rule"`
+	Rule     fwtypes.ListNestedObjectValueOf[centralizationRuleModel] `tfsdk:"rule" aws:"CentralizationRule"`
 	RuleName types.String                                             `tfsdk:"rule_name"`
 	Tags     tftags.Map                                               `tfsdk:"tags"`
 	TagsAll  tftags.Map                                               `tfsdk:"tags_all"`
@@ -422,7 +444,7 @@ type centralizationRuleDestinationModel struct {
 }
 
 type centralizationRuleSourceModel struct {
-	Regions                 fwtypes.ListOfString                                          `tfsdk:"regions"`
+	Regions                 fwtypes.SetOfString                                           `tfsdk:"regions"`
 	Scope                   types.String                                                  `tfsdk:"scope"`
 	SourceLogsConfiguration fwtypes.ListNestedObjectValueOf[sourceLogsConfigurationModel] `tfsdk:"source_logs_configuration"`
 }
