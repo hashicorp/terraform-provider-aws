@@ -555,6 +555,8 @@ func TestFilterPermissions(t *testing.T) {
 			var filter tflakeformation.PermissionsFilter
 			if testCase.TableType != tflakeformation.TableTypeTableWithColumns {
 				filter = tflakeformation.FilterTablePermissions(principalIdentifier, testCase.Input.Resource.Table)
+			} else {
+				filter = tflakeformation.FilterTableWithColumnsPermissions(principalIdentifier, testCase.Input.Resource.Table, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard)
 			}
 
 			got := tflakeformation.FilterPermissions(testCase.Input, filter, principalIdentifier, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
@@ -958,7 +960,7 @@ func TestFilterTableWithColumnsPermissions(t *testing.T) {
 					},
 				},
 			},
-			ExpectedClean: nil,
+			ExpectedClean: []awstypes.PrincipalResourcePermissions{},
 		},
 		{
 			Name: "twcBasic",
@@ -1214,9 +1216,9 @@ func TestFilterTableWithColumnsPermissions(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			var filter tflakeformation.PermissionsFilter
+			filter := tflakeformation.FilterTableWithColumnsPermissions(principalIdentifier, testCase.Input.Resource.Table, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard)
 
-			got := tflakeformation.FilterPermissions(testCase.Input, filter, principalIdentifier, tflakeformation.TableTypeTableWithColumns, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
+			got := tfslices.Filter(testCase.All, filter)
 
 			if diff := cmp.Diff(got, testCase.ExpectedClean,
 				cmpopts.IgnoreUnexported(awstypes.PrincipalResourcePermissions{}),

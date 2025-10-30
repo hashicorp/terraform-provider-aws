@@ -885,6 +885,28 @@ func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
 	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return filterTablePermissions(principalIdentifier, ExpandTableResource(v.([]any)[0].(map[string]any)))
 	}
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		var columnNames []string
+		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
+			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+				columnNames = flex.ExpandStringValueSet(v)
+			}
+		}
+
+		var excludedColumnNames []string
+		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
+			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+				excludedColumnNames = flex.ExpandStringValueSet(v)
+			}
+		}
+
+		var columnWildcard bool
+		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
+			columnWildcard = v.(bool)
+		}
+
+		return filterTableWithColumnsPermissions(principalIdentifier, ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any)), columnNames, excludedColumnNames, columnWildcard)
+	}
 	return nil
 }
 

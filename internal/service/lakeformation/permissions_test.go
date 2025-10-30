@@ -1286,11 +1286,14 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		return 0, nil
 	}
 
-	filter := permissionsFilter(rs.Primary.Attributes)
+	filter, err := permissionsFilter(rs.Primary.Attributes)
+	if err != nil {
+		return 0, fmt.Errorf("acceptance test: error creating permissions filter for (%s): %w", rs.Primary.ID, err)
+	}
 
 	var allPermissions []awstypes.PrincipalResourcePermissions
 
-	err := tfresource.Retry(ctx, tflakeformation.IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+	err = tfresource.Retry(ctx, tflakeformation.IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		pages := lakeformation.NewListPermissionsPaginator(conn, input)
 
 		for pages.HasMorePages() {
@@ -1381,26 +1384,26 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	return len(cleanPermissions), nil
 }
 
-func permissionsFilter(attributes map[string]string) tflakeformation.PermissionsFilter {
+func permissionsFilter(attributes map[string]string) (tflakeformation.PermissionsFilter, error) {
 	principalIdentifier := attributes[names.AttrPrincipal]
 
 	if v, ok := attributes["catalog_resource"]; ok && v == acctest.CtTrue {
-		return tflakeformation.FilterCatalogPermissions(principalIdentifier)
+		return tflakeformation.FilterCatalogPermissions(principalIdentifier), nil
 	}
 	if v, ok := attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
-		return tflakeformation.FilterDataCellsFilter(principalIdentifier)
+		return tflakeformation.FilterDataCellsFilter(principalIdentifier), nil
 	}
 	if v, ok := attributes["data_location.#"]; ok && v != "" && v != "0" {
-		return tflakeformation.FilterDataLocationPermissions(principalIdentifier)
+		return tflakeformation.FilterDataLocationPermissions(principalIdentifier), nil
 	}
 	if v, ok := attributes["database.#"]; ok && v != "" && v != "0" {
-		return tflakeformation.FilterDatabasePermissions(principalIdentifier)
+		return tflakeformation.FilterDatabasePermissions(principalIdentifier), nil
 	}
 	if v, ok := attributes["lf_tag.#"]; ok && v != "" && v != "0" {
-		return tflakeformation.FilterLFTagPermissions(principalIdentifier)
+		return tflakeformation.FilterLFTagPermissions(principalIdentifier), nil
 	}
 	if v, ok := attributes["lf_tag_policy.#"]; ok && v != "" && v != "0" {
-		return tflakeformation.FilterLFTagPolicyPermissions(principalIdentifier)
+		return tflakeformation.FilterLFTagPolicyPermissions(principalIdentifier), nil
 	}
 	if v, ok := attributes["table.#"]; ok && v != "" && v != "0" {
 		tfMap := map[string]any{}
@@ -1420,9 +1423,53 @@ func permissionsFilter(attributes map[string]string) tflakeformation.Permissions
 		if v := attributes["table.0.wildcard"]; v != "" && v == acctest.CtTrue {
 			tfMap["wildcard"] = true
 		}
-		return tflakeformation.FilterTablePermissions(principalIdentifier, tflakeformation.ExpandTableResource(tfMap))
+		return tflakeformation.FilterTablePermissions(principalIdentifier, tflakeformation.ExpandTableResource(tfMap)), nil
 	}
-	return nil
+	if v, ok := attributes["table_with_columns.#"]; ok && v != "" && v != "0" {
+		tfMap := map[string]any{}
+
+		if v := attributes["table_with_columns.0.catalog_id"]; v != "" {
+			tfMap[names.AttrCatalogID] = v
+		}
+
+		if v := attributes["table_with_columns.0.database_name"]; v != "" {
+			tfMap[names.AttrDatabaseName] = v
+		}
+
+		if v := attributes["table_with_columns.0.name"]; v != "" {
+			tfMap[names.AttrName] = v
+		}
+
+		var columnNames []string
+		if v := attributes["table_with_columns.0.column_names.#"]; v != "" {
+			colCount, err := strconv.Atoi(attributes["table_with_columns.0.column_names.#"])
+			if err != nil {
+				return nil, fmt.Errorf("acceptance test: could not convert string (%s) Atoi for column_names: %w", attributes["table_with_columns.0.column_names.#"], err)
+			}
+			for i := range colCount {
+				columnNames = append(columnNames, attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
+			}
+		}
+
+		var excludedColumnNames []string
+		if v := attributes["table_with_columns.0.excluded_column_names.#"]; v != "" {
+			colCount, err := strconv.Atoi(attributes["table_with_columns.0.excluded_column_names.#"])
+			if err != nil {
+				return nil, fmt.Errorf("acceptance test: could not convert string (%s) Atoi for excluded_column_names: %w", attributes["table_with_columns.0.excluded_column_names.#"], err)
+			}
+			for i := range colCount {
+				excludedColumnNames = append(excludedColumnNames, attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)])
+			}
+		}
+
+		var columnWildcard bool
+		if v := attributes["table_with_columns.0.wildcard"]; v == acctest.CtTrue {
+			columnWildcard = true
+		}
+
+		return tflakeformation.FilterTableWithColumnsPermissions(principalIdentifier, tflakeformation.ExpandTableWithColumnsResourceAsTable(tfMap), columnNames, excludedColumnNames, columnWildcard), nil
+	}
+	return nil, nil
 }
 
 func testAccPermissionsConfig_basic(rName string) string {
