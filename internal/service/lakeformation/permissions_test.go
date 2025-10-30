@@ -1402,7 +1402,26 @@ func permissionsFilter(attributes map[string]string) tflakeformation.Permissions
 	if v, ok := attributes["lf_tag_policy.#"]; ok && v != "" && v != "0" {
 		return tflakeformation.FilterLFTagPolicyPermissions(principalIdentifier)
 	}
+	if v, ok := attributes["table.#"]; ok && v != "" && v != "0" {
+		tfMap := map[string]any{}
 
+		if v := attributes["table.0.catalog_id"]; v != "" {
+			tfMap[names.AttrCatalogID] = v
+		}
+
+		if v := attributes["table.0.database_name"]; v != "" {
+			tfMap[names.AttrDatabaseName] = v
+		}
+
+		if v := attributes["table.0.name"]; v != "" && v != tflakeformation.TableNameAllTables {
+			tfMap[names.AttrName] = v
+		}
+
+		if v := attributes["table.0.wildcard"]; v != "" && v == acctest.CtTrue {
+			tfMap["wildcard"] = true
+		}
+		return tflakeformation.FilterTablePermissions(principalIdentifier, tflakeformation.ExpandTableResource(tfMap))
+	}
 	return nil
 }
 

@@ -36,10 +36,6 @@ func filterPermissions(input *lakeformation.ListPermissionsInput, filter Permiss
 		return filterTableWithColumnsPermissions(principalIdentifier, input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 	}
 
-	if input.Resource.Table != nil || tableType == TableTypeTable {
-		return filterTablePermissions(principalIdentifier, input.Resource.Table, allPermissions)
-	}
-
 	return nil
 }
 
@@ -79,7 +75,7 @@ func filterLFTagPolicyPermissions(principalIdentifier string) PermissionsFilter 
 	}
 }
 
-func filterTablePermissions(principalIdentifier string, table *awstypes.TableResource, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
+func filterTablePermissions(principalIdentifier string, table *awstypes.TableResource) PermissionsFilter {
 	// CREATE PERMS (in)     = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT, SELECT on Table, Name = (Table Name)
 	//      LIST PERMS (out) = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT         on Table, Name = (Table Name)
 	//      LIST PERMS (out) = SELECT                                             on TableWithColumns, Name = (Table Name), ColumnWildcard
@@ -88,42 +84,35 @@ func filterTablePermissions(principalIdentifier string, table *awstypes.TableRes
 	//        LIST PERMS (out) = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT         on Table, TableWildcard, Name = ALL_TABLES
 	//        LIST PERMS (out) = SELECT                                             on TableWithColumns, Name = ALL_TABLES, ColumnWildcard
 
-	var cleanPermissions []awstypes.PrincipalResourcePermissions
-
-	for _, perm := range allPermissions {
+	return func(perm awstypes.PrincipalResourcePermissions) bool {
 		if principalIdentifier != aws.ToString(perm.Principal.DataLakePrincipalIdentifier) {
-			continue
+			return false
 		}
 
 		if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
 			if aws.ToString(perm.Resource.TableWithColumns.Name) == aws.ToString(table.Name) || (table.TableWildcard != nil && aws.ToString(perm.Resource.TableWithColumns.Name) == TableNameAllTables) {
 				if len(perm.Permissions) > 0 && perm.Permissions[0] == awstypes.PermissionSelect {
-					cleanPermissions = append(cleanPermissions, perm)
-					continue
+					return true
 				}
 
 				if len(perm.PermissionsWithGrantOption) > 0 && perm.PermissionsWithGrantOption[0] == awstypes.PermissionSelect {
-					cleanPermissions = append(cleanPermissions, perm)
-					continue
+					return true
 				}
 			}
 		}
 
 		if perm.Resource.Table != nil && aws.ToString(perm.Resource.Table.DatabaseName) == aws.ToString(table.DatabaseName) {
 			if aws.ToString(perm.Resource.Table.Name) == aws.ToString(table.Name) {
-				cleanPermissions = append(cleanPermissions, perm)
-				continue
+				return true
 			}
 
 			if perm.Resource.Table.TableWildcard != nil && table.TableWildcard != nil {
-				cleanPermissions = append(cleanPermissions, perm)
-				continue
+				return true
 			}
 		}
-		continue
-	}
 
-	return cleanPermissions
+		return false
+	}
 }
 
 func filterTableWithColumnsPermissions(principalIdentifier string, twc *awstypes.TableResource, columnNames []string, excludedColumnNames []string, columnWildcard bool, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {

@@ -29,4 +29,5 @@ var (
 	FilterDatabasePermissions     = filterDatabasePermissions
 	FilterLFTagPermissions        = filterLFTagPermissions
 	FilterLFTagPolicyPermissions  = filterLFTagPolicyPermissions
+	FilterTablePermissions        = filterTablePermissions
 )

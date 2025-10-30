@@ -882,6 +882,9 @@ func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
 	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		return filterLFTagPolicyPermissions(principalIdentifier)
 	}
+	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterTablePermissions(principalIdentifier, ExpandTableResource(v.([]any)[0].(map[string]any)))
+	}
 	return nil
 }
 
