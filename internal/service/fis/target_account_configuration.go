@@ -78,7 +78,7 @@ func (r *resourceTargetAccountConfiguration) Schema(ctx context.Context, req res
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Optional:   true,
 				Computed:   true,
 				Validators: []validator.String{stringvalidator.LengthBetween(20, 2048)},

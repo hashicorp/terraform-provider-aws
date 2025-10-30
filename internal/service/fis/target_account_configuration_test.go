@@ -19,10 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 )
 
 func TestAccFISTargetAccountConfiguration_basic(t *testing.T) {
@@ -47,9 +46,9 @@ func TestAccFISTargetAccountConfiguration_basic(t *testing.T) {
 					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &targetaccountconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_template_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("%s target account configuration", rName)),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "role_arn", "iam", regexache.MustCompile(`role/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, fmt.Sprintf("%s target account configuration", rName)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", regexache.MustCompile(`role/.+$`)),
 				),
 			},
 			{
@@ -83,7 +82,7 @@ func TestAccFISTargetAccountConfiguration_update(t *testing.T) {
 				Config: testAccTargetAccountConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("%s target account configuration", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, fmt.Sprintf("%s target account configuration", rName)),
 				),
 			},
 			{
@@ -91,7 +90,7 @@ func TestAccFISTargetAccountConfiguration_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &after),
 					testAccCheckTargetAccountConfigurationNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("%s target account configuration updated", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, fmt.Sprintf("%s target account configuration updated", rName)),
 				),
 			},
 			{
@@ -250,7 +249,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSFaultInjectionSimulatorEC2Access"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSFaultInjectionSimulatorEC2Access"
 }
 
 resource "aws_fis_experiment_template" "test" {
@@ -333,7 +332,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSFaultInjectionSimulatorEC2Access"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSFaultInjectionSimulatorEC2Access"
 }
 
 resource "aws_fis_experiment_template" "test" {
