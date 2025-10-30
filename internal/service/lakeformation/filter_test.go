@@ -581,6 +581,7 @@ func TestFilterTablePermissions(t *testing.T) {
 	dbName := "Hiliji"
 	altDBName := "Hiuhbum"
 	tableName := "Ladocmoc"
+	altTableName := "AltTable"
 
 	//lintignore:AWSAT005
 	principalIdentifier := fmt.Sprintf("arn:aws-us-gov:iam::%s:role/Zepotiz-Bulgaria", accountID)
@@ -641,6 +642,18 @@ func TestFilterTablePermissions(t *testing.T) {
 							CatalogId:    aws.String(accountID),
 							DatabaseName: aws.String(altDBName),
 							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(altDBName),
+							Name:         aws.String(altTableName),
 						},
 					},
 				},
@@ -855,6 +868,355 @@ func TestFilterTablePermissions(t *testing.T) {
 			filter := tflakeformation.FilterTablePermissions(principalIdentifier, testCase.Input.Resource.Table)
 
 			got := tfslices.Filter(testCase.All, filter)
+
+			if diff := cmp.Diff(got, testCase.ExpectedClean,
+				cmpopts.IgnoreUnexported(awstypes.PrincipalResourcePermissions{}),
+				cmpopts.IgnoreUnexported(awstypes.DataLakePrincipal{}),
+				cmpopts.IgnoreUnexported(awstypes.Resource{}),
+				cmpopts.IgnoreUnexported(awstypes.TableResource{}),
+				cmpopts.IgnoreUnexported(awstypes.TableWithColumnsResource{}),
+				cmpopts.IgnoreUnexported(awstypes.ColumnWildcard{}),
+			); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFilterTableWithColumnsPermissions(t *testing.T) {
+	t.Parallel()
+
+	// primitives to make test cases easier
+	accountID := acctest.Ct12Digit
+	dbName := "Hiliji"
+	altDBName := "Hiuhbum"
+	tableName := "Ladocmoc"
+	altTableName := "AltTable"
+
+	//lintignore:AWSAT005
+	principalIdentifier := fmt.Sprintf("arn:aws-us-gov:iam::%s:role/Zepotiz-Bulgaria", accountID)
+
+	principal := &awstypes.DataLakePrincipal{
+		DataLakePrincipalIdentifier: aws.String(principalIdentifier),
+	}
+
+	testCases := []struct {
+		Name                string
+		Input               *lakeformation.ListPermissionsInput
+		ColumnNames         []string
+		ExcludedColumnNames []string
+		ColumnWildcard      bool
+		All                 []awstypes.PrincipalResourcePermissions
+		ExpectedClean       []awstypes.PrincipalResourcePermissions
+	}{
+		{
+			Name: "empty",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource:  &awstypes.Resource{},
+			},
+			ColumnNames:   []string{names.AttrValue},
+			All:           nil,
+			ExpectedClean: nil,
+		},
+		{
+			Name: "wrongTableResource", // this may not actually be possible but we account for it
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &awstypes.Resource{
+					Table: &awstypes.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			ColumnNames: []string{names.AttrValue},
+			All: []awstypes.PrincipalResourcePermissions{
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(altDBName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(altDBName),
+							Name:         aws.String(altTableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: nil,
+		},
+		{
+			Name: "twcBasic",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &awstypes.Resource{
+					Table: &awstypes.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			ColumnNames: []string{names.AttrValue},
+			All: []awstypes.PrincipalResourcePermissions{
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionAlter, awstypes.PermissionDelete},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  []string{names.AttrValue},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  []string{"fred"},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []awstypes.PrincipalResourcePermissions{
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionAlter, awstypes.PermissionDelete},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  []string{names.AttrValue},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "twcWildcard",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &awstypes.Resource{
+					Table: &awstypes.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			ColumnWildcard: true,
+			All: []awstypes.PrincipalResourcePermissions{
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionAlter, awstypes.PermissionDelete},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId:      aws.String(accountID),
+							ColumnWildcard: &awstypes.ColumnWildcard{},
+							DatabaseName:   aws.String(dbName),
+							Name:           aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  []string{"fred"},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []awstypes.PrincipalResourcePermissions{
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionAlter, awstypes.PermissionDelete},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId:      aws.String(accountID),
+							ColumnWildcard: &awstypes.ColumnWildcard{},
+							DatabaseName:   aws.String(dbName),
+							Name:           aws.String(tableName),
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "twcWildcardExcluded",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &awstypes.Resource{
+					Table: &awstypes.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			ColumnWildcard:      true,
+			ExcludedColumnNames: []string{names.AttrValue},
+			All: []awstypes.PrincipalResourcePermissions{
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionAlter, awstypes.PermissionDelete},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId: aws.String(accountID),
+							ColumnWildcard: &awstypes.ColumnWildcard{
+								ExcludedColumnNames: []string{names.AttrValue},
+							},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  []string{"fred"},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []awstypes.PrincipalResourcePermissions{
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionAlter, awstypes.PermissionDelete},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						Table: &awstypes.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                []awstypes.Permission{awstypes.PermissionSelect},
+					PermissionsWithGrantOption: []awstypes.Permission{},
+					Principal:                  principal,
+					Resource: &awstypes.Resource{
+						TableWithColumns: &awstypes.TableWithColumnsResource{
+							CatalogId: aws.String(accountID),
+							ColumnWildcard: &awstypes.ColumnWildcard{
+								ExcludedColumnNames: []string{names.AttrValue},
+							},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			var filter tflakeformation.PermissionsFilter
+
+			got := tflakeformation.FilterPermissions(testCase.Input, filter, principalIdentifier, tflakeformation.TableTypeTableWithColumns, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
 
 			if diff := cmp.Diff(got, testCase.ExpectedClean,
 				cmpopts.IgnoreUnexported(awstypes.PrincipalResourcePermissions{}),

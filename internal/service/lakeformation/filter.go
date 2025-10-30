@@ -146,9 +146,11 @@ func filterTableWithColumnsPermissions(principalIdentifier string, twc *awstypes
 			}
 		}
 
-		if perm.Resource.Table != nil && aws.ToString(perm.Resource.Table.Name) == aws.ToString(twc.Name) {
-			cleanPermissions = append(cleanPermissions, perm)
-			continue
+		if perm.Resource.Table != nil && aws.ToString(perm.Resource.Table.DatabaseName) == aws.ToString(twc.DatabaseName) {
+			if aws.ToString(perm.Resource.Table.Name) == aws.ToString(twc.Name) {
+				cleanPermissions = append(cleanPermissions, perm)
+				continue
+			}
 		}
 	}
 
