@@ -40,14 +40,6 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `5m`)
-* `update` - (Default `5m`)
-* `delete` - (Default `5m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FIS (Fault Injection Simulator) Target Account Configuration using the `account_id,experiment_template_id`. For example:

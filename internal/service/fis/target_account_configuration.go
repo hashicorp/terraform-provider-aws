@@ -7,12 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -35,11 +33,6 @@ import (
 // @FrameworkResource("aws_fis_target_account_configuration", name="Target Account Configuration")
 func newResourceTargetAccountConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTargetAccountConfiguration{}
-
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
-
 	return r, nil
 }
 
@@ -49,7 +42,6 @@ const (
 
 type resourceTargetAccountConfiguration struct {
 	framework.ResourceWithModel[resourceTargetAccountConfigurationModel]
-	framework.WithTimeouts
 }
 
 func (r *resourceTargetAccountConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -79,13 +71,6 @@ func (r *resourceTargetAccountConfiguration) Schema(ctx context.Context, req res
 				Computed:   true,
 				Validators: []validator.String{stringvalidator.LengthBetween(20, 2048)},
 			},
-		},
-		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -253,9 +238,8 @@ func findTargetAccountConfigurationByID(ctx context.Context, conn *fis.Client, a
 
 type resourceTargetAccountConfigurationModel struct {
 	framework.WithRegionModel
-	AccountId            types.String   `tfsdk:"account_id"`
-	Description          types.String   `tfsdk:"description"`
-	ExperimentTemplateId types.String   `tfsdk:"experiment_template_id"`
-	RoleArn              types.String   `tfsdk:"role_arn"`
-	Timeouts             timeouts.Value `tfsdk:"timeouts"`
+	AccountId            types.String `tfsdk:"account_id"`
+	Description          types.String `tfsdk:"description"`
+	ExperimentTemplateId types.String `tfsdk:"experiment_template_id"`
+	RoleArn              types.String `tfsdk:"role_arn"`
 }
