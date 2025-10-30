@@ -1613,21 +1613,34 @@ func flattenNodeGroupConfigurations(apiObjects []awstypes.NodeGroup) []any {
 			tfMap["slots"] = aws.ToString(v)
 		}
 
-		// Extract availability zones and outpost ARNs from node group members
-		var primaryAZ string
-		var primaryOutpostArn string
-		var replicaAZs []string
-		var replicaOutpostArns []string
+		// Only extract availability zones and outpost ARNs if we can reliably identify roles
+		// In some cases, CurrentRole might not be set or reliable
+		var primaryMember *awstypes.NodeGroupMember
+		var replicaMembers []awstypes.NodeGroupMember
 
 		for _, member := range apiObject.NodeGroupMembers {
 			if member.CurrentRole != nil && aws.ToString(member.CurrentRole) == "primary" {
-				if member.PreferredAvailabilityZone != nil {
-					primaryAZ = aws.ToString(member.PreferredAvailabilityZone)
-				}
-				if member.PreferredOutpostArn != nil {
-					primaryOutpostArn = aws.ToString(member.PreferredOutpostArn)
-				}
-			} else {
+				primaryMember = &member
+			} else if member.CurrentRole != nil && aws.ToString(member.CurrentRole) == "replica" {
+				replicaMembers = append(replicaMembers, member)
+			}
+		}
+
+		// Only set AZ fields if we have clear primary/replica distinction
+		if primaryMember != nil {
+			if primaryMember.PreferredAvailabilityZone != nil {
+				tfMap["primary_availability_zone"] = aws.ToString(primaryMember.PreferredAvailabilityZone)
+			}
+			if primaryMember.PreferredOutpostArn != nil {
+				tfMap["primary_outpost_arn"] = aws.ToString(primaryMember.PreferredOutpostArn)
+			}
+		}
+
+		if len(replicaMembers) > 0 {
+			var replicaAZs []string
+			var replicaOutpostArns []string
+
+			for _, member := range replicaMembers {
 				if member.PreferredAvailabilityZone != nil {
 					replicaAZs = append(replicaAZs, aws.ToString(member.PreferredAvailabilityZone))
 				}
@@ -1635,19 +1648,13 @@ func flattenNodeGroupConfigurations(apiObjects []awstypes.NodeGroup) []any {
 					replicaOutpostArns = append(replicaOutpostArns, aws.ToString(member.PreferredOutpostArn))
 				}
 			}
-		}
 
-		if primaryAZ != "" {
-			tfMap["primary_availability_zone"] = primaryAZ
-		}
-		if primaryOutpostArn != "" {
-			tfMap["primary_outpost_arn"] = primaryOutpostArn
-		}
-		if len(replicaAZs) > 0 {
-			tfMap["replica_availability_zones"] = replicaAZs
-		}
-		if len(replicaOutpostArns) > 0 {
-			tfMap["replica_outpost_arns"] = replicaOutpostArns
+			if len(replicaAZs) > 0 {
+				tfMap["replica_availability_zones"] = replicaAZs
+			}
+			if len(replicaOutpostArns) > 0 {
+				tfMap["replica_outpost_arns"] = replicaOutpostArns
+			}
 		}
 
 		tfList = append(tfList, tfMap)
