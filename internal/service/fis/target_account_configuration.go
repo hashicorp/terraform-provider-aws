@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/YakDriver/smarterr"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -24,14 +23,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -264,44 +260,4 @@ type resourceTargetAccountConfigurationModel struct {
 	ExperimentTemplateId types.String   `tfsdk:"experiment_template_id"`
 	RoleArn              types.String   `tfsdk:"role_arn"`
 	Timeouts             timeouts.Value `tfsdk:"timeouts"`
-}
-
-func sweepTargetAccountConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.FISClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	experimentsInput := &fis.ListExperimentTemplatesInput{}
-	experimentPages := fis.NewListExperimentTemplatesPaginator(conn, experimentsInput)
-
-	for experimentPages.HasMorePages() {
-		experimentPage, err := experimentPages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, experiment := range experimentPage.ExperimentTemplates {
-			input := &fis.ListTargetAccountConfigurationsInput{
-				ExperimentTemplateId: experiment.Id,
-			}
-
-			pages := fis.NewListTargetAccountConfigurationsPaginator(conn, input)
-			for pages.HasMorePages() {
-				page, err := pages.NextPage(ctx)
-				if err != nil {
-					return nil, smarterr.NewError(err)
-				}
-
-				for _, v := range page.TargetAccountConfigurations {
-					sweepResources = append(sweepResources, sweepfw.NewSweepResource(
-						newResourceTargetAccountConfiguration,
-						client,
-						sweepfw.NewAttribute(names.AttrAccountID, aws.ToString(v.AccountId)),
-						sweepfw.NewAttribute("experiment_template_id", aws.ToString(experiment.Id)),
-					))
-				}
-			}
-		}
-	}
-
-	return sweepResources, nil
 }

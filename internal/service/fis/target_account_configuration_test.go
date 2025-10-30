@@ -55,7 +55,7 @@ func TestAccFISTargetAccountConfiguration_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccTargetAccountConfigurationImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrAccountID, "experiment_template_id"),
 				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 			},
 		},
@@ -97,7 +97,7 @@ func TestAccFISTargetAccountConfiguration_update(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccTargetAccountConfigurationImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrAccountID, "experiment_template_id"),
 				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 			},
 		},
@@ -210,24 +210,6 @@ func testAccCheckTargetAccountConfigurationNotRecreated(before, after *awstypes.
 	}
 }
 
-func testAccTargetAccountConfigurationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("resource %s not found", resourceName)
-		}
-
-		experimentTemplateId := rs.Primary.Attributes["experiment_template_id"]
-		accountId := rs.Primary.Attributes[names.AttrAccountID]
-
-		if experimentTemplateId == "" || accountId == "" {
-			return "", fmt.Errorf("experiment_template_id or account_id not set")
-		}
-
-		return fmt.Sprintf("%s,%s", accountId, experimentTemplateId), nil
-	}
-}
-
 func testAccTargetAccountConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -301,12 +283,6 @@ resource "aws_fis_target_account_configuration" "test" {
   account_id             = data.aws_caller_identity.current.account_id
   role_arn               = aws_iam_role.test.arn
   description            = "%[1]s target account configuration"
-
-  timeouts {
-    create = "5m"
-    update = "5m"
-    delete = "5m"
-  }
 }
 `, rName)
 }
@@ -384,12 +360,6 @@ resource "aws_fis_target_account_configuration" "test" {
   account_id             = data.aws_caller_identity.current.account_id
   role_arn               = aws_iam_role.test.arn
   description            = "%[1]s target account configuration updated"
-
-  timeouts {
-    create = "5m"
-    update = "5m"
-    delete = "5m"
-  }
 }
 `, rName)
 }
