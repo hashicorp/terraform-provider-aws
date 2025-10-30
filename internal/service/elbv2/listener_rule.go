@@ -486,11 +486,67 @@ func resourceListenerRule() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"transform": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 2,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TransformTypeEnum](),
+						},
+						"host_header_rewrite_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rewrite": transformRewriteConfigSchema(),
+								},
+							},
+						},
+						"url_rewrite_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rewrite": transformRewriteConfigSchema(),
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: customdiff.All(
 			validateListenerActionsCustomDiff(names.AttrAction),
 		),
+	}
+}
+
+func transformRewriteConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1, // This argument is an array, but the current AWS API accepts exactly only one `rewrite`
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"regex": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"replace": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+			},
+		},
 	}
 }
 
@@ -529,6 +585,10 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	input.Conditions, err = expandRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if v, ok := d.GetOk("transform"); ok && len(v.(*schema.Set).List()) > 0 {
+		input.Transforms = expandRuleTransforms(v.(*schema.Set).List())
 	}
 
 	output, err := retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
@@ -648,6 +708,10 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 
+	if err := d.Set("transform", flattenRuleTransforms(rule.Transforms)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting transform: %s", err)
+	}
+
 	return diags
 }
 
@@ -691,6 +755,15 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.Conditions, err = expandRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
+			}
+			requestUpdate = true
+		}
+
+		if d.HasChange("transform") {
+			if v, ok := d.GetOk("transform"); ok && len(v.(*schema.Set).List()) > 0 {
+				input.Transforms = expandRuleTransforms(d.Get("transform").(*schema.Set).List())
+			} else {
+				input.ResetTransforms = aws.Bool(true)
 			}
 			requestUpdate = true
 		}
@@ -993,6 +1066,74 @@ func expandPathPatternConditionConfig(tfMap map[string]any) *awstypes.PathPatter
 	return apiObject
 }
 
+func expandRuleTransforms(tfList []any) []awstypes.RuleTransform {
+	var apiObjects []awstypes.RuleTransform
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.RuleTransform{}
+
+		if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
+			apiObject.Type = awstypes.TransformTypeEnum(v.(string))
+		}
+		if v, ok := tfMap["host_header_rewrite_config"].([]any); ok && len(v) > 0 {
+			apiObject.HostHeaderRewriteConfig = expandHostHeaderRewriteConfig(v[0].(map[string]any))
+		}
+		if v, ok := tfMap["url_rewrite_config"].([]any); ok && len(v) > 0 {
+			apiObject.UrlRewriteConfig = expandURLRewriteConfig(v[0].(map[string]any))
+		}
+		apiObjects = append(apiObjects, apiObject)
+	}
+	return apiObjects
+}
+
+func expandHostHeaderRewriteConfig(tfMap map[string]any) *awstypes.HostHeaderRewriteConfig {
+	if tfMap == nil {
+		return &awstypes.HostHeaderRewriteConfig{}
+	}
+
+	apiObject := &awstypes.HostHeaderRewriteConfig{}
+	if v, ok := tfMap["rewrite"].([]any); ok && len(v) > 0 {
+		apiObject.Rewrites = expandRewriteConfig(v)
+	}
+	return apiObject
+}
+
+func expandURLRewriteConfig(tfMap map[string]any) *awstypes.UrlRewriteConfig {
+	if tfMap == nil {
+		return &awstypes.UrlRewriteConfig{}
+	}
+
+	apiObject := &awstypes.UrlRewriteConfig{}
+	if v, ok := tfMap["rewrite"].([]any); ok && len(v) > 0 {
+		apiObject.Rewrites = expandRewriteConfig(v)
+	}
+	return apiObject
+}
+
+func expandRewriteConfig(tfList []any) []awstypes.RewriteConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+	var apiObjects []awstypes.RewriteConfig
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.RewriteConfig{
+			Regex:   aws.String(tfMap["regex"].(string)),
+			Replace: aws.String(tfMap["replace"].(string)),
+		}
+		apiObjects = append(apiObjects, apiObject)
+	}
+	return apiObjects
+}
+
 func flattenHostHeaderConditionConfig(apiObject *awstypes.HostHeaderConditionConfig) map[string]any {
 	if apiObject == nil {
 		return nil
@@ -1038,4 +1179,67 @@ func flattenPathPatternConditionConfig(apiObject *awstypes.PathPatternConditionC
 		tfMap["regex_values"] = flex.FlattenStringValueSet(apiObject.RegexValues)
 	}
 	return tfMap
+}
+
+func flattenRuleTransforms(apiObjects []awstypes.RuleTransform) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+
+		if v := string(apiObject.Type); v != "" {
+			tfMap[names.AttrType] = v
+		}
+		if v := flattenHostHeaderRewriteConfig(apiObject.HostHeaderRewriteConfig); v != nil {
+			tfMap["host_header_rewrite_config"] = []any{v}
+		}
+		if v := flattenURLRewriteConfig(apiObject.UrlRewriteConfig); v != nil {
+			tfMap["url_rewrite_config"] = []any{v}
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
+}
+
+func flattenHostHeaderRewriteConfig(apiObject *awstypes.HostHeaderRewriteConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := make(map[string]any)
+
+	if v := flattenRewriteConfig(apiObject.Rewrites); v != nil {
+		tfMap["rewrite"] = v
+	}
+	return tfMap
+}
+
+func flattenURLRewriteConfig(apiObject *awstypes.UrlRewriteConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := make(map[string]any)
+
+	if v := flattenRewriteConfig(apiObject.Rewrites); v != nil {
+		tfMap["rewrite"] = v
+	}
+	return tfMap
+}
+
+func flattenRewriteConfig(apiObjects []awstypes.RewriteConfig) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"regex":   aws.ToString(apiObject.Regex),
+			"replace": aws.ToString(apiObject.Replace),
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
 }
