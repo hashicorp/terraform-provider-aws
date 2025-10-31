@@ -506,6 +506,35 @@ func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 	})
 }
 
+func TestAccEKSNodeGroup_nodeRepairConfig_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1 types.Nodegroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_nodeRepairConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEKSNodeGroup_nodeRepairConfig_counts(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
@@ -2182,6 +2211,34 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 `, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
+}
+
+func testAccNodeGroupConfig_nodeRepairConfigBasic(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  node_repair_config {
+    enabled = true
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
 }
 
 func testAccNodeGroupConfig_nodeRepairConfigCounts(rName string) string {
