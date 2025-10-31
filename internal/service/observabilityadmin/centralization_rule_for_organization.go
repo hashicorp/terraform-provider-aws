@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -40,7 +39,7 @@ import (
 // @Tags(identifierAttribute="rule_arn")
 func newResourceCentralizationRuleForOrganization(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCentralizationRuleForOrganization{
-		flexOpt: flex.WithFieldNameSuffix(""),
+		flexOpt: fwflex.WithFieldNameSuffix(""),
 	}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
@@ -265,7 +264,6 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-
 }
 
 func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -290,8 +288,8 @@ func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, re
 	}
 
 	// Manual field mapping for fields with different names between Create and Get APIs
-	state.ARN = flex.StringToFramework(ctx, rule.RuleArn)
-	state.RuleName = flex.StringToFramework(ctx, rule.RuleName)
+	state.ARN = fwflex.StringToFramework(ctx, rule.RuleArn)
+	state.RuleName = fwflex.StringToFramework(ctx, rule.RuleName)
 
 	// Handle the CentralizationRule -> Rule field name mismatch manually
 	if rule.CentralizationRule != nil {
@@ -320,7 +318,7 @@ func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, 
 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -345,7 +343,7 @@ func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, 
 			return
 		}
 
-		plan.ARN = flex.StringToFramework(ctx, out.RuleArn)
+		plan.ARN = fwflex.StringToFramework(ctx, out.RuleArn)
 	}
 
 	// Check if the rule was updated successfully by reading it back

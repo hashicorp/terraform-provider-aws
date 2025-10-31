@@ -267,17 +267,6 @@ func testAccCheckCentralizationRuleForOrganizationExists(ctx context.Context, na
 	}
 }
 
-func testAccCentralizationRuleForOrganizationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["rule_name"], nil
-	}
-}
-
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
 
