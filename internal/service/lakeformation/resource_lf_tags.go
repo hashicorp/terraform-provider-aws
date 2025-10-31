@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,11 +42,10 @@ func ResourceResourceLFTags() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
+				Type:     schema.TypeString,
+				Computed: true,
+				ForceNew: true,
+				Optional: true,
 			},
 			names.AttrDatabase: {
 				Type:     schema.TypeList,
