@@ -6,11 +6,15 @@ package invoicing
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/invoicing/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,12 +35,17 @@ import (
 func newInvoiceUnitResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &invoiceUnitResource{}
 
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+
 	return r, nil
 }
 
 type invoiceUnitResource struct {
 	framework.ResourceWithModel[invoiceUnitResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
+	framework.WithTimeouts
 }
 
 func (r *invoiceUnitResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -46,7 +55,6 @@ func (r *invoiceUnitResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
 			"invoice_receiver": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -83,6 +91,11 @@ func (r *invoiceUnitResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+				Update: true,
+			}),
 		},
 	}
 }
@@ -91,7 +104,6 @@ type invoiceUnitResourceModel struct {
 	framework.WithRegionModel
 	ARN                    types.String                               `tfsdk:"arn"`
 	Description            types.String                               `tfsdk:"description"`
-	ID                     types.String                               `tfsdk:"id"`
 	InvoiceReceiver        types.String                               `tfsdk:"invoice_receiver"`
 	LastModified           timetypes.RFC3339                          `tfsdk:"last_modified"`
 	Name                   types.String                               `tfsdk:"name"`
@@ -99,6 +111,7 @@ type invoiceUnitResourceModel struct {
 	TaxInheritanceDisabled types.Bool                                 `tfsdk:"tax_inheritance_disabled"`
 	Tags                   tftags.Map                                 `tfsdk:"tags"`
 	TagsAll                tftags.Map                                 `tfsdk:"tags_all"`
+	Timeouts               timeouts.Value                             `tfsdk:"timeouts"`
 }
 
 type ruleModel struct {
@@ -128,23 +141,20 @@ func (r *invoiceUnitResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	data.ID = fwflex.StringToFramework(ctx, output.InvoiceUnitArn)
 	data.ARN = fwflex.StringToFramework(ctx, output.InvoiceUnitArn)
 
-	// Read the resource to get computed values
-	invoiceUnit, err := findInvoiceUnitByARN(ctx, conn, data.ID.ValueString())
+	invoiceUnit, err := waitInvoiceUnitCreated(ctx, conn, data.ARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
-		response.Diagnostics.AddError("reading Invoice Unit after create", err.Error())
+		response.State.SetAttribute(ctx, path.Root(names.AttrARN), data.ARN) // Set 'arn' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Invoice Unit (%s) create", data.ARN.ValueString()), err.Error())
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, invoiceUnit, &data)...)
+	// Set values for unknowns after creation is complete
+	response.Diagnostics.Append(fwflex.Flatten(ctx, invoiceUnit, &data, fwflex.WithFieldNamePrefix("InvoiceUnit"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	data.ID = fwflex.StringToFramework(ctx, invoiceUnit.InvoiceUnitArn)
-	data.ARN = fwflex.StringToFramework(ctx, invoiceUnit.InvoiceUnitArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -158,8 +168,8 @@ func (r *invoiceUnitResource) Read(ctx context.Context, request resource.ReadReq
 
 	conn := r.Meta().InvoicingClient(ctx)
 
-	output, err := findInvoiceUnitByARN(ctx, conn, data.ID.ValueString())
-	if tfresource.NotFound(err) {
+	output, err := findInvoiceUnitByARN(ctx, conn, data.ARN.ValueString())
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -169,13 +179,10 @@ func (r *invoiceUnitResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("InvoiceUnit"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	data.ID = fwflex.StringToFramework(ctx, output.InvoiceUnitArn)
-	data.ARN = fwflex.StringToFramework(ctx, output.InvoiceUnitArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -194,7 +201,7 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 		!new.Rule.Equal(old.Rule) ||
 		!new.TaxInheritanceDisabled.Equal(old.TaxInheritanceDisabled) {
 		input := invoicing.UpdateInvoiceUnitInput{
-			InvoiceUnitArn: new.ID.ValueStringPointer(),
+			InvoiceUnitArn: new.ARN.ValueStringPointer(),
 		}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -204,6 +211,12 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 		_, err := conn.UpdateInvoiceUnit(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError("updating Invoice Unit", err.Error())
+			return
+		}
+
+		_, err = waitInvoiceUnitUpdated(ctx, conn, new.ARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Invoice Unit (%s) update", new.ARN.ValueString()), err.Error())
 			return
 		}
 	}
@@ -221,7 +234,7 @@ func (r *invoiceUnitResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().InvoicingClient(ctx)
 
 	input := invoicing.DeleteInvoiceUnitInput{
-		InvoiceUnitArn: data.ID.ValueStringPointer(),
+		InvoiceUnitArn: data.ARN.ValueStringPointer(),
 	}
 	_, err := conn.DeleteInvoiceUnit(ctx, &input)
 	if err != nil {
@@ -230,6 +243,12 @@ func (r *invoiceUnitResource) Delete(ctx context.Context, request resource.Delet
 			return
 		}
 		response.Diagnostics.AddError("deleting Invoice Unit", err.Error())
+		return
+	}
+
+	_, err = waitInvoiceUnitDeleted(ctx, conn, data.ARN.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Invoice Unit (%s) delete", data.ARN.ValueString()), err.Error())
 	}
 }
 
@@ -254,4 +273,71 @@ func findInvoiceUnitByARN(ctx context.Context, conn *invoicing.Client, arn strin
 	}
 
 	return output, nil
+}
+
+func waitInvoiceUnitCreated(ctx context.Context, conn *invoicing.Client, arn string, timeout time.Duration) (*invoicing.GetInvoiceUnitOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{"AVAILABLE"},
+		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*invoicing.GetInvoiceUnitOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInvoiceUnitUpdated(ctx context.Context, conn *invoicing.Client, arn string, timeout time.Duration) (*invoicing.GetInvoiceUnitOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{"AVAILABLE"},
+		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*invoicing.GetInvoiceUnitOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInvoiceUnitDeleted(ctx context.Context, conn *invoicing.Client, arn string, timeout time.Duration) (*invoicing.GetInvoiceUnitOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"AVAILABLE"},
+		Target:  []string{},
+		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*invoicing.GetInvoiceUnitOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusInvoiceUnit(_ context.Context, conn *invoicing.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findInvoiceUnitByARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, "AVAILABLE", nil
+	}
 }

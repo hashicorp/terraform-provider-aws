@@ -6,7 +6,6 @@ package invoicing_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinvoicing "github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,15 +46,15 @@ func TestAccInvoicingInvoiceUnit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.0.linked_accounts.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.linked_accounts.*", linkedAccount),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "invoicing", regexache.MustCompile(`invoice-unit/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 			},
 		},
 	})
@@ -70,7 +69,7 @@ func testAccCheckInvoiceUnitExists(ctx context.Context, n string, v *invoicing.G
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).InvoicingClient(ctx)
 
-		output, err := tfinvoicing.FindInvoiceUnitByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfinvoicing.FindInvoiceUnitByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
 			return err
 		}
@@ -90,15 +89,15 @@ func testAccCheckInvoiceUnitDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfinvoicing.FindInvoiceUnitByARN(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			_, err := tfinvoicing.FindInvoiceUnitByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("Invoice Unit %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Invoice Unit %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
