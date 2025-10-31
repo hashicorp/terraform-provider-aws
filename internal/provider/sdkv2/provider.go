@@ -243,6 +243,30 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "Skip requesting the account ID. " +
 						"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 				},
+				"sqs_wait_times": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					MaxItems:    1,
+					Description: "Configuration block for SQS wait times. Useful for local development environments like LocalStack.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"create_continuous_target_occurrence": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      6,
+								ValidateFunc: validation.IntAtLeast(1),
+								Description:  "Number of consecutive successful checks required during SQS queue creation. Default is 6 (30 seconds). Lower values speed up local development.",
+							},
+							"delete_continuous_target_occurrence": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      15,
+								ValidateFunc: validation.IntAtLeast(1),
+								Description:  "Number of consecutive successful checks required during SQS queue deletion. Default is 15 (45 seconds). Lower values speed up local development.",
+							},
+						},
+					},
+				},
 				"sts_region": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -482,6 +506,14 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 			config.EC2MetadataServiceEnableState = imds.ClientDisabled
 		} else {
 			config.EC2MetadataServiceEnableState = imds.ClientEnabled
+		}
+	}
+
+	if v, ok := d.GetOk("sqs_wait_times"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		sqsWaitTimes := v.([]any)[0].(map[string]any)
+		config.SQSWaitTimes = &conns.SQSWaitTimesConfig{
+			CreateContinuousTargetOccurrence: sqsWaitTimes["create_continuous_target_occurrence"].(int),
+			DeleteContinuousTargetOccurrence: sqsWaitTimes["delete_continuous_target_occurrence"].(int),
 		}
 	}
 

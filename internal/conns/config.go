@@ -61,6 +61,12 @@ type Config struct {
 	TokenBucketRateLimiterCapacity int
 	UseDualStackEndpoint           bool
 	UseFIPSEndpoint                bool
+	SQSWaitTimes                   *SQSWaitTimesConfig
+}
+
+type SQSWaitTimesConfig struct {
+	CreateContinuousTargetOccurrence int
+	DeleteContinuousTargetOccurrence int
 }
 
 // ConfigureProvider configures the provided provider Meta (instance data).
@@ -203,6 +209,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
 	client.s3USEast1RegionalEndpoint = c.S3USEast1RegionalEndpoint
+	client.sqsWaitTimes = c.SQSWaitTimes
 	client.stsRegion = c.STSRegion
 
 	return client, diags
