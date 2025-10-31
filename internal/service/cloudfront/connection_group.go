@@ -346,14 +346,14 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 
-		const timeout = 30 * time.Second
+		const timeout = 1 * time.Minute
 		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, timeout, func(ctx context.Context) (any, error) {
 			return nil, deleteConnectionGroup(ctx, conn, id)
 		})
 	}
 
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
-		const timeout = 10 * time.Second
+		const timeout = 1 * time.Minute
 		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func(ctx context.Context) (any, error) {
 			return nil, deleteConnectionGroup(ctx, conn, id)
 		})
@@ -492,8 +492,8 @@ func waitConnectionGroupDeployed(ctx context.Context, conn *cloudfront.Client, i
 		Target:     []string{connectionGroupStatusDeployed},
 		Refresh:    statusConnectionGroup(ctx, conn, id),
 		Timeout:    30 * time.Minute,
-		MinTimeout: 5 * time.Second,
-		Delay:      10 * time.Second,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -511,8 +511,8 @@ func waitConnectionGroupDeleted(ctx context.Context, conn *cloudfront.Client, id
 		Target:     []string{},
 		Refresh:    statusConnectionGroup(ctx, conn, id),
 		Timeout:    30 * time.Minute,
-		MinTimeout: 5 * time.Second,
-		Delay:      10 * time.Second,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
