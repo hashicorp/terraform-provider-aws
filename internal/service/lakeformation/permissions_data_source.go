@@ -298,10 +298,6 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		input.Resource = &awstypes.Resource{}
 
-		if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
-		}
-
 		if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			// can't ListPermissions for TableWithColumns, so use Table instead
 			input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any))

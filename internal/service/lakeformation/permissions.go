@@ -444,10 +444,6 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		input.Resource = &awstypes.Resource{}
 
-		if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
-		}
-
 		if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.Resource.TableWithColumns = expandTableColumnsResource(v.([]any)[0].(map[string]any))
 		}
@@ -515,10 +511,6 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.Resource = resource
 	} else {
 		input.Resource = &awstypes.Resource{}
-
-		if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
-		}
 
 		if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			// can't ListPermissions for TableWithColumns, so use Table instead
@@ -679,10 +671,6 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		input.Resource = &awstypes.Resource{}
 
-		if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
-		}
-
 		if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.Resource.TableWithColumns = expandTableColumnsResource(v.([]any)[0].(map[string]any))
 		}
@@ -836,6 +824,10 @@ func expandResource(d *schema.ResourceData) *awstypes.Resource {
 	} else if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		resource = &awstypes.Resource{
 			LFTagPolicy: ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any)),
+		}
+	} else if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		resource = &awstypes.Resource{
+			Table: ExpandTableResource(v.([]any)[0].(map[string]any)),
 		}
 	}
 
