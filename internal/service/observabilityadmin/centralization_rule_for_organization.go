@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -131,9 +130,6 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
-													PlanModifiers: []planmodifier.List{
-														listplanmodifier.RequiresReplace(),
-													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"encryption_strategy": schema.StringAttribute{
@@ -159,9 +155,6 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 															"kms_key_arn": schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Optional:   true,
-																PlanModifiers: []planmodifier.String{
-																	stringplanmodifier.RequiresReplace(),
-																},
 															},
 														},
 													},
@@ -270,6 +263,7 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 
 }
@@ -289,7 +283,6 @@ func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, re
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	// regions := strings.Join(rule.CentralizationRule.Source.Regions, ",")
 
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName.String())
