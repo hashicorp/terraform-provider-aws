@@ -6,16 +6,14 @@ package lakeformation
 import (
 	"context"
 	"fmt"
-	"reflect"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter, principalIdentifier string) retry.StateRefreshFunc {
+func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		var permissions []awstypes.PrincipalResourcePermissions
 
@@ -36,25 +34,16 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 			}
 
 			for _, permission := range page.PrincipalResourcePermissions {
-				if reflect.ValueOf(permission).IsZero() {
-					continue
+				if filter(permission) {
+					permissions = append(permissions, permission)
 				}
-
-				if principalIdentifier != aws.ToString(permission.Principal.DataLakePrincipalIdentifier) {
-					continue
-				}
-
-				permissions = append(permissions, permission)
 			}
 		}
 
-		// clean permissions = filter out permissions that do not pertain to this specific resource
-		cleanPermissions := filterPermissions(filter, permissions)
-
-		if len(cleanPermissions) == 0 {
+		if len(permissions) == 0 {
 			return nil, statusNotFound, nil
 		}
 
-		return cleanPermissions, statusAvailable, nil
+		return permissions, statusAvailable, nil
 	}
 }

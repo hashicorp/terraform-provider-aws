@@ -565,7 +565,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	filter := permissionsFilter(d)
 
-	permissions, err := waitPermissionsReady(ctx, conn, &input, filter, principalIdentifier)
+	permissions, err := waitPermissionsReady(ctx, conn, &input, filter)
 
 	if !d.IsNewResource() {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {

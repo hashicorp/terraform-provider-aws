@@ -6,7 +6,6 @@ package lakeformation_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"testing"
 
@@ -1288,8 +1287,6 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	var permissions []awstypes.PrincipalResourcePermissions
 
 	err = tfresource.Retry(ctx, tflakeformation.IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
-		var allPermissions []awstypes.PrincipalResourcePermissions
-
 		pages := lakeformation.NewListPermissionsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
@@ -1311,16 +1308,11 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 			}
 
 			for _, permission := range page.PrincipalResourcePermissions {
-				if reflect.ValueOf(permission).IsZero() {
-					continue
+				if filter(permission) {
+					permissions = append(permissions, permission)
 				}
-
-				allPermissions = append(allPermissions, permission)
 			}
 		}
-
-		// clean permissions = filter out permissions that do not pertain to this specific resource
-		permissions = tflakeformation.FilterPermissions(filter, allPermissions)
 
 		return nil
 	})

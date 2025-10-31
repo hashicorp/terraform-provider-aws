@@ -22,11 +22,11 @@ const (
 	statusIAMDelay  = "IAM DELAY"
 )
 
-func waitPermissionsReady(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter, principalIdentifier string) ([]awstypes.PrincipalResourcePermissions, error) {
+func waitPermissionsReady(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter) ([]awstypes.PrincipalResourcePermissions, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNotFound, statusIAMDelay},
 		Target:  []string{statusAvailable},
-		Refresh: statusPermissions(ctx, conn, input, filter, principalIdentifier),
+		Refresh: statusPermissions(ctx, conn, input, filter),
 		Timeout: permissionsReadyTimeout,
 	}
 

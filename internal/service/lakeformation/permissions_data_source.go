@@ -329,7 +329,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 
 	filter := permissionsFilter(d)
 
-	permissions, err := waitPermissionsReady(ctx, conn, &input, filter, principalIdentifier)
+	permissions, err := waitPermissionsReady(ctx, conn, &input, filter)
 
 	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
