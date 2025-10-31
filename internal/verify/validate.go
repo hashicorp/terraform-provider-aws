@@ -313,13 +313,19 @@ func IsIPv4CIDRBlockOrIPv6CIDRBlock(ipv4Validator, ipv6Validator schema.SchemaVa
 // ref: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id
 // ref: https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html#KMS-Encrypt-request-KeyId
 func ValidKMSKeyID(v any, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) < 1 {
-		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
-	} else if len(value) > 2048 {
+	value, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return ws, errors
+	}
+	// Allow empty string for backward compatibility
+	if value == "" {
+		return ws, errors
+	}
+	if len(value) > 2048 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 2048 characters", k))
 	}
-	return
+	return ws, errors
 }
 
 func ValidLaunchTemplateID(v any, k string) (ws []string, errors []error) {
