@@ -22,7 +22,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 			page, err := pages.NextPage(ctx)
 
 			if errs.IsA[*awstypes.EntityNotFoundException](err) {
-				return nil, statusNotFound, err
+				return nil, "", nil
 			}
 
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
@@ -41,7 +41,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 		}
 
 		if len(permissions) == 0 {
-			return nil, statusNotFound, nil
+			return nil, "", nil
 		}
 
 		return permissions, statusAvailable, nil

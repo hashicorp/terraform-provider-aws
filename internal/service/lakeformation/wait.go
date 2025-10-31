@@ -17,13 +17,12 @@ const (
 	permissionsDeleteRetryTimeout = 30 * time.Second
 
 	statusAvailable = "AVAILABLE"
-	statusNotFound  = "NOT FOUND"
 	statusIAMDelay  = "IAM DELAY"
 )
 
 func waitPermissionsReady(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter) ([]awstypes.PrincipalResourcePermissions, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusNotFound, statusIAMDelay},
+		Pending: []string{statusIAMDelay},
 		Target:  []string{statusAvailable},
 		Refresh: statusPermissions(ctx, conn, input, filter),
 		Timeout: permissionsReadyTimeout,
