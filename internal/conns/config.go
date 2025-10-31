@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags/tagris"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -196,8 +197,15 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	// Fetch tagging policy details when enforced
 	if c.TaggingPolicyEnforced {
 		tflog.Debug(ctx, "Retrieving tagging policy details")
-		reqTags, d := getRequiredTags(ctx, cfg)
-		diags = append(diags, d...)
+		reqTags, err := tagris.GetRequiredTags(ctx, cfg)
+		if err != nil {
+			diags = append(diags, errs.NewErrorDiagnostic(
+				"Retrieving Required Tags",
+				`Failed to retrieve required tags from the organizations effective tagging policy. Ensure the calling principal `+
+					`has the "tag:ListRequiredTags" IAM permission and that tag policies are attached to the target account.`+
+					fmt.Sprintf("\n\nOriginal error: %s", err)))
+			return nil, diags
+		}
 
 		client.taggingPolicyConfig = &tftags.TaggingPolicyConfig{
 			Level:        c.TaggingPolicySeverity,
@@ -241,28 +249,3 @@ func NormalizeS3USEast1RegionalEndpoint(v string) string {
 		return ""
 	}
 }
-
-// TODO: move into separate package and/or aws-sdk-go-base
-func getRequiredTags(ctx context.Context, awsConfig aws.Config) (map[string]tftags.KeyValueTags, diag.Diagnostics) {
-	// TODO implement
-	// client := resourceGroupsTaggingAPIClient(ctx, awsConfig)
-
-	out := map[string]tftags.KeyValueTags{
-		// Plugin SDK V2 based
-		"aws_cloudwatch_log_group": {
-			"owner":       nil,
-			"cost_center": nil,
-		},
-		// Plugin Framework based
-		"aws_iot_billing_group": {
-			"owner":       nil,
-			"cost_center": nil,
-		},
-	}
-
-	return out, nil
-}
-
-// func resourceGroupsTaggingAPIClient(ctx context.Context, awsConfig aws.Config) *resourcegroupstaggingapi.Client {
-// 	return resourcegroupstaggingapi.NewFromConfig(awsConfig)
-// }
