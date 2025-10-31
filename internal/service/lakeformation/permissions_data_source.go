@@ -5,7 +5,6 @@ package lakeformation
 
 import (
 	"context"
-	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -280,7 +278,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	input := &lakeformation.ListPermissionsInput{
+	input := lakeformation.ListPermissionsInput{
 		Resource: &awstypes.Resource{},
 	}
 
@@ -320,44 +318,18 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
 	}
 
-	var tableType TableType
-
 	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
-		tableType = TableTypeTable
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
 		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any))
-		tableType = TableTypeTableWithColumns
 	}
 
-	columnNames := make([]string, 0)
-	excludedColumnNames := make([]string, 0)
-	columnWildcard := false
+	filter := permissionsFilter(d)
 
-	if tableType == TableTypeTableWithColumns {
-		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
-			columnWildcard = v.(bool)
-		}
-
-		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
-			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				columnNames = flex.ExpandStringValueSet(v)
-			}
-		}
-
-		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
-			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				excludedColumnNames = flex.ExpandStringValueSet(v)
-			}
-		}
-	}
-
-	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
-
-	allPermissions, err := waitPermissionsReady(ctx, conn, input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, &input, filter, principalIdentifier)
 
 	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
@@ -366,10 +338,10 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := filterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := filterPermissions(filter, allPermissions)
 
 	if len(cleanPermissions) != len(allPermissions) {
-		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
+		return sdkdiag.AppendErrorf(diags, "Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths", len(cleanPermissions), len(allPermissions))
 	}
 
 	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)

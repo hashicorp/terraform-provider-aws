@@ -7,13 +7,6 @@ import (
 	"time"
 )
 
-type TableType string
-
-const (
-	TableTypeTable            TableType = "Table"
-	TableTypeTableWithColumns TableType = "TableWithColumns"
-)
-
 const (
 	TableNameAllTables   = "ALL_TABLES"
 	IAMAllowedPrincipals = "IAM_ALLOWED_PRINCIPALS"
