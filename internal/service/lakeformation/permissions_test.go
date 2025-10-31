@@ -1113,6 +1113,29 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
+	if v, ok := rs.Primary.Attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
+		tfMap := map[string]any{}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.database_name"]; v != "" {
+			tfMap[names.AttrDatabaseName] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.name"]; v != "" {
+			tfMap[names.AttrName] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.table_catalog_id"]; v != "" {
+			tfMap["table_catalog_id"] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.table_name"]; v != "" {
+			tfMap[names.AttrTableName] = v
+		}
+
+		input.Resource.DataCellsFilter = tflakeformation.ExpandDataCellsFilter([]any{tfMap})
+		noResource = false
+	}
+
 	if v, ok := rs.Primary.Attributes["data_location.#"]; ok && v != "" && v != "0" {
 		tfMap := map[string]any{}
 
@@ -1248,29 +1271,6 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 
 		input.Resource.Table = tflakeformation.ExpandTableWithColumnsResourceAsTable(tfMap)
 
-		noResource = false
-	}
-
-	if v, ok := rs.Primary.Attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
-		tfMap := map[string]any{}
-
-		if v := rs.Primary.Attributes["data_cells_filter.0.database_name"]; v != "" {
-			tfMap[names.AttrDatabaseName] = v
-		}
-
-		if v := rs.Primary.Attributes["data_cells_filter.0.name"]; v != "" {
-			tfMap[names.AttrName] = v
-		}
-
-		if v := rs.Primary.Attributes["data_cells_filter.0.table_catalog_id"]; v != "" {
-			tfMap["table_catalog_id"] = v
-		}
-
-		if v := rs.Primary.Attributes["data_cells_filter.0.table_name"]; v != "" {
-			tfMap[names.AttrTableName] = v
-		}
-
-		input.Resource.DataCellsFilter = tflakeformation.ExpandDataCellsFilter([]any{tfMap})
 		noResource = false
 	}
 
