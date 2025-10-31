@@ -24,15 +24,8 @@ import (
 func TestAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	invoiceReceiver := os.Getenv("INVOICING_INVOICE_RECEIVER_ACCOUNT_ID")
-	if invoiceReceiver == "" {
-		t.Skip("Environment variable INVOICING_INVOICE_RECEIVER_ACCOUNT_ID is not set")
-	}
-
-	linkedAccount := os.Getenv("INVOICING_INVOICE_LINKED_ACCOUNT_ID")
-	if linkedAccount == "" {
-		t.Skip("Environment variable INVOICING_INVOICE_LINKED_ACCOUNT_ID is not set")
-	}
+	invoiceReceiver := acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_RECEIVER_ACCOUNT_ID")
+	linkedAccount := acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_LINKED_ACCOUNT_ID")
 
 	var invoiceUnit invoicing.GetInvoiceUnitOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
