@@ -2199,9 +2199,9 @@ resource "aws_eks_node_group" "test" {
   }
 
   node_repair_config {
-    enabled                              = true
-    max_parallel_nodes_repaired_count    = 2
-    max_unhealthy_node_threshold_count   = 3
+    enabled                            = true
+    max_parallel_nodes_repaired_count  = 2
+    max_unhealthy_node_threshold_count = 3
   }
 
   depends_on = [
@@ -2229,9 +2229,9 @@ resource "aws_eks_node_group" "test" {
   }
 
   node_repair_config {
-    enabled                                    = true
-    max_parallel_nodes_repaired_percentage     = 25
-    max_unhealthy_node_threshold_percentage    = 40
+    enabled                                 = true
+    max_parallel_nodes_repaired_percentage  = 25
+    max_unhealthy_node_threshold_percentage = 40
   }
 
   depends_on = [
@@ -2262,10 +2262,10 @@ resource "aws_eks_node_group" "test" {
     enabled = true
 
     node_repair_config_overrides {
-      min_repair_wait_time_mins  = 30
-      node_monitoring_condition  = "NodeNotReady"
-      node_unhealthy_reason      = "NetworkUnavailable"
-      repair_action              = "Replace"
+      min_repair_wait_time_mins = 30
+      node_monitoring_condition = "NodeNotReady"
+      node_unhealthy_reason     = "NetworkUnavailable"
+      repair_action             = "Replace"
     }
   }
 
