@@ -6,9 +6,9 @@ package invoicing
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/invoicing/types"
@@ -25,6 +25,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -137,7 +138,7 @@ func (r *invoiceUnitResource) Create(ctx context.Context, request resource.Creat
 
 	output, err := conn.CreateInvoiceUnit(ctx, &input)
 	if err != nil {
-		response.Diagnostics.AddError("creating Invoice Unit", err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
 
@@ -146,7 +147,7 @@ func (r *invoiceUnitResource) Create(ctx context.Context, request resource.Creat
 	invoiceUnit, err := waitInvoiceUnitCreated(ctx, conn, data.ARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrARN), data.ARN) // Set 'arn' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Invoice Unit (%s) create", data.ARN.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ARN.ValueString())
 		return
 	}
 
@@ -175,7 +176,7 @@ func (r *invoiceUnitResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 	if err != nil {
-		response.Diagnostics.AddError("reading Invoice Unit", err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ARN.ValueString())
 		return
 	}
 
@@ -210,13 +211,13 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 
 		_, err := conn.UpdateInvoiceUnit(ctx, &input)
 		if err != nil {
-			response.Diagnostics.AddError("updating Invoice Unit", err.Error())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ARN.ValueString())
 			return
 		}
 
 		_, err = waitInvoiceUnitUpdated(ctx, conn, new.ARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Invoice Unit (%s) update", new.ARN.ValueString()), err.Error())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ARN.ValueString())
 			return
 		}
 	}
@@ -242,13 +243,13 @@ func (r *invoiceUnitResource) Delete(ctx context.Context, request resource.Delet
 		if errors.As(err, &nfe) {
 			return
 		}
-		response.Diagnostics.AddError("deleting Invoice Unit", err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ARN.ValueString())
 		return
 	}
 
 	_, err = waitInvoiceUnitDeleted(ctx, conn, data.ARN.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Invoice Unit (%s) delete", data.ARN.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ARN.ValueString())
 	}
 }
 
@@ -265,11 +266,11 @@ func findInvoiceUnitByARN(ctx context.Context, conn *invoicing.Client, arn strin
 				LastError: err,
 			}
 		}
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output, nil
@@ -335,7 +336,7 @@ func statusInvoiceUnit(_ context.Context, conn *invoicing.Client, arn string) re
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, "AVAILABLE", nil
