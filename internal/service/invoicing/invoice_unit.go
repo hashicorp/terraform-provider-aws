@@ -121,7 +121,7 @@ type ruleModel struct {
 
 func (r *invoiceUnitResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data invoiceUnitResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -129,7 +129,7 @@ func (r *invoiceUnitResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().InvoicingClient(ctx)
 
 	input := invoicing.CreateInvoiceUnitInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -152,17 +152,17 @@ func (r *invoiceUnitResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns after creation is complete
-	response.Diagnostics.Append(fwflex.Flatten(ctx, invoiceUnit, &data, fwflex.WithFieldNamePrefix("InvoiceUnit"))...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, invoiceUnit, &data, fwflex.WithFieldNamePrefix("InvoiceUnit")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *invoiceUnitResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data invoiceUnitResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -180,18 +180,18 @@ func (r *invoiceUnitResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("InvoiceUnit"))...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("InvoiceUnit")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *invoiceUnitResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new invoiceUnitResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -204,7 +204,7 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 		input := invoicing.UpdateInvoiceUnitInput{
 			InvoiceUnitArn: new.ARN.ValueStringPointer(),
 		}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -222,12 +222,12 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, new)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, new))
 }
 
 func (r *invoiceUnitResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data invoiceUnitResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
