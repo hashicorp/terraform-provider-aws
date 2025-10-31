@@ -526,9 +526,9 @@ argument should not be specified.
 
 #### Logging Config Arguments
 
-* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`. The bucket must have correct ACL attached with "FULL_CONTROL" permission for "awslogsdelivery" account (Canonical ID: "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0") for log transfer to work.
-* `include_cookies` (Optional) - Whether to include cookies in access logs (default: `false`).
-* `prefix` (Optional) - Prefix to the access log filenames for this distribution, for example, `myprefix/`.
+* `bucket` (Optional) - Amazon S3 bucket for V1 logging where access logs are stored, for example, `myawslogbucket.s3.amazonaws.com`. V1 logging is enabled when this argument is specified. The bucket must have correct ACL attached with "FULL_CONTROL" permission for "awslogsdelivery" account (Canonical ID: "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0") for log transfer to work.
+* `include_cookies` (Optional) - Whether to include cookies in access logs (default: `false`). This argument applies to both V1 and V2 logging.
+* `prefix` (Optional) - Prefix added to the access log file names for V1 logging, for example, `myprefix/`. This argument is effective only when V1 logging is enabled.
 
 #### Origin Arguments
 
@@ -608,6 +608,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 * `arn` - ARN for the distribution. For example: `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`, where `123456789012` is your AWS account ID.
 * `caller_reference` - Internal value used by CloudFront to allow future updates to the distribution configuration.
+* `logging_v1_enabled` - Whether V1 logging is enabled for the distribution.
 * `status` - Current status of the distribution. `Deployed` if the distribution's information is fully propagated throughout the Amazon CloudFront system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `trusted_key_groups` - List of nested attributes for active trusted key groups, if the distribution is set up to serve private content with signed URLs.
