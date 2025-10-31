@@ -149,7 +149,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule3),
 					// Test log_group_selection_criteria updated from "*" to OAM filter
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "LogGroupName LIKE '%%test'"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "LogGroupName LIKE '/aws/lambda%'"),
 					// Ensure other values remain the same
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.encrypted_log_group_strategy", "ALLOW"),
@@ -372,7 +372,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
 
       source_logs_configuration {
         encrypted_log_group_strategy  = "ALLOW"
-        log_group_selection_criteria = "aws/lambda/*"
+        log_group_selection_criteria = "LogGroupName LIKE '/aws/lambda%%'"
       }
     }
   }
