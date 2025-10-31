@@ -123,6 +123,10 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.encrypted_log_group_strategy", "SKIP"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "*"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.#", "0"),
+					// Test tags
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 				),
 			},
 			{
@@ -142,6 +146,11 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.logs_encryption_configuration.0.encryption_strategy", "AWS_OWNED"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.backup_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.backup_configuration.0.region", "us-west-1"),
+					// Test updated tags
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Team", "observability"),
 				),
 			},
 			{
@@ -155,6 +164,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.encrypted_log_group_strategy", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.logs_encryption_configuration.0.encryption_strategy", "AWS_OWNED"),
+					// Test final tags with additional Filter tag
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Team", "observability"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Filter", "lambda-logs"),
 				),
 			},
 			{
@@ -301,6 +316,11 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
       }
     }
   }
+
+  tags = {
+    Name = %[1]q
+    Environment = "test"
+  }
 }
 `, rName)
 }
@@ -339,6 +359,12 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
       }
     }
   }
+
+  tags = {
+    Name = %[1]q
+    Environment = "production"
+    Team = "observability"
+  }
 }
 `, rName)
 }
@@ -375,6 +401,13 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
         log_group_selection_criteria = "LogGroupName LIKE '/aws/lambda%%'"
       }
     }
+  }
+
+  tags = {
+    Name = %[1]q
+    Environment = "production"
+    Team = "observability"
+    Filter = "lambda-logs"
   }
 }
 `, rName)

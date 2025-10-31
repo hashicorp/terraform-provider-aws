@@ -243,7 +243,7 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 		return
 	}
 
-	// input.Tags = getTagsIn(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	rule, err := conn.CreateCentralizationRuleForOrganization(ctx, &input)
 	if err != nil {
@@ -307,9 +307,7 @@ func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, re
 		resp.Diagnostics.Append(diags...)
 	}
 
-	// smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
 }
 
 func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
