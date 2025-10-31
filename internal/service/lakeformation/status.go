@@ -30,7 +30,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 			}
 
 			if err != nil {
-				return nil, statusFailed, fmt.Errorf("listing permissions: %w", err)
+				return nil, "", fmt.Errorf("listing permissions: %w", err)
 			}
 
 			for _, permission := range page.PrincipalResourcePermissions {

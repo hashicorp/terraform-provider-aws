@@ -18,7 +18,6 @@ const (
 
 	statusAvailable = "AVAILABLE"
 	statusNotFound  = "NOT FOUND"
-	statusFailed    = "FAILED"
 	statusIAMDelay  = "IAM DELAY"
 )
 
