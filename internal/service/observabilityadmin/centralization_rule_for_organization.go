@@ -38,9 +38,7 @@ import (
 // @FrameworkResource("aws_observabilityadmin_centralization_rule_for_organization", name="Centralization Rule For Organization")
 // @Tags(identifierAttribute="rule_arn")
 func newResourceCentralizationRuleForOrganization(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCentralizationRuleForOrganization{
-		flexOpt: fwflex.WithFieldNameSuffix(""),
-	}
+	r := &resourceCentralizationRuleForOrganization{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -56,8 +54,6 @@ const (
 type resourceCentralizationRuleForOrganization struct {
 	framework.ResourceWithModel[centralizationRuleForOrganizationModel]
 	framework.WithTimeouts
-
-	flexOpt fwflex.AutoFlexOptionsFunc
 }
 
 func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -237,7 +233,7 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
 	var input observabilityadmin.CreateCentralizationRuleForOrganizationInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, r.flexOpt)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -258,7 +254,7 @@ func (r *resourceCentralizationRuleForOrganization) Create(ctx context.Context, 
 	}
 
 	plan.ARN = fwflex.StringToFramework(ctx, rule.RuleArn)
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, rule, &plan, r.flexOpt)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, rule, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -294,7 +290,7 @@ func (r *resourceCentralizationRuleForOrganization) Read(ctx context.Context, re
 	// Handle the CentralizationRule -> Rule field name mismatch manually
 	if rule.CentralizationRule != nil {
 		var ruleData centralizationRuleModel
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.CentralizationRule, &ruleData, r.flexOpt)...)
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.CentralizationRule, &ruleData)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -328,7 +324,7 @@ func (r *resourceCentralizationRuleForOrganization) Update(ctx context.Context, 
 		input := observabilityadmin.UpdateCentralizationRuleForOrganizationInput{
 			RuleIdentifier: state.RuleName.ValueStringPointer(),
 		}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, r.flexOpt)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
