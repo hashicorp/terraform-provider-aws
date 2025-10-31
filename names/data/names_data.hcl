@@ -661,14 +661,11 @@ service "arcregionswitch" {
 
   names {
     provider_name_upper = "ARCRegionSwitch"
-    human_friendly      = "Application Resilience Controller Region Switch"
+    human_friendly      = "Application Recovery Controller Region Switch"
   }
 
   endpoint_info {
     endpoint_api_call = "ListPlans"
-    endpoint_region_overrides = {
-      "aws" = "us-east-1"
-    }
   }
 
   resource_prefix {
