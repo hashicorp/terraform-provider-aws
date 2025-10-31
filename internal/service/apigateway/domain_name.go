@@ -183,6 +183,12 @@ func resourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"routing_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(flattenRoutingModeValues(types.RoutingMode("").Values()), true),
+			},
 			"security_policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -246,6 +252,10 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("regional_certificate_name"); ok {
 		input.RegionalCertificateName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("routing_mode"); ok {
+		input.RoutingMode = types.RoutingMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_policy"); ok {
@@ -313,6 +323,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("regional_certificate_name", output.RegionalCertificateName)
 	d.Set("regional_domain_name", output.RegionalDomainName)
 	d.Set("regional_zone_id", output.RegionalHostedZoneId)
+	d.Set("routing_mode", output.RoutingMode)
 	d.Set("security_policy", output.SecurityPolicy)
 
 	setTagsOut(ctx, output.Tags)
@@ -432,6 +443,14 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				Op:    types.OpReplace,
 				Path:  aws.String("/regionalCertificateName"),
 				Value: aws.String(d.Get("regional_certificate_name").(string)),
+			})
+		}
+
+		if d.HasChange("routing_mode") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/routingMode"),
+				Value: aws.String(d.Get("routing_mode").(string)),
 			})
 		}
 
@@ -633,4 +652,14 @@ func flattenMutualTLSAuthentication(apiObject *types.MutualTlsAuthentication) []
 
 func domainNameARN(ctx context.Context, c *conns.AWSClient, domainName string) string {
 	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/domainnames/%s", domainName))
+}
+
+func flattenRoutingModeValues(t []types.RoutingMode) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }
