@@ -147,7 +147,7 @@ func (r *resourceCentralizationRuleForOrganization) Schema(ctx context.Context, 
 																	),
 																},
 															},
-															"kms_key_arn": schema.StringAttribute{
+															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Optional:   true,
 															},

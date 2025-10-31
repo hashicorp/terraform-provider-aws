@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -42,12 +43,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_basic(t *testing
 		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName),
+				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "rule_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.#", "1"),
@@ -85,7 +86,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName),
+				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfobservabilityadmin.ResourceCentralizationRuleForOrganization, resourceName),
@@ -116,7 +117,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName),
+				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule1),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "1"),
@@ -124,19 +125,19 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "*"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.#", "0"),
 					// Test tags
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 				),
 			},
 			{
-				Config: testAccCentralizationRuleForOrganizationConfig_updated(rName),
+				Config: testAccCentralizationRuleForOrganizationConfig_updated(rName, endpoints.EuWest1RegionID, endpoints.UsWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule2),
 					// Test regions updated from 1 to 2
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.0", "ap-southeast-1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.1", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.0", endpoints.ApSoutheast1RegionID),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.1", endpoints.UsEast1RegionID),
 					// Test source_logs_configuration updated from SKIP to ALLOW
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.encrypted_log_group_strategy", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "*"),
@@ -145,16 +146,16 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.logs_encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.logs_encryption_configuration.0.encryption_strategy", "AWS_OWNED"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.backup_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.backup_configuration.0.region", "us-west-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.backup_configuration.0.region", endpoints.UsWest1RegionID),
 					// Test updated tags
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Team", "observability"),
 				),
 			},
 			{
-				Config: testAccCentralizationRuleForOrganizationConfig_updatedLogFilter(rName),
+				Config: testAccCentralizationRuleForOrganizationConfig_updatedLogFilter(rName, endpoints.EuWest1RegionID, endpoints.UsWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule3),
 					// Test log_group_selection_criteria updated from "*" to OAM filter
@@ -165,47 +166,11 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.logs_encryption_configuration.0.encryption_strategy", "AWS_OWNED"),
 					// Test final tags with additional Filter tag
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Team", "observability"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Filter", "lambda-logs"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
-				ImportStateVerifyIdentifierAttribute: "rule_name",
-			},
-		},
-	})
-}
-
-func TestAccObservabilityAdminCentralizationRuleForOrganization_import(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
 				),
 			},
 			{
@@ -270,8 +235,8 @@ func testAccCheckCentralizationRuleForOrganizationExists(ctx context.Context, na
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
 
-	input := &observabilityadmin.ListCentralizationRulesForOrganizationInput{}
-	_, err := conn.ListCentralizationRulesForOrganization(ctx, input)
+	input := observabilityadmin.ListCentralizationRulesForOrganizationInput{}
+	_, err := conn.ListCentralizationRulesForOrganization(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -281,7 +246,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCentralizationRuleForOrganizationConfig_basic(rName string) string {
+func testAccCentralizationRuleForOrganizationConfig_basic(rName, dstRegion, srcRegion string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_organizations_organization" "current" {}
@@ -291,30 +256,30 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
 
   rule {
     destination {
-      region  = "eu-west-1"
+      region  = %[2]q
       account = data.aws_caller_identity.current.account_id
     }
 
     source {
-      regions = ["ap-southeast-1"]
+      regions = [%[3]q]
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
-        encrypted_log_group_strategy  = "SKIP"
+        encrypted_log_group_strategy = "SKIP"
         log_group_selection_criteria = "*"
       }
     }
   }
 
   tags = {
-    Name = %[1]q
+    Name        = %[1]q
     Environment = "test"
   }
 }
-`, rName)
+`, rName, dstRegion, srcRegion)
 }
 
-func testAccCentralizationRuleForOrganizationConfig_updated(rName string) string {
+func testAccCentralizationRuleForOrganizationConfig_updated(rName, dstRegion, backupRegion, srcRegion1, srcRegion2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_organizations_organization" "current" {}
@@ -324,40 +289,40 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
 
   rule {
     destination {
-      region  = "eu-west-1"
+      region  = %[2]q
       account = data.aws_caller_identity.current.account_id
 
       destination_logs_configuration {
         logs_encryption_configuration {
-		  encryption_strategy = "AWS_OWNED"
+          encryption_strategy = "AWS_OWNED"
         }
 
         backup_configuration {
-          region = "us-west-1"
+          region = %[3]q
         }
       }
     }
 
     source {
-      regions = ["ap-southeast-1", "us-east-1"]
+      regions = [%[4]q, %[5]q]
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
-        encrypted_log_group_strategy  = "ALLOW"
+        encrypted_log_group_strategy = "ALLOW"
         log_group_selection_criteria = "*"
       }
     }
   }
 
   tags = {
-    Name = %[1]q
+    Name        = %[1]q
     Environment = "production"
-    Team = "observability"
+    Team        = "observability"
   }
 }
-`, rName)
+`, rName, dstRegion, backupRegion, srcRegion1, srcRegion2)
 }
-func testAccCentralizationRuleForOrganizationConfig_updatedLogFilter(rName string) string {
+func testAccCentralizationRuleForOrganizationConfig_updatedLogFilter(rName, dstRegion, backupRegion, srcRegion1, srcRegion2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_organizations_organization" "current" {}
@@ -367,37 +332,37 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
 
   rule {
     destination {
-      region  = "eu-west-1"
+      region  = %[2]q
       account = data.aws_caller_identity.current.account_id
 
       destination_logs_configuration {
         logs_encryption_configuration {
-		  encryption_strategy = "AWS_OWNED"
+          encryption_strategy = "AWS_OWNED"
         }
 
         backup_configuration {
-          region = "us-west-1"
+          region = %[3]q
         }
       }
     }
 
     source {
-      regions = ["ap-southeast-1", "us-east-1"]
+      regions = [%[4]q, %[5]q]
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
-        encrypted_log_group_strategy  = "ALLOW"
+        encrypted_log_group_strategy = "ALLOW"
         log_group_selection_criteria = "LogGroupName LIKE '/aws/lambda%%'"
       }
     }
   }
 
   tags = {
-    Name = %[1]q
+    Name        = %[1]q
     Environment = "production"
-    Team = "observability"
-    Filter = "lambda-logs"
+    Team        = "observability"
+    Filter      = "lambda-logs"
   }
 }
-`, rName)
+`, rName, dstRegion, backupRegion, srcRegion1, srcRegion2)
 }

@@ -36,7 +36,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "example"
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
-        encrypted_log_group_strategy  = "SKIP"
+        encrypted_log_group_strategy = "SKIP"
         log_group_selection_criteria = "*"
       }
     }
@@ -79,7 +79,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "advanced
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
-        encrypted_log_group_strategy  = "ALLOW"
+        encrypted_log_group_strategy = "ALLOW"
         log_group_selection_criteria = "*"
       }
     }
@@ -113,7 +113,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "filtered
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
-        encrypted_log_group_strategy  = "ALLOW"
+        encrypted_log_group_strategy = "ALLOW"
         log_group_selection_criteria = "LogGroupName LIKE '/aws/lambda%'"
       }
     }
@@ -135,6 +135,7 @@ This resource supports the following arguments:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### rule
