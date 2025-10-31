@@ -2,6 +2,13 @@
 
 ## 6.19.0 (October 30, 2025)
 
+ENHANCEMENTS:
+
+* data-source/aws_elasticache_replication_group: Add `node_group_configuration` attribute to expose node group details including availability zones, replica counts, and slot ranges ([#44879](https://github.com/hashicorp/terraform-provider-aws/issues/44879))
+* resource/aws_elasticache_replication_group: Add `node_group_configuration` block to support availability zone specification and snapshot restoration for cluster mode enabled replication groups ([#44879](https://github.com/hashicorp/terraform-provider-aws/issues/44879))
+
+## 6.19.0 (October 30, 2025)
+
 FEATURES:
 
 * **New Data Source:** `aws_ecrpublic_images` ([#44795](https://github.com/hashicorp/terraform-provider-aws/issues/44795))
