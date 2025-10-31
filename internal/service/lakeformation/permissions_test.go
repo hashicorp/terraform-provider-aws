@@ -1285,11 +1285,12 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		return 0, fmt.Errorf("acceptance test: error creating permissions filter for (%s): %w", rs.Primary.ID, err)
 	}
 
-	var allPermissions []awstypes.PrincipalResourcePermissions
+	var permissions []awstypes.PrincipalResourcePermissions
 
 	err = tfresource.Retry(ctx, tflakeformation.IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
-		pages := lakeformation.NewListPermissionsPaginator(conn, input)
+		var allPermissions []awstypes.PrincipalResourcePermissions
 
+		pages := lakeformation.NewListPermissionsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 
@@ -1318,6 +1319,9 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 			}
 		}
 
+		// clean permissions = filter out permissions that do not pertain to this specific resource
+		permissions = tflakeformation.FilterPermissions(filter, allPermissions)
+
 		return nil
 	})
 
@@ -1331,13 +1335,10 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	}
 
 	if err != nil {
-		return 0, fmt.Errorf("acceptance test: error listing Lake Formation permissions after retry %v: %w", input, err)
+		return 0, fmt.Errorf("acceptance test: error listing Lake Formation permissions: %w", err)
 	}
 
-	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := tflakeformation.FilterPermissions(filter, allPermissions)
-
-	return len(cleanPermissions), nil
+	return len(permissions), nil
 }
 
 func permissionsFilter(attributes map[string]string) (tflakeformation.PermissionsFilter, error) {
