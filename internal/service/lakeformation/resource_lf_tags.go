@@ -63,11 +63,10 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -119,11 +118,10 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
 						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
@@ -167,11 +165,10 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,
