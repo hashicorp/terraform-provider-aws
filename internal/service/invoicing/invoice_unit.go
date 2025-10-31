@@ -193,7 +193,6 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 	if !new.Description.Equal(old.Description) ||
 		!new.Rule.Equal(old.Rule) ||
 		!new.TaxInheritanceDisabled.Equal(old.TaxInheritanceDisabled) {
-
 		input := invoicing.UpdateInvoiceUnitInput{
 			InvoiceUnitArn: new.ID.ValueStringPointer(),
 		}
