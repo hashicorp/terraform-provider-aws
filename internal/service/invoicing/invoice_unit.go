@@ -171,7 +171,7 @@ func (r *invoiceUnitResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findInvoiceUnitByARN(ctx, conn, data.ARN.ValueString())
 	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.EnrichAppendDiagnostic(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -262,9 +262,9 @@ func findInvoiceUnitByARN(ctx context.Context, conn *invoicing.Client, arn strin
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
-			}
+			})
 		}
 		return nil, smarterr.NewError(err)
 	}
@@ -287,10 +287,10 @@ func waitInvoiceUnitCreated(ctx context.Context, conn *invoicing.Client, arn str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*invoicing.GetInvoiceUnitOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitInvoiceUnitUpdated(ctx context.Context, conn *invoicing.Client, arn string, timeout time.Duration) (*invoicing.GetInvoiceUnitOutput, error) {
@@ -304,10 +304,10 @@ func waitInvoiceUnitUpdated(ctx context.Context, conn *invoicing.Client, arn str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*invoicing.GetInvoiceUnitOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitInvoiceUnitDeleted(ctx context.Context, conn *invoicing.Client, arn string, timeout time.Duration) (*invoicing.GetInvoiceUnitOutput, error) {
@@ -321,10 +321,10 @@ func waitInvoiceUnitDeleted(ctx context.Context, conn *invoicing.Client, arn str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*invoicing.GetInvoiceUnitOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func statusInvoiceUnit(_ context.Context, conn *invoicing.Client, arn string) retry.StateRefreshFunc {

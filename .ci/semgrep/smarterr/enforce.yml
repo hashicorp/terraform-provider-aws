@@ -8,6 +8,7 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-sdkdiag-appenderrorf
     languages: [go]
@@ -19,6 +20,7 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-create-appenddiagerror
     languages: [go]
@@ -28,6 +30,7 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-diagnostics-adderror
     languages: [go]
@@ -41,6 +44,7 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-create-adderror
     languages: [go]
@@ -50,6 +54,7 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-adderror
     languages: [go]
@@ -61,35 +66,40 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-appenderrorf
     languages: [go]
-    message: Use smerr.Append or smerr.EnrichAppend instead of diag.AppendErrorf (migrate to smarterr/smerr).
+    message: Use smerr.Append or smerr.EnrichAppend() instead of diag.AppendErrorf (migrate to smarterr/smerr).
     severity: ERROR
     pattern: diag.AppendErrorf(...)
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-appendfromerr
     languages: [go]
-    message: Use smerr.Append or smerr.EnrichAppend instead of diag.AppendFromErr (migrate to smarterr/smerr).
+    message: Use smerr.Append() or smerr.EnrichAppend() instead of diag.AppendFromErr (migrate to smarterr/smerr).
     severity: ERROR
     pattern: diag.AppendFromErr(...)
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-append
     languages: [go]
-    message: Use smerr.EnrichAppend instead of resp.Diagnostics.Append (migrate to smarterr/smerr).
+    message: Use smerr.EnrichAppend() or smerr.EnrichAppendDiagnostic() instead of resp.Diagnostics.Append (migrate to smarterr/smerr).
     severity: ERROR
     patterns:
       - pattern: $RESP.Diagnostics.Append(...)
       - pattern-not-inside: smerr.EnrichAppend(...)
+      - pattern-not-inside: smerr.EnrichAppendDiagnostic(...)
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-bare-return-err
     languages: [go]
@@ -103,6 +113,7 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-bare-assertsinglevalueresult
     languages: [go]
@@ -115,6 +126,7 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-bare-empty-result-error
     languages: [go]
@@ -127,3 +139,4 @@ rules:
     paths:
       include:
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
