@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/invoicing/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -37,6 +36,7 @@ func newInvoiceUnitResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type invoiceUnitResource struct {
 	framework.ResourceWithModel[invoiceUnitResourceModel]
+	framework.WithImportByID
 }
 
 func (r *invoiceUnitResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -114,15 +114,15 @@ func (r *invoiceUnitResource) Create(ctx context.Context, request resource.Creat
 
 	conn := r.Meta().InvoicingClient(ctx)
 
-	input := &invoicing.CreateInvoiceUnitInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := invoicing.CreateInvoiceUnitInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.ResourceTags = getTagsIn(ctx)
 
-	output, err := conn.CreateInvoiceUnit(ctx, input)
+	output, err := conn.CreateInvoiceUnit(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError("creating Invoice Unit", err.Error())
 		return
@@ -194,15 +194,15 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 		!new.Rule.Equal(old.Rule) ||
 		!new.TaxInheritanceDisabled.Equal(old.TaxInheritanceDisabled) {
 
-		input := &invoicing.UpdateInvoiceUnitInput{
+		input := invoicing.UpdateInvoiceUnitInput{
 			InvoiceUnitArn: new.ID.ValueStringPointer(),
 		}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.UpdateInvoiceUnit(ctx, input)
+		_, err := conn.UpdateInvoiceUnit(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError("updating Invoice Unit", err.Error())
 			return
@@ -234,16 +234,12 @@ func (r *invoiceUnitResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *invoiceUnitResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
 func findInvoiceUnitByARN(ctx context.Context, conn *invoicing.Client, arn string) (*invoicing.GetInvoiceUnitOutput, error) {
-	input := &invoicing.GetInvoiceUnitInput{
+	input := invoicing.GetInvoiceUnitInput{
 		InvoiceUnitArn: aws.String(arn),
 	}
 
-	output, err := conn.GetInvoiceUnit(ctx, input)
+	output, err := conn.GetInvoiceUnit(ctx, &input)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
