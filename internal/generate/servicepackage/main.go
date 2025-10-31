@@ -237,6 +237,10 @@ type ResourceDatum struct {
 	SetIDAttribute                    bool
 	HasV6_0SDKv2Fix                   bool
 	HasIdentityFix                    bool
+	IdentityVersion                   int64
+	CustomInherentRegionIdentity      bool
+	customIdentityAttribute           string
+	CustomInherentRegionParser        string
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -272,6 +276,14 @@ func (d ResourceDatum) RegionOverrideEnabled() bool {
 
 func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 	return len(r.IdentityDuplicateAttrs) > 0
+}
+
+func (r ResourceDatum) HasResourceIdentity() bool {
+	return len(r.IdentityAttributes) > 0 || r.ARNIdentity || r.SingletonIdentity || r.CustomInherentRegionIdentity
+}
+
+func (r ResourceDatum) CustomIdentityAttribute() string {
+	return namesgen.ConstOrQuote(r.customIdentityAttribute)
 }
 
 type ServiceDatum struct {
@@ -525,7 +537,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				args := common.ParseArgs(m[3])
 				attr := args.Positional[0]
 				if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
 				} else {
 					d.ImportIDHandler = typeName
@@ -541,6 +553,47 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.SetIDAttribute = b
 					}
+				}
+
+			case "IdentityVersion":
+				args := common.ParseArgs(m[3])
+				attr := args.Positional[0]
+				if i, err := strconv.ParseInt(attr, 10, 64); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("invalid IdentityVersion value: %q at %s. Should be integer value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				} else {
+					d.IdentityVersion = i
+				}
+
+			case "CustomInherentRegionIdentity":
+				d.CustomInherentRegionIdentity = true
+				d.WrappedImport = true
+
+				args := common.ParseArgs(m[3])
+
+				if len(args.Positional) < 2 {
+					v.errs = append(v.errs, fmt.Errorf("CustomInherentRegionIdentity missing required parameters: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				d.customIdentityAttribute = args.Positional[0]
+
+				attr := args.Positional[1]
+				if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
+				} else {
+					d.CustomInherentRegionParser = funcName
+					if importSpec != nil {
+						d.goImports = append(d.goImports, *importSpec)
+					}
+				}
+
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs := strings.Split(attr, ";")
+					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+						return namesgen.ConstOrQuote(s)
+					})
 				}
 
 			// TODO: allow underscore?
@@ -675,6 +728,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
+				if d.IdentityVersion > 0 {
+					v.errs = append(v.errs, fmt.Errorf("IdentityVersion not currently supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 			case "SDKDataSource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -769,7 +826,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkListResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
 				// Handled above.
 			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.
