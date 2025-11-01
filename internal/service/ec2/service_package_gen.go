@@ -109,6 +109,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newAllowedImagesSettingsResource,
+			TypeName: "aws_ec2_allowed_images_settings",
+			Name:     "Allowed Images Settings",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newInstanceConnectEndpointResource,
 			TypeName: "aws_ec2_instance_connect_endpoint",
 			Name:     "Instance Connect Endpoint",
