@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_timestreaminfluxdb_db_cluster: Fix required fields for InfluxDB V3 clusters by making `allocated_storage`, `bucket`, `organization`, `username`, and `password` optional. These fields are not required when using `db_parameter_group_identifier` for InfluxDB V3 clusters, and the AWS API rejects those fields for V3 clusters.
+```
+
