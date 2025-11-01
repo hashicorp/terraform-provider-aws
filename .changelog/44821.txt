@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_s3_bucket_lifecycle_configuration: Update state string to make error message more informative, indicating whether `transition_default_minimum_object_size` or rules are incorrect.
+```
