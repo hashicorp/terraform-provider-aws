@@ -196,7 +196,7 @@ func resourceNodeGroup() *schema.Resource {
 									"min_repair_wait_time_mins": {
 										Type:         schema.TypeInt,
 										Required:     true,
-										ValidateFunc: validation.IntAtLeast(0),
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 									"node_monitoring_condition": {
 										Type:     schema.TypeString,
