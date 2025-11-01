@@ -894,7 +894,6 @@ data "aws_caller_identity" "current" {}
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-  # No locale configured - this is the key to the test
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
