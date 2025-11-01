@@ -70,7 +70,15 @@ This data source exports the following attributes in addition to the arguments a
 * `locale` - Locale is the Region where your pool is available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region.
 * `publicly_advertisable` - Defines whether or not IPv6 pool space is publicly advertisable over the internet.
 * `source_ipam_pool_id` - ID of the source IPAM pool.
+* `source_resource` - The resource used to create the resource planning pool.
 * `tags` - Map of tags to assigned to the resource.
+
+### source_resource
+
+* `resource_id` - (Required) The ID of the resource.
+* `resource_owner` - (Required) The owner of the resource.
+* `resource_region` - (Required) The region where the resource exists. Must match the `locale` of the parent IPAM Pool.
+* `resource_type` - (Required) The type of the resource. (`vpc`)
 
 ## Timeouts
 
