@@ -507,6 +507,45 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 	})
 }
 
+func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_dbParameterGroupV3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-cluster/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					// Verify cluster was created successfully without requiring allocated_storage, bucket, organization, username, or password
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization", names.AttrAllocatedStorage},
+			},
+		},
+	})
+}
+
 func testAccCheckDBClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
@@ -810,4 +849,17 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   failover_mode = %[2]q
 }
 `, rName, failoverMode))
+}
+
+// Configuration for InfluxDB V3 cluster without optional fields.
+func testAccDBClusterConfig_dbParameterGroupV3(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                        = %[1]q
+  vpc_subnet_ids              = aws_subnet.test[*].id
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  db_instance_type            = "db.influx.large"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+}
+`, rName))
 }
