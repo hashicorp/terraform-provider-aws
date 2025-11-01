@@ -128,6 +128,7 @@ func TestAccConnect_serial(t *testing.T) {
 			acctest.CtDisappears:           testAccRoutingProfile_disappears,
 			"tags":                         testAccRoutingProfile_updateTags,
 			"concurrency":                  testAccRoutingProfile_updateConcurrency,
+			"crossChannelBehavior":         testAccRoutingProfile_crossChannelBehavior,
 			"defaultOutboundQueue":         testAccRoutingProfile_updateDefaultOutboundQueue,
 			"queues":                       testAccRoutingProfile_updateQueues,
 			"createQueueBatchAssociations": testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate,
