@@ -49,7 +49,7 @@ func TestAccIPAMPoolDataSource_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test
 	})
 }
 
-func TestAccIPAMPoolDataSource_sourceResource(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+func TestAccIPAMPoolDataSource_sourceResourceVPC(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -66,12 +66,11 @@ func TestAccIPAMPoolDataSource_sourceResource(t *testing.T) { // nosemgrep:ci.vp
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolDataSourceConfig_sourceResource(rName),
+				Config: testAccIPAMPoolDataSourceConfig_sourceResourceVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_resource.#", resourceName, "source_resource.#"),
 					resource.TestCheckResourceAttr(dataSourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "source_resource.0.resource_id", resourceName, "source_resource.0.resource_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "source_resource.0.resource_owner"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "source_resource.0.resource_region"),
 					resource.TestCheckResourceAttr(dataSourceName, "source_resource.0.resource_type", "vpc"),
@@ -100,7 +99,7 @@ data "aws_vpc_ipam_pool" "test" {
 }
 `)
 
-func testAccIPAMPoolDataSourceConfig_sourceResource(rName string) string {
+func testAccIPAMPoolDataSourceConfig_sourceResourceVPC(rName string) string {
 	return acctest.ConfigCompose(testAccIPAMPoolConfig_base, fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

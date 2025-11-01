@@ -129,7 +129,7 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) { // nosemgrep:ci.vpc-in-
 	})
 }
 
-func TestAccIPAMPoolCIDR_ipam_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+func TestAccIPAMPoolCIDR_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -148,7 +148,7 @@ func TestAccIPAMPoolCIDR_ipam_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-
 		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolCIDRConfig_ipam_VPCAllocation(rName, cidrBlock),
+				Config: testAccIPAMPoolCIDRConfig_VPCAllocation(rName, cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidrBlock),
@@ -156,6 +156,45 @@ func TestAccIPAMPoolCIDR_ipam_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pool_cidr_id"),
 					resource.TestCheckResourceAttrSet(vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(vpcResourceName, names.AttrCIDRBlock),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIPAMPoolCIDR_VPCAllocation_crossRegion(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cidr awstypes.IpamPoolCidr
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_ipam_pool_cidr.test"
+	poolResourceName := "aws_vpc_ipam_pool.test"
+	poolCidrBlock := "10.0.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRConfig_VPCAllocation_crossRegion(rName, poolCidrBlock),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					resource.TestCheckResourceAttr(resourceName, "cidr", poolCidrBlock),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", poolResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "ipam_pool_cidr_id"),
 				),
 			},
 			{
@@ -299,7 +338,7 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 `, netmaskLength))
 }
 
-func testAccIPAMPoolCIDRConfig_ipam_VPCAllocation(rName, cidr string) string {
+func testAccIPAMPoolCIDRConfig_VPCAllocation(rName, cidr string) string {
 	return acctest.ConfigCompose(TestAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePool(rName), fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
@@ -317,4 +356,63 @@ resource "aws_vpc" "test" {
   depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
 `, cidr, rName))
+}
+
+func testAccIPAMPoolCIDRConfig_VPCAllocation_crossRegion(rName, poolCidr string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+
+  operating_regions {
+    region_name = data.aws_region.alternate.name
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.alternate.name
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = %[2]q
+}
+
+resource "aws_vpc" "test" {
+  provider = awsalternate
+
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool_cidr" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr         = aws_vpc.test.cidr_block
+}
+`, rName, poolCidr))
 }

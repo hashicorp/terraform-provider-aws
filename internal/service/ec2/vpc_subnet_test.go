@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -640,20 +641,7 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 	})
 }
 
-func TestAccVPCSubnet_IPAM_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"Allocation": {
-			"ipv4": testAccVPCSubnet_IPAM_ipv4Allocation,
-			"ipv6": testAccVPCSubnet_IPAM_ipv6Allocation,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-func testAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
+func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -663,7 +651,7 @@ func testAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -676,6 +664,7 @@ func testAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ipv4_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_netmask_length", "27"),
 					testAccCheckSubnetCIDRPrefix(&subnet, "27"),
+					testAccCheckIPAMPoolAllocationExistsForSubnet(ctx, "aws_vpc_ipam_pool.vpc", &subnet),
 				),
 			},
 			{
@@ -688,7 +677,7 @@ func testAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 	})
 }
 
-func testAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
+func TestAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -698,7 +687,7 @@ func testAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -711,6 +700,7 @@ func testAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "60"),
 					testAccCheckSubnetIPv6CIDRPrefix(&subnet, "60"),
+					testAccCheckIPAMPoolAllocationExistsForSubnet(ctx, "aws_vpc_ipam_pool.vpc", &subnet),
 				),
 			},
 			{
@@ -718,6 +708,50 @@ func testAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"ipv6_ipam_pool_id", "ipv6_netmask_length"},
+			},
+		},
+	})
+}
+
+func TestAccVPCSubnet_IPAM_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var subnet awstypes.Subnet
+	var providers []*schema.Provider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_subnet.test"
+	vpcResourceName := "aws_vpc.test"
+	poolResourceName := "aws_vpc_ipam_pool.vpc"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_ipamCrossRegion(rName, 28),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubnetExistsWithProvider(ctx, resourceName, &subnet, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv4_ipam_pool_id", poolResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_netmask_length", "28"),
+					testAccCheckSubnetCIDRPrefix(&subnet, "28"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
+					testAccCheckIPAMPoolAllocationExistsForSubnet(ctx, poolResourceName, &subnet, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
 			},
 		},
 	})
@@ -808,6 +842,31 @@ func testAccCheckSubnetExists(ctx context.Context, n string, v *awstypes.Subnet)
 	}
 }
 
+func testAccCheckSubnetExistsWithProvider(ctx context.Context, n string, v *awstypes.Subnet, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Subnet ID is set")
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindSubnetByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *awstypes.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -818,9 +877,58 @@ func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *awstypes.Subnet, 
 
 func testAccCheckSubnetCIDRPrefix(subnet *awstypes.Subnet, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if strings.Split(aws.ToString(subnet.CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: got %s, expected /%s", aws.ToString(subnet.CidrBlock), expected)
+		cidrBlock := aws.ToString(subnet.CidrBlock)
+		parts := strings.Split(cidrBlock, "/")
+		if len(parts) != 2 {
+			return fmt.Errorf("Bad cidr format: got %s, expected format <ip>/<prefix>", cidrBlock)
 		}
+		if parts[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: got %s, expected /%s", cidrBlock, expected)
+		}
+		return nil
+	}
+}
+
+func testAccCheckIPAMPoolAllocationExistsForSubnet(ctx context.Context, poolResourceName string, subnet *awstypes.Subnet, providerF ...func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[poolResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", poolResourceName)
+		}
+
+		poolID := rs.Primary.ID
+		subnetID := aws.ToString(subnet.SubnetId)
+		subnetCIDR := aws.ToString(subnet.CidrBlock)
+
+		// Use provided provider function or default to acctest.Provider
+		var conn *conns.AWSClient
+		if len(providerF) > 0 && providerF[0] != nil {
+			conn = providerF[0]().Meta().(*conns.AWSClient)
+		} else {
+			conn = acctest.Provider.Meta().(*conns.AWSClient)
+		}
+
+		// Find allocations for this subnet in the IPAM pool
+		allocations, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn.EC2Client(ctx), poolID, subnetID)
+		if err != nil {
+			return fmt.Errorf("error finding IPAM Pool (%s) allocations for subnet (%s): %w", poolID, subnetID, err)
+		}
+
+		if len(allocations) == 0 {
+			return fmt.Errorf("no IPAM Pool allocation found for subnet %s in pool %s", subnetID, poolID)
+		}
+
+		// Verify the allocation details
+		allocation := allocations[0]
+		if allocation.ResourceType != awstypes.IpamPoolAllocationResourceTypeSubnet {
+			return fmt.Errorf("expected allocation resource type 'subnet', got %s", allocation.ResourceType)
+		}
+
+		allocationCIDR := aws.ToString(allocation.Cidr)
+		if allocationCIDR != subnetCIDR {
+			return fmt.Errorf("allocation CIDR (%s) does not match subnet CIDR (%s)", allocationCIDR, subnetCIDR)
+		}
+
 		return nil
 	}
 }
@@ -1461,4 +1569,106 @@ resource "aws_subnet" "test" {
   depends_on = [aws_vpc_ipam_pool_cidr.vpc]
 }
 `, netmaskLength))
+}
+
+func testAccVPCSubnetConfig_ipamCrossRegion(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_availability_zones" "alternate" {
+  provider = awsalternate
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+
+  operating_regions {
+    region_name = data.aws_region.alternate.name
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.alternate.name
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  provider = awsalternate
+
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.alternate.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.alternate.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool_cidr" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr         = aws_vpc.test.cidr_block
+}
+
+resource "aws_subnet" "test" {
+  provider = awsalternate
+
+  vpc_id              = aws_vpc.test.id
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.vpc.id
+  ipv4_netmask_length = %[2]d
+  availability_zone   = data.aws_availability_zones.alternate.names[0]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.vpc]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, netmaskLength))
 }

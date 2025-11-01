@@ -258,7 +258,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		resourceOwner := aws.String(sourceResourceData[names.AttrResourceOwner].(string))
 		resourceType := awstypes.IpamPoolSourceResourceType(sourceResourceData[names.AttrResourceType].(string))
 
-		log.Printf("[DEBUG] Checking if resource %s exists in region %s before waiting for IPAM discovery", resourceID, resourceRegion)
+		log.Printf("[DEBUG] Verifying resource %s exists in region %s before waiting for IPAM management", resourceID, resourceRegion)
 
 		resourceConn := conn
 		if resourceRegion != meta.(*conns.AWSClient).Region(ctx) {
@@ -304,6 +304,10 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			log.Printf("[DEBUG] Resource %s is now managed by IPAM", resourceID)
 			return resources, nil
 		})
+
+		if tfresource.TimedOut(err) {
+			return sdkdiag.AppendErrorf(diags, "timeout waiting for resource %s to be managed by IPAM after %s (cross-region resources can take 20+ minutes)", resourceID, d.Timeout(schema.TimeoutCreate))
+		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for resource %s to be managed by IPAM: %s", resourceID, err)

@@ -193,19 +193,20 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	// VPC / Subnet allocations take upto 20m to be released after resource deletion.
 	log.Printf("[DEBUG] Checking for allocations from CIDR %s in IPAM Pool (%s) that need to be released", cidrBlock, poolID)
 
-	// Create a region-specific client for the pool's locale
-	poolRegion := aws.ToString(ipamPool.Locale)
-	allocationCtx := conns.NewResourceContext(ctx, names.EC2ServiceID, "aws_vpc_ipam_pool_cidr", poolRegion)
-	allocationConn := meta.(*conns.AWSClient).EC2Client(allocationCtx)
+	var allocationCtx context.Context
+	var allocationConn *ec2.Client
+
+	poolLocale := aws.ToString(ipamPool.Locale)
+	if poolLocale != "" && poolLocale != "None" {
+		allocationCtx = conns.NewResourceContext(ctx, names.EC2ServiceID, "aws_vpc_ipam_pool_cidr", poolLocale)
+		allocationConn = meta.(*conns.AWSClient).EC2Client(allocationCtx)
+	} else {
+		allocationCtx = ctx
+		allocationConn = conn
+	}
 
 	ipamPoolAllocationsInput := &ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(poolID),
-		Filters: []awstypes.Filter{
-			{
-				Name:   aws.String("resource-type"),
-				Values: []string{string(awstypes.IpamPoolAllocationResourceTypeVpc), string(awstypes.IpamPoolAllocationResourceTypeSubnet)},
-			},
-		},
 	}
 	allocations, err := findIPAMPoolAllocations(allocationCtx, allocationConn, ipamPoolAllocationsInput)
 	if intretry.NotFound(err) {
@@ -216,6 +217,12 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 
 	var allocationsToTrack []awstypes.IpamPoolAllocation
 	for _, allocation := range allocations {
+		// Only track VPC and Subnet allocations
+		resourceType := allocation.ResourceType
+		if resourceType != awstypes.IpamPoolAllocationResourceTypeVpc && resourceType != awstypes.IpamPoolAllocationResourceTypeSubnet {
+			continue
+		}
+
 		allocationCIDR := aws.ToString(allocation.Cidr)
 
 		if !types.CIDRBlocksOverlap(cidrBlock, allocationCIDR) {
