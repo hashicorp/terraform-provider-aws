@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -451,6 +452,28 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossRegion(t *testing.T) { // nosemgre
 	})
 }
 
+func TestAccIPAMPool_ResourcePlanningVPC_noParentLocale(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccIPAMPoolConfig_resourcePlanningVPC_noParentLocale(rName),
+				ExpectError: regexache.MustCompile(`InvalidParameterValue`),
+			},
+		},
+	})
+}
+
 func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *awstypes.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -854,6 +877,52 @@ resource "aws_vpc_ipam_pool" "vpc" {
     resource_id     = aws_vpc.test.id
     resource_owner  = data.aws_caller_identity.current.account_id
     resource_region = data.aws_region.alternate.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccIPAMPoolConfig_resourcePlanningVPC_noParentLocale(rName string) string {
+	return acctest.ConfigCompose(testAccIPAMPoolConfig_base, fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  # No locale configured - this is the key to the test
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.current.name
     resource_type   = "vpc"
   }
 

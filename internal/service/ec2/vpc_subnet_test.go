@@ -900,7 +900,6 @@ func testAccCheckIPAMPoolAllocationExistsForSubnet(ctx context.Context, poolReso
 		subnetID := aws.ToString(subnet.SubnetId)
 		subnetCIDR := aws.ToString(subnet.CidrBlock)
 
-		// Use provided provider function or default to acctest.Provider
 		var conn *conns.AWSClient
 		if len(providerF) > 0 && providerF[0] != nil {
 			conn = providerF[0]().Meta().(*conns.AWSClient)
@@ -908,7 +907,6 @@ func testAccCheckIPAMPoolAllocationExistsForSubnet(ctx context.Context, poolReso
 			conn = acctest.Provider.Meta().(*conns.AWSClient)
 		}
 
-		// Find allocations for this subnet in the IPAM pool
 		allocations, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn.EC2Client(ctx), poolID, subnetID)
 		if err != nil {
 			return fmt.Errorf("error finding IPAM Pool (%s) allocations for subnet (%s): %w", poolID, subnetID, err)
@@ -918,18 +916,29 @@ func testAccCheckIPAMPoolAllocationExistsForSubnet(ctx context.Context, poolReso
 			return fmt.Errorf("no IPAM Pool allocation found for subnet %s in pool %s", subnetID, poolID)
 		}
 
-		// Verify the allocation details
 		allocation := allocations[0]
 		if allocation.ResourceType != awstypes.IpamPoolAllocationResourceTypeSubnet {
 			return fmt.Errorf("expected allocation resource type 'subnet', got %s", allocation.ResourceType)
 		}
 
 		allocationCIDR := aws.ToString(allocation.Cidr)
-		if allocationCIDR != subnetCIDR {
-			return fmt.Errorf("allocation CIDR (%s) does not match subnet CIDR (%s)", allocationCIDR, subnetCIDR)
+
+		// Check if allocation matches IPv4 CIDR
+		if allocationCIDR == subnetCIDR && subnetCIDR != "" {
+			return nil
 		}
 
-		return nil
+		// Check if allocation matches any IPv6 CIDR
+		for _, association := range subnet.Ipv6CidrBlockAssociationSet {
+			if association.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated {
+				subnetIPv6CIDR := aws.ToString(association.Ipv6CidrBlock)
+				if allocationCIDR == subnetIPv6CIDR {
+					return nil
+				}
+			}
+		}
+
+		return fmt.Errorf("allocation CIDR (%s) does not match subnet IPv4 CIDR (%s) or any associated IPv6 CIDR", allocationCIDR, subnetCIDR)
 	}
 }
 

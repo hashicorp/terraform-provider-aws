@@ -43,7 +43,7 @@ func resourceIPAMPool() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			// Cross-region resources take 20+ minutes to be monitored by IPAM
+			// Cross-region resources take 20+ minutes to be managed by IPAM
 			Create: schema.DefaultTimeout(35 * time.Minute),
 			Update: schema.DefaultTimeout(3 * time.Minute),
 			Delete: schema.DefaultTimeout(3 * time.Minute),
