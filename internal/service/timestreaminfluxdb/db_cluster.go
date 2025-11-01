@@ -73,15 +73,16 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
-				Required: true,
+				Optional: true,
 				Validators: []validator.Int64{
 					int64validator.Between(20, 16384),
 				},
-				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).`,
+				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).
+					This field is optional for InfluxDB V3 clusters (when using db_parameter_group_identifier).`,
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrBucket: schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -94,7 +95,8 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Description: `The name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. 
 					A bucket combines the concept of a database and a retention period (the duration of time 
-					that each data point persists). A bucket belongs to an organization.`,
+					that each data point persists). A bucket belongs to an organization.
+					This field is optional for InfluxDB V3 clusters (when using db_parameter_group_identifier).`,
 			},
 			"db_instance_type": schema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[awstypes.DbInstanceType](),
@@ -203,7 +205,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"organization": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -211,10 +213,11 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					stringvalidator.LengthBetween(1, 64),
 				},
 				Description: `The name of the initial organization for the initial admin user in InfluxDB. An 
-					InfluxDB organization is a workspace for a group of users.`,
+					InfluxDB organization is a workspace for a group of users.
+					This field is optional for InfluxDB V3 clusters (when using db_parameter_group_identifier).`,
 			},
 			names.AttrPassword: schema.StringAttribute{
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -226,7 +229,9 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: `The password of the initial admin user created in InfluxDB. This password will 
 					allow you to access the InfluxDB UI to perform various administrative tasks and 
 					also use the InfluxDB CLI to create an operator token. These attributes will be 
-					stored in a Secret created in AWS SecretManager in your account.`,
+					stored in a Secret created in AWS SecretManager in your account.
+					This field is optional for InfluxDB V3 clusters (when using db_parameter_group_identifier)
+					and must not be provided for V3 clusters as the AWS API rejects it.`,
 			},
 			names.AttrPort: schema.Int32Attribute{
 				Optional: true,
@@ -258,7 +263,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					read-only operations.`,
 			},
 			names.AttrUsername: schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -275,7 +280,8 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					you to access the InfluxDB UI to perform various administrative tasks 
 					and also use the InfluxDB CLI to create an operator token. These 
 					attributes will be stored in a Secret created in Amazon Secrets 
-					Manager in your account.`,
+					Manager in your account.
+					This field is optional for InfluxDB V3 clusters (when using db_parameter_group_identifier).`,
 			},
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
