@@ -615,11 +615,15 @@ func TestAccEKSNodeGroup_nodeRepairConfig_overrides(t *testing.T) {
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.min_repair_wait_time_mins", "30"),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.node_monitoring_condition", "NodeNotReady"),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.node_unhealthy_reason", "NetworkUnavailable"),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.repair_action", "Replace"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.min_repair_wait_time_mins", "60"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.node_monitoring_condition", "NodeNotReady"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.node_unhealthy_reason", "AutoScalingGroupNotFound"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.repair_action", "Reboot"),
 				),
 			},
 			{
@@ -2323,6 +2327,13 @@ resource "aws_eks_node_group" "test" {
       node_monitoring_condition = "NodeNotReady"
       node_unhealthy_reason     = "NetworkUnavailable"
       repair_action             = "Replace"
+    }
+
+    node_repair_config_overrides {
+      min_repair_wait_time_mins = 60
+      node_monitoring_condition = "NodeNotReady"
+      node_unhealthy_reason     = "AutoScalingGroupNotFound"
+      repair_action             = "Reboot"
     }
   }
 
