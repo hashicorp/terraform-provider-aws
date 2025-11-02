@@ -139,6 +139,7 @@ The `filters` configuration block supports the following arguments:
 ~> **NOTE:** For each argument below, up to 20 can be provided.
 
 * `aws_account_id` - (Optional) AWS account ID that a finding is generated in. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `aws_account_name` - (Optional) AWS account name to filter findings by. See [String_Filter](#string-filter-argument-reference) below for more details.
 * `company_name` - (Optional) The name of the findings provider (company) that owns the solution (product) that generates findings. See [String_Filter](#string-filter-argument-reference) below for more details.
 * `compliance_status` - (Optional) Exclusive to findings that are generated as the result of a check run against a specific rule in a supported standard, such as CIS AWS Foundations. Contains security standard-related finding details. See [String Filter](#string-filter-argument-reference) below for more details.
 * `confidence` - (Optional) A finding's confidence. Confidence is defined as the likelihood that a finding accurately identifies the behavior or issue that it was intended to identify. Confidence is scored on a 0-100 basis using a ratio scale, where 0 means zero percent confidence and 100 means 100 percent confidence. See [Number Filter](#number-filter-argument-reference) below for more details.
