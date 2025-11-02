@@ -1251,6 +1251,39 @@ func waitIPAMUpdated(ctx context.Context, conn *ec2.Client, id string, timeout t
 	return nil, err
 }
 
+func waitIPAMResourceCIDRManaged(ctx context.Context, conn *ec2.Client, scopeID, resourceID string, timeout time.Duration) (*awstypes.IpamResourceCidr, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:        []string{"", string(awstypes.IpamManagementStateUnmanaged)}, // nosemgrep:ci.typed-enum-conversion
+		Target:         enum.Slice(awstypes.IpamManagementStateManaged),
+		Refresh:        statusIPAMResourceCIDR(ctx, conn, scopeID, resourceID),
+		Timeout:        timeout,
+		Delay:          10 * time.Second,
+		NotFoundChecks: 1000, // Should exceed any reasonable custom timeout value.
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.IpamResourceCidr); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client, poolID, cidrBlock string, timeout time.Duration) error {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{ipamPoolCIDRAllocationsExist},
+		Target:  []string{ipamPoolCIDRAllocationsReleased},
+		Refresh: statusIPAMPoolCIDRAllocationsReleased(ctx, conn, poolID, cidrBlock),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
 func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) error {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{""},

@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -262,7 +260,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		resourceConn := conn
 		if resourceRegion != meta.(*conns.AWSClient).Region(ctx) {
-			resourceCtx := conns.NewResourceContext(ctx, names.EC2ServiceID, "aws_vpc_ipam_pool", resourceRegion)
+			resourceCtx := conns.NewResourceContext(ctx, names.EC2ServiceID, "IPAM Pool","aws_vpc_ipam_pool", resourceRegion)
 			resourceConn = meta.(*conns.AWSClient).EC2Client(resourceCtx)
 		}
 
@@ -275,43 +273,11 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		log.Printf("[DEBUG] Resource %s exists, waiting for IPAM to manage the resource", resourceID)
 
 		// Wait for the resource to be managed by IPAM - can take 20+ minutes
-		_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
-			input := &ec2.GetIpamResourceCidrsInput{
-				IpamScopeId: aws.String(scopeID),
-				Filters: []awstypes.Filter{
-					{
-						Name:   aws.String("resource-id"),
-						Values: []string{resourceID},
-					},
-					{
-						Name:   aws.String("management-state"),
-						Values: []string{"managed"},
-					},
-				},
-			}
-
-			resources, err := findIPAMResourceCIDRs(ctx, conn, input)
-			if err != nil {
-				return nil, err
-			}
-
-			if len(resources) == 0 {
-				return nil, &retry.NotFoundError{
-					Message: fmt.Sprintf("resource %s not yet managed by IPAM", resourceID),
-				}
-			}
-
-			log.Printf("[DEBUG] Resource %s is now managed by IPAM", resourceID)
-			return resources, nil
-		})
-
-		if tfresource.TimedOut(err) {
-			return sdkdiag.AppendErrorf(diags, "timeout waiting for resource %s to be managed by IPAM after %s (cross-region resources can take 20+ minutes)", resourceID, d.Timeout(schema.TimeoutCreate))
-		}
-
-		if err != nil {
+		if _, err := waitIPAMResourceCIDRManaged(ctx, conn, scopeID, resourceID, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for resource %s to be managed by IPAM: %s", resourceID, err)
 		}
+
+		log.Printf("[DEBUG] Resource %s is now managed by IPAM", resourceID)
 
 		input.SourceResource = &awstypes.IpamPoolSourceResourceRequest{
 			ResourceId:     aws.String(resourceID),

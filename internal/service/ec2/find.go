@@ -4522,7 +4522,7 @@ func findIPAMResourceCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.Get
 		page, err := pages.NextPage(ctx)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
-				return nil, &retry.NotFoundError{
+				return nil, &sdkretry.NotFoundError{
 					LastError:   err,
 					LastRequest: input,
 				}
