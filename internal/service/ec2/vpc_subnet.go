@@ -327,8 +327,19 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	// If we're enabling dns64 and resource_name_dns_aaaa_record_on_launch, do that after modifying the IPv6 CIDR block.
-	if d.HasChange("ipv6_cidr_block") {
-		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
+	// Check if ipv6_cidr_block needs to be modified. When Optional+Computed, removal from config doesn't trigger HasChange()
+	rawConfig := d.GetRawConfig()
+	ipv6InConfig := !rawConfig.GetAttr("ipv6_cidr_block").IsNull()
+	currentIPv6 := d.Get("ipv6_cidr_block").(string)
+
+	if d.HasChange("ipv6_cidr_block") || (currentIPv6 != "" && !ipv6InConfig) {
+		targetValue := ""
+		if ipv6InConfig {
+			targetValue = d.Get("ipv6_cidr_block").(string)
+		}
+
+		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(),
+			d.Get("ipv6_cidr_block_association_id").(string), targetValue); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
