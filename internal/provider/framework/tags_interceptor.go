@@ -284,29 +284,38 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 			return
 		}
 
-		var planTags tftags.Map
+		var planTags, stateTags tftags.Map
 		opts.response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
+		opts.response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 		if opts.response.Diagnostics.HasError() {
 			return
 		}
 
-		if policy := c.TaggingPolicyConfig(ctx); policy != nil {
-			allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags))
+		allPlanTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags))
+		allStateTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, stateTags))
 
-			// Verify required tags are present
-			if reqTags, ok := policy.RequiredTags[typeName]; ok {
-				if !allTags.ContainsAllKeys(reqTags) {
-					missing := reqTags.Removed(allTags).Keys()
-					summary := "Missing Required Tags"
-					detail := fmt.Sprintf("An organizational tagging policy requires the following tags for %s: %s", typeName, missing)
+		isCreate := request.State.Raw.IsNull()
+		hasTagsChange := !allPlanTags.Equal(allStateTags)
 
-					switch policy.Level {
-					case "error":
-						opts.response.Diagnostics.AddAttributeError(path.Root(names.AttrTags), summary, detail)
-					default:
-						opts.response.Diagnostics.AddAttributeWarning(path.Root(names.AttrTags), summary, detail)
+		// Only run validation during resource creation or when tags are modified
+		if isCreate || hasTagsChange {
+			if policy := c.TaggingPolicyConfig(ctx); policy != nil {
+
+				// Verify required tags are present
+				if reqTags, ok := policy.RequiredTags[typeName]; ok {
+					if !allPlanTags.ContainsAllKeys(reqTags) {
+						missing := reqTags.Removed(allPlanTags).Keys()
+						summary := "Missing Required Tags"
+						detail := fmt.Sprintf("An organizational tagging policy requires the following tags for %s: %s", typeName, missing)
+
+						switch policy.Level {
+						case "warning":
+							opts.response.Diagnostics.AddAttributeWarning(path.Root(names.AttrTags), summary, detail)
+						default:
+							opts.response.Diagnostics.AddAttributeError(path.Root(names.AttrTags), summary, detail)
+						}
+						return
 					}
-					return
 				}
 			}
 		}
