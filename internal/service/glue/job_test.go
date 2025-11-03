@@ -598,14 +598,14 @@ func TestAccGlueJob_streamingTimeout(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_timeout(rName, 1),
+				Config: testAccJobConfig_streamingTimeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1"),
 				),
 			},
 			{
-				Config: testAccJobConfig_timeout(rName, 2),
+				Config: testAccJobConfig_streamingTimeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
@@ -1404,6 +1404,24 @@ resource "aws_glue_job" "test" {
   timeout      = %[2]d
 
   command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, timeout))
+}
+
+func testAccJobConfig_streamingTimeout(rName string, timeout int) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  max_capacity = 10
+  name         = %[1]q
+  role_arn     = aws_iam_role.test.arn
+  timeout      = %[2]d
+
+  command {
+    name            = "gluestreaming"
     script_location = "testscriptlocation"
   }
 
