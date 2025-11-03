@@ -69,7 +69,7 @@ provider "aws" {
 
   endpoints {
     dynamodb = "https://custom-ddb-endpoint.example.com"
-    s3 = "https://custom-s3-endpoint.example.com"
+    s3       = "https://custom-s3-endpoint.example.com"
   }
 }
 ```
