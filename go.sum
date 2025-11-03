@@ -397,8 +397,8 @@ github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.3 h1:eYWsdd8DOUeHMV
 github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.3/go.mod h1:BLJpa/L6bdx2I91JcoWFR6INlcZ1AEhsaZXetMSJ0jM=
 github.com/aws/aws-sdk-go-v2/service/odb v1.5.3 h1:2TsBlYq2zcOq0wCouGKaApj8dAulM1DyhhvjM23JBjQ=
 github.com/aws/aws-sdk-go-v2/service/odb v1.5.3/go.mod h1:jYMCAmlXks0JQ2RqBSLPEyRjnpRwCP8QKjsQP+6iy7I=
-github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.8 h1:lFeAFG+OOMbUFcTgsROi1uIjOOCLA6pWAgL4SfTiGBY=
-github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.8/go.mod h1:Vl3ROh8aYzg2O8dqmT+vQ0K9bIMoZMkWYl0BzYctlSg=
+github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.9 h1:5uzz7nSHjDhmLop8IihUq8bFt5Y0F5d/0C7D/msdxLc=
+github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.9/go.mod h1:V/DfuSZlJxGEOrbnlxIcph9PQPdoYZI6jhLsNJeCvDQ=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.27.0 h1:5fXHnRsLHwK0Vz7Jl1AVTWs3vYim2L0G85tBV9J4w3M=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.27.0/go.mod h1:EGxZm9zIX+WGDuj56bBR5DQBeI+MD3ePLmMgwDHeZ1A=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.46.0 h1:HLHEngyd+WJSe9xNnA26abpxQwQkoBCEmZoUvo/wKLw=
