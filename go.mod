@@ -51,7 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.9
 	github.com/aws/aws-sdk-go-v2/service/chime v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.9
-	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.28.0
+	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.28.9
