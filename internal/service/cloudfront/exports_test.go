@@ -8,7 +8,7 @@ var (
 	ResourceCachePolicy                 = resourceCachePolicy
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
 	ResourceDistribution                = resourceDistribution
-	ResourceDistributionTenant          = resourceDistributionTenant
+	ResourceDistributionTenant          = newDistributionTenantResource
 	ResourceFieldLevelEncryptionConfig  = resourceFieldLevelEncryptionConfig
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
