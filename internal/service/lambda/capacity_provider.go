@@ -57,8 +57,8 @@ type resourceCapacityProvider struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceCapacityProvider) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrName: schema.StringAttribute{
@@ -69,12 +69,9 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, req resource.Sche
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
-				Required: true,
-			},
 		},
 		Blocks: map[string]schema.Block{
-			"vpc_config": schema.ListNestedBlock{
+			names.AttrVPCConfig: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -82,11 +79,11 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, req resource.Sche
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"subnet_ids": schema.SetAttribute{
+						names.AttrSubnetIDs: schema.SetAttribute{
 							Required:   true,
 							CustomType: fwtypes.SetOfStringType,
 						},
-						"security_group_ids": schema.SetAttribute{
+						names.AttrSecurityGroupIDs: schema.SetAttribute{
 							Optional:   true,
 							CustomType: fwtypes.SetOfStringType,
 						},
@@ -119,7 +116,7 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, req resource.Sche
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"kms_key_arn": schema.StringAttribute{
+						names.AttrKMSKeyARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 						},
@@ -189,45 +186,45 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *resourceCapacityProvider) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := mocks.LambdaClient(ctx)
 
 	var plan resourceCapacityProviderModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	var input awsmocktypes.CreateCapacityProviderInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
+	if response.Diagnostics.HasError() {
 		return
 	}
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateCapacityProvider(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Flatten(ctx, out, &plan))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitCapacityProviderActive(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
 }
 
 func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -258,61 +255,61 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceCapacityProvider) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := mocks.LambdaClient(ctx)
 
 	var plan, state resourceCapacityProviderModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	diff, d := flex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input awsmocktypes.UpdateCapacityProviderInput
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
-		if resp.Diagnostics.HasError() {
+		smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
+		if response.Diagnostics.HasError() {
 			return
 		}
 
 		out, err := conn.UpdateCapacityProvider(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ARN.String())
 			return
 		}
 		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ARN.String())
+			smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.ARN.String())
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
+		smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Flatten(ctx, out, &plan))
+		if response.Diagnostics.HasError() {
 			return
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		_, err = waitCapacityProviderActive(ctx, conn, plan.ARN.ValueString(), updateTimeout)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ARN.String())
 			return
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
-func (r *resourceCapacityProvider) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := mocks.LambdaClient(ctx)
 
 	var state resourceCapacityProviderModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -324,20 +321,20 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, req resource.Dele
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ARN.String())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitCapacityProviderDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ARN.String())
 		return
 	}
 }
 
-func (r *resourceCapacityProvider) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func (r *resourceCapacityProvider) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 func waitCapacityProviderActive(ctx context.Context, conn *mocks.Client, id string, timeout time.Duration) (*awsmocktypes.GetCapacityProviderOutput, error) {
