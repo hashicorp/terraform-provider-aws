@@ -40,6 +40,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_s3tables_table_bucket",
 			Name:     "Table Bucket",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newTableBucketPolicyResource,
