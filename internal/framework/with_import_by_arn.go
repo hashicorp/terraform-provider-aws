@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// WithImportByARN is intended to be embedded in resources which import state via the "id" attribute.
+// WithImportByARN is intended to be embedded in resources which import state via the "arn" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
 type WithImportByARN struct{}
 
