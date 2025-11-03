@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.50.3
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.52.0
-	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.10
+	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.11
 	github.com/aws/aws-sdk-go-v2/service/athena v1.55.8
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.60.1
