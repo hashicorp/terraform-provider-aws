@@ -292,17 +292,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	resource := expandResource(d)
-	if resource != nil {
-		input.Resource = resource
-	} else {
-		input.Resource = &awstypes.Resource{}
-
-		if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			// can't ListPermissions for TableWithColumns, so use Table instead
-			input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any))
-		}
-	}
+	populateResourceForRead(&input, d)
 
 	filter := permissionsFilter(d)
 

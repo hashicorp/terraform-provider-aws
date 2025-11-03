@@ -438,16 +438,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.PermissionsWithGrantOption = flex.ExpandStringyValueSet[awstypes.Permission](v.(*schema.Set))
 	}
 
-	resource := expandResource(d)
-	if resource != nil {
-		input.Resource = resource
-	} else {
-		input.Resource = &awstypes.Resource{}
-
-		if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.Resource.TableWithColumns = expandTableColumnsResource(v.([]any)[0].(map[string]any))
-		}
-	}
+	populateResourceForCreate(input, d)
 
 	var output *lakeformation.GrantPermissionsOutput
 	err := tfresource.Retry(ctx, IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
@@ -506,17 +497,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	resource := expandResource(d)
-	if resource != nil {
-		input.Resource = resource
-	} else {
-		input.Resource = &awstypes.Resource{}
-
-		if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			// can't ListPermissions for TableWithColumns, so use Table instead
-			input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any))
-		}
-	}
+	populateResourceForRead(&input, d)
 
 	filter := permissionsFilter(d)
 
@@ -665,16 +646,7 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	resource := expandResource(d)
-	if resource != nil {
-		input.Resource = resource
-	} else {
-		input.Resource = &awstypes.Resource{}
-
-		if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.Resource.TableWithColumns = expandTableColumnsResource(v.([]any)[0].(map[string]any))
-		}
-	}
+	populateResourceForDelete(input, d)
 
 	if input.Resource == nil || reflect.DeepEqual(input.Resource, &awstypes.Resource{}) {
 		// if resource is empty, don't delete = it won't delete anything since this is the predicate
@@ -796,6 +768,37 @@ func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
 		return filterTableWithColumnsPermissions(principalIdentifier, ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any)), columnNames, excludedColumnNames, columnWildcard)
 	}
 	return nil
+}
+
+func populateResourceForCreate(input *lakeformation.GrantPermissionsInput, d *schema.ResourceData) {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource = &awstypes.Resource{
+			TableWithColumns: expandTableColumnsResource(v.([]any)[0].(map[string]any)),
+		}
+	} else {
+		input.Resource = expandResource(d)
+	}
+}
+
+func populateResourceForRead(input *lakeformation.ListPermissionsInput, d *schema.ResourceData) {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		// can't ListPermissions for TableWithColumns, so use Table instead
+		input.Resource = &awstypes.Resource{
+			Table: ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any)),
+		}
+	} else {
+		input.Resource = expandResource(d)
+	}
+}
+
+func populateResourceForDelete(input *lakeformation.RevokePermissionsInput, d *schema.ResourceData) {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource = &awstypes.Resource{
+			TableWithColumns: expandTableColumnsResource(v.([]any)[0].(map[string]any)),
+		}
+	} else {
+		input.Resource = expandResource(d)
+	}
 }
 
 func expandResource(d *schema.ResourceData) *awstypes.Resource {
