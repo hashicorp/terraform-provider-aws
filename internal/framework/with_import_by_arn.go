@@ -15,6 +15,6 @@ import (
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
 type WithImportByARN struct{}
 
-func (w *WithImportByARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) { // nosemgrep:ci.semgrep.framework.with-import-by-id
+func (w *WithImportByARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
