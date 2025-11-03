@@ -5,11 +5,9 @@ package glue
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -179,6 +177,10 @@ func resourceJob() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"security_configuration": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"source_control_details": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -230,10 +232,6 @@ func resourceJob() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"security_configuration": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"worker_type": {
 				Type:          schema.TypeString,
@@ -292,12 +290,12 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.JobRunQueuingEnabled = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
-		input.MaxCapacity = aws.Float64(v.(float64))
-	}
-
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		input.MaintenanceWindow = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
+		input.MaxCapacity = aws.Float64(v.(float64))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -359,14 +357,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading Glue Job (%s): %s", d.Id(), err)
 	}
 
-	jobARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("job/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, jobARN)
+	d.Set(names.AttrARN, jobARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting command: %s", err)
 	}
@@ -691,4 +682,8 @@ func flattenSourceControlDetails(sourceControlDetails *awstypes.SourceControlDet
 
 func workerType_Values() []string {
 	return tfslices.AppendUnique(enum.Values[awstypes.WorkerType](), "G.12X", "G.16X", "R.1X", "R.2X", "R.4X", "R.8X")
+}
+
+func jobARN(ctx context.Context, c *conns.AWSClient, jobID string) string {
+	return c.RegionalARN(ctx, "glue", "job/"+jobID)
 }
