@@ -2717,7 +2717,7 @@ func flattenCanaryConfiguration(apiObject *awstypes.CanaryConfiguration) []map[s
 		tfMap["canary_bake_time_in_minutes"] = flex.Int32ToStringValue(v)
 	}
 
-	tfMap["canary_percent"] = (*apiObject).CanaryPercent
+	tfMap["canary_percent"] = aws.ToFloat64((*apiObject).CanaryPercent)
 
 	return []map[string]any{tfMap}
 }
@@ -2729,7 +2729,7 @@ func flattenLinearConfiguration(apiObject *awstypes.LinearConfiguration) []map[s
 		tfMap["step_bake_time_in_minutes"] = flex.Int32ToStringValue(v)
 	}
 
-	tfMap["step_percent"] = (*apiObject).StepPercent
+	tfMap["step_percent"] = aws.ToFloat64((*apiObject).StepPercent)
 
 	return []map[string]any{tfMap}
 }
@@ -2785,18 +2785,18 @@ func expandBakeTimeInMinutes(bakeTimeStr string) (*int32, error) {
 	return ptrBakeTimeRet, nil
 }
 
-func expandCanaryConfiguration(canary_config map[string]any) (float64, *int32, error) {
-	var canaryPercentRet float64
+func expandCanaryConfiguration(canary_config map[string]any) (*float64, *int32, error) {
+	var canaryPercentRet *float64
 	var ptrCanaryBakeTimeRet *int32
 
 	if cp, ok := canary_config["canary_percent"].(float64); ok {
-		canaryPercentRet = cp
+		canaryPercentRet = aws.Float64(cp)
 	}
 	if cbtm, ok := canary_config["canary_bake_time_in_minutes"].(string); ok {
 		canaryBakeTimeInMinutes := nullable.Int(cbtm)
 		value, _, err := canaryBakeTimeInMinutes.ValueInt32()
 		if err != nil {
-			return 0.0, nil, err
+			return nil, nil, err
 		}
 		ptrCanaryBakeTimeRet = aws.Int32(value)
 	}
@@ -2804,18 +2804,18 @@ func expandCanaryConfiguration(canary_config map[string]any) (float64, *int32, e
 	return canaryPercentRet, ptrCanaryBakeTimeRet, nil
 }
 
-func expandLinearConfiguration(linear_config map[string]any) (float64, *int32, error) {
-	var stepPercentRet float64
+func expandLinearConfiguration(linear_config map[string]any) (*float64, *int32, error) {
+	var stepPercentRet *float64
 	var ptrStepBakeTimeRet *int32
 
 	if sp, ok := linear_config["step_percent"].(float64); ok {
-		stepPercentRet = sp
+		stepPercentRet = aws.Float64(sp)
 	}
 	if sbtm, ok := linear_config["step_bake_time_in_minutes"].(string); ok {
 		stepBakeTimeInMinutes := nullable.Int(sbtm)
 		value, _, err := stepBakeTimeInMinutes.ValueInt32()
 		if err != nil {
-			return 0.0, nil, nil
+			return nil, nil, nil
 		}
 		ptrStepBakeTimeRet = aws.Int32(value)
 	}
