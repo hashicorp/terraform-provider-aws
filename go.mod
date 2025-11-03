@@ -12,9 +12,9 @@ require (
 	github.com/YakDriver/regexache v0.24.0
 	github.com/YakDriver/smarterr v0.6.0
 	github.com/aws/aws-sdk-go-v2 v1.39.5
-	github.com/aws/aws-sdk-go-v2/config v1.31.15
-	github.com/aws/aws-sdk-go-v2/credentials v1.18.19
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.11
+	github.com/aws/aws-sdk-go-v2/config v1.31.16
+	github.com/aws/aws-sdk-go-v2/credentials v1.18.20
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.12
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.44.8
 	github.com/aws/aws-sdk-go-v2/service/account v1.29.0
@@ -251,10 +251,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.7
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.8
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.25.7
-	github.com/aws/aws-sdk-go-v2/service/sso v1.29.8
+	github.com/aws/aws-sdk-go-v2/service/sso v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/sts v1.38.9
+	github.com/aws/aws-sdk-go-v2/service/sts v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.16.8
@@ -328,16 +328,16 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.11 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.11 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.12 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.12 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.11.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.11 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.4 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
