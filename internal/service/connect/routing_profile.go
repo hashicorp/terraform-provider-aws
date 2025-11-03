@@ -4,6 +4,7 @@
 package connect
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -66,6 +68,16 @@ func resourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeSet,
 				MinItems: 1,
 				Required: true,
+				Set: func(v any) int {
+					var buf bytes.Buffer
+					m := v.(map[string]any)
+					fmt.Fprintf(&buf, "%s-", m["channel"].(string))
+					fmt.Fprintf(&buf, "%d-", m["concurrency"].(int))
+					// TODO: Because cross_channel_behavior is not included here, computed values
+					// will not trigger a diff. However, changes to a configured value _also_ will
+					// not trigger a change, which is undesirable.
+					return create.StringHashcode(buf.String())
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"channel": {
@@ -87,7 +99,8 @@ func resourceRoutingProfile() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"behavior_type": {
 										Type:             schema.TypeString,
-										Required:         true,
+										Optional:         true,
+										Computed:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.BehaviorType](),
 									},
 								},
@@ -216,7 +229,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
 	d.Set(names.AttrDescription, routingProfile.Description)
 	d.Set(names.AttrInstanceID, instanceID)
-	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies, d.Get("media_concurrencies").(*schema.Set).List())); err != nil {
+	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting media_concurrencies: %s", err)
 	}
 	d.Set(names.AttrName, routingProfile.Name)
@@ -527,19 +540,8 @@ func flattenCrossChannelBehavior(apiObject *awstypes.CrossChannelBehavior) []map
 	}
 }
 
-func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, configList ...[]any) []any {
+func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency) []any {
 	tfList := []any{}
-
-	configuredBehaviors := make(map[string]bool)
-	if len(configList) > 0 && configList[0] != nil {
-		for _, configRaw := range configList[0] {
-			configMap := configRaw.(map[string]any)
-			channel := configMap["channel"].(string)
-			if crossChannelBehaviorList, ok := configMap["cross_channel_behavior"].([]any); ok && len(crossChannelBehaviorList) > 0 {
-				configuredBehaviors[channel] = true
-			}
-		}
-	}
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
@@ -547,11 +549,8 @@ func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, configLis
 			"concurrency": aws.ToInt32(apiObject.Concurrency),
 		}
 
-		channel := string(apiObject.Channel)
 		if apiObject.CrossChannelBehavior != nil {
-			if len(configList) == 0 || configuredBehaviors[channel] {
-				tfMap["cross_channel_behavior"] = flattenCrossChannelBehavior(apiObject.CrossChannelBehavior)
-			}
+			tfMap["cross_channel_behavior"] = flattenCrossChannelBehavior(apiObject.CrossChannelBehavior)
 		}
 
 		tfList = append(tfList, tfMap)

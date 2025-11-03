@@ -53,11 +53,15 @@ This data source exports the following attributes in addition to the arguments a
 * `queue_configs` - One or more `queue_configs` blocks that specify the inbound queues associated with the routing profile. If no queue is added, the agent only can make outbound calls. The `queue_configs` block is documented below.
 * `tags` - Map of tags to assign to the Routing Profile.
 
+### `media_concurrencies` Attribute Reference
+
 A `media_concurrencies` block supports the following attributes:
 
 * `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
 * `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
 * `cross_channel_behavior` - Configuration block for cross-channel behavior. Documented below.
+
+### `cross_channel_behavior` Attribute Reference
 
 A `cross_channel_behavior` block supports the following attributes:
 

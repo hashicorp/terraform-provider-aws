@@ -37,7 +37,7 @@ func testAccRoutingProfile_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, originalDescription),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/routing-profile/{routing_profile_id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
@@ -93,7 +93,7 @@ func testAccRoutingProfile_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, "Disappear"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceRoutingProfile(), resourceName),
 				),
@@ -120,7 +120,7 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/routing-profile/{routing_profile_id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
@@ -174,7 +174,7 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileConfig_defaultOutboundQueue(rName, rName2, rName3, rName4, "first"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/routing-profile/{routing_profile_id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
@@ -232,7 +232,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 			{
 				// Routing profile without queue_configs
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/routing-profile/{routing_profile_id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
@@ -351,18 +351,22 @@ func testAccRoutingProfile_crossChannelBehavior(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileConfig_crossChannelBehaviorDefault(rName, rName2, rName3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
-						"channel":                  string(awstypes.ChannelVoice),
-						"concurrency":              "1",
-						"cross_channel_behavior.#": "0",
+						"channel":     string(awstypes.ChannelVoice),
+						"concurrency": "1",
+						// "cross_channel_behavior.#": "0",
+						"cross_channel_behavior.#":               "1",
+						"cross_channel_behavior.0.behavior_type": string(awstypes.BehaviorTypeRouteCurrentChannelOnly), // Server-side default
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
-						"channel":                  string(awstypes.ChannelChat),
-						"concurrency":              "2",
-						"cross_channel_behavior.#": "0",
+						"channel":     string(awstypes.ChannelChat),
+						"concurrency": "2",
+						// "cross_channel_behavior.#": "0",
+						"cross_channel_behavior.#":               "1",
+						"cross_channel_behavior.0.behavior_type": string(awstypes.BehaviorTypeRouteCurrentChannelOnly), // Server-side default
 					}),
 				),
 			},
@@ -373,7 +377,7 @@ func testAccRoutingProfile_crossChannelBehavior(t *testing.T) {
 			},
 			{
 				Config: testAccRoutingProfileConfig_crossChannelBehaviorCurrentChannelOnly(rName, rName2, rName3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
@@ -390,7 +394,7 @@ func testAccRoutingProfile_crossChannelBehavior(t *testing.T) {
 			},
 			{
 				Config: testAccRoutingProfileConfig_crossChannelBehaviorMixed(rName, rName2, rName3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
@@ -426,7 +430,7 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, names.AttrTags),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Routing Profile"),
@@ -568,7 +572,7 @@ func testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate(t *tes
 			},
 			{
 				Config: testAccRoutingProfileConfig_TwoQueues(rName, rName2, rName3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
@@ -602,7 +606,7 @@ func testAccRoutingProfile_updateQueueConfigsBatchedAssociateDisassociate(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileConfig_TwoQueues(rName, rName2, rName3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
@@ -710,7 +714,7 @@ func testAccRoutingProfile_updateQueueConfigsBatchedAssociateDisassociate(t *tes
 			},
 			{
 				Config: testAccRoutingProfileConfig_TwoQueues(rName, rName2, rName3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
