@@ -195,8 +195,8 @@ github.com/aws/aws-sdk-go-v2/service/datasync v1.55.3 h1:C7L1PPDPedgSox6ij7E8/52
 github.com/aws/aws-sdk-go-v2/service/datasync v1.55.3/go.mod h1:UZN0ZeIXzp8MRu0iUyHx0w5+Y8FbObUDDQPFwSr7Pqo=
 github.com/aws/aws-sdk-go-v2/service/datazone v1.44.1 h1:ZGLDvPcw4mLiHrTVDfpUCcxRVSMh6BhLp2ny29K36qQ=
 github.com/aws/aws-sdk-go-v2/service/datazone v1.44.1/go.mod h1:gZo189ju2ITgcsjY+/JyntPpHM45u83ZeYLIBBWbT30=
-github.com/aws/aws-sdk-go-v2/service/dax v1.29.3 h1:61ZfTRIjajob00e68crWRCi//9zenmu/hdSGa/nI2j8=
-github.com/aws/aws-sdk-go-v2/service/dax v1.29.3/go.mod h1:Y4bD/AGU4qJzYt9U32M8ggMPjJwVy2i9v+ZpqxJtl0M=
+github.com/aws/aws-sdk-go-v2/service/dax v1.29.4 h1:IBtJf1olfwspLm3d20sDFstQTlHgL+dA2NtdXQMDius=
+github.com/aws/aws-sdk-go-v2/service/dax v1.29.4/go.mod h1:XciMFO7HCGFzOlvNl42HsWNakjQtt/JHzW26VzlahGI=
 github.com/aws/aws-sdk-go-v2/service/detective v1.38.0 h1:ddlu9OEUR12GgWIds0nN0QlTwnjuL6tfFaqQdxDuoLw=
 github.com/aws/aws-sdk-go-v2/service/detective v1.38.0/go.mod h1:1nyQuefKmZn5W8BReV1W9eftWfhhfSEMc28tV7LlXhc=
 github.com/aws/aws-sdk-go-v2/service/devicefarm v1.36.1 h1:Rp1JjbogKtYOT/gDzx9nN5izsuJTIYl6zn/lkHFv0iY=
