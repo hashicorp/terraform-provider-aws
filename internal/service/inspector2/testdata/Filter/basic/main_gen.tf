@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_inspector2_filter" "test" {
-{{- template "region" }}
   name   = var.rName
   action = "NONE"
   filter_criteria {
@@ -8,6 +10,10 @@ resource "aws_inspector2_filter" "test" {
       value      = "111222333444"
     }
   }
+}
 
-{{- template "tags" . }}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
